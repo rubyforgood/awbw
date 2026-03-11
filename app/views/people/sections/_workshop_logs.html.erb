@@ -1,15 +1,27 @@
 <%= turbo_frame_tag "person_workshop_logs_section" do %>
   <% if workshop_logs.any? %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
-      <% workshop_logs.each do |workshop_log| %>
-        <%= render "show_card",
-                   record_title: "#{workshop_log.workshop&.title ||
-                     "Workshop log #" + workshop_log.id.to_s} - #{workshop_log.windows_type_name}",
-                   record: workshop_log.decorate, title_font_size: "text-sm" %>
-      <% end %>
+    <% all_logs = person.user&.workshop_logs || WorkshopLog.none %>
+    <% grouped = workshop_logs.group_by { |log| log.workshop_id || log.external_workshop_title } %>
+    <div class="flex flex-wrap items-center gap-3 mb-4 text-sm text-gray-600">
+      <span class="font-semibold text-gray-800">
+        Total participants: <%= all_logs.sum(:children_first_time) + all_logs.sum(:children_ongoing) +
+                   all_logs.sum(:teens_first_time) + all_logs.sum(:teens_ongoing) +
+                   all_logs.sum(:adults_first_time) + all_logs.sum(:adults_ongoing) %>
+      </span>
+      <span>Adults: <%= all_logs.sum(:adults_first_time) + all_logs.sum(:adults_ongoing) %></span>
+      <span>Teens: <%= all_logs.sum(:teens_first_time) + all_logs.sum(:teens_ongoing) %></span>
+      <span>Children: <%= all_logs.sum(:children_first_time) + all_logs.sum(:children_ongoing) %></span>
+      <span>Unique workshops: <%= grouped.size %></span>
     </div>
-    <div class="mt-6 flex justify-center">
-      <%= tailwind_paginate workshop_logs, params: { section: "workshop_logs" } %>
+    <% sorted_grouped = grouped.sort_by { |_key, logs|
+     dates = logs.first(10).map { |l| -(l.date || l.created_at.to_date).to_time.to_i }
+     dates.fill(0, dates.size...10)
+   }.to_h %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
+      <% sorted_grouped.each do |key, logs| %>
+        <%= render "people/sections/workshop_log_grouped_card",
+                   person: person, logs: logs %>
+      <% end %>
     </div>
   <% else %>
     <p class="text-gray-500 italic">No workshops logged yet.</p>

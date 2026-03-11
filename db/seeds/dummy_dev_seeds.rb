@@ -74,6 +74,8 @@ admin_user = User.find_by(email: "umberto.user@example.com")
     pub_issue: "II/3",
     published: true,
     featured: true,
+    publicly_visible: true,
+    publicly_featured: true,
     searchable: true,
     created_by: admin_user,
     created_at: Time.zone.parse("2005-03-01 02:45:03")
@@ -101,6 +103,8 @@ admin_user = User.find_by(email: "umberto.user@example.com")
     description: "Gives participants a voice to explore their abuse and what directions they can choose to take for their future. By externalizing their own story onto a doll, it becomes a safe place to explore, often becoming a way to discover feelings and thoughts never before claimed.",
     pub_issue: "II/6",
     published: true,
+    publicly_visible: true,
+    publicly_featured: true,
     searchable: true,
     created_by: admin_user,
     created_at: Time.zone.parse("2005-03-01 02:45:04")
@@ -323,31 +327,41 @@ admin_user = User.find_by(email: "umberto.user@example.com")
 end
 
 # Duplicate-title workshops to exercise ID disambiguation in search
+# Covers: same title/author/type (true dupes), same title/different author, same title/different type
 [
-  {
-    title: "Healing Through Color",
-    windows_type: adult_wt,
-    full_name: "Maria Torres",
-    month: 3,
-    year: 2020,
-    description: "Uses color mixing and painting to help participants explore emotions and find calm. Participants create a personal color wheel that maps feelings to colors.",
-    published: true,
-    searchable: true,
-    created_by: admin_user
-  },
-  {
-    title: "Healing Through Color",
-    windows_type: adult_wt,
-    full_name: "James Whitfield",
-    month: 9,
-    year: 2022,
-    description: "A revised version exploring color as a pathway to emotional awareness. Participants blend watercolors while discussing how color connects to memory and healing.",
-    published: true,
-    searchable: true,
-    created_by: admin_user
-  }
+  # Same title, same author, same windows type (true dupes — different years)
+  { title: "Healing Through Color", full_name: "Maria Torres", windows_type: adult_wt,
+    month: 3, year: 2020,
+    description: "Uses color mixing and painting to help participants explore emotions and find calm.",
+    published: true, searchable: true, created_by: admin_user },
+  { title: "Healing Through Color", full_name: "Maria Torres", windows_type: adult_wt,
+    month: 6, year: 2024,
+    description: "Revised edition with new guided prompts for exploring emotions through color.",
+    published: true, searchable: true, created_by: admin_user },
+  # Same title, different author, same windows type
+  { title: "Healing Through Color", full_name: "James Whitfield", windows_type: adult_wt,
+    month: 9, year: 2022,
+    description: "A revised version exploring color as a pathway to emotional awareness.",
+    published: true, searchable: true, created_by: admin_user },
+  # Same title, same author, different windows type
+  { title: "Healing Through Color", full_name: "Maria Torres", windows_type: children_wt,
+    month: 1, year: 2023,
+    description: "Adapted for children: color mixing and painting to explore emotions through play.",
+    published: true, searchable: true, created_by: admin_user },
+  # Same title as existing seed workshop, different author and windows type
+  { title: "Inspirational Scrolls", full_name: "Linda Park", windows_type: combined_wt,
+    month: 5, year: 2021,
+    description: "A combined-audience version of Inspirational Scrolls for mixed-age groups.",
+    published: true, searchable: true, created_by: admin_user },
+  # Same title as existing, same author, same type (true dupe)
+  { title: "Feelings Collages", full_name: "Lisa Cohen", windows_type: adult_wt,
+    month: 11, year: 2019,
+    description: "Updated edition with new collage prompts exploring a wider range of emotions.",
+    published: true, searchable: true, created_by: admin_user }
 ].each do |workshop_data|
-  Workshop.create!(workshop_data)
+  Workshop.where(title: workshop_data[:title], full_name: workshop_data[:full_name],
+                 windows_type: workshop_data[:windows_type], year: workshop_data[:year])
+          .first_or_create!(workshop_data)
 end
 
 puts "Assigning workshop categories and sectors…"
@@ -576,7 +590,7 @@ puts "Creating Persons and Affiliations for seed users…"
 [
   User.find_by(email: "umberto.user@example.com"),
   User.find_by(email: "amy.user@example.com"),
-  User.find_by(email: "priya.user@example.com")
+  User.find_by(email: "aisha.user@example.com")
 ].compact.each do |user|
   next if user.person.present?
 
@@ -847,25 +861,79 @@ WorkshopVariationIdea.all.sample(2).each_with_index do |idea, i|
 end
 
 puts "Creating WorkshopLogs…"
-5.times do
-  workshop = Workshop.all.sample
-  next unless workshop
+aisha_user = User.find_by(email: "aisha.user@example.com")
+aisha_org = aisha_user&.person&.affiliations&.first&.organization || Organization.first
+all_workshops = Workshop.all.to_a.shuffle
 
-  WorkshopLog.create!(
-    workshop_id: workshop.id,
-    organization_id: Organization.all.sample&.id,
-    windows_type_id: WindowsType.all.sample&.id,
-    created_by_id: User.first&.id,
-    date: Date.today - rand(1..90).days,
-    children_ongoing: rand(0..5),
-    teens_ongoing: rand(0..3),
-    adults_ongoing: rand(0..10),
-    children_first_time: rand(0..2),
-    teens_first_time: rand(0..2),
-    adults_first_time: rand(0..4),
-    created_at: Time.current - rand(1..90).days,
-    updated_at: Time.current - rand(1..40).days
-  )
+if aisha_user && all_workshops.any? && WorkshopLog.where(created_by_id: aisha_user.id).none?
+  # 30 logs for Aisha's primary workshop
+  primary_workshop = all_workshops.shift
+  30.times do |i|
+    WorkshopLog.create!(
+      workshop_id: primary_workshop.id,
+      organization_id: aisha_org.id,
+      windows_type_id: primary_workshop.windows_type_id || WindowsType.first.id,
+      created_by_id: aisha_user.id,
+      date: Date.today - (i * 7 + rand(0..3)).days,
+      children_ongoing: rand(1..6),
+      teens_ongoing: rand(0..4),
+      adults_ongoing: rand(2..12),
+      children_first_time: rand(0..3),
+      teens_first_time: rand(0..2),
+      adults_first_time: rand(0..5),
+      created_at: Time.current - (i * 7).days,
+      updated_at: Time.current - (i * 7).days
+    )
+  end
+
+  # Up to 10 other workshops with varying log counts (1–15)
+  other_workshops = all_workshops.first(10)
+  log_counts = [ 15, 12, 9, 7, 5, 4, 3, 2, 1, 1 ]
+  other_workshops.each_with_index do |workshop, idx|
+    count = log_counts[idx] || 1
+    count.times do |i|
+      WorkshopLog.create!(
+        workshop_id: workshop.id,
+        organization_id: aisha_org.id,
+        windows_type_id: workshop.windows_type_id || WindowsType.first.id,
+        created_by_id: aisha_user.id,
+        date: Date.today - (i * 14 + rand(0..6)).days,
+        children_ongoing: rand(0..5),
+        teens_ongoing: rand(0..3),
+        adults_ongoing: rand(1..10),
+        children_first_time: rand(0..2),
+        teens_first_time: rand(0..2),
+        adults_first_time: rand(0..4),
+        created_at: Time.current - (i * 14).days,
+        updated_at: Time.current - (i * 14).days
+      )
+    end
+  end
+  puts "  Created 89 logs for Aisha on 11 workshops"
+end
+
+# A few logs for the admin user as well
+if WorkshopLog.where(created_by_id: User.first&.id).none?
+  5.times do
+    workshop = Workshop.all.sample
+    next unless workshop
+
+    WorkshopLog.create!(
+      workshop_id: workshop.id,
+      organization_id: Organization.all.sample&.id,
+      windows_type_id: WindowsType.all.sample&.id,
+      created_by_id: User.first&.id,
+      date: Date.today - rand(1..90).days,
+      children_ongoing: rand(0..5),
+      teens_ongoing: rand(0..3),
+      adults_ongoing: rand(0..10),
+      children_first_time: rand(0..2),
+      teens_first_time: rand(0..2),
+      adults_first_time: rand(0..4),
+      created_at: Time.current - rand(1..90).days,
+      updated_at: Time.current - rand(1..40).days
+    )
+  end
 end
 
 puts "Creating Stories…"
@@ -1305,13 +1373,13 @@ You are welcome to participate in our <a href="/awbw/programs-sac.php">Survivor'
   {
     id: 12, question: "How do I get a scholarship for Leadership Training?",
     answer: %(
-We award all scholarships based on need and availability of funds to agencies serving domestic violence clients. We ask those interested in applying for scholarship funding to submit a <a href="/awbw/programs-leadership_training-scholarships_application.php">Scholarship Request</a> 4 weeks in advance of the chosen training. <a href="/awbw/programs-leadership_training-scholarships.php">Click here</a> to see the guidelines.
+We award all scholarships based on need and avaishability of funds to agencies serving domestic violence clients. We ask those interested in applying for scholarship funding to submit a <a href="/awbw/programs-leadership_training-scholarships_application.php">Scholarship Request</a> 4 weeks in advance of the chosen training. <a href="/awbw/programs-leadership_training-scholarships.php">Click here</a> to see the guidelines.
     ), published: true, ordering: 120
   },
   {
     id: 13, question: "I need more art supplies to hold my Windows Workshops. How can AWBW help?",
     answer: %(
-AWBW awards Art Supply Scholarships to active reporting programs. All scholarship grants are based on need, availability of funds and strength of monthly reporting. Programs must report for a minimum of three months to be eligible to receive an art supply scholarship and must continue to hold weekly workshops and report monthly for a period of one year.<br /><br />AWBW programs that have been awarded art supply scholarships will be reimbursed for art supplies bought at any purveyor of their choosing as long as they submit receipts attached to AWBW's reimbursement form.<br /><br />Visit our <a href="/awbw/programs-women_windows-art_supplies.php">recommended supply resource list</a> for information on where you can order art supplies.<br /><br />AWBW also offers some free art supplies from our donated goods shopping area. Programs in good standing can make an appointment to "free shop" at our Venice location.
+AWBW awards Art Supply Scholarships to active reporting programs. All scholarship grants are based on need, avaishability of funds and strength of monthly reporting. Programs must report for a minimum of three months to be eligible to receive an art supply scholarship and must continue to hold weekly workshops and report monthly for a period of one year.<br /><br />AWBW programs that have been awarded art supply scholarships will be reimbursed for art supplies bought at any purveyor of their choosing as long as they submit receipts attached to AWBW's reimbursement form.<br /><br />Visit our <a href="/awbw/programs-women_windows-art_supplies.php">recommended supply resource list</a> for information on where you can order art supplies.<br /><br />AWBW also offers some free art supplies from our donated goods shopping area. Programs in good standing can make an appointment to "free shop" at our Venice location.
     ), published: true, ordering: 110
   },
   {
@@ -1433,10 +1501,10 @@ end
 
 puts "Creating Bookmarks for seed users…"
 amy = User.find_by(email: "amy.user@example.com")
-priya = User.find_by(email: "priya.user@example.com")
+aisha = User.find_by(email: "aisha.user@example.com")
 
-if amy && priya
-  excluded_person_ids = [ amy.person_id, priya.person_id ].compact
+if amy && aisha
+  excluded_person_ids = [ amy.person_id, aisha.person_id ].compact
 
   # Two records per bookmarkable type (where available)
   pairs = {
@@ -1456,23 +1524,23 @@ if amy && priya
     "WorkshopVariationIdea" => WorkshopVariationIdea.order(:id).limit(2).to_a
   }.reject { |_, v| v.empty? }
 
-  # 3 types are shared between Amy and Priya for tally testing
+  # 3 types are shared between Amy and Aisha for tally testing
   shared_types = pairs.keys.first(3)
 
   pairs.each do |type, records|
     if shared_types.include?(type)
       # Both users bookmark the first record
-      [ amy, priya ].each { |u| u.bookmarks.find_or_create_by!(bookmarkable: records.first) }
+      [ amy, aisha ].each { |u| u.bookmarks.find_or_create_by!(bookmarkable: records.first) }
     else
-      # Each user gets a different record (Priya falls back to first if only one exists)
+      # Each user gets a different record (Aisha falls back to first if only one exists)
       amy.bookmarks.find_or_create_by!(bookmarkable: records.first)
-      priya.bookmarks.find_or_create_by!(bookmarkable: records.last)
+      aisha.bookmarks.find_or_create_by!(bookmarkable: records.last)
     end
   end
 
-  puts "  Created #{amy.bookmarks.count} bookmarks for Amy, #{priya.bookmarks.count} for Priya"
+  puts "  Created #{amy.bookmarks.count} bookmarks for Amy, #{aisha.bookmarks.count} for Aisha"
   shared = amy.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id) &
-           priya.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id)
+           aisha.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id)
   puts "  #{shared.size} bookmarks shared between both users"
 end
 
@@ -1481,7 +1549,7 @@ puts "Creating Ahoy visits and events for analytics charts…"
 
 ahoy_users = [
   User.find_by(email: "amy.user@example.com"),
-  User.find_by(email: "priya.user@example.com"),
+  User.find_by(email: "aisha.user@example.com"),
   nil # anonymous visitor
 ].compact
 

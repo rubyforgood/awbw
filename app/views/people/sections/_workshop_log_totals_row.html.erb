@@ -1,0 +1,20 @@
+<% show_actions = local_assigns.fetch(:show_actions, false) %>
+<div class="flex items-center gap-2 mb-1">
+  <div class="grid grid-cols-5 gap-2 flex-1 min-w-0">
+    <div class="rounded-lg py-2 px-2.5 <%= show_actions ? "text-right pr-4" : "text-center" %>">
+      <div class="text-xs font-medium text-gray-500">Grand totals</div>
+    </div>
+    <% { "Total" => logs.sum(&:total_attendance),
+         "Adults" => logs.sum { |l| l.adults_first_time + l.adults_ongoing },
+         "Teens" => logs.sum { |l| l.teens_first_time + l.teens_ongoing },
+         "Children" => logs.sum { |l| l.children_first_time + l.children_ongoing } }.each do |label, count| %>
+      <div class="<%= label == "Total" ? "bg-purple-200" : "bg-purple-100" %> rounded-lg py-2 px-1.5 text-center">
+        <% unless show_actions %><div class="text-xs text-gray-500"><%= label %></div><% end %>
+        <div class="text-sm font-bold text-gray-800"><%= count %></div>
+      </div>
+    <% end %>
+  </div>
+  <% if show_actions %>
+    <div class="shrink-0 w-20 ml-4"></div>
+  <% end %>
+</div>
