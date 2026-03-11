@@ -70,8 +70,11 @@ class PeopleController < ApplicationController
   def workshop_logs
     authorize! @person
     @person = @person.decorate
-    all_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type)&.order(date: :desc) || WorkshopLog.none
-    @grouped_logs = all_logs.group_by { |log| log.workshop_id || log.external_workshop_title }
+    all_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type)&.order(date: :desc, created_at: :desc) || WorkshopLog.none
+    @grouped_logs = all_logs.group_by { |log| log.workshop_id || log.external_workshop_title }.sort_by { |_key, logs|
+      dates = logs.first(10).map { |l| -(l.date || l.created_at.to_date).to_time.to_i }
+      dates.fill(0, dates.size...10)
+    }.to_h
 
     if params[:workshop_id].present?
       @filtered_logs = all_logs.select { |log| log.workshop_id == params[:workshop_id].to_i }

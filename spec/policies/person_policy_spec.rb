@@ -65,6 +65,32 @@ RSpec.describe PersonPolicy, type: :policy do
     end
   end
 
+  describe "#workshop_logs?" do
+    context "with admin user" do
+      subject { policy_for(record: owned_person, user: admin_user) }
+
+      it { is_expected.to be_allowed_to(:workshop_logs?) }
+    end
+
+    context "with owner" do
+      subject { policy_for(record: owned_person, user: owner_user) }
+
+      it { is_expected.to be_allowed_to(:workshop_logs?) }
+    end
+
+    context "with regular user who is not the owner" do
+      subject { policy_for(record: searchable_person, user: regular_user) }
+
+      it { is_expected.not_to be_allowed_to(:workshop_logs?) }
+    end
+
+    context "with no user" do
+      subject { policy_for(record: searchable_person, user: nil) }
+
+      it { is_expected.not_to be_allowed_to(:workshop_logs?) }
+    end
+  end
+
   describe "#edit?" do
     context "with admin user" do
       subject { policy_for(record: searchable_person, user: admin_user) }
