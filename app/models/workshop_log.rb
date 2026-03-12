@@ -12,10 +12,6 @@ class WorkshopLog < ApplicationRecord
            dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
 
-  # Images
-  has_one_attached :image
-  has_one_attached :form_file
-
   # Asset associations
   has_many :media_files, dependent: :destroy
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
@@ -44,10 +40,6 @@ class WorkshopLog < ApplicationRecord
                                   object["_create"].to_i == 0 && object["answer"].nil? }
 
   # Validations
-  FORM_FILE_CONTENT_TYPES = %w[application/pdf application/msword
-    application/vnd.openxmlformats-officedocument.wordprocessingml.document application/vnd.ms-excel
-    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet]
-  validates :form_file, content_type: FORM_FILE_CONTENT_TYPES
   validates :date, presence: true
   validates :children_ongoing, :teens_ongoing, :adults_ongoing,
             :children_first_time, :teens_first_time, :adults_first_time,
