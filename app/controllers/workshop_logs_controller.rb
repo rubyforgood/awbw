@@ -25,28 +25,8 @@ class WorkshopLogsController < ApplicationController
     @workshop_log = WorkshopLog.find(params[:id])
     authorize! @workshop_log
 
-    success = false
-
-    ActiveRecord::Base.transaction do
-      success = @workshop_log.update(workshop_log_params)
-
-      if success
-        # Maintain consistency with other dependent updates
-        quotes_ok = @workshop_log.delete_and_update_all(
-          params[:quotes_attributes],
-          params[:report_form_field_answers_attributes]
-        )
-
-        # If delete_and_update_all returns false or nil, treat as failure
-        success &&= quotes_ok.present?
-      end
-
-      raise ActiveRecord::Rollback unless success
-    end
-
-    if success
-      flash[:notice] = "Thanks for reporting on a workshop."
-      redirect_to @workshop_log
+    if @workshop_log.update(workshop_log_params)
+      redirect_to @workshop_log, notice: "Thanks for reporting on a workshop."
     else
       flash.now[:alert] = "Failed to update workshop log."
       set_form_variables
@@ -109,14 +89,6 @@ class WorkshopLogsController < ApplicationController
     set_form_variables
   end
 
-
-  def validate_new
-    @date         = Date.new(params[:year].to_i, params[:month].to_i)
-    @windows_type = WindowsType.find(params[:windows_type])
-    @report       = current_user.submitted_monthly_report(@date, @windows_type, params[:organization_id])
-
-    render json: { validate: @report.nil? }.to_json
-  end
 
   def set_index_variables # needs to not be private
     cache_key_prefix = "workshop_logs/index_dropdowns/#{current_user&.id}"

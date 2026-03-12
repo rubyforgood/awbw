@@ -104,12 +104,6 @@ RSpec.describe WorkshopLog do
     end
   end
 
-  describe "#story?" do
-    it "returns false" do
-      expect(build(:workshop_log).story?).to be false
-    end
-  end
-
   describe "scopes" do
     describe ".search" do
       let(:organization) { create(:organization) }

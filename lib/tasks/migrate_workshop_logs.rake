@@ -20,19 +20,17 @@ namespace :workshop_logs do
       ActiveRecord::Base.connection.execute(<<~SQL)
         INSERT INTO workshop_logs (
           id, created_by_id, organization_id, windows_type_id, workshop_id,
-          date, rating, external_workshop_title, workshop_name, has_attachment,
+          date, rating, external_workshop_title, workshop_name,
           other_description, children_first_time, children_ongoing,
           teens_first_time, teens_ongoing, adults_first_time, adults_ongoing,
-          form_file_file_name, form_file_content_type, form_file_file_size,
-          form_file_updated_at, created_at, updated_at
+          created_at, updated_at
         )
         SELECT
           id, created_by_id, organization_id, windows_type_id, workshop_id,
-          date, rating, external_workshop_title, workshop_name, has_attachment,
+          date, rating, external_workshop_title, workshop_name,
           other_description, children_first_time, children_ongoing,
           teens_first_time, teens_ongoing, adults_first_time, adults_ongoing,
-          form_file_file_name, form_file_content_type, form_file_file_size,
-          form_file_updated_at, created_at, updated_at
+          created_at, updated_at
         FROM reports
         WHERE #{wl_condition}
       SQL
@@ -121,6 +119,15 @@ namespace :workshop_logs do
       puts "Deleting WorkshopLog records from reports table..."
       ActiveRecord::Base.connection.execute(<<~SQL)
         DELETE FROM reports WHERE #{wl_condition}
+      SQL
+
+      # Populate total columns from migrated attendance data
+      puts "Populating total_children, total_teens, total_adults..."
+      ActiveRecord::Base.connection.execute(<<~SQL)
+        UPDATE workshop_logs
+        SET total_children = COALESCE(children_first_time, 0) + COALESCE(children_ongoing, 0),
+            total_teens = COALESCE(teens_first_time, 0) + COALESCE(teens_ongoing, 0),
+            total_adults = COALESCE(adults_first_time, 0) + COALESCE(adults_ongoing, 0)
       SQL
 
       # Enforce NOT NULL on columns that are always populated

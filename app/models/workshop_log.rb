@@ -55,8 +55,7 @@ class WorkshopLog < ApplicationRecord
   validate :workshop_or_external_title_present
 
   # Callbacks
-  before_save :set_has_attachment
-  after_create :set_windows_type
+  before_save :compute_totals
   after_commit :update_workshop_log_count, on: [ :create, :update ]
 
   # Scopes
@@ -93,7 +92,8 @@ class WorkshopLog < ApplicationRecord
   end
 
   def full_name
-    "#{ date.strftime("%m-%d-%Y") if date }: #{workshop_title} - #{type_title}"
+    type_label = windows_type ? "#{windows_type_name} WorkshopLog" : "WorkshopLog"
+    "#{ date.strftime("%m-%d-%Y") if date }: #{workshop_title} - #{type_label}"
   end
 
   def workshop_title
@@ -103,20 +103,8 @@ class WorkshopLog < ApplicationRecord
     title
   end
 
-  def workshop_name
-    workshop&.title
-  end
-
   def windows_type_name
     windows_type&.short_name
-  end
-
-  def type_title
-    if windows_type
-      "#{windows_type_name} WorkshopLog"
-    else
-      "WorkshopLog"
-    end
   end
 
   def title
@@ -156,31 +144,12 @@ class WorkshopLog < ApplicationRecord
       .sum(:answer).to_i if field_ids.any?
   end
 
-  def form_builder
-    FormBuilder
-      .workshop_logs
-      .find_by(windows_type: windows_type)
-  end
-
-  def log_fields
-    if form_builder
-      form_builder.forms[0].form_fields.where("position is not null and status = 1").
-        order(position: :desc).all
-    else
-      []
-    end
-  end
-
   def description
     "Workshop Log for #{workshop_title} led by #{name} on #{date_label}"
   end
 
   def date_label
     date ? date.strftime("%m/%d/%Y") : created_at.strftime("%m/%d/%Y")
-  end
-
-  def workshop_quotes
-    workshop&.quotes || Quote.none
   end
 
   def attendance_breakdown
@@ -210,40 +179,12 @@ class WorkshopLog < ApplicationRecord
     )
   end
 
-  def delete_and_update_all(quotes_params, log_fields, image = nil)
-    unless image.blank?
-      self.image.destroy if self.image
-      self.image = Image.new(file: image)
-    end
-    save
-  end
-
-  def user_name
-    created_by.name
-  end
-
-  def display_date
-    created_at.strftime("%B %e, %Y")
-  end
-
-  def story?
-    false
-  end
-
-  def users_admin_type
-    "WorkshopLog - #{workshop ? workshop.communal_label(self) : "[ EMPTY ]"} - User: #{created_by.full_name if created_by}"
-  end
-
   private
 
-  def set_has_attachment
-    self.has_attachment = image&.file&.attached? || form_file&.attached? ||
-      media_files.any? { |media_file| media_file.file.attached? }
-  end
-
-  def set_windows_type
-    return unless organization && windows_type.nil?
-    update(windows_type_id: organization.windows_type.id)
+  def compute_totals
+    self.total_children = children_first_time + children_ongoing
+    self.total_teens = teens_first_time + teens_ongoing
+    self.total_adults = adults_first_time + adults_ongoing
   end
 
   def workshop_or_external_title_present

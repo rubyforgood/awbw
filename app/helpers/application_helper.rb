@@ -43,36 +43,6 @@ module ApplicationHelper
     end
   end
 
-  def ra_path(obj, action = nil)
-    action = action.nil? ? "" : "#{action}_"
-
-    if obj.form_builder and obj.form_builder.name == "Share a Story"
-      if action.empty?
-        return report_path(obj)
-      else
-        return send("reports_#{action}story_path", obj)
-      end
-    end
-
-    unless obj.respond_to? :type
-      if action.empty?
-        return share_idea_show_path(obj)
-      else
-        return edit_workshop_path(obj)
-      end
-    end
-
-    if obj.is_a?(WorkshopLog)
-      send("#{action}workshop_log_path", obj)
-    elsif !obj.is_a?(WorkshopLog) and action == "edit_"
-      send("#{action}report_path", obj, form_builder_id: obj.form_builder,
-           month: obj.date.month,
-           year: obj.date.year)
-    else
-      send("#{action}report_path", obj)
-    end
-  end
-
   def sortable_field_display_name(name)
     case name
     when :adult

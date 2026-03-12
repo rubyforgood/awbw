@@ -25,7 +25,6 @@ class TransformWorkshopLogsTable < ActiveRecord::Migration[8.1]
     add_column :workshop_logs, :windows_type_id, :integer
     add_column :workshop_logs, :external_workshop_title, :string
     add_column :workshop_logs, :workshop_name, :string
-    add_column :workshop_logs, :has_attachment, :boolean, default: false, null: false
     add_column :workshop_logs, :other_description, :string
     add_column :workshop_logs, :children_first_time, :integer, default: 0
     add_column :workshop_logs, :children_ongoing, :integer, default: 0
@@ -33,10 +32,9 @@ class TransformWorkshopLogsTable < ActiveRecord::Migration[8.1]
     add_column :workshop_logs, :teens_ongoing, :integer, default: 0
     add_column :workshop_logs, :adults_first_time, :integer, default: 0
     add_column :workshop_logs, :adults_ongoing, :integer, default: 0
-    add_column :workshop_logs, :form_file_file_name, :string
-    add_column :workshop_logs, :form_file_content_type, :string
-    add_column :workshop_logs, :form_file_file_size, :integer
-    add_column :workshop_logs, :form_file_updated_at, :datetime, precision: nil
+    add_column :workshop_logs, :total_children, :integer, default: 0
+    add_column :workshop_logs, :total_teens, :integer, default: 0
+    add_column :workshop_logs, :total_adults, :integer, default: 0
 
     # Make existing columns NOT NULL where needed (after data migration will populate them)
     # organization_id is already present; created_by_id was renamed from user_id
@@ -68,7 +66,6 @@ class TransformWorkshopLogsTable < ActiveRecord::Migration[8.1]
     remove_column :workshop_logs, :windows_type_id
     remove_column :workshop_logs, :external_workshop_title
     remove_column :workshop_logs, :workshop_name
-    remove_column :workshop_logs, :has_attachment
     remove_column :workshop_logs, :other_description
     remove_column :workshop_logs, :children_first_time
     remove_column :workshop_logs, :children_ongoing
@@ -76,10 +73,9 @@ class TransformWorkshopLogsTable < ActiveRecord::Migration[8.1]
     remove_column :workshop_logs, :teens_ongoing
     remove_column :workshop_logs, :adults_first_time
     remove_column :workshop_logs, :adults_ongoing
-    remove_column :workshop_logs, :form_file_file_name
-    remove_column :workshop_logs, :form_file_content_type
-    remove_column :workshop_logs, :form_file_file_size
-    remove_column :workshop_logs, :form_file_updated_at
+    remove_column :workshop_logs, :total_children
+    remove_column :workshop_logs, :total_teens
+    remove_column :workshop_logs, :total_adults
 
     # Rename back
     rename_column :workshop_logs, :created_by_id, :user_id

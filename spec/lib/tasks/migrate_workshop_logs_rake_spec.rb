@@ -25,7 +25,6 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
       workshop_id: workshop.id,
       date: Date.current,
       rating: 0,
-      has_attachment: false,
       children_first_time: 1,
       children_ongoing: 2,
       teens_first_time: 3,
