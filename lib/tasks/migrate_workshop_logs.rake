@@ -75,20 +75,6 @@ namespace :workshop_logs do
           AND owner_id IN (SELECT id FROM reports WHERE #{wl_condition})
       SQL
 
-      # Update forms with polymorphic owner
-      forms_count = ActiveRecord::Base.connection.execute(<<~SQL).first[0]
-        SELECT COUNT(*) FROM forms
-        WHERE owner_type = 'Report'
-          AND owner_id IN (SELECT id FROM reports WHERE #{wl_condition})
-      SQL
-      puts "Updating #{forms_count} forms..."
-      ActiveRecord::Base.connection.execute(<<~SQL)
-        UPDATE forms
-        SET owner_type = 'WorkshopLog'
-        WHERE owner_type = 'Report'
-          AND owner_id IN (SELECT id FROM reports WHERE #{wl_condition})
-      SQL
-
       # Fix quotable_item_quotes stored as type 'Report' for WorkshopLog records
       qiq_count = ActiveRecord::Base.connection.execute(<<~SQL).first[0]
         SELECT COUNT(*) FROM quotable_item_quotes
@@ -103,16 +89,18 @@ namespace :workshop_logs do
           AND quotable_id IN (SELECT id FROM reports WHERE #{wl_condition})
       SQL
 
-      # Update media_files - move report_id to workshop_log_id
-      mf_count = ActiveRecord::Base.connection.execute(<<~SQL).first[0]
-        SELECT COUNT(*) FROM media_files
-        WHERE report_id IN (SELECT id FROM reports WHERE #{wl_condition})
+      # Update sectorable_items polymorphic type
+      si_count = ActiveRecord::Base.connection.execute(<<~SQL).first[0]
+        SELECT COUNT(*) FROM sectorable_items
+        WHERE sectorable_type = 'Report'
+          AND sectorable_id IN (SELECT id FROM reports WHERE #{wl_condition})
       SQL
-      puts "Updating #{mf_count} media_files..."
+      puts "Updating #{si_count} sectorable_items..."
       ActiveRecord::Base.connection.execute(<<~SQL)
-        UPDATE media_files
-        SET workshop_log_id = report_id, report_id = NULL
-        WHERE report_id IN (SELECT id FROM reports WHERE #{wl_condition})
+        UPDATE sectorable_items
+        SET sectorable_type = 'WorkshopLog'
+        WHERE sectorable_type = 'Report'
+          AND sectorable_id IN (SELECT id FROM reports WHERE #{wl_condition})
       SQL
 
       # Delete WorkshopLog records from reports table

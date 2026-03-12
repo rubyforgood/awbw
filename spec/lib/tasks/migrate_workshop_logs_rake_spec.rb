@@ -119,21 +119,6 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
     expect(qiq[0]).to eq("WorkshopLog")
   end
 
-  it "migrates media_files" do
-    report_id = insert_report_as_workshop_log
-    conn.execute(<<~SQL)
-      INSERT INTO media_files (report_id, file_file_name, file_content_type, file_file_size, file_updated_at)
-      VALUES (#{report_id}, 'test.pdf', 'application/pdf', 1024, NOW())
-    SQL
-
-    Rake::Task["workshop_logs:migrate_from_reports"].invoke
-
-    mf = conn.execute("SELECT report_id, workshop_log_id FROM media_files WHERE workshop_log_id = #{report_id}").first
-    expect(mf).to be_present
-    expect(mf[0]).to be_nil # report_id nulled
-    expect(mf[1]).to eq(report_id) # workshop_log_id set
-  end
-
   it "deletes WorkshopLog records from reports table" do
     insert_report_as_workshop_log
 

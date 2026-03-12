@@ -9,7 +9,6 @@ RSpec.describe WorkshopLog do
     it { should have_many(:bookmarks) }
     it { should have_many(:notifications) }
     it { should have_many(:report_form_field_answers).dependent(:destroy) }
-    it { should have_many(:media_files) }
     it { should have_many(:gallery_assets) }
     it { should have_many(:sectorable_items) }
     it { should have_many(:quotable_item_quotes) }
