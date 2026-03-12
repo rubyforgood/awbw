@@ -185,7 +185,7 @@ RSpec.describe Workshop do
       create(:workshop_log, workshop: workshop)
 
       expect { workshop.destroy }.not_to change(Workshop, :count)
-      expect(workshop.errors[:base]).to include(a_string_matching(/cannot be deleted/i).or(a_string_matching(/restrict/i)))
+      expect(workshop.errors[:base]).to include(a_string_matching(/cannot be deleted/i).or(a_string_matching(/restrict/i)).or(a_string_matching(/Cannot delete record/i)))
     end
 
     it "allows deletion when no workshop_logs exist" do

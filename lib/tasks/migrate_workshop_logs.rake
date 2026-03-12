@@ -8,6 +8,7 @@ namespace :workshop_logs do
       count = ActiveRecord::Base.connection.execute("SELECT COUNT(*) AS c FROM workshop_logs").first
       if count && count[0] > 0
         puts "Clearing #{count[0]} legacy record(s) from workshop_logs..."
+        ActiveRecord::Base.connection.execute("UPDATE report_form_field_answers SET workshop_log_id = NULL WHERE workshop_log_id IS NOT NULL")
         ActiveRecord::Base.connection.execute("DELETE FROM workshop_logs")
       end
 

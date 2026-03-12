@@ -54,7 +54,7 @@ class Bookmark < ApplicationRecord
         CONCAT(st_ppl.first_name, ' ', st_ppl.last_name),
         st_org.name, st_rpt.type, st_res.title, st_st.title,
         st_si.title, st_vr.title, st_ws.title, st_wi.title,
-        DATE_FORMAT(st_wl.date, '%Y-%m-%d'), st_wv.name, st_wvi.name
+        DATE_FORMAT(st_wl.workshop_held_on, '%Y-%m-%d'), st_wv.name, st_wvi.name
       )
     )
   SQL

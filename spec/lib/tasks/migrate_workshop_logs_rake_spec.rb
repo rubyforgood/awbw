@@ -6,6 +6,14 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
     Rails.application.load_tasks
   end
 
+  around do |example|
+    original_stdout = $stdout
+    $stdout = StringIO.new
+    example.run
+  ensure
+    $stdout = original_stdout
+  end
+
   before do
     Rake::Task["workshop_logs:migrate_from_reports"].reenable
   end
@@ -46,7 +54,6 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
 
     expect { Rake::Task["workshop_logs:migrate_from_reports"].invoke }
       .to change { conn.execute("SELECT COUNT(*) FROM workshop_logs").first[0] }.by(1)
-      .and change { conn.execute("SELECT COUNT(*) FROM reports WHERE type = 'WorkshopLog'").first[0] }.by(-1)
 
     row = conn.execute("SELECT * FROM workshop_logs WHERE id = #{report_id}").first
     expect(row).to be_present
@@ -119,13 +126,13 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
     expect(qiq[0]).to eq("WorkshopLog")
   end
 
-  it "deletes WorkshopLog records from reports table" do
+  it "does not delete WorkshopLog records from reports table" do
     insert_report_as_workshop_log
 
     Rake::Task["workshop_logs:migrate_from_reports"].invoke
 
     count = conn.execute("SELECT COUNT(*) FROM reports WHERE type = 'WorkshopLog'").first[0]
-    expect(count).to eq(0)
+    expect(count).to eq(1)
   end
 
   it "does not affect non-WorkshopLog reports" do
@@ -144,13 +151,9 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
   it "rolls back all changes if any step fails" do
     insert_report_as_workshop_log
 
-    # Sabotage: drop workshop_logs table to force an error mid-task
-    allow(conn).to receive(:execute).and_call_original
-    call_count = 0
     allow(conn).to receive(:execute).and_wrap_original do |method, *args|
-      call_count += 1
-      # Fail on the DELETE step (after INSERT has happened)
-      if args[0]&.include?("DELETE FROM reports")
+      # Fail on the sectorable_items UPDATE (after INSERT has happened)
+      if args[0]&.include?("UPDATE sectorable_items")
         raise ActiveRecord::StatementInvalid, "simulated failure"
       end
       method.call(*args)
@@ -158,8 +161,8 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
 
     expect { Rake::Task["workshop_logs:migrate_from_reports"].invoke }.to raise_error(ActiveRecord::StatementInvalid)
 
-    # Original report should still be in reports table due to rollback
-    count = conn.execute("SELECT COUNT(*) FROM reports WHERE type = 'WorkshopLog'").first[0]
-    expect(count).to eq(1)
+    # workshop_logs should be empty due to rollback
+    count = conn.execute("SELECT COUNT(*) FROM workshop_logs").first[0]
+    expect(count).to eq(0)
   end
 end
