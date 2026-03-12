@@ -84,10 +84,7 @@ class WorkshopLog < ApplicationRecord
   end
 
   def workshop_title
-    title = workshop&.title.presence || workshop_name
-    title = external_workshop_title if title.blank?
-    return "" unless title
-    title
+    workshop&.title.presence || external_workshop_title || ""
   end
 
   def windows_type_name
@@ -95,7 +92,7 @@ class WorkshopLog < ApplicationRecord
   end
 
   def title
-    wt = workshop&.title.presence || workshop_name
+    wt = workshop&.title.presence || external_workshop_title
     return unless wt
     "Workshop Log - #{wt}"
   end
