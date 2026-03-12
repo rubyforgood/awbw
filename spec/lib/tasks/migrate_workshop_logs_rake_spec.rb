@@ -16,10 +16,12 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
 
   before do
     Rake::Task["workshop_logs:migrate_from_reports"].reenable
-    # Ensure clean state — clear any workshop_logs so the rake task's
-    # "clear legacy data" step doesn't interfere with test assertions
+    # Ensure clean state — clear any stale data so the rake task
+    # only processes this test's report
     conn.execute("UPDATE report_form_field_answers SET workshop_log_id = NULL WHERE workshop_log_id IS NOT NULL")
     conn.execute("DELETE FROM workshop_logs")
+    conn.execute("UPDATE report_form_field_answers SET report_id = NULL WHERE report_id IN (SELECT id FROM reports WHERE type = 'WorkshopLog')")
+    conn.execute("DELETE FROM reports WHERE type = 'WorkshopLog'")
   end
 
   let(:conn) { ActiveRecord::Base.connection }
@@ -82,6 +84,9 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
     SQL
 
     Rake::Task["workshop_logs:migrate_from_reports"].invoke
+
+    wl_count = conn.execute("SELECT COUNT(*) FROM workshop_logs WHERE id = #{report_id}").first[0]
+    expect(wl_count).to eq(1), "Expected workshop_log #{report_id} to exist after migration"
 
     rffa = conn.execute("SELECT report_id, workshop_log_id FROM report_form_field_answers WHERE workshop_log_id = #{report_id}").first
     expect(rffa).to be_present
