@@ -19,7 +19,7 @@ RSpec.describe "Workshop log card pagination on person profile", type: :system, 
           workshop_id: workshop.id,
           organization_id: organization.id,
           created_by_id: user.id,
-          date: (i + 1).days.ago,
+          workshop_held_on: (i + 1).days.ago,
           adults_first_time: 1,
           adults_ongoing: 2)
       end
@@ -56,7 +56,7 @@ RSpec.describe "Workshop log card pagination on person profile", type: :system, 
           workshop_id: workshop.id,
           organization_id: organization.id,
           created_by_id: user.id,
-          date: (i + 1).days.ago,
+          workshop_held_on: (i + 1).days.ago,
           adults_first_time: 1,
           adults_ongoing: 2)
       end

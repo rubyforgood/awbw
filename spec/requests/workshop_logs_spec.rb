@@ -10,7 +10,7 @@ RSpec.describe "/workshop_logs", type: :request do
 
   let(:valid_attributes) do
     {
-      date: Date.current,
+      workshop_held_on: Date.current,
       workshop_id: workshop.id,
       organization_id: organization.id,
       windows_type_id: windows_type.id,
@@ -27,7 +27,7 @@ RSpec.describe "/workshop_logs", type: :request do
 
   let(:external_title_attributes) do
     {
-      date: Date.current,
+      workshop_held_on: Date.current,
       workshop_id: nil,
       external_workshop_title: "Community Art Workshop",
       organization_id: organization.id,
@@ -44,7 +44,7 @@ RSpec.describe "/workshop_logs", type: :request do
 
   let(:invalid_attributes) do
     {
-      date: nil,
+      workshop_held_on: nil,
       workshop_id: nil
     }
   end

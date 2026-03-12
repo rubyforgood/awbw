@@ -14,7 +14,7 @@
       <span>Unique workshops: <%= grouped.size %></span>
     </div>
     <% sorted_grouped = grouped.sort_by { |_key, logs|
-     dates = logs.first(10).map { |l| -(l.date || l.created_at.to_date).to_time.to_i }
+     dates = logs.first(10).map { |l| -(l.workshop_held_on || l.created_at.to_date).to_time.to_i }
      dates.fill(0, dates.size...10)
    }.to_h %>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">

@@ -99,12 +99,13 @@ This codebase (Rails 8.1)
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
-| `Report` | STI base class for MonthlyReport and WorkshopLog |
+| `Report` | STI base class for MonthlyReport |
+| `WorkshopLog` | Standalone model for workshop log submissions (attendance, form fields) |
 
 ### STI Models
 
 - **Asset** (inheritance column: `type`): PrimaryAsset, GalleryAsset, RichTextAsset, DownloadableAsset, ThumbnailAsset
-- **Report**: MonthlyReport, WorkshopLog
+- **Report**: MonthlyReport
 
 ### Polymorphic Associations
 

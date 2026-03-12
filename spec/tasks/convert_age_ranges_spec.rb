@@ -3,7 +3,7 @@ require "rake"
 
 RSpec.describe "data:convert_age_ranges" do
   before(:all) do
-    Rails.application.load_tasks
+    Rails.application.load_tasks unless Rake::Task.task_defined?("data:convert_age_ranges")
   end
 
   before do
@@ -25,7 +25,15 @@ RSpec.describe "data:convert_age_ranges" do
   let!(:cat_family) { create(:category, name: "Family windows", category_type: age_range_type) }
 
   def run_task
-    Rake::Task["data:convert_age_ranges"].invoke
+    suppress_output { Rake::Task["data:convert_age_ranges"].invoke }
+  end
+
+  def suppress_output
+    original_stdout = $stdout
+    $stdout = StringIO.new
+    yield
+  ensure
+    $stdout = original_stdout
   end
 
   def age_range_category_names(workshop)
