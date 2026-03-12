@@ -16,6 +16,10 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
 
   before do
     Rake::Task["workshop_logs:migrate_from_reports"].reenable
+    # Ensure clean state — clear any workshop_logs so the rake task's
+    # "clear legacy data" step doesn't interfere with test assertions
+    conn.execute("UPDATE report_form_field_answers SET workshop_log_id = NULL WHERE workshop_log_id IS NOT NULL")
+    conn.execute("DELETE FROM workshop_logs")
   end
 
   let(:conn) { ActiveRecord::Base.connection }
