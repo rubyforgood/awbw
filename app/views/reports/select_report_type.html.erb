@@ -44,13 +44,13 @@ This report is used to report on the overall month of your Windows Workshops and
   $(function() {
   $('#workshop1').on('change', function() {
   var id = $('#workshop1 option:selected').attr('value');
-  if (id > 1) window.location = '../workshop_log_creation_wizard/fill_out_form?workshop_id=' + id;
-  if (id == 1) window.location = '../workshop_log_creation_wizard/fill_out_form?windows_type_id=1'
+  if (id > 1) window.location = '../workshop_logs/new?workshop_id=' + id;
+  if (id == 1) window.location = '../workshop_logs/new?windows_type_id=1'
   });
   $('#workshop2').on('change', function() {
   var id = $('#workshop2 option:selected').attr('value');
-  if (id > 1) window.location = '../workshop_log_creation_wizard/fill_out_form?workshop_id=' + id;
-  if (id == 1) window.location = '../workshop_log_creation_wizard/fill_out_form?windows_type_id=2'
+  if (id > 1) window.location = '../workshop_logs/new?workshop_id=' + id;
+  if (id == 1) window.location = '../workshop_logs/new?windows_type_id=2'
   });
   })
 </script> 
