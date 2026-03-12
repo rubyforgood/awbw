@@ -114,7 +114,7 @@ class Bookmark < ApplicationRecord
        stories.title LIKE :q OR workshops.title LIKE :q OR workshop_ideas.title LIKE :q OR
        story_ideas.body LIKE :q OR
        video_recordings.title LIKE :q OR
-       DATE_FORMAT(workshop_logs.date, '%Y-%m-%d') LIKE :q OR
+       DATE_FORMAT(workshop_logs.workshop_held_on, '%Y-%m-%d') LIKE :q OR
        workshop_variations.name LIKE :q OR
        workshop_variation_ideas.name LIKE :q OR
        action_text_rich_texts.body LIKE :q",

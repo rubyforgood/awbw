@@ -92,15 +92,15 @@ class WorkshopLogsController < ApplicationController
     cache_key_prefix = "workshop_logs/index_dropdowns/#{current_user&.id}"
     @month_year_options = Rails.cache.fetch("#{cache_key_prefix}/month_year", expires_in: 5.minutes) do
       scoped_logs = authorized_scope(WorkshopLog.all)
-      scoped_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
-                 .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
-           MAX(COALESCE(date, created_at)) AS max_dt")
+      scoped_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
+                 .select("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m') AS ym,
+           MAX(COALESCE(workshop_held_on, created_at)) AS max_dt")
                  .order("max_dt DESC")
                  .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
     end
     @year_options = Rails.cache.fetch("#{cache_key_prefix}/year", expires_in: 5.minutes) do
       scoped_logs = authorized_scope(WorkshopLog.all)
-      scoped_logs.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")).sort.reverse
+      scoped_logs.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(workshop_held_on, created_at, NOW()))")).sort.reverse
     end
 
     scoped_users = authorized_scope(User.all, as: :colleagues)
@@ -191,7 +191,7 @@ class WorkshopLogsController < ApplicationController
   def workshop_log_params
     params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
-      :adults_ongoing, :adults_first_time, :created_by_id, :organization_id, :date,
+      :adults_ongoing, :adults_first_time, :created_by_id, :organization_id, :workshop_held_on,
       :workshop_id, :windows_type_id, :external_workshop_title,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,

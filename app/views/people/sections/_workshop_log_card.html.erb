@@ -23,7 +23,7 @@
       <% end %>
 
       <!-- PARTICIPANT COUNTS + DATE -->
-      <% display_date = workshop_log.date || workshop_log.created_at %>
+      <% display_date = workshop_log.workshop_held_on || workshop_log.created_at %>
       <div class="grid grid-cols-5 gap-2">
         <div class="rounded-lg py-2 px-2.5 text-center">
           <div class="text-sm font-bold text-gray-800"><%= display_date.strftime("%b %-d") %></div>

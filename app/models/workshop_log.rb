@@ -36,7 +36,7 @@ class WorkshopLog < ApplicationRecord
                                   object["_create"].to_i == 0 && object["answer"].nil? }
 
   # Validations
-  validates :date, presence: true
+  validates :workshop_held_on, presence: true
   validates :children_ongoing, :teens_ongoing, :adults_ongoing,
             :children_first_time, :teens_first_time, :adults_first_time,
             numericality: { greater_than_or_equal_to: 0, only_integer: true }
@@ -53,14 +53,14 @@ class WorkshopLog < ApplicationRecord
   scope :month_and_year, ->(month_and_year) {
     if month_and_year.present?
       year, month = month_and_year.split("-").map(&:to_i)
-      where("EXTRACT(YEAR FROM COALESCE(workshop_logs.date, workshop_logs.created_at)) = ? AND
-               EXTRACT(MONTH FROM COALESCE(workshop_logs.date, workshop_logs.created_at)) = ?", year, month)
+      where("EXTRACT(YEAR FROM COALESCE(workshop_logs.workshop_held_on, workshop_logs.created_at)) = ? AND
+               EXTRACT(MONTH FROM COALESCE(workshop_logs.workshop_held_on, workshop_logs.created_at)) = ?", year, month)
     end }
   scope :year, ->(year) {
     if year.present?
-      where("EXTRACT(YEAR FROM COALESCE(workshop_logs.date, workshop_logs.created_at)) = ?", year.to_i)
+      where("EXTRACT(YEAR FROM COALESCE(workshop_logs.workshop_held_on, workshop_logs.created_at)) = ?", year.to_i)
     end }
-  scope :ordered_by_date, -> { order(Arel.sql("COALESCE(workshop_logs.date, workshop_logs.created_at) DESC")) }
+  scope :ordered_by_date, -> { order(Arel.sql("COALESCE(workshop_logs.workshop_held_on, workshop_logs.created_at) DESC")) }
 
   def self.search(params)
     logs = is_a?(ActiveRecord::Relation) ? self : all
@@ -79,7 +79,7 @@ class WorkshopLog < ApplicationRecord
 
   def full_name
     type_label = windows_type ? "#{windows_type_name} WorkshopLog" : "WorkshopLog"
-    "#{ date.strftime("%m-%d-%Y") if date }: #{workshop_title} - #{type_label}"
+    "#{ workshop_held_on.strftime("%m-%d-%Y") if workshop_held_on }: #{workshop_title} - #{type_label}"
   end
 
   def workshop_title
@@ -132,7 +132,7 @@ class WorkshopLog < ApplicationRecord
   end
 
   def date_label
-    date ? date.strftime("%m/%d/%Y") : created_at.strftime("%m/%d/%Y")
+    workshop_held_on ? workshop_held_on.strftime("%m/%d/%Y") : created_at.strftime("%m/%d/%Y")
   end
 
   def attendance_breakdown

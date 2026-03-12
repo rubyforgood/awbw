@@ -4,6 +4,6 @@ FactoryBot.define do
     association :organization
     association :windows_type
     association :workshop
-    date { Date.today }
+    workshop_held_on { Date.today }
   end
 end

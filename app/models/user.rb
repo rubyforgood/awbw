@@ -157,20 +157,20 @@ class User < ApplicationRecord
       organization.workshop_logs.where(where.join(" OR "), *windows_type)
     end.flatten
     logs = logs.select do |log|
-      log.date && log.date.month == date.month.to_i &&
-        log.date.year == date.year.to_i
+      log.workshop_held_on && log.workshop_held_on.month == date.month.to_i &&
+        log.workshop_held_on.year == date.year.to_i
     end.flatten
-    logs.uniq.group_by { |log| log.date }
+    logs.uniq.group_by { |log| log.workshop_held_on }
   end
 
   def organization_workshop_logs(date, windows_type, organization_id)
     if organization_id
       logs = workshop_logs.where(organization_id: organization_id, windows_type_id: windows_type.id)
       logs = logs.select do |log|
-        log.date && log.date.month == date.month.to_i &&
-          log.date.year == date.year.to_i
+        log.workshop_held_on && log.workshop_held_on.month == date.month.to_i &&
+          log.workshop_held_on.year == date.year.to_i
       end.flatten
-      logs.uniq.group_by { |log| log.date }
+      logs.uniq.group_by { |log| log.workshop_held_on }
     end
   end
 

@@ -32,10 +32,10 @@ RSpec.describe WorkshopLog do
       expect(workshop_log.errors[:base]).to include("Please select a workshop or provide an external workshop title")
     end
 
-    it "requires date" do
-      workshop_log = build(:workshop_log, date: nil)
+    it "requires workshop_held_on" do
+      workshop_log = build(:workshop_log, workshop_held_on: nil)
       expect(workshop_log).not_to be_valid
-      expect(workshop_log.errors[:date]).to include("can't be blank")
+      expect(workshop_log.errors[:workshop_held_on]).to include("can't be blank")
     end
 
     it "requires attendance fields to be non-negative integers" do

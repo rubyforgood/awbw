@@ -15,7 +15,7 @@ RSpec.describe "Viewing a workshop log", type: :system do
              organization: organization,
              workshop: workshop,
              windows_type: windows_type,
-             date: 1.day.ago)
+             workshop_held_on: 1.day.ago)
     end
 
     before { sign_in user }
@@ -42,7 +42,7 @@ RSpec.describe "Viewing a workshop log", type: :system do
              organization: organization,
              workshop: workshop,
              windows_type: windows_type,
-             date: 1.day.ago)
+             workshop_held_on: 1.day.ago)
     end
 
     before { sign_in user }
@@ -64,7 +64,7 @@ RSpec.describe "Viewing a workshop log", type: :system do
              workshop: nil,
              windows_type: windows_type,
              external_workshop_title: "Community Mural Project",
-             date: 1.day.ago)
+             workshop_held_on: 1.day.ago)
     end
 
     before { sign_in user }
@@ -94,7 +94,7 @@ RSpec.describe "Viewing a workshop log", type: :system do
              workshop: workshop,
              windows_type: windows_type,
              external_workshop_title: "Guest-led Session",
-             date: 1.day.ago)
+             workshop_held_on: 1.day.ago)
     end
 
     before { sign_in user }
@@ -124,7 +124,7 @@ RSpec.describe "Viewing a workshop log", type: :system do
              organization: organization,
              workshop: workshop,
              windows_type: windows_type,
-             date: 1.day.ago)
+             workshop_held_on: 1.day.ago)
     end
 
     before { sign_in admin }

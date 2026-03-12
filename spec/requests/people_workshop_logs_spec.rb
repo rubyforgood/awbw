@@ -12,13 +12,13 @@ RSpec.describe "People#workshop_logs", type: :request do
     create(:affiliation, person: person, organization: organization)
   end
 
-  def create_log(workshop, date:)
+  def create_log(workshop, workshop_held_on:)
     create(:workshop_log,
       workshop: workshop,
       windows_type: workshop.windows_type,
       organization_id: organization.id,
       created_by_id: owner.id,
-      date: date,
+      workshop_held_on: workshop_held_on,
       adults_first_time: 1,
       adults_ongoing: 2)
   end
@@ -28,16 +28,16 @@ RSpec.describe "People#workshop_logs", type: :request do
       before { sign_in owner }
 
       it "renders the workshop logs page" do
-        create_log(workshop_a, date: 1.day.ago)
+        create_log(workshop_a, workshop_held_on: 1.day.ago)
         get workshop_logs_person_path(person)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Workshop Logs for")
       end
 
       it "groups logs by workshop" do
-        create_log(workshop_a, date: 1.day.ago)
-        create_log(workshop_a, date: 2.days.ago)
-        create_log(workshop_b, date: 3.days.ago)
+        create_log(workshop_a, workshop_held_on: 1.day.ago)
+        create_log(workshop_a, workshop_held_on: 2.days.ago)
+        create_log(workshop_b, workshop_held_on: 3.days.ago)
         get workshop_logs_person_path(person)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Workshop A")
@@ -45,15 +45,15 @@ RSpec.describe "People#workshop_logs", type: :request do
       end
 
       it "filters by workshop_id" do
-        create_log(workshop_a, date: 1.day.ago)
-        create_log(workshop_b, date: 2.days.ago)
+        create_log(workshop_a, workshop_held_on: 1.day.ago)
+        create_log(workshop_b, workshop_held_on: 2.days.ago)
         get workshop_logs_person_path(person, workshop_id: workshop_a.id)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Workshop A")
       end
 
       it "filters by external_title" do
-        log = create_log(workshop_a, date: 1.day.ago)
+        log = create_log(workshop_a, workshop_held_on: 1.day.ago)
         log.update!(workshop_id: nil, external_workshop_title: "Outside Art Class")
         get workshop_logs_person_path(person, external_title: "Outside Art Class")
         expect(response).to have_http_status(:ok)
@@ -67,7 +67,7 @@ RSpec.describe "People#workshop_logs", type: :request do
       before { sign_in admin }
 
       it "renders the workshop logs page" do
-        create_log(workshop_a, date: 1.day.ago)
+        create_log(workshop_a, workshop_held_on: 1.day.ago)
         get workshop_logs_person_path(person)
         expect(response).to have_http_status(:ok)
       end
