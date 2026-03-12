@@ -5,10 +5,9 @@ class WorkshopLogsController < ApplicationController
     authorize!
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, created_by: :person)
-                                             .where(type: "WorkshopLog"))
+    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, created_by: :person))
     filtered = base_scope.search(params)
-    @workshop_logs_unpaginated  = filtered
+    @workshop_logs_unpaginated = filtered
     @workshop_logs = filtered.paginate(page: params[:page], per_page: @per_page)
     @workshop_logs_count = @workshop_logs&.total_entries
 
@@ -26,28 +25,8 @@ class WorkshopLogsController < ApplicationController
     @workshop_log = WorkshopLog.find(params[:id])
     authorize! @workshop_log
 
-    success = false
-
-    ActiveRecord::Base.transaction do
-      success = @workshop_log.update(workshop_log_params)
-
-      if success
-        # Maintain consistency with other dependent updates
-        quotes_ok = @workshop_log.delete_and_update_all(
-          params[:quotes_attributes],
-          params[:report_form_field_answers_attributes]
-        )
-
-        # If delete_and_update_all returns false or nil, treat as failure
-        success &&= quotes_ok.present?
-      end
-
-      raise ActiveRecord::Rollback unless success
-    end
-
-    if success
-      flash[:notice] = "Thanks for reporting on a workshop."
-      redirect_to @workshop_log
+    if @workshop_log.update(workshop_log_params)
+      redirect_to @workshop_log, notice: "Thanks for reporting on a workshop."
     else
       flash.now[:alert] = "Failed to update workshop log."
       set_form_variables
@@ -105,33 +84,23 @@ class WorkshopLogsController < ApplicationController
   def edit
     @workshop_log = WorkshopLog.find(params[:id])
     authorize! @workshop_log
-    @workshop = @workshop_log.owner || Workshop.new(windows_type_id: @workshop_log.windows_type_id)
-
     set_form_variables
   end
 
-
-  def validate_new
-    @date         = Date.new(params[:year].to_i, params[:month].to_i)
-    @windows_type = WindowsType.find(params[:windows_type])
-    @report       = current_user.submitted_monthly_report(@date, @windows_type, params[:organization_id])
-
-    render json: { validate: @report.nil? }.to_json
-  end
 
   def set_index_variables # needs to not be private
     cache_key_prefix = "workshop_logs/index_dropdowns/#{current_user&.id}"
     @month_year_options = Rails.cache.fetch("#{cache_key_prefix}/month_year", expires_in: 5.minutes) do
       scoped_logs = authorized_scope(WorkshopLog.all)
-      scoped_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
-                 .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
-           MAX(COALESCE(date, created_at)) AS max_dt")
+      scoped_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
+                 .select("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m') AS ym,
+           MAX(COALESCE(workshop_held_on, created_at)) AS max_dt")
                  .order("max_dt DESC")
                  .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
     end
     @year_options = Rails.cache.fetch("#{cache_key_prefix}/year", expires_in: 5.minutes) do
       scoped_logs = authorized_scope(WorkshopLog.all)
-      scoped_logs.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")).sort.reverse
+      scoped_logs.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(workshop_held_on, created_at, NOW()))")).sort.reverse
     end
 
     scoped_users = authorized_scope(User.all, as: :colleagues)
@@ -161,14 +130,6 @@ class WorkshopLogsController < ApplicationController
   def set_form_variables
     @workshop_log.gallery_assets.build
 
-    if params[:workshop_id].present?
-      @workshop = Workshop.where(id: params[:workshop_id]).last
-    elsif params[:windows_type_id].present?
-      @workshop = Workshop.new(windows_type_id: params[:windows_type_id])
-    else
-      @workshop = Workshop.new
-    end
-
     workshops = authorized_scope(Workshop.all)
     @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id))
                           .includes(:windows_type)
@@ -191,7 +152,7 @@ class WorkshopLogsController < ApplicationController
     # @sectors = Sector.published.map{ |si| [ si.id, si.name ] }
     # @files = MediaFile.where(["workshop_log_id = ?", @workshop_log.id])
 
-    @windows_type_id = params[:windows_type_id].presence || @workshop.windows_type_id ||
+    @windows_type_id = params[:windows_type_id].presence || @workshop_log.windows_type_id ||
       WindowsType.where(short_name: "Combined").last.id
     form = FormBuilder.where(windows_type_id: @windows_type_id)
                       .first&.forms.first # because there's only one form per form_builder
@@ -230,8 +191,8 @@ class WorkshopLogsController < ApplicationController
   def workshop_log_params
     params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
-      :adults_ongoing, :adults_first_time, :owner_id, :owner_type, :created_by_id, :organization_id, :date,
-      :workshop_name, :workshop_id, :windows_type_id, :other_description, :external_workshop_title, # :user,
+      :adults_ongoing, :adults_first_time, :created_by_id, :organization_id, :workshop_held_on,
+      :workshop_id, :windows_type_id, :external_workshop_title,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
         quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
@@ -239,7 +200,7 @@ class WorkshopLogsController < ApplicationController
         :id, :quotable_type, :quotable_id, :_destroy,
         quote_attributes: [ :id, :quote, :age, :workshop_id, :_destroy ] ],
       report_form_field_answers_attributes: [ :id, :form_field_id, :answer_option_id,
-                                             :answer, :report_id, :_destroy ],
+                                             :answer, :workshop_log_id, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ])
   end
 end

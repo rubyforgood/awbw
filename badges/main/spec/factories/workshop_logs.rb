@@ -1,9 +1,9 @@
 FactoryBot.define do
-  factory :workshop_log, parent: :report, class: 'WorkshopLog' do
-    type { "WorkshopLog" }
-
-    association :owner, factory: :workshop
-
-    workshop { owner }
+  factory :workshop_log do
+    association :created_by, factory: :user
+    association :organization
+    association :windows_type
+    association :workshop
+    workshop_held_on { Date.today }
   end
 end

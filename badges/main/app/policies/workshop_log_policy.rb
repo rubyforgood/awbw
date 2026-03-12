@@ -33,7 +33,7 @@ class WorkshopLogPolicy < ApplicationPolicy
     next relation if admin?
     scope = relation.where(created_by_id: user.id) # owned logs
     if user.person&.organization_ids.present?
-      scope = scope.or(relation.organization_ids(user.person&.organization_ids)) # logs from person's affiliations
+      scope = scope.or(relation.organization_id(user.person.organization_ids)) # logs from person's affiliations
     end
     scope
   end

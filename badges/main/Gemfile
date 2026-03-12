@@ -23,7 +23,6 @@ gem "puma", "~> 6.0" # Add Puma as the web server
 
 gem "cocoon", "~> 1.2.6"
 
-gem "wicked"
 gem "search_cop"
 gem "httparty"
 gem "will_paginate", "~> 3.1.7"

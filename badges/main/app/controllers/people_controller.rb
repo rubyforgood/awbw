@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs ]
 
   def index
     authorize!
@@ -55,7 +55,7 @@ class PeopleController < ApplicationController
         @story_ideas = @person.user&.story_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
         render partial: "people/sections/story_ideas", locals: { person: @person, story_ideas: @story_ideas }
       when "workshop_logs"
-        @workshop_logs = @person.user&.workshop_logs&.order(date: :desc, created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        @workshop_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type)&.order(workshop_held_on: :desc, created_at: :desc) || WorkshopLog.none
         render partial: "people/sections/workshop_logs", locals: { person: @person, workshop_logs: @workshop_logs }
       when "workshop_variation_ideas"
         @workshop_variation_ideas = @person.user&.workshop_variation_ideas_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
@@ -64,6 +64,22 @@ class PeopleController < ApplicationController
         @affiliations = @person.affiliations.active.includes(organization: :logo_attachment).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/affiliations", locals: { person: @person, affiliations: @affiliations }
       end
+    end
+  end
+
+  def workshop_logs
+    authorize! @person
+    @person = @person.decorate
+    all_logs = @person.user&.workshop_logs&.includes(:workshop, :windows_type)&.order(workshop_held_on: :desc, created_at: :desc) || WorkshopLog.none
+    @grouped_logs = all_logs.group_by { |log| log.workshop_id || log.external_workshop_title }.sort_by { |_key, logs|
+      dates = logs.first(10).map { |l| -(l.workshop_held_on || l.created_at.to_date).to_time.to_i }
+      dates.fill(0, dates.size...10)
+    }.to_h
+
+    if params[:workshop_id].present?
+      @filtered_logs = all_logs.select { |log| log.workshop_id == params[:workshop_id].to_i }
+    elsif params[:external_title].present?
+      @filtered_logs = all_logs.select { |log| log.external_workshop_title == params[:external_title] }
     end
   end
 

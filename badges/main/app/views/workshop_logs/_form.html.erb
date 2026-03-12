@@ -57,11 +57,11 @@
       </div>
 
       <div class="flex-1 mb-4 md:mb-0">
-        <%= f.input :date,
-                  label: "Workshop Date",
+        <%= f.input :workshop_held_on,
+                  label: "Workshop date",
                   as: :string,
                   required: true,
-                  input_html: { type: 'date', value: f.object.date&.strftime('%Y-%m-%d'),
+                  input_html: { type: 'date', value: f.object.workshop_held_on&.strftime('%Y-%m-%d'),
                                 class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                   label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
       </div>

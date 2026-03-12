@@ -185,11 +185,13 @@ namespace :data do
         unmatched << { id: workshop.id, age_range: raw_en, age_range_spanish: raw_es }
         skipped += 1
 
-        # Leave a comment so staff can manually review
-        workshop.comments.create!(
-          body: "#{comment_tag} Could not auto-apply age range categories from #{source_label}. Please review and assign manually."
-        )
-        commented += 1
+        # Leave a comment so staff can manually review (skip if already commented)
+        unless workshop.comments.where("body LIKE ?", "%#{comment_tag}%").exists?
+          workshop.comments.create!(
+            body: "#{comment_tag} Could not auto-apply age range categories from #{source_label}. Please review and assign manually."
+          )
+          commented += 1
+        end
       else
         # Skip categories already assigned
         existing_ids = workshop.categorizable_items
@@ -207,10 +209,12 @@ namespace :data do
           end
 
           applied_names = new_categories.map(&:name).join(", ")
-          workshop.comments.create!(
-            body: "#{comment_tag} Auto-applied age range categories: #{applied_names} from #{source_label}."
-          )
-          commented += 1
+          unless workshop.comments.where("body LIKE ?", "%#{comment_tag}%").exists?
+            workshop.comments.create!(
+              body: "#{comment_tag} Auto-applied age range categories: #{applied_names} from #{source_label}."
+            )
+            commented += 1
+          end
           total += 1
         end
       end

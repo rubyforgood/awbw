@@ -34,7 +34,7 @@ RSpec.describe "Saving a workshop log", type: :system do
 
       # Fill in workshop date (JS to reliably set HTML5 date input)
       page.execute_script(
-        "document.getElementById('workshop_log_date').value = '#{1.day.ago.strftime('%Y-%m-%d')}'"
+        "document.getElementById('workshop_log_workshop_held_on').value = '#{1.day.ago.strftime('%Y-%m-%d')}'"
       )
 
       # Fill in participant counts

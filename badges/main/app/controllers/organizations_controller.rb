@@ -34,20 +34,20 @@ class OrganizationsController < ApplicationController
     track_view(@organization)
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
-    @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
-                                       .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
-       MAX(COALESCE(date, created_at)) AS max_dt")
+    @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
+                                       .select("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m') AS ym,
+       MAX(COALESCE(workshop_held_on, created_at)) AS max_dt")
                                        .order("max_dt DESC")
                                        .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
 
     @year_options = workshop_logs.pluck(
-      Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
+      Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(workshop_held_on, created_at, NOW()))")
     ).sort.reverse
     @organizations = Organization.where(id: @organization.id)
     @per_page = params[:per_page] || 10
     @workshop_logs_unpaginated = workshop_logs
                                  .includes(:workshop, :windows_type, created_by: :person)
-                                 .order(date: :desc, created_at: :desc)
+                                 .order(workshop_held_on: :desc, created_at: :desc)
     @workshop_logs_count = @workshop_logs_unpaginated.count
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
 
