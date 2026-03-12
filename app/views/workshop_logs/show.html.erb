@@ -137,6 +137,18 @@
       </div>
     </div>
 
+    <!-- Sectors -->
+    <% if @workshop_log.sectors.any? %>
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Sectors</h2>
+        <div class="flex flex-wrap gap-1">
+          <% @workshop_log.sectors.each do |sector| %>
+            <%= render "sectors/tagging_label", sector: sector %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
     <!-- Responses -->
     <% if @answers.any? %>
       <div class="space-y-3">

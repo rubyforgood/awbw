@@ -24,7 +24,6 @@ class TransformWorkshopLogsTable < ActiveRecord::Migration[8.1]
     # Add new columns
     add_column :workshop_logs, :windows_type_id, :integer
     add_column :workshop_logs, :external_workshop_title, :string
-    add_column :workshop_logs, :other_description, :string
     add_column :workshop_logs, :children_first_time, :integer, default: 0
     add_column :workshop_logs, :children_ongoing, :integer, default: 0
     add_column :workshop_logs, :teens_first_time, :integer, default: 0
@@ -64,7 +63,6 @@ class TransformWorkshopLogsTable < ActiveRecord::Migration[8.1]
     # Remove new columns
     remove_column :workshop_logs, :windows_type_id
     remove_column :workshop_logs, :external_workshop_title
-    remove_column :workshop_logs, :other_description
     remove_column :workshop_logs, :children_first_time
     remove_column :workshop_logs, :children_ongoing
     remove_column :workshop_logs, :teens_first_time

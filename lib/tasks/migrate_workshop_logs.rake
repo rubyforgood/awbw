@@ -21,14 +21,14 @@ namespace :workshop_logs do
         INSERT INTO workshop_logs (
           id, created_by_id, organization_id, windows_type_id, workshop_id,
           date, rating, external_workshop_title,
-          other_description, children_first_time, children_ongoing,
+          children_first_time, children_ongoing,
           teens_first_time, teens_ongoing, adults_first_time, adults_ongoing,
           created_at, updated_at
         )
         SELECT
           id, created_by_id, organization_id, windows_type_id, workshop_id,
           date, rating, COALESCE(external_workshop_title, workshop_name),
-          other_description, children_first_time, children_ongoing,
+          children_first_time, children_ongoing,
           teens_first_time, teens_ongoing, adults_first_time, adults_ongoing,
           created_at, updated_at
         FROM reports
