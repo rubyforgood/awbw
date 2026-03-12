@@ -16,6 +16,9 @@ export default class extends Controller {
         onChange: () => {
           this.element.requestSubmit();
         },
+        onInitialize() {
+          this.control.classList.add("!rounded-lg", "!py-2");
+        },
       });
     });
   }
