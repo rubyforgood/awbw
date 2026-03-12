@@ -14,8 +14,8 @@ RSpec.describe "People#workshop_logs", type: :request do
 
   def create_log(workshop, date:)
     create(:workshop_log,
-      owner: workshop,
       workshop: workshop,
+      windows_type: workshop.windows_type,
       organization_id: organization.id,
       created_by_id: owner.id,
       date: date,
@@ -54,7 +54,7 @@ RSpec.describe "People#workshop_logs", type: :request do
 
       it "filters by external_title" do
         log = create_log(workshop_a, date: 1.day.ago)
-        log.update!(workshop_id: nil, owner: nil, external_workshop_title: "Outside Art Class")
+        log.update!(workshop_id: nil, external_workshop_title: "Outside Art Class")
         get workshop_logs_person_path(person, external_title: "Outside Art Class")
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Outside Art Class")

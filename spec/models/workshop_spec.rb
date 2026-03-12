@@ -30,7 +30,6 @@ RSpec.describe Workshop do
     # it { should accept_nested_attributes_for(:sector_ids) } # assigns them in the controller
     it { should accept_nested_attributes_for(:quotes) }
     it { should accept_nested_attributes_for(:workshop_variations) }
-    it { should accept_nested_attributes_for(:workshop_logs).allow_destroy(true) }
   end
 
   describe 'validations' do

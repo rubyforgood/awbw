@@ -7,7 +7,7 @@ class WorkshopLogsController < ApplicationController
     params[:workshop_id] ||= @workshop&.id
     base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, created_by: :person))
     filtered = base_scope.search(params)
-    @workshop_logs_unpaginated  = filtered
+    @workshop_logs_unpaginated = filtered
     @workshop_logs = filtered.paginate(page: params[:page], per_page: @per_page)
     @workshop_logs_count = @workshop_logs&.total_entries
 

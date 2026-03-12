@@ -49,7 +49,6 @@ class WorkshopLog < ApplicationRecord
   # Scopes
   scope :workshop_id, ->(workshop_id) { where(workshop_id: workshop_id) if workshop_id.present? }
   scope :organization_id, ->(organization_id) { where(organization_id: organization_id) if organization_id.present? }
-  scope :organization_ids, ->(organization_ids) { where(organization_id: organization_ids) }
   scope :created_by_id, ->(created_by_id) { where(created_by_id: created_by_id.to_i) if created_by_id.present? }
   scope :month_and_year, ->(month_and_year) {
     if month_and_year.present?

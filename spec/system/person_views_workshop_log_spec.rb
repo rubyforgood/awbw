@@ -13,7 +13,6 @@ RSpec.describe "Viewing a workshop log", type: :system do
       create(:workshop_log,
              created_by: user,
              organization: organization,
-             owner: workshop,
              workshop: workshop,
              windows_type: windows_type,
              date: 1.day.ago)
@@ -41,7 +40,6 @@ RSpec.describe "Viewing a workshop log", type: :system do
       create(:workshop_log,
              created_by: user,
              organization: organization,
-             owner: workshop,
              workshop: workshop,
              windows_type: windows_type,
              date: 1.day.ago)
@@ -63,7 +61,6 @@ RSpec.describe "Viewing a workshop log", type: :system do
       create(:workshop_log,
              created_by: user,
              organization: organization,
-             owner: nil,
              workshop: nil,
              windows_type: windows_type,
              external_workshop_title: "Community Mural Project",
@@ -94,7 +91,6 @@ RSpec.describe "Viewing a workshop log", type: :system do
       create(:workshop_log,
              created_by: user,
              organization: organization,
-             owner: workshop,
              workshop: workshop,
              windows_type: windows_type,
              external_workshop_title: "Guest-led Session",
@@ -126,7 +122,6 @@ RSpec.describe "Viewing a workshop log", type: :system do
       create(:workshop_log,
              created_by: admin,
              organization: organization,
-             owner: workshop,
              workshop: workshop,
              windows_type: windows_type,
              date: 1.day.ago)
