@@ -103,12 +103,6 @@ namespace :workshop_logs do
           AND sectorable_id IN (SELECT id FROM reports WHERE #{wl_condition})
       SQL
 
-      # Delete WorkshopLog records from reports table
-      puts "Deleting WorkshopLog records from reports table..."
-      ActiveRecord::Base.connection.execute(<<~SQL)
-        DELETE FROM reports WHERE #{wl_condition}
-      SQL
-
       # Populate total columns from migrated attendance data
       puts "Populating total_children, total_teens, total_adults..."
       ActiveRecord::Base.connection.execute(<<~SQL)
@@ -118,12 +112,38 @@ namespace :workshop_logs do
             total_adults = COALESCE(adults_first_time, 0) + COALESCE(adults_ongoing, 0)
       SQL
 
-      # Enforce NOT NULL on columns that are always populated
-      puts "Enforcing NOT NULL constraints..."
-      ActiveRecord::Base.connection.execute("ALTER TABLE workshop_logs MODIFY organization_id int NOT NULL")
-      ActiveRecord::Base.connection.execute("ALTER TABLE workshop_logs MODIFY windows_type_id int NOT NULL")
-
       puts "Done! #{workshop_log_count} workshop logs migrated successfully."
     end
+  end
+
+  desc "Delete WorkshopLog records from reports table (run after migrate_from_reports)"
+  task delete_from_reports: :environment do
+    wl_condition = "type = 'WorkshopLog'"
+
+    wl_count = ActiveRecord::Base.connection.execute(
+      "SELECT COUNT(*) FROM workshop_logs"
+    ).first[0]
+    report_count = ActiveRecord::Base.connection.execute(
+      "SELECT COUNT(*) FROM reports WHERE #{wl_condition}"
+    ).first[0]
+
+    if wl_count == 0
+      abort "No records in workshop_logs — run `rake workshop_logs:migrate_from_reports` first."
+    end
+
+    if report_count == 0
+      puts "No WorkshopLog records in reports table. Nothing to delete."
+      next
+    end
+
+    puts "workshop_logs table: #{wl_count} records"
+    puts "reports table (WorkshopLog): #{report_count} records"
+    puts "Deleting #{report_count} WorkshopLog records from reports..."
+
+    ActiveRecord::Base.connection.execute(<<~SQL)
+      DELETE FROM reports WHERE #{wl_condition}
+    SQL
+
+    puts "Done! Deleted #{report_count} WorkshopLog records from reports table."
   end
 end

@@ -1,7 +1,7 @@
 class WorkshopLog < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
-  belongs_to :organization
-  belongs_to :windows_type
+  belongs_to :organization, optional: true
+  belongs_to :windows_type, optional: true
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy, autosave: false
