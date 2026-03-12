@@ -47,7 +47,6 @@ class WorkshopLog < ApplicationRecord
   after_commit :update_workshop_log_count, on: [ :create, :update ]
 
   # Scopes
-  scope :in_month, ->(date) { where(created_at: date.beginning_of_month..date.end_of_month) }
   scope :workshop_id, ->(workshop_id) { where(workshop_id: workshop_id) if workshop_id.present? }
   scope :organization_id, ->(organization_id) { where(organization_id: organization_id) if organization_id.present? }
   scope :organization_ids, ->(organization_ids) { where(organization_id: organization_ids) }
