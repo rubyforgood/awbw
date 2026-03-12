@@ -3,7 +3,7 @@ require "rake"
 
 RSpec.describe "data:convert_age_ranges" do
   before(:all) do
-    Rails.application.load_tasks
+    Rails.application.load_tasks unless Rake::Task.task_defined?("data:convert_age_ranges")
   end
 
   before do

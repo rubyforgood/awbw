@@ -3,7 +3,7 @@ require "rake"
 
 RSpec.describe "workshop_logs:migrate_from_reports" do
   before(:all) do
-    Rails.application.load_tasks
+    Rails.application.load_tasks unless Rake::Task.task_defined?("workshop_logs:migrate_from_reports")
   end
 
   around do |example|
