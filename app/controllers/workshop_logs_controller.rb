@@ -84,8 +84,6 @@ class WorkshopLogsController < ApplicationController
   def edit
     @workshop_log = WorkshopLog.find(params[:id])
     authorize! @workshop_log
-    @workshop = @workshop_log.workshop || Workshop.new(windows_type_id: @workshop_log.windows_type_id)
-
     set_form_variables
   end
 
@@ -132,14 +130,6 @@ class WorkshopLogsController < ApplicationController
   def set_form_variables
     @workshop_log.gallery_assets.build
 
-    if params[:workshop_id].present?
-      @workshop = Workshop.where(id: params[:workshop_id]).last
-    elsif params[:windows_type_id].present?
-      @workshop = Workshop.new(windows_type_id: params[:windows_type_id])
-    else
-      @workshop = Workshop.new
-    end
-
     workshops = authorized_scope(Workshop.all)
     @workshops = workshops.or(Workshop.where(id: @workshop_log.workshop_id))
                           .includes(:windows_type)
@@ -162,7 +152,7 @@ class WorkshopLogsController < ApplicationController
     # @sectors = Sector.published.map{ |si| [ si.id, si.name ] }
     # @files = MediaFile.where(["workshop_log_id = ?", @workshop_log.id])
 
-    @windows_type_id = params[:windows_type_id].presence || @workshop.windows_type_id ||
+    @windows_type_id = params[:windows_type_id].presence || @workshop_log.windows_type_id ||
       WindowsType.where(short_name: "Combined").last.id
     form = FormBuilder.where(windows_type_id: @windows_type_id)
                       .first&.forms.first # because there's only one form per form_builder

@@ -5,7 +5,7 @@
   <% f.object.build_quote if f.object.quote.nil? %>
 
   <%= f.simple_fields_for :quote do |quote_form| %>
-    <%= quote_form.input :workshop_id, as: :hidden, input_html: { value: f.object.quotable.workshop_id || @workshop&.id || @workshop_log.workshop_id } %>
+    <%= quote_form.input :workshop_id, as: :hidden, input_html: { value: f.object.quotable&.workshop_id || @workshop_log.workshop_id } %>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
       <!-- Quote Text -->
