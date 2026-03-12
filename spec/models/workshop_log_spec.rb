@@ -3,8 +3,8 @@ require "rails_helper"
 RSpec.describe WorkshopLog do
   describe "associations" do
     it { should belong_to(:created_by).optional }
-    it { should belong_to(:organization) }
-    it { should belong_to(:windows_type) }
+    it { should belong_to(:organization).optional }
+    it { should belong_to(:windows_type).optional }
     it { should belong_to(:workshop).optional }
     it { should have_many(:bookmarks) }
     it { should have_many(:notifications) }
