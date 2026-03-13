@@ -35,7 +35,8 @@ namespace :workshop_logs do
         SELECT
           r.id,
           CASE WHEN u.id IS NOT NULL THEN r.created_by_id ELSE #{orphaned_user.id} END,
-          r.organization_id, r.windows_type_id, r.workshop_id,
+          r.organization_id, r.windows_type_id,
+          COALESCE(r.workshop_id, CASE WHEN r.owner_type = 'Workshop' THEN r.owner_id END),
           r.date, r.rating, COALESCE(r.external_workshop_title, r.workshop_name),
           r.children_first_time, r.children_ongoing,
           r.teens_first_time, r.teens_ongoing, r.adults_first_time, r.adults_ongoing,

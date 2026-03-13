@@ -142,6 +142,33 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
     expect(qiq[0]).to eq("WorkshopLog")
   end
 
+  it "populates workshop_id from owner_id when owner_type is Workshop" do
+    report_id = insert_report_as_workshop_log(
+      workshop_id: nil,
+      owner_type: "Workshop",
+      owner_id: workshop.id
+    )
+
+    Rake::Task["workshop_logs:migrate_from_reports"].invoke
+
+    wl_workshop_id = conn.execute("SELECT workshop_id FROM workshop_logs WHERE id = #{report_id}").first[0]
+    expect(wl_workshop_id).to eq(workshop.id)
+  end
+
+  it "prefers workshop_id over owner_id when both are present" do
+    other_workshop = create(:workshop)
+    report_id = insert_report_as_workshop_log(
+      workshop_id: workshop.id,
+      owner_type: "Workshop",
+      owner_id: other_workshop.id
+    )
+
+    Rake::Task["workshop_logs:migrate_from_reports"].invoke
+
+    wl_workshop_id = conn.execute("SELECT workshop_id FROM workshop_logs WHERE id = #{report_id}").first[0]
+    expect(wl_workshop_id).to eq(workshop.id)
+  end
+
   it "does not delete WorkshopLog records from reports table" do
     insert_report_as_workshop_log
 
