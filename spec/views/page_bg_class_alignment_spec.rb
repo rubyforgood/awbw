@@ -79,7 +79,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/people/edit.html.erb"                   => "admin-or-owner",
 
     "app/views/reports/show.html.erb"                  => "admin-or-owner-or-member",
-    "app/views/workshop_logs/show.html.erb"            => "admin-or-owner-or-member",
+    "app/views/workshop_logs/show.html.erb"            => "admin-or-owner",
     "app/views/monthly_reports/show.html.erb"          => "admin-or-owner-or-member",
 
     # ─── admin-only bg-blue-100 (policy: admin?) ───
