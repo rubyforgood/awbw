@@ -258,7 +258,6 @@ class OrganizationsController < ApplicationController
 
     candidates.map do |org|
       org_normalized = normalize(org.name)
-      org_words = words(org.name)
 
       exact = org_normalized == normalized
 
@@ -266,9 +265,7 @@ class OrganizationsController < ApplicationController
         org_normalized.include?(normalized) ||
         normalized.include?(org_normalized)
 
-      overlap = (input_words & org_words).any?
-
-      similar = exact || partial || overlap
+      similar = exact || partial
 
       {
         id: org.id,
@@ -284,7 +281,7 @@ class OrganizationsController < ApplicationController
     name.to_s.downcase.gsub(/[^a-z0-9]/, "")
   end
 
-  IGNORE_WORDS = %w[combined]
+  IGNORE_WORDS = %w[combined childrens of the and inc]
 
   def words(name)
     name
