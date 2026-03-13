@@ -54,7 +54,7 @@ jobs:
         env:
           RAILS_ENV: test
           CI: "true"
-        run: bundle exec rspec
+        run: bundle exec rspec --format progress --format json --out tmp/rspec_results.json
 
       - name: Generate coverage badge
         run: ruby bin/coverage_badge.rb coverage/summary.json coverage_badge.svg
@@ -68,3 +68,10 @@ jobs:
           publish_files: coverage_badge.svg
           destination_dir: badges/main
           keep_files: true
+
+      - name: Publish test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rspec-results
+          path: tmp/rspec_results.json
