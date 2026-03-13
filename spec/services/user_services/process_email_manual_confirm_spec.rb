@@ -11,6 +11,7 @@ RSpec.describe UserServices::ProcessEmailManualConfirm do
         let(:mock_mail) { double(deliver_later: true, deliver: true) }
 
         before do
+          user # force creation before stubbing
           allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
         end
 
