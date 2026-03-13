@@ -11,19 +11,24 @@ RSpec.describe UserServices::ProcessEmailChange do
     end
 
     context "with send_confirmation true" do
-      it "sends confirmation instructions" do
-        expect(user).to receive(:send_confirmation_instructions)
+      let(:mock_mail) { double(deliver_later: true, deliver: true) }
 
+      before do
+        allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
+      end
+
+      it "sends confirmation to the pending email" do
         described_class.call(
           user: user,
           send_confirmation: true,
           current_user: admin
         )
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_including(to: "new@example.com"))
       end
 
       it "includes confirmation message in summary" do
-        allow(user).to receive(:send_confirmation_instructions)
-
         result = described_class.call(
           user: user,
           send_confirmation: true,

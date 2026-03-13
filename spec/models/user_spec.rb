@@ -370,4 +370,46 @@ RSpec.describe User do
       user.save!
     end
   end
+
+  describe "#send_confirmation_instructions" do
+    let(:mock_mail) { double(deliver_later: true, deliver: true) }
+
+    before do
+      allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
+    end
+
+    context "when there is no pending email change" do
+      let(:user) { create(:user, confirmed_at: nil) }
+
+      it "sends to the current email" do
+        user.send_confirmation_instructions
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_including(to: user.email))
+      end
+    end
+
+    context "when there is a pending email change" do
+      let(:user) { create(:user) }
+      let(:new_email) { "pending@example.com" }
+
+      before do
+        user.update_columns(unconfirmed_email: new_email)
+      end
+
+      it "sends to the pending email" do
+        user.send_confirmation_instructions
+
+        expect(DeviseMailer).to have_received(:confirmation_instructions)
+          .with(user, anything, hash_including(to: new_email))
+      end
+
+      it "does not send to the current email" do
+        user.send_confirmation_instructions
+
+        expect(DeviseMailer).not_to have_received(:confirmation_instructions)
+          .with(user, anything, hash_including(to: user.email))
+      end
+    end
+  end
 end
