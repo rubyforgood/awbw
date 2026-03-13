@@ -43,6 +43,21 @@ namespace :workshop_logs do
         WHERE r.#{wl_condition}
       SQL
 
+      # Leave a comment on workshop logs with orphaned created_by_id
+      if orphan_count > 0
+        now = Time.current.utc.strftime("%Y-%m-%d %H:%M:%S")
+        ActiveRecord::Base.connection.execute(<<~SQL)
+          INSERT INTO comments (body, commentable_id, commentable_type, created_at, updated_at)
+          SELECT
+            CONCAT('[migration] Original created_by_id was ', r.created_by_id, ' but user no longer exists.'),
+            r.id, 'WorkshopLog', '#{now}', '#{now}'
+          FROM reports r
+          LEFT JOIN users u ON u.id = r.created_by_id
+          WHERE r.#{wl_condition} AND r.created_by_id IS NOT NULL AND u.id IS NULL
+        SQL
+        puts "  Added comments to #{orphan_count} workshop logs with orphaned created_by_id"
+      end
+
       # Update report_form_field_answers to point to workshop_logs
       rffa_count = ActiveRecord::Base.connection.execute(<<~SQL).first[0]
         SELECT COUNT(*) FROM report_form_field_answers
