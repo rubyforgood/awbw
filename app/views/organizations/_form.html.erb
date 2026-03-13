@@ -3,6 +3,7 @@
   <%= render "duplicate_organizations_warning" %>
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>
   <% automanaged_notice = "<span class='text-xs text-amber-700 mt-1'>Auto-managed by affiliations</span>" %>
+
   <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 mb-8 items-start">
     <!-- LEFT SIDE (3/4) -->
     <div>
@@ -21,16 +22,19 @@
                       } %>
         </div>
       </div>
+
       <!-- Sectors & Windows audience -->
       <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4 items-start">
         <div class="form-group space-y-4">
           <div class="font-semibold text-gray-700 mb-2">
             Sectors
           </div>
+
           <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm">
             <%= f.simple_fields_for :sectorable_items do |sfi| %>
               <%= render "shared/sectorable_item_fields", f: sfi %>
             <% end %>
+
             <%= link_to_add_association "➕ Add Sector",
                                         f,
                                         :sectorable_items,
@@ -44,6 +48,7 @@
                                       class: "btn btn-secondary-outline" %>
           </div>
         </div>
+
         <div>
           <%= f.association :windows_type,
                             label: "Windows audience",
@@ -55,12 +60,14 @@
         </div>
       </div>
     </div>
+
     <!-- RIGHT SIDE (1/4) -->
     <div class="flex items-center justify-center">
       <!-- Logo -->
       <div class="flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :logo %></div>
     </div>
   </div>
+
   <!-- Profile-specific Categories (e.g. Workshop Environments) -->
   <% if @org_categories_grouped.present? %>
     <div class="form-group space-y-4 mb-8">
@@ -86,53 +93,54 @@
       <% end %>
     </div>
   <% end %>
+
   <!-- Background info -->
   <div class="form-group space-y-4 mb-8">
     <div class="font-semibold text-gray-700 mb-2">
       Background Info
     </div>
+
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-      <% org_earliest_aff = f.object.persisted? ? f.object.affiliations.minimum(:start_date) : nil %>
-      <% org_aff_ended = f.object.persisted? && f.object.affiliations.any? && !f.object.affiliations.active.exists? %>
-      <% org_latest_end = f.object.persisted? ? f.object.affiliations.maximum(:end_date) : nil %>
-      <% org_end_date = org_aff_ended ? org_latest_end : f.object.end_date %>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <% if allowed_to?(:manage?, Organization) %>
-          <div class="">
-            <div class="shrink-0 relative group cursor-help">
-              <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
-                Affiliated since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
-              </label>
-              <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
-                <% if has_affiliations && org_earliest_aff.present? %>
-                  <p>Auto-managed from affiliation records. Earliest affiliation start date: <%= org_earliest_aff.strftime('%b %Y') %>.</p>
-                  <% if f.object.start_date.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>
-                    <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Organization start_date (<%= f.object.start_date.strftime('%b %Y') %>) differs from earliest affiliation.</p>
-                  <% end %>
-                <% elsif has_affiliations %>
-                  <p>Auto-managed from affiliation records.<br>
-                    <br>
-                    <span class="text-amber-700 font-medium">⚠ No affiliations have a start date. Add a start date to an affiliation record.</span></p>
-                <% else %>
-                  <p>No affiliations yet. Set this date directly, or add affiliation records to auto-manage it.</p>
-                <% end %>
-                <% if org_aff_ended %>
-                  <p class="mt-2 text-amber-700 font-medium">⚠ All affiliations have ended.</p>
-                <% elsif f.object.end_date.present? && !has_affiliations %>
-                  <p class="mt-2 text-amber-700 font-medium">⚠ Organization end_date: <%= f.object.end_date.strftime('%b %Y') %>.</p>
-                <% end %>
-              </div>
-              <div class="pt-1">
-                <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if org_aff_ended || (f.object.end_date.present? && !has_affiliations) %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="Affiliation ended"></i><% end %><%= (org_earliest_aff || f.object.start_date)&.strftime('%b %Y') || "—" %><%= " – #{org_end_date.strftime('%b %Y')}" if org_end_date.present? %></span>
-                <% if has_affiliations && org_earliest_aff.nil? %>
-                  <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
-                <% elsif f.object.start_date.present? && org_earliest_aff.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>
-                  <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>Organization start_date: <%= f.object.start_date.strftime("%b %Y") %></p>
-                <% end %>
-              </div>
-            </div>
-            <% unless has_affiliations %>
-              <%= f.input :start_date,
+
+  <% org_earliest_aff = f.object.persisted? ? f.object.affiliations.minimum(:start_date) : nil %>
+  <% org_aff_ended = f.object.persisted? && f.object.affiliations.any? && !f.object.affiliations.active.exists? %>
+  <% org_latest_end = f.object.persisted? ? f.object.affiliations.maximum(:end_date) : nil %>
+  <% org_end_date = org_aff_ended ? org_latest_end : f.object.end_date %>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <% if allowed_to?(:manage?, Organization) %>
+      <div class="">
+        <div class="shrink-0 relative group cursor-help">
+          <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
+            Affiliated since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
+          </label>
+          <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
+            <% if has_affiliations && org_earliest_aff.present? %>
+              <p>Auto-managed from affiliation records. Earliest affiliation start date: <%= org_earliest_aff.strftime('%b %Y') %>.</p>
+              <% if f.object.start_date.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>
+                <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Organization start_date (<%= f.object.start_date.strftime('%b %Y') %>) differs from earliest affiliation.</p>
+              <% end %>
+            <% elsif has_affiliations %>
+              <p>Auto-managed from affiliation records.<br><br><span class="text-amber-700 font-medium">⚠ No affiliations have a start date. Add a start date to an affiliation record.</span></p>
+            <% else %>
+              <p>No affiliations yet. Set this date directly, or add affiliation records to auto-manage it.</p>
+            <% end %>
+            <% if org_aff_ended %>
+              <p class="mt-2 text-amber-700 font-medium">⚠ All affiliations have ended.</p>
+            <% elsif f.object.end_date.present? && !has_affiliations %>
+              <p class="mt-2 text-amber-700 font-medium">⚠ Organization end_date: <%= f.object.end_date.strftime('%b %Y') %>.</p>
+            <% end %>
+          </div>
+          <div class="pt-1">
+            <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if org_aff_ended || (f.object.end_date.present? && !has_affiliations) %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="Affiliation ended"></i><% end %><%= (org_earliest_aff || f.object.start_date)&.strftime('%b %Y') || "—" %><%= " – #{org_end_date.strftime('%b %Y')}" if org_end_date.present? %></span>
+            <% if has_affiliations && org_earliest_aff.nil? %>
+              <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
+            <% elsif f.object.start_date.present? && org_earliest_aff.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>
+              <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>Organization start_date: <%= f.object.start_date.strftime("%b %Y") %></p>
+            <% end %>
+          </div>
+        </div>
+        <% unless has_affiliations %>
+          <%= f.input :start_date,
                       label: false,
                       as: :string,
                       input_html: {
@@ -140,11 +148,12 @@
                         value: f.object.start_date&.strftime('%Y-%m-%d'),
                         class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-2"
                       } %>
-            <% end %>
-          </div>
         <% end %>
-        <div class="flex flex-col">
-          <%= f.input :agency_type,
+      </div>
+    <% end %>
+
+    <div class="flex flex-col">
+      <%= f.input :agency_type,
                   label: "Organization Type",
                   as: :select,
                   required: true,
@@ -159,25 +168,26 @@
                     value: f.object.agency_type,
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
-          <%= f.input :agency_type_other,
+      <%= f.input :agency_type_other,
                   label: "Organization Type Other",
                   hint: "Please specify if 'Other' selected",
                   input_html: {
                     class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                   } %>
-        </div>
-        <div class="flex flex-col">
-          <%= f.input :email,
+    </div>
+
+    <div class="flex flex-col">
+      <%= f.input :email,
                   label: "Organization Email",
                   as: :email,
                   input_html: {
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
-          <% if f.object.website_url.present? && (URI.parse(f.object.website_url) rescue nil).nil? %>
-            <% website_warning = "<span class='text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 text-sm''>
+      <% if f.object.website_url.present? && (URI.parse(f.object.website_url) rescue nil).nil? %>
+        <% website_warning = "<span class='text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 text-sm''>
           Invalid</span>" %>
-          <% end %>
-          <%= f.input :website_url,
+      <% end %>
+      <%= f.input :website_url,
                   label: "Website URL #{website_warning}".html_safe,
                   as: :string,
                   hint: "Enter full URL: https:// or http://".html_safe,
@@ -186,18 +196,20 @@
                     class: "rounded-md #{"bg-red-200" if website_warning.present? } border-gray-300
                     shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
-        </div>
-        <% if allowed_to?(:manage?, Organization) %>
-          <div class="admin-only bg-blue-100">
-            <%= f.input :filemaker_code,
+    </div>
+
+    <% if allowed_to?(:manage?, Organization) %>
+      <div class="admin-only bg-blue-100">
+        <%= f.input :filemaker_code,
                     label: "FileMaker Project ID",
                     input_html: {
                       class: "rounded-md border-gray-300 bg-blue-100 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     } %>
-          </div>
-        <% end %>
-        <% if params[:admin] && allowed_to?(:manage?, Organization) %>
-          <%= f.input :organization_status_id,
+      </div>
+    <% end %>
+
+    <% if params[:admin] && allowed_to?(:manage?, Organization) %>
+      <%= f.input :organization_status_id,
                   as: :select,
                   collection: @organization_statuses,
                   include_blank: true,
@@ -206,15 +218,15 @@
                   input_html: {
                     class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                   } %>
-        <% else %>
-          <%= f.hidden_field :organization_status_id, value: f.object.organization_status_id || OrganizationStatus.find_by(name: "Active")&.id %>
-        <% end %>
-      </div>
-      <% if params[:admin] && allowed_to?(:manage?, Organization) %>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div class="admin-only bg-blue-100 p-3">
-            <label class="block text-md font-medium text-gray-700 mb-1">Affiliation start date</label>
-            <%= f.input :start_date,
+    <% else %>
+      <%= f.hidden_field :organization_status_id, value: f.object.organization_status_id || OrganizationStatus.find_by(name: "Active")&.id %>
+    <% end %>
+  </div>
+  <% if params[:admin] && allowed_to?(:manage?, Organization) %>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="admin-only bg-blue-100 p-3">
+        <label class="block text-md font-medium text-gray-700 mb-1">Affiliation start date</label>
+        <%= f.input :start_date,
                     label: false,
                     as: :string,
                     input_html: {
@@ -222,10 +234,10 @@
                       value: f.object.start_date&.strftime('%Y-%m-%d'),
                       class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     } %>
-          </div>
-          <div class="admin-only bg-blue-100 p-3">
-            <label class="block text-md font-medium text-gray-700 mb-1">Affiliation end date</label>
-            <%= f.input :end_date,
+      </div>
+      <div class="admin-only bg-blue-100 p-3">
+        <label class="block text-md font-medium text-gray-700 mb-1">Affiliation end date</label>
+        <%= f.input :end_date,
                     label: false,
                     as: :string,
                     input_html: {
@@ -233,38 +245,44 @@
                       value: f.object.end_date&.strftime('%Y-%m-%d'),
                       class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     } %>
-          </div>
-        </div>
-      <% end %>
-      <!-- Mission/Vision/Values -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <%= f.input :description,
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Mission/Vision/Values -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <%= f.input :description,
                 as: :text,
                 label: "Description",
                 input_html: {
                   rows: 4,
                   class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
                 } %>
-        <%= f.input :mission_vision_values,
+
+    <%= f.input :mission_vision_values,
                 label: "Mission / Vision / Values",
                 as: :text,
                 input_html: {
                   rows: 4,
                   class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 } %>
-      </div>
+  </div>
+
     </div>
   </div>
+
   <div class="form-group space-y-4 mb-8">
     <div class="font-semibold text-gray-700 mb-2">
       Addresses
     </div>
+
     <div class="rounded-lg border border-gray-200 bg-yellow-50 p-4 mb-4 shadow-sm">
       <div class="flex flex-wrap items-center gap-4 p-3">
         <%= f.simple_fields_for :addresses do |sfi| %>
           <%= render "organizations/address_fields", f: sfi %>
         <% end %>
       </div>
+
       <%= link_to_add_association "➕ Add Address",
                                   f,
                                   :addresses,
@@ -276,10 +294,12 @@
                                   class: "btn btn-secondary-outline" %>
     </div>
   </div>
+
   <div class="form-group space-y-4 mb-8">
     <div class="font-semibold text-gray-700 mb-2">
       Affiliations
     </div>
+
     <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 mb-4 shadow-sm">
       <% if allowed_to?(:manage?, Organization) %>
         <div class="admin-only bg-blue-100 p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
@@ -290,6 +310,7 @@
             </div>
           <% end %>
           <div data-paginated-fields-target="nav"></div>
+
           <div class="admin-only bg-blue-100 p-3 mt-6"><%= link_to_add_association "➕ Add Affiliation",
                                         f,
                                         :affiliations,
@@ -304,10 +325,12 @@
       <% end %>
     </div>
   </div>
+
   <div class="profile-preferences-section mb-8">
     <div class="font-medium text-gray-700 mb-2 block">
       Profile display preferences:
     </div>
+
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
       <div class="pl-3 pr-3 pb-3">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
@@ -316,37 +339,44 @@
           <%= f.input :profile_show_website, label: "Show website" %>
           <%= f.input :profile_show_description, label: "Show description" %>
         </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
           <%= f.input :profile_show_sectors, label: "Show sectors" %>
           <%= f.input :profile_show_workshops, label: "Show workshops" %>
           <%= f.input :profile_show_stories, label: "Show stories" %>
           <%= f.input :profile_show_events_registered, label: "Show events hosted" %>
         </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
           <%= f.input :profile_show_workshop_logs, label: "Show workshop logs" %>
         </div>
       </div>
     </div>
   </div>
+
   <% if f.object.persisted? %>
     <!-- Comments -->
     <% if allowed_to?(:manage?, Comment) %>
       <div class="form-group space-y-4 mb-8" id="comments-section">
         <div class="font-semibold text-gray-700 mb-2">Comments</div>
+
         <div class="admin-only bg-blue-50 rounded-lg border border-gray-200 p-4 mb-4 shadow-sm" data-controller="paginated-fields comment-edit-toggle" data-paginated-fields-per-page-value="5">
           <%= f.simple_fields_for :comments do |cf| %>
             <%= render "comments/comment_fields", f: cf %>
           <% end %>
+
           <div data-paginated-fields-target="nav"></div>
+
           <button
             type="button"
             class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
             style="float:right"
             data-action="click->comment-edit-toggle#toggle"
-            >
+          >
             <span data-comment-edit-toggle-target="editLabel">Edit Comments</span>
             <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done Editing</span>
           </button>
+
           <%= link_to_add_association "➕ Add Comment",
                                     f,
                                     :comments,
@@ -355,7 +385,9 @@
         </div>
       </div>
     <% end %>
+
   <% end %>
+
   <% if params[:admin] && allowed_to?(:manage?, Organization) %>
     <div class="<%= 'admin-only bg-blue-100' if allowed_to?(:manage?, Organization) %> mb-6">
       <%= f.input :notes,
@@ -368,11 +400,13 @@
                   } %>
     </div>
   <% end %>
+
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @organization, class: "btn btn-danger-outline",
                   data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
+
     <%= link_to "Cancel", organizations_path, class: "btn btn-secondary-outline" %>
     <%= f.button :submit, class: "btn btn-primary" %>
   </div>
