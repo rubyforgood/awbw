@@ -378,7 +378,7 @@ RSpec.describe User do
       let(:user) { create(:user, confirmed_at: nil) }
 
       before do
-        # Stub after factory creation so we don't count the on-create confirmation
+        user # force creation before stubbing so on-create confirmation isn't counted
         allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
       end
 
