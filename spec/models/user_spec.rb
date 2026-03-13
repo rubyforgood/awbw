@@ -374,12 +374,13 @@ RSpec.describe User do
   describe "#send_confirmation_instructions" do
     let(:mock_mail) { double(deliver_later: true, deliver: true) }
 
-    before do
-      allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
-    end
-
     context "when there is no pending email change" do
       let(:user) { create(:user, confirmed_at: nil) }
+
+      before do
+        # Stub after factory creation so we don't count the on-create confirmation
+        allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
+      end
 
       it "sends to the current email" do
         user.send_confirmation_instructions
@@ -395,6 +396,7 @@ RSpec.describe User do
 
       before do
         user.update_columns(unconfirmed_email: new_email)
+        allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
       end
 
       it "sends to the pending email" do
