@@ -17,7 +17,11 @@ namespace :workshop_logs do
         "SELECT COUNT(*) AS c FROM reports WHERE #{wl_condition}"
       ).first[0]
       # Reassign orphaned created_by_id to the "Orphaned Reports" user
-      orphaned_user = User.find_by!(email: "orphaned_reports@awbw.org")
+      orphaned_user = User.find_or_create_by!(email: "orphaned_reports@awbw.org") do |u|
+        u.first_name = "Orphaned Reports"
+        u.last_name = "User"
+        u.password = SecureRandom.hex(20)
+      end
       orphan_count = ActiveRecord::Base.connection.execute(
         "SELECT COUNT(*) FROM reports r LEFT JOIN users u ON u.id = r.created_by_id WHERE r.#{wl_condition} AND r.created_by_id IS NOT NULL AND u.id IS NULL"
       ).first[0]
