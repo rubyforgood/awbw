@@ -8,7 +8,7 @@ FactoryBot.define do
     owner { nil } # Default owner
 
     # STI type column
-    type { "Report" } # Default type, override for MonthlyReport, WorkshopLog etc.
+    type { "Report" } # Default type, override for MonthlyReport etc.
 
     # Other potential attributes
     date { Date.today }

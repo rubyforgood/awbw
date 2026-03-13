@@ -107,7 +107,7 @@ RSpec.describe NotificationMailer, type: :mailer do
 
     context "without a workshop (external title only)" do
       let(:workshop_log) do
-        create(:workshop_log, workshop: nil, owner: nil, external_workshop_title: "Community Art Session")
+        create(:workshop_log, workshop: nil, external_workshop_title: "Community Art Session")
       end
       let(:notification) { create(:notification, kind: "workshop_log_submitted_fyi", noticeable: workshop_log) }
 
@@ -189,7 +189,7 @@ RSpec.describe NotificationMailer, type: :mailer do
 
     context "without a workshop (external title only)" do
       let(:workshop_log) do
-        create(:workshop_log, created_by: user, workshop: nil, owner: nil,
+        create(:workshop_log, created_by: user, workshop: nil,
                external_workshop_title: "Community Art Session")
       end
       let(:notification) do

@@ -1,4 +1,4 @@
-<% display_date = workshop_log.date || workshop_log.created_at %>
+<% display_date = workshop_log.workshop_held_on || workshop_log.created_at %>
 <% show_actions = local_assigns.fetch(:show_actions, false) %>
 <% link_class = "rounded-lg py-2 px-2.5 hover:bg-gray-100 hover:underline transition-colors" %>
 <% link_class += show_actions ? " flex items-center text-left pl-6" : " text-center" %>

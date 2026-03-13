@@ -54,7 +54,7 @@ class Bookmark < ApplicationRecord
         CONCAT(st_ppl.first_name, ' ', st_ppl.last_name),
         st_org.name, st_rpt.type, st_res.title, st_st.title,
         st_si.title, st_vr.title, st_ws.title, st_wi.title,
-        DATE_FORMAT(st_wl.date, '%Y-%m-%d'), st_wv.name, st_wvi.name
+        DATE_FORMAT(st_wl.workshop_held_on, '%Y-%m-%d'), st_wv.name, st_wvi.name
       )
     )
   SQL
@@ -114,7 +114,7 @@ class Bookmark < ApplicationRecord
        stories.title LIKE :q OR workshops.title LIKE :q OR workshop_ideas.title LIKE :q OR
        story_ideas.body LIKE :q OR
        video_recordings.title LIKE :q OR
-       DATE_FORMAT(workshop_logs.date, '%Y-%m-%d') LIKE :q OR
+       DATE_FORMAT(workshop_logs.workshop_held_on, '%Y-%m-%d') LIKE :q OR
        workshop_variations.name LIKE :q OR
        workshop_variation_ideas.name LIKE :q OR
        action_text_rich_texts.body LIKE :q",

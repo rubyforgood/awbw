@@ -48,8 +48,6 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create ]
   end
 
-  post "workshop_logs/validate_new", to: "workshop_logs#validate_new"
-
   get "contact_us", to: "contact_us#index"
   post "contact_us", to: "contact_us#create"
 
@@ -168,7 +166,7 @@ Rails.application.routes.draw do
   resources :windows_types
   resources :workshop_ideas
   resources :workshop_logs
-  resources :workshop_log_creation_wizard
+
   resources :workshop_variation_ideas
   resources :workshop_variations
   resources :workshops do

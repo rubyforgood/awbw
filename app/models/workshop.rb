@@ -33,7 +33,7 @@ class Workshop < ApplicationRecord
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
   has_many :associated_resources, class_name: "Resource", foreign_key: "workshop_id", dependent: :restrict_with_error
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
-  has_many :workshop_logs, dependent: :destroy, as: :owner
+  has_many :workshop_logs, dependent: :restrict_with_error
   has_many :workshop_resources, dependent: :destroy
   has_many :workshop_series_children, # When this workshop is the parent in a series
            -> { order(:position) },
@@ -131,7 +131,6 @@ class Workshop < ApplicationRecord
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :quotes, reject_if: proc { |object| object["quote"].nil? }
-  accepts_nested_attributes_for :workshop_logs, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
                                 allow_destroy: true

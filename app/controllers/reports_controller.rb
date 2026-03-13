@@ -4,25 +4,6 @@ class ReportsController < ApplicationController
     @report = Report.find(params[:id])
   end
 
-  def monthly_select_type
-    authorize! :report, to: :monthly_select_type?
-  end
-
-  def monthly
-    build_month_and_year
-    find_form_builder
-
-    if (@report = current_user.submitted_monthly_report(@date,
-                                                        @form_builder.windows_type))
-      redirect_to(action: :edit, id: @report,
-                   month: @month, year: @year,
-                   form_builder_id: @form_builder.id)
-    else
-      render_form
-      render :new
-    end
-  end
-
   def share_story
     params[:form_builder_id] = 7
     render_form

@@ -13,7 +13,7 @@ RSpec.describe Workshop do
 
     it { should have_many(:sectorable_items).dependent(:destroy).inverse_of(:sectorable) }
     it { should have_many(:sectors).through(:sectorable_items) }
-    it { should have_many(:workshop_logs).dependent(:destroy) } # As owner
+    it { should have_many(:workshop_logs).dependent(:restrict_with_error) }
     it { should have_many(:bookmarks).dependent(:destroy) } # As bookmarkable
     it { should have_many(:workshop_variations).dependent(:restrict_with_error) }
     it { should have_many(:categorizable_items).dependent(:destroy) } # As categorizable
@@ -30,7 +30,6 @@ RSpec.describe Workshop do
     # it { should accept_nested_attributes_for(:sector_ids) } # assigns them in the controller
     it { should accept_nested_attributes_for(:quotes) }
     it { should accept_nested_attributes_for(:workshop_variations) }
-    it { should accept_nested_attributes_for(:workshop_logs).allow_destroy(true) }
   end
 
   describe 'validations' do
@@ -177,6 +176,22 @@ RSpec.describe Workshop do
       results = Workshop.remote_search("Healing")
 
       expect(results.includes_values).to include(:windows_type)
+    end
+  end
+
+  describe "dependent restrictions" do
+    it "prevents deletion when workshop_logs exist" do
+      workshop = create(:workshop)
+      create(:workshop_log, workshop: workshop)
+
+      expect { workshop.destroy }.not_to change(Workshop, :count)
+      expect(workshop.errors[:base]).to include(a_string_matching(/cannot be deleted/i).or(a_string_matching(/restrict/i)).or(a_string_matching(/Cannot delete record/i)))
+    end
+
+    it "allows deletion when no workshop_logs exist" do
+      workshop = create(:workshop)
+
+      expect { workshop.destroy }.to change(Workshop, :count).by(-1)
     end
   end
 

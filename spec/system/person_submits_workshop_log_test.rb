@@ -27,7 +27,7 @@ RSpec.describe "People can submit a workshop log" do
         expect(page).to have_content("New workshop log")
         select "The best workshop in the world", from: "workshop_log[workshop_id]"
         select @organization.name, from: "workshop_log[organization_id]"
-        fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
+        fill_in "workshop_log[workshop_held_on]", with: 1.day.ago.strftime("%m-%d-%Y")
 
         fill_in "workshop_log_children_ongoing", with: "5"
         fill_in "workshop_log_teens_ongoing", with: "3"
@@ -75,7 +75,7 @@ RSpec.describe "People can submit a workshop log" do
 
         #  Missing organization
         select "The best workshop in the world", from: "workshop_log[workshop_id]"
-        fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
+        fill_in "workshop_log[workshop_held_on]", with: 1.day.ago.strftime("%m-%d-%Y")
         select "", from: "workshop_log[organization_id]"
         click_button "Submit"
         expect(page).to have_content("Project must exist")
@@ -83,7 +83,7 @@ RSpec.describe "People can submit a workshop log" do
         # Missing workshop
         visit new_workshop_log_path
         select @organization.name, from: "workshop_log[organization_id]"
-        fill_in "workshop_log[date]", with: 1.day.ago.strftime("%m-%d-%Y")
+        fill_in "workshop_log[workshop_held_on]", with: 1.day.ago.strftime("%m-%d-%Y")
         click_button "Submit"
         expect(page).to have_content("Workshop must exist")
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_12_120000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -804,9 +804,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
     t.integer "form_field_id"
     t.integer "report_id"
     t.datetime "updated_at", precision: nil
+    t.integer "workshop_log_id"
     t.index ["answer_option_id"], name: "index_report_form_field_answers_on_answer_option_id"
     t.index ["form_field_id"], name: "index_report_form_field_answers_on_form_field_id"
     t.index ["report_id"], name: "index_report_form_field_answers_on_report_id"
+    t.index ["workshop_log_id"], name: "index_report_form_field_answers_on_workshop_log_id"
   end
 
   create_table "reports", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1134,27 +1136,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
   end
 
   create_table "workshop_logs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "challenges", size: :medium
-    t.text "comments", size: :medium
+    t.integer "adults_first_time", default: 0
+    t.integer "adults_ongoing", default: 0
+    t.integer "children_first_time", default: 0
+    t.integer "children_ongoing", default: 0
     t.datetime "created_at", precision: nil, null: false
-    t.date "date"
-    t.text "differences", size: :medium
-    t.boolean "is_embodied_art_workshop", default: false
-    t.boolean "lead_similar"
-    t.integer "num_participants_first_time", default: 0
-    t.integer "num_participants_on_going", default: 0
+    t.integer "created_by_id"
+    t.string "external_workshop_title"
     t.integer "organization_id"
-    t.text "questions", size: :medium
     t.integer "rating", default: 0
-    t.text "reaction", size: :medium
-    t.text "similarities", size: :medium
-    t.text "successes", size: :medium
-    t.text "suggestions", size: :medium
+    t.integer "teens_first_time", default: 0
+    t.integer "teens_ongoing", default: 0
+    t.integer "total_adults", default: 0
+    t.integer "total_children", default: 0
+    t.integer "total_teens", default: 0
     t.datetime "updated_at", precision: nil, null: false
-    t.integer "user_id"
+    t.integer "windows_type_id"
+    t.date "workshop_held_on"
     t.integer "workshop_id"
+    t.index ["created_by_id"], name: "index_workshop_logs_on_created_by_id"
+    t.index ["organization_id", "workshop_held_on"], name: "index_workshop_logs_on_org_and_workshop_held_on"
     t.index ["organization_id"], name: "index_workshop_logs_on_organization_id"
-    t.index ["user_id"], name: "index_workshop_logs_on_user_id"
+    t.index ["windows_type_id"], name: "index_workshop_logs_on_windows_type_id"
+    t.index ["workshop_held_on"], name: "index_workshop_logs_on_workshop_held_on"
     t.index ["workshop_id"], name: "index_workshop_logs_on_workshop_id"
   end
 
@@ -1386,6 +1390,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
   add_foreign_key "report_form_field_answers", "answer_options"
   add_foreign_key "report_form_field_answers", "form_fields"
   add_foreign_key "report_form_field_answers", "reports"
+  add_foreign_key "report_form_field_answers", "workshop_logs"
   add_foreign_key "reports", "organizations"
   add_foreign_key "reports", "users", column: "created_by_id"
   add_foreign_key "reports", "windows_types"
@@ -1421,7 +1426,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_120000) do
   add_foreign_key "workshop_ideas", "users", column: "updated_by_id"
   add_foreign_key "workshop_ideas", "windows_types"
   add_foreign_key "workshop_logs", "organizations"
-  add_foreign_key "workshop_logs", "users"
+  add_foreign_key "workshop_logs", "users", column: "created_by_id"
+  add_foreign_key "workshop_logs", "windows_types"
   add_foreign_key "workshop_logs", "workshops"
   add_foreign_key "workshop_resources", "resources"
   add_foreign_key "workshop_resources", "workshops"

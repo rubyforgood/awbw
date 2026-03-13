@@ -79,7 +79,7 @@
 
                 <tr id="workshop_log_<%= log.id %>" class="hover:bg-gray-50 transition-colors duration-150">
                   <td class="px-2 text-left text-xs whitespace-nowrap">
-                    <%= link_to (log.date || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %>
+                    <%= link_to (log.workshop_held_on || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %>
                   </td>
                   <td class="px-2 text-left text-sm font-bold">
                     <% if log.workshop %>
@@ -117,6 +117,7 @@
                                   workshop_log_path(log),
                                   class: "btn btn-secondary-outline text-xs px-2 py-1" %>
                     <% end %>
+                    <%= render "bookmarks/editable_bookmark_icon", resource: log %>
                   </td>
                 </tr>
               <% end %>
