@@ -22,9 +22,14 @@ class DeviseMailer < Devise::Mailer
     @record = record
     @token  = token
     @user = record
+    @reconfirmation = record.pending_reconfirmation?
 
-    opts[:subject] = "AWBW Portal: Welcome instructions for #{record.full_name}"
-    @mail   = super
+    opts[:subject] = if @reconfirmation
+      "AWBW Portal: Confirm your new email address"
+    else
+      "AWBW Portal: Welcome instructions for #{record.full_name}"
+    end
+    @mail = super
   end
 
   def unlock_instructions(record, token, opts = {})
