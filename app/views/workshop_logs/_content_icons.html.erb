@@ -1,0 +1,10 @@
+<% if workshop_log.has_quotes? || workshop_log.has_gallery_images? %>
+  <span class="inline-flex items-center gap-1 text-teal-400">
+    <% if workshop_log.has_quotes? %>
+      <i class="fa-regular fa-comment text-xs" title="Has quotes"></i>
+    <% end %>
+    <% if workshop_log.has_gallery_images? %>
+      <i class="fa-regular fa-image text-xs" title="Has images"></i>
+    <% end %>
+  </span>
+<% end %>

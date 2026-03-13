@@ -10,9 +10,11 @@
       <% if show_actions %>
         <div class="text-sm font-bold text-gray-800 whitespace-nowrap"><%= display_date.strftime("%b %-d") %></div>
         <div class="text-xs text-gray-400 ml-3"><%= display_date.strftime("%Y") %></div>
+        <%= render "workshop_logs/content_icons", workshop_log: workshop_log %>
       <% else %>
         <div class="text-xs text-gray-400"><%= display_date.strftime("%Y") %></div>
         <div class="text-sm font-bold text-gray-800 whitespace-nowrap"><%= display_date.strftime("%b %-d") %></div>
+        <%= render "workshop_logs/content_icons", workshop_log: workshop_log %>
       <% end %>
     <% end %>
     <% { "Total" => workshop_log.total_attendance,
