@@ -320,4 +320,37 @@ RSpec.describe "/workshop_logs", type: :request do
       end
     end
   end
+
+  describe "DELETE /destroy" do
+    it "destroys the workshop log and redirects to index" do
+      workshop_log = create(:workshop_log, valid_attributes)
+
+      expect {
+        delete workshop_log_path(workshop_log)
+      }.to change(WorkshopLog, :count).by(-1)
+
+      expect(response).to redirect_to(workshop_logs_path)
+    end
+
+    it "does not allow destroying another user's workshop log" do
+      other_user = create(:user)
+      workshop_log = create(:workshop_log, valid_attributes.merge(created_by_id: other_user.id))
+
+      expect {
+        delete workshop_log_path(workshop_log)
+      }.not_to change(WorkshopLog, :count)
+    end
+
+    it "allows admin to destroy any workshop log" do
+      admin = create(:user, :admin)
+      sign_in admin
+      workshop_log = create(:workshop_log, valid_attributes)
+
+      expect {
+        delete workshop_log_path(workshop_log)
+      }.to change(WorkshopLog, :count).by(-1)
+
+      expect(response).to redirect_to(workshop_logs_path)
+    end
+  end
 end

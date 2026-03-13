@@ -110,6 +110,12 @@ class WorkshopLogsController < ApplicationController
     set_form_variables
   end
 
+  def destroy
+    @workshop_log = WorkshopLog.find(params[:id])
+    authorize! @workshop_log
+    @workshop_log.destroy!
+    redirect_to workshop_logs_path, notice: "Workshop log was successfully deleted."
+  end
 
   def validate_new
     @date         = Date.new(params[:year].to_i, params[:month].to_i)
