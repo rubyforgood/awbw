@@ -183,7 +183,7 @@ class OrganizationsController < ApplicationController
       sector_counts[primary_sector] += 1 if primary_sector
     end
     @sectors_by_people = sector_counts.sort_by { |_sector, count| -count }
-end
+  end
 
   private
 
@@ -245,68 +245,53 @@ end
     )
   end
 
+
   def find_duplicate_organizations(name)
     return [] if name.blank?
 
-    duplicates = []
-    duplicate_ids = Set.new
-    normalized_name = name.to_s.strip.downcase.gsub(/\s+/, " ")
-    normalized_name_for_sql = normalized_name.gsub(/[^a-z0-9]/, "")
+    normalized = normalize(name)
+    input_words = words(name)
 
-    # Exact match on normalized name
-    name_matches = Organization.where(
-      "REPLACE(REPLACE(REPLACE(LOWER(name), '.', ''), ' ', ''), '-', '') = ?",
-      normalized_name_for_sql
-    ).limit(10)
+    candidates = Organization
+      .where("LOWER(name) LIKE ?", "%#{input_words.first}%")
+      .limit(20)
 
-    name_matches.each do |org|
-      next if duplicate_ids.include?(org.id)
+    candidates.map do |org|
+      org_normalized = normalize(org.name)
+      org_words = words(org.name)
 
-      duplicate_ids.add(org.id)
-      duplicates << format_duplicate_organization(org, entered_name: name)
-    end
+      exact = org_normalized == normalized
 
-    # Similar name match (contains the entered name or is contained by it)
-    if name.present? && duplicates.size < 10
-      similar_name_matches = Organization.where(
-        "REPLACE(REPLACE(REPLACE(LOWER(name), '.', ''), ' ', ''), '-', '') LIKE ?",
-        "%#{normalized_name_for_sql}%"
-      ).limit(10)
+      partial =
+        org_normalized.include?(normalized) ||
+        normalized.include?(org_normalized)
 
-      similar_name_matches.each do |org|
-        next if duplicate_ids.include?(org.id)
-        next if duplicates.size >= 10
+      overlap = (input_words & org_words).any?
 
-        duplicate_ids.add(org.id)
-        duplicates << format_duplicate_organization(org, entered_name: name)
-      end
-    end
+      similar = exact || partial || overlap
 
-    duplicates
+      {
+        id: org.id,
+        name: org.name,
+        match_type: exact ? "exact" : "approximate",
+        name_match: similar,
+        blocked: exact
+      }
+    end.select { |d| d[:name_match] }
   end
 
-  def format_duplicate_organization(org, entered_name: nil)
-    org_name_normalized = org.name.to_s.strip.downcase.gsub(/\s+/, " ").gsub(/[^a-z0-9]/, "")
-    entered_name_normalized = entered_name.to_s.strip.downcase.gsub(/\s+/, " ").gsub(/[^a-z0-9]/, "")
+  def normalize(name)
+    name.to_s.downcase.gsub(/[^a-z0-9]/, "")
+  end
 
-    name_exact = org_name_normalized == entered_name_normalized
-    name_similar = entered_name.present? && (
-      org_name_normalized.include?(entered_name_normalized) ||
-      entered_name_normalized.include?(org_name_normalized)
-    )
+  IGNORE_WORDS = %w[combined]
 
-    match_type = if name_exact
-      "exact"
-    else
-      "approximate"
-    end
-
-    {
-      id: org.id,
-      name: org.name,
-      match_type: match_type,
-      name_match: name_exact || name_similar,
-      blocked: name_exact
-    }
+  def words(name)
+    name
+      .to_s
+      .downcase
+      .gsub(/[^a-z0-9\s]/, "")
+      .split
+      .reject { |w| IGNORE_WORDS.include?(w) }
   end
 end
