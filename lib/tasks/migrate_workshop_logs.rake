@@ -8,7 +8,43 @@ namespace :workshop_logs do
       count = ActiveRecord::Base.connection.execute("SELECT COUNT(*) AS c FROM workshop_logs").first
       if count && count[0] > 0
         puts "Clearing #{count[0]} legacy record(s) from workshop_logs..."
-        ActiveRecord::Base.connection.execute("UPDATE report_form_field_answers SET workshop_log_id = NULL WHERE workshop_log_id IS NOT NULL")
+
+        # Clear workshop_log_id from previously migrated report_form_field_answers
+        ActiveRecord::Base.connection.execute(<<~SQL)
+          UPDATE report_form_field_answers
+          SET workshop_log_id = NULL
+          WHERE workshop_log_id IS NOT NULL
+        SQL
+
+        # Revert polymorphic types back to Report for re-migration
+        ActiveRecord::Base.connection.execute(<<~SQL)
+          UPDATE active_storage_attachments
+          SET record_type = 'Report'
+          WHERE record_type = 'WorkshopLog'
+            AND record_id IN (SELECT id FROM workshop_logs)
+        SQL
+
+        ActiveRecord::Base.connection.execute(<<~SQL)
+          UPDATE assets
+          SET owner_type = 'Report'
+          WHERE owner_type = 'WorkshopLog'
+            AND owner_id IN (SELECT id FROM workshop_logs)
+        SQL
+
+        ActiveRecord::Base.connection.execute(<<~SQL)
+          UPDATE quotable_item_quotes
+          SET quotable_type = 'Report'
+          WHERE quotable_type = 'WorkshopLog'
+            AND quotable_id IN (SELECT id FROM workshop_logs)
+        SQL
+
+        ActiveRecord::Base.connection.execute(<<~SQL)
+          UPDATE sectorable_items
+          SET sectorable_type = 'Report'
+          WHERE sectorable_type = 'WorkshopLog'
+            AND sectorable_id IN (SELECT id FROM workshop_logs)
+        SQL
+
         ActiveRecord::Base.connection.execute("DELETE FROM workshop_logs")
       end
 
@@ -50,7 +86,7 @@ namespace :workshop_logs do
         WHERE r.#{wl_condition}
       SQL
 
-      # Update report_form_field_answers to point to workshop_logs
+      # Populate workshop_log_id on report_form_field_answers (keep report_id)
       rffa_count = ActiveRecord::Base.connection.execute(<<~SQL).first[0]
         SELECT COUNT(*) FROM report_form_field_answers
         WHERE report_id IN (SELECT id FROM reports WHERE #{wl_condition})
@@ -58,7 +94,7 @@ namespace :workshop_logs do
       puts "Updating #{rffa_count} report_form_field_answers..."
       ActiveRecord::Base.connection.execute(<<~SQL)
         UPDATE report_form_field_answers
-        SET workshop_log_id = report_id, report_id = NULL
+        SET workshop_log_id = report_id
         WHERE report_id IN (SELECT id FROM reports WHERE #{wl_condition})
       SQL
 
