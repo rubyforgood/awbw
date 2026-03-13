@@ -137,7 +137,6 @@ class OrganizationsController < ApplicationController
     @name = params[:name]
     @duplicates = find_duplicate_organizations(@name)
     @blocked = @duplicates.any? { |d| d[:blocked] }
-    @stored_params = { name: @name }
   end
 
   # Optional hooks for setting variables for forms or index
