@@ -16,11 +16,13 @@ namespace :workshop_logs do
       workshop_log_count = ActiveRecord::Base.connection.execute(
         "SELECT COUNT(*) AS c FROM reports WHERE #{wl_condition}"
       ).first[0]
+      # Reassign orphaned created_by_id to the "Orphaned Reports" user
+      orphaned_user = User.find_by!(email: "orphaned_reports@awbw.org")
       orphan_count = ActiveRecord::Base.connection.execute(
         "SELECT COUNT(*) FROM reports r LEFT JOIN users u ON u.id = r.created_by_id WHERE r.#{wl_condition} AND r.created_by_id IS NOT NULL AND u.id IS NULL"
       ).first[0]
       puts "Copying #{workshop_log_count} WorkshopLog records to workshop_logs table..."
-      puts "  (#{orphan_count} records have orphaned created_by_id — will be set to NULL)" if orphan_count > 0
+      puts "  (#{orphan_count} records have orphaned created_by_id — reassigning to #{orphaned_user.email})" if orphan_count > 0
 
       ActiveRecord::Base.connection.execute(<<~SQL)
         INSERT INTO workshop_logs (
@@ -32,7 +34,7 @@ namespace :workshop_logs do
         )
         SELECT
           r.id,
-          CASE WHEN u.id IS NOT NULL THEN r.created_by_id END,
+          CASE WHEN u.id IS NOT NULL THEN r.created_by_id ELSE #{orphaned_user.id} END,
           r.organization_id, r.windows_type_id, r.workshop_id,
           r.date, r.rating, COALESCE(r.external_workshop_title, r.workshop_name),
           r.children_first_time, r.children_ongoing,
@@ -42,21 +44,6 @@ namespace :workshop_logs do
         LEFT JOIN users u ON u.id = r.created_by_id
         WHERE r.#{wl_condition}
       SQL
-
-      # Leave a comment on workshop logs with orphaned created_by_id
-      if orphan_count > 0
-        now = Time.current.utc.strftime("%Y-%m-%d %H:%M:%S")
-        ActiveRecord::Base.connection.execute(<<~SQL)
-          INSERT INTO comments (body, commentable_id, commentable_type, created_at, updated_at)
-          SELECT
-            CONCAT('[migration] Original created_by_id was ', r.created_by_id, ' but user no longer exists.'),
-            r.id, 'WorkshopLog', '#{now}', '#{now}'
-          FROM reports r
-          LEFT JOIN users u ON u.id = r.created_by_id
-          WHERE r.#{wl_condition} AND r.created_by_id IS NOT NULL AND u.id IS NULL
-        SQL
-        puts "  Added comments to #{orphan_count} workshop logs with orphaned created_by_id"
-      end
 
       # Update report_form_field_answers to point to workshop_logs
       rffa_count = ActiveRecord::Base.connection.execute(<<~SQL).first[0]
