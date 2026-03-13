@@ -257,7 +257,6 @@ class OrganizationsController < ApplicationController
     candidates = Organization
       .where("LOWER(name) LIKE ?", "%#{search_word}%")
       .select(:id, :name)
-      .limit(20)
 
     candidates.map do |org|
       org_normalized = normalize(org.name)
@@ -279,6 +278,7 @@ class OrganizationsController < ApplicationController
       }
     end.select { |d| d[:name_match] }
   end
+
   def normalize(name)
     name.to_s.downcase.gsub(/[^a-z0-9]/, "")
   end
