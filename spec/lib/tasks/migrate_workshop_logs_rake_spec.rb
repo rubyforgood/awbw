@@ -142,6 +142,72 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
     expect(qiq[0]).to eq("WorkshopLog")
   end
 
+  it "populates workshop_id from owner_id when workshop_id is null and owner_type is Workshop" do
+    report_id = insert_report_as_workshop_log(
+      workshop_id: nil,
+      owner_type: "Workshop",
+      owner_id: workshop.id
+    )
+
+    Rake::Task["workshop_logs:migrate_from_reports"].invoke
+
+    wl_workshop_id = conn.execute("SELECT workshop_id FROM workshop_logs WHERE id = #{report_id}").first[0]
+    expect(wl_workshop_id).to eq(workshop.id)
+  end
+
+  it "falls back to owner_id when workshop_id is zero" do
+    report_id = insert_report_as_workshop_log(
+      workshop_id: 0,
+      owner_type: "Workshop",
+      owner_id: workshop.id
+    )
+
+    Rake::Task["workshop_logs:migrate_from_reports"].invoke
+
+    wl_workshop_id = conn.execute("SELECT workshop_id FROM workshop_logs WHERE id = #{report_id}").first[0]
+    expect(wl_workshop_id).to eq(workshop.id)
+  end
+
+  it "does not use owner_id when owner_type is not Workshop" do
+    report_id = insert_report_as_workshop_log(
+      workshop_id: nil,
+      owner_type: "Organization",
+      owner_id: organization.id
+    )
+
+    Rake::Task["workshop_logs:migrate_from_reports"].invoke
+
+    wl_workshop_id = conn.execute("SELECT workshop_id FROM workshop_logs WHERE id = #{report_id}").first[0]
+    expect(wl_workshop_id).to be_nil
+  end
+
+  it "sets workshop_id to null when workshop_id is absent and no workshop owner" do
+    report_id = insert_report_as_workshop_log(
+      workshop_id: nil,
+      owner_type: nil,
+      owner_id: nil
+    )
+
+    Rake::Task["workshop_logs:migrate_from_reports"].invoke
+
+    wl_workshop_id = conn.execute("SELECT workshop_id FROM workshop_logs WHERE id = #{report_id}").first[0]
+    expect(wl_workshop_id).to be_nil
+  end
+
+  it "preserves valid integer workshop_id over owner_id" do
+    other_workshop = create(:workshop)
+    report_id = insert_report_as_workshop_log(
+      workshop_id: workshop.id,
+      owner_type: "Workshop",
+      owner_id: other_workshop.id
+    )
+
+    Rake::Task["workshop_logs:migrate_from_reports"].invoke
+
+    wl_workshop_id = conn.execute("SELECT workshop_id FROM workshop_logs WHERE id = #{report_id}").first[0]
+    expect(wl_workshop_id).to eq(workshop.id)
+  end
+
   it "does not delete WorkshopLog records from reports table" do
     insert_report_as_workshop_log
 
