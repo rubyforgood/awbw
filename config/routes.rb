@@ -123,11 +123,14 @@ Rails.application.routes.draw do
     end
   end
   resources :organizations do
-   member do
-     get :populations_served
-   end
-   resources :comments, only: [ :index, :create ]
- end
+    collection do
+      get :check_duplicates
+    end
+    member do
+      get :populations_served
+    end
+    resources :comments, only: [ :index, :create ]
+  end
   resources :organization_statuses
   resources :affiliations
   resources :quotes

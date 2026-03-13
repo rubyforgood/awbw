@@ -87,6 +87,20 @@ class OrganizationsController < ApplicationController
     @organization = Organization.new(organization_params)
     authorize! @organization
 
+    unless params[:skip_duplicate_check].present?
+      @duplicates = find_duplicate_organizations(@organization.name)
+      if @duplicates.any?
+        @name = @organization.name
+        @blocked = @duplicates.any? { |d| d[:blocked] }
+        set_form_variables
+        respond_to do |format|
+          format.html { render :new, status: :unprocessable_content }
+          format.turbo_stream
+        end
+        return
+      end
+    end
+
     if @organization.save
       assign_associations(@organization) if params.dig(:organization, :category_ids)
       redirect_to @organization, notice: "Organization was successfully created."
@@ -115,6 +129,15 @@ class OrganizationsController < ApplicationController
     authorize! @organization
     @organization.destroy!
     redirect_to organizations_path, notice: "Organization was successfully destroyed."
+  end
+
+  def check_duplicates
+    authorize!
+
+    @name = params[:name]
+    @duplicates = find_duplicate_organizations(@name)
+    @blocked = @duplicates.any? { |d| d[:blocked] }
+    @stored_params = { name: @name }
   end
 
   # Optional hooks for setting variables for forms or index
@@ -220,5 +243,70 @@ end
         :_destroy
       ]
     )
+  end
+
+  def find_duplicate_organizations(name)
+    return [] if name.blank?
+
+    duplicates = []
+    duplicate_ids = Set.new
+    normalized_name = name.to_s.strip.downcase.gsub(/\s+/, " ")
+    normalized_name_for_sql = normalized_name.gsub(/[^a-z0-9]/, "")
+
+    # Exact match on normalized name
+    name_matches = Organization.where(
+      "REPLACE(REPLACE(REPLACE(LOWER(name), '.', ''), ' ', ''), '-', '') = ?",
+      normalized_name_for_sql
+    ).limit(10)
+
+    name_matches.each do |org|
+      next if duplicate_ids.include?(org.id)
+
+      duplicate_ids.add(org.id)
+      duplicates << format_duplicate_organization(org, entered_name: name)
+    end
+
+    # Similar name match (contains the entered name or is contained by it)
+    if name.present? && duplicates.size < 10
+      similar_name_matches = Organization.where(
+        "REPLACE(REPLACE(REPLACE(LOWER(name), '.', ''), ' ', ''), '-', '') LIKE ?",
+        "%#{normalized_name_for_sql}%"
+      ).limit(10)
+
+      similar_name_matches.each do |org|
+        next if duplicate_ids.include?(org.id)
+        next if duplicates.size >= 10
+
+        duplicate_ids.add(org.id)
+        duplicates << format_duplicate_organization(org, entered_name: name)
+      end
+    end
+
+    duplicates
+  end
+
+  def format_duplicate_organization(org, entered_name: nil)
+    org_name_normalized = org.name.to_s.strip.downcase.gsub(/\s+/, " ").gsub(/[^a-z0-9]/, "")
+    entered_name_normalized = entered_name.to_s.strip.downcase.gsub(/\s+/, " ").gsub(/[^a-z0-9]/, "")
+
+    name_exact = org_name_normalized == entered_name_normalized
+    name_similar = entered_name.present? && (
+      org_name_normalized.include?(entered_name_normalized) ||
+      entered_name_normalized.include?(org_name_normalized)
+    )
+
+    match_type = if name_exact
+      "exact"
+    else
+      "approximate"
+    end
+
+    {
+      id: org.id,
+      name: org.name,
+      match_type: match_type,
+      name_match: name_exact || name_similar,
+      blocked: name_exact
+    }
   end
 end
