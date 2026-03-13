@@ -197,6 +197,16 @@ class User < ApplicationRecord
     []
   end
 
+  # Override Devise to always send confirmation to the pending email when present.
+  # Devise's default checks `pending_reconfirmation?` but can still route to the
+  # current email in some flows. This ensures the confirmation always targets the
+  # unconfirmed (new) email address.
+  def send_confirmation_instructions
+    generate_confirmation_token! unless @raw_confirmation_token
+    target = unconfirmed_email.presence || email
+    send_devise_notification(:confirmation_instructions, @raw_confirmation_token, to: target)
+  end
+
   def set_welcome_instructions_token!
     loop do
       self.welcome_instructions_token = Devise.friendly_token
