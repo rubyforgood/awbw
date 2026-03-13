@@ -114,7 +114,8 @@ class WorkshopLogsController < ApplicationController
     @workshop_log = WorkshopLog.find(params[:id])
     authorize! @workshop_log
     @workshop_log.destroy!
-    redirect_to workshop_logs_path, notice: "Workshop log was successfully deleted."
+    redirect_params = params[:created_by_id].present? ? { created_by_id: params[:created_by_id] } : {}
+    redirect_to workshop_logs_path(redirect_params), notice: "Workshop log was successfully deleted."
   end
 
   def validate_new

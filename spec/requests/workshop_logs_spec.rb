@@ -332,6 +332,14 @@ RSpec.describe "/workshop_logs", type: :request do
       expect(response).to redirect_to(workshop_logs_path)
     end
 
+    it "preserves created_by_id param in redirect when present" do
+      workshop_log = create(:workshop_log, valid_attributes)
+
+      delete workshop_log_path(workshop_log), params: { created_by_id: user.id }
+
+      expect(response).to redirect_to(workshop_logs_path(created_by_id: user.id))
+    end
+
     it "does not allow destroying another user's workshop log" do
       other_user = create(:user)
       workshop_log = create(:workshop_log, valid_attributes.merge(created_by_id: other_user.id))
