@@ -282,14 +282,21 @@ class OrganizationsController < ApplicationController
     name.to_s.downcase.gsub(/[^a-z0-9]/, "")
   end
 
-  IGNORE_WORDS = %w[combined childrens of the and inc]
+  IGNORE_WORDS_LAST_ONLY = %w[combined childrens adult]
+  IGNORE_WORDS_ALWAYS = %w[of the and inc]
 
   def words(name)
-    name
+    all_words = name
       .to_s
       .downcase
       .gsub(/[^a-z0-9\s]/, "")
       .split
-      .reject { |w| IGNORE_WORDS.include?(w) }
+
+    last_word = all_words.last
+
+    all_words.reject do |w|
+      IGNORE_WORDS_ALWAYS.include?(w) ||
+        (IGNORE_WORDS_LAST_ONLY.include?(w) && w != last_word)
+    end
   end
 end
