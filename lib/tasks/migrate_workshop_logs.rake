@@ -16,7 +16,11 @@ namespace :workshop_logs do
       workshop_log_count = ActiveRecord::Base.connection.execute(
         "SELECT COUNT(*) AS c FROM reports WHERE #{wl_condition}"
       ).first[0]
+      orphan_count = ActiveRecord::Base.connection.execute(
+        "SELECT COUNT(*) FROM reports r LEFT JOIN users u ON u.id = r.created_by_id WHERE r.#{wl_condition} AND r.created_by_id IS NOT NULL AND u.id IS NULL"
+      ).first[0]
       puts "Copying #{workshop_log_count} WorkshopLog records to workshop_logs table..."
+      puts "  (#{orphan_count} records have orphaned created_by_id — will be set to NULL)" if orphan_count > 0
 
       ActiveRecord::Base.connection.execute(<<~SQL)
         INSERT INTO workshop_logs (
@@ -27,13 +31,16 @@ namespace :workshop_logs do
           created_at, updated_at
         )
         SELECT
-          id, created_by_id, organization_id, windows_type_id, workshop_id,
-          date, rating, COALESCE(external_workshop_title, workshop_name),
-          children_first_time, children_ongoing,
-          teens_first_time, teens_ongoing, adults_first_time, adults_ongoing,
-          created_at, updated_at
-        FROM reports
-        WHERE #{wl_condition}
+          r.id,
+          CASE WHEN u.id IS NOT NULL THEN r.created_by_id END,
+          r.organization_id, r.windows_type_id, r.workshop_id,
+          r.date, r.rating, COALESCE(r.external_workshop_title, r.workshop_name),
+          r.children_first_time, r.children_ongoing,
+          r.teens_first_time, r.teens_ongoing, r.adults_first_time, r.adults_ongoing,
+          r.created_at, r.updated_at
+        FROM reports r
+        LEFT JOIN users u ON u.id = r.created_by_id
+        WHERE r.#{wl_condition}
       SQL
 
       # Update report_form_field_answers to point to workshop_logs
