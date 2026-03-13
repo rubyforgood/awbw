@@ -245,15 +245,18 @@ class OrganizationsController < ApplicationController
     )
   end
 
-
   def find_duplicate_organizations(name)
     return [] if name.blank?
 
     normalized = normalize(name)
     input_words = words(name)
 
+    # fallback if all words were ignored
+    search_word = input_words.first || name.to_s.downcase
+
     candidates = Organization
-      .where("LOWER(name) LIKE ?", "%#{input_words.first}%")
+      .where("LOWER(name) LIKE ?", "%#{search_word}%")
+      .select(:id, :name)
       .limit(20)
 
     candidates.map do |org|
@@ -276,7 +279,6 @@ class OrganizationsController < ApplicationController
       }
     end.select { |d| d[:name_match] }
   end
-
   def normalize(name)
     name.to_s.downcase.gsub(/[^a-z0-9]/, "")
   end
