@@ -16,6 +16,13 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
 
   before do
     Rake::Task["workshop_logs:migrate_from_reports"].reenable
+    # Ensure the orphaned reports user exists (rake task requires it)
+    User.find_or_create_by!(email: "orphaned_reports@awbw.org") do |u|
+      u.first_name = "Orphaned Reports"
+      u.last_name = "User"
+      u.password = "password"
+      u.confirmed_at = Time.current
+    end
     # Ensure clean state — clear any stale data so the rake task
     # only processes this test's report
     conn.execute("UPDATE report_form_field_answers SET workshop_log_id = NULL WHERE workshop_log_id IS NOT NULL")
@@ -155,6 +162,20 @@ RSpec.describe "workshop_logs:migrate_from_reports" do
 
     count = conn.execute("SELECT COUNT(*) FROM reports WHERE type = 'MonthlyReport'").first[0]
     expect(count).to eq(1)
+  end
+
+  it "reassigns orphaned created_by_id to the orphaned reports user" do
+    report_id = insert_report_as_workshop_log
+    # Orphan the user by deleting them with FK checks disabled
+    conn.execute("SET FOREIGN_KEY_CHECKS = 0")
+    conn.execute("DELETE FROM users WHERE id = #{user.id}")
+    conn.execute("SET FOREIGN_KEY_CHECKS = 1")
+
+    Rake::Task["workshop_logs:migrate_from_reports"].invoke
+
+    orphaned_reports_user = User.find_by!(email: "orphaned_reports@awbw.org")
+    created_by = conn.execute("SELECT created_by_id FROM workshop_logs WHERE id = #{report_id}").first[0]
+    expect(created_by).to eq(orphaned_reports_user.id)
   end
 
   it "rolls back all changes if any step fails" do
