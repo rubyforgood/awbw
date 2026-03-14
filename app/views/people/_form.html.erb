@@ -18,62 +18,6 @@
         <h3 class="font-semibold text-gray-700 mb-2">Important dates</h3>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
           <div class="flex flex-col md:flex-row gap-6">
-            <div class="shrink-0 relative group cursor-help">
-              <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
-                Affiliated since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
-              </label>
-              <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
-                <% affiliated_start = person.affiliations.minimum(:start_date) %>
-                <% if affiliated_start.nil? && person.affiliations.exists? && person.member_since.present? %>
-                  <p>Earliest start date from any affiliation, regardless of title.<br><br><span class="text-amber-700 font-medium">⚠ No affiliations have a start date. Legacy member_since value is <%= person.member_since.strftime('%b %Y') %>. Add a start date to an affiliation to use it here.</span></p>
-                <% elsif affiliated_start.nil? && person.affiliations.exists? %>
-                  <p>Earliest start date from any affiliation, regardless of title.<br><br><span class="text-amber-700 font-medium">⚠ No affiliations have a start date. Edit the affiliation records to add one.</span></p>
-                <% else %>
-                  <p>Earliest start date from any affiliation, regardless of title. Edit affiliation records to change this date.</p>
-                  <% if decorated.member_since_earlier_than_all_affiliations? %>
-                    <p class="mt-2 text-amber-700 font-medium">⚠ Member since (<%= person.member_since.strftime('%b %Y') %>) is earlier than any affiliation. Create an affiliation with that start date to reflect it on the profile.</p>
-                  <% elsif decorated.member_since_differs_from_all_affiliations? %>
-                    <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Member since (<%= person.member_since.strftime('%b %Y') %>) differs from the earliest affiliation start date.</p>
-                  <% end %>
-                <% end %>
-              </div>
-              <div class="pt-1">
-                <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if decorated.affiliation_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i><% end %><%= decorated.affiliated_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.affiliation_end_date.strftime('%b %Y')}" if decorated.affiliation_end_date %></span>
-                <% if decorated.affiliated_since_date.nil? && person.affiliations.exists? %>
-                  <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
-                <% elsif decorated.member_since_earlier_than_all_affiliations? %>
-                  <p class="text-xs text-amber-700 mt-1">⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %></p>
-                <% elsif decorated.member_since_differs_from_all_affiliations? %>
-                  <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %></p>
-                <% end %>
-              </div>
-            </div>
-            <div class="shrink-0 relative group cursor-help">
-              <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
-                Facilitator since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
-              </label>
-              <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
-                <% facilitator_start = person.affiliations.facilitators.minimum(:start_date) %>
-                <% if facilitator_start.nil? && person.member_since.present? %>
-                  <p>Earliest start date from affiliations with 'facilitator' somewhere in the title.<br><br><span class="text-amber-700 font-medium">⚠ Currently showing the legacy member_since value (<%= person.member_since.strftime('%b %Y') %>) because no Facilitator affiliation has a start date. Add a start date to a Facilitator affiliation to stop using the legacy value.</span></p>
-                <% else %>
-                  <p>Earliest start date from affiliations with 'facilitator' somewhere in the title. Edit affiliation records to change this date.</p>
-                  <% if decorated.member_since_earlier_than_facilitator_affiliations? %>
-                    <p class="mt-2 text-amber-700 font-medium">⚠ Member since (<%= person.member_since.strftime('%b %Y') %>) is earlier than any Facilitator affiliation. Create an affiliation with that start date to reflect it on the profile.</p>
-                  <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
-                    <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Member since (<%= person.member_since.strftime('%b %Y') %>) differs from the earliest Facilitator affiliation start date.</p>
-                  <% end %>
-                <% end %>
-              </div>
-              <div class="pt-1">
-                <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><% if decorated.facilitation_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active facilitator affiliations"></i><% end %><%= decorated.facilitator_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.facilitation_end_date.strftime('%b %Y')}" if decorated.facilitation_end_date %></span>
-                <% if decorated.member_since_earlier_than_facilitator_affiliations? %>
-                  <p class="text-xs text-amber-700 mt-1">⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %></p>
-                <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
-                  <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %></p>
-                <% end %>
-              </div>
-            </div>
             <div class="flex-1">
               <%= f.input :date_of_birth,
                           label: "Birthday",
@@ -261,6 +205,64 @@
     </div>
 
     <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:organizations) %> p-4 mb-4 shadow-sm">
+      <div class="flex flex-col md:flex-row gap-6 mb-4">
+        <div class="shrink-0 relative group cursor-help">
+          <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
+            Affiliated since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
+          </label>
+          <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
+            <% affiliated_start = person.affiliations.minimum(:start_date) %>
+            <% if affiliated_start.nil? && person.affiliations.exists? && person.member_since.present? %>
+              <p>Earliest start date from any affiliation, regardless of title.<br><br><span class="text-amber-700 font-medium">⚠ No affiliations have a start date. Legacy member_since value is <%= person.member_since.strftime('%b %Y') %>. Add a start date to an affiliation to use it here.</span></p>
+            <% elsif affiliated_start.nil? && person.affiliations.exists? %>
+              <p>Earliest start date from any affiliation, regardless of title.<br><br><span class="text-amber-700 font-medium">⚠ No affiliations have a start date. Edit the affiliation records to add one.</span></p>
+            <% else %>
+              <p>Earliest start date from any affiliation, regardless of title. Edit affiliation records to change this date.</p>
+              <% if decorated.member_since_earlier_than_all_affiliations? %>
+                <p class="mt-2 text-amber-700 font-medium">⚠ Member since (<%= person.member_since.strftime('%b %Y') %>) is earlier than any affiliation. Create an affiliation with that start date to reflect it on the profile.</p>
+              <% elsif decorated.member_since_differs_from_all_affiliations? %>
+                <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Member since (<%= person.member_since.strftime('%b %Y') %>) differs from the earliest affiliation start date.</p>
+              <% end %>
+            <% end %>
+          </div>
+          <div class="pt-1">
+            <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if decorated.affiliation_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i><% end %><%= decorated.affiliated_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.affiliation_end_date.strftime('%b %Y')}" if decorated.affiliation_end_date %></span>
+            <% if decorated.affiliated_since_date.nil? && person.affiliations.exists? %>
+              <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
+            <% elsif decorated.member_since_earlier_than_all_affiliations? %>
+              <p class="text-xs text-amber-700 mt-1">⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %></p>
+            <% elsif decorated.member_since_differs_from_all_affiliations? %>
+              <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %></p>
+            <% end %>
+          </div>
+        </div>
+        <div class="shrink-0 relative group cursor-help">
+          <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
+            Facilitator since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
+          </label>
+          <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
+            <% facilitator_start = person.affiliations.facilitators.minimum(:start_date) %>
+            <% if facilitator_start.nil? && person.member_since.present? %>
+              <p>Earliest start date from affiliations with 'facilitator' somewhere in the title.<br><br><span class="text-amber-700 font-medium">⚠ Currently showing the legacy member_since value (<%= person.member_since.strftime('%b %Y') %>) because no Facilitator affiliation has a start date. Add a start date to a Facilitator affiliation to stop using the legacy value.</span></p>
+            <% else %>
+              <p>Earliest start date from affiliations with 'facilitator' somewhere in the title. Edit affiliation records to change this date.</p>
+              <% if decorated.member_since_earlier_than_facilitator_affiliations? %>
+                <p class="mt-2 text-amber-700 font-medium">⚠ Member since (<%= person.member_since.strftime('%b %Y') %>) is earlier than any Facilitator affiliation. Create an affiliation with that start date to reflect it on the profile.</p>
+              <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
+                <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Member since (<%= person.member_since.strftime('%b %Y') %>) differs from the earliest Facilitator affiliation start date.</p>
+              <% end %>
+            <% end %>
+          </div>
+          <div class="pt-1">
+            <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><% if decorated.facilitation_end_date %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active facilitator affiliations"></i><% end %><%= decorated.facilitator_since_date&.strftime("%b %Y") || "—" %><%= " – #{decorated.facilitation_end_date.strftime('%b %Y')}" if decorated.facilitation_end_date %></span>
+            <% if decorated.member_since_earlier_than_facilitator_affiliations? %>
+              <p class="text-xs text-amber-700 mt-1">⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %></p>
+            <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
+              <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %></p>
+            <% end %>
+          </div>
+        </div>
+      </div>
       <% if allowed_to?(:manage?, Person) %>
         <div class="p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
           <%= f.fields_for :affiliations do |affiliation_form| %>
