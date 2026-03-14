@@ -5,6 +5,7 @@
 #   ai/lint           # check all files
 #   ai/lint --fix     # auto-fix
 set -euo pipefail
+eval "$(command /opt/homebrew/bin/mise activate zsh)"
 if [[ "${1:-}" == "--fix" ]]; then
   shift
   bundle exec rubocop -a "$@"
