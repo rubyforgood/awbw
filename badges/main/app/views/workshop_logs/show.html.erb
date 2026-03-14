@@ -5,6 +5,9 @@
     <% if allowed_to?(:index?, WorkshopLog) %>
       <%= link_to "My Workshop Logs", workshop_logs_path(created_by_id: current_user.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <% end %>
+    <% if allowed_to?(:manage?, WorkshopLog) %>
+      <%= link_to "All workshop logs", workshop_logs_path, class: "text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded px-2 py-1" %>
+    <% end %>
     <% if allowed_to?(:edit?, @workshop_log) %>
       <%= link_to "Edit", edit_workshop_log_path(@workshop_log), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <% end %>

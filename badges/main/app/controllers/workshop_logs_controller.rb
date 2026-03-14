@@ -87,6 +87,13 @@ class WorkshopLogsController < ApplicationController
     set_form_variables
   end
 
+  def destroy
+    @workshop_log = WorkshopLog.find(params[:id])
+    authorize! @workshop_log
+    @workshop_log.destroy!
+    redirect_params = params[:created_by_id].present? ? { created_by_id: params[:created_by_id] } : {}
+    redirect_to workshop_logs_path(redirect_params), notice: "Workshop log was successfully deleted."
+  end
 
   def set_index_variables # needs to not be private
     cache_key_prefix = "workshop_logs/index_dropdowns/#{current_user&.id}"
