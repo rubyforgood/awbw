@@ -5,4 +5,5 @@
 # Usage:
 #   ai/server
 set -euo pipefail
+eval "$(command /opt/homebrew/bin/mise activate zsh)"
 bin/dev

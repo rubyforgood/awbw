@@ -7,4 +7,5 @@
 #   ai/test spec/models/user_spec.rb:42          # specific line
 #   ai/test --fail-fast                          # stop on first failure
 set -euo pipefail
+eval "$(command /opt/homebrew/bin/mise activate zsh)"
 bundle exec rspec "$@"

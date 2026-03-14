@@ -6,4 +6,5 @@
 #   ai/routes -g workshops     # routes matching "workshops"
 #   ai/routes -g events        # routes matching "events"
 set -euo pipefail
+eval "$(command /opt/homebrew/bin/mise activate zsh)"
 bundle exec rails routes "$@"

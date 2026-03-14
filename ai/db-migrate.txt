@@ -5,4 +5,5 @@
 #   ai/db-migrate                    # migrate
 #   ai/db-migrate VERSION=0          # rollback all
 set -euo pipefail
+eval "$(command /opt/homebrew/bin/mise activate zsh)"
 bundle exec rails db:migrate "$@"

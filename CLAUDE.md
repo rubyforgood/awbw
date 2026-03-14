@@ -181,6 +181,14 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
 - **On every push**, add PR review comments on notable lines of code — decisions, trade-offs, non-obvious logic, or anything a reviewer should understand. Use `gh api` to post line comments on the diff
 
+## Ruby Version Manager
+
+This project uses [mise](https://mise.jdx.dev/) to manage the Ruby version. Before running any `bundle exec` or Ruby command, activate mise:
+```bash
+eval "$(command /opt/homebrew/bin/mise activate zsh)"
+```
+The `ai/` scripts include this automatically.
+
 ## Quick Commands
 
 See `ai/` directory for executable scripts:
