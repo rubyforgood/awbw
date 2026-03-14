@@ -1,5 +1,6 @@
 <%= simple_form_for(@organization, html: { data: { controller: "affiliation-dates" } }) do |f| %>
   <%= render 'shared/errors', resource: @organization if @organization.errors.any? %>
+  <%= render "duplicate_organizations_warning" %>
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>
   <% automanaged_notice = "<span class='text-xs text-amber-700 mt-1'>Auto-managed by affiliations</span>" %>
 
