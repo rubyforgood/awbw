@@ -15,7 +15,7 @@
   <br>
   <%= f.fields_for :workshop_logs do |workshop_log| %>
     <% unless workshop_log.object.id %>
-      <%= render 'workshop_log_fields', f: workshop_log, agencies: agencies, parent_form: f, workshop: workshop, windows_type: windows_type %>
+      <%= render 'workshop_log_fields', f: workshop_log, organizations: organizations, parent_form: f, workshop: workshop, windows_type: windows_type %>
     <% end %>
   <% end %>
   <br>

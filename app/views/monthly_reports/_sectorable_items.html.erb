@@ -2,7 +2,7 @@
 <% @sectors = Sector.published.map{ |si| [ si.id, si.name ] } %>
 
 <div class="form-group">
-  <label for="agency">Select all populations served this month *:</label>
+  <label for="organization">Select all populations served this month *:</label>
   <% i= 0 %>
   <div class="four-btn-row four-btn-row-custom clearfix" id="population_fields">
     <% @sectors.each do |sf| %>

@@ -147,12 +147,12 @@
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                      Agency / Organization *
+                      Organization *
                     </label>
                     <input type="text"
-                           name="contact_us[agency]"
+                           name="contact_us[organization]"
                            required
-                           data-error-message="Agency / Organization is required"
+                           data-error-message="Organization is required"
                            class="w-full rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition">
                     <p class="field-error hidden mt-1 text-xs text-red-600"></p>
                   </div>
@@ -161,7 +161,7 @@
                 <input type="hidden" name="contact_us[first_name]" value="<%= @user.person&.first_name %>">
                 <input type="hidden" name="contact_us[last_name]" value="<%= @user.person&.last_name %>">
                 <input type="hidden" name="contact_us[from]" value="<%= @user.email %>">
-                <input type="hidden" name="contact_us[agency]" value="<%= @user.person&.primary_organization&.name || '' %>">
+                <input type="hidden" name="contact_us[organization]" value="<%= @user.person&.primary_organization&.name || '' %>">
               <% end %>
               <!-- Honeypot -->
               <div class="absolute opacity-0 top-0 left-0 h-0 w-0 -z-10" aria-hidden="true">

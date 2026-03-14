@@ -93,7 +93,7 @@
                       label: "Organization",
                       required: true,
                       disabled: promoted_to_story,
-                      hint: "Please contact AWBW if your agency is not listed.",
+                      hint: "Please contact AWBW if your organization is not listed.",
                       prompt: "Select organization",
                       selected: (params[:organization_id].presence || f.object.organization_id || default_org&.id),
                       input_html: {

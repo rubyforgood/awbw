@@ -106,28 +106,28 @@ class ExtendedEventRegistrationFormBuilder
                          key: "phone_type", group: "contact", required: true,
                          options: %w[Mobile Home Work])
 
-    position = add_header(form, position, "Agency / Organization Information", group: "contact")
-    position = add_field(form, position, "Agency / Organization Name", :free_form_input_one_line,
-                         key: "agency_name", group: "contact", required: false)
+    position = add_header(form, position, "Organization Information", group: "contact")
+    position = add_field(form, position, "Organization Name", :free_form_input_one_line,
+                         key: "organization_name", group: "contact", required: false)
     position = add_field(form, position, "Position / Title", :free_form_input_one_line,
-                         key: "agency_position", group: "contact", required: false)
-    position = add_field(form, position, "Agency Street Address", :free_form_input_one_line,
-                         key: "agency_street", group: "contact", required: false)
-    position = add_field(form, position, "Agency City", :free_form_input_one_line,
-                         key: "agency_city", group: "contact", required: false)
-    position = add_field(form, position, "Agency State / Province", :free_form_input_one_line,
-                         key: "agency_state", group: "contact", required: false)
-    position = add_field(form, position, "Agency Zip / Postal Code", :free_form_input_one_line,
-                         key: "agency_zip", group: "contact", required: false)
-    position = add_field(form, position, "Agency Type", :multiple_choice_radio,
-                         key: "agency_type", group: "contact", required: false,
+                         key: "organization_position", group: "contact", required: false)
+    position = add_field(form, position, "Organization Street Address", :free_form_input_one_line,
+                         key: "organization_street", group: "contact", required: false)
+    position = add_field(form, position, "Organization City", :free_form_input_one_line,
+                         key: "organization_city", group: "contact", required: false)
+    position = add_field(form, position, "Organization State / Province", :free_form_input_one_line,
+                         key: "organization_state", group: "contact", required: false)
+    position = add_field(form, position, "Organization Zip / Postal Code", :free_form_input_one_line,
+                         key: "organization_zip", group: "contact", required: false)
+    position = add_field(form, position, "Organization Type", :multiple_choice_radio,
+                         key: "organization_type", group: "contact", required: false,
                          options: [
                            "Domestic Violence", "Homeless Shelter", "Hospital",
                            "Mental Health", "School", "After-School Program",
                            "Community Center", "Other"
                          ])
     position = add_field(form, position, "Agency Website", :free_form_input_one_line,
-                         key: "agency_website", group: "contact", required: false)
+                         key: "organization_website", group: "contact", required: false)
 
     position
   end

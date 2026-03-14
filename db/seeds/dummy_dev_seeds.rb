@@ -1195,13 +1195,13 @@ form_submissions.each do |data|
     when "last_name" then data[:person].last_name
     when "primary_email", "enter_email", "confirm_email" then data[:person].preferred_email || "sample@example.com"
     when "phone" then "(555) #{rand(100..999)}-#{rand(1000..9999)}"
-    when "street_address", "agency_street_address" then Faker::Address.street_address
-    when "city", "agency_city" then Faker::Address.city
-    when "state_province", "agency_state_province" then Faker::Address.state_abbr
-    when "zip_postal_code", "agency_zip_postal_code" then Faker::Address.zip_code
-    when "agency_organization_name" then Faker::Company.name
+    when "street_address", "organization_street_address" then Faker::Address.street_address
+    when "city", "organization_city" then Faker::Address.city
+    when "state_province", "organization_state_province" then Faker::Address.state_abbr
+    when "zip_postal_code", "organization_zip_postal_code" then Faker::Address.zip_code
+    when "organization_name" then Faker::Company.name
     when "position_title" then "Facilitator"
-    when "agency_website" then "https://example.org"
+    when "organization_website" then "https://example.org"
     when "racial_ethnic_identity" then "Prefer not to say"
     when "secondary_email" then data[:person].email_2
     when "preferred_nickname" then data[:person].first_name
@@ -1291,7 +1291,7 @@ You are welcome to participate in our <a href="/awbw/programs-sac.php">Survivor'
   {
     id: 12, question: "How do I get a scholarship for Leadership Training?",
     answer: %(
-We award all scholarships based on need and availability of funds to agencies serving domestic violence clients. We ask those interested in applying for scholarship funding to submit a <a href="/awbw/programs-leadership_training-scholarships_application.php">Scholarship Request</a> 4 weeks in advance of the chosen training. <a href="/awbw/programs-leadership_training-scholarships.php">Click here</a> to see the guidelines.
+We award all scholarships based on need and availability of funds to organizations serving domestic violence clients. We ask those interested in applying for scholarship funding to submit a <a href="/awbw/programs-leadership_training-scholarships_application.php">Scholarship Request</a> 4 weeks in advance of the chosen training. <a href="/awbw/programs-leadership_training-scholarships.php">Click here</a> to see the guidelines.
     ), published: true, ordering: 120
   },
   {
@@ -1303,25 +1303,25 @@ AWBW awards Art Supply Scholarships to active reporting programs. All scholarshi
   {
     id: 5, question: "I would like to volunteer to run art workshops at my local shelter. How can I get involved?",
     answer: %(
-Due to confidentiality issues, art workshops are run by volunteers and staff who already work with a domestic violence agency, rather than outside volunteers. Contact your local domestic violence organization to find out about volunteer opportunities and whether or not they use the Windows Program. You will need to meet the individual agency's training requirements and get their permission and support to implement AWBW's program. Resource numbers you can call to find <a href="/awbw/contact-dv_resources.php">domestic violence organizations in your local area</a>.
+Due to confidentiality issues, art workshops are run by volunteers and staff who already work with a domestic violence organization, rather than outside volunteers. Contact your local domestic violence organization to find out about volunteer opportunities and whether or not they use the Windows Program. You will need to meet the individual organization's training requirements and get their permission and support to implement AWBW's program. Resource numbers you can call to find <a href="/awbw/contact-dv_resources.php">domestic violence organizations in your local area</a>.
     ), published: true, ordering: 109
   },
   {
-    id: 38, question: "Why Can We Train People Within Our Agency, But Not Train People Outside Our Agency?",
+    id: 38, question: "Why Can We Train People Within Our Organization, But Not Train People Outside Our Organization",
     answer: %(
-1. We encourage you to train others within your agency because we want you to be able to do all you can to help your Windows groups become as strong and creative as possible. Over the years we've seen that the AWBW trained leaders can teach others quite effectively, and the new leaders they train also become a wonderful asset to the program.<br />
-2. There is a special process for training the trainers (for training beyond one's own agency). Otherwise many people who've been to only one training might want to start representing AWBW, and leading throughout beyond their agency, and we'd have no way of knowing if they were effective. There would also be no system of connecting what they are doing into the AWBW network of leaders. <br />
-3. Everything we do has been made possible by the network of leaders communicating and staying in touch with AWBW. The program and all that's been developed simply wouldn't exist without all the leaders sending their reports, insights and thoughts to AWBW so we can share them with everybody. So by leading the trainings we are able to make sure new agencies get the best shot possible at being closely connected to this network, so that it can thrive and continue.
+1. We encourage you to train others within your organization because we want you to be able to do all you can to help your Windows groups become as strong and creative as possible. Over the years we've seen that the AWBW trained leaders can teach others quite effectively, and the new leaders they train also become a wonderful asset to the program.<br />
+2. There is a special process for training the trainers (for training beyond one's own organization). Otherwise many people who've been to only one training might want to start representing AWBW, and leading throughout beyond their organization, and we'd have no way of knowing if they were effective. There would also be no system of connecting what they are doing into the AWBW network of leaders. <br />
+3. Everything we do has been made possible by the network of leaders communicating and staying in touch with AWBW. The program and all that's been developed simply wouldn't exist without all the leaders sending their reports, insights and thoughts to AWBW so we can share them with everybody. So by leading the trainings we are able to make sure new organizations get the best shot possible at being closely connected to this network, so that it can thrive and continue.
     ), published: true, ordering: 108
   },
   {
-    id: 39, question: "So How Can I Share AWBW With Other Agencies Within My Community?",
+    id: 39, question: "So How Can I Share AWBW With Other Organizations Within My Community?",
     answer: %(
-These are some ways you can help other agencies start their own Windows Programs:<br />
+These are some ways you can help other organizations start their own Windows Programs:<br />
 1. Share an introductory workshop with them (rather than a full training). Be sure to let us know you are doing it. That way we can help you pick a workshop to lead (if you want help) and we can give you the Workshop Feedback form to pass out. The form gives participants a way to get in touch with us so we can help them get further training so desire.<br />
 2. Encourage them to get trained (by either hosting a training, having distance learning, or coming to California :-)<br />
 3. Encourage them to take advantage of the scholarships we have through grant funding for the training in LA and the distance training.<br />
-4. If a leader works at your agency and then gets a job at another agency, they are welcome to contact us and let us know they are starting the program there. We will be happy to support them in starting a new program.
+4. If a leader works at your organization and then gets a job at another organization, they are welcome to contact us and let us know they are starting the program there. We will be happy to support them in starting a new program.
     ), published: true, ordering: 107
   },
   {

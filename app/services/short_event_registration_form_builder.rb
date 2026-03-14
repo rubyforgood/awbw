@@ -53,7 +53,7 @@ class ShortEventRegistrationFormBuilder
     position = add_header(form, position, "Scholarship Application", group: "scholarship")
 
     position = add_field(form, position,
-                         "I / my agency cannot afford the full training cost and need a scholarship to attend.",
+                         "I / my organization cannot afford the full training cost and need a scholarship to attend.",
                          :multiple_choice_checkbox,
                          key: "scholarship_eligibility", group: "scholarship", required: true,
                          options: [ "Yes" ])

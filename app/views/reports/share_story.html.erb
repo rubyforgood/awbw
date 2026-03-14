@@ -23,17 +23,17 @@
              <br>
            </div>
 
-           <!-- ##### AGENCIES  #### -->
+           <!-- ##### ORGANIZATIONS  #### -->
            <div class='form-group'>
              <div class="label-plus-comment">
-               <%= f.label 'Agency' %>
+               <%= f.label 'Organization' %>
                <div class="custom-smaller">
-                 Please contact AWBW if your agency is not listed.
+                 Please contact AWBW if your organization is not listed.
                </div>
              </div>
-             <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
-             <%= f.collection_select :organization_id, @agencies, :id, :name,
-{ selected: agency ? agency.id : nil,class: 'js-agency-select' },
+             <% organization = @organizations.find_by(windows_type_id: f.object.windows_type.id) %>
+             <%= f.collection_select :organization_id, @organizations, :id, :name,
+{ selected: organization ? organization.id : nil, class: 'js-organization-select' },
 class:"selectpicker form-control form-control-custom" %>
            </div>
 

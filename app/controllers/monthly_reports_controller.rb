@@ -13,15 +13,15 @@ class MonthlyReportsController < ApplicationController
 
     build_month_and_year
     find_form_builder
-    load_agencies
+    load_organizations
     @workshop_log_summary_page = show_feature?(:new_workshop_log)
 
     if (@report = current_user.submitted_monthly_report(@date,
                                                         @form_builder.windows_type,
-                                                        @agency_id))
+                                                        @organization_id))
       redirect_to(action: :edit, id: @report,
                    month: @month, year: @year,
-                   form_builder_id: @form_builder.id, agency_id: @agency_id)
+                   form_builder_id: @form_builder.id, organization_id: @organization_id)
     else
       render_form
       render :new
@@ -40,8 +40,8 @@ class MonthlyReportsController < ApplicationController
       else
         @form_builder = FormBuilder.find(@report.owner_id)
         build_month_and_year
-        load_agencies
-        @agency_id = report_params["organization_id"]
+        load_organizations
+        @organization_id = report_params["organization_id"]
 
         flash[:alert] = "There was a problem submitting your form: " +
                         "#{@report.errors.full_messages.join(" ")}"
@@ -66,13 +66,13 @@ class MonthlyReportsController < ApplicationController
     @report = Report.find(params[:id])
 
     authorize! @report
-    @agencies  = current_user.organizations.
+    @organizations  = current_user.organizations.
                  where(windows_type_id: @report.windows_type_id)
     @month = @report.date.month
     @year  =  @report.date.year
 
     find_workshop_logs
-    find_combined_workshop_logs(@agency_id)
+    find_combined_workshop_logs(@organization_id)
   end
 
   def update
@@ -91,8 +91,8 @@ class MonthlyReportsController < ApplicationController
         flash[:notice] = "Thanks for reporting on a update report. "
         redirect_to root_path
       else
-        @agencies  = current_user.organizations.
-                       where(windows_type_id: @report.windows_type_id)
+        @organizations  = current_user.organizations.
+                            where(windows_type_id: @report.windows_type_id)
 
         flash[:alert] = "ERROR!!!!!!!!!!!!!!"
         render :edit
@@ -118,9 +118,9 @@ class MonthlyReportsController < ApplicationController
 
   private
 
-  def load_agencies
-    @agencies  = current_user.organizations.
-                   where(windows_type_id: @form_builder.windows_type_id).uniq
+  def load_organizations
+    @organizations  = current_user.organizations.
+                         where(windows_type_id: @form_builder.windows_type_id).uniq
   end
 
   def render_form
@@ -133,7 +133,7 @@ class MonthlyReportsController < ApplicationController
     find_form_builder
     build_report_form_fields
     find_workshop_logs
-    find_combined_workshop_logs(@agency_id)
+    find_combined_workshop_logs(@organization_id)
   end
 
   def find_form_builder
@@ -142,12 +142,12 @@ class MonthlyReportsController < ApplicationController
     else
       @form_builder = FormBuilder
         .monthly
-        .find_by(windows_type_id: @agency.windows_type_id)
+        .find_by(windows_type_id: @organization.windows_type_id)
         .decorate
     end
 
-    agency     = params[:agency_id] ? Organization.find(params[:agency_id]) : current_user.organizations.where(windows_type_id: @form_builder.windows_type).first
-    @agency_id = agency.id unless agency.nil?
+    organization     = params[:organization_id] ? Organization.find(params[:organization_id]) : current_user.organizations.where(windows_type_id: @form_builder.windows_type).first
+    @organization_id = organization.id unless organization.nil?
   end
 
   def build_report
@@ -208,10 +208,10 @@ class MonthlyReportsController < ApplicationController
     @total_first_time = logs.reduce(0) { |sum, l| sum = sum + l.num_first_time }
   end
 
-  def find_combined_workshop_logs(agency_id)
+  def find_combined_workshop_logs(organization_id)
     combined_windows_type = WindowsType.where(short_name: "COMBINED").first
     @combined_workshop_logs = current_user.organization_workshop_logs(
-    @report.date, combined_windows_type, agency_id)
+    @report.date, combined_windows_type, organization_id)
   end
 
   def build_month_and_year

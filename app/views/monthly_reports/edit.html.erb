@@ -51,12 +51,12 @@ A monthly report has already been submitted for this month. Please contact your 
 
       <div class='form-group'>
         <div class="label-plus-comment">
-          <%= f.label 'Agency' %>
-          <div class="custom-smaller">Please contact AWBW if your agency is not listed.</div>
+          <%= f.label 'Organization' %>
+          <div class="custom-smaller">Please contact AWBW if your organization is not listed.</div>
         </div>
-        <% agency = @agency_id %>
-        <%= f.collection_select :organization_id, @agencies, :id, :name,
-        { selected: agency, class: 'js-agency-select' },
+        <% organization = @organization_id %>
+        <%= f.collection_select :organization_id, @organizations, :id, :name,
+        { selected: organization, class: 'js-organization-select' },
         class:"selectpicker form-control form-control-custom", onchange: 'redirectToNewOrganization()' %>
       </div>
 
@@ -242,10 +242,10 @@ A monthly report has already been submitted for this month. Please contact your 
   });
 
     $('#report_organization_id').on("change", function(){
-    var agency_id = this.value;
+    var organization_id = this.value;
     var year = <%= @year %>;
     var month = <%= @month %>;
-    var new_url = "/reports/monthly?form_builder_id=<%= params[:form_builder_id]%>&month=" + month + "&year=" + year + "&agency_id=" + agency_id;
+    var new_url = "/reports/monthly?form_builder_id=<%= params[:form_builder_id]%>&month=" + month + "&year=" + year + "&organization_id=" + organization_id;
      window.location = new_url;
 
   });

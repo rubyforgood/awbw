@@ -47,7 +47,7 @@ class WorkshopsController < ApplicationController
 
     combined_windows_type = WindowsType.where(short_name: "COMBINED").first
     @combined_workshop_logs = current_user.organization_workshop_logs(
-      @report.date, combined_windows_type, current_user.agency_id
+      @report.date, combined_windows_type, current_user.organization_id
     )
     authorize! @combined_workshop_logs
   end

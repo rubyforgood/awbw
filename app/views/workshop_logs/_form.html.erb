@@ -44,7 +44,7 @@
                     value_method: :id,
                     label: "Organization",
                     required: true,
-                    hint: "Please contact AWBW if your agency is not listed.",
+                    hint: "Please contact AWBW if your organization is not listed.",
                     prompt: (@organizations.count > 1 ? "Please select the relevant organization" : nil),
                     selected: (params[:organization_id].presence || (f.object.organization_id || (@organizations.count == 1 ? @organizations.first.id : nil))),
                     input_html: { value: params[:organization_id].presence || f.object.organization_id || @organization_id,

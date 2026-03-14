@@ -21,9 +21,9 @@ module EventRegistrationServices
         create_mailing_address(person) if field_value("mailing_city").present?
         create_phone_contact(person) if field_value("phone").present?
 
-        organization = find_organization if field_value("agency_name").present?
+        organization = find_organization if field_value("organization_name").present?
         create_affiliation(person, organization) if organization
-        create_agency_address(organization) if organization && field_value("agency_city").present?
+        create_organization_address(organization) if organization && field_value("organization_city").present?
 
         assign_tags(person, organization)
 
@@ -159,7 +159,7 @@ module EventRegistrationServices
     end
 
     def find_organization
-      name = field_value("agency_name")&.strip
+      name = field_value("organization_name")&.strip
       return nil if name.blank?
 
       Organization.find_by(name: name)
@@ -170,14 +170,14 @@ module EventRegistrationServices
         person: person,
         organization: organization
       ) do |aff|
-        aff.title = field_value("agency_position")
+        aff.title = field_value("organization_position")
         aff.start_date = Date.current
       end
     end
 
-    def create_agency_address(organization)
-      new_city = field_value("agency_city")&.strip
-      new_state = field_value("agency_state")&.strip
+    def create_organization_address(organization)
+      new_city = field_value("organization_city")&.strip
+      new_state = field_value("organization_state")&.strip
 
       existing = organization.addresses.find_by(
         "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
@@ -186,8 +186,8 @@ module EventRegistrationServices
 
       if existing
         existing.update!(
-          street_address: field_value("agency_street"),
-          zip_code: field_value("agency_zip"),
+          street_address: field_value("organization_street"),
+          zip_code: field_value("organization_zip"),
           primary: true,
           inactive: false
         )
@@ -197,10 +197,10 @@ module EventRegistrationServices
       organization.addresses.where(primary: true).update_all(primary: false, inactive: true)
 
       organization.addresses.create!(
-        street_address: field_value("agency_street"),
+        street_address: field_value("organization_street"),
         city: new_city,
         state: new_state,
-        zip_code: field_value("agency_zip"),
+        zip_code: field_value("organization_zip"),
         locality: "Unknown",
         address_type: "work",
         primary: true

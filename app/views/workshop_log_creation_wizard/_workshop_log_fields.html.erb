@@ -6,8 +6,8 @@
 </div>
 <div class="form-group">
   <%= f.label "Organization", class: 'bold' %>
-  <%= f.collection_select :organization_id, agencies, :id, :name %>
-  Please contact AWBW if your agency is not listed.
+  <%= f.collection_select :organization_id, organizations, :id, :name %>
+  Please contact AWBW if your organization is not listed.
 </div>
 <div class="form-group">
   <%= f.label 'Workshop Date (required)', class: 'bold' %>

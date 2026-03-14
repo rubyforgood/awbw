@@ -67,13 +67,13 @@
 
       <div class='form-group'>
         <div class="label-plus-comment">
-          <%= f.label 'Agency' %>
-          <div class="custom-smaller">Please contact AWBW if your agency is not listed.</div>
+          <%= f.label 'Organization' %>
+          <div class="custom-smaller">Please contact AWBW if your organization is not listed.</div>
         </div>
-        <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
-        <%= f.collection_select :organization_id, @agencies, :id, :name,
-        { selected: agency ? agency.id : nil,class: 'js-agency-select' },
-        class:"selectpicker form-control form-control-custom", onchange: "window.location = $.replaceUrlParam(window.location.toString(),'agency_id',$(this).val() )" %>
+        <% organization = @organizations.find_by(windows_type_id: f.object.windows_type.id) %>
+        <%= f.collection_select :organization_id, @organizations, :id, :name,
+        { selected: organization ? organization.id : nil, class: 'js-organization-select' },
+        class:"selectpicker form-control form-control-custom", onchange: "window.location = $.replaceUrlParam(window.location.toString(),'organization_id',$(this).val() )" %>
       </div>
 
       <%= f.hidden_field :owner_id, value: @form_builder.id %>
@@ -257,8 +257,8 @@
    });
 
 
-  if ($.urlParam('agency_id') != null){
-    $("#report_organization_id").val("<%=params[:agency_id] %>");
+  if ($.urlParam('organization_id') != null){
+    $("#report_organization_id").val("<%=params[:organization_id] %>");
   }
 
   function validateOptions(event, div_id, input_type) {

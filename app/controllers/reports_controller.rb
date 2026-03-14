@@ -29,7 +29,7 @@ class ReportsController < ApplicationController
 
     @report.owner_type = "FormBuilder"
     @report.owner_id   = 7
-    @agencies = current_user.organizations
+    @organizations = current_user.organizations
   end
 
   def render_form
@@ -48,8 +48,8 @@ class ReportsController < ApplicationController
     build_month_and_year
     find_form_builder
     @report    = current_user.submitted_monthly_report(@date, @form_builder.windows_type)
-    @agencies  = current_user.organizations.
-                 where(windows_type_id: @report.windows_type_id)
+    @organizations  = current_user.organizations.
+                        where(windows_type_id: @report.windows_type_id)
     @month = @report.date.month
     @year  =  @report.date.year
 
@@ -62,8 +62,8 @@ class ReportsController < ApplicationController
                              .order(title: :asc)
 
     @report    = Report.find(params[:id])
-    @agencies  = current_user.organizations.
-                 where(windows_type_id: @report.windows_type_id)
+    @organizations  = current_user.organizations.
+                      where(windows_type_id: @report.windows_type_id)
   end
 
   def update_story
@@ -81,8 +81,8 @@ class ReportsController < ApplicationController
         flash[:notice] = "Thanks for reporting on a update report. "
         redirect_to root_path
       else
-        @agencies  = current_user.organizations.
-                       where(windows_type_id: @report.windows_type_id)
+        @organizations  = current_user.organizations.
+                          where(windows_type_id: @report.windows_type_id)
 
         flash[:alert] = "ERROR!!!!!!!!!!!!!!"
         render :edit
@@ -107,8 +107,8 @@ class ReportsController < ApplicationController
         flash[:notice] = "Thanks for reporting on a update report. "
         redirect_to root_path
       else
-        @agencies  = current_user.organizations.
-                       where(windows_type_id: @report.windows_type_id)
+        @organizations  = current_user.organizations.
+                          where(windows_type_id: @report.windows_type_id)
 
         flash[:alert] = "ERROR!!!!!!!!!!!!!!"
         render :edit
@@ -186,7 +186,7 @@ class ReportsController < ApplicationController
     else
       @form_builder = FormBuilder
         .monthly
-        .find_by(windows_type_id: @agency.windows_type_id)
+        .find_by(windows_type_id: @organization.windows_type_id)
         .decorate
     end
   end

@@ -206,7 +206,7 @@ class WorkshopLogsController < ApplicationController
         .or(Organization.where(id: @workshop_log.organization_id))
         .distinct
         .order(:name)
-    organization = params[:agency_id].present? ? Organization.where(id: params[:agency_id]).last : @organizations.first
+    organization = params[:organization_id].present? ? Organization.where(id: params[:organization_id]).last : @organizations.first
     @organization_id = organization.id if organization
   end
 

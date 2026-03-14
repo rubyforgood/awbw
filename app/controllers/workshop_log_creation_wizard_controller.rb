@@ -7,7 +7,7 @@ class WorkshopLogCreationWizardController < ApplicationController
   def show
     authorize! :workshop_log_creation_wizard, to: :show?
     @user = current_user
-    @agencies = current_user.organizations
+    @organizations = current_user.organizations
     windows_type_id = params[:windows_type_id] || WindowsType.where(short_name: "COMBINED")
     @windows_type = WindowsType.find(windows_type_id) if windows_type_id
     send(step)
@@ -17,7 +17,7 @@ class WorkshopLogCreationWizardController < ApplicationController
   def update
     authorize! :workshop_log_creation_wizard, to: :update?
     @user = current_user
-    @agencies = current_user.organizations
+    @organizations = current_user.organizations
     windows_type_id = params["workshop"]["workshop_logs_attributes"].values[0]["windows_type_id"]
     @windows_type = WindowsType.find(windows_type_id)
     send("update_#{step}")
@@ -37,7 +37,7 @@ class WorkshopLogCreationWizardController < ApplicationController
     # build_workshop_age_ranges
     build_report_form_field_answers
     build_workshop_quote
-    @agencies = @agencies.where(windows_type: @workshop.windows_type) if @workshop.windows_type
+    @organizations = @organizations.where(windows_type: @workshop.windows_type) if @workshop.windows_type
   end
 
   def load_previous_report
