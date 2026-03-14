@@ -87,6 +87,20 @@ class OrganizationsController < ApplicationController
     @organization = Organization.new(organization_params)
     authorize! @organization
 
+    unless params[:skip_duplicate_check].present?
+      @duplicates = find_duplicate_organizations(@organization.name)
+      if @duplicates.any?
+        @name = @organization.name
+        @blocked = @duplicates.any? { |d| d[:blocked] }
+        set_form_variables
+        respond_to do |format|
+          format.html { render :new, status: :unprocessable_content }
+          format.turbo_stream
+        end
+        return
+      end
+    end
+
     if @organization.save
       assign_associations(@organization) if params.dig(:organization, :category_ids)
       redirect_to @organization, notice: "Organization was successfully created."
@@ -115,6 +129,14 @@ class OrganizationsController < ApplicationController
     authorize! @organization
     @organization.destroy!
     redirect_to organizations_path, notice: "Organization was successfully destroyed."
+  end
+
+  def check_duplicates
+    authorize!
+
+    @name = params[:name]
+    @duplicates = find_duplicate_organizations(@name)
+    @blocked = @duplicates.any? { |d| d[:blocked] }
   end
 
   # Optional hooks for setting variables for forms or index
@@ -160,7 +182,7 @@ class OrganizationsController < ApplicationController
       sector_counts[primary_sector] += 1 if primary_sector
     end
     @sectors_by_people = sector_counts.sort_by { |_sector, count| -count }
-end
+  end
 
   private
 
@@ -220,5 +242,61 @@ end
         :_destroy
       ]
     )
+  end
+
+  def find_duplicate_organizations(name)
+    return [] if name.blank?
+
+    normalized = normalize(name)
+    input_words = words(name)
+
+    # fallback if all words were ignored
+    search_word = input_words.first || name.to_s.downcase
+
+    candidates = Organization
+      .where("LOWER(name) LIKE ?", "%#{search_word}%")
+      .select(:id, :name)
+
+    candidates.map do |org|
+      org_normalized = normalize(org.name)
+
+      exact = org_normalized == normalized
+
+      partial =
+        org_normalized.include?(normalized) ||
+        normalized.include?(org_normalized)
+
+      similar = exact || partial
+
+      {
+        id: org.id,
+        name: org.name,
+        match_type: exact ? "exact" : "approximate",
+        name_match: similar,
+        blocked: exact
+      }
+    end.select { |d| d[:name_match] }
+  end
+
+  def normalize(name)
+    name.to_s.downcase.gsub(/[^a-z0-9]/, "")
+  end
+
+  IGNORE_WORDS_LAST_ONLY = %w[combined childrens adult]
+  IGNORE_WORDS_ALWAYS = %w[of the and inc]
+
+  def words(name)
+    all_words = name
+      .to_s
+      .downcase
+      .gsub(/[^a-z0-9\s]/, "")
+      .split
+
+    last_word = all_words.last
+
+    all_words.reject do |w|
+      IGNORE_WORDS_ALWAYS.include?(w) ||
+        (IGNORE_WORDS_LAST_ONLY.include?(w) && w != last_word)
+    end
   end
 end

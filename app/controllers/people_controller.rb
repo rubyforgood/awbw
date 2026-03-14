@@ -182,7 +182,6 @@ class PeopleController < ApplicationController
     @email = params[:email]
     @duplicates = find_duplicate_people(@first_name, @last_name, @email)
     @blocked = @duplicates.any? { |d| d[:blocked] }
-    @stored_params = { first_name: @first_name, last_name: @last_name, email: @email }
   end
 
   private
