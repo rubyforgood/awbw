@@ -13,6 +13,10 @@ class WorkshopLogPolicy < ApplicationPolicy
     authenticated?
   end
 
+  def edit?
+    admin? || owner?
+  end
+
   def update?
     admin? || owner?
   end
