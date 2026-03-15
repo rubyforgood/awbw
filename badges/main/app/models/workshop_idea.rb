@@ -57,7 +57,6 @@ class WorkshopIdea < ApplicationRecord
   has_rich_text :rhino_objective_spanish
   has_rich_text :rhino_materials_spanish
   has_rich_text :rhino_optional_materials_spanish
-  has_rich_text :rhino_age_range_spanish
   has_rich_text :rhino_setup_spanish
   has_rich_text :rhino_introduction_spanish
   has_rich_text :rhino_opening_circle_spanish
