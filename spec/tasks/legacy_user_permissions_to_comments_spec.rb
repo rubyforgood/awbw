@@ -52,4 +52,3 @@ RSpec.describe "legacy:user_permissions_to_comments" do
     expect(user.comments.count).to eq(first_count)
   end
 end
-

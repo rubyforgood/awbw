@@ -41,4 +41,3 @@ namespace :legacy do
     say.call "Created #{processed} comments on users (skipped #{skipped})."
   end
 end
-
