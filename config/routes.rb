@@ -101,8 +101,10 @@ Rails.application.routes.draw do
   resources :events do
     member do
       get :manage
+      get :remind
       patch :preview
       post :copy_registration_form
+      post :send_reminder
     end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events

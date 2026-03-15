@@ -1,0 +1,32 @@
+Event reminder
+
+Hello <%= @person.full_name %>,
+
+This is a reminder that you're registered for the following event<%= @days_until_event.is_a?(Integer) ? (@days_until_event == 0 ? " today" : @days_until_event == 1 ? " tomorrow" : " in #{@days_until_event} days") : "" %>:
+
+<% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
+<%= @event.pre_title %>
+<% end %><%= @event.title %>
+<% Time.use_zone(@time_zone) { %><%= @event.times(display_day: true, display_date: true) %><% } %>
+
+<% if @event.location.present? %>
+Location: <%= @event.location.name %>
+<% end %>
+
+<% if @event.videoconference_url.present? %>
+Videoconference URL: <%= @event.videoconference_url %>
+<% end %>
+
+<% if @event.labelled_cost.present? %>
+<%= @event.labelled_cost %>
+<% end %>
+
+<% if @event_registration.slug.present? %>
+View your registration:
+<%= registration_ticket_url(@event_registration.slug) %>
+
+<% end %>View the event page:
+<%= @event_url %>
+
+--
+This is an automated reminder from <%= @organization_name %>.
