@@ -15,7 +15,6 @@ RSpec.describe "/workshop_ideas", type: :request do
       created_by_id: regular_user.id,
       updated_by_id: regular_user.id,
       windows_type_id: windows_type.id,
-      age_range: "10–14",
       time_creation: 30
     }
   end

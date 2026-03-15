@@ -37,7 +37,6 @@ RSpec.describe Workshop do
     subject { build(:workshop, created_by: create(:user), windows_type: create(:windows_type)) }
 
     it { should validate_presence_of(:title) }
-    it { should validate_length_of(:age_range).is_at_most(16) }
 
     # Conditional presence validation for legacy workshops (month, year)
     context 'when legacy is true' do

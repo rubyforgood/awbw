@@ -13,7 +13,6 @@ RSpec.describe "workshop_ideas/edit", type: :view do
     assign(:windows_types, [])
     assign(:sectors, [])
     assign(:categories_grouped, [])
-    assign(:age_ranges, [])
     assign(:potential_series_workshops, [])
     assign(:users, User.none)
   end

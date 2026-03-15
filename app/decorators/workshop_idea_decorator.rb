@@ -8,13 +8,14 @@ class WorkshopIdeaDecorator < ApplicationDecorator
   end
 
   def display_spanish_fields
-    [
+    fields = [
       :objective_spanish, :materials_spanish, :optional_materials_spanish,
-      :age_range_spanish, :setup_spanish,
+      :setup_spanish,
       :introduction_spanish, :demonstration_spanish, :opening_circle_spanish,
       :warm_up_spanish, :visualization_spanish, :creation_spanish,
       :closing_spanish, :notes_spanish, :tips_spanish # :timeframe_spanish,
     ]
+    fields
   end
 
   def labels_spanish
@@ -23,7 +24,6 @@ class WorkshopIdeaDecorator < ApplicationDecorator
       materials_spanish: "Materiales",
       optional_materials_spanish: "Materiales Opcionales",
       timeframe_spanish: "Periodo de tiempo",
-      age_range_spanish: "Rango de edad",
       setup_spanish: "Preparativos",
       introduction_spanish: "Introducción",
       demonstration_spanish: "Demostración",

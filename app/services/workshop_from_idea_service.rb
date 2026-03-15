@@ -18,7 +18,7 @@ class WorkshopFromIdeaService
 
   def attributes_from_idea
     workshop_idea.attributes.slice(
-      "title", "windows_type_id", "age_range", "author_credit_preference",
+      "title", "windows_type_id", "author_credit_preference",
       "time_intro", "time_closing", "time_creation",
       "time_demonstration", "time_warm_up",
       "time_opening", "time_opening_circle"
@@ -42,7 +42,6 @@ class WorkshopFromIdeaService
       rhino_objective_spanish: workshop_idea.rhino_objective_spanish,
       rhino_materials_spanish: workshop_idea.rhino_materials_spanish,
       rhino_optional_materials_spanish: workshop_idea.rhino_optional_materials_spanish,
-      rhino_age_range_spanish: workshop_idea.rhino_age_range_spanish,
       rhino_setup_spanish: workshop_idea.rhino_setup_spanish,
       rhino_introduction_spanish: workshop_idea.rhino_introduction_spanish,
       rhino_opening_circle_spanish: workshop_idea.rhino_opening_circle_spanish,

@@ -7,7 +7,6 @@ RSpec.describe "workshops/edit", type: :view do
 
   before(:each) do
     assign(:workshop, workshop)
-    assign(:age_ranges, [])
     assign(:potential_series_workshops, [])
     assign(:windows_types, [])
     assign(:workshop_ideas, [])
