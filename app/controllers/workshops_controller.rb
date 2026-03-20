@@ -1,5 +1,6 @@
 class WorkshopsController < ApplicationController
-  include AhoyTracking, TagAssignable
+  include AhoyTracking, TagAssignable, MentionableFiltering
+
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index
@@ -187,8 +188,8 @@ class WorkshopsController < ApplicationController
                              .includes(:windows_type, :created_by, primary_asset: [ :file_attachment ])
                              .order(created_at: :desc)
     @sectors = @workshop.sectorable_items.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
-    @mentioners = @workshop.mentioner_records_grouped
-    @mentionees = @workshop.mentionee_records_grouped
+    @mentioners = filter_authorized_mentions(@workshop.mentioner_records_grouped)
+    @mentionees = filter_authorized_mentions(@workshop.mentionee_records_grouped)
   end
 
 

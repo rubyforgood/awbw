@@ -1,5 +1,6 @@
 class ResourcesController < ApplicationController
-  include ExternallyRedirectable, AhoyTracking, TagAssignable
+  include ExternallyRedirectable, AhoyTracking, TagAssignable, MentionableFiltering
+
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
   def index
@@ -59,8 +60,8 @@ class ResourcesController < ApplicationController
     ).find(resource_id_param).decorate
     authorize! @resource
     track_view(@resource)
-    @mentioners = @resource.mentioner_records_grouped
-    @mentionees = @resource.mentionee_records_grouped
+    @mentioners = filter_authorized_mentions(@resource.mentioner_records_grouped)
+    @mentionees = filter_authorized_mentions(@resource.mentionee_records_grouped)
   end
 
   def create
