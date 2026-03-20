@@ -59,7 +59,8 @@ class ResourcesController < ApplicationController
     ).find(resource_id_param).decorate
     authorize! @resource
     track_view(@resource)
-    @mentions = @resource.all_mentions_grouped
+    @mentioners = @resource.mentioner_records_grouped
+    @mentionees = @resource.mentionee_records_grouped
   end
 
   def create

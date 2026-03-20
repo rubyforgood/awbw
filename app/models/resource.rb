@@ -2,7 +2,7 @@ class Resource < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
-  include Mentioner
+  include Mentionable
 
   # Define rich text fields for mentions functionality
   def self.mentionable_rich_text_fields

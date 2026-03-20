@@ -187,7 +187,8 @@ class WorkshopsController < ApplicationController
                              .includes(:windows_type, :created_by, primary_asset: [ :file_attachment ])
                              .order(created_at: :desc)
     @sectors = @workshop.sectorable_items.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
-    @mentions = @workshop.all_mentions_grouped
+    @mentioners = @workshop.mentioner_records_grouped
+    @mentionees = @workshop.mentionee_records_grouped
   end
 
 

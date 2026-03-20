@@ -1,4 +1,4 @@
-module Mentioner
+module Mentionable
   extend ActiveSupport::Concern
 
   included do
@@ -6,13 +6,11 @@ module Mentioner
 
   class_methods do
     def mentionable_rich_text_fields
-      # Override this method in models to specify which rich text fields to check
-      # Default to empty array - models must override this
       []
     end
   end
 
-  def all_mentions_grouped
+  def mentionee_records_grouped
     rich_text_fields = self.class.mentionable_rich_text_fields
 
     result = {}
@@ -38,5 +36,17 @@ module Mentioner
     end
 
     result
+  end
+
+  def mentioner_records_grouped
+    records = ActionTextMention
+      .where(mentionable_type: self.class.name, mentionable_id: id)
+      .includes(action_text_rich_text: :record)
+      .map(&:action_text_rich_text)
+      .map(&:record)
+      .select(&:persisted?)
+      .uniq
+
+    records.group_by { |record| record.class.name }
   end
 end
