@@ -5,6 +5,8 @@ module Mentionable
   end
 
   class_methods do
+    # Override this method in models to specify which rich text fields to check
+    # Default to empty array - models must override this
     def mentionable_rich_text_fields
       []
     end
