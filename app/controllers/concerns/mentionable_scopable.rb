@@ -1,9 +1,9 @@
-module MentionableFiltering
+module MentionableScopable
   extend ActiveSupport::Concern
 
   private
 
-  def filter_authorized_mentions(grouped)
+  def authorized_scope_mentions(grouped)
     grouped.transform_values do |records|
       next [] if records.empty?
 
