@@ -27,7 +27,7 @@ ActiveSupport.on_load(:action_text_rich_text) do
       end
 
       (current_records - existing_records).each do |record|
-        action_text_mentions.build(mentionable: record)
+        action_text_mentions.create!(mentionable: record)
       end
     end
 
