@@ -85,7 +85,7 @@ module Admin
     def print
       authorize! :analytics, to: :print?
 
-      return head :bad_request unless request.format.json?
+      return head :bad_request unless request.content_type&.include?("application/json")
 
       printable_models = {
         "Resource" => Resource,
