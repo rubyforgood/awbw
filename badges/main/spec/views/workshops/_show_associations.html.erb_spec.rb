@@ -9,7 +9,8 @@ RSpec.describe "workshops/_show_associations", type: :view do
     assign(:workshop_variations, [])
     assign(:quotes, [])
     assign(:leader_spotlights, [])
-    assign(:mentions, {})
+    assign(:mentioners, {})
+    assign(:mentionees, {})
   end
 
   context "when user can manage WorkshopVariation" do

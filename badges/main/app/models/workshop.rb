@@ -5,7 +5,7 @@ class Workshop < ApplicationRecord
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include ActiveModel::Dirty
-  include Mentioner
+  include Mentionable
 
   # Define rich text fields for mentions functionality
   def self.mentionable_rich_text_fields

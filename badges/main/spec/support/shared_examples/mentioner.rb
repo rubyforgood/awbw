@@ -16,10 +16,10 @@ RSpec.shared_examples "mentioner" do
     end
   end
 
-  describe "#all_mentions_grouped" do
+  describe "#mentionee_records_grouped" do
     context "when model has no mentions" do
       it "returns empty hash" do
-        mentions = record.all_mentions_grouped
+        mentions = record.mentionee_records_grouped
         expect(mentions).to eq({})
       end
     end
@@ -49,13 +49,13 @@ RSpec.shared_examples "mentioner" do
       end
 
       it "returns mentions grouped by type" do
-        mentions = record.all_mentions_grouped
+        mentions = record.mentionee_records_grouped
         expect(mentions).to have_key(other_record.class.name)
         expect(mentions[other_record.class.name]).to include(other_record)
       end
 
       it "deduplicates mentions of same record" do
-        mentions = record.all_mentions_grouped
+        mentions = record.mentionee_records_grouped
         expect(mentions[other_record.class.name]).to include(other_record)
         expect(mentions[other_record.class.name].count).to eq(1)
       end
@@ -63,7 +63,7 @@ RSpec.shared_examples "mentioner" do
       it "handles missing records gracefully" do
         other_record.destroy
 
-        mentions = record.all_mentions_grouped
+        mentions = record.mentionee_records_grouped
         expect(mentions[other_record.class.name] || []).not_to include(other_record)
       end
     end
@@ -74,7 +74,7 @@ RSpec.shared_examples "mentioner" do
           workshop = create(:workshop, title: "Test Workshop")
           workshop.update(rhino_misc1: nil, rhino_misc2: nil)
 
-          mentions = workshop.all_mentions_grouped
+          mentions = workshop.mentionee_records_grouped
           expect(mentions).to eq({})
         else
           skip "nil test already verified."

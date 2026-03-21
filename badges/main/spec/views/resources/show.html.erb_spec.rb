@@ -9,7 +9,8 @@ RSpec.describe "resources/show", type: :view do
     allow(view).to receive(:current_user).and_return(admin)
     allow(view).to receive(:allowed_to?).and_return(true)
     assign(:resource, resource.decorate)
-    assign(:mentions, [])
+    assign(:mentioners, [])
+    assign(:mentionees, [])
   end
 
   context "when resource has an attached primary image" do
