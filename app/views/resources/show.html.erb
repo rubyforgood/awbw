@@ -18,7 +18,7 @@
                     download: true if @resource.downloadable_asset&.file&.attached? %>
       </div>
       <!-- Resource Card -->
-      <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
+      <div class="bg-white rounded-lg shadow-md p-6 mb-4 space-y-6">
         <!-- Title -->
         <div class="font-semibold text-gray-900 mb-2">
           <%= title_with_badges(@resource, font_size: "text-3xl") %>
@@ -51,5 +51,6 @@
         </div>
       </div>
       <!-- Mentions -->
-      <%= render "show_mentions" %>
+      <%= render "shared/show_mentions_list", mentions: @mentioners, heading: "Mentioned by" %>
+      <%= render "shared/show_mentions_list", mentions: @mentionees, heading: "Mentions in this Resource" %>
 </div>
