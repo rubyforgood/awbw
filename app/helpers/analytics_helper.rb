@@ -53,7 +53,6 @@ module AnalyticsHelper
                   window.print();
                   fetch("#{path}", {
                     method: "POST",
-                    credentials: 'include',
                     headers: {
                       "Content-Type": "application/json",
                       "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
