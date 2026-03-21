@@ -81,6 +81,7 @@ FROM base AS server
 RUN apt-get update -qq && apt-get install --no-install-recommends -y \
   libvips \
   poppler-utils \
+  mupdf-tools \
   tzdata \
   libxml2 \
   libxslt1.1 \
