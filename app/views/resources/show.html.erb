@@ -51,5 +51,6 @@
         </div>
       </div>
       <!-- Mentions -->
-      <%= render "show_mentions" %>
+      <%= render "shared/show_mentions_list", mentions: @mentioners, heading: "Mentioned by" %>
+      <%= render "shared/show_mentions_list", mentions: @mentionees, heading: "Mentions in this Resource" %>
 </div>
