@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+staged_files=$(git diff --cached --name-only --diff-filter=d)
+staged_rb_files=$(echo "$staged_files" | grep '\.rb$' || true)
+
+# Run rubocop on staged .rb files only
+if [ -n "$staged_rb_files" ]; then
+  echo "Running rubocop on staged Ruby files..."
+  bundle exec rubocop --force-exclusion $staged_rb_files || exit 1
+fi
+
+# Run brakeman security scan
+echo "Running brakeman security scan..."
+bundle exec brakeman --no-pager -q || exit 1
+
+# Check for debug statements
+if [ -n "$staged_rb_files" ]; then
+  if echo "$staged_rb_files" | xargs grep -n 'binding\.pry\|binding\.irb\|byebug\|debugger' 2>/dev/null; then
+    echo "ERROR: Debug statements found in staged files. Remove them before committing."
+    exit 1
+  fi
+fi
+
+# Check for merge conflict markers
+if [ -n "$staged_files" ]; then
+  if echo "$staged_files" | xargs grep -n '<<<<<<<\|>>>>>>>\|=======' 2>/dev/null; then
+    echo "ERROR: Merge conflict markers found in staged files. Resolve them before committing."
+    exit 1
+  fi
+fi
+
+# Check for secrets/env files
+if echo "$staged_files" | grep -q '\.env$\|\.env\.\|credentials\.yml\.enc\|master\.key'; then
+  echo "ERROR: Potentially sensitive files staged for commit:"
+  echo "$staged_files" | grep '\.env$\|\.env\.\|credentials\.yml\.enc\|master\.key'
+  echo "Remove them from staging before committing."
+  exit 1
+fi
