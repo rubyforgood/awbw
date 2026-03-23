@@ -1,5 +1,3 @@
-Rails.application.config.active_storage.previewers = [
-  ActiveStorage::Previewer::MuPDFPreviewer,    # move MuPDF to first for high-quality PDFs
-  ActiveStorage::Previewer::PopplerPDFPreviewer,
-  ActiveStorage::Previewer::VideoPreviewer
-]
+Rails.application.config.after_initialize do
+  Rails.application.config.active_storage.previewers.unshift HighResPopplerPdfPreviewer
+end
