@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview manage remind send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview manage preview_reminder send_reminder copy_registration_form ]
 
   def index
     authorize!
@@ -59,8 +59,8 @@ class EventsController < ApplicationController
     end
   end
 
-  def remind
-    authorize! @event, to: :remind?
+  def preview_reminder
+    authorize! @event, to: :preview_reminder?
     @event = @event.decorate
     @event_registrations = @event.event_registrations
       .includes(:payments, registrant: [ :user, :contact_methods ])

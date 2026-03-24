@@ -33,7 +33,7 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
-  def remind?
+  def preview_reminder?
     manage?
   end
 
