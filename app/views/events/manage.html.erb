@@ -11,7 +11,7 @@
       </p>
     </div>
     <div class="flex gap-2">
-      <%= link_to "Send reminder", preview_reminder_event_path(@event), class: "btn btn-secondary-outline btn-sm" %>
+      <%= link_to "Send reminder", preview_reminder_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
       <%= link_to "Download CSV", manage_event_path(@event, format: :csv), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1", data: { turbo_frame: "_top" } %>
       <%= link_to "View", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
       <% if allowed_to?(:edit?, @event) %>
