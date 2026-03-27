@@ -8,12 +8,12 @@
         <h1 class="text-2xl font-semibold text-gray-900">
           <%= User.model_name.human.pluralize %>
         </h1>
-        <%= link_to flow_diagram_users_path, class: "text-xs text-blue-600 hover:text-blue-800 hover:underline" do %>
-          <i class="fa-solid fa-diagram-project"></i> Account flow diagram
-        <% end %>
       </div>
       <div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 items-center">
+          <%= link_to flow_diagram_users_path, class: "text-xs text-blue-600 hover:text-blue-800 hover:underline" do %>
+            <i class="fa-solid fa-diagram-project"></i> Account flow diagram
+          <% end %>
           <% if allowed_to?(:new?, User) %>
             <%= link_to "New #{User.model_name.human.downcase}",
                         new_user_path,
