@@ -1,5 +1,5 @@
 class ContactUsController < ApplicationController
-  include EmailDeliveryRescuable
+  rescue_from(*EmailDeliveryErrorHandler::ERRORS) { |e| EmailDeliveryErrorHandler.handle(e, self) }
 
   skip_before_action :authenticate_user!, only: [ :index, :create ]
   rescue_from ActionController::InvalidAuthenticityToken do

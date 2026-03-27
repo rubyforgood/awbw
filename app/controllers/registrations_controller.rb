@@ -1,5 +1,5 @@
 class RegistrationsController < Devise::RegistrationsController
-  include EmailDeliveryRescuable
+  rescue_from(*EmailDeliveryErrorHandler::ERRORS) { |e| EmailDeliveryErrorHandler.handle(e, self) }
 
   private
 

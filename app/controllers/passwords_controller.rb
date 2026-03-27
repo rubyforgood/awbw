@@ -1,6 +1,7 @@
 class PasswordsController < Devise::PasswordsController
   include AhoyTracking
-  include EmailDeliveryRescuable
+
+  rescue_from(*EmailDeliveryErrorHandler::ERRORS) { |e| EmailDeliveryErrorHandler.handle(e, self) }
 
   skip_before_action :authenticate_user!, only: [ :new, :create, :edit, :update ]
 

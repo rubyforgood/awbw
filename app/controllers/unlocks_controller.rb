@@ -1,3 +1,3 @@
 class UnlocksController < Devise::UnlocksController
-  include EmailDeliveryRescuable
+  rescue_from(*EmailDeliveryErrorHandler::ERRORS) { |e| EmailDeliveryErrorHandler.handle(e, self) }
 end
