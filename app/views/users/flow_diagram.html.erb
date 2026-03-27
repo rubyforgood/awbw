@@ -1,10 +1,14 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="max-w-6xl mx-auto py-6">
-  <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">Account management flows</h1>
-    <p class="text-sm text-gray-500 mt-1">How invitation, password reset, email change, lockout, and unlock work from an admin's perspective</p>
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold text-gray-900">Account management flows</h1>
+    <div class="flex items-center gap-1">
+      <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+      <%= link_to "Users", users_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    </div>
   </div>
+  <p class="text-sm text-gray-500 mb-6">How invitation, password reset, email change, lockout, and unlock work from an admin's perspective</p>
 
   <%# Triage cheat sheet %>
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6">
@@ -420,7 +424,7 @@ flowchart LR
   </div>
 
   <p class="text-center text-gray-400 text-xs mt-4">
-    Generated from codebase analysis &bull; Source: UsersController, WelcomeController, ConfirmationsController, PasswordsController, User model, Devise config
+    Source: UsersController, WelcomeController, ConfirmationsController, PasswordsController, User model, Devise config
   </p>
 </div>
 
