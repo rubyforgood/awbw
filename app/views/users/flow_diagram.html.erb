@@ -49,7 +49,7 @@
               <div class="mt-1 pl-4"><a href="#flow-1" class="text-blue-500 hover:underline">flow 1 &darr;</a></div>
             </div>
             <div class="bg-white rounded p-2 border border-gray-200">
-              <span class="font-semibold text-gray-700"><i class="fa fa-check-circle text-gray-400"></i> Check icon</span>
+              <span class="font-semibold text-gray-700"><i class="fa-solid fa-check-circle text-gray-400"></i> Check icon</span>
               <span class="text-gray-500">(hover info)</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
                 <li>Already confirmed &mdash; user doesn't need an invite, they need a <strong>password reset</strong></li>
@@ -79,7 +79,7 @@
               <div class="mt-1 pl-4"><a href="#flow-2" class="text-blue-500 hover:underline">flow 2 &darr;</a></div>
             </div>
             <div class="bg-white rounded p-2 border border-gray-200">
-              <span class="font-semibold text-gray-700"><i class="fa fa-check-circle text-gray-400"></i> Check icon</span>
+              <span class="font-semibold text-gray-700"><i class="fa-solid fa-check-circle text-gray-400"></i> Check icon</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
                 <li>Already confirmed &mdash; user doesn't need an invite, they need a <strong>password reset</strong></li>
               </ul>
@@ -163,21 +163,30 @@
           <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <p class="text-gray-600 mb-2">On <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a>, look under <strong>Access</strong> column:</p>
+          <p class="text-gray-600 mb-2">Check <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a> columns:</p>
           <div class="space-y-2 text-xs">
             <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-lock text-red-400"></i> Lock icon</span>
+              <span class="text-gray-500">(Access column)</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
-                <li>Account is unconfirmed</li>
-                <li>Click <strong>Invite</strong> (or <strong>Resend invite email</strong> on Edit) to refresh tokens. Old links are now invalid.</li>
+                <li>Account is locked &mdash; <strong>Unlock account</strong> on user's Edit first</li>
+                <li>Then send a <strong>password reset</strong> if needed</li>
+              </ul>
+              <div class="mt-1 pl-4"><a href="#flow-6" class="text-blue-500 hover:underline">flow 6 &darr;</a></div>
+            </div>
+            <div class="bg-white rounded p-2 border border-gray-200">
+              <span class="font-semibold text-gray-700"><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon</span>
+              <span class="text-gray-500">(Confirmed column)</span>
+              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
+                <li>Email is unconfirmed &mdash; click <strong>Invite</strong> (or <strong>Resend invite email</strong> on Edit)</li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-2" class="text-blue-500 hover:underline">flow 2 &darr;</a></div>
             </div>
             <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-ban text-red-400"></i> Ban icon</span>
+              <span class="text-gray-500">(Access column)</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
-                <li>Account is inactive (<strong>Active: No</strong> on user's Show)</li>
-                <li>On user's Edit, set to active under Account flags</li>
+                <li>Account is inactive &mdash; set to active on user's Edit under Account flags</li>
               </ul>
             </div>
           </div>
@@ -226,23 +235,29 @@
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
-    A["<b>Admin</b>: creates user<br/>(Users#create)"]:::admin
-    A2["<b>Admin</b>: clicks 'Invite'<br/>on users index or<br/>'Resend invite email'<br/>on user edit page"]:::admin
-    B["System generates<br/>welcome_instructions_token<br/>for confirmation + password<br/>(valid 30 days)"]:::system
-    C["System sends<br/>welcome instructions /<br/>confirmation email<br/>(token valid 3 days)"]:::system
-    D{"User clicks<br/>'Set your password'<br/>link in email?"}:::decision
-    E["Confirmations#show<br/>confirms email"]:::system
-    F["Redirect to<br/>/welcome/:token"]:::system
-    G["<b>User</b>: sets password<br/>(min 5 chars)"]:::user
-    H["Account active!<br/>Auto-signed in"]:::success
-    I["Link expired<br/>(3 days)"]:::error
-    J["Admin resends invite<br/>from user edit page<br/>(see flow 2)"]:::admin
+    A["fa:fa-user-plus <b>Admin</b>: creates user<br/>(Users#create)"]:::admin
+    A2["fa:fa-paper-plane <b>Admin</b>: clicks 'Invite'<br/>on users index or<br/>'Resend invite email'<br/>on user edit page"]:::admin
+    B["fa:fa-key System generates<br/>welcome_instructions_token<br/>for confirmation + password<br/>(valid 30 days)"]:::system
+    C["fa:fa-envelope System sends<br/>welcome instructions /<br/>confirmation email<br/>(token valid 3 days)"]:::system
+    D{"fa:fa-clock User clicks<br/>'Set your password'<br/>link in email?"}:::decision
+    E["fa:fa-check-circle Confirmations#show<br/>confirms email"]:::system
+    F{"fa:fa-key Welcome token<br/>still valid?<br/>(30 days)"}:::decision
+    F2["Redirect to<br/>/welcome/:token"]:::system
+    G["fa:fa-lock <b>User</b>: sets password<br/>(min 5 chars)"]:::user
+    H["fa:fa-circle-check Account active!<br/>Auto-signed in"]:::success
+    I["fa:fa-clock Link expired<br/>(3 days)"]:::error
+    J["fa:fa-rotate <b>Admin</b> resends invite<br/>from user edit page<br/>(see flow 2)"]:::admin
+    STUCK["fa:fa-triangle-exclamation Redirected to<br/>password reset form<br/>(user has no known password)"]:::error
+    FIX["fa:fa-envelope <b>User</b> requests<br/>password reset<br/>(see flow 3)"]:::admin
 
     A --> A2 --> B --> C --> D
-    D -- "Yes, within 3 days" --> E --> F --> G --> H
+    D -- "Yes, within 3 days" --> E --> F
+    F -- "Yes" --> F2 --> G --> H
+    F -- "No (expired)" --> STUCK --> FIX
     D -- "No / too late" --> I --> J
 
-    linkStyle 8 stroke:#f87171
+    linkStyle 10 stroke:#f87171
+    linkStyle 11 stroke:#f87171
 
     classDef admin fill:#dbeafe,stroke:#93c5fd,color:#1e3a5f
     classDef system fill:#dcfce7,stroke:#86efac,color:#14532d
@@ -260,13 +275,13 @@ flowchart TD
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
-    A{"User's email<br/>is not confirmed?"}:::decision
-    B["Button visible:<br/><b>'Invite'</b> on users index<br/><b>'Resend invite email'</b><br/>on user edit page"]:::admin
-    C["Buttons hidden<br/>(user already confirmed)"]:::error
+    A{"fa:fa-question User's email<br/>is not confirmed?"}:::decision
+    B["fa:fa-paper-plane Button visible:<br/><b>'Invite'</b> on users index<br/><b>'Resend invite email'</b><br/>on user edit page"]:::admin
+    C["fa:fa-eye-slash Buttons hidden<br/>(user already confirmed)"]:::error
     D["POST /users/:id/<br/>send_welcome_instructions"]:::system
-    E["Regenerates<br/>welcome_instructions_token<br/>(new 30-day window)"]:::system
-    F["Sends new<br/>confirmation email<br/>(new 3-day token)"]:::system
-    G["User receives<br/>fresh link"]:::user
+    E["fa:fa-key Regenerates<br/>welcome_instructions_token<br/>(new 30-day window)"]:::system
+    F["fa:fa-envelope Sends new<br/>confirmation email<br/>(new 3-day token)"]:::system
+    G["fa:fa-inbox User receives<br/>fresh link"]:::user
 
     A -- "Yes" --> B --> D --> E --> F --> G
     A -- "No" --> C
@@ -288,18 +303,18 @@ flowchart TD
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
-    A["<b>Admin</b>: clicks<br/>'Send reset password email'<br/>on user edit page"]:::admin
-    A2["<b>User</b>: clicks<br/>'Forgot your password?'<br/>on sign-in page"]:::user
-    B["System generates<br/>reset_password_token<br/>(valid 6 hours)"]:::system
-    C["Email sent to user<br/>+ FYI notification to admin"]:::system
-    D{"User clicks<br/>'Reset your password'<br/>within 6 hours?"}:::decision
+    A["fa:fa-paper-plane <b>Admin</b>: clicks<br/>'Send reset password email'<br/>on user edit page"]:::admin
+    A2["fa:fa-question <b>User</b>: clicks<br/>'Forgot your password?'<br/>on sign-in page"]:::user
+    B["fa:fa-key System generates<br/>reset_password_token<br/>(valid 6 hours)"]:::system
+    C["fa:fa-envelope Email sent to user<br/>+ FYI notification to admin"]:::system
+    D{"fa:fa-clock User clicks<br/>'Reset your password'<br/>within 6 hours?"}:::decision
     E["Passwords#edit<br/>shows reset form"]:::system
-    F["<b>User</b>: enters new<br/>password (min 5 chars)"]:::user
-    G{"Was user<br/>unconfirmed?"}:::decision
-    H["Also confirms email"]:::system
-    I["Password updated<br/>Auto-signed in"]:::success
-    J["Link expired<br/>(6 hours)"]:::error
-    K["Admin sends another<br/>from user edit page,<br/>or user requests from<br/>sign-in page"]:::admin
+    F["fa:fa-lock <b>User</b>: enters new<br/>password (min 5 chars)"]:::user
+    G{"fa:fa-check-circle Was user<br/>unconfirmed?"}:::decision
+    H["fa:fa-envelope-circle-check Also confirms email"]:::system
+    I["fa:fa-circle-check Password updated<br/>Auto-signed in"]:::success
+    J["fa:fa-clock Link expired<br/>(6 hours)"]:::error
+    K["fa:fa-rotate Admin sends another<br/>from user edit page,<br/>or user requests from<br/>sign-in page"]:::admin
 
     A --> B
     A2 --> B
@@ -328,17 +343,17 @@ flowchart TD
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
-    A["<b>Admin</b>: changes email<br/>on user edit page"]:::admin
+    A["fa:fa-pen-to-square <b>Admin</b>: changes email<br/>on user edit page"]:::admin
     B["Old email stays active<br/>New email saved to<br/>unconfirmed_email"]:::system
     C["Interstitial page:<br/>'Email change saved'"]:::system
-    D{"Admin chooses to<br/>send confirmation<br/>email?"}:::decision
-    E["Confirmation email<br/>sent to new address<br/>(token valid 3 days)"]:::system
-    F["Skip — no email sent<br/>Warning icon shown on<br/>users index and user show page"]:::admin
-    G{"User clicks<br/>confirm link<br/>in email?"}:::decision
-    H["New email becomes<br/>active, old email<br/>replaced"]:::success
-    I["Link expired<br/>(3 days)"]:::error
-    J["Admin can resend<br/>confirmation email from<br/>the user show page"]:::admin
-    K["User keeps signing in<br/>with old email<br/>until confirmed"]:::user
+    D{"fa:fa-question Admin chooses to<br/>send confirmation<br/>email?"}:::decision
+    E["fa:fa-envelope Confirmation email<br/>sent to new address<br/>(token valid 3 days)"]:::system
+    F["fa:fa-triangle-exclamation Skip — no email sent<br/>Warning icon shown on<br/>users index and user show page"]:::admin
+    G{"fa:fa-clock User clicks<br/>confirm link<br/>in email?"}:::decision
+    H["fa:fa-circle-check New email becomes<br/>active, old email<br/>replaced"]:::success
+    I["fa:fa-clock Link expired<br/>(3 days)"]:::error
+    J["fa:fa-rotate Admin can resend<br/>confirmation email from<br/>the user show page"]:::admin
+    K["fa:fa-right-to-bracket User keeps signing in<br/>with old email<br/>until confirmed"]:::user
 
     A --> B --> C --> D
     D -- "Yes" --> E --> G
@@ -366,18 +381,18 @@ flowchart TD
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
-    A["<b>User</b>: enters<br/>wrong password<br/>on sign-in page"]:::user
-    B["failed_attempts<br/>counter +1"]:::system
+    A["fa:fa-xmark <b>User</b>: enters<br/>wrong password<br/>on sign-in page"]:::user
+    B["fa:fa-plus failed_attempts<br/>counter +1"]:::system
     C{"failed_attempts<br/>== 9?"}:::decision
-    D["Warning shown on<br/>sign-in page:<br/>'Last attempt before<br/>account is locked'"]:::error
+    D["fa:fa-triangle-exclamation Warning shown on<br/>sign-in page:<br/>'Last attempt before<br/>account is locked'"]:::error
     E{"failed_attempts<br/>≥ 10?"}:::decision
-    F["Account LOCKED<br/>(locked_at = now)"]:::error
-    G["User sees on sign-in<br/>page: 'Account is locked'"]:::error
-    H["User can<br/>try again"]:::user
-    I["<b>Admin</b>: sees lock icon<br/>in Access col on<br/>users index"]:::admin
-    J["<b>Admin</b>: clicks<br/>'Unlock account'<br/>on user edit page"]:::admin
-    K["locked_at cleared<br/>failed_attempts reset to 0"]:::system
-    L["User can<br/>sign in again"]:::success
+    F["fa:fa-lock Account LOCKED<br/>(locked_at = now)"]:::error
+    G["fa:fa-ban User sees on sign-in<br/>page: 'Account is locked'"]:::error
+    H["fa:fa-rotate User can<br/>try again"]:::user
+    I["fa:fa-lock <b>Admin</b>: sees lock icon<br/>in Access col on<br/>users index"]:::admin
+    J["fa:fa-unlock <b>Admin</b>: clicks<br/>'Unlock account'<br/>on user edit page"]:::admin
+    K["fa:fa-eraser locked_at cleared<br/>failed_attempts reset to 0"]:::system
+    L["fa:fa-circle-check User can<br/>sign in again"]:::success
 
     A --> B --> C
     C -- "Yes" --> D --> E
@@ -404,12 +419,12 @@ flowchart TD
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart LR
-    A["<b>Admin</b>: user edit page"]:::admin
-    B{"Account<br/>currently<br/>locked?"}:::decision
-    C["Button: 'Unlock account'"]:::admin
-    D["Button: 'Lock account'"]:::admin
-    E["Account unlocked<br/>failed_attempts reset to 0"]:::system
-    F["Account locked<br/>immediately"]:::system
+    A["fa:fa-pen-to-square <b>Admin</b>: user edit page"]:::admin
+    B{"fa:fa-question Account<br/>currently<br/>locked?"}:::decision
+    C["fa:fa-unlock Button: 'Unlock account'"]:::admin
+    D["fa:fa-lock Button: 'Lock account'"]:::admin
+    E["fa:fa-eraser Account unlocked<br/>failed_attempts reset to 0"]:::system
+    F["fa:fa-lock Account locked<br/>immediately"]:::system
 
     A --> B
     B -- "Yes" --> C --> E
