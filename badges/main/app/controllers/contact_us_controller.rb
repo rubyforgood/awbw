@@ -1,4 +1,6 @@
 class ContactUsController < ApplicationController
+  rescue_from(*EmailDeliveryErrorHandler::ERRORS) { |e| EmailDeliveryErrorHandler.handle(e, self) }
+
   skip_before_action :authenticate_user!, only: [ :index, :create ]
   rescue_from ActionController::InvalidAuthenticityToken do
     flash[:alert] = "Your session has expired. Please try submitting the form again."

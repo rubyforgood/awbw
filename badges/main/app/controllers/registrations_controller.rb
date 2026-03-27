@@ -1,4 +1,6 @@
 class RegistrationsController < Devise::RegistrationsController
+  rescue_from(*EmailDeliveryErrorHandler::ERRORS) { |e| EmailDeliveryErrorHandler.handle(e, self) }
+
   private
 
   def sign_up_params
