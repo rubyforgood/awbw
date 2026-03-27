@@ -23,7 +23,8 @@ Rails.application.routes.draw do
   devise_for :users,
              controllers: { registrations: "registrations",
                             confirmations: "confirmations",
-                            passwords: "passwords" }
+                            passwords: "passwords",
+                            unlocks: "unlocks" }
   devise_scope :user do
     get "/confirm/:confirmation_token", to: "confirmations#show", as: :confirm
   end

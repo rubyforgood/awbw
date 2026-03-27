@@ -1,4 +1,6 @@
 class ConfirmationsController < Devise::ConfirmationsController
+  rescue_from(*EmailDeliveryErrorHandler::ERRORS) { |e| EmailDeliveryErrorHandler.handle(e, self) }
+
   # GET /users/confirmation?confirmation_token=...
 
   def show
