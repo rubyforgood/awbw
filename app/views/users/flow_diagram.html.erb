@@ -161,30 +161,20 @@
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
         <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
           <div>
-            <span class="font-semibold text-gray-700">"I can sign in but nothing works"</span>
-            <p class="text-xs text-gray-400 mt-1">Account may be unconfirmed or inactive</p>
+            <span class="font-semibold text-gray-700">"I confirmed my email but can't sign in"</span>
+            <p class="text-xs text-gray-400 mt-1">Email confirmed but user never set a password</p>
           </div>
           <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <p class="text-gray-600 mb-2">Check <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a> columns:</p>
-          <div class="space-y-2 text-xs">
-            <div class="bg-white rounded p-2 border border-gray-200">
-              <span class="font-semibold text-gray-700"><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon</span>
-              <span class="text-gray-500">(Confirmed column)</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
-                <li>Email is unconfirmed &mdash; click <strong>Invite</strong> (or <strong>Resend invite email</strong> on Edit)</li>
-              </ul>
-              <div class="mt-1 pl-4"><a href="#flow-2" class="text-blue-500 hover:underline">flow 2 &darr;</a></div>
-            </div>
-            <div class="bg-white rounded p-2 border border-gray-200">
-              <span class="font-semibold text-gray-700"><i class="fa-solid fa-ban text-red-400"></i> Ban icon</span>
-              <span class="text-gray-500">(Access column)</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
-                <li>Account is inactive &mdash; set to active on user's Edit under Account flags</li>
-              </ul>
-            </div>
-          </div>
+          <p class="text-gray-600 mb-2">User clicked the confirmation link but the welcome token expired before they set a password. They see "Invalid email or password" because they never had one.</p>
+          <ul class="list-disc pl-4 text-gray-600 space-y-1 text-sm">
+            <li>Check <strong>Confirmed</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a> &mdash; should show <i class="fa-solid fa-check-circle text-gray-400"></i> (confirmed)</li>
+            <li>Admin clicks <strong>Send reset password email</strong> from user's Edit</li>
+            <li>User sets a password via the reset link &mdash; this also auto-signs them in</li>
+          </ul>
+          <div class="mt-1 pl-4"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
+          <p class="text-xs text-gray-400 mt-2">Note: Accounts are created with a random password the user doesn't know. The welcome flow is the only way they set a real one.</p>
         </div>
       </details>
     </div>
