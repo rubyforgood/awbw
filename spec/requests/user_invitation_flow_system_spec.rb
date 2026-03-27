@@ -143,7 +143,7 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
       expect(response).to redirect_to(user_welcome_path(user_with_token.welcome_instructions_token))
     end
 
-    it "redirects to sign in if user has no welcome token" do
+    it "redirects to password reset if user has no welcome token" do
       # User without welcome token
       user_without_token = create(:user, confirmed_at: nil)
       user_without_token.update_columns(welcome_instructions_token: nil)
@@ -152,8 +152,8 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
       # Visit confirmation link
       get user_confirmation_path(confirmation_token: user_without_token.confirmation_token)
 
-      # Should redirect to sign in page
-      expect(response).to redirect_to(new_user_session_path)
+      # Should redirect to password reset page (user has no known password)
+      expect(response).to redirect_to(new_user_password_path)
       follow_redirect!
       expect(response.body).to include("confirmed")
     end
