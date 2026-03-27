@@ -1,5 +1,6 @@
 class PasswordsController < Devise::PasswordsController
   include AhoyTracking
+  include EmailDeliveryRescuable
 
   skip_before_action :authenticate_user!, only: [ :new, :create, :edit, :update ]
 

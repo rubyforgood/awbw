@@ -1,4 +1,6 @@
 class RegistrationsController < Devise::RegistrationsController
+  include EmailDeliveryRescuable
+
   private
 
   def sign_up_params

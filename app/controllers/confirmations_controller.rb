@@ -1,4 +1,6 @@
 class ConfirmationsController < Devise::ConfirmationsController
+  include EmailDeliveryRescuable
+
   # GET /users/confirmation?confirmation_token=...
 
   def show
