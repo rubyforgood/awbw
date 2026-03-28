@@ -34,10 +34,10 @@
           <div class="space-y-2 text-xs">
             <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon</span>
-              <span class="text-gray-500">(hover info)</span>
+              <span class="text-gray-500">(hover on index for details)</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
                 <li>Invite was sent &mdash; ask user to check spam</li>
-                <li>If still not found, click <strong>Invite</strong> on users index or <strong>Resend invite email</strong> on user's Edit</li>
+                <li>Otherwise click <strong>Resend invite email</strong> on user's Edit</li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-2" class="text-blue-500 hover:underline">flow 2 &darr;</a></div>
             </div>
@@ -50,7 +50,7 @@
             </div>
             <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-check-circle text-gray-400"></i> Check icon</span>
-              <span class="text-gray-500">(hover info)</span>
+              <span class="text-gray-500">(hover on index for details)</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
                 <li>Already confirmed &mdash; user doesn't need an invite, they need a <strong>password reset</strong></li>
               </ul>
@@ -73,16 +73,17 @@
           <div class="space-y-2 text-xs">
             <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon</span>
-              <span class="text-gray-500">(hover info)</span>
+              <span class="text-gray-500">(hover on index for details)</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
-                <li>Confirmation link expired &mdash; click <strong>Invite</strong> on users index or <strong>Resend invite email</strong> on user's Edit</li>
-                <li>This generates fresh tokens and invalidates old links</li>
+                <li>Invite was sent but not yet confirmed</li>
+                <li>Click <strong>Resend invite email</strong> on user's Edit</li>
               </ul>
+              <p class="text-xs text-gray-400 mt-1 pl-4">Note: This invalidates old links</p>
               <div class="mt-1 pl-4"><a href="#flow-2" class="text-blue-500 hover:underline">flow 2 &darr;</a></div>
             </div>
             <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-check-circle text-gray-400"></i> Check icon</span>
-              <span class="text-gray-500">(hover info)</span>
+              <span class="text-gray-500">(hover on index for details)</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
                 <li>Already confirmed &mdash; user doesn't need an invite, they need a <strong>password reset</strong></li>
               </ul>
@@ -106,17 +107,17 @@
             <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-lock text-red-400"></i> Lock icon</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
-                <li>Account is locked &mdash; go to user's Edit and click <strong>Unlock account</strong> (this sets failed attempts back to 0)</li>
-                <li>Then help user sign in &mdash; they may also need a <strong>password reset</strong></li>
+                <li>Account is locked &mdash; go to user's Edit and click <strong>Unlock account</strong> (sets failed attempts back to 0)</li>
+                <li>User may also need a <strong>password reset</strong></li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-5" class="text-blue-500 hover:underline">flow 5 &darr;</a> &nbsp; <a href="#flow-6" class="text-blue-500 hover:underline">flow 6 &darr;</a></div>
             </div>
             <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700">No lock icon</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
-                <li>Forgot password &mdash; trigger a <strong>password reset</strong></li>
                 <li><i class="fa-solid fa-ban text-red-400"></i> Ban icon &mdash; account is inactive, set to active on user's Edit under Account flags</li>
-                <li><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon in Confirmed &mdash; email unconfirmed, send an <strong>invite</strong></li>
+                <li><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon in Confirmed &mdash; email unconfirmed, send an <strong>Invite</strong></li>
+                <li>Maybe they mean they forgot their password?</li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-3" class="text-blue-500 hover:underline">flow 3 &darr;</a> &nbsp; <a href="#flow-1" class="text-blue-500 hover:underline">flow 1 &darr;</a></div>
             </div>
@@ -133,12 +134,9 @@
           <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <ul class="list-disc pl-4 text-gray-600 space-y-1">
-            <li>User clicks <strong>Forgot your password?</strong> from login</li>
-            <li><span class="text-gray-400">or</span> admin clicks <strong>Send reset password email</strong> from user's Edit</li>
-          </ul>
-          <div class="mt-1 pl-4"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
-          <p class="text-xs text-gray-400 mt-2">Note: Reset link valid for <strong>6 hours</strong>.<br>Note: User will be automatically signed in after reset.</p>
+          <p class="text-gray-600">User clicks <strong>Forgot your password?</strong> from login <span class="text-gray-400">or</span> admin clicks <strong>Send reset password email</strong> from user's Edit</p>
+          <div class="mt-1"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
+          <p class="text-xs text-gray-400 mt-2">Note: Reset links expire after <strong>6 hours</strong>.<br>Note: Each new reset invalidates previous email links.<br>Note: User will be automatically signed in after reset.</p>
         </div>
       </details>
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
@@ -150,11 +148,8 @@
           <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <ul class="list-disc pl-4 text-gray-600 space-y-1">
-            <li>User clicks <strong>Forgot your password?</strong> from login again</li>
-            <li><span class="text-gray-400">or</span> admin clicks <strong>Send reset password email</strong> from user's Edit</li>
-          </ul>
-          <div class="mt-1 pl-4"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
+          <p class="text-gray-600">User clicks <strong>Forgot your password?</strong> again <span class="text-gray-400">or</span> admin clicks <strong>Send reset password email</strong> from user's Edit</p>
+          <div class="mt-1"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
           <p class="text-xs text-gray-400 mt-2">Note: Each new reset invalidates previous email links.</p>
         </div>
       </details>
@@ -170,11 +165,11 @@
           <p class="text-gray-600 mb-2">User clicked the confirmation link but the welcome token expired before they set a password. They see "Invalid email or password" because they never had one.</p>
           <ul class="list-disc pl-4 text-gray-600 space-y-1 text-sm">
             <li>Check <strong>Confirmed</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a> &mdash; should show <i class="fa-solid fa-check-circle text-gray-400"></i> (confirmed)</li>
-            <li>Admin clicks <strong>Send reset password email</strong> from user's Edit</li>
+            <li>Admin clicks <strong>Send reset password email</strong> from user's Edit <span class="text-gray-400">or</span> user clicks <strong>Forgot your password?</strong> from login</li>
             <li>User sets a password via the reset link &mdash; this also auto-signs them in</li>
           </ul>
           <div class="mt-1 pl-4"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
-          <p class="text-xs text-gray-400 mt-2">Note: Accounts are created with a random password the user doesn't know. The welcome flow is the only way they set a real one.</p>
+          <p class="text-xs text-gray-400 mt-2">Note: Accounts are created with a random password the user doesn't know. Ideally they set a real one during the welcome invite flow.</p>
         </div>
       </details>
     </div>
