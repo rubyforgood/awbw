@@ -39,11 +39,12 @@ class ConfirmationsController < Devise::ConfirmationsController
   protected
 
   def after_confirmation_success(resource)
-    if resource.welcome_instructions_token.present?
+    if resource.previous_changes.key?("email")
+      redirect_to new_user_session_path, notice: "Your email has been confirmed. Please sign in."
+    elsif resource.welcome_instructions_token.present?
       redirect_to user_welcome_path(resource.welcome_instructions_token)
     else
-      redirect_to new_user_session_path,
-                  notice: "Your email has been confirmed. Please sign in."
+      redirect_to new_user_session_path, notice: "Your email has been confirmed. Please sign in."
     end
   end
 end

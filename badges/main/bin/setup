@@ -67,6 +67,9 @@ FileUtils.chdir APP_ROOT do
   system! "RAILS_ENV=test bin/rails db:create"
   system! "RAILS_ENV=test bin/rails db:migrate"
 
+  puts "\n== Building Vite test assets =="
+  system! "RAILS_ENV=test npx vite build --mode test"
+
   puts "\n== Cleaning logs and tempfiles =="
   system! "bin/rails log:clear tmp:clear"
 
