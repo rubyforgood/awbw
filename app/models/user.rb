@@ -215,9 +215,6 @@ class User < ApplicationRecord
     )
   end
 
-  def welcome_instructions_token_valid?
-    welcome_instructions_token.present? && welcome_instructions_created_at.present?
-  end
 
   def track_auth_event(name, properties = {})
     payload = { name: name, properties: properties.merge(

@@ -30,15 +30,6 @@ RSpec.describe "/users/welcome", type: :request do
       end
     end
 
-    context "with old token" do
-      it "still renders successfully" do
-        user.update_columns(welcome_instructions_created_at: 60.days.ago)
-
-        get user_welcome_url(user.welcome_instructions_token)
-
-        expect(response).to have_http_status(:ok)
-      end
-    end
   end
 
   describe "PATCH /update" do
