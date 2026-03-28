@@ -15,6 +15,7 @@ class UserPolicy < ApplicationPolicy
   def confirm_email_manual? = admin?
   def process_email_manual? = admin?
   def send_welcome_instructions? = admin?
+  def flow_diagram? = admin?
   def search? = admin?
   def change_password? = authenticated?
   def update_password? = authenticated?

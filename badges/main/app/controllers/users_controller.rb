@@ -305,6 +305,11 @@ class UsersController < ApplicationController
                 notice: "Invitation sent to #{@user.email}."
   end
 
+  # Visual reference for admins triaging user account challenges
+  def flow_diagram
+    authorize!
+  end
+
   # =========================================================
   # PRIVATE
   # =========================================================
