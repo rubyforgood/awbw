@@ -57,7 +57,7 @@
               <div class="mt-1 pl-4"><a href="#flow-3" class="text-blue-500 hover:underline">flow 3 &darr;</a></div>
             </div>
           </div>
-          <p class="text-xs text-gray-400 mt-2">Note: Confirmation links and welcome tokens do not expire</p>
+          <p class="text-xs text-gray-400 mt-2">Note: Confirmation and welcome tokens do not expire</p>
         </div>
       </details>
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
@@ -90,7 +90,7 @@
               <div class="mt-1 pl-4"><a href="#flow-3" class="text-blue-500 hover:underline">flow 3 &darr;</a></div>
             </div>
           </div>
-          <p class="text-xs text-gray-400 mt-2">Note: Confirmation links and welcome tokens do not expire</p>
+          <p class="text-xs text-gray-400 mt-2">Note: Confirmation and welcome tokens do not expire</p>
         </div>
       </details>
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
@@ -107,7 +107,7 @@
             <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700">No lock icon</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
-                <li><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon in Confirmed &mdash; email unconfirmed, send an <strong>Invite</strong></li>
+                <li><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon in Confirmed &mdash; email unconfirmed, <strong>Resend invite email</strong> on user's Edit</li>
                 <li><i class="fa-solid fa-ban text-red-400"></i> Ban icon &mdash; account is inactive, set to active on user's Edit under Account flags</li>
                 <li>Maybe they mean they forgot their password?</li>
               </ul>
@@ -128,8 +128,8 @@
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
         <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
           <div>
-            <span class="font-semibold text-gray-700">"I forgot my password" / "My reset link expired"</span>
-            <p class="text-xs text-gray-400 mt-1">User needs a password reset &bull; Reset links expire after <strong>7 days</strong></p>
+            <span class="font-semibold text-gray-700">"I forgot my password" / "My reset expired"</span>
+            <p class="text-xs text-gray-400 mt-1">User needs a password reset</p>
           </div>
           <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
@@ -137,25 +137,6 @@
           <p class="text-gray-600">User clicks <strong>Forgot your password?</strong> from login <span class="text-gray-400">or</span> admin clicks <strong>Send reset password email</strong> from user's Edit</p>
           <div class="mt-1"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
           <p class="text-xs text-gray-400 mt-2">Note: Reset links expire after <strong>7 days</strong>.<br>Note: Each new reset invalidates previous email links.<br>Note: User will be automatically signed in after reset.</p>
-        </div>
-      </details>
-      <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
-        <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
-          <div>
-            <span class="font-semibold text-gray-700">"I changed my email but can't log in with it"</span>
-            <p class="text-xs text-gray-400 mt-1">New email needs confirmation before it becomes active</p>
-          </div>
-          <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
-        </summary>
-        <div class="px-4 pb-4">
-          <p class="text-gray-600 mb-2">After an email change, the old email stays active until the new one is confirmed. User must sign in with the <strong>old email</strong> until then.</p>
-          <ul class="list-disc pl-4 text-gray-600 space-y-1 text-sm">
-            <li>Check if user has a <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> warning icon on users index or user show &mdash; means confirmation email wasn't sent</li>
-            <li>Admin can resend confirmation email from the user show page</li>
-            <li>Confirmation link does not expire &mdash; admin can resend if user lost the email</li>
-          </ul>
-          <div class="mt-1 pl-4"><a href="#flow-4" class="text-xs text-blue-500 hover:underline">flow 4 &darr;</a></div>
-          <p class="text-xs text-gray-400 mt-2">Note: User keeps signing in with old email until new email is confirmed.</p>
         </div>
       </details>
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
@@ -175,6 +156,25 @@
           </ul>
           <div class="mt-1 pl-4"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
           <p class="text-xs text-gray-400 mt-2">Note: Accounts are created with a random password the user doesn't know. Ideally they set a real one during the welcome invite flow.<br>Note: Welcome tokens no longer expire, so this mainly applies to legacy accounts created before that change.</p>
+        </div>
+      </details>
+      <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
+        <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
+          <div>
+            <span class="font-semibold text-gray-700">"I changed my email but can't log in with it"</span>
+            <p class="text-xs text-gray-400 mt-1">New email needs confirmation to become active</p>
+          </div>
+          <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
+        </summary>
+        <div class="px-4 pb-4">
+          <p class="text-gray-600 mb-2">After an email change, the old email stays active until the new one is confirmed. User must sign in with the <strong>old email</strong> until then.</p>
+          <ul class="list-disc pl-4 text-gray-600 space-y-1 text-sm">
+            <li>Check if user has a <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> warning icon on users index or user show &mdash; means confirmation email wasn't sent</li>
+            <li>Admin can resend confirmation email from the user show page</li>
+            <li>Confirmation link does not expire &mdash; admin can resend if user lost the email</li>
+          </ul>
+          <div class="mt-1 pl-4"><a href="#flow-4" class="text-xs text-blue-500 hover:underline">flow 4 &darr;</a></div>
+          <p class="text-xs text-gray-400 mt-2">Note: User keeps signing in with old email until new email is confirmed.</p>
         </div>
       </details>
     </div>
@@ -267,9 +267,11 @@ flowchart TD
     E["fa:fa-key Regenerates<br/>welcome_instructions_token"]:::system
     F["fa:fa-envelope Sends new<br/>confirmation email"]:::system
     G["fa:fa-inbox User receives<br/>fresh link"]:::user
+    H["fa:fa-arrow-right User clicks<br/>'Set your password'<br/>(see flow 1)"]:::system
+    click H href "#flow-1" "Go to flow 1"
 
-    A -- "Yes" --> B --> D --> E --> F --> G
-    A -- "No" --> C
+    A -- "Yes" --> B --> D --> E --> F --> G --> H
+    A -- "No, email is<br/>already confirmed" --> C
 
     linkStyle 5 stroke:#f87171
 
