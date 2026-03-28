@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+staged_files=$(git diff --cached --name-only --diff-filter=d)
+staged_rb_files=$(echo "$staged_files" | grep '\.rb$' || true)
+
+# Check for debug statements
+if [ -n "$staged_rb_files" ]; then
+  if echo "$staged_rb_files" | xargs grep -n 'binding\.pry\|binding\.irb\|byebug\|debugger' 2>/dev/null; then
+    echo "ERROR: Debug statements found in staged files. Remove them before committing."
+    exit 1
+  fi
+fi
+
+# Check for merge conflict markers
+if [ -n "$staged_files" ]; then
+  if echo "$staged_files" | xargs grep -n '<<<<<<<\|>>>>>>>\|=======' 2>/dev/null; then
+    echo "ERROR: Merge conflict markers found in staged files. Resolve them before committing."
+    exit 1
+  fi
+fi
+
+# Check for secrets/env files (allow .env.example)
+if echo "$staged_files" | grep '\.env$\|\.env\.\|master\.key' | grep -qv '\.env\.example$'; then
+  echo "ERROR: Potentially sensitive files staged for commit:"
+  echo "$staged_files" | grep '\.env$\|\.env\.\|master\.key' | grep -v '\.env\.example$'
+  echo "Remove them from staging before committing."
+  exit 1
+fi

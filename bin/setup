@@ -70,6 +70,11 @@ FileUtils.chdir APP_ROOT do
   puts "\n== Building Vite test assets =="
   system! "RAILS_ENV=test npx vite build --mode test"
 
+  puts "\n== Installing git hooks =="
+  system! 'cp bin/pre-commit .git/hooks/pre-commit'
+  system! 'chmod +x .git/hooks/pre-commit'
+  system! 'cp bin/pre-push .git/hooks/pre-push'
+  system! 'chmod +x .git/hooks/pre-push'
   puts "\n== Cleaning logs and tempfiles =="
   system! "bin/rails log:clear tmp:clear"
 
