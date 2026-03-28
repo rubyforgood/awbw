@@ -66,6 +66,11 @@ gem "active_storage_validations", "~> 3.0"
 
 gem "solid_cache"
 
+# Payments
+gem "pay", "~> 11.4"
+gem "stripe", "~> 18.0"
+gem "receipts", "~> 2.4"
+
 group :development do
   gem "rubocop-rails-omakase", require: false
 end
