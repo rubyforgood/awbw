@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-# Start development services (web + vite).
-# Runs Procfile.dev.
-#
-# Usage:
-#   ai/server
-set -euo pipefail
-eval "$(command /opt/homebrew/bin/mise activate zsh)"
-bin/dev

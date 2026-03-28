@@ -1,0 +1,8 @@
+# Ensure the correct Ruby version is available via mise or rbenv
+if command -v mise &> /dev/null; then
+  eval "$(mise activate bash)"
+elif command -v rbenv &> /dev/null; then
+  eval "$(rbenv init -)"
+elif [ -x "$HOME/.rbenv/bin/rbenv" ]; then
+  eval "$("$HOME/.rbenv/bin/rbenv" init -)"
+fi

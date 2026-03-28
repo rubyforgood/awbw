@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Open a Rails console.
+set -euo pipefail
+source "$(dirname "$0")/.ruby-env"
+bundle exec rails console "$@"
