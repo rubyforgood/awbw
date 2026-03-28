@@ -29,7 +29,6 @@ RSpec.describe "/users/welcome", type: :request do
         expect(flash[:alert]).to include("Invalid invitation link")
       end
     end
-
   end
 
   describe "PATCH /update" do
