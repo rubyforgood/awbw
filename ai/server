@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Start development services (web + vite).
+# Uses CONDUCTOR_PORT if set, otherwise defaults to 3000.
+# Derives a unique Vite port (CONDUCTOR_PORT + 1) to avoid collisions.
+set -euo pipefail
+source "$(dirname "$0")/.ruby-env"
+if [ -n "${CONDUCTOR_PORT:-}" ]; then
+  export VITE_RUBY_PORT=$((CONDUCTOR_PORT + 1))
+fi
+bin/dev -p "${CONDUCTOR_PORT:-3000}"
