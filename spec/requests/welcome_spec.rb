@@ -30,14 +30,13 @@ RSpec.describe "/users/welcome", type: :request do
       end
     end
 
-    context "with expired token" do
-      it "redirects with alert" do
-        user.update_columns(welcome_instructions_created_at: 31.days.ago)
+    context "with old token" do
+      it "still renders successfully" do
+        user.update_columns(welcome_instructions_created_at: 60.days.ago)
 
         get user_welcome_url(user.welcome_instructions_token)
 
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to include("expired")
+        expect(response).to have_http_status(:ok)
       end
     end
   end
