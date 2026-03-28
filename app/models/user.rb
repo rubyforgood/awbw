@@ -215,10 +215,6 @@ class User < ApplicationRecord
     )
   end
 
-  def welcome_instructions_token_valid?
-    welcome_instructions_token.present? && welcome_instructions_created_at.present? &&
-      welcome_instructions_created_at > 30.days.ago
-  end
 
   def track_auth_event(name, properties = {})
     payload = { name: name, properties: properties.merge(

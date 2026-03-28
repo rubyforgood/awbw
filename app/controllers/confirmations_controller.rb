@@ -39,7 +39,7 @@ class ConfirmationsController < Devise::ConfirmationsController
   protected
 
   def after_confirmation_success(resource)
-    if resource.welcome_instructions_token_valid?
+    if resource.welcome_instructions_token.present?
       redirect_to user_welcome_path(resource.welcome_instructions_token)
     else
       redirect_to new_user_session_path,
