@@ -143,22 +143,21 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
       expect(response).to redirect_to(user_welcome_path(user_with_token.welcome_instructions_token))
     end
 
-    it "regenerates welcome token and redirects to welcome page if token is expired" do
-      # User with expired welcome token
-      user_with_expired_token = create(:user, confirmed_at: nil)
-      user_with_expired_token.set_welcome_instructions_token!
-      user_with_expired_token.update_column(:welcome_instructions_created_at, 31.days.ago)
-      old_token = user_with_expired_token.welcome_instructions_token
-      user_with_expired_token.send_confirmation_instructions
+    it "redirects to welcome page with existing token even if token is old" do
+      # User with old welcome token (tokens no longer expire)
+      user_with_old_token = create(:user, confirmed_at: nil)
+      user_with_old_token.set_welcome_instructions_token!
+      user_with_old_token.update_column(:welcome_instructions_created_at, 31.days.ago)
+      old_token = user_with_old_token.welcome_instructions_token
+      user_with_old_token.send_confirmation_instructions
 
       # Visit confirmation link
-      get user_confirmation_path(confirmation_token: user_with_expired_token.confirmation_token)
+      get user_confirmation_path(confirmation_token: user_with_old_token.confirmation_token)
 
-      # Should regenerate welcome token and redirect to welcome page
-      user_with_expired_token.reload
-      expect(user_with_expired_token.welcome_instructions_token).to be_present
-      expect(user_with_expired_token.welcome_instructions_token).not_to eq(old_token)
-      expect(response).to redirect_to(user_welcome_path(user_with_expired_token.welcome_instructions_token))
+      # Should keep existing token and redirect to welcome page
+      user_with_old_token.reload
+      expect(user_with_old_token.welcome_instructions_token).to eq(old_token)
+      expect(response).to redirect_to(user_welcome_path(user_with_old_token.welcome_instructions_token))
     end
 
     it "redirects existing users to root on email change reconfirmation" do
