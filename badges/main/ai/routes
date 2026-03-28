@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Search Rails routes. Pass a grep pattern to filter.
+set -euo pipefail
+source "$(dirname "$0")/.ruby-env"
+bundle exec rails routes "$@"
