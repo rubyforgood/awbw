@@ -11,7 +11,7 @@ RSpec.describe UserServices::ProcessEmailChange do
     end
 
     context "with send_confirmation true" do
-      let(:mock_mail) { double(deliver_later: true, deliver: true) }
+      let(:mock_mail) { double(deliver_later: true, deliver: true, deliver_now: true) }
 
       before do
         allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)

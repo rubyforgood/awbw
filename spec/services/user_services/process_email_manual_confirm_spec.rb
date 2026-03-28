@@ -8,7 +8,7 @@ RSpec.describe UserServices::ProcessEmailManualConfirm do
       let(:user) { create(:user, confirmed_at: nil) }
 
       context "with action 'resend'" do
-        let(:mock_mail) { double(deliver_later: true, deliver: true) }
+        let(:mock_mail) { double(deliver_later: true, deliver: true, deliver_now: true) }
 
         before do
           user # force creation before stubbing
@@ -70,7 +70,7 @@ RSpec.describe UserServices::ProcessEmailManualConfirm do
       end
 
       context "with action 'resend'" do
-        let(:mock_mail) { double(deliver_later: true, deliver: true) }
+        let(:mock_mail) { double(deliver_later: true, deliver: true, deliver_now: true) }
 
         before do
           allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)

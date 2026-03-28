@@ -42,9 +42,11 @@
       Your email address will remain unchanged.
     </p>
 
+    <% if Devise.confirm_within %>
     <p>
       This link will expire in <%= distance_of_time_in_words(Devise.confirm_within) %>.
     </p>
+    <% end %>
 
     <p>
       If you have any questions, please visit our

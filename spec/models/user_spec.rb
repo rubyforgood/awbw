@@ -372,7 +372,7 @@ RSpec.describe User do
   end
 
   describe "#send_confirmation_instructions" do
-    let(:mock_mail) { double(deliver_later: true, deliver: true) }
+    let(:mock_mail) { double(deliver_later: true, deliver: true, deliver_now: true) }
 
     context "when there is no pending email change" do
       let(:user) { create(:user, confirmed_at: nil) }
