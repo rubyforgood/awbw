@@ -160,10 +160,38 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
       expect(response).to redirect_to(user_welcome_path(user_with_old_token.welcome_instructions_token))
     end
 
-    it "redirects existing users to root on email change reconfirmation" do
-      # Existing user who has signed in before and is changing their email
+    it "redirects legacy ported users without welcome token to sign in" do
+      # Legacy user ported from old system — sign_in_count is 0, no welcome token
+      legacy_user = create(:user, confirmed_at: nil)
+      legacy_user.update_columns(welcome_instructions_token: nil, sign_in_count: 0)
+      legacy_user.send_confirmation_instructions
+
+      get user_confirmation_path(confirmation_token: legacy_user.confirmation_token)
+
+      expect(response).to redirect_to(new_user_session_path)
+      follow_redirect!
+      expect(response.body).to include("confirmed")
+    end
+
+    it "redirects to sign in on reconfirmation even with welcome token present" do
+      # Edge case: user has welcome token but is doing an email change
+      user = create(:user, confirmed_at: 1.year.ago)
+      user.set_welcome_instructions_token!
+      user.update_columns(
+        unconfirmed_email: "changed@example.com",
+        confirmation_token: Devise.friendly_token,
+        confirmation_sent_at: Time.current
+      )
+
+      get user_confirmation_path(confirmation_token: user.confirmation_token)
+
+      # Reconfirmation takes priority over welcome token
+      expect(response).to redirect_to(new_user_session_path)
+    end
+
+    it "redirects to sign in on email change reconfirmation" do
+      # Existing user changing their email — unconfirmed_email triggers reconfirmation detection
       existing_user = create(:user, confirmed_at: 1.year.ago)
-      existing_user.update_column(:sign_in_count, 5)
       existing_user.update_columns(
         unconfirmed_email: "newemail@example.com",
         confirmation_token: Devise.friendly_token,
@@ -175,6 +203,11 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
       expect(response).to redirect_to(new_user_session_path)
       follow_redirect!
       expect(response.body).to include("confirmed")
+
+      # Verify email was actually changed
+      existing_user.reload
+      expect(existing_user.email).to eq("newemail@example.com")
+      expect(existing_user.unconfirmed_email).to be_nil
     end
   end
 end
