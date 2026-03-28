@@ -33,6 +33,13 @@
           <p class="text-gray-600 mb-2">Check <strong>Confirmed</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a>:</p>
           <div class="space-y-2 text-xs">
             <div class="bg-white rounded p-2 border border-gray-200">
+              <span class="font-semibold text-gray-700"><strong>Invite</strong> button</span>
+              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
+                <li>No invite has been sent &mdash; click <strong>Invite</strong> to send</li>
+              </ul>
+              <div class="mt-1 pl-4"><a href="#flow-1" class="text-blue-500 hover:underline">flow 1 &darr;</a></div>
+            </div>
+            <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon</span>
               <span class="text-gray-500">(hover on index for details)</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
@@ -40,13 +47,6 @@
                 <li>Otherwise click <strong>Resend invite email</strong> on user's Edit</li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-2" class="text-blue-500 hover:underline">flow 2 &darr;</a></div>
-            </div>
-            <div class="bg-white rounded p-2 border border-gray-200">
-              <span class="font-semibold text-gray-700"><strong>Invite</strong> button</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
-                <li>No invite has been sent &mdash; click <strong>Invite</strong> to send</li>
-              </ul>
-              <div class="mt-1 pl-4"><a href="#flow-1" class="text-blue-500 hover:underline">flow 1 &darr;</a></div>
             </div>
             <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-check-circle text-gray-400"></i> Check icon</span>
@@ -57,14 +57,14 @@
               <div class="mt-1 pl-4"><a href="#flow-3" class="text-blue-500 hover:underline">flow 3 &darr;</a></div>
             </div>
           </div>
-          <p class="text-xs text-gray-400 mt-2">Note: Confirmation links valid for <strong>3 days</strong>, welcome tokens for <strong>30 days</strong></p>
+          <p class="text-xs text-gray-400 mt-2">Note: Confirmation links and welcome tokens do not expire</p>
         </div>
       </details>
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
         <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
           <div>
             <span class="font-semibold text-gray-700">"My invite link doesn't work"</span>
-            <p class="text-xs text-gray-400 mt-1">Confirmation link likely expired (valid for 3 days)</p>
+            <p class="text-xs text-gray-400 mt-1">Confirmation link may be invalid or already used</p>
           </div>
           <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
@@ -90,7 +90,7 @@
               <div class="mt-1 pl-4"><a href="#flow-3" class="text-blue-500 hover:underline">flow 3 &darr;</a></div>
             </div>
           </div>
-          <p class="text-xs text-gray-400 mt-2">Note: Confirmation links valid for <strong>3 days</strong>, welcome tokens for <strong>30 days</strong></p>
+          <p class="text-xs text-gray-400 mt-2">Note: Confirmation links and welcome tokens do not expire</p>
         </div>
       </details>
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
@@ -105,21 +105,21 @@
           <p class="text-gray-600 mb-2">Check <strong>Access</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a>:</p>
           <div class="space-y-2 text-xs">
             <div class="bg-white rounded p-2 border border-gray-200">
+              <span class="font-semibold text-gray-700">No lock icon</span>
+              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
+                <li><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon in Confirmed &mdash; email unconfirmed, send an <strong>Invite</strong></li>
+                <li><i class="fa-solid fa-ban text-red-400"></i> Ban icon &mdash; account is inactive, set to active on user's Edit under Account flags</li>
+                <li>Maybe they mean they forgot their password?</li>
+              </ul>
+              <div class="mt-1 pl-4"><a href="#flow-1" class="text-blue-500 hover:underline">flow 1 &darr;</a> &nbsp; <a href="#flow-3" class="text-blue-500 hover:underline">flow 3 &darr;</a></div>
+            </div>
+            <div class="bg-white rounded p-2 border border-gray-200">
               <span class="font-semibold text-gray-700"><i class="fa-solid fa-lock text-red-400"></i> Lock icon</span>
               <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
                 <li>Account is locked &mdash; go to user's Edit and click <strong>Unlock account</strong> (sets failed attempts back to 0)</li>
                 <li>User may also need a <strong>password reset</strong></li>
               </ul>
               <div class="mt-1 pl-4"><a href="#flow-5" class="text-blue-500 hover:underline">flow 5 &darr;</a> &nbsp; <a href="#flow-6" class="text-blue-500 hover:underline">flow 6 &darr;</a></div>
-            </div>
-            <div class="bg-white rounded p-2 border border-gray-200">
-              <span class="font-semibold text-gray-700">No lock icon</span>
-              <ul class="list-disc pl-4 mt-1 text-gray-600 space-y-0.5">
-                <li><i class="fa-solid fa-ban text-red-400"></i> Ban icon &mdash; account is inactive, set to active on user's Edit under Account flags</li>
-                <li><i class="fa-solid fa-clock text-yellow-500"></i> Clock icon in Confirmed &mdash; email unconfirmed, send an <strong>Invite</strong></li>
-                <li>Maybe they mean they forgot their password?</li>
-              </ul>
-              <div class="mt-1 pl-4"><a href="#flow-3" class="text-blue-500 hover:underline">flow 3 &darr;</a> &nbsp; <a href="#flow-1" class="text-blue-500 hover:underline">flow 1 &darr;</a></div>
             </div>
           </div>
           <p class="text-xs text-gray-400 mt-2">Note: Accounts don't auto-unlock &mdash; needs an admin.</p>
@@ -128,29 +128,34 @@
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
         <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
           <div>
-            <span class="font-semibold text-gray-700">"I forgot my password"</span>
-            <p class="text-xs text-gray-400 mt-1">User needs a password reset</p>
+            <span class="font-semibold text-gray-700">"I forgot my password" / "My reset link expired"</span>
+            <p class="text-xs text-gray-400 mt-1">User needs a password reset &bull; Reset links expire after <strong>7 days</strong></p>
           </div>
           <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
           <p class="text-gray-600">User clicks <strong>Forgot your password?</strong> from login <span class="text-gray-400">or</span> admin clicks <strong>Send reset password email</strong> from user's Edit</p>
           <div class="mt-1"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
-          <p class="text-xs text-gray-400 mt-2">Note: Reset links expire after <strong>6 hours</strong>.<br>Note: Each new reset invalidates previous email links.<br>Note: User will be automatically signed in after reset.</p>
+          <p class="text-xs text-gray-400 mt-2">Note: Reset links expire after <strong>7 days</strong>.<br>Note: Each new reset invalidates previous email links.<br>Note: User will be automatically signed in after reset.</p>
         </div>
       </details>
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
         <summary class="p-4 cursor-pointer select-none list-none flex items-start justify-between [&::-webkit-details-marker]:hidden">
           <div>
-            <span class="font-semibold text-gray-700">"My password reset link expired"</span>
-            <p class="text-xs text-gray-400 mt-1">Reset links expire after <strong>6 hours</strong></p>
+            <span class="font-semibold text-gray-700">"I changed my email but can't log in with it"</span>
+            <p class="text-xs text-gray-400 mt-1">New email needs confirmation before it becomes active</p>
           </div>
           <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <p class="text-gray-600">User clicks <strong>Forgot your password?</strong> again <span class="text-gray-400">or</span> admin clicks <strong>Send reset password email</strong> from user's Edit</p>
-          <div class="mt-1"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
-          <p class="text-xs text-gray-400 mt-2">Note: Each new reset invalidates previous email links.</p>
+          <p class="text-gray-600 mb-2">After an email change, the old email stays active until the new one is confirmed. User must sign in with the <strong>old email</strong> until then.</p>
+          <ul class="list-disc pl-4 text-gray-600 space-y-1 text-sm">
+            <li>Check if user has a <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> warning icon on users index or user show &mdash; means confirmation email wasn't sent</li>
+            <li>Admin can resend confirmation email from the user show page</li>
+            <li>Confirmation link does not expire &mdash; admin can resend if user lost the email</li>
+          </ul>
+          <div class="mt-1 pl-4"><a href="#flow-4" class="text-xs text-blue-500 hover:underline">flow 4 &darr;</a></div>
+          <p class="text-xs text-gray-400 mt-2">Note: User keeps signing in with old email until new email is confirmed.</p>
         </div>
       </details>
       <details class="bg-gray-50 rounded-lg text-sm leading-relaxed border border-transparent hover:border-blue-200 transition-colors">
@@ -162,14 +167,14 @@
           <i class="fa-solid fa-chevron-down text-gray-400 text-xs mt-1 transition-transform [[open]>&]:rotate-180"></i>
         </summary>
         <div class="px-4 pb-4">
-          <p class="text-gray-600 mb-2">User clicked the confirmation link but the welcome token expired before they set a password. They see "Invalid email or password" because they never had one.</p>
+          <p class="text-gray-600 mb-2">User confirmed their email but never set a password. They see "Invalid email or password" because they never had one.</p>
           <ul class="list-disc pl-4 text-gray-600 space-y-1 text-sm">
             <li>Check <strong>Confirmed</strong> column on <a href="<%= users_path %>" target="_blank" class="text-blue-600 underline">users index</a> &mdash; should show <i class="fa-solid fa-check-circle text-gray-400"></i> (confirmed)</li>
             <li>Admin clicks <strong>Send reset password email</strong> from user's Edit <span class="text-gray-400">or</span> user clicks <strong>Forgot your password?</strong> from login</li>
             <li>User sets a password via the reset link &mdash; this also auto-signs them in</li>
           </ul>
           <div class="mt-1 pl-4"><a href="#flow-3" class="text-xs text-blue-500 hover:underline">flow 3 &darr;</a></div>
-          <p class="text-xs text-gray-400 mt-2">Note: Accounts are created with a random password the user doesn't know. Ideally they set a real one during the welcome invite flow.</p>
+          <p class="text-xs text-gray-400 mt-2">Note: Accounts are created with a random password the user doesn't know. Ideally they set a real one during the welcome invite flow.<br>Note: Welcome tokens no longer expire, so this mainly applies to legacy accounts created before that change.</p>
         </div>
       </details>
     </div>
@@ -211,27 +216,27 @@
   <%# Flow 1: Invite new user %>
   <div id="flow-1" class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6 scroll-mt-20">
     <h2 class="text-base font-semibold text-gray-900">1. Invite new user</h2>
-    <p class="text-xs text-gray-500 mb-5">Admin creates a user and sends welcome instructions &bull; Token valid 30 days &bull; Confirmation token valid 3 days</p>
+    <p class="text-xs text-gray-500 mb-5">Admin creates a user and sends welcome instructions &bull; Tokens do not expire</p>
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
     A["fa:fa-user-plus <b>Admin</b>: creates user<br/>(Users#create)"]:::admin
     A2["fa:fa-paper-plane <b>Admin</b>: clicks 'Invite'<br/>on users index or<br/>'Resend invite email'<br/>on user edit page"]:::admin
-    B["fa:fa-key System generates<br/>welcome_instructions_token<br/>for confirmation + password<br/>(valid 30 days)"]:::system
-    C["fa:fa-envelope System sends<br/>welcome instructions /<br/>confirmation email<br/>(token valid 3 days)"]:::system
+    B["fa:fa-key System generates<br/>welcome_instructions_token<br/>for confirmation + password"]:::system
+    C["fa:fa-envelope System sends<br/>welcome instructions /<br/>confirmation email"]:::system
     D{"fa:fa-clock User clicks<br/>'Set your password'<br/>link in email?"}:::decision
     E["fa:fa-check-circle Confirmations#show<br/>confirms email"]:::system
-    F{"fa:fa-key Welcome token<br/>still valid?<br/>(30 days)"}:::decision
+    F{"fa:fa-key Welcome token<br/>still valid?"}:::decision
     F2["Redirect to<br/>/welcome/:token"]:::system
     G["fa:fa-lock <b>User</b>: sets password<br/>(min 5 chars)"]:::user
     H["fa:fa-circle-check Account active!<br/>Auto-signed in"]:::success
-    I["fa:fa-clock Link expired<br/>(3 days)"]:::error
+    I["fa:fa-clock Link not clicked"]:::error
     J["fa:fa-rotate <b>Admin</b> resends invite<br/>from user edit page<br/>(see flow 2)"]:::admin
     STUCK["fa:fa-triangle-exclamation Redirected to<br/>password reset form<br/>(user has no known password)"]:::error
     FIX["fa:fa-envelope <b>User</b> requests<br/>password reset<br/>(see flow 3)"]:::admin
 
     A --> A2 --> B --> C --> D
-    D -- "Yes, within 3 days" --> E --> F
+    D -- "Yes" --> E --> F
     F -- "Yes" --> F2 --> G --> H
     F -- "No (expired)" --> STUCK --> FIX
     D -- "No / too late" --> I --> J
@@ -259,8 +264,8 @@ flowchart TD
     B["fa:fa-paper-plane Button visible:<br/><b>'Invite'</b> on users index<br/><b>'Resend invite email'</b><br/>on user edit page"]:::admin
     C["fa:fa-eye-slash Buttons hidden<br/>(user already confirmed)"]:::error
     D["POST /users/:id/<br/>send_welcome_instructions"]:::system
-    E["fa:fa-key Regenerates<br/>welcome_instructions_token<br/>(new 30-day window)"]:::system
-    F["fa:fa-envelope Sends new<br/>confirmation email<br/>(new 3-day token)"]:::system
+    E["fa:fa-key Regenerates<br/>welcome_instructions_token"]:::system
+    F["fa:fa-envelope Sends new<br/>confirmation email"]:::system
     G["fa:fa-inbox User receives<br/>fresh link"]:::user
 
     A -- "Yes" --> B --> D --> E --> F --> G
@@ -279,21 +284,21 @@ flowchart TD
   <%# Flow 3: Reset password %>
   <div id="flow-3" class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6 scroll-mt-20">
     <h2 class="text-base font-semibold text-gray-900">3. Reset password</h2>
-    <p class="text-xs text-gray-500 mb-5">Admin or user can initiate &bull; Token valid 6 hours &bull; User auto-signed in after reset</p>
+    <p class="text-xs text-gray-500 mb-5">Admin or user can initiate &bull; Token valid 7 days &bull; User auto-signed in after reset</p>
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
     A["fa:fa-paper-plane <b>Admin</b>: clicks<br/>'Send reset password email'<br/>on user edit page"]:::admin
     A2["fa:fa-question <b>User</b>: clicks<br/>'Forgot your password?'<br/>on sign-in page"]:::user
-    B["fa:fa-key System generates<br/>reset_password_token<br/>(valid 6 hours)"]:::system
+    B["fa:fa-key System generates<br/>reset_password_token<br/>(valid 7 days)"]:::system
     C["fa:fa-envelope Email sent to user<br/>+ FYI notification to admin"]:::system
-    D{"fa:fa-clock User clicks<br/>'Reset your password'<br/>within 6 hours?"}:::decision
+    D{"fa:fa-clock User clicks<br/>'Reset your password'<br/>within 7 days?"}:::decision
     E["Passwords#edit<br/>shows reset form"]:::system
     F["fa:fa-lock <b>User</b>: enters new<br/>password (min 5 chars)"]:::user
     G{"fa:fa-check-circle Was user<br/>unconfirmed?"}:::decision
     H["fa:fa-envelope-circle-check Also confirms email"]:::system
     I["fa:fa-circle-check Password updated<br/>Auto-signed in"]:::success
-    J["fa:fa-clock Link expired<br/>(6 hours)"]:::error
+    J["fa:fa-clock Link expired<br/>(7 days)"]:::error
     K["fa:fa-rotate Admin sends another<br/>from user edit page,<br/>or user requests from<br/>sign-in page"]:::admin
 
     A --> B
@@ -319,7 +324,7 @@ flowchart TD
   <%# Flow 4: Email change %>
   <div id="flow-4" class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 mb-6 scroll-mt-20">
     <h2 class="text-base font-semibold text-gray-900">4. Email change (admin-initiated)</h2>
-    <p class="text-xs text-gray-500 mb-5">Devise reconfirmable &bull; Old email stays active until new email is confirmed &bull; Confirmation token valid 3 days</p>
+    <p class="text-xs text-gray-500 mb-5">Devise reconfirmable &bull; Old email stays active until new email is confirmed &bull; Confirmation token does not expire</p>
     <pre class="mermaid flex justify-center">
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#93c5fd', 'secondaryColor': '#dcfce7', 'tertiaryColor': '#fef9c3', 'lineColor': '#94a3b8', 'fontSize': '14px' }}}%%
 flowchart TD
@@ -327,18 +332,18 @@ flowchart TD
     B["Old email stays active<br/>New email saved to<br/>unconfirmed_email"]:::system
     C["Interstitial page:<br/>'Email change saved'"]:::system
     D{"fa:fa-question Admin chooses to<br/>send confirmation<br/>email?"}:::decision
-    E["fa:fa-envelope Confirmation email<br/>sent to new address<br/>(token valid 3 days)"]:::system
+    E["fa:fa-envelope Confirmation email<br/>sent to new address"]:::system
     F["fa:fa-triangle-exclamation Skip — no email sent<br/>Warning icon shown on<br/>users index and user show page"]:::admin
     G{"fa:fa-clock User clicks<br/>confirm link<br/>in email?"}:::decision
     H["fa:fa-circle-check New email becomes<br/>active, old email<br/>replaced"]:::success
-    I["fa:fa-clock Link expired<br/>(3 days)"]:::error
+    I["fa:fa-clock Link not clicked"]:::error
     J["fa:fa-rotate Admin can resend<br/>confirmation email from<br/>the user show page"]:::admin
     K["fa:fa-right-to-bracket User keeps signing in<br/>with old email<br/>until confirmed"]:::user
 
     A --> B --> C --> D
     D -- "Yes" --> E --> G
     D -- "No / Skip" --> F --> K
-    G -- "Yes, within 3 days" --> H
+    G -- "Yes" --> H
     G -- "No / too late" --> I --> J
     E --> K
 
