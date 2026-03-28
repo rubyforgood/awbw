@@ -143,17 +143,37 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
       expect(response).to redirect_to(user_welcome_path(user_with_token.welcome_instructions_token))
     end
 
-    it "redirects to password reset if user has no welcome token" do
-      # User without welcome token
-      user_without_token = create(:user, confirmed_at: nil)
-      user_without_token.update_columns(welcome_instructions_token: nil)
-      user_without_token.send_confirmation_instructions
+    it "regenerates welcome token and redirects to welcome page if token is expired" do
+      # User with expired welcome token
+      user_with_expired_token = create(:user, confirmed_at: nil)
+      user_with_expired_token.set_welcome_instructions_token!
+      user_with_expired_token.update_column(:welcome_instructions_created_at, 31.days.ago)
+      old_token = user_with_expired_token.welcome_instructions_token
+      user_with_expired_token.send_confirmation_instructions
 
       # Visit confirmation link
-      get user_confirmation_path(confirmation_token: user_without_token.confirmation_token)
+      get user_confirmation_path(confirmation_token: user_with_expired_token.confirmation_token)
 
-      # Should redirect to password reset page (user has no known password)
-      expect(response).to redirect_to(new_user_password_path)
+      # Should regenerate welcome token and redirect to welcome page
+      user_with_expired_token.reload
+      expect(user_with_expired_token.welcome_instructions_token).to be_present
+      expect(user_with_expired_token.welcome_instructions_token).not_to eq(old_token)
+      expect(response).to redirect_to(user_welcome_path(user_with_expired_token.welcome_instructions_token))
+    end
+
+    it "redirects existing users to root on email change reconfirmation" do
+      # Existing user who has signed in before and is changing their email
+      existing_user = create(:user, confirmed_at: 1.year.ago)
+      existing_user.update_column(:sign_in_count, 5)
+      existing_user.update_columns(
+        unconfirmed_email: "newemail@example.com",
+        confirmation_token: Devise.friendly_token,
+        confirmation_sent_at: Time.current
+      )
+
+      get user_confirmation_path(confirmation_token: existing_user.confirmation_token)
+
+      expect(response).to redirect_to(root_path)
       follow_redirect!
       expect(response.body).to include("confirmed")
     end
