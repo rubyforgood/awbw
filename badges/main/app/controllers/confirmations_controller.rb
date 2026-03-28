@@ -21,17 +21,19 @@ class ConfirmationsController < Devise::ConfirmationsController
     end
   end
 
+
   # POST /users/confirmation (resend)
   def create
     self.resource = resource_class.send_confirmation_instructions(resource_params)
 
-    if resource.errors.empty?
-      redirect_to new_user_session_path,
-                  notice: "If your email exists in our system, you will receive confirmation instructions shortly."
+    if resource.errors.empty? || email_not_found?
+      flash[:notice] = "If your email exists in our system, you will receive confirmation instructions shortly."
+      redirect_to new_user_session_path
     elsif resource.confirmed_at.present?
-      redirect_to new_user_session_path,
-                  notice: "Your email is already confirmed. Please sign in."
+      flash[:notice] = "Your email is already confirmed. Please sign in."
+      redirect_to new_user_session_path
     else
+      flash.now[:alert] = resource.errors.full_messages.join(", ")
       respond_with(resource)
     end
   end
@@ -46,5 +48,11 @@ class ConfirmationsController < Devise::ConfirmationsController
     else
       redirect_to new_user_session_path, notice: "Your email has been confirmed. Please sign in."
     end
+  end
+
+  private
+
+  def email_not_found?
+    resource.errors.any? { |e| e.attribute == :email && e.type == :not_found }
   end
 end

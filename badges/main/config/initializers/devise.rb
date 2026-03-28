@@ -13,6 +13,10 @@ Devise.setup do |config|
   config.mailer_sender = ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
   config.sign_in_after_reset_password = true
 
+  # Use Turbo-compatible HTTP status codes
+  config.responder.error_status = :unprocessable_entity
+  config.responder.redirect_status = :see_other
+
   # Configure the class responsible to send e-mails.
   # config.mailer = 'Devise::Mailer'
   config.mailer = "DeviseMailer"
