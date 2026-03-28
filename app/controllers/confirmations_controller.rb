@@ -39,11 +39,11 @@ class ConfirmationsController < Devise::ConfirmationsController
   protected
 
   def after_confirmation_success(resource)
-    if resource.welcome_instructions_token.present?
-      redirect_to user_welcome_path(resource.welcome_instructions_token)
+    if resource.sign_in_count.to_i > 0
+      redirect_to new_user_session_path, notice: "Your email has been confirmed. Please sign in."
     else
-      redirect_to new_user_password_path,
-                  notice: "Your email has been confirmed. Please set a password to complete your account setup."
+      resource.set_welcome_instructions_token! unless resource.welcome_instructions_token.present?
+      redirect_to user_welcome_path(resource.welcome_instructions_token)
     end
   end
 end
