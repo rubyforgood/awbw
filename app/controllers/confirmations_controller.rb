@@ -26,12 +26,13 @@ class ConfirmationsController < Devise::ConfirmationsController
     self.resource = resource_class.send_confirmation_instructions(resource_params)
 
     if resource.errors.empty?
-      redirect_to new_user_session_path,
-                  notice: "If your email exists in our system, you will receive confirmation instructions shortly."
+      flash[:notice] = "If your email exists in our system, you will receive confirmation instructions shortly."
+      redirect_to new_user_session_path
     elsif resource.confirmed_at.present?
-      redirect_to new_user_session_path,
-                  notice: "Your email is already confirmed. Please sign in."
+      flash[:notice] = "Your email is already confirmed. Please sign in."
+      redirect_to new_user_session_path
     else
+      flash.now[:alert] = resource.errors.full_messages.join(", ") if resource.errors.any?
       respond_with(resource)
     end
   end
