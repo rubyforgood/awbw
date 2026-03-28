@@ -84,40 +84,25 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
   end
 
   describe "Edge cases" do
-    it "handles expired confirmation token (> 3 days)" do
-      # Create user with expired confirmation token
-      expired_user = create(:user,
-                            email: "expired@example.com",
-                            confirmed_at: nil)
-      # Let Devise generate token properly
-      expired_user.send_confirmation_instructions
-      expired_user.reload
+    it "confirms user with old confirmation token (no expiry)" do
+      old_user = create(:user,
+                        email: "old_token@example.com",
+                        confirmed_at: nil)
+      old_user.send_confirmation_instructions
+      old_user.reload
 
-      # Store the token before it potentially gets cleared
-      old_token = expired_user.confirmation_token
+      old_token = old_user.confirmation_token
 
-      # Age it manually
-      expired_user.update_column(:confirmation_sent_at, 4.days.ago)
+      # Age token well beyond previous 3-day limit
+      old_user.update_column(:confirmation_sent_at, 30.days.ago)
 
-      # Set the welcome token
-      expired_user.set_welcome_instructions_token!
+      old_user.set_welcome_instructions_token!
 
-      # Try to visit confirmation page with expired token
       get user_confirmation_path(confirmation_token: old_token)
 
-      # With expired token, should either:
-      # 1. Show error (422) if token is truly expired and user not confirmed, OR
-      # 2. Redirect to sign in (302) if somehow user got confirmed
-      # Devise behavior: expired tokens show error page
-      expect(response.status).to be_in([ 302, 422 ])
-
-      if response.status == 422
-        expect(response).to have_http_status(:unprocessable_content)
-        expect(response.body).to include("Resend confirmation instructions")
-      else
-        # If redirected, check it went to appropriate page
-        expect(response).to redirect_to(new_user_session_path)
-      end
+      expect(response).to have_http_status(:redirect)
+      old_user.reload
+      expect(old_user.confirmed?).to be true
     end
 
     it "redirects already confirmed users without welcome token to sign in" do
