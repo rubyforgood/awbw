@@ -7,7 +7,7 @@
       Log in to our Portal
     </h2>
 
-    <%= simple_form_for(resource, url: session_path(resource_name), data: { turbo: false }) do |f| %>
+    <%= simple_form_for(resource, url: session_path(resource_name)) do |f| %>
       <% if resource.errors.any? %>
         <%= render 'shared/errors', resource: resource %>
       <% end %>

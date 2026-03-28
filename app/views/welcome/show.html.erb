@@ -13,7 +13,7 @@
     </div>
 
     <%= simple_form_for(@user, url: user_welcome_update_path(@user.welcome_instructions_token),
-                        scope: :user, html: { class: "space-y-4" }, data: { turbo_method: :patch, turbo: false }) do |f| %>
+                        scope: :user, html: { class: "space-y-4" }) do |f| %>
       <% if @user.errors.any? %>
         <%= render 'shared/errors', resource: @user %>
       <% end %>
