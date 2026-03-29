@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_28_221937) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_29_161720) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -176,6 +176,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_28_221937) do
     t.index ["user_id"], name: "index_ahoy_visits_on_user_id"
     t.index ["visit_token"], name: "index_ahoy_visits_on_visit_token", unique: true
     t.index ["visitor_token", "started_at"], name: "index_ahoy_visits_on_visitor_token_and_started_at"
+  end
+
+  create_table "allocations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "allocatable_id", null: false
+    t.string "allocatable_type", null: false
+    t.integer "amount", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "source_id", null: false
+    t.string "source_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["allocatable_type", "allocatable_id"], name: "index_allocations_on_allocatable"
+    t.index ["allocatable_type", "allocatable_id"], name: "index_allocations_on_allocatable_type_and_allocatable_id"
+    t.index ["source_type", "source_id"], name: "index_allocations_on_source"
+    t.index ["source_type", "source_id"], name: "index_allocations_on_source_type_and_source_id"
   end
 
   create_table "answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
