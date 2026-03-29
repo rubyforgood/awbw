@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_29_161720) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_29_180236) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -787,29 +787,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_29_161720) do
 
   create_table "payments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents", null: false
+    t.string "check_number"
     t.datetime "created_at", null: false
     t.string "currency", default: "usd", null: false
-    t.bigint "event_id"
-    t.string "failure_code"
-    t.string "failure_message"
-    t.bigint "payable_id", null: false
-    t.string "payable_type", null: false
+    t.bigint "pay_charge_id"
     t.bigint "payer_id", null: false
     t.string "payer_type", null: false
-    t.string "payment_type", default: "stripe", null: false
-    t.string "status", null: false
-    t.string "stripe_charge_id"
-    t.json "stripe_metadata"
-    t.string "stripe_payment_intent_id"
+    t.string "type", null: false
     t.datetime "updated_at", null: false
-    t.index ["event_id"], name: "index_payments_on_event_id"
-    t.index ["payable_type", "payable_id", "status"], name: "index_payments_on_payable_type_and_payable_id_and_status"
-    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable"
-    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable_type_and_payable_id"
     t.index ["payer_type", "payer_id"], name: "index_payments_on_payer"
     t.index ["payer_type", "payer_id"], name: "index_payments_on_payer_type_and_payer_id"
-    t.index ["stripe_charge_id"], name: "index_payments_on_stripe_charge_id"
-    t.index ["stripe_payment_intent_id"], name: "index_payments_on_stripe_payment_intent_id", unique: true
   end
 
   create_table "people", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -908,6 +895,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_29_161720) do
     t.integer "workshop_id"
     t.index ["published"], name: "index_quotes_on_published"
     t.index ["workshop_id"], name: "index_quotes_on_workshop_id"
+  end
+
+  create_table "refunds", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.bigint "recipient_id", null: false
+    t.string "recipient_type", null: false
+    t.bigint "refundable_id", null: false
+    t.string "refundable_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["recipient_type", "recipient_id"], name: "index_refunds_on_recipient"
+    t.index ["refundable_type", "refundable_id"], name: "index_refunds_on_refundable"
   end
 
   create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1495,7 +1494,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_29_161720) do
   add_foreign_key "pay_charges", "pay_subscriptions", column: "subscription_id"
   add_foreign_key "pay_payment_methods", "pay_customers", column: "customer_id"
   add_foreign_key "pay_subscriptions", "pay_customers", column: "customer_id"
-  add_foreign_key "payments", "events"
   add_foreign_key "people", "users", column: "created_by_id"
   add_foreign_key "people", "users", column: "updated_by_id"
   add_foreign_key "person_form_form_fields", "form_fields"
