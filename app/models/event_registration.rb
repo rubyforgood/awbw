@@ -5,7 +5,6 @@ class EventRegistration < ApplicationRecord
   has_many :event_registration_organizations, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :organizations, through: :event_registration_organizations
-  has_many :payments, as: :payable
 
   before_destroy :create_refund_payments
 
