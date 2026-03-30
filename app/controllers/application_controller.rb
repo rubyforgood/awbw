@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::Base
-  before_action :authenticate_user!  # ensures only logged-in users can access pages
+  before_action :authenticate_user!
+  before_action :track_user_with_ahoy, unless: :devise_controller?
   before_action :set_current_user # for AhoyTrackable in models
   before_action :preload_current_user_associations
 
@@ -48,11 +49,11 @@ class ApplicationController < ActionController::Base
   def authenticate_user!
     return super if devise_controller?
 
-    if user_signed_in?
-      ahoy.authenticate(current_user)
-    else
-      redirect_to root_path
-    end
+    redirect_to root_path unless user_signed_in?
+  end
+
+  def track_user_with_ahoy
+    ahoy.authenticate(current_user) if user_signed_in?
   end
 
   def flush_lifecycle_events
