@@ -46,27 +46,14 @@ class ApplicationController < ActionController::Base
   end
 
   def authenticate_user!
-    # Rails.logger.warn "AUTH CHECK → #{request.fullpath}"
-    # Rails.logger.warn "  user_signed_in?: #{user_signed_in?}"
-    # Rails.logger.warn "  current_user: #{current_user&.id}"
-    # Rails.logger.warn "  devise_controller?: #{devise_controller?}"
-    # Rails.logger.warn "  referrer: #{request.referrer}"
     return super if devise_controller?
-    return if user_signed_in?
-    ahoy.authenticate(current_user)
+
+    if user_signed_in?
+      ahoy.authenticate(current_user)
+    else
+      redirect_to root_path
+    end
   end
-
-  # def authenticate_user!
-  #   return super if devise_controller?
-  #   return if user_signed_in?
-  #   ahoy.authenticate(current_user)
-  #   redirect_to root_path # this part is questionable
-  # end
-
-  # def authenticate_user!
-  #   ahoy.authenticate(current_user) if user_signed_in?
-  #   super
-  # end
 
   def flush_lifecycle_events
     Analytics::LifecycleBuffer.flush(self) # needed for Ahoy tracking in models
