@@ -6,7 +6,7 @@ class QuotePolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || owner?
+    admin? || (authenticated? && record.published?)
   end
 
   # Scoping
@@ -19,11 +19,5 @@ class QuotePolicy < ApplicationPolicy
     else
       relation.none
     end
-  end
-
-  private
-
-  def owner?
-    record.recipient_email == user.email
   end
 end
