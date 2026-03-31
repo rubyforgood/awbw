@@ -51,6 +51,50 @@ RSpec.describe DeviseMailer, type: :mailer do
     # so user_unlock_url route doesn't exist and the view can't render
   end
 
+  describe "#confirmation_instructions" do
+    context "when sending for initial signup (no pending reconfirmation)" do
+      it "uses the welcome subject line" do
+        mail = described_class.confirmation_instructions(user, token)
+
+        expect(mail.subject).to eq("AWBW Portal: Welcome instructions for #{user.full_name}")
+      end
+
+      it "includes welcome copy and password setup CTA" do
+        mail = described_class.confirmation_instructions(user, token)
+
+        expect(mail.body.encoded).to include("Welcome to the AWBW Portal!")
+        expect(mail.body.encoded).to include("Set your password")
+      end
+    end
+
+    context "when sending for email change (reconfirmation)" do
+      before do
+        user.skip_confirmation_notification!
+        user.update!(email: "new@example.com")
+      end
+
+      it "uses the email change subject line" do
+        mail = described_class.confirmation_instructions(user, token)
+
+        expect(mail.subject).to eq("AWBW Portal: Confirm your new email address")
+      end
+
+      it "includes email change copy instead of welcome copy" do
+        mail = described_class.confirmation_instructions(user, token)
+
+        expect(mail.body.encoded).to include("Confirm your new email")
+        expect(mail.body.encoded).not_to include("Welcome to the AWBW Portal!")
+        expect(mail.body.encoded).not_to include("Set your password")
+      end
+
+      it "shows the new email address in the body" do
+        mail = described_class.confirmation_instructions(user, token)
+
+        expect(mail.body.encoded).to include(user.unconfirmed_email)
+      end
+    end
+  end
+
   describe "#create_notification_record" do
     let(:notification) { build(:notification) }
 

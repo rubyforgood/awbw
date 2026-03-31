@@ -8,19 +8,25 @@ RSpec.describe UserServices::ProcessEmailManualConfirm do
       let(:user) { create(:user, confirmed_at: nil) }
 
       context "with action 'resend'" do
-        it "sends confirmation instructions" do
-          expect(user).to receive(:send_confirmation_instructions)
+        let(:mock_mail) { double(deliver_later: true, deliver: true, deliver_now: true) }
 
+        before do
+          user # force creation before stubbing
+          allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
+        end
+
+        it "sends confirmation to the user's email" do
           described_class.call(
             user: user,
             action: "resend",
             current_user: admin
           )
+
+          expect(DeviseMailer).to have_received(:confirmation_instructions)
+            .with(user, anything, hash_including(to: user.email))
         end
 
         it "includes resent message with user email in summary" do
-          allow(user).to receive(:send_confirmation_instructions)
-
           result = described_class.call(
             user: user,
             action: "resend",
@@ -64,19 +70,35 @@ RSpec.describe UserServices::ProcessEmailManualConfirm do
       end
 
       context "with action 'resend'" do
-        it "sends confirmation instructions" do
-          expect(user).to receive(:send_confirmation_instructions)
+        let(:mock_mail) { double(deliver_later: true, deliver: true, deliver_now: true) }
 
+        before do
+          allow(DeviseMailer).to receive(:confirmation_instructions).and_return(mock_mail)
+        end
+
+        it "sends confirmation to the pending email" do
           described_class.call(
             user: user,
             action: "resend",
             current_user: admin
           )
+
+          expect(DeviseMailer).to have_received(:confirmation_instructions)
+            .with(user, anything, hash_including(to: new_email))
+        end
+
+        it "does not send to the current email" do
+          described_class.call(
+            user: user,
+            action: "resend",
+            current_user: admin
+          )
+
+          expect(DeviseMailer).not_to have_received(:confirmation_instructions)
+            .with(user, anything, hash_including(to: user.email))
         end
 
         it "includes the pending email in summary" do
-          allow(user).to receive(:send_confirmation_instructions)
-
           result = described_class.call(
             user: user,
             action: "resend",
