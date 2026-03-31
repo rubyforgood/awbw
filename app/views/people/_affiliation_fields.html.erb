@@ -1,7 +1,7 @@
 <% if allowed_to?(:manage?, Person) %>
   <% expired = f.object.inactive? || (f.object.end_date.present? && f.object.end_date < Date.current) %>
   <div data-controller="inactive-toggle">
-    <div class="nested-fields mb-4 rounded-lg border p-3 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-white border-gray-200' %>"
+    <div class="nested-fields mb-4 rounded-lg border px-3 pt-3 pb-1 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-white border-gray-200' %>"
          style="border-left: 4px solid <%= f.object.facilitator? ? '#e879f9' : '#d1d5db' %>"
          data-inactive-toggle-target="row">
       <div class="flex gap-x-4 items-start">
@@ -11,29 +11,34 @@
             <%= organization_profile_button(f.object.organization, truncate_at: 25) %>
             <%= f.hidden_field :organization_id %>
           <% else %>
-            <%= f.input :organization_id,
-              include_blank: true,
-              required: true,
-              input_html: {
-                data: {
-                  controller: "remote-select",
-                  remote_select_model_value: "organization"
-                }
-              },
-              error: "Organization can't be blank",
-              prompt: "Search by name",
-              label: "Organization",
-              label_html: { class: "block font-medium text-gray-700 mb-1" } %>
+            <label class="block font-medium text-gray-700 mb-1">Organization <abbr>*</abbr></label>
+            <div class="rounded-md border border-gray-300 shadow-sm overflow-hidden" style="height: 56px;">
+              <%= f.input :organization_id,
+                include_blank: true,
+                required: true,
+                wrapper_html: { class: "mb-0 h-full" },
+                input_html: {
+                  class: "h-full border-0",
+                  data: {
+                    controller: "remote-select",
+                    remote_select_model_value: "organization"
+                  }
+                },
+                error: "Organization can't be blank",
+                prompt: "Search by name",
+                label: false %>
+            </div>
           <% end %>
         </div>
 
         <div class="flex-1" style="min-width: 150px;">
           <%= f.input :title,
                       as: :text,
+                      wrapper_html: { class: "mb-0" },
                       input_html: {
                         rows: 1,
                         value: f.object.title || "Facilitator",
-                        style: "height: 42px; min-height: 42px;",
+                        style: "height: 56px; min-height: 56px; padding-top: 14px;",
                         data: {
                           inactive_toggle_target: "title",
                           action: "affiliation-dates#recalculate inactive-toggle#updateBorder"
@@ -45,10 +50,12 @@
           <%= f.input :start_date,
                       as: :string,
                       label: "Start",
+                      wrapper_html: { class: "mb-0" },
                       input_html: {
                         type: "date",
                         value: (f.object.start_date || (Date.current unless f.object.persisted?))&.strftime("%Y-%m-%d"),
                         class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
+                        style: "height: 56px;",
                         data: { action: "change->affiliation-dates#recalculate" }
                       } %>
         </div>
@@ -57,10 +64,12 @@
           <%= f.input :end_date,
                       as: :string,
                       label: "End",
+                      wrapper_html: { class: "mb-0" },
                       input_html: {
                         type: "date",
                         value: f.object.end_date&.strftime("%Y-%m-%d"),
                         class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
+                        style: "height: 56px;",
                         data: {
                           inactive_toggle_target: "endDate",
                           action: "change->inactive-toggle#toggle change->affiliation-dates#recalculate"
@@ -69,19 +78,18 @@
         </div>
 
         <div class="shrink-0 whitespace-nowrap">
-          <label class="block font-medium text-gray-700 mb-1">Primary contact</label>
+          <label class="block font-medium text-gray-700 mb-1">Primary org contact</label>
           <div class="pt-2">
             <%= f.check_box :primary_contact,
                             checked: f.object.primary_contact? || !f.object.persisted?,
                             class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
           </div>
+          <div class="-mb-2 text-right">
+            <%= link_to_remove_association "Remove",
+                                           f,
+                                           class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
+          </div>
         </div>
-      </div>
-
-      <div class="text-right admin-only mt-1">
-        <%= link_to_remove_association "Remove",
-                                       f,
-                                       class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap admin-only bg-blue-100 rounded px-2 py-1" %>
       </div>
     </div>
   </div>
