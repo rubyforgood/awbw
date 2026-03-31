@@ -1,3 +1,23 @@
+<% if @reconfirmation %>
+Confirm your new email
+======================
+
+Hello <%= @user.first_name_or_email %>,
+
+We received a request to change your AWBW Portal email address to <%= @user.unconfirmed_email %>.
+
+Confirm this change:
+<%= confirm_url(confirmation_token: @token) %>
+
+If you did not request this change, you can safely ignore this email. Your email address will remain unchanged.
+
+<% if Devise.confirm_within %>
+This link will expire in <%= distance_of_time_in_words(Devise.confirm_within) %>.
+
+<% end %>
+If you have any questions, please visit our Contact us page to connect with our staff:
+<%= contact_us_url %>
+<% else %>
 Welcome to the AWBW Portal!
 ==========================
 
@@ -12,3 +32,4 @@ This invitation link can only be used once.
 
 If you have any questions regarding this invitation, please visit our Contact us page to connect with our staff:
 <%= contact_us_url %>
+<% end %>
