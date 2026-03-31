@@ -13,95 +13,53 @@
       <div class="space-y-6">
         <div class="flex flex-col md:flex-row gap-4"><%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name" %><%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name } %><%= f.input :pronouns %></div>
 
-        <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
-        <% decorated = person.decorate %>
-        <h3 class="font-semibold text-gray-700 mb-2">Important dates</h3>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-          <div class="flex flex-col md:flex-row gap-6">
-            <div class="flex-1">
-              <%= f.input :date_of_birth,
-                          label: "Birthday",
-                          as: :date,
-                          discard_year: true,
-                          order: [:month, :day],
-                          prompt: { month: "Select Month", day: "Select Day" },
-                          wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
-                          label_html: { class: "w-full" },
-                          input_html: {
-                            class: "flex-1 rounded-md border-gray-300 shadow-sm
-                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                          } %>
+        <div class="emails">
+          <h3 class="font-semibold text-gray-700 mb-2">Emails</h3>
+
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+            <div class="flex flex-col md:flex-row gap-4">
+              <% if f.object.user %>
+                <div>
+                  <label class="block text-md font-medium text-gray-700 mb-1">Primary email</label>
+                  <span class="text-gray-900 font-medium"><%= f.object.user&.email %></span>
+
+                  <p class="text-sm text-gray-500 mt-1">
+                    Only
+                    <% if allowed_to?(:edit?, f.object.user) %>
+                      <%= link_to "editable by admins",
+                                  edit_user_path(f.object.user),
+                                  class: "underline" %>
+                    <% else %>
+                      editable by admins
+                    <% end %>
+                  </p>
+                </div>
+              <% else %>
+                <%= f.input :email, label: "Primary email" %>
+              <% end %>
+
+              <%= f.input :email_type,
+                          label: "Primary email type",
+                          as: :select,
+                          collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                          selected: f.object.email_type || f.object.user&.email_type,
+                          include_blank: true %>
+
+              <%= f.input :email_2, label: "Secondary email" %>
+
+              <%= f.input :email_2_type,
+                          label: "Secondary email type",
+                          as: :select,
+                          collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                          include_blank: true %>
             </div>
           </div>
-          <% if allowed_to?(:manage?, Person) && params[:admin].present? %>
-            <div class="admin-only bg-blue-100 rounded-lg p-4 mt-3">
-              <%= f.input :member_since,
-                          as: :date,
-                          discard_day: true,
-                          start_year: 1991,
-                          end_year: Time.current.year,
-                          prompt: { month: "Select Month", year: "Select Year" },
-                          order: [:month, :year],
-                          label: "Member since (override)",
-                          hint: "Pick January if you only know the year",
-                          wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
-                          label_html: { class: "w-full" },
-                          hint_html: { class: "w-full" },
-                          input_html: {
-                            class: "flex-1 rounded-md border-gray-300 shadow-sm admin-only bg-blue-100 border-blue-200
-                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                          } %>
-            </div>
-          <% end %>
         </div>
       </div>
     </div>
 
     <!-- Avatar -->
     <div class="w-full md:w-1/4 flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div>
-  </div>
-
-  <div class="emails">
-    <h3 class="font-semibold text-gray-700 mb-2">Emails</h3>
-
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-      <div class="flex flex-col md:flex-row gap-4">
-        <% if f.object.user %>
-          <div>
-            <label class="block text-md font-medium text-gray-700 mb-1">Primary email</label>
-            <span class="text-gray-900 font-medium"><%= f.object.user&.email %></span>
-
-            <p class="text-sm text-gray-500 mt-1">
-              Only
-              <% if allowed_to?(:edit?, f.object.user) %>
-                <%= link_to "editable by admins",
-                            edit_user_path(f.object.user),
-                            class: "underline" %>
-              <% else %>
-                editable by admins
-              <% end %>
-            </p>
-          </div>
-        <% else %>
-          <%= f.input :email, label: "Primary email" %>
-        <% end %>
-
-        <%= f.input :email_type,
-                    label: "Primary email type",
-                    as: :select,
-                    collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                    selected: f.object.email_type || f.object.user&.email_type,
-                    include_blank: true %>
-
-        <%= f.input :email_2, label: "Secondary email" %>
-
-        <%= f.input :email_2_type,
-                    label: "Secondary email type",
-                    as: :select,
-                    collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                    include_blank: true %>
-      </div>
-    </div>
   </div>
 
   <div class="phones">
@@ -199,12 +157,34 @@
   <% end %>
 
   <!-- Organization Affiliations -->
+  <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
+  <% decorated = person.decorate %>
   <div class="form-group space-y-4">
     <div class="font-semibold text-gray-700 mb-2">
       Affiliations<span class="text-sm font-normal text-gray-500"> (only editable by admins)</span>
     </div>
 
-    <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:organizations) %> p-4 mb-4 shadow-sm">
+    <div class="rounded-lg border border-gray-200 admin-only bg-blue-50 p-4 mb-4 shadow-sm">
+      <% if allowed_to?(:manage?, Person) && params[:admin].present? %>
+        <div class="admin-only bg-blue-100 rounded-lg p-4 mb-4">
+          <%= f.input :member_since,
+                      as: :date,
+                      discard_day: true,
+                      start_year: 1991,
+                      end_year: Time.current.year,
+                      prompt: { month: "Select Month", year: "Select Year" },
+                      order: [:month, :year],
+                      label: "Member since (override)",
+                      hint: "Pick January if you only know the year",
+                      wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
+                      label_html: { class: "w-full" },
+                      hint_html: { class: "w-full" },
+                      input_html: {
+                        class: "flex-1 rounded-md border-gray-300 shadow-sm admin-only bg-blue-100 border-blue-200
+                        focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      } %>
+        </div>
+      <% end %>
       <div class="flex flex-col md:flex-row gap-6 mb-4">
         <div class="shrink-0 relative group cursor-help">
           <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
@@ -289,21 +269,33 @@
   </div>
 
   <!-- PERSON FIELDS -->
-  <div class="space-y-6">
-    <%= f.input :bio,
-                as: :text,
-                input_html: {
-                  rows: 2,
-                  maxlength: 1650,
-                  class: "w-full rounded-md border-gray-300 shadow-sm
-                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                },
-                hint: "Maximum 250 characters" %></div>
+  <%= f.input :bio,
+              as: :text,
+              input_html: {
+                rows: 2,
+                maxlength: 1650,
+                class: "w-full rounded-md border-gray-300 shadow-sm
+                    focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+              },
+              hint: "Maximum 250 characters" %>
 
-  <!-- Preferences: timezone for event times etc. -->
-  <% if f.object.user %>
-    <%= f.fields_for :user do |user_form| %>
-      <div class="space-y-6 p-3">
+  <div class="flex flex-col md:flex-row gap-6 items-end">
+    <div class="w-full md:w-48">
+      <%= f.input :date_of_birth,
+                  label: "Birthday",
+                  as: :date,
+                  discard_year: true,
+                  order: [:month, :day],
+                  prompt: { month: "Month", day: "Day" },
+                  wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
+                  label_html: { class: "w-full" },
+                  input_html: {
+                    class: "flex-1 rounded-md border-gray-300 shadow-sm
+                    focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  } %>
+    </div>
+    <% if f.object.user %>
+      <%= f.fields_for :user do |user_form| %>
         <%= user_form.input :time_zone,
                     as: :select,
                     collection: us_time_zone_fundamentals,
@@ -312,13 +304,13 @@
                     hint: "Event times and other dates will be shown in this timezone.",
                     input_html: { class: "w-full" },
                     wrapper_html: { class: "w-full max-w-md" } %>
-      </div>
+      <% end %>
     <% end %>
-  <% end %>
+  </div>
 
   <div class="profile-preferences-section">
     <div class="font-medium text-gray-700 mb-2 block">
-      Social media links:
+      Social media links
     </div>
 
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
@@ -334,7 +326,7 @@
 
   <div class="profile-preferences-section">
     <div class="font-medium text-gray-700 mb-2 block">
-      Profile display preferences:
+      Profile display preferences
     </div>
 
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
