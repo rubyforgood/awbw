@@ -1,5 +1,5 @@
 class TagsController < ApplicationController
-  skip_before_action :authenticate_user!, only: [ :index ]
+  skip_before_action :authenticate_user!, only: [ :index, :sectors, :categories ]
 
   def index
     authorize!
