@@ -1,5 +1,7 @@
 module Home
   class ResourcesController < ApplicationController
+    skip_before_action :authenticate_user!
+
     def index
       authorize! :home
       @resources = authorized_scope(Resource.includes(primary_asset: { file_attachment: :blob }, downloadable_asset: { file_attachment: :blob }, gallery_assets: { file_attachment: :blob })

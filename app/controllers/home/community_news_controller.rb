@@ -1,5 +1,7 @@
 module Home
   class CommunityNewsController < ApplicationController
+    skip_before_action :authenticate_user!
+
     def index
       authorize! :home
       @community_news = authorized_scope(CommunityNews
