@@ -36,7 +36,7 @@ RSpec.describe "Dedupable concern", type: :request do
       context "as a guest" do
         it "denies access" do
           get dedupe_index_categories_path
-          expect(response).to redirect_to(root_path)
+          expect(response).to redirect_to(new_user_session_path)
         end
       end
     end

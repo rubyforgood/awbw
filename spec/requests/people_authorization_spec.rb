@@ -7,9 +7,9 @@ RSpec.describe "People authorization", type: :request do
 
   describe "GET /people" do
     context "as a visitor" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get people_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
@@ -34,9 +34,9 @@ RSpec.describe "People authorization", type: :request do
 
   describe "GET /people/:id" do
     context "as a visitor" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get person_path(other_person)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 

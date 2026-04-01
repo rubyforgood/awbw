@@ -9,11 +9,10 @@ RSpec.describe "Admin::Home", type: :request do
   # ============================================================
 
   context "as a guest" do
-    it "redirects to root with alert" do
+    it "redirects to new user session path" do
       get admin_path
 
-      expect(response).to redirect_to(root_path)
-      # expect(flash[:alert]).to eq("Not authorized")
+      expect(response).to redirect_to(new_user_session_path)
     end
   end
 

@@ -110,9 +110,9 @@ RSpec.describe "OrganizationStatuses", type: :request do
   # GUEST BLOCKED
   # --------------------------------------------------
   describe "unauthenticated access" do
-    it "redirects to root" do
+    it "redirects to new user session path" do
       get organization_statuses_path
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
   end
 end
