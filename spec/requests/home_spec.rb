@@ -21,7 +21,7 @@ RSpec.describe "Home", type: :request do
   end
 
   describe "GET /home/* (turbo frame lazy loading)" do
-    %w[workshops resources events community_news stories].each do |section|
+    %w[workshops resources events community_news stories video_recordings].each do |section|
       it "#{section} returns 200 for visitors" do
         get "/home/#{section}"
         expect(response).to have_http_status(:ok)
