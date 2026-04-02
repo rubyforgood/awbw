@@ -45,21 +45,21 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
     describe "GET /admin/activities" do
       it "redirects and does not expose activity" do
         get index_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "GET /admin/activities/visits" do
       it "redirects and does not expose visits" do
         get visits_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "GET /admin/activities/charts" do
       it "redirects and does not expose charts" do
         get charts_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end

@@ -46,12 +46,6 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def authenticate_user!
-    return super if devise_controller?
-
-    redirect_to root_path unless user_signed_in?
-  end
-
   def track_user_with_ahoy
     ahoy.authenticate(current_user) if user_signed_in?
   end

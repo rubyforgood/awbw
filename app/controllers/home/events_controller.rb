@@ -1,5 +1,7 @@
 module Home
   class EventsController < ApplicationController
+    skip_before_action :authenticate_user!
+
     def index
       authorize! :home
       @events = authorized_scope(Event.includes(:bookmarks, :primary_asset)

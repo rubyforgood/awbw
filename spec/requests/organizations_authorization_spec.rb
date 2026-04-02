@@ -9,9 +9,9 @@ RSpec.describe "Organizations authorization", type: :request do
 
   describe "GET /organizations" do
     context "as a visitor" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get organizations_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
@@ -36,9 +36,9 @@ RSpec.describe "Organizations authorization", type: :request do
 
   describe "GET /organizations/:id" do
     context "as a visitor" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get organization_path(organization)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 

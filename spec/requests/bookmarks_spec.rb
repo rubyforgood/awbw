@@ -19,34 +19,34 @@ RSpec.describe "Bookmarks", type: :request do
   context "as a guest" do
     it "cannot access index" do
       get bookmarks_path
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
 
     it "cannot access personal bookmarks index" do
       get personal_bookmarks_path
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
 
     it "cannot access tally" do
       get tally_bookmarks_path
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
 
-    it "cannot create bookmark and redirects to root" do
+    it "cannot create bookmark and redirects to new user session path" do
       expect {
         post bookmarks_path,
              params: { bookmark: { bookmarkable_id: workshop.id, bookmarkable_type: "Workshop" } }
       }.not_to change(Bookmark, :count)
 
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
 
-    it "cannot destroy bookmark and redirects to root" do
+    it "cannot destroy bookmark and redirects to new user session path" do
       expect {
         delete bookmark_path(bookmark)
       }.not_to change(Bookmark, :count)
 
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
 
     context "with video_recordings" do
@@ -59,7 +59,7 @@ RSpec.describe "Bookmarks", type: :request do
                                      bookmarkable_type: "VideoRecording" } }
         }.not_to change(Bookmark, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
 
       it "cannot destroy a video_recording bookmark" do
@@ -68,7 +68,7 @@ RSpec.describe "Bookmarks", type: :request do
           delete bookmark_path(video_recording_bookmark)
         }.not_to change(Bookmark, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
