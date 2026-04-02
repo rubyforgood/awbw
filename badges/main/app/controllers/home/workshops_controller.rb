@@ -1,5 +1,7 @@
 module Home
   class WorkshopsController < ApplicationController
+    skip_before_action :authenticate_user!
+
     def index
       authorize! :home
       if params[:bust_cache] == "true" && allowed_to?(:manage?, with: ApplicationPolicy)

@@ -87,7 +87,7 @@ RSpec.describe "People#workshop_logs", type: :request do
     context "when not signed in" do
       it "denies access" do
         get workshop_logs_person_path(person)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end

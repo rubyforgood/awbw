@@ -271,9 +271,9 @@ RSpec.describe "/stories", type: :request do
     end
 
     describe "POST /create" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         post stories_url, params: { story: base_attributes }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end

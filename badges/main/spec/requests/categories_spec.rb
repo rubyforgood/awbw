@@ -258,23 +258,23 @@ RSpec.describe "Categories", type: :request do
   context "as a guest" do
     it "denies index" do
       get categories_path
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
 
     it "denies show" do
       category = create(:category, valid_attributes)
       get category_path(category)
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
 
     it "denies new" do
       get new_category_path
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
 
     it "cannot create" do
       post categories_path, params: { category: valid_attributes }
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
 
     it "cannot destroy" do
@@ -284,7 +284,7 @@ RSpec.describe "Categories", type: :request do
         delete category_path(category)
       }.not_to change(Category, :count)
 
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(new_user_session_path)
     end
   end
 end
