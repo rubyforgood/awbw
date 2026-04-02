@@ -135,6 +135,18 @@ class WorkshopLog < ApplicationRecord
     workshop_held_on ? workshop_held_on.strftime("%m/%d/%Y") : created_at.strftime("%m/%d/%Y")
   end
 
+  def has_quotes?
+    all_quotable_item_quotes.any?
+  end
+
+  def has_gallery_images?
+    gallery_assets.any?
+  end
+
+  def workshop_quotes
+    workshop&.quotes || Quote.none
+  end
+
   def attendance_breakdown
     {
       children: {

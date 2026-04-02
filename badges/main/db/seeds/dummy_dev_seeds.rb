@@ -1512,7 +1512,7 @@ if amy && aisha
     "Event"                => Event.order(:id).limit(2).to_a,
     "Organization"         => Organization.order(:id).limit(2).to_a,
     "Person"               => Person.where.not(id: excluded_person_ids).order(:id).limit(2).to_a,
-    "Report"               => Report.order(:id).limit(2).to_a,
+    "Report"               => Report.where.not(type: "WorkshopLog").order(:id).limit(2).to_a,
     "Resource"             => Resource.order(:id).limit(2).to_a,
     "Story"                => Story.order(:id).limit(2).to_a,
     "StoryIdea"            => StoryIdea.order(:id).limit(2).to_a,
