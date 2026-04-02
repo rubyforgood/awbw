@@ -88,6 +88,7 @@
                 <tr id="workshop_log_<%= log.id %>" class="hover:bg-gray-50 transition-colors duration-150">
                   <td class="px-2 text-left text-xs whitespace-nowrap">
                     <%= link_to (log.workshop_held_on || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %>
+                    <%= render "workshop_logs/content_icons", workshop_log: log %>
                   </td>
                   <td class="px-2 text-left text-sm font-bold">
                     <% if log.workshop %>

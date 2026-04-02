@@ -15,6 +15,7 @@
       <!-- TITLE -->
       <div class="text-sm font-semibold text-gray-900 leading-tight pr-6 mb-1">
         <%= workshop_log.workshop_title.presence || "Workshop Log ##{workshop_log.id}" %>
+        <%= render "workshop_logs/content_icons", workshop_log: workshop_log %>
       </div>
 
       <!-- WINDOWS TYPE -->
