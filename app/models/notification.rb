@@ -47,10 +47,29 @@ class Notification < ApplicationRecord
     Report
     StoryIdea
     User
-    WorkshopIdea
     WorkshopLog
+    WorkshopIdea
     WorkshopVariation
     WorkshopVariationIdea
+  ].freeze
+
+  EMAIL_TOPICS = [
+    [ "Admin FYI (all)", "[FYI]" ],
+    [ "Admin FYI: event registration confirmed", "[FYI] New event registration" ],
+    [ "Admin FYI: event registration cancelled", "[FYI] Event registration cancelled" ],
+    [ "Admin FYI: idea submitted", "submission by" ],
+    [ "Admin FYI: password reset", "[FYI] New password reset" ],
+    [ "Admin FYI: workshop log submission", "New WorkshopLog submission" ],
+    [ "Admin FYI: contact form submission", "contact form submission" ],
+    [ "Contact: form confirmation", "We received your message" ],
+    [ "Event: event registration cancelled", "Event registration cancelled" ],
+    [ "Event: event registration confirmed", "Event registration confirmed" ],
+    [ "Idea: confirmation (all)", "has been received" ],
+    [ "Idea: confirmation: workshop log", "workshop log has been received" ],
+    [ "User: confirm new email", "Confirm your new email address" ],
+    [ "User: password reset", "Password reset request" ],
+    [ "User: unlock instructions", "Unlock instructions" ],
+    [ "User: welcome instructions", "Welcome instructions" ]
   ].freeze
 
   RECIPIENT_ROLES = %w[
@@ -74,12 +93,19 @@ class Notification < ApplicationRecord
       .where("people.name LIKE ?", "%#{name}%") }
   scope :record_type, ->(record_type) { where(noticeable_type: record_type.to_s.camelize.titleize.gsub(" ", "")) }
   scope :subject_line, ->(subject) { where("notifications.email_subject LIKE ?", "%#{subject}%") }
+  scope :email_topic, ->(topic) { where("notifications.email_subject LIKE ?", "%#{topic}%") }
+
+  def self.email_topic_phrase(label)
+    EMAIL_TOPICS.assoc(label)&.last
+  end
 
   def self.search_by_params(params)
     stories = is_a?(ActiveRecord::Relation) ? self : all
     stories = stories.email(params[:email]) if params[:email].present?
     stories = stories.participant_name(params[:participant_name]) if params[:participant_name].present?
     stories = stories.subject_line(params[:subject_line]) if params[:subject_line].present?
+    topic_phrase = email_topic_phrase(params[:email_topic]) if params[:email_topic].present?
+    stories = stories.email_topic(topic_phrase) if topic_phrase.present?
     stories = stories.record_type(params[:record_type]) if params[:record_type].present?
     stories
   end

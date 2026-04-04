@@ -1,0 +1,10 @@
+<%= turbo_frame_tag "notifications_results" do %>
+  <div class="rounded-xl bg-white p-6 animate-fade blur-on-submit">
+    <%= render "index" %>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination flex justify-center mt-12">
+    <%= tailwind_paginate @notifications %>
+  </div>
+<% end %>

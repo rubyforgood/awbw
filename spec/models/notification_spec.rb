@@ -196,6 +196,79 @@ RSpec.describe Notification do
       expect(results).not_to include(notification_bob)
     end
 
+    context 'email_topic filter' do
+      let!(:welcome_notification) { create(:notification, email_subject: "AWBW Portal: Welcome instructions for Jane") }
+      let!(:password_notification) { create(:notification, email_subject: "AWBW Portal: Password reset request for Jane") }
+      let!(:event_notification) { create(:notification, email_subject: "AWBW Portal: Event registration confirmed for Art Show") }
+
+      it 'filters by email_topic keyword' do
+        results = Notification.search_by_params(email_topic: "User: welcome instructions")
+        expect(results).to include(welcome_notification)
+        expect(results).not_to include(password_notification, event_notification)
+      end
+
+      it 'returns all when email_topic is blank' do
+        results = Notification.search_by_params(email_topic: "")
+        expect(results).to include(welcome_notification, password_notification, event_notification)
+      end
+
+      it 'chains email_topic and subject_line with AND' do
+        results = Notification.search_by_params(email_topic: "User: welcome instructions", subject_line: "Jane")
+        expect(results).to include(welcome_notification)
+        expect(results).not_to include(password_notification, event_notification)
+      end
+
+      it 'subject_line alone still works as AND with other filters' do
+        results = Notification.search_by_params(subject_line: "Jane")
+        expect(results).to include(welcome_notification, password_notification)
+        expect(results).not_to include(event_notification)
+      end
+
+      it 'Admin FYI (all) matches all FYI emails' do
+        fyi_event = create(:notification, email_subject: "AWBW Portal: [FYI] New event registration by Jane to Art Show")
+        fyi_cancel = create(:notification, email_subject: "AWBW Portal: [FYI] Event registration cancelled by Jane for Art Show")
+        fyi_submission = create(:notification, email_subject: "AWBW Portal: [FYI] New StoryIdea submission by Jane")
+        fyi_reset = create(:notification, email_subject: "AWBW Portal: [FYI] New password reset by Jane")
+
+        results = Notification.search_by_params(email_topic: "Admin FYI (all)")
+        expect(results).to include(fyi_event, fyi_cancel, fyi_submission, fyi_reset)
+        expect(results).not_to include(welcome_notification, password_notification, event_notification)
+      end
+
+      it 'granular FYI topics match only their specific type' do
+        fyi_event = create(:notification, email_subject: "AWBW Portal: [FYI] New event registration by Jane to Art Show")
+        fyi_cancel = create(:notification, email_subject: "AWBW Portal: [FYI] Event registration cancelled by Jane for Art Show")
+        fyi_submission = create(:notification, email_subject: "AWBW Portal: [FYI] New StoryIdea submission by Jane")
+
+        results = Notification.search_by_params(email_topic: "Admin FYI: event registration confirmed")
+        expect(results).to include(fyi_event)
+        expect(results).not_to include(fyi_cancel, fyi_submission)
+      end
+
+      it 'Idea confirmation (all) matches idea and workshop log confirmations' do
+        idea_conf = create(:notification, email_subject: "AWBW Portal: Your story idea has been received")
+        log_conf = create(:notification, email_subject: "AWBW Portal: Your workshop log has been received")
+
+        results = Notification.search_by_params(email_topic: "Idea: confirmation (all)")
+        expect(results).to include(idea_conf, log_conf)
+        expect(results).not_to include(welcome_notification)
+      end
+
+      it 'Event: event registration confirmed does not return cancelled emails' do
+        confirmed = create(:notification, email_subject: "AWBW Portal: Event registration confirmed for Art Show")
+        cancelled = create(:notification, email_subject: "AWBW Portal: Event registration cancelled for Art Show")
+
+        results = Notification.search_by_params(email_topic: "Event: event registration confirmed")
+        expect(results).to include(confirmed)
+        expect(results).not_to include(cancelled)
+      end
+
+      it 'ignores an unrecognized email_topic label' do
+        results = Notification.search_by_params(email_topic: "Nonexistent topic")
+        expect(results).to include(welcome_notification, password_notification, event_notification)
+      end
+    end
+
     context 'record_type filter' do
       let!(:notification_story) { create(:notification, noticeable: create(:story_idea)) }
       let!(:notification_user) { create(:notification, noticeable: create(:user)) }

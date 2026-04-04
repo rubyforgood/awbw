@@ -5,13 +5,12 @@
                 data: {controller: "collection",
                       turbo_frame: "notifications_results" },
                       autocomplete: "off",
-                class: "flex flex-wrap gap-4" do |f| %>
-    <div>
-      <%= f.label :email, "Recipient email contains",
-                  class: "text-sm font-medium text-gray-500 mb-1" %>
+                class: "flex items-end gap-3" do |f| %>
+    <div class="flex-1">
+      <%= f.label :email, "Email contains",
+                  class: "block text-sm font-medium text-gray-500 mb-1" %>
 
       <%= f.text_field :email,
-                       placeholder: "mae@example.com",
                        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
                                  focus:ring-blue-500 focus:border-blue-500",
                        oninput: "this.form.requestSubmit()" %>
@@ -19,7 +18,7 @@
 
     <div>
       <%= f.label :record_type, "Record type",
-                  class: "text-sm font-medium text-gray-500 mb-1" %>
+                  class: "block text-sm font-medium text-gray-500 mb-1" %>
 
       <%= f.select :record_type,
                    options_for_select(
@@ -28,21 +27,34 @@
                    ),
                    { include_blank: "All" },
                    class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                             focus:ring-blue-500 focus:border-blue-500",
-                   onchange: "this.form.requestSubmit()" %>
+                             focus:ring-blue-500 focus:border-blue-500" %>
     </div>
 
-    <div class="flex-grow min-w-[200px]">
-      <%= f.label :subject_line, "Subject line",
-                  class: "text-sm font-medium text-gray-500 mb-1" %>
+    <div>
+      <%= f.label :email_topic, "Email topic",
+                  class: "block text-sm font-medium text-gray-500 mb-1" %>
+
+      <%= f.select :email_topic,
+                   options_for_select(Notification::EMAIL_TOPICS.map(&:first), params[:email_topic]),
+                   { include_blank: "All" },
+                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                             focus:ring-blue-500 focus:border-blue-500" %>
+    </div>
+
+    <div class="flex-1">
+      <%= f.label :subject_line, "Subject contains",
+                  class: "block text-sm font-medium text-gray-500 mb-1" %>
 
       <%= f.text_field :subject_line,
-                       placeholder: "e.g. new StoryIdea submission",
                        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                                 focus:ring-blue-500 focus:border-blue-500" %>
+                                 focus:ring-blue-500 focus:border-blue-500",
+                       oninput: "this.form.requestSubmit()" %>
     </div>
 
     <!-- Clear -->
-    <div><%= link_to "Clear filters", notifications_path, class: "btn btn-utility-outline whitespace-nowrap", data: { action: "collection#clearAndSubmit" } %></div>
+    <div>
+      <span class="block text-sm mb-1">&nbsp;</span>
+      <%= link_to "Clear filters", notifications_path, class: "btn btn-utility-outline whitespace-nowrap", data: { action: "collection#clearAndSubmit" } %>
+    </div>
   <% end %>
 </div>
