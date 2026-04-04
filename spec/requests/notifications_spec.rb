@@ -5,6 +5,29 @@ RSpec.describe "Notifications", type: :request do
   let(:regular_user) { create(:user) }
   let(:notification) { create(:notification, recipient_email: regular_user.email) }
 
+  describe "GET /notifications" do
+    before { sign_in admin }
+
+    let!(:story_notification) { create(:notification, noticeable: create(:story_idea), email_subject: "New story idea") }
+    let!(:user_notification) { create(:notification, noticeable: create(:user), email_subject: "Welcome") }
+
+    it "preserves the email_topic filter selection" do
+      get notifications_path, params: { email_topic: "User: confirm new email" }
+      expect(response.body).to include('selected="selected"')
+      expect(response.body).to include("User: confirm new email")
+    end
+
+    it "preserves the record_type filter selection" do
+      get notifications_path, params: { record_type: "StoryIdea" }
+      expect(response.body).to include('selected="selected"')
+    end
+
+    it "wraps results in a turbo frame" do
+      get notifications_path
+      expect(response.body).to include('id="notifications_results"')
+    end
+  end
+
   describe "POST /notifications/:id/resend" do
     context "as an admin" do
       before { sign_in admin }
