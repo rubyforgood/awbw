@@ -126,6 +126,7 @@ module Admin
       authorize! :ahoy_activity, to: :charts?
       @creation_velocity_data = creation_velocity_data
       prepare_chart_data
+      prepare_portal_usage_data
     end
 
     private
@@ -335,6 +336,54 @@ module Admin
       @top_exit_events = Ahoy::Event
         .where(id: last_event_ids)
         .group(:name)
+        .count
+        .sort_by { |_k, v| -v }
+        .first(10).to_h
+    end
+
+    def prepare_portal_usage_data
+      # Total registered users with portal access
+      @total_users_with_access = User.has_access.where(super_user: false).count
+
+      # Unique logged-in users over time (by day)
+      login_events = scoped_events.where(name: "auth.login")
+      @active_users_by_day = login_events
+        .where.not(user_id: nil)
+        .group_by_day(:time)
+        .distinct
+        .count(:user_id)
+
+      # Total unique active users in the selected period
+      @unique_active_users = login_events.where.not(user_id: nil).distinct.count(:user_id)
+
+      # Login count over time (total logins per day)
+      @logins_by_day = login_events.group_by_day(:time).count
+
+      # Distribution of user login frequency
+      login_counts = login_events
+        .where.not(user_id: nil)
+        .group(:user_id)
+        .count
+        .values
+      @login_frequency = { "1 login" => 0, "2-5 logins" => 0, "6-10 logins" => 0,
+                           "11-25 logins" => 0, "26-50 logins" => 0, "51+ logins" => 0 }
+      login_counts.each do |c|
+        bucket = case c
+        when 1 then "1 login"
+        when 2..5 then "2-5 logins"
+        when 6..10 then "6-10 logins"
+        when 11..25 then "11-25 logins"
+        when 26..50 then "26-50 logins"
+        else "51+ logins"
+        end
+        @login_frequency[bucket] += 1
+      end
+
+      # Top users by login count in this period (non-staff)
+      @top_users_by_logins = login_events
+        .joins("INNER JOIN users ON users.id = ahoy_events.user_id")
+        .where(users: { super_user: false })
+        .group(Arel.sql("CONCAT(users.first_name, ' ', users.last_name)"))
         .count
         .sort_by { |_k, v| -v }
         .first(10).to_h

@@ -31,6 +31,45 @@
 
       <section class="mt-6">
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Portal usage</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center">
+              <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @total_users_with_access %></div>
+              <div class="text-sm text-gray-500 mt-2">Total users with portal access</div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center">
+              <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @unique_active_users %></div>
+              <div class="text-sm text-gray-500 mt-2">Unique users who logged in</div>
+            </div>
+
+            <%= chart_card("Login frequency distribution") { column_chart @login_frequency } %>
+
+            <%= chart_card("Top users by logins") do %>
+              <%= bar_chart @top_users_by_logins, library: { indexAxis: "y" } %>
+            <% end %>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-6">
+        <%= chart_card("Unique active users by day") do %>
+          <%= line_chart @active_users_by_day,
+                         xtitle: "Date", ytitle: "Unique users",
+                         height: "300px", width: "100%" %>
+        <% end %>
+      </section>
+
+      <section class="mt-6">
+        <%= chart_card("Total logins by day") do %>
+          <%= line_chart @logins_by_day,
+                         xtitle: "Date", ytitle: "Logins",
+                         height: "300px", width: "100%" %>
+        <% end %>
+      </section>
+
+      <section class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">Visit patterns</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             <%= chart_card("Average visits by Hour") do %>
