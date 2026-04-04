@@ -1,5 +1,5 @@
 <div class="rounded-xl bg-white p-6">
-  <%= simple_form_for @workshop_variation, data: { turbo: false } do |f| %>
+  <%= simple_form_for @workshop_variation, html: { multipart: true }, data: { turbo: false } do |f| %>
     <%= hidden_field_tag(:from, params[:from]) %>
 
     <%= render "shared/errors", resource: @workshop_variation if @workshop_variation.errors.any? %>
@@ -140,6 +140,8 @@
         </div>
       </div>
     </div>
+
+    <%= render "shared/form_image_fields", f: f, include_primary_asset: false %>
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
