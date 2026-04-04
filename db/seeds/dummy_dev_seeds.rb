@@ -1545,23 +1545,29 @@ if amy && aisha
 end
 
 # ─── Ahoy visits & events (analytics charts) ───────────────────────────
+if Ahoy::Visit.any?
+  puts "Skipping Ahoy seed data (#{Ahoy::Visit.count} visits already exist)"
+else
 puts "Creating Ahoy visits and events for analytics charts…"
 
-ahoy_users = [
-  User.find_by(email: "amy.user@example.com"),
-  User.find_by(email: "aisha.user@example.com"),
-  nil # anonymous visitor
-].compact
+all_non_staff = User.where(super_user: false).where.not(confirmed_at: nil).to_a
+ahoy_users = (all_non_staff.sample([ all_non_staff.size, 8 ].min) + [ nil ]).compact
 
 cities = [ "Los Angeles", "San Diego", "Portland", "Seattle", "Denver" ]
 browsers = %w[Chrome Safari Firefox Edge]
 devices = %w[Desktop Mobile Tablet]
 
-# Create visits spread over the past month
+# Create visits spread over the past month, with some users browsing more than others
 ahoy_visits = []
+# Give each visit-user a weight so some browse heavily, others lightly
+visit_user_weights = ahoy_users.each_with_object({}) do |user, h|
+  h[user] = rand(1..5)
+end
+visit_user_weights[nil] = 2 # anonymous visitors
+
 30.times do |day_offset|
-  rand(2..4).times do
-    user = ahoy_users.sample
+  rand(3..6).times do
+    user = visit_user_weights.max_by { |_u, w| rand**(1.0 / w) }.first
     visit = Ahoy::Visit.create!(
       visit_token: SecureRandom.uuid,
       visitor_token: SecureRandom.uuid,
@@ -1590,8 +1596,9 @@ view_targets = {
 }.reject { |_, v| v.empty? }
 
 # ── view.* events (populates "Content Types People View Most" pie chart) ──
+# Generate enough view events across varied users so engagement differs from logins
 view_targets.each do |resource_name, records|
-  weight = resource_name == "workshop" ? 8 : (resource_name == "resource" ? 5 : 3)
+  weight = resource_name == "workshop" ? 20 : (resource_name == "resource" ? 12 : 6)
   weight.times do
     record = records.sample
     visit = ahoy_visits.sample
@@ -1611,7 +1618,7 @@ end
 %w[workshop resource story community_news].each do |resource_name|
   next unless view_targets[resource_name]&.any?
 
-  rand(2..4).times do
+  rand(4..8).times do
     record = view_targets[resource_name].sample
     visit = ahoy_visits.sample
     Ahoy::Event.create!(
@@ -1655,7 +1662,7 @@ search_full_texts = [ "anxiety", "we rise", "luck", "collage", "mental wellness"
                       "mental well-being", "friendship", "transforming", "north star" ]
 
 # Filter events with categories, sectors, and windows types
-12.times do
+20.times do
   visit = ahoy_visits.sample
   cats = seed_categories.sample(rand(1..3)).map { |c| { id: c.id, name: c.name, type: c.category_type&.name } }
   secs = seed_sectors.sample(rand(1..2)).map { |s| { id: s.id, name: s.name } }
@@ -1677,7 +1684,7 @@ search_full_texts = [ "anxiety", "we rise", "luck", "collage", "mental wellness"
 end
 
 # Search events with keywords AND filters
-10.times do
+15.times do
   visit = ahoy_visits.sample
   cats = seed_categories.sample(rand(1..2)).map { |c| { id: c.id, name: c.name, type: c.category_type&.name } }
   secs = seed_sectors.sample(rand(1..2)).map { |s| { id: s.id, name: s.name } }
@@ -1725,13 +1732,13 @@ zero_queries.each do |query|
   end
 end
 
-# ── browse.taggings events (supplements tagging charts) ──
-5.times do
+# ── search.taggings events (supplements tagging charts) ──
+50.times do
   visit = ahoy_visits.sample
   Ahoy::Event.create!(
     visit: visit,
     user: visit.user,
-    name: "browse.taggings",
+    name: "search.taggings",
     properties: {
       sectors: seed_sectors.sample(rand(1..3)).map(&:name),
       categories: seed_categories.sample(rand(1..3)).map(&:name),
@@ -1770,7 +1777,7 @@ end
 
 # ── create.* events (populates "Content Creation Velocity" chart) ──
 if view_targets["workshop"]&.any?
-  %w[workshop_idea story_idea workshop_log quote bookmark].each do |model_name|
+  %w[workshop_idea story_idea workshop_variation_idea workshop_log quote bookmark].each do |model_name|
     klass = model_name.classify.safe_constantize
     next unless klass
 
@@ -1806,27 +1813,30 @@ if all_seeded_users.any?
     end
 
     login_days.sort.each do |day_offset|
-      visit = ahoy_visits.sample || Ahoy::Visit.create!(
+      started = day_offset.days.ago + rand(6..22).hours
+      visit = Ahoy::Visit.create!(
         visit_token: SecureRandom.uuid,
         visitor_token: SecureRandom.uuid,
         user: user,
-        started_at: day_offset.days.ago + rand(6..22).hours,
+        started_at: started,
         browser: browsers.sample,
         device_type: devices.sample,
         city: cities.sample,
         country: "US",
         landing_page: "/"
       )
+      ahoy_visits << visit
 
       Ahoy::Event.create!(
         visit: visit,
         user: user,
         name: "auth.login",
         properties: { sign_in_count: rand(1..200) },
-        time: day_offset.days.ago + rand(6..22).hours
+        time: started + rand(0..30).seconds
       )
     end
   end
 end
 
 puts "  Created #{Ahoy::Visit.count} visits, #{Ahoy::Event.count} events"
+end

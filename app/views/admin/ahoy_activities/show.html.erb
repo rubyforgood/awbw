@@ -3,17 +3,17 @@
 
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">Event Detail</h1>
-        <%= link_to "Back to Events",
+        <h1 class="text-2xl font-semibold text-gray-900">Activity detail</h1>
+        <%= link_to "Back to Activities",
                     admin_activities_events_path,
                     class: "text-indigo-600 hover:underline text-sm" %>
       </div>
 
-      <!-- Event Info -->
+      <!-- Activity Info -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
         <dl class="divide-y divide-gray-100 text-sm">
           <div class="py-3 flex items-baseline gap-4">
-            <dt class="text-gray-500 font-medium w-28 shrink-0">Event Name</dt>
+            <dt class="text-gray-500 font-medium w-28 shrink-0">Activity name</dt>
             <dd class="text-gray-900"><%= @event.name %></dd>
           </div>
 

@@ -108,3 +108,6 @@ application.register("toggle-user-icon", ToggleUserIconController)
 import RemoteSelectController from "./remote_select_controller"
 application.register("remote-select", RemoteSelectController)
 
+import MixedChartController from "./mixed_chart_controller"
+application.register("mixed-chart", MixedChartController)
+

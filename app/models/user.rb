@@ -92,6 +92,9 @@ class User < ApplicationRecord
     elsif params[:access] == "false"
       results = results.where("users.inactive = ? OR users.locked_at IS NOT NULL OR users.confirmed_at IS NULL", true)
     end
+    results = results.where.not(welcome_instructions_sent_at: nil) if params[:invited] == "true"
+    results = results.where.not(confirmed_at: nil) if params[:confirmed] == "true"
+    results = results.where("users.sign_in_count > 0") if params[:authenticated] == "true"
     results
   end
 

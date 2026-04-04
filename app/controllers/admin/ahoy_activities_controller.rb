@@ -124,9 +124,10 @@ module Admin
 
     def charts
       authorize! :ahoy_activity, to: :charts?
-      @creation_velocity_data = creation_velocity_data
       prepare_chart_data
       prepare_portal_usage_data
+      prepare_content_creation_data
+      creation_velocity_data
     end
 
     private
@@ -234,9 +235,14 @@ module Admin
         "Download" => rs_funnel_counts["download.resource"] || 0
       }
 
+      # Tag analytics metrics
+      @tags_page_views = events.where(name: "view.tags").count
+      @taggings_page_views = events.where(name: "view.taggings").count
+
       # Tagging sectors and categories
-      tagging_events = events.where(name: "browse.taggings")
+      tagging_events = events.where(name: "search.taggings")
       tagging_count = tagging_events.count
+      @tagging_searches = tagging_count
 
       @tagging_sectors = tagging_events
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.sectors')"))
@@ -247,6 +253,56 @@ module Admin
         .pluck(Arel.sql("JSON_EXTRACT(properties, '$.categories')"))
         .flat_map { |arr| safe_json_parse(arr) }
         .tally.sort_by { |_k, v| -v }.first(15).to_h
+
+      # Search complexity: how many filters per search
+      raw_searches = tagging_events
+        .pluck(
+          Arel.sql("JSON_EXTRACT(properties, '$.sectors')"),
+          Arel.sql("JSON_EXTRACT(properties, '$.categories')")
+        )
+      @tagging_search_complexity = { "1 filter" => 0, "2 filters" => 0, "3 filters" => 0, "4 filters" => 0, "5+ filters" => 0 }
+      combo_tallies = Hash.new(0)
+      raw_searches.each do |sectors_json, categories_json|
+        sectors = safe_json_parse(sectors_json)
+        categories = safe_json_parse(categories_json)
+        total = sectors.size + categories.size
+        bucket = case total
+        when 0..1 then "1 filter"
+        when 2 then "2 filters"
+        when 3 then "3 filters"
+        when 4 then "4 filters"
+        else "5+ filters"
+        end
+        @tagging_search_complexity[bucket] += 1
+
+        combo = (sectors.sort + categories.sort).join(" + ")
+        combo_tallies[combo] += 1 if combo.present?
+      end
+
+      @top_filter_combos = combo_tallies
+        .sort_by { |_k, v| -v }
+        .first(12).to_h
+
+      # Tagging search origin: was the immediately preceding event a tags page view?
+      search_event_ids = tagging_events.pluck(:id, :visit_id, :time)
+      via_tags = 0
+      via_taggings = 0
+      search_event_ids.each do |id, visit_id, time|
+        preceding = events.where(visit_id: visit_id)
+                          .where("time <= ? AND id < ?", time, id)
+                          .order(time: :desc, id: :desc)
+                          .limit(1)
+                          .pick(:name)
+        if preceding == "view.tags"
+          via_tags += 1
+        else
+          via_taggings += 1
+        end
+      end
+      @tagging_search_origin = {
+        "Via tags page" => via_tags,
+        "Via taggings page" => via_taggings
+      }
 
       # User discovery funnel - batch with LIKE patterns
       @discovery_funnel = {
@@ -287,9 +343,24 @@ module Admin
         .sort_by { |_k, v| -v }
         .first(10).to_h
 
-      # User signup trend
-      signup_range = time_range || (6.months.ago..Time.current)
-      @user_signup_trend = User.where(created_at: signup_range).group_by_week(:created_at).count
+      # User activity level distribution
+      user_event_counts = events
+        .where.not(user_id: nil)
+        .group(:user_id)
+        .count
+        .values
+      active_user_ids = events.where.not(user_id: nil).distinct.pluck(:user_id)
+      never_active = User.where.not(id: active_user_ids).count
+      @user_activity_distribution = { "Never active" => never_active, "Light (1-9)" => 0,
+                                      "Regular (10-49)" => 0, "Power (50+)" => 0 }
+      user_event_counts.each do |c|
+        bucket = case c
+        when 1..9 then "Light (1-9)"
+        when 10..49 then "Regular (10-49)"
+        else "Power (50+)"
+        end
+        @user_activity_distribution[bucket] += 1
+      end
 
       # Search-to-view conversion
       total_search_visits = events.where("name LIKE 'search.%'").distinct.count(:visit_id)
@@ -326,10 +397,27 @@ module Admin
         @session_duration_chart[bucket] += 1
       end
 
-      # Heatmap: visits by hour × day of week
-      @heatmap_data = visits.group(
-        Arel.sql("HOUR(started_at)"), Arel.sql("DAYOFWEEK(started_at)")
+      # Average session duration (minutes)
+      if raw_durations.any?
+        @avg_session_minutes = (raw_durations.sum(&:to_f) / raw_durations.size).round(1)
+      else
+        @avg_session_minutes = 0
+      end
+
+      # New vs returning visitors
+      visitor_counts = visits.group(:visitor_token).count
+      @new_vs_returning = {
+        "New" => visitor_counts.count { |_k, v| v == 1 },
+        "Returning" => visitor_counts.count { |_k, v| v > 1 }
+      }
+
+      # Heatmap: events by hour × day of week (in user's timezone)
+      tz_name = ActiveSupport::TimeZone[Time.zone.name].tzinfo.canonical_identifier
+      @heatmap_data = events.group(
+        Arel.sql("HOUR(CONVERT_TZ(time, 'UTC', '#{tz_name}'))"),
+        Arel.sql("DAYOFWEEK(CONVERT_TZ(time, 'UTC', '#{tz_name}'))")
       ).count
+      @user_tz_abbr = Time.zone.now.strftime("%Z")
 
       # Top exit events (last event per visit)
       last_event_ids = events.group(:visit_id).select("MAX(ahoy_events.id)")
@@ -339,30 +427,63 @@ module Admin
         .count
         .sort_by { |_k, v| -v }
         .first(10).to_h
+
+      # Top referrer → landing page combos (with wrapped labels)
+      @top_referrer_landing = visits.group(:referring_domain, :landing_page)
+        .count
+        .sort_by { |_k, v| -v }
+        .first(10)
+        .map { |(domain, page), count| [ wrap_label("#{domain || '(direct)'} → #{page}", 30), count ] }
+        .to_h
     end
 
     def prepare_portal_usage_data
-      non_staff = User.where(super_user: false)
+      audiences = selected_audiences
 
-      # Portal access: invited users (welcome instructions sent)
-      @portal_access_users = non_staff.where.not(welcome_instructions_sent_at: nil).count
+      # Determine which user scope to show based on audience filter
+      @audience_labels = audiences.sort
+      has_users = audiences.include?("users")
+      has_staff = audiences.include?("staff")
+      user_scope = if has_users && has_staff
+        User.all
+      elsif has_staff
+        User.where(super_user: true)
+      elsif has_users
+        User.where(super_user: false)
+      else
+        User.none
+      end
 
-      # Confirmed: users who clicked the email invite link
-      @confirmed_users = non_staff.where.not(confirmed_at: nil).count
+      # Total users in the system (always show full picture)
+      @total_users = User.count
+      @staff_users = User.where(super_user: true).count
+      @non_staff_users = User.where(super_user: false).count
 
-      # Authenticated: users who have logged in at least once
-      @authenticated_users = non_staff.where("sign_in_count > 0").count
+      # Filtered counts
+      @filtered_user_count = user_scope.count
+      @portal_access_users = user_scope.where.not(welcome_instructions_sent_at: nil).count
+      @has_access_users = user_scope.has_access.count
+      @confirmed_users = user_scope.where.not(confirmed_at: nil).count
+      @authenticated_users = user_scope.where("sign_in_count > 0").count
 
-      # Unique logged-in users over time (by day)
       login_events = scoped_events.where(name: "auth.login")
-      @active_users_by_day = login_events
-        .where.not(user_id: nil)
-        .group_by_day(:time)
-        .distinct
-        .count(:user_id)
+
+      # Visits split by visitor vs logged-in user
+      @authenticated_visits = scoped_visits.where.not(user_id: nil).count
+      @public_visits = scoped_visits.where(user_id: nil).count
+      total_events = scoped_events.count
+      public_events = scoped_events.where(user_id: nil).count
+      @public_events_pct = total_events > 0 ? (public_events.to_f / total_events * 100).round(0) : 0
+      total_visits = @authenticated_visits + @public_visits
+      @public_visits_pct = total_visits > 0 ? (@public_visits.to_f / total_visits * 100).round(0) : 0
+      @visitor_visits_by_day = scoped_visits.where(user_id: nil).group_by_day(:started_at).count
+      @user_visits_by_day = scoped_visits.where.not(user_id: nil).group_by_day(:started_at).count
 
       # Login count over time (total logins per day)
       @logins_by_day = login_events.group_by_day(:time).count
+
+      # Visits by day
+      @visits_by_day = scoped_visits.group_by_day(:started_at).count
 
       # Distribution of user login frequency
       login_counts = login_events
@@ -394,23 +515,86 @@ module Admin
         .first(10).to_h
     end
 
+    def prepare_content_creation_data
+      idea_classes = [ WorkshopIdea, StoryIdea, WorkshopVariationIdea ]
+
+      @ideas_submitted = idea_classes.sum(&:count)
+
+      @ideas_promoted = idea_classes.sum do |klass|
+        case klass.name
+        when "WorkshopIdea" then klass.joins(:workshops).distinct.count
+        when "StoryIdea" then klass.joins(:stories).distinct.count
+        when "WorkshopVariationIdea" then klass.joins(:workshop_variations).distinct.count
+        end
+      end
+
+      creator_count = idea_classes.flat_map { |k| k.distinct.pluck(:created_by_id) }.uniq.compact.size
+      @avg_ideas_per_person = creator_count > 0 ? (@ideas_submitted.to_f / creator_count).round(1) : 0
+    end
+
     def creation_velocity_data
-      models = %w[workshop_idea story_idea workshop_log quote bookmark]
+      all_models = %w[workshop_idea story_idea workshop_variation_idea workshop_variation workshop_log quote bookmark resource community_news event video_recording]
 
-      base_scope = Ahoy::Event
+      base_scope = scoped_events
                      .where("name LIKE 'create.%'")
-                     .where(resource_type: models.map(&:classify))
-                     .where("time >= ?", 6.months.ago)
+                     .where(resource_type: all_models.map(&:classify))
 
-      models.map do |model|
-        {
-          name: model.humanize.titleize.pluralize,
-          data: base_scope
-                  .where(name: "create.#{model}")
-                  .group_by_day(:time)
-                  .count
-        }
-      end.reject { |s| s[:data].empty? }
+      counts = base_scope.group(:name).count
+
+      promoted_counts = {
+        "workshop_idea" => WorkshopIdea.joins(:workshops).distinct.count,
+        "story_idea" => StoryIdea.joins(:stories).distinct.count,
+        "workshop_variation_idea" => WorkshopVariationIdea.joins(:workshop_variations).distinct.count
+      }
+
+      # User-generated
+      user_models = %w[bookmark quote story_idea workshop_idea workshop_variation_idea workshop_log]
+      user_labels = {
+        "workshop_variation_idea" => "Variation Ideas"
+      }
+      @user_generated_content = user_models.map do |model|
+        label = user_labels[model] || model.humanize.titleize.pluralize
+        [ label, counts["create.#{model}"] || 0, promoted_counts[model] ]
+      end
+
+      # Admin-generated
+      admin_models = %w[bookmark quote story workshop workshop_variation]
+      admin_labels = {
+        "workshop_variation" => "Variations"
+      }
+      @admin_generated_content = admin_models.map do |model|
+        count = counts["create.#{model}"] || 0
+        promoted = promoted_counts["#{model}_idea"]
+        label = admin_labels[model] || model.humanize.titleize.pluralize
+        [ label, count, promoted ]
+      end
+      @admin_generated_content << [ :spacer ]
+      %w[resource community_news event video_recording].each do |model|
+        @admin_generated_content << [ model.humanize.titleize.pluralize, counts["create.#{model}"] || 0, nil ]
+      end
+
+      # Total: combined paired types
+      @total_generated_content = []
+      %w[bookmark quote].each do |model|
+        count = counts["create.#{model}"] || 0
+        @total_generated_content << [ model.humanize.titleize.pluralize, count, nil, nil ]
+      end
+      pairs = [
+        [ "Stories", "story", "story_idea" ],
+        [ "Workshops", "workshop", "workshop_idea" ],
+        [ "Variations", "workshop_variation", "workshop_variation_idea" ]
+      ]
+      pairs.each do |label, admin_key, idea_key|
+        admin_count = counts["create.#{admin_key}"] || 0
+        idea_count = counts["create.#{idea_key}"] || 0
+        promoted = [ promoted_counts[idea_key] || 0, admin_count, idea_count ].min
+        total = admin_count + idea_count - promoted
+        @total_generated_content << [ label, total, idea_count, admin_count, promoted ]
+      end
+      @total_generated_content << [ "Workshop Logs", counts["create.workshop_log"] || 0, nil, nil ]
+      %w[resource community_news event video_recording].each do |model|
+        @total_generated_content << [ model.humanize.titleize.pluralize, counts["create.#{model}"] || 0, nil, nil ]
+      end
     end
 
     def selected_audiences
@@ -481,6 +665,26 @@ module Admin
       JSON.parse(json)
     rescue JSON::ParserError, TypeError
       []
+    end
+
+    # Chart.js renders array labels as multi-line; split at delimiter boundaries
+    def wrap_label(text, max_chars)
+      return text if text.length <= max_chars
+
+      # Split on " + " or " → " while keeping the delimiter with the next part
+      tokens = text.split(/(?<= \+ )|(?<= → )/)
+      lines = []
+      current = tokens.shift.to_s
+      tokens.each do |token|
+        if (current.length + token.length) > max_chars
+          lines << current.strip
+          current = token
+        else
+          current = "#{current}#{token}"
+        end
+      end
+      lines << current.strip
+      lines
     end
 
     def tracked_activity_conditions(scope)

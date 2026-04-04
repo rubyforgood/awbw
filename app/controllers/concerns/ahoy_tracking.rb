@@ -37,7 +37,7 @@ module AhoyTracking
     return if sectors.blank? && categories.blank?
 
     # total_results = grouped_results.values.sum { |r| r.respond_to?(:total_entries) ? r.total_entries : r.size }
-    ahoy.track "browse.taggings", {
+    ahoy.track "search.taggings", {
       sectors: sectors,
       categories: categories,
       # result_count: total_results,
@@ -49,7 +49,13 @@ module AhoyTracking
   end
 
   # Sugar for controllers (readability)
-  def track_view(resource)    = track(:view, resource)
+  def track_view(resource, properties = {})
+    if resource.is_a?(String)
+      track_event("view.#{resource}", properties)
+    else
+      track(:view, resource)
+    end
+  end
   def track_print(resource)   = track(:print, resource)
   def track_download(resource)= track(:download, resource)
 
