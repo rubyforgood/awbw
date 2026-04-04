@@ -184,7 +184,7 @@ class WorkshopLog < ApplicationRecord
 
   def workshop_or_external_title_present
     return if workshop.present? || external_workshop_title.present?
-    errors.add(:base, "Please select or enter a workshop title")
+    errors.add(:base, "Please select a workshop or enter a workshop title")
   end
 
   def update_workshop_log_count
