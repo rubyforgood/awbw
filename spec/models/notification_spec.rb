@@ -195,5 +195,21 @@ RSpec.describe Notification do
       expect(results).to include(notification_alice)
       expect(results).not_to include(notification_bob)
     end
+
+    context 'record_type filter' do
+      let!(:notification_story) { create(:notification, noticeable: create(:story_idea)) }
+      let!(:notification_user) { create(:notification, noticeable: create(:user)) }
+
+      it 'filters by record_type' do
+        results = Notification.search_by_params(record_type: "StoryIdea")
+        expect(results).to include(notification_story)
+        expect(results).not_to include(notification_user)
+      end
+
+      it 'returns all when record_type is blank' do
+        results = Notification.search_by_params(record_type: "")
+        expect(results).to include(notification_story, notification_user)
+      end
+    end
   end
 end
