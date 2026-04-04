@@ -19,8 +19,8 @@ RSpec.describe 'Reset password (person)', type: :system do
       fill_in "change-password-new-password-confirmation", with: "new_secure_password"
       click_button "Change Password"
 
-      expect(page).to have_current_path(root_path)
       expect(page).to have_content("Your Password was updated.")
+      expect(page).to have_current_path(root_path)
       expect(page).to have_css("#avatar")
     end
   end
