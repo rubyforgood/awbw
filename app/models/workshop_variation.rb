@@ -58,6 +58,7 @@ class WorkshopVariation < ApplicationRecord
   def attach_assets_from_idea!
     return unless workshop_variation_idea
 
+    assets.destroy_all
     workshop_variation_idea.assets.find_each do |asset|
       new_asset = assets.build(type: asset.type)
       new_asset.file.attach(asset.file.blob)
