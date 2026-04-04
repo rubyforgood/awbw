@@ -29,7 +29,7 @@ RSpec.describe WorkshopLog do
     it "is invalid without workshop or external_workshop_title" do
       workshop_log = build(:workshop_log, workshop: nil, external_workshop_title: nil)
       expect(workshop_log).not_to be_valid
-      expect(workshop_log.errors[:base]).to include("Please select a workshop or provide a workshop title")
+      expect(workshop_log.errors[:base]).to include("Please select or enter a workshop title")
     end
 
     it "requires workshop_held_on" do
