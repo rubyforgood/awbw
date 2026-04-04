@@ -21,11 +21,15 @@
       <%= f.label :record_type, "Record type",
                   class: "text-sm font-medium text-gray-500 mb-1" %>
 
-      <%= f.text_field :record_type,
-                       placeholder: "e.g. StoryIdea",
-                       class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                                 focus:ring-blue-500 focus:border-blue-500",
-                       oninput: "this.form.requestSubmit()" %>
+      <%= f.select :record_type,
+                   options_for_select(
+                     Notification::NOTICEABLE_TYPES.map { |t| [ t.underscore.humanize, t ] },
+                     params[:record_type]
+                   ),
+                   { include_blank: "All" },
+                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                             focus:ring-blue-500 focus:border-blue-500",
+                   onchange: "this.form.requestSubmit()" %>
     </div>
 
     <div class="flex-grow min-w-[200px]">

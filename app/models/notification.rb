@@ -42,6 +42,17 @@ class Notification < ApplicationRecord
     welcome_instructions
   ].freeze
 
+  NOTICEABLE_TYPES = %w[
+    EventRegistration
+    Report
+    StoryIdea
+    User
+    WorkshopIdea
+    WorkshopLog
+    WorkshopVariation
+    WorkshopVariationIdea
+  ].freeze
+
   RECIPIENT_ROLES = %w[
     admin
     person
@@ -69,6 +80,7 @@ class Notification < ApplicationRecord
     stories = stories.email(params[:email]) if params[:email].present?
     stories = stories.participant_name(params[:participant_name]) if params[:participant_name].present?
     stories = stories.subject_line(params[:subject_line]) if params[:subject_line].present?
+    stories = stories.record_type(params[:record_type]) if params[:record_type].present?
     stories
   end
 
