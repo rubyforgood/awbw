@@ -1792,4 +1792,41 @@ if view_targets["workshop"]&.any?
   end
 end
 
+# ── auth.login events (populates "Portal usage" charts) ──
+# Simulate realistic login patterns: some users log in daily, others weekly
+all_seeded_users = User.where(super_user: false).where.not(confirmed_at: nil).to_a
+if all_seeded_users.any?
+  # Assign each user a login frequency: heavy, moderate, or light
+  all_seeded_users.each do |user|
+    frequency = %i[heavy moderate light light light].sample
+    login_days = case frequency
+    when :heavy   then (0..89).to_a.sample(rand(40..70))
+    when :moderate then (0..89).to_a.sample(rand(12..25))
+    when :light    then (0..89).to_a.sample(rand(2..6))
+    end
+
+    login_days.sort.each do |day_offset|
+      visit = ahoy_visits.sample || Ahoy::Visit.create!(
+        visit_token: SecureRandom.uuid,
+        visitor_token: SecureRandom.uuid,
+        user: user,
+        started_at: day_offset.days.ago + rand(6..22).hours,
+        browser: browsers.sample,
+        device_type: devices.sample,
+        city: cities.sample,
+        country: "US",
+        landing_page: "/"
+      )
+
+      Ahoy::Event.create!(
+        visit: visit,
+        user: user,
+        name: "auth.login",
+        properties: { sign_in_count: rand(1..200) },
+        time: day_offset.days.ago + rand(6..22).hours
+      )
+    end
+  end
+end
+
 puts "  Created #{Ahoy::Visit.count} visits, #{Ahoy::Event.count} events"

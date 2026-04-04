@@ -33,20 +33,38 @@
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">Portal usage</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center">
-              <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @total_users_with_access %></div>
-              <div class="text-sm text-gray-500 mt-2">Total users with portal access</div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <h3 class="text-sm font-semibold text-gray-700 mb-2">Portal access users</h3>
+              <div class="flex flex-col items-center justify-center py-4">
+                <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @portal_access_users %></div>
+                <div class="text-xs text-gray-400 mt-2">Invited users (welcome instructions sent)</div>
+              </div>
             </div>
 
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col items-center justify-center">
-              <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @unique_active_users %></div>
-              <div class="text-sm text-gray-500 mt-2">Unique users who logged in</div>
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <h3 class="text-sm font-semibold text-gray-700 mb-2">Confirmed users</h3>
+              <div class="flex flex-col items-center justify-center py-4">
+                <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @confirmed_users %></div>
+                <div class="text-xs text-gray-400 mt-2">Users who have clicked email invite link</div>
+              </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <h3 class="text-sm font-semibold text-gray-700 mb-2">Authenticated users</h3>
+              <div class="flex flex-col items-center justify-center py-4">
+                <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @authenticated_users %></div>
+                <div class="text-xs text-gray-400 mt-2">Users who have logged in at least once</div>
+              </div>
             </div>
 
             <%= chart_card("Login frequency distribution") { column_chart @login_frequency } %>
 
             <%= chart_card("Top users by logins") do %>
               <%= bar_chart @top_users_by_logins, library: { indexAxis: "y" } %>
+            <% end %>
+
+            <%= chart_card("Top engaged users") do %>
+              <%= bar_chart @top_engaged_users, library: { indexAxis: "y" } %>
             <% end %>
           </div>
         </div>
@@ -222,10 +240,6 @@
                                          .limit(10)
                                          .count(:id),
                             height: "350px" %>
-            <% end %>
-
-            <%= chart_card("Top Engaged Users") do %>
-              <%= bar_chart @top_engaged_users, library: { indexAxis: "y" } %>
             <% end %>
 
             <%= chart_card("Bounce Rate") { pie_chart @bounce_rate } %>

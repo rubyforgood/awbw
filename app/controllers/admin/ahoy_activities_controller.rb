@@ -342,8 +342,16 @@ module Admin
     end
 
     def prepare_portal_usage_data
-      # Total registered users with portal access
-      @total_users_with_access = User.has_access.where(super_user: false).count
+      non_staff = User.where(super_user: false)
+
+      # Portal access: invited users (welcome instructions sent)
+      @portal_access_users = non_staff.where.not(welcome_instructions_sent_at: nil).count
+
+      # Confirmed: users who clicked the email invite link
+      @confirmed_users = non_staff.where.not(confirmed_at: nil).count
+
+      # Authenticated: users who have logged in at least once
+      @authenticated_users = non_staff.where("sign_in_count > 0").count
 
       # Unique logged-in users over time (by day)
       login_events = scoped_events.where(name: "auth.login")
@@ -352,9 +360,6 @@ module Admin
         .group_by_day(:time)
         .distinct
         .count(:user_id)
-
-      # Total unique active users in the selected period
-      @unique_active_users = login_events.where.not(user_id: nil).distinct.count(:user_id)
 
       # Login count over time (total logins per day)
       @logins_by_day = login_events.group_by_day(:time).count
