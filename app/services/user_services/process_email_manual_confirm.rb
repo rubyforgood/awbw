@@ -6,13 +6,14 @@ module UserServices
       end
     end
 
-    def self.call(user:, action:, current_user:)
-      new(user:, action:, current_user:).call
+    def self.call(user:, action:, send_reset_password: false, current_user:)
+      new(user:, action:, send_reset_password:, current_user:).call
     end
 
-    def initialize(user:, action:, current_user:)
+    def initialize(user:, action:, send_reset_password:, current_user:)
       @user = user
       @action = action
+      @send_reset_password = send_reset_password
       @current_user = current_user
       @actions_taken = []
     end
@@ -23,6 +24,7 @@ module UserServices
         resend_confirmation
       when "confirm"
         manually_confirm
+        send_reset_password_instructions if @send_reset_password
       end
 
       Result.new(actions_taken: @actions_taken)
@@ -44,6 +46,11 @@ module UserServices
       else
         @actions_taken << "Email has been manually confirmed"
       end
+    end
+
+    def send_reset_password_instructions
+      @user.send_reset_password_instructions
+      @actions_taken << "Password reset instructions sent to #{@user.email}"
     end
   end
 end

@@ -134,6 +134,43 @@ RSpec.describe UserServices::ProcessEmailManualConfirm do
       end
     end
 
+    context "with action 'confirm' and send_reset_password" do
+      let(:user) { create(:user) }
+      let(:new_email) { "newemail@example.com" }
+      let(:mock_mail) { double(deliver_later: true, deliver: true, deliver_now: true) }
+
+      before do
+        user.update_columns(unconfirmed_email: new_email)
+        allow(DeviseMailer).to receive(:reset_password_instructions).and_return(mock_mail)
+      end
+
+      it "confirms the email and sends password reset instructions" do
+        result = described_class.call(
+          user: user,
+          action: "confirm",
+          send_reset_password: true,
+          current_user: admin
+        )
+
+        user.reload
+        expect(user.email).to eq(new_email)
+        expect(DeviseMailer).to have_received(:reset_password_instructions)
+        expect(result.summary).to include("manually confirmed")
+        expect(result.summary).to include("Password reset instructions sent to #{new_email}")
+      end
+
+      it "does not send password reset when send_reset_password is false" do
+        described_class.call(
+          user: user,
+          action: "confirm",
+          send_reset_password: false,
+          current_user: admin
+        )
+
+        expect(DeviseMailer).not_to have_received(:reset_password_instructions)
+      end
+    end
+
     context "with no action" do
       let(:user) { create(:user, confirmed_at: nil) }
 

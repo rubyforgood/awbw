@@ -281,6 +281,7 @@ class UsersController < ApplicationController
     result = UserServices::ProcessEmailManualConfirm.call(
       user: @user,
       action: params[:confirm_action],
+      send_reset_password: params[:send_reset_password] == "1",
       current_user: current_user
     )
 
