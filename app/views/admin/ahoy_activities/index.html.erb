@@ -6,7 +6,7 @@
         <h1 class="text-2xl font-semibold text-gray-900">Activities</h1>
 
         <div class="text-sm text-gray-500">
-          <%= @events.count %> events
+          <%= @events.count %> activities
         </div>
       </div>
 
@@ -20,10 +20,10 @@
 
           <div class="flex flex-wrap lg:flex-nowrap gap-4">
 
-            <!-- Event Name -->
+            <!-- Activity Name -->
             <div class="flex-1 min-w-0">
               <label class="block text-sm font-medium text-gray-600 mb-1">
-                Event Name
+                Activity name
               </label>
               <%= text_field_tag :event_name,
                                  params[:event_name],
@@ -134,13 +134,13 @@
         <% end %>
       </div>
 
-      <!-- Events Table -->
+      <!-- Activities Table -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
         <table class="responsive-table min-w-full divide-y divide-gray-200 text-sm">
           <thead class="bg-gray-50 text-gray-600 uppercase tracking-wider text-xs">
           <tr>
             <th class="px-4 py-3 text-left rounded-tl-xl">Time</th>
-            <th class="px-4 py-3 text-left">Event</th>
+            <th class="px-4 py-3 text-left">Activity</th>
             <th class="px-4 py-3 text-left">Resource</th>
             <th class="px-4 py-3 text-left">User</th>
             <th class="px-4 py-3 text-left">Visit ID</th>
@@ -155,7 +155,7 @@
                 <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
               </td>
 
-              <td data-label="Event" class="px-4 py-3 font-medium text-gray-900">
+              <td data-label="Activity" class="px-4 py-3 font-medium text-gray-900">
                 <%= event.name %>
               </td>
 

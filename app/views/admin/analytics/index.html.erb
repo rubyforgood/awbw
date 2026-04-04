@@ -47,19 +47,12 @@
                     <%= number_with_delimiter(data[:views]) %>
                   </div>
 
-                  <div class="mt-2 space-y-1 text-xs text-gray-600">
-                    <% if data[:prints].to_i > 0 %>
-                      <div class="flex items-center gap-1">
-                        <span class="tabular-nums"><%= number_with_delimiter(data[:prints]) %></span>
-                        <span class="text-gray-500">prints</span>
-                      </div>
-                    <% end %>
-
-                    <% if data[:downloads].to_i > 0 %>
-                      <div class="flex items-center gap-1">
-                        <span class="tabular-nums"><%= number_with_delimiter(data[:downloads]) %></span>
-                        <span class="text-gray-500">downloads</span>
-                      </div>
+                  <div class="mt-2 text-xs text-gray-600">
+                    <% stats = [] %>
+                    <% stats << "#{number_with_delimiter(data[:prints])} prints" if data[:prints].to_i > 0 %>
+                    <% stats << "#{number_with_delimiter(data[:downloads])} downloads" if data[:downloads].to_i > 0 %>
+                    <% if stats.any? %>
+                      <div><%= stats.join(" · ") %></div>
                     <% end %>
                   </div>
                 </div>
