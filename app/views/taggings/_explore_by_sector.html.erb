@@ -7,7 +7,7 @@
 </h3>
 
 <div class="flex flex-wrap justify-center gap-2 mb-6">
-  <% Sector.published.has_taggings.order(:name).each do |sector| %>
+  <% @sectors.each do |sector| %>
     <% next if sector.name == @sector_names %>
     <%= render "sectors/tagging_label", sector: sector %>
   <% end %>
