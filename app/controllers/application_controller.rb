@@ -71,4 +71,12 @@ class ApplicationController < ActionController::Base
   def set_current_user
     Current.user = current_user if user_signed_in? # needed for Ahoy tracking in models
   end
+
+  # Render a Turbo Stream that triggers a client-side Turbo.visit().
+  # Use instead of redirect_to when the response also modifies the session
+  # (e.g. bypass_sign_in after password change) to ensure the browser
+  # processes the Set-Cookie header before navigation begins.
+  def turbo_stream_visit(url)
+    %(<turbo-stream action="visit" url="#{ERB::Util.html_escape(url)}"></turbo-stream>).html_safe
+  end
 end

@@ -179,7 +179,13 @@ class UsersController < ApplicationController
         user: @user
       )
       bypass_sign_in(@user)
-      redirect_to root_path, notice: "Your Password was updated."
+      respond_to do |format|
+        format.html { redirect_to root_path, notice: "Your Password was updated." }
+        format.turbo_stream do
+          flash[:notice] = "Your Password was updated."
+          render turbo_stream: turbo_stream_visit(root_path)
+        end
+      end
     else
       respond_to do |format|
         format.html { render :change_password }

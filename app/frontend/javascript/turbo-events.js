@@ -1,3 +1,16 @@
+import { Turbo } from "@hotwired/turbo-rails"
+
+// Custom Turbo Stream action: navigate to a URL via Turbo.visit().
+// Use instead of redirect_to when the response also modifies the session
+// (e.g. bypass_sign_in after password change) to ensure the browser
+// processes the Set-Cookie header before navigation begins.
+//
+// Usage in controller:
+//   render turbo_stream: turbo_stream_visit(root_path)
+Turbo.StreamActions.visit = function () {
+  Turbo.visit(this.getAttribute("url"))
+}
+
 addEventListener("turbo:frame-missing", async (event) => {
   event.preventDefault();
 
