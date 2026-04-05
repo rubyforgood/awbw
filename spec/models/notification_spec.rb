@@ -13,8 +13,8 @@ RSpec.describe Notification do
       expect(Notification::KINDS).to include("account_email_change_requested")
     end
 
-    it "includes account_email_changed" do
-      expect(Notification::KINDS).to include("account_email_changed")
+    it "includes account_email_change_requested_notification" do
+      expect(Notification::KINDS).to include("account_email_change_requested_notification")
     end
 
     it "validates account_email_change_requested as a valid kind" do
@@ -22,8 +22,8 @@ RSpec.describe Notification do
       expect(notification).to be_valid
     end
 
-    it "validates account_email_changed as a valid kind" do
-      notification = build(:notification, kind: "account_email_changed", recipient_role: "person")
+    it "validates account_email_change_requested_notification as a valid kind" do
+      notification = build(:notification, kind: "account_email_change_requested_notification", recipient_role: "person")
       expect(notification).to be_valid
     end
   end
