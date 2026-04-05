@@ -4,6 +4,7 @@ module LoginHelpers
     fill_in "Email", with: user.email
     fill_in "Password", with: user.password
     click_button "Log in"
+    expect(page).to have_no_link("Log In")
   end
 end
 
