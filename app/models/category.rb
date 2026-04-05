@@ -27,6 +27,18 @@ class Category < ApplicationRecord
 
   # Scopes
   scope :has_taggings, -> { joins(:categorizable_items).distinct }
+  scope :has_published_taggings, -> {
+    subqueries = Tag::TAGGABLE_META.map do |_key, data|
+      klass = data[:klass]
+      klass.published
+           .joins(:categorizable_items)
+           .where("categorizable_items.category_id = categories.id")
+           .select("1")
+           .arel.exists
+    end
+
+    where(subqueries.reduce(:or))
+  }
   scope :category_type_id, ->(category_type_id) {
     category_type_id.present? ? where(category_type_id: category_type_id) : all }
   scope :category_name, ->(category_name) {
