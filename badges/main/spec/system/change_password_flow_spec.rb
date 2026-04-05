@@ -5,6 +5,8 @@ RSpec.describe 'Change Password Flow', type: :system do
 
   it 'allows the user to log out and reset their password' do
     sign_in user
+    visit root_path
+    expect(page).to have_no_link("Log In")
 
     # Navigate to the change password page
     visit change_password_path

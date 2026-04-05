@@ -43,6 +43,18 @@ class Sector < ApplicationRecord
   scope :sector_name, ->(sector_name) {
     sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
+  scope :has_published_taggings, -> {
+    subqueries = Tag::TAGGABLE_META.map do |_key, data|
+      klass = data[:klass]
+      klass.published
+           .joins(:sectorable_items)
+           .where("sectorable_items.sector_id = sectors.id")
+           .select("1")
+           .arel.exists
+    end
+
+    where(subqueries.reduce(:or))
+  }
 
   scope :filter_scope, ->(params) do
     filtered = self.all

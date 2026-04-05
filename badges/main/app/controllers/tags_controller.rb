@@ -5,19 +5,24 @@ class TagsController < ApplicationController
 
   def index
     authorize!
+    @sectors = authorized_scope(Sector.all, as: :taggable).order(:name)
+    @categories = authorized_scope(Category.all, as: :taggable)
+      .joins(:category_type)
+      .select("categories.*, category_types.name AS category_type_name")
+      .distinct
+      .order("category_type_name ASC, categories.name ASC")
+    @categories_by_type = @categories.to_a.group_by(&:category_type_name)
     track_view("tags", { page: "index" })
   end
 
   def sectors
     authorize! Sector, to: :tags_index?
-    @sectors = Sector.published.has_taggings.order(:name)
+    @sectors = authorized_scope(Sector.all, as: :taggable).order(:name)
   end
 
   def categories
     authorize! Category, to: :tags_index?
-    @categories_by_type = Category
-      .published
-      .has_taggings
+    @categories_by_type = authorized_scope(Category.all, as: :taggable)
       .joins(:category_type)
       .select("categories.*, category_types.name AS category_type_name")
       .order("category_types.name, categories.position, categories.name")
