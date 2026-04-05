@@ -1,5 +1,5 @@
 <div class="rounded-xl bg-white p-6">
-  <%= simple_form_for @workshop_variation, data: { turbo: false } do |f| %>
+  <%= simple_form_for @workshop_variation, html: { multipart: true }, data: { turbo: false } do |f| %>
     <%= hidden_field_tag(:from, params[:from]) %>
 
     <%= render "shared/errors", resource: @workshop_variation if @workshop_variation.errors.any? %>
@@ -32,7 +32,7 @@
       <div class="admin-only bg-purple-100 rounded-lg border border-purple-200 p-4 mb-6">
         <div class="flex items-center gap-2">
           <i class="fas fa-arrow-up-from-bracket text-purple-600"></i>
-          <span class="text-sm font-medium text-purple-800">Promoted from:</span>
+          <span class="text-sm font-medium text-purple-800"><%= f.object.persisted? ? "Promoted from:" : "Promoting from:" %></span>
           <%= link_to linked_idea.name,
                       workshop_variation_idea_path(linked_idea),
                       class: "btn btn-secondary-outline text-sm" %>
@@ -140,6 +140,52 @@
         </div>
       </div>
     </div>
+
+    <% if linked_idea %>
+      <% idea_assets = linked_idea.assets.select { |a| a.file.attached? } %>
+      <% if idea_assets.any? %>
+        <% idea_blob_ids = Set.new(idea_assets.map { |a| a.file.blob_id }) %>
+        <% variation_blob_ids = Set.new(f.object.assets.select { |a| a.file.attached? }.map { |a| a.file.blob_id }) %>
+        <% assets_already_transferred = idea_blob_ids.subset?(variation_blob_ids) %>
+        <% unless assets_already_transferred && params[:admin] != "true" %>
+          <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 mt-6">
+            <div class="flex items-start space-x-3">
+              <%= label_tag :promote_idea_assets, class: "flex items-start space-x-3 cursor-pointer" do %>
+                <%= check_box_tag :promote_idea_assets, true, f.object.new_record?, class: "mt-1 h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" %>
+                <div class="flex flex-col">
+                  <span class="text-gray-900 font-medium">
+                    Check this box to transfer attachments from the variation idea.
+                  </span>
+                  <p class="text-amber-600 text-sm mt-1 font-medium">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    This will replace any existing attachments on this variation once you click submit.
+                  </p>
+                </div>
+              <% end %>
+            </div>
+
+            <h3 class="text-sm font-semibold text-gray-700 mt-4 mb-2 ml-8"><%= link_to "Variation idea attachments:", edit_workshop_variation_idea_path(linked_idea, anchor: "attachments"), class: "underline hover:text-blue-600" %></h3>
+            <div class="flex flex-wrap gap-4 ml-8">
+              <% first_gallery = true %>
+              <% idea_assets.sort_by(&:id).each do |asset| %>
+                <% promoted_label = if first_gallery && asset.type == "GalleryAsset"
+                     first_gallery = false
+                     "Primary asset"
+                   else
+                     asset.type.underscore.humanize
+                   end %>
+                <div class="flex flex-col items-center">
+                  <%= render "assets/display_image", resource: linked_idea, item: asset, variant: :gallery %>
+                  <span class="text-xs text-gray-500 mt-1"><%= promoted_label %></span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
