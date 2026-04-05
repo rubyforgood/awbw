@@ -144,10 +144,10 @@
     <% if linked_idea %>
       <% idea_assets = linked_idea.assets.select { |a| a.file.attached? } %>
       <% if idea_assets.any? %>
-        <% idea_blob_ids = idea_assets.map { |a| a.file.blob_id }.sort %>
-        <% story_blob_ids = f.object.assets.select { |a| a.file.attached? }.map { |a| a.file.blob_id }.sort %>
-        <% assets_already_match = idea_blob_ids == story_blob_ids %>
-        <% unless f.object.persisted? && assets_already_match %>
+        <% idea_blob_ids = Set.new(idea_assets.map { |a| a.file.blob_id }) %>
+        <% variation_blob_ids = Set.new(f.object.assets.select { |a| a.file.attached? }.map { |a| a.file.blob_id }) %>
+        <% assets_already_transferred = idea_blob_ids.subset?(variation_blob_ids) %>
+        <% unless assets_already_transferred && params[:admin] != "true" %>
           <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 mt-6">
             <div class="flex items-start space-x-3">
               <%= label_tag :promote_idea_assets, class: "flex items-start space-x-3 cursor-pointer" do %>
