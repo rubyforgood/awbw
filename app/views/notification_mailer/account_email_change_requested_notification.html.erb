@@ -1,0 +1,31 @@
+<h1>Email change requested</h1>
+
+<div style="text-align: left;">
+  <p>
+    Hello <strong><%= @user.first_name_or_email %></strong>,
+  </p>
+
+  <p>
+    A request was made to change the email address on your AWBW Portal account
+    from <strong><%= @user.email %></strong>
+    to a new address.
+  </p>
+</div>
+
+<div style="
+  background-color:#fef3c7;
+  border-radius:6px;
+  padding:12px;
+  margin:16px 0;
+">
+  <p>
+    If you made this request, no action is needed. A confirmation email was
+    sent to your new address to complete the change.
+  </p>
+
+  <p>
+    If you did <strong>not</strong> request this change, please
+    <%= link_to "contact us", contact_us_url %> immediately so we can
+    secure your account.
+  </p>
+</div>

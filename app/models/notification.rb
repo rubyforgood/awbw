@@ -14,7 +14,7 @@ class Notification < ApplicationRecord
     account_confirmation
     account_confirmation_fyi
     account_email_change_requested
-    account_email_changed
+    account_email_change_requested_notification
     account_confirmed
     account_confirmed_fyi
     account_unlock_fyi
@@ -67,6 +67,7 @@ class Notification < ApplicationRecord
     [ "Idea: confirmation (all)", "has been received" ],
     [ "Idea: confirmation: workshop log", "workshop log has been received" ],
     [ "User: confirm new email", "Confirm your new email address" ],
+    [ "User: email change alert (old address)", "email change was requested" ],
     [ "User: password reset", "Password reset request" ],
     [ "User: unlock instructions", "Unlock instructions" ],
     [ "User: welcome instructions", "Welcome instructions" ]

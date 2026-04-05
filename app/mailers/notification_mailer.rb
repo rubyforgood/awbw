@@ -96,6 +96,16 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def account_email_change_requested_notification(notification)
+    @user = notification.noticeable
+    @new_email = @user.unconfirmed_email
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} An email change was requested for your account"
+    )
+  end
+
   def workshop_log_submitted(notification)
     @notification = notification
     @noticeable = notification.noticeable

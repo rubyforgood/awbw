@@ -210,6 +210,38 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#account_email_change_requested_notification" do
+    let(:user) { create(:user, email: "old@example.com") }
+    let(:notification) do
+      create(:notification,
+        kind: "account_email_change_requested_notification",
+        noticeable: user,
+        recipient_role: "person",
+        recipient_email: "old@example.com")
+    end
+
+    before { user.update_columns(unconfirmed_email: "new@example.com") }
+
+    subject(:mail) { described_class.account_email_change_requested_notification(notification) }
+
+    it "sends to the old email address" do
+      expect(mail.to).to eq([ "old@example.com" ])
+    end
+
+    it "includes a warning about the email change" do
+      expect(mail.body.encoded).to include("Email change requested")
+      expect(mail.body.encoded).to include("old@example.com")
+    end
+
+    it "includes contact information for unauthorized changes" do
+      expect(mail.body.encoded).to include("contact us")
+    end
+
+    it "renders without raising" do
+      expect { mail.deliver_now }.not_to raise_error
+    end
+  end
+
   describe "#reset_password_fyi" do
     let(:user) { create(:user, email: "user@example.com") }
     let(:notification) { create(:notification, kind: "reset_password_fyi", noticeable: user) }

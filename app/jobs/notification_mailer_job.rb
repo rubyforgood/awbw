@@ -11,6 +11,7 @@ class NotificationMailerJob < ApplicationJob
       "workshop_log_submitted"     => ->(n) { NotificationMailer.workshop_log_submitted(n) },
       "workshop_log_submitted_fyi" => ->(n) { NotificationMailer.workshop_log_submitted_fyi(n) },
       "reset_password_fyi"   => ->(n) { NotificationMailer.reset_password_fyi(n) },
+      "account_email_change_requested_notification" => ->(n) { NotificationMailer.account_email_change_requested_notification(n) },
       "event_registration_confirmation" => ->(n) { EventMailer.event_registration_confirmation(n.noticeable) },
       "event_registration_confirmation_fyi" => ->(n) { NotificationMailer.event_registration_confirmation_fyi(n) },
       "event_registration_cancelled" => ->(n) { EventMailer.event_registration_cancelled(n.noticeable) },

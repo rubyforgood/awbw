@@ -19,7 +19,7 @@ class User < ApplicationRecord
   after_update :track_password_reset_sent
   after_update :track_password_changed
 
-  after_commit :create_email_changed_notification, on: :update
+  after_commit :notify_old_email_of_change_request, on: :update
 
   before_destroy :track_account_deleted
 
@@ -365,17 +365,18 @@ class User < ApplicationRecord
     person.update(email: email)
   end
 
-  def create_email_changed_notification
-    return unless previous_changes.key?("email")
 
-    _from, to = previous_changes["email"]
+  def notify_old_email_of_change_request
+    return unless previous_changes.key?("unconfirmed_email")
+    return if previous_changes["unconfirmed_email"].last.blank?
+
     NotificationServices::CreateNotification.call(
       noticeable: self,
       recipient_role: :person,
-      recipient_email: to,
-      kind: :account_email_changed,
+      recipient_email: email,
+      kind: :account_email_change_requested_notification,
       notification_type: 1,
-      deliver: false
+      deliver: true
     )
   end
 

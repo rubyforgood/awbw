@@ -316,25 +316,34 @@ RSpec.describe User do
     end
   end
 
-  describe "#create_email_changed_notification" do
+  describe "#notify_old_email_of_change_request" do
     let(:user) { create(:user, email: "old@example.com") }
 
-    it "creates an account_email_changed notification when email changes" do
-      user.skip_reconfirmation!
+    it "creates a notification to the old email when an email change is requested" do
+      user.email = "new@example.com"
+      user.skip_confirmation_notification!
 
       expect {
-        user.update!(email: "changed@example.com")
+        user.save!
       }.to change(Notification, :count).by(1)
 
       notification = Notification.last
-      expect(notification.kind).to eq("account_email_changed")
+      expect(notification.kind).to eq("account_email_change_requested_notification")
       expect(notification.recipient_role).to eq("person")
-      expect(notification.recipient_email).to eq("changed@example.com")
+      expect(notification.recipient_email).to eq("old@example.com")
       expect(notification.noticeable).to eq(user)
-      expect(notification.delivered_at).to be_nil
     end
 
-    it "does not create notification when email does not change" do
+    it "does not create notification when unconfirmed_email is cleared" do
+      user.update_columns(unconfirmed_email: "pending@example.com")
+
+      user.skip_reconfirmation!
+      expect {
+        user.update!(email: "pending@example.com")
+      }.not_to change(Notification.where(kind: "account_email_change_requested_notification"), :count)
+    end
+
+    it "does not create notification when other fields change" do
       expect {
         user.update!(first_name: "Updated")
       }.not_to change(Notification, :count)
