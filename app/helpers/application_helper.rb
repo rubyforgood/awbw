@@ -25,7 +25,7 @@ module ApplicationHelper
 
   def display_banner
     # Cache banners to avoid repeated queries during page render
-    @banners ||= Banner.published.select("id, content").to_a
+    @banners ||= Banner.active.select("id, content").to_a
     return if @banners.empty?
 
     safe_content_array = @banners.map { |banner|
