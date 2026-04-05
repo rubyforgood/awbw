@@ -60,7 +60,7 @@ class EventsController < ApplicationController
   end
 
   def preview_reminder
-    authorize! @event, to: :preview_reminder?
+    authorize! @event
     @event = @event.decorate
     @event_registrations = @event.event_registrations
       .includes(:payments, registrant: [ :user, :contact_methods ])
