@@ -19,7 +19,7 @@ class CategoryPolicy < ApplicationPolicy
   end
 
   relation_scope(:taggable) do |relation|
-    next relation if admin?
+    next relation.has_taggings if admin?
     relation.published.has_published_taggings
   end
 end

@@ -1,6 +1,7 @@
 require "rails_helper"
 
 RSpec.describe TaggingSearchService do
+  let!(:user) { create(:user) }
   let!(:sector) { create(:sector, :published, name: "Youth") }
   let!(:category_type) { create(:category_type, name: "Theme") }
   let!(:category) { create(:category, :published, name: "Healing", category_type: category_type) }
@@ -12,10 +13,10 @@ RSpec.describe TaggingSearchService do
     create(:categorizable_item, category: category, categorizable: workshop)
   end
 
-  describe ".call" do
+  describe "#call" do
     context "when no filters are provided" do
       it "returns empty paginated collections for all types" do
-        results = described_class.call(
+        results = described_class.new(user: user).call(
           sector_names_all: nil,
           category_names_all: nil,
           pages: {},
@@ -34,7 +35,7 @@ RSpec.describe TaggingSearchService do
 
     context "when no sector_names_all or category_names_all are provided" do
       it "returns empty results for all taggable models" do
-        result = described_class.call(
+        result = described_class.new(user: user).call(
           sector_names_all: nil,
           category_names_all: nil
         )
@@ -50,7 +51,7 @@ RSpec.describe TaggingSearchService do
 
     context "when filtering by sector" do
       it "returns matching tagged content" do
-        results = described_class.call(
+        results = described_class.new(user: user).call(
           sector_names_all: "Youth",
           category_names_all: nil,
           pages: {},
@@ -63,7 +64,7 @@ RSpec.describe TaggingSearchService do
 
     context "when filtering by category" do
       it "returns matching tagged content" do
-        results = described_class.call(
+        results = described_class.new(user: user).call(
           sector_names_all: nil,
           category_names_all: "Healing",
           pages: {},
@@ -76,7 +77,7 @@ RSpec.describe TaggingSearchService do
 
     context "when filters do not match anything" do
       it "returns empty collections" do
-        results = described_class.call(
+        results = described_class.new(user: user).call(
           sector_names_all: "Nonexistent",
           category_names_all: nil,
           pages: {},
@@ -89,7 +90,7 @@ RSpec.describe TaggingSearchService do
 
       it "returns empty collections for partial/substring matches" do
         # Should NOT match "Youth" sector with partial search "You"
-        results = described_class.call(
+        results = described_class.new(user: user).call(
           sector_names_all: "You",
           category_names_all: nil,
           pages: {},
@@ -99,7 +100,7 @@ RSpec.describe TaggingSearchService do
         expect(results[:workshops]).to be_empty
 
         # Should NOT match "Healing" category with partial search "Heal"
-        results = described_class.call(
+        results = described_class.new(user: user).call(
           sector_names_all: nil,
           category_names_all: "Heal",
           pages: {},
@@ -107,6 +108,20 @@ RSpec.describe TaggingSearchService do
         )
 
         expect(results[:workshops]).to be_empty
+      end
+    end
+
+    context "as a guest (nil user)" do
+      it "returns only publicly visible results" do
+        results = described_class.new(user: nil).call(
+          sector_names_all: "Youth",
+          category_names_all: nil,
+          pages: {},
+          number_of_items_per_page: 9
+        )
+
+        expect(results).to be_a(Hash)
+        expect(results.keys).to match_array(Tag::TAGGABLE_META.keys)
       end
     end
   end

@@ -28,8 +28,8 @@ class TaggingsController < ApplicationController
       number_of_items_per_page: number_of_items_per_page
     )
 
-    @sectors = authorized_scope(Sector.published.has_taggings, as: :taggable).order(:name)
-    @categories = authorized_scope(Category.published.has_taggings, as: :taggable)
+    @sectors = authorized_scope(Sector.all, as: :taggable).order(:name)
+    @categories = authorized_scope(Category.all, as: :taggable)
                     .joins(:category_type)
                     .select("categories.*, category_types.name AS category_type_name")
                     .distinct
