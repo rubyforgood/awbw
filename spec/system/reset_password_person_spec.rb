@@ -32,6 +32,9 @@ RSpec.describe 'Reset password (person)', type: :system do
       expect(page).to have_content("Don't remember your password?")
       expect(page).to have_link("Log out and reset it.")
 
+      # Wait for Turbo JS to initialize (needed for data-turbo-confirm)
+      expect(page).to have_css("[data-controller='password-toggle']")
+
       # Click "Log out and reset it." and accept the confirm dialog
       accept_confirm "This will log you out and send you to the password reset page. Continue?" do
         click_link 'Log out and reset it.'
