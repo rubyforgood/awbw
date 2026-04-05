@@ -7,6 +7,8 @@ RSpec.describe 'Reset password (person)', type: :system do
 
   before do
     sign_in person_user
+    visit root_path
+    expect(page).to have_no_link("Log In")
     visit change_password_path
   end
 
