@@ -26,6 +26,7 @@ class TaggingsController < ApplicationController
       number_of_items_per_page: number_of_items_per_page
     )
 
+    track_view("taggings")
     track_tagging_browse(@grouped_tagged_items) if browsing_intentionally?
   end
 

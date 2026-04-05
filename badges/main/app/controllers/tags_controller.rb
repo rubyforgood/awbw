@@ -1,8 +1,11 @@
 class TagsController < ApplicationController
+  include AhoyTracking
+
   skip_before_action :authenticate_user!, only: [ :index, :sectors, :categories ]
 
   def index
     authorize!
+    track_view("tags", { page: "index" })
   end
 
   def sectors

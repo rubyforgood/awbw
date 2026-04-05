@@ -219,20 +219,19 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         body = response.body
 
         [
-          "Workshop Search: Category Types",
-          "Workshop Search: Categories",
-          "Workshop Search: Sectors",
-          "Workshop Search: Titles",
-          "Workshop Search: Authors",
-          "Workshop Search: Full-Text",
-          "Workshop search: Windows audiences",
-          "Workshop Search: No Results",
-          "Workshop Discovery Funnel",
-          "Content Types People View Most",
-          "Content Types Printed Most",
-          "How Users Discover Content",
-          "Search-to-View Conversion",
-          "User Signup Trend"
+          "Workshop search: category types",
+          "Workshop search: categories",
+          "Workshop search: sectors",
+          "Workshop search: titles",
+          "Workshop search: authors",
+          "Workshop search: full-text",
+          "Workshop search: windows audiences",
+          "Workshop search: no results",
+          "Workshop discovery funnel",
+          "Content types people view most",
+          "Content types printed most",
+          "How users discover content",
+          "Search-to-view conversion"
         ].each do |title|
           expect(body).to include(title), "Expected chart title '#{title}' to be present"
         end
@@ -348,7 +347,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       let!(:tagging_event) do
         create(
           :ahoy_event,
-          name: "browse.taggings",
+          name: "search.taggings",
           user: user,
           visit: visit,
           time: 2.days.ago,
@@ -403,6 +402,257 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
 
         expect(body).to include(sector.name)
         expect(body).to include(category.name)
+      end
+    end
+
+    # ==============================================================
+    # Audience filtering
+    # ==============================================================
+
+    describe "charts audience filtering" do
+      let(:regular_user) { create(:user, super_user: false, first_name: "Regular", last_name: "Person") }
+      let(:staff_user)   { create(:user, super_user: true, first_name: "Staff", last_name: "Admin") }
+
+      let(:visitor_visit) { create(:ahoy_visit, user: nil, started_at: 2.days.ago) }
+      let(:user_visit)    { create(:ahoy_visit, user: regular_user, started_at: 2.days.ago) }
+      let(:staff_visit)   { create(:ahoy_visit, user: staff_user, started_at: 2.days.ago) }
+
+      let!(:visitor_event) do
+        create(:ahoy_event, name: "view.workshop", user: nil, visit: visitor_visit,
+               time: 2.days.ago, properties: { "resource_type" => "Workshop" })
+      end
+
+      let!(:user_event) do
+        create(:ahoy_event, name: "view.workshop", user: regular_user, visit: user_visit,
+               time: 2.days.ago, properties: { "resource_type" => "Workshop" })
+      end
+
+      let!(:staff_event) do
+        create(:ahoy_event, name: "view.workshop", user: staff_user, visit: staff_visit,
+               time: 2.days.ago, properties: { "resource_type" => "Workshop" })
+      end
+
+      it "visitors-only renders successfully" do
+        get charts_path, params: { time_period: "all_time", audience: [ "visitors" ] }
+
+        expect(response).to have_http_status(:ok)
+        # Should not show the authenticated/public split hint since all visits are public
+        expect(response.body).not_to include("authenticated · ")
+      end
+
+      it "users-only excludes visitor data from response" do
+        get charts_path, params: { time_period: "all_time", audience: [ "users" ] }
+
+        expect(response).to have_http_status(:ok)
+        body = response.body
+        # Non-admin only label should be shown
+        expect(body).to include("Non-admin only")
+      end
+
+      it "staff-only shows admin-only label" do
+        get charts_path, params: { time_period: "all_time", audience: [ "staff" ] }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Admin only")
+      end
+
+      it "all audiences renders without audience restriction labels" do
+        get charts_path, params: { time_period: "all_time", audience: %w[visitors users staff] }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("Non-admin only")
+        expect(response.body).not_to include("Admin only")
+      end
+
+      it "filters workshop search data by audience" do
+        create(:ahoy_event, name: "search.workshops", user: regular_user, visit: user_visit,
+               time: 2.days.ago, properties: {
+                 "resource_type" => "Workshop", "result_count" => 1,
+                 "keywords" => { "title" => "unique_user_search_xyz" },
+                 "filters" => { "categories" => [], "sectors" => [], "windows_types" => [] }
+               })
+
+        get charts_path, params: { time_period: "all_time", audience: [ "visitors" ] }
+        expect(response.body).not_to include("unique_user_search_xyz")
+
+        get charts_path, params: { time_period: "all_time", audience: [ "users" ] }
+        expect(response.body).to include("unique_user_search_xyz")
+      end
+
+      it "filters tagging data by audience" do
+        create(:ahoy_event, name: "search.taggings", user: regular_user, visit: user_visit,
+               time: 2.days.ago, properties: {
+                 "sectors" => [ "AudienceTestSector" ], "categories" => [], "page_result_count" => 5
+               })
+
+        get charts_path, params: { time_period: "all_time", audience: [ "visitors" ] }
+        expect(response.body).not_to include("AudienceTestSector")
+
+        get charts_path, params: { time_period: "all_time", audience: [ "users" ] }
+        expect(response.body).to include("AudienceTestSector")
+      end
+
+      it "visitors-only shows no top engaged users" do
+        get charts_path, params: { time_period: "all_time", audience: [ "visitors" ] }
+
+        # Top users by activities chart should have no user names since visitors are anonymous
+        expect(response.body).not_to include(regular_user.full_name)
+        expect(response.body).not_to include(staff_user.full_name)
+      end
+
+      it "users-only portal metrics exclude staff" do
+        get charts_path, params: { time_period: "all_time", audience: [ "users" ] }
+
+        body = response.body
+        expect(body).to include("Non-admin only")
+        # User count should match non-admin count
+        non_admin_count = User.where(super_user: false).count
+        expect(body).to include(non_admin_count.to_s)
+      end
+    end
+
+    # ==============================================================
+    # Time period filtering
+    # ==============================================================
+
+    describe "charts time period filtering" do
+      let(:recent_visit) { create(:ahoy_visit, user: user, started_at: 2.days.ago) }
+      let(:old_visit)    { create(:ahoy_visit, user: user, started_at: 2.months.ago) }
+
+      let!(:recent_event) do
+        create(:ahoy_event, name: "view.workshop", user: user, visit: recent_visit,
+               time: 2.days.ago, properties: { "resource_type" => "Workshop", "resource_title" => "RecentWorkshop" })
+      end
+
+      let!(:old_event) do
+        create(:ahoy_event, name: "view.workshop", user: user, visit: old_visit,
+               time: 2.months.ago, properties: { "resource_type" => "Workshop", "resource_title" => "OldWorkshop" })
+      end
+
+      it "past_week renders successfully" do
+        get charts_path, params: { time_period: "past_week", audience: %w[visitors users staff] }
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "all_time renders successfully" do
+        get charts_path, params: { time_period: "all_time", audience: %w[visitors users staff] }
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "time filter applies to workshop search charts" do
+        create(:ahoy_event, name: "search.workshops", user: user, visit: recent_visit,
+               time: 2.days.ago, properties: {
+                 "resource_type" => "Workshop", "result_count" => 1,
+                 "keywords" => { "title" => "recent_search_term_abc" },
+                 "filters" => { "categories" => [], "sectors" => [], "windows_types" => [] }
+               })
+        create(:ahoy_event, name: "search.workshops", user: user, visit: old_visit,
+               time: 2.months.ago, properties: {
+                 "resource_type" => "Workshop", "result_count" => 1,
+                 "keywords" => { "title" => "old_search_term_xyz" },
+                 "filters" => { "categories" => [], "sectors" => [], "windows_types" => [] }
+               })
+
+        get charts_path, params: { time_period: "past_week", audience: %w[visitors users staff] }
+        expect(response.body).to include("recent_search_term_abc")
+        expect(response.body).not_to include("old_search_term_xyz")
+      end
+
+      it "time filter applies to tagging charts" do
+        create(:ahoy_event, name: "search.taggings", user: user, visit: recent_visit,
+               time: 2.days.ago, properties: {
+                 "sectors" => [ "RecentSectorXyz" ], "categories" => [], "page_result_count" => 5
+               })
+        create(:ahoy_event, name: "search.taggings", user: user, visit: old_visit,
+               time: 2.months.ago, properties: {
+                 "sectors" => [ "OldSectorXyz" ], "categories" => [], "page_result_count" => 3
+               })
+
+        get charts_path, params: { time_period: "past_week", audience: %w[visitors users staff] }
+        expect(response.body).to include("RecentSectorXyz")
+        expect(response.body).not_to include("OldSectorXyz")
+      end
+
+      it "time filter applies to zero-result searches" do
+        create(:ahoy_event, name: "search_zero.workshops", user: user, visit: recent_visit,
+               time: 2.days.ago, properties: {
+                 "resource_type" => "Workshop", "result_count" => 0,
+                 "query" => "recent_zero_query"
+               })
+        create(:ahoy_event, name: "search_zero.workshops", user: user, visit: old_visit,
+               time: 2.months.ago, properties: {
+                 "resource_type" => "Workshop", "result_count" => 0,
+                 "query" => "old_zero_query"
+               })
+
+        get charts_path, params: { time_period: "past_week", audience: %w[visitors users staff] }
+        expect(response.body).to include("recent_zero_query")
+        expect(response.body).not_to include("old_zero_query")
+      end
+    end
+
+    # ==============================================================
+    # Combined audience + time filtering
+    # ==============================================================
+
+    describe "charts combined audience and time filtering" do
+      let(:regular_user) { create(:user, super_user: false) }
+      let(:recent_user_visit)    { create(:ahoy_visit, user: regular_user, started_at: 2.days.ago) }
+      let(:recent_visitor_visit) { create(:ahoy_visit, user: nil, started_at: 2.days.ago) }
+      let(:old_user_visit)       { create(:ahoy_visit, user: regular_user, started_at: 2.months.ago) }
+
+      let!(:recent_user_search) do
+        create(:ahoy_event, name: "search.workshops", user: regular_user, visit: recent_user_visit,
+               time: 2.days.ago, properties: {
+                 "resource_type" => "Workshop", "result_count" => 1,
+                 "keywords" => { "title" => "combined_user_recent" },
+                 "filters" => { "categories" => [], "sectors" => [], "windows_types" => [] }
+               })
+      end
+
+      let!(:recent_visitor_search) do
+        create(:ahoy_event, name: "search.workshops", user: nil, visit: recent_visitor_visit,
+               time: 2.days.ago, properties: {
+                 "resource_type" => "Workshop", "result_count" => 1,
+                 "keywords" => { "title" => "combined_visitor_recent" },
+                 "filters" => { "categories" => [], "sectors" => [], "windows_types" => [] }
+               })
+      end
+
+      let!(:old_user_search) do
+        create(:ahoy_event, name: "search.workshops", user: regular_user, visit: old_user_visit,
+               time: 2.months.ago, properties: {
+                 "resource_type" => "Workshop", "result_count" => 1,
+                 "keywords" => { "title" => "combined_user_old" },
+                 "filters" => { "categories" => [], "sectors" => [], "windows_types" => [] }
+               })
+      end
+
+      it "users + past_week includes only recent user data" do
+        get charts_path, params: { time_period: "past_week", audience: [ "users" ] }
+
+        body = response.body
+        expect(body).to include("combined_user_recent")
+        expect(body).not_to include("combined_visitor_recent")
+        expect(body).not_to include("combined_user_old")
+      end
+
+      it "visitors + past_week includes only recent visitor data" do
+        get charts_path, params: { time_period: "past_week", audience: [ "visitors" ] }
+
+        body = response.body
+        expect(body).to include("combined_visitor_recent")
+        expect(body).not_to include("combined_user_recent")
+        expect(body).not_to include("combined_user_old")
+      end
+
+      it "all audiences + all_time includes everything" do
+        get charts_path, params: { time_period: "all_time", audience: %w[visitors users staff] }
+
+        body = response.body
+        expect(body).to include("combined_user_recent")
+        expect(body).to include("combined_visitor_recent")
+        expect(body).to include("combined_user_old")
       end
     end
   end

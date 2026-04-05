@@ -8,6 +8,8 @@ class NotificationsController < ApplicationController
     filtered = base_scope.search_by_params(params.to_unsafe_h)
     @notifications = filtered.order(created_at: :desc)
                              .paginate(page: params[:page], per_page: per_page)
+
+    render turbo_frame_request? ? :notifications_results : :index
   end
 
   def show
