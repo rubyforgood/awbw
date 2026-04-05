@@ -22,6 +22,19 @@ class ConfirmationsController < Devise::ConfirmationsController
   end
 
 
+  # GET /users/confirmation/resend — one-click resend from the login flash
+  def resend
+    email = session.delete(:unconfirmed_email)
+
+    if email.present?
+      user = resource_class.send_confirmation_instructions(email: email)
+      create_resend_notification(user) if user.errors.empty?
+    end
+
+    redirect_to new_user_session_path,
+                notice: "If your email exists in our system, you will receive confirmation instructions shortly."
+  end
+
   # POST /users/confirmation (resend)
   def create
     self.resource = resource_class.send_confirmation_instructions(resource_params)
@@ -54,5 +67,17 @@ class ConfirmationsController < Devise::ConfirmationsController
 
   def email_not_found?
     resource.errors.any? { |e| e.attribute == :email && e.type == :not_found }
+  end
+
+  def create_resend_notification(user)
+    NotificationServices::CreateNotification.call(
+      noticeable: user,
+      recipient_role: :person,
+      recipient_email: user.email,
+      kind: "account_confirmation",
+      notification_type: 1,
+      deliver: false,
+      persist_delivered_email: false
+    )
   end
 end

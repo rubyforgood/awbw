@@ -27,6 +27,7 @@ Rails.application.routes.draw do
                             unlocks: "unlocks" }
   devise_scope :user do
     get "/confirm/:confirmation_token", to: "confirmations#show", as: :confirm
+    get "/users/confirmation/resend", to: "confirmations#resend", as: :resend_user_confirmation
   end
   get "users/change_password", to: "users#change_password", as: "change_password"
   post "users/update_password", to: "users#update_password", as: "update_password"
