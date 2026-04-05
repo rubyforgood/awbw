@@ -27,7 +27,8 @@ class ConfirmationsController < Devise::ConfirmationsController
     email = session.delete(:unconfirmed_email)
 
     if email.present?
-      resource_class.send_confirmation_instructions(email: email)
+      user = resource_class.send_confirmation_instructions(email: email)
+      create_resend_notification(user) if user.errors.empty?
     end
 
     redirect_to new_user_session_path,
@@ -66,5 +67,17 @@ class ConfirmationsController < Devise::ConfirmationsController
 
   def email_not_found?
     resource.errors.any? { |e| e.attribute == :email && e.type == :not_found }
+  end
+
+  def create_resend_notification(user)
+    NotificationServices::CreateNotification.call(
+      noticeable: user,
+      recipient_role: :person,
+      recipient_email: user.email,
+      kind: "account_confirmation",
+      notification_type: 1,
+      deliver: false,
+      persist_delivered_email: false
+    )
   end
 end
