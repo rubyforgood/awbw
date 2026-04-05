@@ -21,12 +21,19 @@ class TaggingsController < ApplicationController
       video_recordings: params[:video_recordings_page]
     }
 
-    @grouped_tagged_items = TaggingSearchService.call(
+    @grouped_tagged_items = TaggingSearchService.new(user: current_user).call(
       sector_names_all: @sector_names_all,
       category_names_all: @category_names_all,
       pages: pages,
       number_of_items_per_page: number_of_items_per_page
     )
+
+    @sectors = authorized_scope(Sector.published.has_taggings, as: :taggable).order(:name)
+    @categories = authorized_scope(Category.published.has_taggings, as: :taggable)
+                    .joins(:category_type)
+                    .select("categories.*, category_types.name AS category_type_name")
+                    .distinct
+                    .order("category_type_name ASC, categories.name ASC")
 
     track_view("taggings")
     track_tagging_browse(@grouped_tagged_items) if browsing_intentionally?

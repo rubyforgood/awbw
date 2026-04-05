@@ -17,4 +17,9 @@ class SectorPolicy < ApplicationPolicy
     next relation if admin?
     relation.none
   end
+
+  relation_scope(:taggable) do |relation|
+    next relation if admin?
+    relation.published.has_published_taggings
+  end
 end
