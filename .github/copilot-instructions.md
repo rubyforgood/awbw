@@ -135,6 +135,22 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - Controller naming: `[name]_controller.js`
 - Keep controllers focused and small
 
+### Turbo and Session-Modifying Responses
+
+When a form submission modifies the session (e.g. `bypass_sign_in` after password change) and then redirects, **do not use `data-turbo="false"`** as the fix. Turbo's `fetch()` with `redirect: "follow"` can race against `Set-Cookie` processing, but disabling Turbo is a blunt workaround that breaks other Turbo features on the page (e.g. `data-turbo-method`, `data-turbo-confirm` on descendant elements).
+
+Instead, use `turbo_stream_visit(url)` (defined in `ApplicationController`) to separate the session update from navigation:
+```ruby
+respond_to do |format|
+  format.html { redirect_to root_path, notice: "Done." }
+  format.turbo_stream do
+    flash[:notice] = "Done."
+    render turbo_stream: turbo_stream_visit(root_path)
+  end
+end
+```
+The server responds with a 200 (Set-Cookie is processed), then the custom Turbo Stream action triggers `Turbo.visit()` client-side.
+
 ### Stimulus Conventions
 
 Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introduction) and reference docs. Key rules:
