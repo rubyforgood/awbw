@@ -5,7 +5,13 @@ class TagsController < ApplicationController
 
   def index
     authorize!
-    load_taggable_sectors_and_categories
+    @sectors = authorized_scope(Sector.all, as: :taggable).order(:name)
+    @categories = authorized_scope(Category.all, as: :taggable)
+      .joins(:category_type)
+      .select("categories.*, category_types.name AS category_type_name")
+      .distinct
+      .order("category_type_name ASC, categories.name ASC")
+    @categories_by_type = @categories.to_a.group_by(&:category_type_name)
     track_view("tags", { page: "index" })
   end
 
@@ -22,16 +28,5 @@ class TagsController < ApplicationController
       .order("category_types.name, categories.position, categories.name")
       .to_a
       .group_by(&:category_type_name)
-  end
-
-  private
-
-  def load_taggable_sectors_and_categories
-    @sectors = authorized_scope(Sector.all, as: :taggable).order(:name)
-    @categories = authorized_scope(Category.all, as: :taggable)
-      .joins(:category_type)
-      .select("categories.*, category_types.name AS category_type_name")
-      .distinct
-      .order("category_type_name ASC, categories.name ASC")
   end
 end
