@@ -106,9 +106,17 @@ class Story < ApplicationRecord
 
   def attach_assets_from_idea!
     return unless story_idea
+
     assets.destroy_all
-    story_idea.assets.find_each do |asset|
-      new_asset = assets.build(type: asset.type)
+    first_gallery = true
+    story_idea.assets.order(:id).each do |asset|
+      new_type = if first_gallery && asset.type == "GalleryAsset"
+        first_gallery = false
+        "PrimaryAsset"
+      else
+        asset.type
+      end
+      new_asset = assets.build(type: new_type)
       new_asset.file.attach(asset.file.blob)
     end
 

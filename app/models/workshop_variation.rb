@@ -59,8 +59,15 @@ class WorkshopVariation < ApplicationRecord
     return unless workshop_variation_idea
 
     assets.destroy_all
-    workshop_variation_idea.assets.find_each do |asset|
-      new_asset = assets.build(type: asset.type)
+    first_gallery = true
+    workshop_variation_idea.assets.order(:id).each do |asset|
+      new_type = if first_gallery && asset.type == "GalleryAsset"
+        first_gallery = false
+        "PrimaryAsset"
+      else
+        asset.type
+      end
+      new_asset = assets.build(type: new_type)
       new_asset.file.attach(asset.file.blob)
     end
 
