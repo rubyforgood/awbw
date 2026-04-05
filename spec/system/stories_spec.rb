@@ -72,6 +72,7 @@ RSpec.describe "Stories", type: :system do
       it "sees story show" do
         sign_in(create(:user))
         visit root_path
+        expect(page).to have_no_link("Log In")
         story = create(:story, :published, title: "The best story in the world. This is a tribute.")
 
         visit story_path(story)
@@ -82,6 +83,7 @@ RSpec.describe "Stories", type: :system do
       it "cannot see unpublished story show" do
         sign_in(create(:user))
         visit root_path
+        expect(page).to have_no_link("Log In")
         story = create(:story, :unpublished, title: "The best story in the world. This is a tribute.")
         visit story_path(story)
         expect(page).to have_current_path(root_path)
