@@ -179,10 +179,17 @@
 
           <h3 class="text-sm font-semibold text-gray-700 mt-4 mb-2 ml-8"><%= link_to "Story idea attachments:", edit_story_idea_path(story_idea, anchor: "attachments"), class: "underline hover:text-blue-600" %></h3>
           <div class="flex flex-wrap gap-4 ml-8">
-            <% idea_assets.each do |asset| %>
+            <% first_gallery = true %>
+            <% idea_assets.sort_by(&:id).each do |asset| %>
+              <% promoted_label = if first_gallery && asset.type == "GalleryAsset"
+                   first_gallery = false
+                   "Primary asset"
+                 else
+                   asset.type.underscore.humanize
+                 end %>
               <div class="flex flex-col items-center">
                 <%= render "assets/display_image", resource: story_idea, item: asset, variant: :gallery %>
-                <span class="text-xs text-gray-500 mt-1"><%= asset.type.underscore.humanize %></span>
+                <span class="text-xs text-gray-500 mt-1"><%= promoted_label %></span>
               </div>
             <% end %>
           </div>
