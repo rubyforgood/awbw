@@ -37,6 +37,24 @@ RSpec.describe NotificationMailerJob, type: :job do
       expect(notification.delivered_at).to be_nil
     end
 
+    it "delivers the account_email_change_requested_notification email" do
+      user = create(:user, email: "old@example.com")
+      user.update_columns(unconfirmed_email: "new@example.com")
+      notif = create(:notification,
+        kind: "account_email_change_requested_notification",
+        noticeable: user,
+        recipient_role: "person",
+        recipient_email: "old@example.com")
+
+      expect {
+        described_class.new.perform(notif.id)
+      }.to change { ActionMailer::Base.deliveries.count }.by(1)
+
+      notif.reload
+      expect(notif.delivered_at).to be_present
+      expect(notif.email_subject).to include("email change was requested")
+    end
+
     it "raises for unknown notification kinds" do
       notification.update_column(:kind, "reset_password") # valid kind but no mailer mapping
 
