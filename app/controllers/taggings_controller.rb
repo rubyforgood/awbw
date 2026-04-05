@@ -1,6 +1,8 @@
 class TaggingsController < ApplicationController
   include AhoyTracking
 
+  skip_before_action :authenticate_user!, only: [ :index ]
+
   def index
     authorize! :tagging, to: :index?
     @sector_names_all = params[:sector_names_all]
