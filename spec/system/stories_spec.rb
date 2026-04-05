@@ -68,8 +68,6 @@ RSpec.describe "Stories", type: :system do
   end
 
   describe "view story" do
-    before { driven_by(:rack_test) }
-
     context "as a regular_user" do
       it "sees story show" do
         sign_in(create(:user))
