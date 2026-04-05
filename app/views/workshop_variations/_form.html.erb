@@ -32,7 +32,7 @@
       <div class="admin-only bg-purple-100 rounded-lg border border-purple-200 p-4 mb-6">
         <div class="flex items-center gap-2">
           <i class="fas fa-arrow-up-from-bracket text-purple-600"></i>
-          <span class="text-sm font-medium text-purple-800">Promoted from:</span>
+          <span class="text-sm font-medium text-purple-800"><%= f.object.persisted? ? "Promoted from:" : "Promoting from:" %></span>
           <%= link_to linked_idea.name,
                       workshop_variation_idea_path(linked_idea),
                       class: "btn btn-secondary-outline text-sm" %>

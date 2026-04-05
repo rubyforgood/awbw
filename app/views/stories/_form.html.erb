@@ -11,7 +11,7 @@
     <div class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 mb-6">
       <i class="fas fa-arrow-up-from-bracket text-blue-600"></i>
       <span class="text-sm font-medium text-blue-800">
-        Promoted from
+        <%= f.object.persisted? ? "Promoted from" : "Promoting from" %>
         <%= link_to story_idea.full_name, edit_story_idea_path(story_idea), class: "underline hover:text-blue-600" %>
       </span>
     </div>
