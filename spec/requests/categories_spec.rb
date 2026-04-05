@@ -189,7 +189,7 @@ RSpec.describe "Categories", type: :request do
         category = create(:category, valid_attributes)
 
         expect {
-          delete category_path(category)
+          delete category_path(category), headers: { "Accept" => "text/html" }
         }.to change(Category, :count).by(-1)
 
         expect(response).to redirect_to(categories_path)
