@@ -33,6 +33,14 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def preview_reminder?
+    manage?
+  end
+
+  def send_reminder?
+    manage?
+  end
+
   alias_rule :preview?, to: :edit?
 
   private

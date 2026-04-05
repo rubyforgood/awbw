@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview manage copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview manage preview_reminder send_reminder copy_registration_form ]
 
   def index
     authorize!
@@ -57,6 +57,43 @@ class EventsController < ApplicationController
           disposition: "attachment"
       end
     end
+  end
+
+  def preview_reminder
+    authorize! @event
+    @event = @event.decorate
+    @event_registrations = @event.event_registrations
+      .includes(:payments, registrant: [ :user, :contact_methods ])
+      .joins(:registrant)
+      .select { |r| r.registrant.preferred_email.present? }
+    @sample_registration = @event_registrations.first
+    @days_until_event = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
+
+    if @sample_registration
+      mail = EventMailer.event_registration_reminder(@sample_registration, days_until_event: @days_until_event)
+      @reminder_preview_html = mail.html_part&.body&.decoded
+    end
+  end
+
+  def send_reminder
+    authorize! @event, to: :send_reminder?
+    allowed_ids = Array(params[:registration_ids]).map(&:to_i).reject(&:zero?)
+    registrations = @event.event_registrations
+      .where(id: allowed_ids)
+      .includes(registrant: [ :user, :contact_methods ])
+      .select { |r| r.registrant.preferred_email.present? }
+    days_until = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
+
+    if registrations.empty?
+      redirect_to remind_event_path(@event), alert: "Please select at least one recipient."
+      return
+    end
+
+    registrations.each do |event_registration|
+      EventMailer.event_registration_reminder(event_registration, days_until_event: days_until).deliver_later
+    end
+
+    redirect_to manage_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
   end
 
   def create
