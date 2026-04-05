@@ -67,7 +67,7 @@ class Notification < ApplicationRecord
     [ "Idea: confirmation (all)", "has been received" ],
     [ "Idea: confirmation: workshop log", "workshop log has been received" ],
     [ "User: confirm new email", "Confirm your new email address" ],
-    [ "User: email change alert (old address)", "email change was requested" ],
+    [ "User: confirm new email (old address)", "email change was requested" ],
     [ "User: password reset", "Password reset request" ],
     [ "User: unlock instructions", "Unlock instructions" ],
     [ "User: welcome instructions", "Welcome instructions" ]
