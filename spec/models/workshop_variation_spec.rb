@@ -32,6 +32,7 @@ RSpec.describe WorkshopVariation do
 
     it "promotes the first gallery asset to primary" do
       variation.attach_assets_from_idea!
+      variation.reload
 
       expect(variation.primary_asset).to be_present
       expect(variation.primary_asset.file).to be_attached
@@ -39,6 +40,7 @@ RSpec.describe WorkshopVariation do
 
     it "keeps remaining gallery assets as gallery" do
       variation.attach_assets_from_idea!
+      variation.reload
 
       expect(variation.gallery_assets.count).to eq(2)
       variation.gallery_assets.each do |asset|
@@ -46,18 +48,64 @@ RSpec.describe WorkshopVariation do
       end
     end
 
-    it "replaces existing assets" do
+    it "appends idea assets after existing gallery assets" do
       create(:gallery_asset, :with_file, owner: variation)
-      expect(variation.assets.count).to eq(1)
 
       variation.attach_assets_from_idea!
 
-      expect(variation.assets.count).to eq(3)
+      expect(variation.assets.count).to eq(4)
     end
 
     it "does nothing without a linked idea" do
       variation_without_idea = create(:workshop_variation, workshop_variation_idea: nil)
       expect { variation_without_idea.attach_assets_from_idea! }.not_to change { variation_without_idea.assets.count }
+    end
+
+    context "when user uploaded a primary asset" do
+      before { create(:primary_asset, :with_file, owner: variation) }
+
+      it "keeps the user-uploaded primary" do
+        original_blob_id = variation.primary_asset.file.blob_id
+
+        variation.attach_assets_from_idea!
+        variation.reload
+
+        expect(variation.primary_asset.file.blob_id).to eq(original_blob_id)
+      end
+
+      it "adds all idea assets as gallery" do
+        variation.attach_assets_from_idea!
+        variation.reload
+
+        expect(variation.gallery_assets.count).to eq(3)
+      end
+
+      it "does not create a second primary asset" do
+        variation.attach_assets_from_idea!
+        variation.reload
+
+        expect(variation.assets.where(type: "PrimaryAsset").count).to eq(1)
+      end
+    end
+
+    context "when user uploaded gallery assets" do
+      before { create(:gallery_asset, :with_file, owner: variation) }
+
+      it "keeps user-uploaded gallery assets" do
+        original_blob_id = variation.gallery_assets.first.file.blob_id
+
+        variation.attach_assets_from_idea!
+        variation.reload
+
+        expect(variation.gallery_assets.map(&:file).map(&:blob_id)).to include(original_blob_id)
+      end
+
+      it "promotes first idea gallery to primary when no primary exists" do
+        variation.attach_assets_from_idea!
+        variation.reload
+
+        expect(variation.primary_asset).to be_present
+      end
     end
   end
 

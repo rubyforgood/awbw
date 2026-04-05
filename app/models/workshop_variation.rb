@@ -58,14 +58,13 @@ class WorkshopVariation < ApplicationRecord
   def attach_assets_from_idea!
     return unless workshop_variation_idea
 
-    assets.destroy_all
-    first_gallery = true
+    has_primary = primary_asset&.file&.attached?
     workshop_variation_idea.assets.order(:id).each do |asset|
-      new_type = if first_gallery && asset.type == "GalleryAsset"
-        first_gallery = false
+      new_type = if !has_primary && asset.type == "GalleryAsset"
+        has_primary = true
         "PrimaryAsset"
       else
-        asset.type
+        "GalleryAsset"
       end
       new_asset = assets.build(type: new_type)
       new_asset.file.attach(asset.file.blob)
