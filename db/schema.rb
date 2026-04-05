@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_12_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_05_143000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -213,8 +213,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_12_120000) do
     t.text "content"
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
+    t.datetime "ended_at"
     t.boolean "published", default: false, null: false
     t.boolean "show"
+    t.datetime "started_at"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "updated_by_id"
     t.index ["created_by_id"], name: "index_banners_on_created_by_id"
