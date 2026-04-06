@@ -254,50 +254,50 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
 
   context "as a guest" do
     describe "GET /index" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get workshop_variation_ideas_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "GET /new" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get new_workshop_variation_idea_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "POST /create" do
-      it "does not create and redirects to root" do
+      it "does not create and redirects to new user session path" do
         expect {
           post workshop_variation_ideas_path,
                params: { workshop_variation_idea: valid_attributes }
         }.not_to change(WorkshopVariationIdea, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "PATCH /update" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         idea = create(:workshop_variation_idea, valid_attributes)
 
         patch workshop_variation_idea_path(idea),
               params: { workshop_variation_idea: { name: "Updated" } }
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "DELETE /destroy" do
-      it "does not delete and redirects to root" do
+      it "does not delete and redirects to new user session path" do
         idea = create(:workshop_variation_idea, valid_attributes)
 
         expect {
           delete workshop_variation_idea_path(idea)
         }.not_to change(WorkshopVariationIdea, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end

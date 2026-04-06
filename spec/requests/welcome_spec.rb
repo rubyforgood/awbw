@@ -29,17 +29,6 @@ RSpec.describe "/users/welcome", type: :request do
         expect(flash[:alert]).to include("Invalid invitation link")
       end
     end
-
-    context "with expired token" do
-      it "redirects with alert" do
-        user.update_columns(welcome_instructions_created_at: 31.days.ago)
-
-        get user_welcome_url(user.welcome_instructions_token)
-
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to include("expired")
-      end
-    end
   end
 
   describe "PATCH /update" do

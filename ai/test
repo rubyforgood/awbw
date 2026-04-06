@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Run RSpec tests. Pass any args through (file paths, flags, etc.)
+set -euo pipefail
+source "$(dirname "$0")/.ruby-env"
+bundle exec rspec "$@"

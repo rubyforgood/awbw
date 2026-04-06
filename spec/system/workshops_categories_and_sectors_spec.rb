@@ -11,6 +11,8 @@ RSpec.describe "Workshop categories & sectors", type: :system do
   describe "CREATE workshop" do
     it "assigns categories and sectors from checkboxes" do
       sign_in(admin)
+      visit root_path
+      expect(page).to have_no_link("Log In")
 
       windows_type  = create(:windows_type, :adult)
       category_type = create(:category_type, :published, name: "Focus")

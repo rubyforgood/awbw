@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe "User login", type: :system do
   let(:password) { "MyString" }
-  let(:generic_error) { "Invalid email or password. Please contact us for assistance." }
+  let(:generic_error) { "Invalid email or password. Please email us or fill out our Contact Us form for assistance." }
 
   def fill_in_login(email, password)
     visit new_user_session_path
@@ -20,7 +20,7 @@ RSpec.describe "User login", type: :system do
       fill_in_login(user.email, password)
 
       expect(page).to have_current_path(new_user_session_path)
-      expect(page).to have_content("Please contact us for assistance.")
+      expect(page).to have_content("Please email us or fill out our Contact Us form for assistance.")
     end
   end
 
@@ -51,7 +51,7 @@ RSpec.describe "User login", type: :system do
       fill_in_login(user.email, password)
 
       expect(page).to have_current_path(new_user_session_path)
-      expect(page).to have_content("Please contact us for assistance.")
+      expect(page).to have_content("Please email us or fill out our Contact Us form for assistance.")
       expect(user.reload.locked_at).to be_present
     end
   end

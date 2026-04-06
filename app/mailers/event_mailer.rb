@@ -19,6 +19,28 @@ class EventMailer < ApplicationMailer
     )
   end
 
+  def event_registration_reminder(event_registration, days_until_event: nil)
+    @event_registration = event_registration
+    @event = event_registration.event.decorate
+    @person = event_registration.registrant
+    @days_until_event = days_until_event
+
+    @notification_type = "Event registration reminder"
+
+    @time_zone = @person.user&.time_zone || Time.zone.name
+    @event_url = @event_registration.slug.present? ? event_url(@event, reg: @event_registration.slug) : event_url(@event)
+    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_website = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
+
+    subject = "Reminder: #{@event.title} – #{@event.start_date.in_time_zone(@time_zone).strftime('%B %-d, %Y')}"
+    mail(
+      to: @person.preferred_email,
+      from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
+      reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      subject: "AWBW Portal: #{subject}"
+    )
+  end
+
   def event_registration_cancelled(event_registration)
     @event_registration = event_registration
     @event = event_registration.event.decorate

@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::Base
-  before_action :authenticate_user!  # ensures only logged-in users can access pages
+  before_action :authenticate_user! # ensures only logged-in users can access pages
+  before_action :track_user_with_ahoy, unless: :devise_controller?
   before_action :set_current_user # for AhoyTrackable in models
   before_action :preload_current_user_associations
 
@@ -45,28 +46,9 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def authenticate_user!
-    # Rails.logger.warn "AUTH CHECK → #{request.fullpath}"
-    # Rails.logger.warn "  user_signed_in?: #{user_signed_in?}"
-    # Rails.logger.warn "  current_user: #{current_user&.id}"
-    # Rails.logger.warn "  devise_controller?: #{devise_controller?}"
-    # Rails.logger.warn "  referrer: #{request.referrer}"
-    return super if devise_controller?
-    return if user_signed_in?
-    ahoy.authenticate(current_user)
+  def track_user_with_ahoy
+    ahoy.authenticate(current_user) if user_signed_in?
   end
-
-  # def authenticate_user!
-  #   return super if devise_controller?
-  #   return if user_signed_in?
-  #   ahoy.authenticate(current_user)
-  #   redirect_to root_path # this part is questionable
-  # end
-
-  # def authenticate_user!
-  #   ahoy.authenticate(current_user) if user_signed_in?
-  #   super
-  # end
 
   def flush_lifecycle_events
     Analytics::LifecycleBuffer.flush(self) # needed for Ahoy tracking in models

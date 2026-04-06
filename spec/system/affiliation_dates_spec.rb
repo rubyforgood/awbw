@@ -88,6 +88,24 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     end
   end
 
+  it "displays correct month for first-of-month dates in US timezones" do
+    visit_and_wait edit_person_path(person, admin: true)
+
+    affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
+
+    # Set both affiliations to first-of-month dates and verify the JS controller
+    # formats them correctly. This catches UTC-to-local timezone bugs where midnight
+    # UTC rolls back to the previous month in behind-UTC timezones
+    # (e.g., 2025-01-01T00:00Z → Dec 31 in EST).
+    start_inputs = all("input[name*='affiliations_attributes'][name*='start_date']")
+    set_date_input(start_inputs[0], "2025-03-01")
+    set_date_input(start_inputs[1], "2025-01-01")
+
+    # Should show Jan 2025, not Dec 2024
+    expect(affiliated).to have_text("Jan 2025", wait: 5)
+    expect(affiliated).not_to have_text("Dec 2024")
+  end
+
   it "removes an affiliation and recalculates" do
     visit_and_wait edit_person_path(person, admin: true)
 

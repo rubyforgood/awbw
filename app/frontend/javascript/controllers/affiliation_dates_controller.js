@@ -46,7 +46,8 @@ export default class extends Controller {
       : null
 
     // Affiliated end = only if ALL affiliations are inactive (end_date in the past)
-    const today = new Date(new Date().toDateString())
+    const now = new Date()
+    const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
     const allInactive = affiliations.length > 0 &&
       affiliations.every(a => a.endDate && new Date(a.endDate) < today)
     const affiliatedEnd = allInactive
@@ -92,7 +93,7 @@ export default class extends Controller {
 
   formatDate(date) {
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-    return `${months[date.getMonth()]} ${date.getFullYear()}`
+    return `${months[date.getUTCMonth()]} ${date.getUTCFullYear()}`
   }
 
   updateDisplay(target, sinceDate, endDate) {

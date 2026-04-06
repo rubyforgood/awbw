@@ -13,6 +13,10 @@ Devise.setup do |config|
   config.mailer_sender = ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
   config.sign_in_after_reset_password = true
 
+  # Use Turbo-compatible HTTP status codes
+  config.responder.error_status = :unprocessable_entity
+  config.responder.redirect_status = :see_other
+
   # Configure the class responsible to send e-mails.
   # config.mailer = 'Devise::Mailer'
   config.mailer = "DeviseMailer"
@@ -115,7 +119,7 @@ Devise.setup do |config|
   # their account can't be confirmed with the token any more.
   # Default is nil, meaning there is no restriction on how long a user can take
   # before confirming their account.
-  config.confirm_within = 3.days
+  config.confirm_within = nil
 
   # If true, requires any email changes to be confirmed (exactly the same way as
   # initial account confirmation) to be applied. Requires additional unconfirmed_email
@@ -193,7 +197,7 @@ Devise.setup do |config|
   # Time interval you can reset your password with a reset password key.
   # Don't put a too small interval or your users won't have the time to
   # change their passwords.
-  config.reset_password_within = 6.hours
+  config.reset_password_within = 7.days
 
   # ==> Configuration for :encryptable
   # Allow you to use another encryption algorithm besides bcrypt (default). You can use
@@ -246,6 +250,17 @@ Devise.setup do |config|
   #   manager.intercept_401 = false
   #   manager.default_strategies(scope: :user).unshift :some_external_strategy
   # end
+
+  # Store the attempted email in the session when login fails because the
+  # account is unconfirmed, so the resend-confirmation link in the flash
+  # can send the email without an intermediate form.
+  Warden::Manager.before_failure do |env, opts|
+    if opts[:message] == :unconfirmed
+      request = Rack::Request.new(env)
+      email = request.params.dig("user", "email")
+      env["rack.session"]["unconfirmed_email"] = email if email.present?
+    end
+  end
 
   # ==> Mountable engine configurations
   # When using Devise inside an engine, let's call it `MyEngine`, and this engine

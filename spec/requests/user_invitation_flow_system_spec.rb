@@ -84,40 +84,25 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
   end
 
   describe "Edge cases" do
-    it "handles expired confirmation token (> 3 days)" do
-      # Create user with expired confirmation token
-      expired_user = create(:user,
-                            email: "expired@example.com",
-                            confirmed_at: nil)
-      # Let Devise generate token properly
-      expired_user.send_confirmation_instructions
-      expired_user.reload
+    it "confirms user with old confirmation token (no expiry)" do
+      old_user = create(:user,
+                        email: "old_token@example.com",
+                        confirmed_at: nil)
+      old_user.send_confirmation_instructions
+      old_user.reload
 
-      # Store the token before it potentially gets cleared
-      old_token = expired_user.confirmation_token
+      old_token = old_user.confirmation_token
 
-      # Age it manually
-      expired_user.update_column(:confirmation_sent_at, 4.days.ago)
+      # Age token well beyond previous 3-day limit
+      old_user.update_column(:confirmation_sent_at, 30.days.ago)
 
-      # Set the welcome token
-      expired_user.set_welcome_instructions_token!
+      old_user.set_welcome_instructions_token!
 
-      # Try to visit confirmation page with expired token
       get user_confirmation_path(confirmation_token: old_token)
 
-      # With expired token, should either:
-      # 1. Show error (422) if token is truly expired and user not confirmed, OR
-      # 2. Redirect to sign in (302) if somehow user got confirmed
-      # Devise behavior: expired tokens show error page
-      expect(response.status).to be_in([ 302, 422 ])
-
-      if response.status == 422
-        expect(response).to have_http_status(:unprocessable_content)
-        expect(response.body).to include("Resend confirmation instructions")
-      else
-        # If redirected, check it went to appropriate page
-        expect(response).to redirect_to(new_user_session_path)
-      end
+      expect(response).to have_http_status(:redirect)
+      old_user.reload
+      expect(old_user.confirmed?).to be true
     end
 
     it "redirects already confirmed users without welcome token to sign in" do
@@ -158,19 +143,71 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
       expect(response).to redirect_to(user_welcome_path(user_with_token.welcome_instructions_token))
     end
 
-    it "redirects to sign in if user has no welcome token" do
-      # User without welcome token
-      user_without_token = create(:user, confirmed_at: nil)
-      user_without_token.update_columns(welcome_instructions_token: nil)
-      user_without_token.send_confirmation_instructions
+    it "redirects to welcome page with existing token even if token is old" do
+      # User with old welcome token (tokens no longer expire)
+      user_with_old_token = create(:user, confirmed_at: nil)
+      user_with_old_token.set_welcome_instructions_token!
+      user_with_old_token.update_column(:welcome_instructions_created_at, 31.days.ago)
+      old_token = user_with_old_token.welcome_instructions_token
+      user_with_old_token.send_confirmation_instructions
 
       # Visit confirmation link
-      get user_confirmation_path(confirmation_token: user_without_token.confirmation_token)
+      get user_confirmation_path(confirmation_token: user_with_old_token.confirmation_token)
 
-      # Should redirect to sign in page
+      # Should keep existing token and redirect to welcome page
+      user_with_old_token.reload
+      expect(user_with_old_token.welcome_instructions_token).to eq(old_token)
+      expect(response).to redirect_to(user_welcome_path(user_with_old_token.welcome_instructions_token))
+    end
+
+    it "redirects legacy ported users without welcome token to sign in" do
+      # Legacy user ported from old system — sign_in_count is 0, no welcome token
+      legacy_user = create(:user, confirmed_at: nil)
+      legacy_user.update_columns(welcome_instructions_token: nil, sign_in_count: 0)
+      legacy_user.send_confirmation_instructions
+
+      get user_confirmation_path(confirmation_token: legacy_user.confirmation_token)
+
       expect(response).to redirect_to(new_user_session_path)
       follow_redirect!
       expect(response.body).to include("confirmed")
+    end
+
+    it "redirects to sign in on reconfirmation even with welcome token present" do
+      # Edge case: user has welcome token but is doing an email change
+      user = create(:user, confirmed_at: 1.year.ago)
+      user.set_welcome_instructions_token!
+      user.update_columns(
+        unconfirmed_email: "changed@example.com",
+        confirmation_token: Devise.friendly_token,
+        confirmation_sent_at: Time.current
+      )
+
+      get user_confirmation_path(confirmation_token: user.confirmation_token)
+
+      # Reconfirmation takes priority over welcome token
+      expect(response).to redirect_to(new_user_session_path)
+    end
+
+    it "redirects to sign in on email change reconfirmation" do
+      # Existing user changing their email — unconfirmed_email triggers reconfirmation detection
+      existing_user = create(:user, confirmed_at: 1.year.ago)
+      existing_user.update_columns(
+        unconfirmed_email: "newemail@example.com",
+        confirmation_token: Devise.friendly_token,
+        confirmation_sent_at: Time.current
+      )
+
+      get user_confirmation_path(confirmation_token: existing_user.confirmation_token)
+
+      expect(response).to redirect_to(new_user_session_path)
+      follow_redirect!
+      expect(response.body).to include("confirmed")
+
+      # Verify email was actually changed
+      existing_user.reload
+      expect(existing_user.email).to eq("newemail@example.com")
+      expect(existing_user.unconfirmed_email).to be_nil
     end
   end
 end

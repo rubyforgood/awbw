@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+eval "$(command /opt/homebrew/bin/mise activate zsh)"
+
+# Run rubocop on all Ruby files
+echo "Running rubocop..."
+bundle exec rubocop || exit 1
+
+# Run brakeman security scan
+echo "Running brakeman security scan..."
+bundle exec brakeman --no-pager -q || exit 1

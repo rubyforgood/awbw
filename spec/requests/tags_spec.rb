@@ -4,7 +4,7 @@ RSpec.describe "Tags index", type: :request do
   let!(:sector) { create(:sector, :published, name: "Youth") }
   let!(:category_type) { create(:category_type, name: "Theme") }
   let!(:category) { create(:category, :published, name: "Healing", category_type: category_type) }
-  let!(:workshop) { create(:workshop) }
+  let!(:workshop) { create(:workshop, :published) }
 
   before do
     create(:sectorable_item, sector: sector, sectorable: workshop)
@@ -115,6 +115,26 @@ RSpec.describe "Tags index", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).not_to include("Manage sectors")
       expect(response.body).not_to include("Manage categories")
+    end
+
+    it "hides sectors whose only tagged items are unpublished" do
+      unpublished_workshop = create(:workshop, published: false)
+      hidden_sector = create(:sector, :published, name: "Hidden Sector")
+      create(:sectorable_item, sector: hidden_sector, sectorable: unpublished_workshop)
+
+      get tags_sectors_path
+      expect(response.body).to include("Youth")
+      expect(response.body).not_to include("Hidden Sector")
+    end
+
+    it "hides categories whose only tagged items are unpublished" do
+      unpublished_workshop = create(:workshop, published: false)
+      hidden_category = create(:category, :published, name: "Hidden Category", category_type: category_type)
+      create(:categorizable_item, category: hidden_category, categorizable: unpublished_workshop)
+
+      get tags_categories_path
+      expect(response.body).to include("Healing")
+      expect(response.body).not_to include("Hidden Category")
     end
   end
 end

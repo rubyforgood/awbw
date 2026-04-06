@@ -181,6 +181,12 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
 - **On every push**, add PR review comments on notable lines of code — decisions, trade-offs, non-obvious logic, or anything a reviewer should understand. Use `gh api` to post line comments on the diff
 
+## Testing
+
+- **Bug fixes require a failing test first** — before writing any fix code, write a test that reproduces the bug and confirm it fails. Only then write the code to make it pass.
+- Follow the red-green-refactor cycle: failing test, minimal fix, then refactor
+- Be careful with system/JS tests — avoid patterns that lead to flakiness
+
 ## Quick Commands
 
 See `ai/` directory for executable scripts:

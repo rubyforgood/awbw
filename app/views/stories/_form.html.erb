@@ -11,7 +11,7 @@
     <div class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 mb-6">
       <i class="fas fa-arrow-up-from-bracket text-blue-600"></i>
       <span class="text-sm font-medium text-blue-800">
-        Promoted from
+        <%= f.object.persisted? ? "Promoted from" : "Promoting from" %>
         <%= link_to story_idea.full_name, edit_story_idea_path(story_idea), class: "underline hover:text-blue-600" %>
       </span>
     </div>
@@ -65,7 +65,7 @@
 
       <%= f.input :external_workshop_title,
                   as: :text,
-                  label: "External title (if no workshop above)",
+                  label: "Workshop title (if different or unlisted)",
                   input_html: { rows: 1 } %>
     </div>
 
@@ -157,10 +157,10 @@
   <% if story_idea %>
     <% idea_assets = story_idea.assets.select { |a| a.file.attached? } %>
     <% if idea_assets.any? %>
-      <% idea_blob_ids = idea_assets.map { |a| a.file.blob_id }.sort %>
-      <% story_blob_ids = f.object.assets.select { |a| a.file.attached? }.map { |a| a.file.blob_id }.sort %>
-      <% assets_already_match = idea_blob_ids == story_blob_ids %>
-      <% unless f.object.persisted? && assets_already_match %>
+      <% idea_blob_ids = Set.new(idea_assets.map { |a| a.file.blob_id }) %>
+      <% story_blob_ids = Set.new(f.object.assets.select { |a| a.file.attached? }.map { |a| a.file.blob_id }) %>
+      <% assets_already_transferred = idea_blob_ids.subset?(story_blob_ids) %>
+      <% unless assets_already_transferred && params[:admin] != "true" %>
         <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 mt-6">
           <div class="flex items-start space-x-3">
             <%= label_tag :promote_idea_assets, class: "flex items-start space-x-3 cursor-pointer" do %>
@@ -179,10 +179,17 @@
 
           <h3 class="text-sm font-semibold text-gray-700 mt-4 mb-2 ml-8"><%= link_to "Story idea attachments:", edit_story_idea_path(story_idea, anchor: "attachments"), class: "underline hover:text-blue-600" %></h3>
           <div class="flex flex-wrap gap-4 ml-8">
-            <% idea_assets.each do |asset| %>
+            <% first_gallery = true %>
+            <% idea_assets.sort_by(&:id).each do |asset| %>
+              <% promoted_label = if first_gallery && asset.type == "GalleryAsset"
+                   first_gallery = false
+                   "Primary asset"
+                 else
+                   asset.type.underscore.humanize
+                 end %>
               <div class="flex flex-col items-center">
                 <%= render "assets/display_image", resource: story_idea, item: asset, variant: :gallery %>
-                <span class="text-xs text-gray-500 mt-1"><%= asset.type.underscore.humanize %></span>
+                <span class="text-xs text-gray-500 mt-1"><%= promoted_label %></span>
               </div>
             <% end %>
           </div>

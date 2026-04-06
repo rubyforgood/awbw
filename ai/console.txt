@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-# Open a Rails console.
-#
-# Usage:
-#   ai/console
-#   ai/console --sandbox
-set -euo pipefail
-eval "$(command /opt/homebrew/bin/mise activate zsh)"
-bundle exec rails console "$@"

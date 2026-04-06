@@ -92,6 +92,9 @@ class User < ApplicationRecord
     elsif params[:access] == "false"
       results = results.where("users.inactive = ? OR users.locked_at IS NOT NULL OR users.confirmed_at IS NULL", true)
     end
+    results = results.where.not(welcome_instructions_sent_at: nil) if params[:invited] == "true"
+    results = results.where.not(confirmed_at: nil) if params[:confirmed] == "true"
+    results = results.where("users.sign_in_count > 0") if params[:authenticated] == "true"
     results
   end
 
@@ -197,6 +200,16 @@ class User < ApplicationRecord
     []
   end
 
+  # Override Devise to always send confirmation to the pending email when present.
+  # Devise's default checks `pending_reconfirmation?` but can still route to the
+  # current email in some flows. This ensures the confirmation always targets the
+  # unconfirmed (new) email address.
+  def send_confirmation_instructions
+    generate_confirmation_token! unless @raw_confirmation_token
+    target = unconfirmed_email.presence || email
+    send_devise_notification(:confirmation_instructions, @raw_confirmation_token, to: target)
+  end
+
   def set_welcome_instructions_token!
     loop do
       self.welcome_instructions_token = Devise.friendly_token
@@ -215,10 +228,6 @@ class User < ApplicationRecord
     )
   end
 
-  def welcome_instructions_token_valid?
-    welcome_instructions_token.present? && welcome_instructions_created_at.present? &&
-      welcome_instructions_created_at > 30.days.ago
-  end
 
   def track_auth_event(name, properties = {})
     payload = { name: name, properties: properties.merge(

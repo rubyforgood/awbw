@@ -104,13 +104,17 @@ class WorkshopVariationsController < ApplicationController
   def set_form_variables
     @workshop = @workshop_variation.workshop || (Workshop.find_by(id: params[:workshop_id]) if params[:workshop_id].present?)
     @workshop_variation_idea = WorkshopVariationIdea.find_by(id: params[:workshop_variation_idea_id]) if params[:workshop_variation_idea_id].present?
+    @workshop_variation.build_primary_asset if @workshop_variation.primary_asset.blank?
+    @workshop_variation.gallery_assets.build
   end
 
   def workshop_variation_params
     params.require(:workshop_variation).permit(
       [ :name, :rhino_body, :published, :publicly_visible, :position, :youtube_url, :created_by_id,
         :organization_id, :workshop_id, :workshop_variation_idea_id, :author_credit_preference,
-        :windows_type_id
+        :windows_type_id,
+        primary_asset_attributes: [ :id, :file, :_destroy ],
+        gallery_assets_attributes: [ :id, :file, :_destroy ]
       ]
     )
   end

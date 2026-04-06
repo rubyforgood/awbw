@@ -23,9 +23,11 @@ Rails.application.routes.draw do
   devise_for :users,
              controllers: { registrations: "registrations",
                             confirmations: "confirmations",
-                            passwords: "passwords" }
+                            passwords: "passwords",
+                            unlocks: "unlocks" }
   devise_scope :user do
     get "/confirm/:confirmation_token", to: "confirmations#show", as: :confirm
+    get "/users/confirmation/resend", to: "confirmations#resend", as: :resend_user_confirmation
   end
   get "users/change_password", to: "users#change_password", as: "change_password"
   post "users/update_password", to: "users#update_password", as: "update_password"
@@ -34,6 +36,7 @@ Rails.application.routes.draw do
   resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
     collection do
       get :check_duplicates
+      get :flow_diagram
     end
     member do
       post :send_reset_password_instructions
@@ -99,8 +102,10 @@ Rails.application.routes.draw do
   resources :events do
     member do
       get :manage
+      get :preview_reminder
       patch :preview
       post :copy_registration_form
+      post :send_reminder
     end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events

@@ -354,9 +354,9 @@ RSpec.describe "EventRegistrations", type: :request do
   # ============================================================
   context "as a guest" do
     describe "GET /event_registrations" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get event_registrations_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
@@ -367,16 +367,16 @@ RSpec.describe "EventRegistrations", type: :request do
                params: { event_registration: { event_id: event.id, registrant_id: regular_user.person.id } }
         }.not_to change(EventRegistration, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "PATCH /event_registrations/:id" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         patch event_registration_path(existing_registration),
               params: { event_registration: { event_id: new_event.id } }
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
@@ -386,7 +386,7 @@ RSpec.describe "EventRegistrations", type: :request do
           delete event_registration_path(existing_registration)
         }.not_to change(EventRegistration, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end

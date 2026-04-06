@@ -49,7 +49,7 @@ gem "maxmind-geoip2", "~> 1.5", ">= 1.5.1"
 # Stylesheet inlining for email
 gem "premailer-rails" # applies any style tag classes to html elements for better email client compatibility
 
-gem "bcrypt", "3.1.16"
+gem "bcrypt", "~> 3.1", ">= 3.1.22"
 gem "json", ">= 2.6", "< 3" # or simply: gem "json", "~> 2.7"
 gem "ostruct"
 gem "simple_form"
