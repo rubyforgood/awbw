@@ -4,6 +4,7 @@
     <div class="flex gap-2">
       <% if @payment.unallocated_amount_cents > 0 %>
         <%= link_to "Allocate", new_allocation_path(source_sgid: @payment.to_sgid.to_s), class: "btn btn-primary" %>
+        <%= link_to "Refund", new_refund_path(payment_sgid: @payment.to_sgid.to_s), class: "btn btn-warning" %>
       <% end %>
       <%= link_to "Back", payments_path, class: "btn btn-secondary" %>
     </div>

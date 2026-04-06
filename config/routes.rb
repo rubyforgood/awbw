@@ -140,6 +140,7 @@ Rails.application.routes.draw do
     end
   end
   resources :allocations, only: [ :new, :create, :index ]
+  resources :refunds, only: [ :new, :create ]
   resources :organization_statuses
   resources :affiliations
   resources :quotes
