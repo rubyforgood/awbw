@@ -202,7 +202,7 @@ class EventsController < ApplicationController
       .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
       .map(&:organization).compact.uniq
     org_names = orgs.map(&:name).join("; ")
-    total_cents = registration.successful_payments_total_cents
+    total_cents = registration.allocations_sum
     payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
     payment_status = cost_required ? (registration.paid_in_full? ? "Paid in full" : "Not paid in full") : ""
     [
