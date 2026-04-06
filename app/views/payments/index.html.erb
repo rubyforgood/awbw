@@ -1,9 +1,11 @@
 <div class="max-w-6xl mx-auto">
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Payments</h1>
-    <%= link_to "New Payment", new_payment_path, class: "btn btn-primary" %>
+    <div class="flex gap-2">
+      <%= link_to "Add Cash Payment", new_payment_path(type: "CashPayment"), class: "btn btn-secondary" %>
+      <%= link_to "Add Check Payment", new_payment_path(type: "CheckPayment"), class: "btn btn-secondary" %>
+    </div>
   </div>
-
   <div class="overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
@@ -16,7 +18,6 @@
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
         </tr>
       </thead>
-
       <tbody class="bg-white divide-y divide-gray-200">
         <% @payments.each do |payment| %>
           <tr>
