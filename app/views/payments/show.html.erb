@@ -12,7 +12,7 @@
   <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
     <div>
       <dt class="text-sm font-medium text-gray-500">Type</dt>
-      <dd class="mt-1 text-sm text-gray-900"><%= @payment.type %></dd>
+      <dd class="mt-1 text-sm text-gray-900"><%= @payment.type.underscore.titleize %></dd>
     </div>
     <div>
       <dt class="text-sm font-medium text-gray-500">Payer</dt>
@@ -68,6 +68,38 @@
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-900">$<%= "%.2f" % (allocation.amount.to_d / 100) %></td>
                 <td class="px-4 py-3 text-sm text-gray-500"><%= allocation.created_at.strftime("%B %d, %Y") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+  <% refunds = @payment.refunds.to_a %>
+  <% if refunds.any? %>
+    <div class="mt-8">
+      <h2 class="text-lg font-medium mb-4">Refunds</h2>
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recipient</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% refunds.each do |refund| %>
+              <tr>
+                <td class="px-4 py-3 text-sm text-gray-900">
+                  <% if refund.recipient.present? %>
+                    <%= refund.recipient.name %>
+                  <% else %>
+                    <%= refund.recipient_type.underscore.titleize %>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-900">$<%= "%.2f" % refund.amount_dollars %></td>
+                <td class="px-4 py-3 text-sm text-gray-500"><%= refund.created_at.strftime("%B %d, %Y") %></td>
               </tr>
             <% end %>
           </tbody>

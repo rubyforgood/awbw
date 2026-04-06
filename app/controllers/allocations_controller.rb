@@ -4,9 +4,9 @@ class AllocationsController < ApplicationController
   def index
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
-      @allocations = @allocatable.allocations.includes(:source)
+      @allocations = @allocatable.allocations.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
     else
-      @allocations = Allocation.all
+      @allocations = Allocation.all.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
     end
     authorize! @allocations
   end
