@@ -1,12 +1,9 @@
 <div id="payment-form" class="max-w-2xl mx-auto" data-controller="payer-select">
   <h1 class="text-2xl font-bold mb-6">New <%= @payment.type.underscore.titleize %></h1>
-
   <%= simple_form_for @payment, as: :payment, url: payments_path do |f| %>
     <%= f.input :type, as: :hidden %>
-
     <div class="mb-4">
       <%= f.label :payer_type, "Payer Type", class: "block text-sm font-medium text-gray-700 mb-1" %>
-
       <%= f.select :payer_type,
            options_for_select(["Person", "Organization"]),
            { include_blank: true },
@@ -14,7 +11,6 @@
                    focus:ring-blue-500 focus:border-blue-500",
            data: { action: "payer-select#toggle" } %>
     </div>
-
     <template data-payer-select-target="person">
       <%= f.input :payer_id,
         collection: @payment.payer.present? ? [[@payment.payer.full_name, @payment.payer.id]] : [],
@@ -28,7 +24,6 @@
         prompt: "Search for a person",
         label: false %>
     </template>
-
     <template data-payer-select-target="organization"><%= f.input :payer_id,
         collection: [],
         include_blank: true,
@@ -40,15 +35,12 @@
         },
         prompt: "Search for an organization",
         label: false %></template>
-
     <div data-payer-select-target="payerContainer"></div>
-    <%= f.input :amount_cents, label: "Amount (cents)", input_html: { min: 0, step: 1 } %>
+    <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "$0.00" } %>
     <%= f.input :currency, as: :hidden, input_html: { value: "usd" } %>
-
     <% if @payment.type == "CheckPayment" %>
       <%= f.input :check_number %>
     <% end %>
-
     <div class="mt-6"><%= f.button :submit, "Create Payment", class: "btn btn-primary" %><%= link_to "Cancel", payments_path, class: "btn btn-secondary ml-2" %></div>
   <% end %>
 </div>

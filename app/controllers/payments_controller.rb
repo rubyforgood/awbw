@@ -81,6 +81,6 @@ class PaymentsController < ApplicationController
   private
 
   def payment_params
-    params.require(:payment).permit(:type, :payer_type, :payer_id, :amount_cents, :currency, :check_number, :allocatable_sgid)
+    params.require(:payment).permit(:type, :payer_type, :payer_id, :amount_dollars, :amount_cents, :currency, :check_number, :allocatable_sgid)
   end
 end
