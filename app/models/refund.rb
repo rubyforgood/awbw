@@ -1,4 +1,6 @@
 class Refund < ApplicationRecord
+  METHODS = %w[check cash].freeze
+
   attr_accessor :amount_dollars
 
   belongs_to :refundable, polymorphic: true
@@ -6,6 +8,7 @@ class Refund < ApplicationRecord
   has_many :allocations, as: :source
 
   validates :amount_cents, numericality: true
+  validates :method, inclusion: { in: METHODS }
 
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents

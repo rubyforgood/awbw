@@ -84,6 +84,7 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recipient</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
             </tr>
@@ -98,6 +99,7 @@
                     <%= refund.recipient_type.underscore.titleize %>
                   <% end %>
                 </td>
+                <td class="px-4 py-3 text-sm text-gray-900"><%= refund.method.titleize %></td>
                 <td class="px-4 py-3 text-sm text-gray-900">$<%= "%.2f" % refund.amount_dollars %></td>
                 <td class="px-4 py-3 text-sm text-gray-500"><%= refund.created_at.strftime("%B %d, %Y") %></td>
               </tr>

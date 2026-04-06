@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_06_183730) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_06_205610) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -901,6 +901,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_06_183730) do
   create_table "refunds", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents", null: false
     t.datetime "created_at", null: false
+    t.string "method", null: false
     t.bigint "recipient_id", null: false
     t.string "recipient_type", null: false
     t.bigint "refundable_id", null: false

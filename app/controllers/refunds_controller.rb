@@ -32,7 +32,8 @@ class RefundsController < ApplicationController
       refundable: @payment,
       recipient_type: params[:refund][:recipient_type],
       recipient_id: params[:refund][:recipient_id],
-      amount_cents: amount_val
+      amount_cents: amount_val,
+      method: params[:refund][:method]
     )
 
     if @refund.save
