@@ -57,6 +57,9 @@ application.register("paginated-fields", PaginatedFieldsController)
 import PasswordToggleController from "./password_toggle_controller"
 application.register("password-toggle", PasswordToggleController)
 
+import PayerSelectController from "./payer_select_controller"
+application.register("payer-select", PayerSelectController)
+
 import PrefetchLazyController from "./prefetch_lazy_controller"
 application.register("prefetch-lazy", PrefetchLazyController)
 
