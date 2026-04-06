@@ -54,7 +54,7 @@ class PaymentsController < ApplicationController
 
   def show
     @payment = Payment.find(params[:id])
-    authorize! @payment
+    authorize! @payment, with: PaymentPolicy
   end
 
   def allocation_form
