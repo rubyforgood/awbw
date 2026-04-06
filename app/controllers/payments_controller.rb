@@ -24,7 +24,7 @@ class PaymentsController < ApplicationController
 
   def create
     authorize!
-    payment_class = params[:payment][:type].safe_constantize || CashPayment
+    payment_class = params[:payment][:type].presence&.safe_constantize || CashPayment
 
     allocatable = nil
     if params[:payment][:allocatable_sgid].present?
@@ -73,7 +73,7 @@ class PaymentsController < ApplicationController
       end
     end
 
-    render turbo_stream: turbo_stream.append("payment-form", partial: "payments/form")
+    render turbo_stream: turbo_stream.append("payment-form", partial: "payments/allocation_form")
   end
 
   private
