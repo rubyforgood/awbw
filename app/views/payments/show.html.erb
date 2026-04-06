@@ -1,7 +1,12 @@
 <div class="max-w-2xl mx-auto">
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Payment</h1>
-    <%= link_to "Back", payments_path, class: "btn btn-secondary" %>
+    <div class="flex gap-2">
+      <% if @payment.unallocated_amount_cents > 0 %>
+        <%= link_to "Allocate", new_allocation_path(source_sgid: @payment.to_sgid.to_s), class: "btn btn-primary" %>
+      <% end %>
+      <%= link_to "Back", payments_path, class: "btn btn-secondary" %>
+    </div>
   </div>
   <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
     <div>
@@ -37,7 +42,8 @@
       <dd class="mt-1 text-sm text-gray-900"><%= @payment.created_at.strftime("%B %d, %Y at %I:%M %p") %></dd>
     </div>
   </dl>
-  <% if @payment.allocations.any? %>
+  <% allocations = @payment.allocations.to_a %>
+  <% if allocations.any? %>
     <div class="mt-8">
       <h2 class="text-lg font-medium mb-4">Allocations</h2>
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -50,7 +56,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
-            <% @payment.allocations.each do |allocation| %>
+            <% allocations.each do |allocation| %>
               <tr>
                 <td class="px-4 py-3 text-sm text-gray-900">
                   <% if allocation.allocatable_type == "EventRegistration" %>
