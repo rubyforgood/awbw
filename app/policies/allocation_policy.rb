@@ -1,0 +1,2 @@
+class AllocationPolicy < ApplicationPolicy
+end

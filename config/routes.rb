@@ -134,6 +134,12 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :index, :create ]
   end
+  resources :payments, only: [ :new, :create, :show, :index ] do
+    collection do
+      post :allocation_form
+    end
+  end
+  resources :allocations, only: [ :new, :create, :index ]
   resources :organization_statuses
   resources :affiliations
   resources :quotes

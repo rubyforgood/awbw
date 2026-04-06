@@ -5,6 +5,7 @@ class EventRegistration < ApplicationRecord
   has_many :event_registration_organizations, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :organizations, through: :event_registration_organizations
+  has_many :allocations, as: :allocatable
 
   before_destroy :create_refund_payments
 
@@ -88,18 +89,20 @@ class EventRegistration < ApplicationRecord
 
   # Sum of successful payment amounts, using preloaded collection when available
   def successful_payments_total_cents
-    if payments.loaded?
-      payments.select(&:succeeded?).sum(&:amount_cents)
-    else
-      payments.successful.sum(:amount_cents)
-    end
+    # if payments.loaded?
+    #   payments.select(&:succeeded?).sum(&:amount_cents)
+    # else
+    #   payments.successful.sum(:amount_cents)
+    # end
+    0
   end
 
   # True if event is free, scholarship recipient, or total successful payments >= event.cost_cents
   def paid_in_full?
-    return true if event.cost_cents.to_i <= 0
-    return true if scholarship_recipient?
-    successful_payments_total_cents >= event.cost_cents.to_i
+    # return true if event.cost_cents.to_i <= 0
+    # return true if scholarship_recipient?
+    # successful_payments_total_cents >= event.cost_cents.to_i
+    false
   end
 
   def scholarship?
