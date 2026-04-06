@@ -1,20 +1,19 @@
-import { Controller } from "@hotwired/stimulus"
+import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-  static targets = ["personField", "organizationField"]
+  static targets = ["person", "organization", "payerContainer"];
 
   toggle(event) {
-    const payerType = event.target.value
-    
+    const payerType = event.target.value;
+
+    this.payerContainerTarget.innerHTML = "";
+
     if (payerType === "Person") {
-      this.personFieldTarget.classList.remove("hidden")
-      this.organizationFieldTarget.classList.add("hidden")
+      const template = this.personTarget.content.cloneNode(true);
+      this.payerContainerTarget.appendChild(template);
     } else if (payerType === "Organization") {
-      this.personFieldTarget.classList.add("hidden")
-      this.organizationFieldTarget.classList.remove("hidden")
-    } else {
-      this.personFieldTarget.classList.add("hidden")
-      this.organizationFieldTarget.classList.add("hidden")
+      const template = this.organizationTarget.content.cloneNode(true);
+      this.payerContainerTarget.appendChild(template);
     }
   }
 }

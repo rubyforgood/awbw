@@ -32,7 +32,7 @@ class PaymentsController < ApplicationController
     end
 
     payment_attrs = payment_params.except(:allocatable_sgid)
-    payment_attrs[:payer_type] = "Person"
+    payment_attrs[:payer_type] = params[:payment][:payer_type].presence || "Person"
     payment_attrs[:payer_id] = params[:payment][:payer_id].presence || (allocatable.try(:registrant_id) if allocatable.is_a?(EventRegistration))
 
     @payment = payment_class.new(payment_attrs)
@@ -47,8 +47,8 @@ class PaymentsController < ApplicationController
       end
 
       respond_to do |format|
-        format.turbo_stream { redirect_to allocations_path(allocatable_sgid: params[:payment][:allocatable_sgid]) }
-        format.html { redirect_to @payment, notice: "Payment was successfully created." }
+        format.turbo_stream { redirect_to payments_path }
+        format.html { redirect_to payments_path, notice: "Payment was successfully created." }
       end
     else
       @allocatable = allocatable
@@ -81,6 +81,6 @@ class PaymentsController < ApplicationController
   private
 
   def payment_params
-    params.require(:payment).permit(:type, :payer_id, :amount_cents, :currency, :check_number, :allocatable_sgid)
+    params.require(:payment).permit(:type, :payer_type, :payer_id, :amount_cents, :currency, :check_number, :allocatable_sgid)
   end
 end

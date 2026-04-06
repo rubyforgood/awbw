@@ -1,17 +1,18 @@
 <div id="payment-form" class="max-w-2xl mx-auto" data-controller="payer-select">
   <h1 class="text-2xl font-bold mb-6">New <%= @payment.type.underscore.titleize %> Payment</h1>
+
   <%= simple_form_for @payment, as: :payment, url: payments_path do |f| %>
     <%= f.input :type, as: :hidden %>
+
     <p class="text-sm text-gray-600 mb-4">Type: <%= @payment.type.underscore.titleize %></p>
-    <div class="mb-4">
-      <%= label_tag :payer_type, "Payer Type", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= select_tag :payer_type, 
+
+    <div class="mb-4"><%= label_tag :payer_type, "Payer Type", class: "block text-sm font-medium text-gray-700 mb-1" %><%= select_tag :payer_type, 
            options_for_select(["Person", "Organization"]), 
            include_blank: true,
            class: "w-full",
-           data: { action: "payer-select#toggle" } %>
-    </div>
-    <div data-payer-select-target="personField" class="hidden">
+           data: { action: "payer-select#toggle" } %></div>
+
+    <template data-payer-select-target="person">
       <%= f.input :payer_id,
         collection: @payment.payer.present? ? [[@payment.payer.full_name, @payment.payer.id]] : [],
         include_blank: true,
@@ -22,10 +23,10 @@
           }
         },
         prompt: "Search for a payer",
-        label: "Payer" %>
-    </div>
-    <div data-payer-select-target="organizationField" class="hidden">
-      <%= f.input :payer_id,
+        label: "Person" %>
+    </template>
+
+    <template data-payer-select-target="organization"><%= f.input :payer_id,
         collection: [],
         include_blank: true,
         input_html: {
@@ -35,13 +36,16 @@
           }
         },
         prompt: "Search for an organization",
-        label: "Organization" %>
-    </div>
+        label: "Organization" %></template>
+
+    <div data-payer-select-target="payerContainer"></div>
     <%= f.input :amount_cents, label: "Amount (cents)", input_html: { min: 0, step: 1 } %>
     <%= f.input :currency, as: :hidden, input_html: { value: "usd" } %>
+
     <% if @payment.type == "CheckPayment" %>
       <%= f.input :check_number %>
     <% end %>
+
     <div class="mt-6"><%= f.button :submit, "Create Payment", class: "btn btn-primary" %><%= link_to "Cancel", payments_path, class: "btn btn-secondary ml-2" %></div>
   <% end %>
 </div>
