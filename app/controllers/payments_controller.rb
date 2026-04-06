@@ -1,7 +1,8 @@
 class PaymentsController < ApplicationController
   def index
     authorize!
-    @payments = Payment.all
+    per_page = params[:number_of_items_per_page].presence || 10
+    @payments = Payment.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
   end
 
   def new
@@ -15,11 +16,6 @@ class PaymentsController < ApplicationController
         @payment.payer = @allocatable.registrant
       end
     end
-
-    # respond_to do |format|
-    #   format.html
-    #   format.turbo_stream
-    # end
   end
 
   def create
@@ -81,6 +77,6 @@ class PaymentsController < ApplicationController
   private
 
   def payment_params
-    params.require(:payment).permit(:type, :payer_type, :payer_id, :amount_dollars, :amount_cents, :currency, :check_number, :allocatable_sgid)
+    params.require(:payment).permit(:type, :payer_type, :payer_id, :amount_dollars, :currency, :check_number, :allocatable_sgid)
   end
 end
