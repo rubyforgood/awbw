@@ -35,11 +35,22 @@ class PaymentsController < ApplicationController
 
     if @payment.save
       if allocatable.present?
-        Allocation.create!(
-          source: @payment,
-          allocatable: allocatable,
-          amount: @payment.amount_cents
-        )
+        Allocation.transaction do
+          @payment.with_lock do
+            new_allocation_amount = @payment.amount_cents
+            current_allocated = @payment.allocations.sum(:amount)
+
+            if current_allocated + new_allocation_amount > @payment.amount_cents
+              raise ActiveRecord::Rollback, "Cannot allocate more than payment amount"
+            end
+
+            Allocation.create!(
+              source: @payment,
+              allocatable: allocatable,
+              amount: @payment.amount_cents
+            )
+          end
+        end
       end
 
       respond_to do |format|
