@@ -17,17 +17,19 @@
       <h1 class="text-2xl font-bold">All Allocations</h1>
     <% end %>
   </div>
+
   <% if @allocatable.is_a?(EventRegistration) %>
-    <div class="flex gap-2 mb-4">
+    <div id="payment-form" class="flex gap-2 mb-4">
       <%= button_to "Add Cash Payment", 
           allocation_form_payments_path(type: "CashPayment", allocatable_sgid: params[:allocatable_sgid]),
           class: "btn btn-secondary" %>
+
       <%= button_to "Add Check Payment", 
           allocation_form_payments_path(type: "CheckPayment", allocatable_sgid: params[:allocatable_sgid]),
           class: "btn btn-secondary" %>
     </div>
   <% end %>
-  <div id="payment-form"></div>
+
   <% if @allocations.any? %>
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <table class="w-full border-collapse">
@@ -38,6 +40,7 @@
             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
           </tr>
         </thead>
+
         <tbody class="divide-y divide-gray-200">
           <% @allocations.each do |allocation| %>
             <tr class="hover:bg-gray-50">
