@@ -14,7 +14,7 @@
       },
       prompt: "Search for a payer",
       label: "Payer" %>
-    <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "$0.00" } %>
+    <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
     <%= f.input :currency, as: :hidden, input_html: { value: "usd" } %>
     <% if @payment.type == "CheckPayment" %>
       <%= f.input :check_number %>

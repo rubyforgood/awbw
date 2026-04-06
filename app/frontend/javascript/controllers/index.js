@@ -114,3 +114,6 @@ application.register("remote-select", RemoteSelectController)
 import MixedChartController from "./mixed_chart_controller"
 application.register("mixed-chart", MixedChartController)
 
+import CurrencyInputController from "./currency_input_controller"
+application.register("currency-input", CurrencyInputController)
+
