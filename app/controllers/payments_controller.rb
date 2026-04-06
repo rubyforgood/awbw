@@ -22,43 +22,30 @@ class PaymentsController < ApplicationController
     authorize!
     payment_class = params[:payment][:type].presence&.safe_constantize || CashPayment
 
-    allocatable = nil
-    if params[:payment][:allocatable_sgid].present?
-      allocatable = GlobalID::Locator.locate_signed(params[:payment][:allocatable_sgid])
-    end
+    allocatable = locate_allocatable
 
-    payment_attrs = payment_params.except(:allocatable_sgid)
-    payment_attrs[:payer_type] = params[:payment][:payer_type].presence || "Person"
-    payment_attrs[:payer_id] = params[:payment][:payer_id].presence || (allocatable.try(:registrant_id) if allocatable.is_a?(EventRegistration))
-
-    @payment = payment_class.new(payment_attrs)
-
-    if @payment.save
+    begin
       if allocatable.present?
-        Allocation.transaction do
-          @payment.with_lock do
-            new_allocation_amount = @payment.amount_cents
-            current_allocated = @payment.allocations.sum(:amount)
+        payment_attrs = build_payment_attributes(payment_params, allocatable)
+        @payment = payment_class.new(payment_attrs)
 
-            if current_allocated + new_allocation_amount > @payment.amount_cents
-              raise ActiveRecord::Rollback, "Cannot allocate more than payment amount"
-            end
-
-            Allocation.create!(
-              source: @payment,
-              allocatable: allocatable,
-              amount: @payment.amount_cents
-            )
-          end
-        end
+        process_allocation!(@payment, allocatable)
+        redirect_path = allocations_path(allocatable_sgid: allocatable.to_sgid.to_s)
+      else
+        @payment = payment_class.new(payment_params.except(:allocatable_sgid))
+        @payment.save!
+        redirect_path = payments_path
       end
 
       respond_to do |format|
-        format.turbo_stream { redirect_to payments_path }
-        format.html { redirect_to payments_path, notice: "Payment was successfully created." }
+        format.turbo_stream { redirect_to redirect_path }
+        format.html { redirect_to redirect_path, notice: "Payment was successfully created." }
       end
-    else
+
+    rescue ActiveRecord::RecordInvalid => e
       @allocatable = allocatable
+      @payment ||= payment_class.new(payment_attrs || {})
+      @payment.errors.add(:base, e.message)
       render :new, status: :unprocessable_content
     end
   end
@@ -89,5 +76,57 @@ class PaymentsController < ApplicationController
 
   def payment_params
     params.require(:payment).permit(:type, :payer_type, :payer_id, :amount_dollars, :currency, :check_number, :allocatable_sgid)
+  end
+
+  def locate_allocatable
+    return nil unless params[:payment][:allocatable_sgid].present?
+    GlobalID::Locator.locate_signed(params[:payment][:allocatable_sgid])
+  end
+
+  def build_payment_attributes(payment_params, allocatable)
+    attrs = payment_params.except(:allocatable_sgid)
+    attrs[:payer_type] = params[:payment][:payer_type].presence || "Person"
+    attrs[:payer_id] = params[:payment][:payer_id].presence || (allocatable.try(:registrant_id) if allocatable.is_a?(EventRegistration))
+    attrs
+  end
+
+  def process_allocation!(payment, allocatable)
+    Payment.transaction do
+      payment.save!
+
+      payment.with_lock do
+        allocation_amount = calculate_allocation_amount(payment, allocatable)
+        current_allocated = payment.allocations.sum(:amount)
+
+        if current_allocated + allocation_amount > payment.amount_cents
+          raise ActiveRecord::Rollback, "Cannot allocate more than payment amount"
+        end
+
+        Allocation.create!(
+          source: payment,
+          allocatable: allocatable,
+          amount: allocation_amount
+        )
+
+        payment.update!(allocated_amount_cents: current_allocated + allocation_amount)
+      end
+    end
+  end
+
+  def calculate_allocation_amount(payment, allocatable)
+    payment_amount = payment.amount_cents
+
+    if allocatable.is_a?(EventRegistration)
+      event_cost = allocatable.event.cost_cents
+      already_allocated = allocatable.allocations_sum
+      remaining_needed = event_cost - already_allocated
+      [ payment_amount, remaining_needed ].min
+    else
+      payment_amount
+    end
+  end
+
+  def redirect_path_for(allocatable)
+    allocations_path(allocatable_sgid: allocatable.to_sgid.to_s)
   end
 end
