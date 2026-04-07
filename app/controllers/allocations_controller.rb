@@ -58,6 +58,13 @@ class AllocationsController < ApplicationController
       end
     end
 
+    if @allocation.allocatable_type == "EventRegistration"
+      unless validate_event_registration_cost(@allocation, amount_val)
+        render :new, status: :unprocessable_content
+        return
+      end
+    end
+
     if @allocation.save
       if @source.is_a?(Payment)
         @source.with_lock do
@@ -105,6 +112,25 @@ class AllocationsController < ApplicationController
   end
 
   private
+
+  def validate_event_registration_cost(allocation, amount_val)
+    return true unless allocation.allocatable.present?
+
+    event_reg = allocation.allocatable
+    event = event_reg.event
+    return true unless event.cost_cents.present?
+
+    current_allocated = event_reg.allocations_sum || 0
+    new_total = current_allocated + amount_val
+
+    if new_total > event.cost_cents
+      remaining = [ event.cost_cents - current_allocated, 0 ].max
+      allocation.errors.add(:base, "Cannot allocate more than remaining event cost. Remaining: $#{'%.2f' % (remaining / 100.0)}")
+      return false
+    end
+
+    true
+  end
 
   def allocation_params
     params.require(:allocation).permit(:source_type, :source_id, :allocatable_type, :allocatable_id, :amount_dollars)
