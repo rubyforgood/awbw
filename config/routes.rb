@@ -116,6 +116,7 @@ Rails.application.routes.draw do
     end
     member do
       get :workshop_logs
+      get :checkout
     end
     resources :comments, only: [ :index, :create ]
   end
