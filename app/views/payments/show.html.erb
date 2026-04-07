@@ -54,11 +54,12 @@
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allocated To</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
             <% allocations.each do |allocation| %>
-              <tr>
+              <tr class="<%= allocation.amount.to_i < 0 ? 'bg-red-50' : '' %>">
                 <td class="px-4 py-3 text-sm text-gray-900">
                   <% if allocation.allocatable_type == "EventRegistration" %>
                     <%= allocation.allocatable.registrant.full_name %> - <%= allocation.allocatable.event.title %>
@@ -68,6 +69,11 @@
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-900">$<%= "%.2f" % (allocation.amount.to_d / 100) %></td>
                 <td class="px-4 py-3 text-sm text-gray-500"><%= allocation.created_at.strftime("%B %d, %Y") %></td>
+                <td class="px-4 py-3 text-right text-sm font-medium">
+                  <% unless allocation.reverted? || allocation.amount.to_i < 0 %>
+                    <%= button_to "Revert Allocation", revert_allocation_path(allocation), method: :post, data: { confirm: "Are you sure you want to revert this allocation? The funds will be returned to the payment." }, class: "text-danger hover:text-danger-dark" %>
+                  <% end %>
+                </td>
               </tr>
             <% end %>
           </tbody>

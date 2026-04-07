@@ -72,6 +72,38 @@ class AllocationsController < ApplicationController
     end
   end
 
+  def revert
+    authorize!
+
+    @allocation = Allocation.find(params[:id])
+
+    if @allocation.reverted?
+      flash[:error] = "This allocation has already been reverted"
+      redirect_to payment_path(@allocation.source)
+      return
+    end
+
+    @revert = Allocation.new(
+      source: @allocation.source,
+      allocatable: @allocation.allocatable,
+      amount: -@allocation.amount
+    )
+
+    if @revert.save
+      @allocation.update!(reverted_id: @revert.id)
+
+      payment = @allocation.source
+      payment.with_lock do
+        payment.update!(allocated_amount_cents: payment.allocations.sum(:amount))
+      end
+
+      redirect_to payment_path(payment), notice: "Allocation reverted"
+    else
+      flash[:error] = @revert.errors.full_messages.join(", ")
+      redirect_to payment_path(@allocation.source)
+    end
+  end
+
   private
 
   def allocation_params

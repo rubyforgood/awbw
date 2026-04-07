@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_06_205610) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_06_232219) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -183,11 +183,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_06_205610) do
     t.string "allocatable_type", null: false
     t.integer "amount", default: 0, null: false
     t.datetime "created_at", null: false
+    t.bigint "reverted_id"
     t.bigint "source_id", null: false
     t.string "source_type", null: false
     t.datetime "updated_at", null: false
     t.index ["allocatable_type", "allocatable_id"], name: "index_allocations_on_allocatable"
     t.index ["allocatable_type", "allocatable_id"], name: "index_allocations_on_allocatable_type_and_allocatable_id"
+    t.index ["reverted_id"], name: "fk_rails_4e7a74eb48"
     t.index ["source_type", "source_id"], name: "index_allocations_on_source"
     t.index ["source_type", "source_id"], name: "index_allocations_on_source_type_and_source_id"
   end
@@ -1451,6 +1453,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_06_205610) do
   add_foreign_key "affiliations", "people"
   add_foreign_key "affiliations", "users"
   add_foreign_key "age_ranges", "windows_types"
+  add_foreign_key "allocations", "allocations", column: "reverted_id"
   add_foreign_key "banners", "users", column: "created_by_id"
   add_foreign_key "banners", "users", column: "updated_by_id"
   add_foreign_key "blazer_audits", "blazer_queries", column: "query_id"

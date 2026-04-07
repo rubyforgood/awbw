@@ -139,7 +139,10 @@ Rails.application.routes.draw do
       post :allocation_form
     end
   end
-  resources :allocations, only: [ :new, :create, :index ]
+  resources :allocations, only: [ :new, :create, :index ] do
+    post :revert, on: :member
+  end
+
   resources :refunds, only: [ :new, :create ]
   resources :organization_statuses
   resources :affiliations
