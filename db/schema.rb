@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_07_135003) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_07_231104) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -908,9 +908,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_135003) do
     t.string "recipient_type", null: false
     t.bigint "refundable_id", null: false
     t.string "refundable_type", null: false
+    t.string "stripe_refund_id"
     t.datetime "updated_at", null: false
     t.index ["recipient_type", "recipient_id"], name: "index_refunds_on_recipient"
     t.index ["refundable_type", "refundable_id"], name: "index_refunds_on_refundable"
+    t.index ["stripe_refund_id"], name: "index_refunds_on_stripe_refund_id"
   end
 
   create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

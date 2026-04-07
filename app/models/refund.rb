@@ -1,5 +1,5 @@
 class Refund < ApplicationRecord
-  METHODS = %w[check cash].freeze
+  METHODS = %w[check cash stripe].freeze
 
   attr_accessor :amount_dollars
 
@@ -9,6 +9,7 @@ class Refund < ApplicationRecord
 
   validates :amount_cents, numericality: true
   validates :method, inclusion: { in: METHODS }
+  validates :stripe_refund_id, uniqueness: true, allow_nil: true
 
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents
