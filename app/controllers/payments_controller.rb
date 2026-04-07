@@ -43,9 +43,7 @@ class PaymentsController < ApplicationController
       end
 
     rescue ActiveRecord::RecordInvalid => e
-      @allocatable = allocatable
-      @payment ||= payment_class.new(payment_attrs || {})
-      @payment.errors.add(:base, e.message)
+      flash[:error] = @payment.errors.full_messages.join(", ")
       render :new, status: :unprocessable_content
     end
   end

@@ -60,6 +60,7 @@ class AllocationsController < ApplicationController
 
     if @allocation.allocatable_type == "EventRegistration"
       unless validate_event_registration_cost(@allocation, amount_val)
+        flash[:error] = @allocation.errors.full_messages.join(", ")
         render :new, status: :unprocessable_content
         return
       end

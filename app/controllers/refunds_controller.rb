@@ -42,6 +42,7 @@ class RefundsController < ApplicationController
       end
       redirect_to payment_path(@payment), notice: "Refund created"
     else
+      flash[:error] = @refund.errors.full_messages.join(", ")
       render :new, status: :unprocessable_content
     end
   end
