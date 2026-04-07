@@ -2,7 +2,7 @@
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Payment</h1>
     <div class="flex gap-2">
-      <% if @payment.unallocated_amount_cents > 0 %>
+      <% if @payment.amount_cents_remaining > 0 %>
         <%= link_to "Allocate", new_allocation_path(source_sgid: @payment.to_sgid.to_s), class: "btn btn-primary" %>
         <%= link_to "Refund", new_refund_path(payment_sgid: @payment.to_sgid.to_s), class: "btn btn-warning" %>
       <% end %>
@@ -23,8 +23,8 @@
       <dd class="mt-1 text-sm text-gray-900">$<%= "%.2f" % @payment.amount_dollars %></dd>
     </div>
     <div>
-      <dt class="text-sm font-medium text-gray-500">Amount available to allocate</dt>
-      <dd class="mt-1 text-sm text-gray-900">$<%= "%.2f" % @payment.unallocated_dollars %></dd>
+      <dt class="text-sm font-medium text-gray-500">Amount remaining to allocate</dt>
+      <dd class="mt-1 text-sm text-gray-900">$<%= "%.2f" % @payment.remaining_dollars %></dd>
     </div>
     <% if @payment.check_number.present? %>
       <div>

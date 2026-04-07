@@ -55,14 +55,12 @@ class PaymentsController < ApplicationController
 
   def allocation_form
     authorize!
-    payment_type = params[:type].presence || "CashPayment"
+    payment_type = params[:type].presence
     @payment = payment_type.safe_constantize.new
 
-    if params[:allocatable_sgid].present?
-      @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
-      if @allocatable.is_a?(EventRegistration)
-        @payment.payer = @allocatable.registrant
-      end
+    @allocatable = locate_allocatable
+    if @allocatable.is_a?(EventRegistration)
+      @payment.payer = @allocatable.registrant
     end
 
     respond_to do |format|
@@ -106,7 +104,7 @@ class PaymentsController < ApplicationController
           amount: allocation_amount
         )
 
-        payment.update!(allocated_amount_cents: current_allocated + allocation_amount)
+        payment.update!(amount_cents_remaining: payment.amount_cents - current_allocated - allocation_amount)
       end
     end
   end

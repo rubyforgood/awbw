@@ -50,9 +50,9 @@ class AllocationsController < ApplicationController
     end
 
     if @source.is_a?(Payment)
-      remaining = @source.unallocated_amount_cents
+      remaining = @source.amount_cents_remaining
       if @allocation.amount > remaining
-        @allocation.errors.add(:amount, "cannot exceed remaining unallocated amount (#{remaining})")
+        @allocation.errors.add(:amount, "cannot exceed remaining amount (#{remaining})")
         render :new, status: :unprocessable_content
         return
       end
@@ -69,7 +69,7 @@ class AllocationsController < ApplicationController
     if @allocation.save
       if @source.is_a?(Payment)
         @source.with_lock do
-          @source.update!(allocated_amount_cents: @source.allocated_amount_cents + amount_val)
+          @source.update!(amount_cents_remaining: @source.amount_cents_remaining - amount_val)
         end
       end
       redirect_to payment_path(@source), notice: "Allocation created"
@@ -101,7 +101,7 @@ class AllocationsController < ApplicationController
 
       payment = @allocation.source
       payment.with_lock do
-        payment.update!(allocated_amount_cents: payment.allocated_amount_cents - @allocation.amount)
+        payment.update!(amount_cents_remaining: payment.amount_cents_remaining + @allocation.amount)
       end
 
       redirect_to payment_path(payment), notice: "Allocation reverted"

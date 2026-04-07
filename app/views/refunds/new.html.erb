@@ -7,7 +7,7 @@
       <div class="mb-4 p-4 bg-gray-50 rounded-lg">
         <p class="text-sm font-medium text-gray-700">For Payment</p>
         <p class="text-lg text-gray-900">$<%= "%.2f" % @payment.amount_dollars %></p>
-        <p class="text-sm text-gray-500">Refundable: $<%= "%.2f" % @payment.unallocated_dollars %></p>
+        <p class="text-sm text-gray-500">Remaining: $<%= "%.2f" % @payment.remaining_dollars %></p>
       </div>
     <% else %>
       <div class="mb-4 p-4 bg-red-50 rounded-lg">

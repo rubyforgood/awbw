@@ -8,7 +8,7 @@
       <div class="mb-4 p-4 bg-gray-50 rounded-lg">
         <p class="text-sm font-medium text-gray-700">From Payment</p>
         <p class="text-lg text-gray-900">$<%= "%.2f" % source.amount_dollars %></p>
-        <p class="text-sm text-gray-500">Remaining: $<%= "%.2f" % source.unallocated_dollars %></p>
+        <p class="text-sm text-gray-500">Remaining: $<%= "%.2f" % source.remaining_dollars %></p>
       </div>
     <% else %>
       <div class="mb-4 p-4 bg-red-50 rounded-lg">
