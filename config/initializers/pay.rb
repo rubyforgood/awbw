@@ -1,4 +1,3 @@
-ActiveSupport.on_load(:pay) do
-  Pay::Webhooks.delegator.subscribe "stripe.checkout.session.completed", FulfillCheckout.new
-  Pay::Webhooks.delegator.subscribe "stripe.checkout.session.async_payment_succeeded", FulfillCheckout.new
+Rails.application.config.to_prepare do
+  Pay::Charge.include PayChargeExtensions
 end

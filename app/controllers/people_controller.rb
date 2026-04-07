@@ -99,6 +99,9 @@ class PeopleController < ApplicationController
     @checkout_session = @person.payment_processor.checkout(
       mode: "payment",
       metadata: { person_id: @person.id },
+      payment_intent_data: {
+        metadata: { person_id: @person.id }
+      },
       line_items: [ {
         price_data: {
           currency: "usd",
