@@ -69,8 +69,7 @@ class AllocationsController < ApplicationController
     if @allocation.save
       if @source.is_a?(Payment)
         @source.with_lock do
-          current = @source.allocations.sum(:amount)
-          @source.update!(allocated_amount_cents: current)
+          @source.update!(allocated_amount_cents: @source.allocated_amount_cents + amount_val)
         end
       end
       redirect_to payment_path(@source), notice: "Allocation created"
@@ -102,7 +101,7 @@ class AllocationsController < ApplicationController
 
       payment = @allocation.source
       payment.with_lock do
-        payment.update!(allocated_amount_cents: payment.allocations.sum(:amount))
+        payment.update!(allocated_amount_cents: payment.allocated_amount_cents - @allocation.amount)
       end
 
       redirect_to payment_path(payment), notice: "Allocation reverted"
