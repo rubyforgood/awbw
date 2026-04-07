@@ -72,7 +72,8 @@ class AllocationsController < ApplicationController
           @source.update!(amount_cents_remaining: @source.amount_cents_remaining - amount_val)
         end
       end
-      redirect_to payment_path(@source), notice: "Allocation created"
+      flash[:notice] = "Allocation created. $#{'%.2f' % @source.remaining_dollars} remaining on payment."
+      redirect_to payment_path(@source)
     else
       Rails.logger.error "Allocation save failed: #{@allocation.errors.full_messages}"
       render :new, status: :unprocessable_content

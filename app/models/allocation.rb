@@ -26,7 +26,7 @@ class Allocation < ApplicationRecord
   private
 
   def reverted_requires_positive_amount
-    if reverted_id.present? && amount.to_i <= 0
+    if reverted_id.present? && amount.to_i < 0
       errors.add(:reverted_id, "must be on a positive amount allocation")
     end
   end

@@ -30,6 +30,8 @@ class PaymentsController < ApplicationController
         @payment = payment_class.new(payment_attrs)
 
         process_allocation!(@payment, allocatable)
+
+        flash[:notice] = "Allocation created. $#{'%.2f' % @payment.reload.remaining_dollars} remaining on payment."
         redirect_path = allocations_path(allocatable_sgid: allocatable.to_sgid.to_s)
       else
         @payment = payment_class.new(payment_params.except(:allocatable_sgid))
@@ -58,9 +60,11 @@ class PaymentsController < ApplicationController
     payment_type = params[:type].presence
     @payment = payment_type.safe_constantize.new
 
-    @allocatable = locate_allocatable
-    if @allocatable.is_a?(EventRegistration)
-      @payment.payer = @allocatable.registrant
+    if params[:allocatable_sgid].present?
+      @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
+      if @allocatable.is_a?(EventRegistration)
+        @payment.payer = @allocatable.registrant
+      end
     end
 
     respond_to do |format|
