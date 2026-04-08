@@ -22,7 +22,7 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= payment.payer.name %></td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$<%= "%.2f" % payment.amount_dollars %></td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$<%= "%.2f" % payment.remaining_dollars %></td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.created_at.strftime("%B %d, %Y") %></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.created_at.strftime("%B %d, %Y at %I:%M %p") %></td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><%= link_to "View", payment_path(payment), class: "text-primary hover:text-primary-dark" %></td>
           </tr>
         <% end %>

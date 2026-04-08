@@ -8,6 +8,8 @@ class Payment < ApplicationRecord
   validates :amount_cents, numericality: true
   validates :currency, presence: true
 
+  before_validation :set_amount_cents_remaining, if: :new_record?
+
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents
   end
@@ -30,5 +32,11 @@ class Payment < ApplicationRecord
 
   def remaining_dollars=(value)
     self.amount_cents_remaining = (value.to_d * 100).to_i if value.present?
+  end
+
+  private
+
+  def set_amount_cents_remaining
+    self.amount_cents_remaining = amount_cents if amount_cents_remaining.nil? && amount_cents.present?
   end
 end
