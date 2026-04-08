@@ -43,7 +43,7 @@
       <dd class="mt-1 text-sm text-gray-900"><%= @payment.created_at.strftime("%B %d, %Y at %I:%M %p") %></dd>
     </div>
   </dl>
-  <% allocations = @payment.allocations.to_a %>
+  <% allocations = @payment.allocations.order(created_at: :desc).to_a %>
   <% if allocations.any? %>
     <div class="mt-8">
       <h2 class="text-lg font-medium mb-4">Allocations</h2>
@@ -53,7 +53,7 @@
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allocated To</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/Time</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
@@ -68,7 +68,7 @@
                   <% end %>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-900">$<%= "%.2f" % (allocation.amount.to_d / 100) %></td>
-                <td class="px-4 py-3 text-sm text-gray-500"><%= allocation.created_at.strftime("%B %d, %Y") %></td>
+                <td class="px-4 py-3 text-sm text-gray-500"><%= allocation.created_at.strftime("%B %d, %Y at %I:%M %p") %></td>
                 <td class="px-4 py-3 text-right text-sm font-medium">
                   <% unless allocation.reverted? || allocation.amount.to_i < 0 %>
                     <%= button_to "Revert Allocation", revert_allocation_path(allocation), method: :post, data: { confirm: "Are you sure you want to revert this allocation? The funds will be returned to the payment." }, class: "text-danger hover:text-danger-dark" %>
@@ -81,7 +81,7 @@
       </div>
     </div>
   <% end %>
-  <% refunds = @payment.refunds.to_a %>
+  <% refunds = @payment.refunds.order(created_at: :desc).to_a %>
   <% if refunds.any? %>
     <div class="mt-8">
       <h2 class="text-lg font-medium mb-4">Refunds</h2>
@@ -92,7 +92,7 @@
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recipient</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/Time</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
@@ -107,7 +107,7 @@
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-900"><%= refund.method.titleize %></td>
                 <td class="px-4 py-3 text-sm text-gray-900">$<%= "%.2f" % refund.amount_dollars %></td>
-                <td class="px-4 py-3 text-sm text-gray-500"><%= refund.created_at.strftime("%B %d, %Y") %></td>
+                <td class="px-4 py-3 text-sm text-gray-500"><%= refund.created_at.strftime("%B %d, %Y at %I:%M %p") %></td>
               </tr>
             <% end %>
           </tbody>
