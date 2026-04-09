@@ -12,6 +12,7 @@
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
+
         <tbody class="bg-white divide-y divide-gray-200">
           <% @payments.each do |payment| %>
             <tr>
@@ -20,7 +21,7 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$<%= "%.2f" % payment.amount_dollars %></td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$<%= "%.2f" % payment.remaining_dollars %></td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.created_at.strftime("%B %d, %Y at %I:%M %p") %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><%= link_to "View", payment_path(payment), class: "text-primary hover:text-primary-dark" %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><%= link_to "View", payment_path(payment), class: "text-primary hover:text-primary-dark", data: { turbo_frame: "_top"} %></td>
             </tr>
           <% end %>
         </tbody>
@@ -29,5 +30,6 @@
   <% else %>
     <p class="text-gray-500 text-center py-6">There are no payments that match your search. Please try again.</p>
   <% end %>
+
   <div class="pagination flex justify-center mt-6"><%= tailwind_paginate @payments %></div>
 <% end %>
