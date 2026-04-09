@@ -15,7 +15,7 @@
       </div>
     <% end %>
     <%= f.input :recipient_type, as: :select, collection: ["Person", "Organization"], include_blank: true, input_html: { data: { action: "search-type-select#toggle" } } %>
-    <template data-search-type-select-target="person">
+    <template data-search-type-select-target="template" data-type="Person">
       <%= f.input :recipient_id,
         collection: [],
         include_blank: true,
@@ -28,7 +28,7 @@
         prompt: "Search for a person",
         label: "Recipient" %>
     </template>
-    <template data-search-type-select-target="organization">
+    <template data-search-type-select-target="template" data-type="Organization">
       <%= f.input :recipient_id,
         collection: [],
         include_blank: true,

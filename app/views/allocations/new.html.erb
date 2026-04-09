@@ -1,4 +1,4 @@
-<div class="max-w-2xl mx-auto">
+<div class="max-w-2xl mx-auto" data-controller="search-type-select">
   <h1 class="text-2xl font-bold mb-6">New Allocation</h1>
   <%= simple_form_for @allocation, url: allocations_path do |f| %>
     <%= f.hidden_field :source_type %>
@@ -15,14 +15,18 @@
         <p class="text-sm font-medium text-red-700">Error: No payment source found</p>
       </div>
     <% end %>
-    <div class="mb-4">
+    <%= f.input :allocatable_type, as: :select, collection: ["EventRegistration"], 
+        include_blank: true, 
+        input_html: { data: { action: "search-type-select#toggle" } } %>
+    <template data-search-type-select-target="template" data-type="EventRegistration">
       <%= label_tag "allocation[allocatable_id]", "Allocate To", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= select_tag "allocation[allocatable_id]", 
            options_from_collection_for_select(@event_registrations, :id, :id),
            include_blank: "Select Event Registration",
-           class: "w-full" %>
-      <%= hidden_field_tag "allocation[allocatable_type]", "EventRegistration" %>
-    </div>
+           class: "w-full",
+           data: { controller: "remote-select", remote_select_model_value: "event_registration" } %>
+    </template>
+    <div data-search-type-select-target="pickerContainer"></div>
     <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
     <div class="mt-6">
       <%= f.button :submit, "Create Allocation", class: "btn btn-primary" %>
