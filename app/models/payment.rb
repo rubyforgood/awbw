@@ -10,6 +10,26 @@ class Payment < ApplicationRecord
 
   before_validation :set_amount_cents_remaining, if: :new_record?
 
+  scope :by_type, ->(types) {
+    types = types.split(",") if types.is_a?(String)
+    where(type: types) if types.present?
+  }
+  scope :by_payer, ->(payer_type, payer_id) { where(payer_type: payer_type, payer_id: payer_id) if payer_type.present? && payer_id.present? }
+  scope :has_remaining, ->(value) {
+    case value
+    when "yes" then where.arel_table[:amount_cents_remaining].gt(0)
+    when "no" then where.arel_table[:amount_cents_remaining].eq(0).or(where.arel_table[:amount_cents_remaining].eq(nil))
+    end
+  }
+
+  def self.search_by_params(params)
+    results = all
+    results = results.by_type(params[:type]) if params[:type].present?
+    results = results.by_payer(params[:payer_type], params[:payer_id]) if params[:payer_type].present? && params[:payer_id].present?
+    results = results.has_remaining(params[:has_remaining]) if params[:has_remaining].present? && params[:has_remaining] != "all"
+    results
+  end
+
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents
   end
