@@ -52,6 +52,8 @@ class PaymentsController < ApplicationController
 
   def show
     @payment = Payment.find(params[:id])
+    @allocations = @payment.allocations.order(created_at: :desc)
+    @refunds = @payment.refunds.order(created_at: :desc)
     authorize! @payment, with: PaymentPolicy
   end
 
