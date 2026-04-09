@@ -76,21 +76,27 @@
   reg_gary = EventRegistration.find_or_create_by!(registrant: gary, event: event)
   reg_iris = EventRegistration.find_or_create_by!(registrant: iris, event: event)
 
-  puts "  Self-pay (full allocation)"
+  puts "  Payment made but allocation reverted)"
   payment1 = CashPayment.find_or_create_by!(
     payer: bob,
     amount_cents: event_cost_cents,
-    amount_cents_remaining: 0
+    amount_cents_remaining: event_cost_cents
   ) do |p|
     p.created_at = 5.days.ago
   end
-  Allocation.find_or_create_by!(
+  original_allocation1 = Allocation.create!(
     source: payment1,
     allocatable: reg_bob,
-    amount: event_cost_cents
-  ) do |a|
-    a.created_at = 5.days.ago
-  end
+    amount: event_cost_cents,
+    created_at: 5.days.ago
+  )
+  reversal_allocation1 = Allocation.create!(
+    source: payment1,
+    allocatable: reg_bob,
+    amount: -event_cost_cents,
+    created_at: 4.days.ago
+  )
+  original_allocation1.update!(reverted_id: reversal_allocation1.id)
 
   puts "  Overpayment with full allocation (Alice pays $6000, covers 4 people)"
   payment2 = CashPayment.find_or_create_by!(
