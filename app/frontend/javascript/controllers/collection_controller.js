@@ -21,7 +21,12 @@ export default class extends Controller {
       }
     });
     this.element.addEventListener("input", (event) => {
-      if (event.target.type === "text") {
+      const target = event.target;
+      if (target.type !== "text") return;
+
+      const isTomSelect = target.closest(".ts-control");
+
+      if (!isTomSelect) {
         this.debouncedSubmit();
       }
     });
