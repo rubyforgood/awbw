@@ -1,4 +1,6 @@
 class EventRegistration < ApplicationRecord
+  include RemoteSearchable
+
   belongs_to :registrant, class_name: "Person"
   belongs_to :event
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
@@ -120,6 +122,34 @@ class EventRegistration < ApplicationRecord
     when "no_show" then "No show"
     else status.humanize
     end
+  end
+
+  remote_searchable_by :registrant,
+    scope: ->(query) {
+      return none if query.blank?
+
+      words = query.split.flat_map { |w| w.split(/[\s\-]+/) }.reject(&:blank?)
+      return none if words.blank?
+
+      pattern = "%#{words.join('%')}%"
+      active
+        .joins(:registrant, :event)
+        .where(
+          "people.first_name LIKE :p
+           OR people.last_name LIKE :p
+           OR people.email LIKE :p
+           OR people.legal_first_name LIKE :p
+           OR people.email_2 LIKE :p
+           OR events.title LIKE :p",
+          p: pattern
+        )
+    }
+
+  def remote_search_label
+    {
+      id: id,
+      label: "#{registrant.full_name} - #{event.title} (##{id})"
+    }
   end
 
   private
