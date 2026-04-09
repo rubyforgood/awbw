@@ -2,13 +2,13 @@ class AllocationsController < ApplicationController
   before_action :authenticate_user!
 
   def index
+    authorize!
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
       @allocations = @allocatable.allocations.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
     else
       @allocations = Allocation.all.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
     end
-    authorize! @allocations
   end
 
   def new
@@ -35,28 +35,11 @@ class AllocationsController < ApplicationController
       amount: amount_val
     )
 
-    # Locate the source
     if @allocation.source_type && @allocation.source_id
       @source = @allocation.source_type.constantize.find_by(id: @allocation.source_id)
     end
 
     @event_registrations = EventRegistration.all.order(created_at: :desc).limit(100)
-
-    # Ensure we have a valid source before proceeding
-    unless @source.present?
-      @allocation.errors.add(:base, "Source is required")
-      render :new, status: :unprocessable_content
-      return
-    end
-
-    if @source.is_a?(Payment)
-      remaining = @source.amount_cents_remaining
-      if @allocation.amount > remaining
-        @allocation.errors.add(:amount, "cannot exceed remaining amount (#{remaining})")
-        render :new, status: :unprocessable_content
-        return
-      end
-    end
 
     if @allocation.allocatable_type == "EventRegistration"
       unless validate_event_registration_cost(@allocation, amount_val)
@@ -66,17 +49,30 @@ class AllocationsController < ApplicationController
       end
     end
 
-    if @allocation.save
+    unless @source.present?
+      @allocation.errors.add(:base, "Source is required")
+      render :new, status: :unprocessable_content
+      return
+    end
+
+    @source.with_lock do
       if @source.is_a?(Payment)
-        @source.with_lock do
+        remaining = @source.amount_cents_remaining
+        if @allocation.amount > remaining
+          @allocation.errors.add(:amount, "cannot exceed remaining amount (#{remaining})")
+          render :new, status: :unprocessable_content
+          return
+        end
+
+        if @allocation.save
           @source.update!(amount_cents_remaining: @source.amount_cents_remaining - amount_val)
+          flash[:notice] = "Allocation created. $#{'%.2f' % @source.remaining_dollars} remaining on payment."
+          redirect_to payment_path(@source)
+        else
+          Rails.logger.error "Allocation save failed: #{@allocation.errors.full_messages}"
+          render :new, status: :unprocessable_content
         end
       end
-      flash[:notice] = "Allocation created. $#{'%.2f' % @source.remaining_dollars} remaining on payment."
-      redirect_to payment_path(@source)
-    else
-      Rails.logger.error "Allocation save failed: #{@allocation.errors.full_messages}"
-      render :new, status: :unprocessable_content
     end
   end
 
@@ -119,7 +115,7 @@ class AllocationsController < ApplicationController
 
     event_reg = allocation.allocatable
     event = event_reg.event
-    return true unless event.cost_cents.present?
+    return false if event.cost_cents.blank?
 
     current_allocated = event_reg.allocations_sum || 0
     new_total = current_allocated + amount_val
