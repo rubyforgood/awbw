@@ -4,10 +4,10 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="relative">
         <label class="text-sm font-medium text-gray-500 mb-1 block">Type</label>
-
         <div data-controller="dropdown" class="inline-block w-full" data-dropdown-target="content">
           <button
             type="button"
+            id="payment-type-button"
             data-action="dropdown#toggle"
             data-dropdown-payload-param='[{"payment-type-dropdown":"hidden"},{"payment-type-arrow":"rotate-180"},{"payment-type-button":"rounded-md rounded-t-md"}]'
             class="relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md border border-gray-300 cursor-pointer flex justify-between items-center"
@@ -15,36 +15,29 @@
             <span class="font-medium text-gray-700">Type</span>
             <i id="payment-type-arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
           </button>
-
           <div id="payment-type-dropdown" class="absolute left-0 top-full w-full shadow-sm bg-white border border-t-0 border-gray-300 rounded-b-md hidden z-40">
             <div class="flex items-center gap-2 mb-1 px-4"><%= check_box_tag "type[]", "CashPayment", Array(params[:type]).include?("CashPayment"), id: "type_CashPayment", class: "category-checkbox" %><%= label_tag "type_CashPayment", "Cash Payment", class: "text-sm text-gray-700" %></div>
             <div class="flex items-center gap-2 mb-1 px-4"><%= check_box_tag "type[]", "CheckPayment", Array(params[:type]).include?("CheckPayment"), id: "type_CheckPayment", class: "category-checkbox" %><%= label_tag "type_CheckPayment", "Check Payment", class: "text-sm text-gray-700" %></div>
           </div>
         </div>
       </div>
-
       <div>
         <label for="has_remaining" class="text-sm font-medium text-gray-500 mb-1 block">Amount Remaining</label>
-
         <%= select_tag "has_remaining",
           options_for_select({ "All" => "all", "Yes" => "yes", "No" => "no" }, params[:has_remaining] || "all"),
           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
       </div>
-
       <div>
         <label for="payer_type" class="text-sm font-medium text-gray-500 mb-1 block">Payer Type</label>
-
         <%= select_tag "payer_type",
           options_for_select(["Person", "Organization"], params[:payer_type]),
           include_blank: true,
           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
           data: { action: "search-type-select#toggle" } %>
       </div>
-
       <template data-search-type-select-target="template" data-type="Person">
         <div>
           <label for="payer_id" class="text-sm font-medium text-gray-500 mb-1 block">Payer</label>
-
           <%= select_tag "payer_id",
             options_for_select(Person.where(id: params[:payer_id]).map { |p| [p.full_name, p.id] }),
             include_blank: true,
@@ -56,11 +49,9 @@
             prompt: "Search for a person" %>
         </div>
       </template>
-
       <template data-search-type-select-target="template" data-type="Organization">
         <div>
           <label for="payer_id" class="text-sm font-medium text-gray-500 mb-1 block">Payer</label>
-
           <%= select_tag "payer_id",
             options_for_select(Organization.where(id: params[:payer_id]).map { |o| [o.name, o.id] }),
             include_blank: true,
@@ -72,9 +63,7 @@
             prompt: "Search for an organization" %>
         </div>
       </template>
-
       <div data-search-type-select-target="pickerContainer"></div>
-
       <div class="md:col-span-4 flex gap-2"><%= submit_tag "Search", class: "btn btn-primary" %><%= link_to "Clear", payments_path, class: "btn btn-secondary" %></div>
     </div>
   <% end %>
