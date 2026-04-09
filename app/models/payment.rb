@@ -11,7 +11,9 @@ class Payment < ApplicationRecord
   before_validation :set_amount_cents_remaining, if: :new_record?
 
   scope :by_type, ->(types) {
+    return if types.blank?
     types = types.split(",") if types.is_a?(String)
+    types = types.reject(&:blank?)
     where(type: types) if types.present?
   }
   scope :by_payer, ->(payer_type, payer_id) { where(payer_type: payer_type, payer_id: payer_id) if payer_type.present? && payer_id.present? }
