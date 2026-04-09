@@ -2,7 +2,13 @@ class PaymentsController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 10
-    @payments = Payment.search_by_params(params).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+
+    if turbo_frame_request?
+      @payments = Payment.search_by_params(params).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+      render :payment_results
+    else
+      @payments = Payment.search_by_params(params).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+    end
   end
 
   def new
