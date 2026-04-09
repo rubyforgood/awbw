@@ -7,15 +7,16 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payer</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remaining</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unallocated</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
+
         <tbody class="bg-white divide-y divide-gray-200">
           <% @payments.each do |payment| %>
             <tr>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= payment.type.underscore.titleize.gsub(" Payment", "") %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= payment.type.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %></td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= payment.payer.name %></td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$<%= "%.2f" % payment.amount_dollars %></td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$<%= "%.2f" % payment.remaining_dollars %></td>
@@ -29,5 +30,6 @@
   <% else %>
     <p class="text-gray-500 text-center py-6">There are no payments that match your search. Please try again.</p>
   <% end %>
+
   <div class="pagination flex justify-center mt-6"><%= tailwind_paginate @payments %></div>
 <% end %>

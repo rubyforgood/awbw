@@ -1,5 +1,5 @@
 <div id="payment-form" class="max-w-2xl mx-auto" data-controller="search-type-select">
-  <h1 class="text-2xl font-bold mb-6">New <%= @payment.type.underscore.titleize.gsub(" Payment", "") %></h1>
+  <h1 class="text-2xl font-bold mb-6">New <%= @payment.type.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %></h1>
   <%= simple_form_for @payment, as: :payment, url: payments_path do |f| %>
     <%= f.input :type, as: :hidden %>
     <div class="mb-4">
