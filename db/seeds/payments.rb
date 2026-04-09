@@ -60,12 +60,13 @@
     p.last_name = "Test"
   end
 
-  event = Event.find_or_create_by!(
-      title: "Payment Test Workshop",
-      start_date: (1).months.from_now,
-      end_date: (1).months.from_now + 2.days,
-      published: true,
-      cost_cents: event_cost_cents)
+  event = Event.find_or_create_by!(title: "Payment Test Workshop") do |e|
+    e.start_date = 1.month.from_now.to_date
+    e.end_date = 1.month.from_now.to_date + 2.days
+    e.published = true
+    e.cost_cents = event_cost_cents
+  end
+  event.update!(start_date: 1.month.from_now.to_date, end_date: 1.month.from_now.to_date + 2.days, published: true, cost_cents: event_cost_cents)
 
   reg_bob = EventRegistration.find_or_create_by!(registrant: bob, event: event)
   reg_alice = EventRegistration.find_or_create_by!(registrant: alice, event: event)
