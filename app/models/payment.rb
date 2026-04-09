@@ -17,8 +17,8 @@ class Payment < ApplicationRecord
   scope :by_payer, ->(payer_type, payer_id) { where(payer_type: payer_type, payer_id: payer_id) if payer_type.present? && payer_id.present? }
   scope :has_remaining, ->(value) {
     case value
-    when "yes" then where.arel_table[:amount_cents_remaining].gt(0)
-    when "no" then where.arel_table[:amount_cents_remaining].eq(0).or(where.arel_table[:amount_cents_remaining].eq(nil))
+    when "yes" then where("amount_cents_remaining > 0")
+    when "no" then where("amount_cents_remaining = 0")
     end
   }
 
