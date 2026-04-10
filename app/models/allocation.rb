@@ -8,6 +8,8 @@ class Allocation < ApplicationRecord
   has_one :revert_record, class_name: "Allocation", foreign_key: "reverted_id", inverse_of: :reverted
 
   validates :amount, numericality: true
+  validates :allocatable_type, presence: true
+  validates :allocatable_id, presence: true
 
   validate :reverted_requires_positive_amount, :negative_cannot_be_reverted
 

@@ -1,12 +1,9 @@
 <div class="max-w-2xl mx-auto" data-controller="search-type-select">
   <h1 class="text-2xl font-bold mb-6">New Allocation</h1>
-
   <%= simple_form_for @allocation, url: allocations_path do |f| %>
     <%= f.hidden_field :source_type %>
     <%= f.hidden_field :source_id %>
-
     <% source = @source || (@allocation.source if @allocation.source.present?) %>
-
     <% if source.present? && source.is_a?(Payment) %>
       <div class="mb-4 p-4 bg-gray-50 rounded-lg">
         <p class="text-sm font-medium text-gray-700">From Payment</p>
@@ -18,11 +15,10 @@
         <p class="text-sm font-medium text-red-700">Error: No payment source found</p>
       </div>
     <% end %>
-
     <%= f.input :allocatable_type, as: :select, collection: ["EventRegistration"], 
         include_blank: true, 
+        required: true,
         input_html: { data: { action: "search-type-select#toggle" } } %>
-
     <template data-search-type-select-target="template" data-type="EventRegistration">
       <%= f.input :allocatable_id,
         collection: [],
@@ -34,15 +30,13 @@
           }
         },
         prompt: "Search for a Person or Event",
-        label: "Allocatable" %>
+        label: "Allocatable",
+        required: true %>
     </template>
-
     <div data-search-type-select-target="pickerContainer"></div>
     <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
-
     <div class="mt-6">
       <%= f.button :submit, "Create Allocation", class: "btn btn-primary" %>
-
       <% if source.present? %>
         <%= link_to "Cancel", payment_path(source), class: "btn btn-secondary ml-2" %>
       <% else %>

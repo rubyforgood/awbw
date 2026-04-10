@@ -38,7 +38,7 @@ class AllocationsController < ApplicationController
       @source = @allocation.source_type.constantize.find_by(id: @allocation.source_id)
     end
 
-    if @allocation.allocatable_type == "EventRegistration"
+    if @allocation.allocatable_type == "EventRegistration" && @allocation.allocatable.present?
       unless validate_event_registration_cost(amount_val)
         flash.now[:error] = @allocation.errors.full_messages.join(", ")
         respond_to do |format|
@@ -82,32 +82,35 @@ class AllocationsController < ApplicationController
   def revert
     authorize!
 
-    @allocation = allocation.find(params[:id])
+    @allocation = Allocation.find(params[:id])
 
     if @allocation.reverted?
-      flash[:error] = "this allocation has already been reverted"
+      flash[:error] = "This allocation has already been reverted"
       redirect_to payment_path(@allocation.source)
       return
     end
 
-    @revert = allocation.new(
+    @revert = Allocation.new(
       source: @allocation.source,
       allocatable: @allocation.allocatable,
       amount: -@allocation.amount
     )
 
-    if @revert.save
-      @allocation.update!(reverted_id: @revert.id)
+    payment = @allocation.source
 
-      payment = @allocation.source
-      payment.with_lock do
-        payment.update!(amount_cents_remaining: payment.amount_cents_remaining + @allocation.amount)
+    payment.with_lock do
+      ActiveRecord::Base.transaction do
+        if @revert.save
+          @allocation.update!(reverted_id: @revert.id)
+
+          payment.update!(amount_cents_remaining: payment.amount_cents_remaining + @allocation.amount)
+
+          redirect_to payment_path(payment), notice: "Allocation reverted"
+        else
+          flash[:error] = @revert.errors.full_messages.join(", ")
+          redirect_to payment_path(@allocation.source)
+        end
       end
-
-      redirect_to payment_path(payment), notice: "allocation reverted"
-    else
-      flash[:error] = @revert.errors.full_messages.join(", ")
-      redirect_to payment_path(@allocation.source)
     end
   end
 
@@ -117,7 +120,7 @@ class AllocationsController < ApplicationController
     event_reg = @allocation.allocatable
     event = event_reg.event
     if event.cost_cents.blank?
-      @allocation.errors.add(:base, "cannot allocate to a free event.")
+      @allocation.errors.add(:base, "Cannot allocate to a free event.")
       return false
     end
     current_allocated = event_reg.allocations_sum || 0
@@ -125,7 +128,7 @@ class AllocationsController < ApplicationController
 
     if new_total > event.cost_cents
       remaining = [ event.cost_cents - current_allocated, 0 ].max
-      @allocation.errors.add(:base, "cannot allocate more than remaining event cost. remaining: $#{'%.2f' % (remaining / 100.0)}")
+      @allocation.errors.add(:base, "Cannot allocate more than remaining event cost. remaining: $#{'%.2f' % (remaining / 100.0)}")
       return false
     end
 
@@ -133,6 +136,6 @@ class AllocationsController < ApplicationController
   end
 
   def allocation_params
-    params.require(:allocation).permit(:source_type, :source_id, :allocatable_type, :allocatable_id, :amount_dollars)
+    params.expect(allocation: [ :source_type, :source_id, :allocatable_type, :allocatable_id, :amount_dollars ])
   end
 end
