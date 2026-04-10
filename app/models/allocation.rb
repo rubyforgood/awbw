@@ -25,6 +25,39 @@ class Allocation < ApplicationRecord
     self.amount = (value.to_d * 100).to_i if value.present?
   end
 
+  scope :by_source_type, ->(types) {
+    return if types.blank?
+    types = types.split(",") if types.is_a?(String)
+    types = types.reject(&:blank?)
+    return unless types.present?
+    where("source_type = 'Payment' AND EXISTS (SELECT 1 FROM payments WHERE payments.id = allocations.source_id AND payments.type IN (?))", types)
+  }
+  scope :by_allocatable_type, ->(type) { where(allocatable_type: type) if type.present? }
+  scope :has_reverted, ->(value) {
+    case value
+    when "yes" then where("reverted_id IS NOT NULL OR amount < 0")
+    when "no" then where("reverted_id IS NULL AND amount >= 0")
+    end
+  }
+  scope :by_payer, ->(payer_type, payer_id) {
+    if payer_type.present? && payer_id.present?
+      where("source_type LIKE ? AND source_id IN (?)", "%Payment", Payment.where(payer_type: payer_type, payer_id: payer_id).select(:id))
+    end
+  }
+  scope :by_allocatable_id, ->(allocatable_type, allocatable_id) {
+    where(allocatable_type: allocatable_type, allocatable_id: allocatable_id) if allocatable_type.present? && allocatable_id.present?
+  }
+
+  def self.search_by_params(params)
+    results = all
+    results = results.by_source_type(params[:source_type]) if params[:source_type].present?
+    results = results.by_allocatable_type(params[:allocatable_type]) if params[:allocatable_type].present?
+    results = results.has_reverted(params[:has_reverted]) if params[:has_reverted].present? && params[:has_reverted] != "all"
+    results = results.by_payer(params[:payer_type], params[:payer_id]) if params[:payer_type].present? && params[:payer_id].present?
+    results = results.by_allocatable_id(params[:allocatable_type], params[:allocatable_id]) if params[:allocatable_type].present? && params[:allocatable_id].present?
+    results
+  end
+
   private
 
   def reverted_requires_positive_amount

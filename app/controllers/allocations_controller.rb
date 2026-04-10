@@ -7,7 +7,7 @@ class AllocationsController < ApplicationController
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
       @allocations = @allocatable.allocations.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
     else
-      @allocations = Allocation.all.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
+      @allocations = Allocation.search_by_params(params).includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
     end
   end
 

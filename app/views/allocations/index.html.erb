@@ -17,6 +17,9 @@
       <h1 class="text-2xl font-bold">All Allocations</h1>
     <% end %>
   </div>
+  <% unless params[:allocatable_sgid].present? %>
+    <%= render 'search_boxes' %>
+  <% end %>
   <% if @allocatable.is_a?(EventRegistration) %>
     <div id="payment-form" class="flex gap-2 mb-4">
       <%= button_to "Add Cash Payment", 
