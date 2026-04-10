@@ -19,7 +19,6 @@ class AllocationsController < ApplicationController
     end
 
     @allocation = Allocation.new(source: @source)
-    @event_registrations = EventRegistration.all.order(created_at: :desc).limit(100)
   end
 
   def create
@@ -39,12 +38,13 @@ class AllocationsController < ApplicationController
       @source = @allocation.source_type.constantize.find_by(id: @allocation.source_id)
     end
 
-    @event_registrations = EventRegistration.all.order(created_at: :desc).limit(100)
-
     if @allocation.allocatable_type == "EventRegistration"
-      unless validate_event_registration_cost(@allocation, amount_val)
-        flash[:error] = @allocation.errors.full_messages.join(", ")
-        render :new, status: :unprocessable_content
+      unless validate_event_registration_cost(amount_val)
+        flash.now[:error] = @allocation.errors.full_messages.join(", ")
+        respond_to do |format|
+            format.turbo_stream { render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages"), status: :unprocessable_content }
+            format.html { render :new, status: :unprocessable_content }
+          end
         return
       end
     end
@@ -57,10 +57,14 @@ class AllocationsController < ApplicationController
 
     @source.with_lock do
       if @source.is_a?(Payment)
-        remaining = @source.amount_cents_remaining
-        if @allocation.amount > remaining
-          @allocation.errors.add(:amount, "cannot exceed remaining amount (#{remaining})")
-          render :new, status: :unprocessable_content
+        if @allocation.amount > @source.amount_cents_remaining
+          @allocation.errors.add(:base, "Cannot exceed remaining amount ($#{@source.remaining_dollars})")
+
+          flash.now[:error] = @allocation.errors.full_messages.join(", ")
+          respond_to do |format|
+              format.turbo_stream { render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages"), status: :unprocessable_content }
+              format.html { render :new, status: :unprocessable_content }
+            end
           return
         end
 
@@ -69,7 +73,6 @@ class AllocationsController < ApplicationController
           flash[:notice] = "Allocation created. $#{'%.2f' % @source.remaining_dollars} remaining on payment."
           redirect_to payment_path(@source)
         else
-          Rails.logger.error "Allocation save failed: #{@allocation.errors.full_messages}"
           render :new, status: :unprocessable_content
         end
       end
@@ -79,15 +82,15 @@ class AllocationsController < ApplicationController
   def revert
     authorize!
 
-    @allocation = Allocation.find(params[:id])
+    @allocation = allocation.find(params[:id])
 
     if @allocation.reverted?
-      flash[:error] = "This allocation has already been reverted"
+      flash[:error] = "this allocation has already been reverted"
       redirect_to payment_path(@allocation.source)
       return
     end
 
-    @revert = Allocation.new(
+    @revert = allocation.new(
       source: @allocation.source,
       allocatable: @allocation.allocatable,
       amount: -@allocation.amount
@@ -101,7 +104,7 @@ class AllocationsController < ApplicationController
         payment.update!(amount_cents_remaining: payment.amount_cents_remaining + @allocation.amount)
       end
 
-      redirect_to payment_path(payment), notice: "Allocation reverted"
+      redirect_to payment_path(payment), notice: "allocation reverted"
     else
       flash[:error] = @revert.errors.full_messages.join(", ")
       redirect_to payment_path(@allocation.source)
@@ -110,19 +113,19 @@ class AllocationsController < ApplicationController
 
   private
 
-  def validate_event_registration_cost(allocation, amount_val)
-    return true unless allocation.allocatable.present?
-
-    event_reg = allocation.allocatable
+  def validate_event_registration_cost(amount_val)
+    event_reg = @allocation.allocatable
     event = event_reg.event
-    return false if event.cost_cents.blank?
-
+    if event.cost_cents.blank?
+      @allocation.errors.add(:base, "cannot allocate to a free event.")
+      return false
+    end
     current_allocated = event_reg.allocations_sum || 0
     new_total = current_allocated + amount_val
 
     if new_total > event.cost_cents
       remaining = [ event.cost_cents - current_allocated, 0 ].max
-      allocation.errors.add(:base, "Cannot allocate more than remaining event cost. Remaining: $#{'%.2f' % (remaining / 100.0)}")
+      @allocation.errors.add(:base, "cannot allocate more than remaining event cost. remaining: $#{'%.2f' % (remaining / 100.0)}")
       return false
     end
 
