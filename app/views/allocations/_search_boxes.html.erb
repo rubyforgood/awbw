@@ -5,6 +5,7 @@
   <%= form_tag allocations_path, method: :get, class: "space-y-4",
     data: {
       controller: "collection search-type-select",
+      turbo_frame: "allocation_results",
       collection_unselected_class: default_btn,
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>

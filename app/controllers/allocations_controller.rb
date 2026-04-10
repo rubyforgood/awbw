@@ -5,9 +5,14 @@ class AllocationsController < ApplicationController
     authorize!
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
-      @allocations = @allocatable.allocations.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
+      @allocations = @allocatable.allocations.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
     else
-      @allocations = Allocation.search_by_params(params).includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 25)
+      if turbo_frame_request?
+        @allocations = Allocation.search_by_params(params).includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+        render :allocation_results
+      else
+        @allocations = Allocation.search_by_params(params).includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+      end
     end
   end
 
