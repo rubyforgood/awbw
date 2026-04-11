@@ -3,6 +3,8 @@ import { Controller } from "@hotwired/stimulus";
 // Connects to data-controller="collection"
 export default class extends Controller {
   static classes = ["unselected", "selected"];
+  static outlets = ["search-type-select"];
+
   connect() {
     this.element.addEventListener("change", (event) => {
       const { type } = event.target;
@@ -80,6 +82,11 @@ export default class extends Controller {
         input.checked = false;
       });
     this.element.reset();
+
+    this.searchTypeSelectOutlets.forEach((controller) => {
+      controller.toggle({ target: { value: "" } });
+    });
+
     this.submitForm();
   }
 

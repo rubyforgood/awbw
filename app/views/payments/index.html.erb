@@ -7,7 +7,7 @@
   <%= render 'search_boxes' %>
   <% result_src = payments_path + "?" + request.query_string %>
 
-  <%= turbo_frame_tag :payment_results, src: result_src, autoscroll: "start", data: { turbo: "temporary" } do %>
+  <%= turbo_frame_tag :payment_results, src: result_src, data: { turbo: "temporary" } do %>
     <div class="min-h-screen">
       <div class="animate-pulse">
         <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">

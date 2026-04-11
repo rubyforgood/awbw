@@ -5,6 +5,7 @@
   <%= form_tag allocations_path, method: :get, class: "space-y-4",
     data: {
       controller: "collection",
+      collection_search_type_select_outlet: "[data-type-picker]",
       turbo_frame: "allocation_results",
       collection_unselected_class: default_btn,
       collection_selected_class: selected_btn
@@ -24,7 +25,7 @@
           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
         </div>
       </div>
-      <%= tag.div data: { controller: "search-type-select"} do %>
+      <%= tag.div data: { controller: "search-type-select", type_picker: "" } do %>
         <div>
           <label for="payer_type" class="text-sm font-medium text-gray-500 mb-1 block">Payer Type</label>
           <%= select_tag "payer_type",
@@ -68,7 +69,7 @@
           </div>
         </div>
       <% end %>
-      <%= tag.div data: { controller: "search-type-select"} do %>
+      <%= tag.div data: { controller: "search-type-select", type_picker: "" } do %>
         <div>
           <label for="allocatable_type" class="text-sm font-medium text-gray-500 mb-1 block">Allocated To Type</label>
           <%= select_tag "allocatable_type",

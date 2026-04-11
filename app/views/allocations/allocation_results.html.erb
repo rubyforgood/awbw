@@ -1,6 +1,6 @@
 <%= turbo_frame_tag :allocation_results do %>
   <% if @allocations.any? %>
-    <div class="overflow-x-auto blur-on-submit">
+    <div class="overflow-x-auto animate-fade blur-on-submit">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -13,7 +13,6 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
           </tr>
         </thead>
-
         <tbody class="bg-white divide-y divide-gray-200">
           <% @allocations.each do |allocation| %>
             <% row_class = if allocation.amount.to_i < 0
@@ -23,12 +22,10 @@
               else
                 'hover:bg-gray-50'
               end %>
-
             <tr class="<%= row_class %>" onclick="window.location='<%= payment_path(allocation.source) %>'" style="cursor: pointer;">
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= allocation.id %></td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= allocation.source.class.name.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %></td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= allocation.source&.payer.name || "Unknown" %></td>
-
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 <% if allocation.allocatable_type == "EventRegistration" && allocation.allocatable.present? %>
                   <%= truncate("#{allocation.allocatable.registrant.full_name} - #{allocation.allocatable.event.title}", length: 40) %>
@@ -36,9 +33,7 @@
                   <%= allocation.allocatable_type.underscore.titleize %>
                 <% end %>
               </td>
-
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$<%= "%.2f" % allocation.amount_dollars %></td>
-
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 <% if allocation.amount.to_i < 0 %>
                   <%= Allocation.find_by(reverted_id: allocation.id)&.id || "-" %>
@@ -46,7 +41,6 @@
                   <%= allocation.reverted_id ? allocation.reverted_id : "-" %>
                 <% end %>
               </td>
-
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= allocation.created_at.strftime("%B %d, %Y") %></td>
             </tr>
           <% end %>
@@ -56,7 +50,6 @@
   <% else %>
     <p class="text-gray-500 text-center py-6">There are no allocations that match your search. Please try again.</p>
   <% end %>
-
   <% if @allocations.respond_to?(:total_pages) && @allocations.total_pages > 1 %>
     <div class="pagination flex justify-center mt-6"><%= tailwind_paginate @allocations %></div>
   <% end %>

@@ -1,6 +1,6 @@
 <%= turbo_frame_tag :payment_results do %>
   <% if @payments.any? %>
-    <div class="overflow-x-auto blur-on-submit">
+    <div class="overflow-x-auto animate-fade blur-on-submit">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -12,7 +12,6 @@
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
-
         <tbody class="bg-white divide-y divide-gray-200">
           <% @payments.each do |payment| %>
             <tr>
@@ -30,6 +29,5 @@
   <% else %>
     <p class="text-gray-500 text-center py-6">There are no payments that match your search. Please try again.</p>
   <% end %>
-
   <div class="pagination flex justify-center mt-6"><%= tailwind_paginate @payments %></div>
 <% end %>
