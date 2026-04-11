@@ -37,7 +37,12 @@
         prompt: "Search for an organization",
         label: false %>
     </template>
-    <div data-search-type-select-target="pickerContainer"></div>
+    <div data-search-type-select-target="pickerContainer">
+      <div>
+        <label class="text-sm font-medium text-gray-500 mb-1 block italic">Select Payer Type</label>
+        <div class="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 cursor-not-allowed min-h-[2.2rem]"></div>
+      </div>
+    </div>
     <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
     <%= f.input :currency, as: :hidden, input_html: { value: "usd" } %>
     <% if @payment.type == "CheckPayment" %>
