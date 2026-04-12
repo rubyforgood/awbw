@@ -83,9 +83,11 @@ export default class extends Controller {
       });
     this.element.reset();
 
-    this.searchTypeSelectOutlets.forEach((controller) => {
-      controller.toggle({ target: { value: "" } });
-    });
+    if (this.hasSearchTypeSelectOutlet) {
+      this.searchTypeSelectOutlets.forEach((controller) => {
+        controller.toggle({ target: { value: "" } });
+      });
+    }
 
     this.submitForm();
   }
