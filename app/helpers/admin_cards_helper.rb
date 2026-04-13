@@ -35,8 +35,8 @@ module AdminCardsHelper
       model_card(:workshop_ideas, icon: "💡", intensity: 100),
       model_card(:workshop_variation_ideas, icon: "🔀", intensity: 100),
       model_card(:workshop_logs, icon: "📝", intensity: 100),
-      custom_card("Payments", payments_path, icon: "💳"),
-      custom_card("Allocations", allocations_path, icon: "📤")
+      model_card(:payments, icon: "💳"),
+      model_card(:allocations, icon: "📤")
     ]
   end
 
