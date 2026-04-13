@@ -1,6 +1,4 @@
 class Payment < ApplicationRecord
-  attr_accessor :amount_dollars, :remaining_dollars
-
   has_many :allocations, as: :source
   has_many :refunds, as: :refundable
   belongs_to :payer, polymorphic: true

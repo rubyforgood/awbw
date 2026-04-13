@@ -1,6 +1,4 @@
 class Allocation < ApplicationRecord
-  attr_accessor :amount_dollars
-
   belongs_to :source, polymorphic: true
   belongs_to :allocatable, polymorphic: true
   belongs_to :reverted, class_name: "Allocation", optional: true

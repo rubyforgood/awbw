@@ -1,8 +1,6 @@
 class Refund < ApplicationRecord
   METHODS = %w[check cash stripe].freeze
 
-  attr_accessor :amount_dollars
-
   belongs_to :refundable, polymorphic: true
   belongs_to :recipient, polymorphic: true
   has_many :allocations, as: :source
