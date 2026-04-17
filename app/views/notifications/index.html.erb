@@ -11,14 +11,7 @@
           <% result_src = notifications_path + "?" + request.query_string %>
 
           <%= turbo_frame_tag "notifications_results", src: result_src do %>
-            <div class="rounded-xl bg-white p-6">
-             <%= render "index" %>
-            </div>
-
-            <!-- Pagination -->
-            <div class="pagination flex justify-center mt-12">
-              <%= tailwind_paginate @notifications %>
-            </div>
+            <%= render "results_skeleton" %>
           <% end %>
         </section>
       </div>

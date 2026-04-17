@@ -44,6 +44,7 @@
         <% if notification.noticeable.present? %>
           <%= link_to notification.noticeable.class.name,
                       polymorphic_path(notification.noticeable),
+                      data: { turbo_frame: "_top" },
                       class: "btn btn-secondary-outline" %>
         <% else %>
           <span class="text-gray-400">—</span>
@@ -54,6 +55,7 @@
       <td class="px-4 py-3 text-right whitespace-nowrap">
         <%= link_to "View",
                     notification_path(notification),
+                    data: { turbo_frame: "_top" },
                     class: "btn btn-secondary-outline" %>
       </td>
     </tr>
