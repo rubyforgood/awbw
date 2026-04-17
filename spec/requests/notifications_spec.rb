@@ -8,22 +8,25 @@ RSpec.describe "Notifications", type: :request do
   describe "GET /notifications" do
     before { sign_in admin }
 
+    let(:turbo_headers) { { "Turbo-Frame" => "notifications_results" } }
     let!(:story_notification) { create(:notification, noticeable: create(:story_idea), email_subject: "New story idea") }
     let!(:user_notification) { create(:notification, noticeable: create(:user), email_subject: "Welcome") }
 
-    it "preserves the email_topic filter selection" do
-      get notifications_path, params: { email_topic: "User: confirm new email" }
-      expect(response.body).to include('selected="selected"')
-      expect(response.body).to include("User: confirm new email")
+    it "filters by email_topic" do
+      matching = create(:notification, email_subject: "Confirm your new email address")
+      get notifications_path, params: { email_topic: "User: confirm new email" }, headers: turbo_headers
+      expect(response.body).to include(matching.recipient_email)
+      expect(response.body).not_to include(story_notification.recipient_email)
     end
 
-    it "preserves the record_type filter selection" do
-      get notifications_path, params: { record_type: "StoryIdea" }
-      expect(response.body).to include('selected="selected"')
+    it "filters by record_type" do
+      get notifications_path, params: { record_type: "StoryIdea" }, headers: turbo_headers
+      expect(response.body).to include(story_notification.recipient_email)
+      expect(response.body).not_to include(user_notification.recipient_email)
     end
 
     it "wraps results in a turbo frame" do
-      get notifications_path
+      get notifications_path, headers: turbo_headers
       expect(response.body).to include('id="notifications_results"')
     end
   end
