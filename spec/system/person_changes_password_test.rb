@@ -43,11 +43,7 @@ RSpec.describe 'People can change their password quickly and easily' do
 
         fill_in 'New password', with: 'NewPassword123!'
         fill_in 'Confirm new password', with: 'NewPassword123!'
-        reset_submit = find_button("Set password")
-        expect(reset_submit["data-turbo"]).to eq("false")
-        expect(reset_submit.find(:xpath, "ancestor::form")["data-turbo"]).to be_nil
-
-        click_button "Set password"
+        click_button 'Set password'
 
         expect(page).to have_content('Your password has been set successfully')
         expect(page).to have_current_path('/')

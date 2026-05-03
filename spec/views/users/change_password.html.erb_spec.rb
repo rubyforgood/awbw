@@ -29,6 +29,15 @@ RSpec.describe "users/change_password", type: :view do
     expect(rendered).to have_field("New password confirmation", type: :password)
   end
 
+  it "submits the password update outside Turbo to avoid the auth-cookie redirect race" do
+    expect(rendered).to have_css('form[data-turbo="false"]')
+  end
+
+  it "keeps the logout-and-reset link outside the non-Turbo password form" do
+    expect(rendered).to have_link("Log out and reset it.", href: destroy_user_session_path(reset_password: true))
+    expect(rendered).not_to have_css('form a', text: "Log out and reset it.")
+  end
+
   it "has a submit button" do
     expect(rendered).to have_button("Change Password")
   end
