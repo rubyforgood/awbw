@@ -114,6 +114,10 @@ class Notification < ApplicationRecord
     !kind.in?(DEVISE_KINDS)
   end
 
+  def contact_us?
+    kind.in?(%w[contact_us contact_us_fyi])
+  end
+
   def delivered?
     delivered_at.present?
   end

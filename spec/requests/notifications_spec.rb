@@ -31,6 +31,49 @@ RSpec.describe "Notifications", type: :request do
     end
   end
 
+  describe "PATCH /notifications/:id" do
+    let(:contact_notification) { create(:notification, kind: "contact_us_fyi", recipient_email: regular_user.email) }
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "marks the notification as responded" do
+        patch notification_path(contact_notification), params: { notification: { responded: "1" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(contact_notification.reload.responded).to be(true)
+      end
+
+      it "marks the notification as not responded" do
+        contact_notification.update!(responded: true)
+
+        patch notification_path(contact_notification), params: { notification: { responded: "0" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(contact_notification.reload.responded).to be(false)
+      end
+    end
+
+    context "as a regular user" do
+      before { sign_in regular_user }
+
+      it "does not allow updating" do
+        patch notification_path(contact_notification), params: { notification: { responded: "1" } }
+
+        expect(contact_notification.reload.responded).to be(false)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "as a guest" do
+      it "redirects to sign in" do
+        patch notification_path(contact_notification), params: { notification: { responded: "1" } }
+
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+  end
+
   describe "POST /notifications/:id/resend" do
     context "as an admin" do
       before { sign_in admin }

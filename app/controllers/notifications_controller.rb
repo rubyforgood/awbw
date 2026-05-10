@@ -1,5 +1,5 @@
 class NotificationsController < ApplicationController
-  before_action :set_notification, only: [ :show, :resend ]
+  before_action :set_notification, only: [ :show, :update, :resend ]
 
   def index
     authorize!
@@ -19,6 +19,12 @@ class NotificationsController < ApplicationController
 
   def show
     authorize! @notification
+  end
+
+  def update
+    authorize! @notification
+    @notification.update!(notification_params)
+    head :ok
   end
 
   def resend
@@ -52,5 +58,9 @@ class NotificationsController < ApplicationController
 
   def set_notification
     @notification = Notification.find(params[:id])
+  end
+
+  def notification_params
+    params.require(:notification).permit(:responded)
   end
 end

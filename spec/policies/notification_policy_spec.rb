@@ -50,6 +50,26 @@ RSpec.describe NotificationPolicy, type: :policy do
     end
   end
 
+  describe "#update?" do
+    context "with admin user" do
+      subject { policy_for(record: notification, user: admin_user) }
+
+      it { is_expected.to be_allowed_to(:update?) }
+    end
+
+    context "with owner user" do
+      subject { policy_for(record: notification, user: regular_user) }
+
+      it { is_expected.not_to be_allowed_to(:update?) }
+    end
+
+    context "with no user" do
+      subject { policy_for(record: notification, user: nil) }
+
+      it { is_expected.not_to be_allowed_to(:update?) }
+    end
+  end
+
   describe "#resend?" do
     context "with admin user" do
       subject { policy_for(record: notification, user: admin_user) }

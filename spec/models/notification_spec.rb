@@ -44,6 +44,20 @@ RSpec.describe Notification do
     end
   end
 
+  describe "#contact_us?" do
+    it "returns true for contact_us kind" do
+      expect(build(:notification, kind: "contact_us").contact_us?).to be true
+    end
+
+    it "returns true for contact_us_fyi kind" do
+      expect(build(:notification, kind: "contact_us_fyi").contact_us?).to be true
+    end
+
+    it "returns false for other kinds" do
+      expect(build(:notification, kind: "reset_password_fyi").contact_us?).to be false
+    end
+  end
+
   describe '#resend?' do
     it 'returns true when notification has a parent' do
       parent = create(:notification)
