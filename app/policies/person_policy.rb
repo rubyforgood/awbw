@@ -2,7 +2,7 @@ class PersonPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
   def index?
-    admin?
+    authenticated?
   end
 
   def show?
@@ -26,7 +26,7 @@ class PersonPolicy < ApplicationPolicy
   end
 
   def search?
-    admin?
+    authenticated?
   end
 
   # Scoping

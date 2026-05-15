@@ -16,9 +16,9 @@ RSpec.describe "People authorization", type: :request do
     context "as a regular user" do
       before { sign_in regular_user }
 
-      it "redirects to root" do
+      it "renders successfully" do
         get people_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to have_http_status(:ok)
       end
     end
 
