@@ -7,7 +7,7 @@ class Affiliation < ApplicationRecord
 
   scope :active, -> {
     where(inactive: false)
-      .where("end_date IS NULL OR end_date >= ?", Date.current)
+      .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)
   }
 
   scope :facilitators, -> { where("title LIKE ?", "%facilitator%") }
