@@ -124,11 +124,13 @@ RSpec.describe PersonPolicy, type: :policy do
     context "with regular user" do
       let(:policy) { policy_for(record: Person, user: regular_user) }
 
-      it "filters to searchable people with active affiliations" do
+      it "filters to searchable people with active affiliations and unlocked users" do
         scope = policy.apply_scope(Person.all, type: :active_record_relation)
-        expect(scope.to_sql).to include('`people`.`profile_is_searchable` = TRUE')
-        expect(scope.to_sql).to include('INNER JOIN `affiliations`')
-        expect(scope.to_sql).to include('`affiliations`.`inactive` = FALSE')
+        sql = scope.to_sql
+        expect(sql).to include('`people`.`profile_is_searchable` = TRUE')
+        expect(sql).to include('INNER JOIN `affiliations`')
+        expect(sql).to include('`affiliations`.`inactive` = FALSE')
+        expect(sql).to include('`users`.`locked_at` IS NULL')
       end
     end
   end
