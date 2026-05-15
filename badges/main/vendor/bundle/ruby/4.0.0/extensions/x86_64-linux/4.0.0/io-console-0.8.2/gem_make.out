@@ -16,16 +16,16 @@ checking for ttyname_r()... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-pr0749 sitelibdir\=./.gem.20260515-2859-pr0749 clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-u8dzkr sitelibdir\=./.gem.20260515-2266-u8dzkr clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-pr0749 sitelibdir\=./.gem.20260515-2859-pr0749
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-u8dzkr sitelibdir\=./.gem.20260515-2266-u8dzkr
 compiling console.c
 linking shared-object io/console.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-pr0749 sitelibdir\=./.gem.20260515-2859-pr0749 install
-/usr/bin/install -c -m 0755 console.so ./.gem.20260515-2859-pr0749/io
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-u8dzkr sitelibdir\=./.gem.20260515-2266-u8dzkr install
+/usr/bin/install -c -m 0755 console.so ./.gem.20260515-2266-u8dzkr/io
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/io-console-0.8.2/ext/io/console
-make DESTDIR\= sitearchdir\=./.gem.20260515-2859-pr0749 sitelibdir\=./.gem.20260515-2859-pr0749 clean
+make DESTDIR\= sitearchdir\=./.gem.20260515-2266-u8dzkr sitelibdir\=./.gem.20260515-2266-u8dzkr clean

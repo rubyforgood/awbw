@@ -22,17 +22,17 @@ checking for RB_WARN_CATEGORY_DEPRECATED in ruby.h... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bigdecimal-4.0.1/ext/bigdecimal
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-b85yrm sitelibdir\=./.gem.20260515-2859-b85yrm clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-w2flkw sitelibdir\=./.gem.20260515-2266-w2flkw clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bigdecimal-4.0.1/ext/bigdecimal
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-b85yrm sitelibdir\=./.gem.20260515-2859-b85yrm
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-w2flkw sitelibdir\=./.gem.20260515-2266-w2flkw
 compiling bigdecimal.c
 compiling missing.c
 linking shared-object bigdecimal.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bigdecimal-4.0.1/ext/bigdecimal
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-b85yrm sitelibdir\=./.gem.20260515-2859-b85yrm install
-/usr/bin/install -c -m 0755 bigdecimal.so ./.gem.20260515-2859-b85yrm
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-w2flkw sitelibdir\=./.gem.20260515-2266-w2flkw install
+/usr/bin/install -c -m 0755 bigdecimal.so ./.gem.20260515-2266-w2flkw
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bigdecimal-4.0.1/ext/bigdecimal
-make DESTDIR\= sitearchdir\=./.gem.20260515-2859-b85yrm sitelibdir\=./.gem.20260515-2859-b85yrm clean
+make DESTDIR\= sitearchdir\=./.gem.20260515-2266-w2flkw sitelibdir\=./.gem.20260515-2266-w2flkw clean

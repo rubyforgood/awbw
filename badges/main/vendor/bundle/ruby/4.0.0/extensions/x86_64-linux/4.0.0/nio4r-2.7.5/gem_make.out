@@ -13,14 +13,14 @@ checking for sys/resource.h... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-z3qun sitelibdir\=./.gem.20260515-2859-z3qun clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-oab3fz sitelibdir\=./.gem.20260515-2266-oab3fz clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-z3qun sitelibdir\=./.gem.20260515-2859-z3qun
-compiling bytebuffer.c
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-oab3fz sitelibdir\=./.gem.20260515-2266-oab3fz
 compiling monitor.c
-compiling nio4r_ext.c
+compiling bytebuffer.c
 compiling selector.c
+compiling nio4r_ext.c
 In file included from nio4r_ext.c:6:
 ../libev/ev.c:234:5: warning: "EV_NO_THREADS" is not defined, evaluates to 0 [-Wundef]
   234 | #if EV_NO_THREADS
@@ -106,6 +106,10 @@ In file included from nio4r_ext.c:6:
 ../libev/ev.c:1374:5: note: in expansion of macro ‘ECB_CPP’
  1374 | #if ECB_CPP
       |     ^~~~~~~
+monitor.c: In function ‘Init_NIO_Monitor’:
+monitor.c:50:6: warning: old-style function definition [-Wold-style-definition]
+   50 | void Init_NIO_Monitor()
+      |      ^~~~~~~~~~~~~~~~
 ../libev/ev.c:734:20: warning: "__cplusplus" is not defined, evaluates to 0 [-Wundef]
   734 | #define ECB_CPP   (__cplusplus+0)
       |                    ^~~~~~~~~~~
@@ -180,14 +184,14 @@ In file included from ../libev/ev.c:2130:
 ../libev/ev.c:2402:31: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  2402 | #if EV_SELECT_IS_WINSOCKET || EV_USE_IOCP
       |                               ^~~~~~~~~~~
-../libev/ev.c: At top level:
-../libev/ev.c:3073:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
- 3073 | #if EV_USE_IOCP
-      |     ^~~~~~~~~~~
 bytebuffer.c: In function ‘Init_NIO_ByteBuffer’:
 bytebuffer.c:59:6: warning: old-style function definition [-Wold-style-definition]
    59 | void Init_NIO_ByteBuffer()
       |      ^~~~~~~~~~~~~~~~~~~
+../libev/ev.c: At top level:
+../libev/ev.c:3073:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
+ 3073 | #if EV_USE_IOCP
+      |     ^~~~~~~~~~~
 In file included from ../libev/ev.c:3086:
 ../libev/ev_linuxaio.c: In function ‘linuxaio_poll’:
 ../libev/ev_linuxaio.c:467:10: warning: suggest explicit braces to avoid ambiguous ‘else’ [-Wdangling-else]
@@ -211,11 +215,11 @@ In file included from ../libev/ev.c:3095:
 ../libev/ev_select.c:176:11: warning: "EV_SELECT_IS_WINSOCKET" is not defined, evaluates to 0 [-Wundef]
   176 |       #if EV_SELECT_IS_WINSOCKET
       |           ^~~~~~~~~~~~~~~~~~~~~~
-monitor.c: In function ‘Init_NIO_Monitor’:
-monitor.c:50:6: warning: old-style function definition [-Wold-style-definition]
-   50 | void Init_NIO_Monitor()
-      |      ^~~~~~~~~~~~~~~~
+selector.c: In function ‘NIO_Selector_wakeup’:
 ../libev/ev.c: In function ‘loop_init’:
+selector.c:525:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  525 |     write(selector->wakeup_writer, "\0", 1);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ../libev/ev.c:3318:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  3318 | #if EV_USE_IOCP
       |     ^~~~~~~~~~~
@@ -223,10 +227,6 @@ monitor.c:50:6: warning: old-style function definition [-Wold-style-definition]
 ../libev/ev.c:3409:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  3409 | #if EV_USE_IOCP
       |     ^~~~~~~~~~~
-selector.c: In function ‘NIO_Selector_wakeup’:
-selector.c:525:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
-  525 |     write(selector->wakeup_writer, "\0", 1);
-      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ../libev/ev.c: In function ‘ev_io_start’:
 ../libev/ev.c:4417:34: warning: suggest parentheses around arithmetic in operand of ‘|’ [-Wparentheses]
  4417 |   fd_change (EV_A_ fd, w->events & EV__IOFDSET | EV_ANFD_REIFY);
@@ -249,6 +249,10 @@ nio4r_ext.c:13:6: warning: old-style function definition [-Wold-style-definition
 ../libev/ev.c:2810:11: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
  2810 |           write (evpipe [1], &(evpipe [1]), 1);
       |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
 ../libev/ev.c: In function ‘pipecb’:
 ../libev/ev.c:2831:11: warning: ignoring return value of ‘read’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
  2831 |           read (evpipe [1], &counter, sizeof (uint64_t));
@@ -268,15 +272,11 @@ At top level:
 cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
 cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
 cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
-At top level:
-cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
-cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
-cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
 linking shared-object nio4r_ext.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-z3qun sitelibdir\=./.gem.20260515-2859-z3qun install
-/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20260515-2859-z3qun
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-oab3fz sitelibdir\=./.gem.20260515-2266-oab3fz install
+/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20260515-2266-oab3fz
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make DESTDIR\= sitearchdir\=./.gem.20260515-2859-z3qun sitelibdir\=./.gem.20260515-2859-z3qun clean
+make DESTDIR\= sitearchdir\=./.gem.20260515-2266-oab3fz sitelibdir\=./.gem.20260515-2266-oab3fz clean
