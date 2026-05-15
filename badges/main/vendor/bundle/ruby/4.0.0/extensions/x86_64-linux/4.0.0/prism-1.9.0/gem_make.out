@@ -6,12 +6,12 @@ checking for whether -fvisibility=hidden is accepted as CFLAGS... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260208-2256-463wfi sitelibdir\=./.gem.20260208-2256-463wfi clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-y4de2h sitelibdir\=./.gem.20260515-2859-y4de2h clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260208-2256-463wfi sitelibdir\=./.gem.20260208-2256-463wfi
-compiling api_node.c
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-y4de2h sitelibdir\=./.gem.20260515-2859-y4de2h
 compiling api_pack.c
+compiling api_node.c
 compiling extension.c
 compiling ./../../src/diagnostic.c
 compiling ./../../src/encoding.c
@@ -37,8 +37,8 @@ compiling ./../../src/util/pm_strpbrk.c
 linking shared-object prism/prism.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260208-2256-463wfi sitelibdir\=./.gem.20260208-2256-463wfi install
-/usr/bin/install -c -m 0755 prism.so ./.gem.20260208-2256-463wfi/prism
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-y4de2h sitelibdir\=./.gem.20260515-2859-y4de2h install
+/usr/bin/install -c -m 0755 prism.so ./.gem.20260515-2859-y4de2h/prism
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20260208-2256-463wfi sitelibdir\=./.gem.20260208-2256-463wfi clean
+make DESTDIR\= sitearchdir\=./.gem.20260515-2859-y4de2h sitelibdir\=./.gem.20260515-2859-y4de2h clean

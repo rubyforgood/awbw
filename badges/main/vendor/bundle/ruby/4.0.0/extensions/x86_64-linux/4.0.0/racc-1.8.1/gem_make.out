@@ -3,16 +3,16 @@ current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/rac
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/racc-1.8.1/ext/racc/cparse
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-9gtyb5 sitelibdir\=./.gem.20260121-2179-9gtyb5 clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-ushk5i sitelibdir\=./.gem.20260515-2859-ushk5i clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/racc-1.8.1/ext/racc/cparse
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-9gtyb5 sitelibdir\=./.gem.20260121-2179-9gtyb5
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-ushk5i sitelibdir\=./.gem.20260515-2859-ushk5i
 compiling cparse.c
 linking shared-object racc/cparse.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/racc-1.8.1/ext/racc/cparse
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260121-2179-9gtyb5 sitelibdir\=./.gem.20260121-2179-9gtyb5 install
-/usr/bin/install -c -m 0755 cparse.so ./.gem.20260121-2179-9gtyb5/racc
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-ushk5i sitelibdir\=./.gem.20260515-2859-ushk5i install
+/usr/bin/install -c -m 0755 cparse.so ./.gem.20260515-2859-ushk5i/racc
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/racc-1.8.1/ext/racc/cparse
-make DESTDIR\= sitearchdir\=./.gem.20260121-2179-9gtyb5 sitelibdir\=./.gem.20260121-2179-9gtyb5 clean
+make DESTDIR\= sitearchdir\=./.gem.20260515-2859-ushk5i sitelibdir\=./.gem.20260515-2859-ushk5i clean

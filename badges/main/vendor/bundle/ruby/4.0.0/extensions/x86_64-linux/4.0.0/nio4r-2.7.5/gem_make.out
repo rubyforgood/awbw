@@ -13,10 +13,10 @@ checking for sys/resource.h... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260125-2230-o1n39p sitelibdir\=./.gem.20260125-2230-o1n39p clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-z3qun sitelibdir\=./.gem.20260515-2859-z3qun clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260125-2230-o1n39p sitelibdir\=./.gem.20260125-2230-o1n39p
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-z3qun sitelibdir\=./.gem.20260515-2859-z3qun
 compiling bytebuffer.c
 compiling monitor.c
 compiling nio4r_ext.c
@@ -129,10 +129,6 @@ In file included from nio4r_ext.c:6:
 ../libev/ev.c:1746:5: warning: "ECB_MEMORY_FENCE_NEEDS_PTHREADS" is not defined, evaluates to 0 [-Wundef]
  1746 | #if ECB_MEMORY_FENCE_NEEDS_PTHREADS
       |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-bytebuffer.c: In function ‘Init_NIO_ByteBuffer’:
-bytebuffer.c:59:6: warning: old-style function definition [-Wold-style-definition]
-   59 | void Init_NIO_ByteBuffer()
-      |      ^~~~~~~~~~~~~~~~~~~
 ../libev/ev.c:1976:5: warning: "EV_AVOID_STDIO" is not defined, evaluates to 0 [-Wundef]
  1976 | #if EV_AVOID_STDIO
       |     ^~~~~~~~~~~~~~
@@ -184,14 +180,14 @@ In file included from ../libev/ev.c:2130:
 ../libev/ev.c:2402:31: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  2402 | #if EV_SELECT_IS_WINSOCKET || EV_USE_IOCP
       |                               ^~~~~~~~~~~
-monitor.c: In function ‘Init_NIO_Monitor’:
-monitor.c:50:6: warning: old-style function definition [-Wold-style-definition]
-   50 | void Init_NIO_Monitor()
-      |      ^~~~~~~~~~~~~~~~
 ../libev/ev.c: At top level:
 ../libev/ev.c:3073:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  3073 | #if EV_USE_IOCP
       |     ^~~~~~~~~~~
+bytebuffer.c: In function ‘Init_NIO_ByteBuffer’:
+bytebuffer.c:59:6: warning: old-style function definition [-Wold-style-definition]
+   59 | void Init_NIO_ByteBuffer()
+      |      ^~~~~~~~~~~~~~~~~~~
 In file included from ../libev/ev.c:3086:
 ../libev/ev_linuxaio.c: In function ‘linuxaio_poll’:
 ../libev/ev_linuxaio.c:467:10: warning: suggest explicit braces to avoid ambiguous ‘else’ [-Wdangling-else]
@@ -215,18 +211,22 @@ In file included from ../libev/ev.c:3095:
 ../libev/ev_select.c:176:11: warning: "EV_SELECT_IS_WINSOCKET" is not defined, evaluates to 0 [-Wundef]
   176 |       #if EV_SELECT_IS_WINSOCKET
       |           ^~~~~~~~~~~~~~~~~~~~~~
+monitor.c: In function ‘Init_NIO_Monitor’:
+monitor.c:50:6: warning: old-style function definition [-Wold-style-definition]
+   50 | void Init_NIO_Monitor()
+      |      ^~~~~~~~~~~~~~~~
 ../libev/ev.c: In function ‘loop_init’:
 ../libev/ev.c:3318:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  3318 | #if EV_USE_IOCP
       |     ^~~~~~~~~~~
 ../libev/ev.c: In function ‘ev_loop_destroy’:
+../libev/ev.c:3409:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
+ 3409 | #if EV_USE_IOCP
+      |     ^~~~~~~~~~~
 selector.c: In function ‘NIO_Selector_wakeup’:
 selector.c:525:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
   525 |     write(selector->wakeup_writer, "\0", 1);
       |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-../libev/ev.c:3409:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
- 3409 | #if EV_USE_IOCP
-      |     ^~~~~~~~~~~
 ../libev/ev.c: In function ‘ev_io_start’:
 ../libev/ev.c:4417:34: warning: suggest parentheses around arithmetic in operand of ‘|’ [-Wparentheses]
  4417 |   fd_change (EV_A_ fd, w->events & EV__IOFDSET | EV_ANFD_REIFY);
@@ -275,8 +275,8 @@ cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ 
 linking shared-object nio4r_ext.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260125-2230-o1n39p sitelibdir\=./.gem.20260125-2230-o1n39p install
-/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20260125-2230-o1n39p
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2859-z3qun sitelibdir\=./.gem.20260515-2859-z3qun install
+/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20260515-2859-z3qun
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make DESTDIR\= sitearchdir\=./.gem.20260125-2230-o1n39p sitelibdir\=./.gem.20260125-2230-o1n39p clean
+make DESTDIR\= sitearchdir\=./.gem.20260515-2859-z3qun sitelibdir\=./.gem.20260515-2859-z3qun clean
