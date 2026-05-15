@@ -98,6 +98,11 @@ class Person < ApplicationRecord
       .merge(Affiliation.active)
       .distinct
   }
+  scope :where_user_not_locked, -> {
+    left_joins(:user).where(users: { locked_at: nil }).or(
+      left_joins(:user).where(users: { id: nil })
+    )
+  }
   scope :organization_name, ->(organization_name) {
     return all if organization_name.blank?
     left_joins(affiliations: :organization)
