@@ -8,6 +8,7 @@ class EventRegistration < ApplicationRecord
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :organizations, through: :event_registration_organizations
   has_many :allocations, as: :allocatable
+  has_many :scholarships, dependent: :destroy
 
   before_destroy :create_refund_payments
 
@@ -93,9 +94,12 @@ class EventRegistration < ApplicationRecord
     allocations.sum(:amount)
   end
 
+  def remaining_cost
+    [ event.cost_cents - allocations_sum, 0 ].max
+  end
+
   def paid_in_full?
     return true if event.cost_cents.to_i <= 0
-    return true if scholarship_recipient?
     allocations_sum >= event.cost_cents.to_i
   end
 
@@ -109,6 +113,7 @@ class EventRegistration < ApplicationRecord
   end
 
   def joinable?
+    # TODO
     active? && paid? && scholarship_tasks_met?
   end
 

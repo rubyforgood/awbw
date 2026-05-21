@@ -98,6 +98,9 @@ Rails.application.routes.draw do
       post :process_confirm
     end
     resources :comments, only: [ :index, :create ]
+    resources :scholarships, only: [ :create, :update, :destroy ] do
+      post :allocate, on: :member
+    end
   end
   resources :events do
     member do
