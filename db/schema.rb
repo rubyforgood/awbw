@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_08_163911) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_21_104718) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -441,9 +441,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_163911) do
     t.datetime "created_at", null: false
     t.bigint "event_id"
     t.bigint "registrant_id", null: false
-    t.boolean "scholarship_recipient", default: false, null: false
     t.boolean "scholarship_requested", default: false, null: false
-    t.boolean "scholarship_tasks_completed", default: false, null: false
     t.string "slug"
     t.string "status", default: "registered", null: false
     t.datetime "updated_at", null: false
@@ -992,6 +990,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_163911) do
     t.index ["workshop_id"], name: "index_resources_on_workshop_id"
   end
 
+  create_table "scholarships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_registration_id", null: false
+    t.boolean "tasks_completed", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_registration_id"], name: "index_scholarships_on_event_registration_id"
+  end
+
   create_table "sectorable_items", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.boolean "is_leader", default: false, null: false
@@ -1519,6 +1526,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_163911) do
   add_foreign_key "resources", "users", column: "created_by_id"
   add_foreign_key "resources", "windows_types"
   add_foreign_key "resources", "workshops"
+  add_foreign_key "scholarships", "event_registrations"
   add_foreign_key "sectorable_items", "sectors"
   add_foreign_key "stories", "organizations"
   add_foreign_key "stories", "people", column: "spotlighted_facilitator_id"
