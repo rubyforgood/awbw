@@ -120,7 +120,7 @@ RSpec.describe "Stories", type: :system do
         adult_window = create(:windows_type, :adult)
         story = create(:story, title: "Old Title", windows_type: adult_window, created_by: user)
 
-        visit edit_story_path(story)
+        visit edit_story_path(format: :turbo_stream, subaction: :update)
 
         within("#edit_story_#{story.id}") do
             fill_in "Title", with: "A New Title"
