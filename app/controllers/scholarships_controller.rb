@@ -1,34 +1,43 @@
 class ScholarshipsController < ApplicationController
   before_action :set_event_registration
-  before_action :set_scholarship, only: [ :update, :destroy, :allocate ]
+  before_action :set_scholarship, only: [ :edit, :update, :destroy, :allocate ]
+
+  def new
+    @scholarship = @event_registration.scholarships.build
+    authorize! @scholarship
+  end
 
   def create
     @scholarship = @event_registration.scholarships.build(scholarship_params)
     authorize! @scholarship
 
     if @scholarship.save
-      redirect_to edit_event_registration_path(@event_registration), notice: "Scholarship created."
+      redirect_to edit_event_registration_scholarship_path(@event_registration, @scholarship),
+                  notice: "Scholarship created."
     else
-      redirect_to edit_event_registration_path(@event_registration),
-                  alert: @scholarship.errors.full_messages.join(", ")
+      render :new, status: :unprocessable_content
     end
+  end
+
+  def edit
+    authorize! @scholarship
   end
 
   def update
     authorize! @scholarship
 
     if @scholarship.update(scholarship_params)
-      redirect_to edit_event_registration_path(@event_registration), notice: "Scholarship updated."
+      redirect_to edit_event_registration_scholarship_path(@event_registration, @scholarship),
+                  notice: "Scholarship updated."
     else
-      redirect_to edit_event_registration_path(@event_registration),
-                  alert: @scholarship.errors.full_messages.join(", ")
+      render :edit, status: :unprocessable_content
     end
   end
 
   def destroy
     authorize! @scholarship
     @scholarship.destroy!
-    redirect_to edit_event_registration_path(@event_registration), notice: "Scholarship removed."
+    redirect_to manage_event_path(@event_registration.event), notice: "Scholarship removed."
   end
 
   def allocate
@@ -36,9 +45,11 @@ class ScholarshipsController < ApplicationController
 
     begin
       @scholarship.allocate!
-      redirect_to edit_event_registration_path(@event_registration), notice: "Scholarship allocated."
+      redirect_to edit_event_registration_scholarship_path(@event_registration, @scholarship),
+                  notice: "Scholarship allocated."
     rescue => e
-      redirect_to edit_event_registration_path(@event_registration), alert: e.message
+      redirect_to edit_event_registration_scholarship_path(@event_registration, @scholarship),
+                  alert: e.message
     end
   end
 

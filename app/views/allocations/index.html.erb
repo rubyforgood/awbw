@@ -94,10 +94,10 @@
                 'hover:bg-gray-50'
               end %>
 
-            <tr class="<%= row_class %>" onclick="window.location='<%= payment_path(allocation.source) %>'" style="cursor: pointer;">
+            <tr class="<%= row_class %>" onclick="window.location='<%= allocation.source.respond_to?(:payer) ? payment_path(allocation.source) : edit_event_registration_scholarship_path(allocation.source.event_registration, allocation.source) %>'" style="cursor: pointer;">
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= allocation.id %></td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= allocation.source.class.name.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= allocation.source&.payer.name || "Unknown" %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= allocation.source.respond_to?(:payer) ? (allocation.source.payer&.name || "Unknown") : "Scholarship" %></td>
 
               <% unless @allocatable %>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

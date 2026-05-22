@@ -37,7 +37,6 @@ class EventRegistration < ApplicationRecord
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :attendance_status, ->(status) { where(status: status) }
-  scope :scholarship, -> { where(scholarship_recipient: true) }
   scope :keyword, ->(term) {
     return none if term.blank?
 
@@ -103,18 +102,8 @@ class EventRegistration < ApplicationRecord
     allocations_sum >= event.cost_cents.to_i
   end
 
-  def scholarship?
-    payments.scholarships.exists?
-  end
-
-  def scholarship_tasks_met?
-    return true unless scholarship?
-    scholarship_tasks_completed?
-  end
-
   def joinable?
-    # TODO
-    active? && paid? && scholarship_tasks_met?
+    active? && paid?
   end
 
   def attendance_status_label

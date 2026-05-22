@@ -41,9 +41,7 @@
                 <td class="px-4 py-2 text-sm text-gray-700"><%= person.preferred_email %></td>
                 <td class="px-4 py-2 text-sm">
                   <% if @event.object.cost_cents.to_i > 0 %>
-                    <% if reg.scholarship_recipient? && reg.allocations_sum <= 0 %>
-                      <span class="text-gray-400">—</span>
-                    <% elsif reg.paid_in_full? %>
+                    <% if reg.paid_in_full? %>
                       <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-green-50 text-green-700 border-green-200">Paid</span>
                     <% else %>
                       <% due_cents = @event.object.cost_cents - reg.allocations_sum %>

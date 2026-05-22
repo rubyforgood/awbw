@@ -211,8 +211,8 @@ class EventsController < ApplicationController
       person.preferred_email.presence || "",
       person.phone_number.presence || "",
       org_names.presence || "",
-      registration.scholarship_recipient? ? "Yes" : "No",
-      registration.scholarship_tasks_completed? ? "Yes" : "No",
+      registration.scholarships.any? ? "Yes" : "No",
+      registration.scholarships.completed.any? ? "Yes" : "No",
       payment_status,
       payment_total
     ]

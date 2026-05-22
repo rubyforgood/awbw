@@ -105,8 +105,11 @@
           <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
             <div class="font-semibold text-sm text-gray-700 mb-2">Scholarship</div>
             <%= f.input :scholarship_requested, as: :boolean %>
-            <%= f.input :scholarship_recipient, as: :boolean, label: "Scholarship approved" %>
-            <%= f.input :scholarship_tasks_completed, as: :boolean, label: "Scholarship tasks completed" %>
+            <% if f.object.scholarships.any? %>
+              <%= link_to "Manage scholarship", edit_event_registration_scholarship_path(f.object, f.object.scholarships.first),
+                          class: "text-sm text-blue-600 hover:text-blue-800 underline",
+                          data: { turbo_frame: "_top" } %>
+            <% end %>
           </div>
         </div>
       </div>
