@@ -15,7 +15,7 @@ gem "vite_rails"
 gem "jquery-rails"
 gem "jbuilder", "~> 2.0"
 
-gem "devise", "~> 5.0.3"
+gem "devise", "~> 5.0.4"
 gem "draper"
 gem "aws-sdk-s3"
 
