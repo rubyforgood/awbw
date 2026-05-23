@@ -109,14 +109,20 @@
                       <% end %>
                     <% end %>
                   <% else %>
-                    <% pill_class = registration.scholarship_requested? ?
-                      "bg-amber-50 text-amber-700 border-amber-200" :
-                      "bg-gray-50 text-gray-400 border-gray-200" %>
-                    <%= link_to new_event_registration_scholarship_path(registration),
-                                class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 #{pill_class} hover:opacity-80",
-                                data: { turbo_frame: "_top" } do %>
-                      <i class="fas fa-graduation-cap"></i>
-                      <span>Create</span>
+                    <% if registration.scholarship_requested? %>
+                      <%= link_to new_event_registration_scholarship_path(registration),
+                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200 hover:opacity-80",
+                                  data: { turbo_frame: "_top" } do %>
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Requested</span>
+                      <% end %>
+                    <% else %>
+                      <%= link_to new_event_registration_scholarship_path(registration),
+                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-gray-50 text-gray-400 border-gray-200 hover:opacity-80",
+                                  data: { turbo_frame: "_top" } do %>
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Create</span>
+                      <% end %>
                     <% end %>
                   <% end %>
                 </td>

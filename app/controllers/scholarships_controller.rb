@@ -1,6 +1,6 @@
 class ScholarshipsController < ApplicationController
   before_action :set_event_registration
-  before_action :set_scholarship, only: [ :edit, :update, :destroy, :allocate ]
+  before_action :set_scholarship, only: [ :edit, :update, :destroy ]
 
   def new
     @scholarship = @event_registration.scholarships.build
@@ -38,19 +38,6 @@ class ScholarshipsController < ApplicationController
     authorize! @scholarship
     @scholarship.destroy!
     redirect_to manage_event_path(@event_registration.event), notice: "Scholarship removed."
-  end
-
-  def allocate
-    authorize! @scholarship
-
-    begin
-      @scholarship.allocate!
-      redirect_to edit_event_registration_scholarship_path(@event_registration, @scholarship),
-                  notice: "Scholarship allocated."
-    rescue => e
-      redirect_to edit_event_registration_scholarship_path(@event_registration, @scholarship),
-                  alert: e.message
-    end
   end
 
   private

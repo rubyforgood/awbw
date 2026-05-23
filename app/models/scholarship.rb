@@ -4,6 +4,8 @@ class Scholarship < ApplicationRecord
 
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
 
+  after_save :sync_allocation
+
   scope :completed, -> { where(tasks_completed: true) }
 
   def amount_dollars
@@ -18,16 +20,14 @@ class Scholarship < ApplicationRecord
     allocations.exists?
   end
 
-  def can_allocate?
-    tasks_completed? && !allocated? && amount_cents.to_i > 0
-  end
+  private
 
-  def allocate!
-    raise "Cannot allocate" unless can_allocate?
-
-    remaining = event_registration.remaining_cost
-    raise "Event already paid in full" if remaining <= 0
-
-    allocations.create!(allocatable: event_registration, amount: [amount_cents, remaining].min)
+  def sync_allocation
+    if tasks_completed? && amount_cents.to_i > 0
+      allocations.find_or_initialize_by(allocatable: event_registration)
+                 .update!(amount: amount_cents)
+    elsif !tasks_completed?
+      allocations.where(allocatable: event_registration).destroy_all
+    end
   end
 end
