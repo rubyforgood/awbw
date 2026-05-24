@@ -125,7 +125,7 @@ class StoryIdeasController < ApplicationController
     @users = users.distinct.order("people.first_name, people.last_name")
 
     @story_population_type = CategoryType.find_by(name: "StoryPopulation")
-    @story_population_categories = @story_population_type&.categories&.published&.order(:name) || []
+    @story_population_categories = @story_population_type&.categories&.published&.ordered_by_position_and_name || []
     @sectors = Sector.published.order(:name)
     submitted_sector_ids = Array(params.dig(:story_idea, :sector_ids)).reject(&:blank?)
     submitted_category_ids = Array(params.dig(:story_idea, :category_ids)).reject(&:blank?)
