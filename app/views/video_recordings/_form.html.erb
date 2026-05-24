@@ -77,7 +77,10 @@
         <div id="tags" class="border border-gray-300 p-4 rounded-b-md">
           <!-- Sectors -->
           <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
-            <h3 class="text-base font-semibold text-gray-800 mb-3">Which sectors apply?</h3>
+            <h3 class="text-base font-semibold text-gray-800 mb-3">
+              <%= Sector::VIDEO_DISPLAY_TEXT %>
+              <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
+            </h3>
 
             <div class="flex flex-wrap gap-3">
               <% @sectors.each do |sector| %>
@@ -105,7 +108,10 @@
           <div class="form-group space-y-6">
             <% @categories_grouped.each do |type, cats| %>
               <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-                <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.display_label %></h3>
+                <h3 class="text-base font-semibold text-gray-800 mb-3">
+                  <%= type.display_label %>
+                  <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
+                </h3>
 
                 <div class="flex flex-wrap gap-3">
                   <% cats.each do |category| %>
