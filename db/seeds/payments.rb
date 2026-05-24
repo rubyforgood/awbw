@@ -60,7 +60,7 @@
     p.last_name = "Test"
   end
 
-  event = Event.find_or_create_by!(title: "Payment Test Workshop") do |e|
+  event = Event.find_or_create_by!(title: "Test Payments Workshop") do |e|
     e.start_date = 1.month.from_now.to_date
     e.end_date = 1.month.from_now.to_date + 2.days
     e.published = true

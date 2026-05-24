@@ -2,16 +2,17 @@
   <div class="flex justify-between items-center mb-6">
     <% if @allocatable %>
       <h1 class="text-2xl font-bold">
+        Allocations
+      </h1>
+      <h2 class="text-xl font-medium">
         <% if @allocatable.is_a?(EventRegistration) %>
-          Payments for
           <%= @allocatable.registrant.full_name %>
           -
           <%= @allocatable.event.title %>
         <% else %>
-          Allocations for
           <%= @allocatable.model_name.human %>
         <% end %>
-      </h1>
+      </h2>
       <%= link_to "← Back", allocations_path(allocatable_sgid: params[:allocatable_sgid]), class: "btn btn-secondary" %>
     <% else %>
       <h1 class="text-2xl font-bold">All Allocations</h1>
