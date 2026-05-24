@@ -22,12 +22,12 @@ RSpec.describe DomainTheme do
 
     it "supports hover classes for 100's" do
       expect(DomainTheme.bg_class_for(:stories, intensity: 200, hover: true))
-        .to eq("hover:bg-rose-300")
+        .to eq("hover:bg-fuchsia-300")
     end
 
     it "supports hover classes for 50" do
       expect(DomainTheme.bg_class_for(:stories, intensity: 50, hover: true))
-        .to eq("hover:bg-rose-100")
+        .to eq("hover:bg-fuchsia-100")
     end
 
     it "defines a color for every taggable home type" do
