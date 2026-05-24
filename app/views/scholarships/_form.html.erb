@@ -1,13 +1,15 @@
-<dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
-  <div>
-    <dt class="text-sm font-medium text-gray-500">Event cost</dt>
-    <dd class="mt-1 text-sm text-gray-900">$<%= "%.2f" % (@event_registration.event.cost_cents.to_f / 100) %></dd>
-  </div>
-  <div>
-    <dt class="text-sm font-medium text-gray-500">Total allocated</dt>
-    <dd class="mt-1 text-sm text-gray-900">$<%= "%.2f" % (@event_registration.allocations_sum.to_f / 100) %></dd>
-  </div>
-</dl>
+<% if @allocatable.respond_to?(:event) %>
+  <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+    <div>
+      <dt class="text-sm font-medium text-gray-500">Event cost</dt>
+      <dd class="mt-1 text-sm text-gray-900">$<%= "%.2f" % (@allocatable.event.cost_cents.to_f / 100) %></dd>
+    </div>
+    <div>
+      <dt class="text-sm font-medium text-gray-500">Total allocated</dt>
+      <dd class="mt-1 text-sm text-gray-900">$<%= "%.2f" % (@allocatable.allocations_sum.to_f / 100) %></dd>
+    </div>
+  </dl>
+<% end %>
 
 <div>
   <%= f.label :amount_dollars, "Scholarship amount", class: "block text-sm font-medium text-gray-700 mb-1" %>

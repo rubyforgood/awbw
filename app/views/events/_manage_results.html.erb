@@ -94,14 +94,14 @@
                 <td class="px-4 py-2 text-sm">
                   <% if (s = registration.scholarships.first) %>
                     <% if s.tasks_completed? %>
-                      <%= link_to edit_event_registration_scholarship_path(registration, s),
+                      <%= link_to edit_scholarship_path(s),
                                   class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200 hover:opacity-80",
                                   data: { turbo_frame: "_top" } do %>
                         <i class="fas fa-graduation-cap"></i>
                         <span>Completed</span>
                       <% end %>
                     <% else %>
-                      <%= link_to edit_event_registration_scholarship_path(registration, s),
+                      <%= link_to edit_scholarship_path(s),
                                   class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-blue-50 text-blue-700 border-blue-200 hover:opacity-80",
                                   data: { turbo_frame: "_top" } do %>
                         <i class="fas fa-graduation-cap"></i>
@@ -110,14 +110,14 @@
                     <% end %>
                   <% else %>
                     <% if registration.scholarship_requested? %>
-                      <%= link_to new_event_registration_scholarship_path(registration),
+                      <%= link_to new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s),
                                   class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200 hover:opacity-80",
                                   data: { turbo_frame: "_top" } do %>
                         <i class="fas fa-graduation-cap"></i>
                         <span>Requested</span>
                       <% end %>
                     <% else %>
-                      <%= link_to new_event_registration_scholarship_path(registration),
+                      <%= link_to new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s),
                                   class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-gray-50 text-gray-400 border-gray-200 hover:opacity-80",
                                   data: { turbo_frame: "_top" } do %>
                         <i class="fas fa-graduation-cap"></i>

@@ -133,7 +133,7 @@
                 <div class="flex items-center gap-2">
                   <span class="text-sm font-medium">$<%= "%.2f" % (s.amount_cents.to_f / 100) %></span>
 
-                  <%= link_to "Manage", edit_event_registration_scholarship_path(f.object, s),
+                  <%= link_to "Manage", edit_scholarship_path(s),
                               class: "text-sm text-blue-600 hover:text-blue-800 underline",
                               data: { turbo_frame: "_top" } %>
                 </div>
@@ -146,7 +146,7 @@
                 <% end %>
               </div>
             <% else %>
-              <%= link_to "Create", new_event_registration_scholarship_path(f.object),
+              <%= link_to "Create", new_scholarship_path(allocatable_sgid: f.object.to_sgid.to_s),
                           class: "text-sm text-blue-600 hover:text-blue-800 underline",
                           data: { turbo_frame: "_top" } %>
             <% end %>

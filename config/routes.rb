@@ -98,8 +98,8 @@ Rails.application.routes.draw do
       post :process_confirm
     end
     resources :comments, only: [ :index, :create ]
-    resources :scholarships, only: [ :new, :create, :edit, :update, :destroy ]
   end
+  resources :scholarships, only: [ :new, :create, :edit, :update, :destroy ]
   resources :events do
     member do
       get :manage
