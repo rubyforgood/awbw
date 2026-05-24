@@ -299,6 +299,12 @@ RSpec.describe Person, type: :model do
       expect(results).to include(person_alice)
       expect(results).not_to include(person_bob)
     end
+
+    it 'chains with_active_affiliations and organization_name without an ambiguous end_date error' do
+      expect {
+        Person.with_active_affiliations.search_by_params(organization_name: 'Alpha').to_a
+      }.not_to raise_error
+    end
   end
 
   describe ".published" do
