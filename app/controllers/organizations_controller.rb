@@ -131,10 +131,10 @@ class OrganizationsController < ApplicationController
     if @organization.destroy
       redirect_to organizations_path, notice: "Organization was successfully destroyed."
     else
-      redirect_to @organization, alert: "Unable to delete this organization: #{@organization.errors.full_messages.to_sentence}."
+      redirect_to edit_organization_path(@organization), alert: "Unable to delete this organization: #{@organization.errors.full_messages.to_sentence}."
     end
   rescue ActiveRecord::InvalidForeignKey
-    redirect_to @organization, alert: "Unable to delete this organization because it has associated records that cannot be removed."
+    redirect_to edit_organization_path(@organization), alert: "Unable to delete this organization because it has associated records that cannot be removed."
   end
 
   def check_duplicates

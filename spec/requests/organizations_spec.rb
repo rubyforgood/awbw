@@ -201,13 +201,37 @@ RSpec.describe "/organizations", type: :request do
           delete organization_url(organization)
         }.not_to change(Organization, :count)
 
-        expect(response).to redirect_to(organization_url(organization))
+        expect(response).to redirect_to(edit_organization_url(organization))
         expect(flash[:alert]).to include("Unable to delete this organization")
       end
 
       it "renders the alert on the page after following the redirect" do
         organization = Organization.create!(valid_attributes)
         create(:affiliation, organization: organization)
+
+        delete organization_url(organization)
+        follow_redirect!
+
+        expect(response.body).to include("Unable to delete this organization")
+      end
+    end
+
+    context "when the organization has event registrations" do
+      it "does not destroy and redirects with an alert" do
+        organization = Organization.create!(valid_attributes)
+        create(:event_registration_organization, organization: organization)
+
+        expect {
+          delete organization_url(organization)
+        }.not_to change(Organization, :count)
+
+        expect(response).to redirect_to(edit_organization_url(organization))
+        expect(flash[:alert]).to include("Unable to delete this organization")
+      end
+
+      it "renders the alert on the page after following the redirect" do
+        organization = Organization.create!(valid_attributes)
+        create(:event_registration_organization, organization: organization)
 
         delete organization_url(organization)
         follow_redirect!
@@ -225,7 +249,7 @@ RSpec.describe "/organizations", type: :request do
           delete organization_url(organization)
         }.not_to change(Organization, :count)
 
-        expect(response).to redirect_to(organization_url(organization))
+        expect(response).to redirect_to(edit_organization_url(organization))
         expect(flash[:alert]).to include("associated records that cannot be removed")
       end
 
