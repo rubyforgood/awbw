@@ -6,6 +6,7 @@
     <th class="px-4 py-3 text-left font-medium text-gray-600">Recipient</th>
     <th class="px-4 py-3 text-left font-medium text-gray-600">Subject</th>
     <th class="px-4 py-3 text-left font-medium text-gray-600">Record</th>
+    <th class="px-4 py-3 text-center font-medium text-gray-600">Responded</th>
     <th class="px-4 py-3 text-right font-medium text-gray-600"></th>
   </tr>
   </thead>
@@ -48,6 +49,25 @@
                       class: "btn btn-secondary-outline" %>
         <% else %>
           <span class="text-gray-400">—</span>
+        <% end %>
+      </td>
+
+      <!-- Responded -->
+      <td class="px-4 py-3 text-center"
+          data-controller="autosave"
+          data-autosave-url-value="<%= notification_path(notification) %>"
+          data-autosave-id-value="<%= notification.id %>"
+          data-action="change->autosave#save">
+        <% if notification.requires_response? %>
+          <input type="hidden" name="notification[responded]" value="0">
+          <input type="checkbox"
+                 name="notification[responded]"
+                 value="1"
+                 <%= "checked" if notification.responded? %>
+                 class="w-5 h-5 rounded border-gray-300 text-green-600 accent-green-600 focus:ring-green-500 cursor-pointer"
+                 title="Responded to by staff">
+        <% else %>
+          <span class="text-gray-300">—</span>
         <% end %>
       </td>
 

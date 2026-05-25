@@ -51,6 +51,17 @@
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
+    <div>
+      <%= f.label :responded_status, "Responded",
+                  class: "block text-sm font-medium text-gray-500 mb-1" %>
+
+      <%= f.select :responded_status,
+                   options_for_select([ [ "Yes", "yes" ], [ "No", "no" ], [ "N/A", "na" ] ], params[:responded_status]),
+                   { include_blank: "All" },
+                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                             focus:ring-blue-500 focus:border-blue-500" %>
+    </div>
+
     <!-- Clear -->
     <div>
       <span class="block text-sm mb-1">&nbsp;</span>

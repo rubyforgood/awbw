@@ -120,7 +120,7 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create ]
   end
   resources :faqs
-  resources :notifications, only: [ :index, :show ] do
+  resources :notifications, only: [ :index, :show, :update ] do
     member do
       post :resend
     end
