@@ -28,7 +28,24 @@ class Allocation < ApplicationRecord
     types = types.split(",") if types.is_a?(String)
     types = types.reject(&:blank?)
     return unless types.present?
-    where("source_type = 'Payment' AND EXISTS (SELECT 1 FROM payments WHERE payments.id = allocations.source_id AND payments.type IN (?))", types)
+
+    payment_types = types.select { |t| %w[CashPayment CheckPayment ExternalProcessorPayment].include?(t) }
+    non_payment_types = types - payment_types
+
+    conditions = []
+    binds = []
+
+    if payment_types.any?
+      conditions << "(source_type = 'Payment' AND EXISTS (SELECT 1 FROM payments WHERE payments.id = allocations.source_id AND payments.type IN (?)))"
+      binds << payment_types
+    end
+
+    non_payment_types.each do |type|
+      conditions << "(source_type = ?)"
+      binds << type
+    end
+
+    where(conditions.join(" OR "), *binds) if conditions.any?
   }
   scope :by_allocatable_type, ->(type) { where(allocatable_type: type) if type.present? }
   scope :has_reverted, ->(value) {

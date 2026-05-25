@@ -15,7 +15,7 @@
         <div>
           <label for="source_type" class="text-sm font-medium text-gray-500 mb-1 block">Source Type</label>
           <%= select_tag "source_type[]",
-          options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Stripe" => "ExternalProcessorPayment" }, Array(params[:source_type]).first),
+          options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Stripe" => "ExternalProcessorPayment", "Discount" => "Discount" }, Array(params[:source_type]).first),
           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
         </div>
         <div>

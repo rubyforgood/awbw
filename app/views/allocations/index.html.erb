@@ -65,7 +65,12 @@
         <%= button_to "Add Check Payment", 
             allocation_form_payments_path(type: "CheckPayment", allocatable_sgid: params[:allocatable_sgid]),
             class: "btn btn-secondary" %>
+
+        <%= button_to "Add Discount", 
+            allocation_form_discounts_path(allocatable_sgid: params[:allocatable_sgid]),
+            class: "btn btn-secondary" %>
       </div>
+      <div id="discount-form"></div>
     <% end %>
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
@@ -73,7 +78,7 @@
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payer</th>
 
             <% unless @allocatable %>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Allocated To</th>
@@ -82,6 +87,7 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ref</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
 
@@ -95,10 +101,16 @@
                 'hover:bg-gray-50'
               end %>
 
-            <tr class="<%= row_class %>" onclick="window.location='<%= allocation.source.respond_to?(:payer) ? payment_path(allocation.source) : edit_scholarship_path(allocation.source) %>'" style="cursor: pointer;">
+            <tr class="<%= row_class %>">
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= allocation.id %></td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= allocation.source.class.name.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= allocation.source.respond_to?(:payer) ? (allocation.source.payer&.name || "Unknown") : "Scholarship" %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= if allocation.source.respond_to?(:payer)
+                  allocation.source.payer&.name || "Unknown"
+                elsif allocation.source.is_a?(Discount)
+                  "Discount"
+                else
+                  "Scholarship"
+                end %></td>
 
               <% unless @allocatable %>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -121,6 +133,18 @@
               </td>
 
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= allocation.created_at.strftime("%B %d, %Y") %></td>
+
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-left font-medium">
+                <% if allocation.source.respond_to?(:payer) %>
+                  <%= link_to "View", payment_path(allocation.source), class: "text-blue-600 hover:text-blue-800" %>
+                <% elsif allocation.source.is_a?(Discount) %>
+                  <%= button_to "Remove", discount_path(allocation.source), method: :delete,
+                        class: "cursor-pointer text-danger hover:text-danger-dark",
+                        data: { turbo_confirm: "Remove this discount?" } %>
+                <% else %>
+                  <%= link_to "View", edit_scholarship_path(allocation.source), class: "text-blue-600 hover:text-blue-800" %>
+                <% end %>
+              </td>
             </tr>
           <% end %>
         </tbody>

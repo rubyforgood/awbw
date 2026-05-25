@@ -100,6 +100,11 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create ]
   end
   resources :scholarships, only: [ :new, :create, :edit, :update, :destroy ]
+  resources :discounts, only: [ :create, :destroy ] do
+    collection do
+      post :allocation_form
+    end
+  end
   resources :events do
     member do
       get :manage
