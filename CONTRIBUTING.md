@@ -46,7 +46,7 @@ Either option below will get you a working development environment. Pick whichev
 
 1. Install mise
    - Follow the [mise installation guide](https://mise.jdx.dev/getting-started.html#installing-mise-cli) for your operating system
-   - mise will automatically install and manage the Ruby version specified in [`mise.toml`](mise.toml) with `mise i`
+   - mise will automatically install and manage the Ruby version specified in [`.ruby-version`](.ruby-version) with `mise i`
    - Verify that mise is working by running `mise --version`
    - **Add mise shims to your PATH** so the project's Ruby is resolved in every shell — including non-interactive contexts like `bin/setup`, IDE task runners, and cron. Add this to `~/.zshenv` (or `~/.bashrc` for bash) and restart your shell:
      ```bash
