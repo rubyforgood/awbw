@@ -191,6 +191,34 @@ RSpec.describe "/organizations", type: :request do
       delete organization_url(organization)
       expect(response).to redirect_to(organizations_url)
     end
+
+    context "when the organization has affiliations" do
+      it "does not destroy and redirects with an alert" do
+        organization = Organization.create!(valid_attributes)
+        create(:affiliation, organization: organization)
+
+        expect {
+          delete organization_url(organization)
+        }.not_to change(Organization, :count)
+
+        expect(response).to redirect_to(organization_url(organization))
+        expect(flash[:alert]).to be_present
+      end
+    end
+
+    context "when the organization has associated workshop logs" do
+      it "does not destroy and redirects with an alert" do
+        organization = Organization.create!(valid_attributes)
+        create(:workshop_log, organization: organization, created_by: admin)
+
+        expect {
+          delete organization_url(organization)
+        }.not_to change(Organization, :count)
+
+        expect(response).to redirect_to(organization_url(organization))
+        expect(flash[:alert]).to be_present
+      end
+    end
   end
 
   describe "POST /create with duplicate check" do
