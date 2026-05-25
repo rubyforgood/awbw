@@ -46,8 +46,13 @@ Either option below will get you a working development environment. Pick whichev
 
 1. Install mise
    - Follow the [mise installation guide](https://mise.jdx.dev/getting-started.html#installing-mise-cli) for your operating system
-   - mise will automatically install and manage the Ruby version specified in [`.ruby-version`](.ruby-version) with `mise i`
+   - mise will automatically install and manage the Ruby version specified in [`mise.toml`](mise.toml) with `mise i`
    - Verify that mise is working by running `mise --version`
+   - **Add mise shims to your PATH** so the project's Ruby is resolved in every shell — including non-interactive contexts like `bin/setup`, IDE task runners, and cron. Add this to `~/.zshenv` (or `~/.bashrc` for bash) and restart your shell:
+     ```bash
+     export PATH="$HOME/.local/share/mise/shims:$PATH"
+     ```
+     Without this, scripts with `#!/usr/bin/env ruby` may pick up the wrong Ruby (or fail to find one).
 2. Install MySQL
    - **macOS**: [Use Homebrew](https://formulae.brew.sh/formula/mysql@8.0)
    - **Windows**: Use WSL2 with Ubuntu - follow [the MariaDB install guide from digital ocean](https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-20-04#step-1-installing-mariadb)

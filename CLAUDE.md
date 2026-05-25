@@ -183,11 +183,13 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## Ruby Version Manager
 
-This project uses [mise](https://mise.jdx.dev/) to manage the Ruby version. Before running any `bundle exec` or Ruby command, activate mise:
+This project uses [mise](https://mise.jdx.dev/) to manage the Ruby version.
+
+**Required one-time setup:** install mise shims so the correct Ruby is on PATH in every shell — including non-interactive contexts like `bin/setup`, IDE task runners, and cron. Add this to `~/.zshenv`:
 ```bash
-eval "$(command /opt/homebrew/bin/mise activate zsh)"
+export PATH="$HOME/.local/share/mise/shims:$PATH"
 ```
-The `ai/` scripts include this automatically.
+This makes `#!/usr/bin/env ruby` shebangs resolve to the mise-managed Ruby without needing `eval "$(mise activate …)"` in the script. The `ai/` scripts source `ai/.ruby-env` as a fallback for contributors who haven't set up shims yet.
 
 ## Testing
 
