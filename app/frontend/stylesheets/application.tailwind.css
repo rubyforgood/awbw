@@ -104,6 +104,7 @@
 select.select-placeholder {
   color: #9ca3af !important;
   font-size: 0.875rem !important;
+  line-height: 1.5rem !important;
 }
 
 .is-active {
