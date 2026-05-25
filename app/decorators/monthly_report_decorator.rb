@@ -1,0 +1,2 @@
+class MonthlyReportDecorator < ReportDecorator
+end
