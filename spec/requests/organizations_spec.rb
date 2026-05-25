@@ -202,7 +202,17 @@ RSpec.describe "/organizations", type: :request do
         }.not_to change(Organization, :count)
 
         expect(response).to redirect_to(organization_url(organization))
-        expect(flash[:alert]).to be_present
+        expect(flash[:alert]).to include("Unable to delete this organization")
+      end
+
+      it "renders the alert on the page after following the redirect" do
+        organization = Organization.create!(valid_attributes)
+        create(:affiliation, organization: organization)
+
+        delete organization_url(organization)
+        follow_redirect!
+
+        expect(response.body).to include("Unable to delete this organization")
       end
     end
 
@@ -216,7 +226,17 @@ RSpec.describe "/organizations", type: :request do
         }.not_to change(Organization, :count)
 
         expect(response).to redirect_to(organization_url(organization))
-        expect(flash[:alert]).to be_present
+        expect(flash[:alert]).to include("associated records that cannot be removed")
+      end
+
+      it "renders the alert on the page after following the redirect" do
+        organization = Organization.create!(valid_attributes)
+        create(:workshop_log, organization: organization, created_by: admin)
+
+        delete organization_url(organization)
+        follow_redirect!
+
+        expect(response.body).to include("associated records that cannot be removed")
       end
     end
   end
