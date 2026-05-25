@@ -91,6 +91,46 @@ RSpec.describe "Notifications", type: :request do
     end
   end
 
+  describe "GET /notifications/:id" do
+    let(:fyi)          { create(:notification, kind: "contact_us_fyi") }
+    let(:user_confirm) { create(:notification, kind: "contact_us") }
+    let(:other)        { create(:notification, kind: "reset_password_fyi") }
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "renders the responded checkbox for contact_us_fyi" do
+        get notification_path(fyi)
+
+        expect(response.body).to match(/<input[^>]*name="notification\[responded\]"[^>]*value="1"/)
+      end
+
+      it "does not render the responded checkbox for contact_us (auto-confirmation)" do
+        get notification_path(user_confirm)
+
+        expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
+      end
+
+      it "does not render the responded checkbox for other kinds" do
+        get notification_path(other)
+
+        expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
+      end
+    end
+
+    context "as a non-admin owner" do
+      let(:fyi) { create(:notification, kind: "contact_us_fyi", recipient_email: regular_user.email) }
+
+      before { sign_in regular_user }
+
+      it "does not render the responded checkbox even on contact_us_fyi" do
+        get notification_path(fyi)
+
+        expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
+      end
+    end
+  end
+
   describe "PATCH /notifications/:id" do
     let(:contact_notification) { create(:notification, kind: "contact_us_fyi", recipient_email: regular_user.email) }
 
