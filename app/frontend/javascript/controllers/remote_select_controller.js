@@ -44,7 +44,7 @@ export default class extends Controller {
       }
       .ts-wrapper .remote-select-icon {
         position: absolute;
-        left: 0;
+        left: 0.25rem;
         top: 50%;
         transform: translateY(-50%);
         color: #9ca3af;
@@ -53,7 +53,7 @@ export default class extends Controller {
       .ts-control {
         border: none !important;
         box-shadow: none !important;
-        padding: 0 0 0 1.25rem !important;  /* Left padding for search icon */
+        padding: 0 0 0 1.5rem !important;  /* Left padding for search icon */
         margin: 0 !important;
         min-height: 0 !important;        /* Remove min-height TomSelect sets */
       }
