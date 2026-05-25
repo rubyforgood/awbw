@@ -48,14 +48,13 @@ Either option below will get you a working development environment. Pick whichev
    - Follow the [mise installation guide](https://mise.jdx.dev/getting-started.html#installing-mise-cli) for your operating system
    - mise will automatically install and manage the Ruby version specified in [`.ruby-version`](.ruby-version) with `mise i`
    - Verify that mise is working by running `mise --version`
-   - **Add mise shims to your PATH** by adding this line to your shell's startup file and then restarting your shell:
-     ```bash
-     export PATH="$HOME/.local/share/mise/shims:$PATH"
-     ```
-     - **zsh users:** add to `~/.zshenv` (not `~/.zshrc`) — `~/.zshenv` is loaded by *every* shell invocation, including non-interactive ones.
-     - **bash users:** add to `~/.bash_profile` (login shells) and `~/.bashrc` (interactive non-login shells).
+   - **Add mise shims to your PATH** so the project's Ruby is available to scripts with `#!/usr/bin/env ruby` (like `bin/setup`), IDE task runners, and cron jobs that don't source your interactive shell config. The export goes in your shell's startup file — pick the one that matches your shell, then restart your shell:
 
-     This makes the project's Ruby available to scripts with `#!/usr/bin/env ruby` (like `bin/setup`), as well as IDE task runners and cron jobs that don't source your interactive shell config.
+     | Shell | File | Line to add |
+     |---|---|---|
+     | zsh   | `~/.zshenv` (loaded by *every* shell invocation, not `~/.zshrc` which is interactive-only) | `export PATH="$HOME/.local/share/mise/shims:$PATH"` |
+     | bash  | `~/.bash_profile` (login shells) and `~/.bashrc` (interactive non-login) | `export PATH="$HOME/.local/share/mise/shims:$PATH"` |
+     | fish  | `~/.config/fish/config.fish` | `fish_add_path $HOME/.local/share/mise/shims` |
 2. Install MySQL
    - **macOS**: [Use Homebrew](https://formulae.brew.sh/formula/mysql@8.0)
    - **Windows**: Use WSL2 with Ubuntu - follow [the MariaDB install guide from digital ocean](https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-20-04#step-1-installing-mariadb)
