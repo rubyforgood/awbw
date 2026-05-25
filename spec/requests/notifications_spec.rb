@@ -25,9 +25,69 @@ RSpec.describe "Notifications", type: :request do
       expect(response.body).not_to include(user_notification.recipient_email)
     end
 
+    context "filtering by responded_status" do
+      let!(:fyi_responded)     { create(:notification, kind: "contact_us_fyi", responded: true,  recipient_email: "yes-fyi@example.com") }
+      let!(:fyi_not_responded) { create(:notification, kind: "contact_us_fyi", responded: false, recipient_email: "no-fyi@example.com") }
+      let!(:user_confirmation) { create(:notification, kind: "contact_us",                       recipient_email: "confirm@example.com") }
+
+      it "yes returns only responded contact_us_fyi notifications" do
+        get notifications_path, params: { responded_status: "yes" }, headers: turbo_headers
+        expect(response.body).to include(fyi_responded.recipient_email)
+        expect(response.body).not_to include(fyi_not_responded.recipient_email)
+        expect(response.body).not_to include(user_confirmation.recipient_email)
+      end
+
+      it "no returns only unresponded contact_us_fyi notifications" do
+        get notifications_path, params: { responded_status: "no" }, headers: turbo_headers
+        expect(response.body).to include(fyi_not_responded.recipient_email)
+        expect(response.body).not_to include(fyi_responded.recipient_email)
+        expect(response.body).not_to include(user_confirmation.recipient_email)
+      end
+
+      it "na excludes contact_us_fyi notifications" do
+        get notifications_path, params: { responded_status: "na" }, headers: turbo_headers
+        expect(response.body).to include(user_confirmation.recipient_email)
+        expect(response.body).not_to include(fyi_responded.recipient_email)
+        expect(response.body).not_to include(fyi_not_responded.recipient_email)
+      end
+    end
+
     it "wraps results in a turbo frame" do
       get notifications_path, headers: turbo_headers
       expect(response.body).to include('id="notifications_results"')
+    end
+
+    context "responded checkbox rendering" do
+      let!(:fyi)             { create(:notification, kind: "contact_us_fyi", responded: false, recipient_email: "fyi@example.com") }
+      let!(:fyi_done)        { create(:notification, kind: "contact_us_fyi", responded: true,  recipient_email: "done@example.com") }
+      let!(:user_confirm)    { create(:notification, kind: "contact_us",                      recipient_email: "confirm@example.com") }
+      let!(:other)           { create(:notification, kind: "reset_password_fyi",              recipient_email: "other@example.com") }
+
+      it "renders an unchecked checkbox for unresponded contact_us_fyi rows" do
+        get notifications_path, params: { email: "fyi@example.com" }, headers: turbo_headers
+
+        expect(response.body).to match(/name="notification\[responded\]"[^>]*value="1"(?![^>]*checked)/)
+      end
+
+      it "renders a checked checkbox for responded contact_us_fyi rows" do
+        get notifications_path, params: { email: "done@example.com" }, headers: turbo_headers
+
+        expect(response.body).to match(/name="notification\[responded\]"[^>]*value="1"[^>]*checked/)
+      end
+
+      it "renders an em-dash placeholder (no checkbox) for contact_us auto-confirmations" do
+        get notifications_path, params: { email: "confirm@example.com" }, headers: turbo_headers
+
+        expect(response.body).to include(user_confirm.recipient_email)
+        expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
+      end
+
+      it "renders an em-dash placeholder (no checkbox) for other kinds" do
+        get notifications_path, params: { email: "other@example.com" }, headers: turbo_headers
+
+        expect(response.body).to include(other.recipient_email)
+        expect(response.body).not_to match(/<input[^>]*name="notification\[responded\]"/)
+      end
     end
   end
 

@@ -94,6 +94,14 @@ class Notification < ApplicationRecord
   scope :record_type, ->(record_type) { where(noticeable_type: record_type.to_s.camelize.titleize.gsub(" ", "")) }
   scope :subject_line, ->(subject) { where("notifications.email_subject LIKE ?", "%#{subject}%") }
   scope :email_topic, ->(topic) { where("notifications.email_subject LIKE ?", "%#{topic}%") }
+  scope :responded_status, ->(status) {
+    case status.to_s
+    when "yes" then where(kind: "contact_us_fyi", responded: true)
+    when "no"  then where(kind: "contact_us_fyi", responded: false)
+    when "na"  then where.not(kind: "contact_us_fyi")
+    else all
+    end
+  }
 
   def self.email_topic_phrase(label)
     EMAIL_TOPICS.assoc(label)&.last
@@ -107,6 +115,7 @@ class Notification < ApplicationRecord
     topic_phrase = email_topic_phrase(params[:email_topic]) if params[:email_topic].present?
     stories = stories.email_topic(topic_phrase) if topic_phrase.present?
     stories = stories.record_type(params[:record_type]) if params[:record_type].present?
+    stories = stories.responded_status(params[:responded_status]) if params[:responded_status].present?
     stories
   end
 
@@ -114,8 +123,8 @@ class Notification < ApplicationRecord
     !kind.in?(DEVISE_KINDS)
   end
 
-  def contact_us?
-    kind.in?(%w[contact_us contact_us_fyi])
+  def requires_response?
+    kind == "contact_us_fyi"
   end
 
   def delivered?

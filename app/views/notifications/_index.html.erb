@@ -58,7 +58,7 @@
           data-autosave-url-value="<%= notification_path(notification) %>"
           data-autosave-id-value="<%= notification.id %>"
           data-action="change->autosave#save">
-        <% if notification.contact_us? %>
+        <% if notification.requires_response? %>
           <input type="hidden" name="notification[responded]" value="0">
           <input type="checkbox"
                  name="notification[responded]"
