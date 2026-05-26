@@ -107,6 +107,20 @@ class MonthlyReport < Report
     created_at.strftime("%B %e, %Y")
   end
 
+  def on_going_participants
+    if form_builder
+      field = form_builder.form_fields.find_by(question: PARTICIPANT_ONGOING_QUESTION, status: 1)
+      field.answer(self) if field
+    end
+  end
+
+  def new_participants
+    if form_builder
+      field = form_builder.form_fields.find_by(question: PARTICIPANT_FIRST_TIME_QUESTION, status: 1)
+      field.answer(self) if field
+    end
+  end
+
   private
 
   def set_has_attachment
