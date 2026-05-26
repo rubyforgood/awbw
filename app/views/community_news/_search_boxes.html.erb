@@ -59,6 +59,19 @@
                  button_text: "All" %>
     </div>
 
+    <!-- ORGANIZATION -->
+    <div class="min-w-[200px] pb-2">
+      <label for="organization_id" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">
+        Organization
+      </label>
+      <%= f.select :organization_id,
+                   options_from_collection_for_select(@organizations, :id, :name, params[:organization_id]),
+                   { include_blank: "All organizations" },
+                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                           focus:ring-blue-500 focus:border-blue-500",
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
     <!-- CLEAR FILTERS -->
     <div class="min-w-[120px] pb-3">
       <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">&nbsp;</label>

@@ -25,6 +25,7 @@ class CommunityNewsController < ApplicationController
 
       render :index_lazy
     else
+      @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
       render :index
     end
   end

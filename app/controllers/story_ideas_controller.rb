@@ -11,6 +11,7 @@ class StoryIdeasController < ApplicationController
                            .paginate(page: params[:page], per_page: per_page)
                            .decorate
     @story_ideas_count = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+    @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
   end
 
   def show
