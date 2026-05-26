@@ -129,9 +129,9 @@ class Report < ApplicationRecord
 
   def form_builder
     if type and type.include? "Monthly"
-      if windows_type and windows_type.name == "ADULT WORKSHOP LOG"
+      if windows_type and windows_type.name == "Adult"
         FormBuilder.find(4)
-      elsif windows_type and windows_type.name == "CHILDREN WORKSHOP LOG"
+      elsif windows_type and windows_type.name == "Children"
         FormBuilder.find(2)
       end
     elsif owner and owner_type.include? "FormBuilder"
