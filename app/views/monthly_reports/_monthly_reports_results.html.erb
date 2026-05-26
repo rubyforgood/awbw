@@ -1,0 +1,92 @@
+<%= turbo_stream.replace("monthly_reports_count", partial: "monthly_reports_count") %>
+
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @monthly_reports.any? %>">
+  <table class="w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
+        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Submitter</th>
+        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Organization</th>
+        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Windows type</th>
+        <th class="px-4 py-3 text-center text-sm font-semibold text-white bg-blue-500"># On-going</th>
+        <th class="px-4 py-3 text-center text-sm font-semibold text-white bg-green-500"># First-time</th>
+        <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody class="divide-y divide-gray-100">
+      <% if @monthly_reports.any? %>
+        <% page_totals = { ongoing: 0, first_time: 0 } %>
+        <% @monthly_reports.each do |report| %>
+          <% counts = @participant_lookup[report.id] %>
+          <% page_totals[:ongoing]    += counts[:ongoing] %>
+          <% page_totals[:first_time] += counts[:first_time] %>
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4 text-sm whitespace-nowrap">
+              <%= link_to report.date&.strftime("%b %Y") || "—",
+                          monthly_report_path(report),
+                          data: { turbo_frame: "_top" },
+                          class: "font-bold text-gray-800 hover:text-indigo-800 hover:underline" %>
+            </td>
+
+            <td class="px-6 py-4 text-sm text-gray-800"><%= report.created_by&.name || "—" %></td>
+
+            <td class="px-6 py-4 text-sm text-gray-600"><%= report.organization&.name || "—" %></td>
+
+            <td class="px-6 py-4 text-sm text-gray-600"><%= report.windows_type&.short_name || "—" %></td>
+
+            <td class="px-4 py-4 text-center text-sm bg-blue-50"><%= display_count(counts[:ongoing]) %></td>
+
+            <td class="px-4 py-4 text-center text-sm bg-green-50"><%= display_count(counts[:first_time]) %></td>
+
+            <td class="px-6 py-4 text-right">
+              <%= link_to "View",
+                          monthly_report_path(report),
+                          data: { turbo_frame: "_top" },
+                          class: "btn btn-secondary-outline" %>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="7" class="text-center py-16">
+            <h2 class="text-gray-600 text-lg mb-2">
+              <% if @organization %>
+                No monthly reports for this organization yet
+              <% else %>
+                No monthly reports found
+              <% end %>
+            </h2>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+
+    <% if @monthly_reports.any? %>
+      <tfoot class="bg-gray-50 border-t-2 border-gray-300">
+        <tr>
+          <td colspan="4" class="px-6 py-3 text-right text-xs font-semibold uppercase text-gray-500 tracking-wide">
+            Page totals
+          </td>
+          <td class="px-4 py-3 text-center text-sm font-semibold bg-blue-100"><%= number_with_delimiter(page_totals[:ongoing]) %></td>
+          <td class="px-4 py-3 text-center text-sm font-semibold bg-green-100"><%= number_with_delimiter(page_totals[:first_time]) %></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="4" class="px-6 py-3 text-right text-xs font-semibold uppercase text-gray-500 tracking-wide">
+            Grand totals (all filtered)
+          </td>
+          <td class="px-4 py-3 text-center text-base font-bold bg-blue-200"><%= number_with_delimiter(@grand_totals[:ongoing]) %></td>
+          <td class="px-4 py-3 text-center text-base font-bold bg-green-200"><%= number_with_delimiter(@grand_totals[:first_time]) %></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    <% end %>
+  </table>
+</div>
+
+<% if @monthly_reports.any? %>
+  <div class="mt-6 flex justify-center">
+    <div class="pagination mt-6"><%= tailwind_paginate @monthly_reports %></div>
+  </div>
+<% end %>

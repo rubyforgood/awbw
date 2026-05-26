@@ -133,20 +133,17 @@ Rails.application.routes.draw do
       get :populations_served
     end
     resources :comments, only: [ :index, :create ]
+    resources :monthly_reports, only: :index
   end
   resources :organization_statuses
   resources :affiliations
   resources :quotes
 
-  resources :monthly_reports
+  resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }
   get "reports/:id/edit_story", to: "reports#edit_story", as: "reports_edit_story"
   put "reports/update_story/:id", to: "reports#update_story", as: "reports_update_story"
   post "reports/share_story", to: "reports#create_story", as: "create_story"
   get "reports/share_story", to: "reports#share_story"
-
-  get "reports/monthly", to: "monthly_reports#monthly"
-  get "reports/monthly_select_type", to: "monthly_reports#monthly_select_type"
-  get "monthly_reports", to: "monthly_reports#monthly"
 
   get "reports/annual", to: "reports#annual"
   resources :reports
