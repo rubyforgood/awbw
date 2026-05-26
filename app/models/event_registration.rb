@@ -68,6 +68,11 @@ class EventRegistration < ApplicationRecord
     elsif params[:event_name].present?
       registrations = registrations.event_title(params[:event_name].downcase.strip)
     end
+    if params[:organization_id].present?
+      registrations = registrations.joins(:event_registration_organizations)
+                                   .where(event_registration_organizations: { organization_id: params[:organization_id] })
+                                   .distinct
+    end
     registrations
   end
 
