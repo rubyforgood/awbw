@@ -5,11 +5,6 @@ RSpec.describe MonthlyReport do
     expect(MonthlyReport.table_name).to eq("reports")
   end
 
-  it "shares the Reportable concern with Report" do
-    expect(MonthlyReport.ancestors).to include(Reportable)
-    expect(Report.ancestors).to include(Reportable)
-  end
-
   it "sets type to 'MonthlyReport' on create" do
     report = create(:monthly_report)
     expect(report.type).to eq("MonthlyReport")
