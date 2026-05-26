@@ -46,6 +46,7 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     "app/views/workshop_logs/new.html.erb"             => "admin-or-auth",
     "app/views/monthly_reports/new.html.erb"           => "admin-or-auth",
+    "app/views/monthly_reports/index.html.erb"         => "admin-or-auth",
     "app/views/reports/new.html.erb"                   => "admin-or-auth",
 
     # ─── admin-or-public-or-authpublished ───
@@ -70,7 +71,6 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     "app/views/reports/edit.html.erb"                  => "admin-or-owner",
     "app/views/workshop_logs/edit.html.erb"            => "admin-or-owner",
-    "app/views/monthly_reports/edit.html.erb"          => "admin-or-owner",
     "app/views/people/workshop_logs.html.erb"          => "admin-or-owner",
 
     "app/views/notifications/show.html.erb"            => "admin-or-owner",

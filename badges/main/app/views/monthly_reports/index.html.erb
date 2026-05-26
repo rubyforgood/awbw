@@ -1,0 +1,33 @@
+<% content_for(:page_bg_class, "admin-or-auth") %>
+<div class="w-full max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:workshop_logs) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="w-full">
+    <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
+      <div class="pr-6">
+        <h2 class="text-2xl font-semibold mb-2">Monthly reports</h2>
+        <% if @organization %>
+          <p class="text-gray-600">
+            for <%= link_to @organization.name, edit_organization_path(@organization), class: "text-gray-700 hover:underline font-medium" %>
+          </p>
+        <% else %>
+          <p class="text-gray-600">Monthly reports submitted by facilitators across organizations</p>
+        <% end %>
+      </div>
+
+      <div class="flex gap-2 items-center text-right">
+        <% if @organization %>
+          <%= link_to "Back to organization", edit_organization_path(@organization), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "search_boxes" %>
+
+    <%= render "monthly_reports_count" %>
+
+    <% result_src = monthly_reports_path + "?" + request.query_string %>
+
+    <%= turbo_frame_tag "monthly_reports_results", src: result_src do %>
+      <%= render "results_skeleton" %>
+    <% end %>
+  </div>
+</div>
