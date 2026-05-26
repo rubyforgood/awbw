@@ -23,6 +23,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response).to have_http_status(:success)
       end
 
+      it "filters registrations by organization_id" do
+        organization = create(:organization)
+        matching_reg = create(:event_registration)
+        create(:event_registration_organization, event_registration: matching_reg, organization: organization)
+
+        get event_registrations_path(organization_id: organization.id)
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(matching_reg.registrant.first_name)
+        expect(response.body).not_to include(existing_registration.registrant.first_name)
+      end
+
       it "exports CSV with headers and data only (no captions)" do
         get event_registrations_path, params: { format: :csv }
 

@@ -81,6 +81,7 @@ class Story < ApplicationRecord
     stories = stories.facilitator_spotlights(params[:facilitator_spotlights]) if params[:facilitator_spotlights].present?
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    stories = stories.where(organization_id: params[:organization_id]) if params[:organization_id].present?
     stories
   end
 
