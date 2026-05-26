@@ -52,6 +52,19 @@ RSpec.describe "/organizations", type: :request do
       get organization_url(organization)
       expect(response).to be_successful
     end
+
+    it "hides the Monthly reports row when there are no monthly reports" do
+      organization = Organization.create!(valid_attributes)
+      get organization_url(organization)
+      expect(response.body).not_to include("Monthly reports")
+    end
+
+    it "shows the Monthly reports row when monthly reports exist" do
+      organization = Organization.create!(valid_attributes)
+      create(:monthly_report, organization: organization)
+      get organization_url(organization)
+      expect(response.body).to include("Monthly reports")
+    end
   end
 
   describe "GET /new" do
@@ -66,6 +79,19 @@ RSpec.describe "/organizations", type: :request do
       organization = Organization.create!(valid_attributes)
       get edit_organization_url(organization)
       expect(response).to be_successful
+    end
+
+    it "hides the Monthly reports row when there are no monthly reports" do
+      organization = Organization.create!(valid_attributes)
+      get edit_organization_url(organization)
+      expect(response.body).not_to include("Monthly reports")
+    end
+
+    it "shows the Monthly reports row when monthly reports exist" do
+      organization = Organization.create!(valid_attributes)
+      create(:monthly_report, organization: organization)
+      get edit_organization_url(organization)
+      expect(response.body).to include("Monthly reports")
     end
   end
 
