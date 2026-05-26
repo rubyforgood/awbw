@@ -53,6 +53,19 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include(private_story.title)
       end
 
+      it "filters by organization_id on lazy turbo-frame request" do
+        other_org = create(:organization)
+        story_in_other_org = Story.create!(base_attributes.merge(
+          title: "Other Org Story #{SecureRandom.hex(4)}",
+          organization_id: other_org.id,
+          published: true
+        ))
+
+        get stories_url(organization_id: organization.id), headers: { "Turbo-Frame" => "story_results" }
+        expect(response.body).to include(published_story.title)
+        expect(response.body).not_to include(story_in_other_org.title)
+      end
+
       describe "external link handling" do
         let(:turbo_headers) { { "Turbo-Frame" => "story_results" } }
 
