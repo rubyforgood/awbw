@@ -133,12 +133,18 @@ class Bookmark < ApplicationRecord
 
   def self.windows_type(windows_type)
     return all unless windows_type.present?
-    normalized = case windows_type.downcase
-    when /adult/    then "Adult"
-    when /child/    then "Children"
-    when /combined/ then "Combined"
-    else windows_type
+    case windows_type.downcase
+    when /adult/
+      normalized = "ADULT WORKSHOP"
+    when /child/
+      normalized = "CHILDREN WORKSHOP"
+    when /combined/
+      normalized = "COMBINED"
+    else
+      normalized = windows_type
     end
+
+    pattern = "%#{normalized}%"
 
     # Use aliased table names to avoid conflicts with title scope's LEFT JOINs
     joins(<<~SQL)
@@ -155,7 +161,7 @@ class Bookmark < ApplicationRecord
       LEFT JOIN windows_types AS wt_ws_types
         ON wt_ws_types.id = wt_workshops.windows_type_id
     SQL
-    .where("wt_res_types.name = :name OR wt_ws_types.name = :name", name: normalized)
+    .where("wt_res_types.name LIKE :pattern OR wt_ws_types.name LIKE :pattern", pattern: pattern)
   end
 
   def self.user_name(user_name)

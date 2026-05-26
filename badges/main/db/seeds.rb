@@ -262,11 +262,11 @@ user_password = Devise::Encryptor.digest(User, "password")
 User.where(email: seed_emails).update_all(encrypted_password: user_password)
 
 puts "Creating WindowsTypes…"
-adult_type = WindowsType.where(name: "Adult")
+adult_type = WindowsType.where(name: "ADULT WINDOWS")
                         .first_or_create!(legacy_id: 1, short_name: "Adult")
-childrens_type = WindowsType.where(name: "Children")
+childrens_type = WindowsType.where(name: "CHILDREN'S WINDOWS")
                             .first_or_create!(legacy_id: 2, short_name: "Children")
-combined_type = WindowsType.where(name: "Combined")
+combined_type = WindowsType.where(name: "ADULT & CHILDREN COMBINED (FAMILY) WINDOWS")
                            .first_or_create!(legacy_id: 3, short_name: "Combined")
 
 puts "Creating FormBuilders…"

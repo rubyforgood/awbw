@@ -4,17 +4,17 @@ FactoryBot.define do
     sequence(:short_name) { |n| "Short Name #{n}" }
 
     trait :adult do
-      name { "Adult" }
+      name { "ADULT WINDOWS" }
       short_name { "Adult" }
     end
 
     trait :children do
-      name { "Children" }
+      name { "CHILDREN'S WINDOWS" }
       short_name { "Children" }
     end
 
     trait :combined do
-      name { "Combined" }
+      name { "ADULT & CHILDREN COMBINED (FAMILY) WINDOWS" }
       short_name { "Combined" }
     end
   end

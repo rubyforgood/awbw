@@ -119,7 +119,7 @@ class BookmarksController < ApplicationController
   private
 
   def set_index_variables
-    @sortable_fields = WindowsType.where.not(name: "Combined")
+    @sortable_fields = WindowsType.where("name NOT LIKE ?", "%COMBINED%")
     @windows_types_array = WindowsType::TYPES
     @bookmarkable_types = Bookmark.bookmarkable_type_options
     @workshops = authorized_scope(Workshop.where("led_count > 0")).order(led_count: :desc)
