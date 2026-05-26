@@ -65,5 +65,11 @@ RSpec.describe StoryIdea, type: :model do
       results = StoryIdea.search_by_params(query: 'nonexistent')
       expect(results).not_to include(idea_alpha, idea_beta)
     end
+
+    it 'filters by organization_id' do
+      results = StoryIdea.search_by_params(organization_id: idea_alpha.organization_id)
+      expect(results).to include(idea_alpha)
+      expect(results).not_to include(idea_beta)
+    end
   end
 end

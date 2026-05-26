@@ -66,6 +66,7 @@ class CommunityNews < ApplicationRecord
     community_news = community_news.by_year(params[:year]) if params[:year].present? && params[:year].match?(/\A\d{4}\z/)
     community_news = community_news.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     community_news = community_news.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    community_news = community_news.where(organization_id: params[:organization_id]) if params[:organization_id].present?
     community_news
   end
 end

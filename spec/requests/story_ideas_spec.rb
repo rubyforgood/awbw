@@ -41,6 +41,17 @@ RSpec.describe "/story_ideas", type: :request do
         get story_ideas_url
         expect(response).to be_successful
       end
+
+      it "filters story ideas by organization_id" do
+        org = create(:organization)
+        matching = create(:story_idea, organization: org)
+        excluded = create(:story_idea)
+
+        get story_ideas_url(organization_id: org.id)
+        expect(response).to be_successful
+        expect(response.body).to include(story_idea_path(matching))
+        expect(response.body).not_to include(story_idea_path(excluded))
+      end
     end
 
     describe "GET /show" do
