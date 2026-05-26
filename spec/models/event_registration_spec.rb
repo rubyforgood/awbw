@@ -228,6 +228,15 @@ RSpec.describe EventRegistration, type: :model do
       expect(results).to include(reg_alice_art)
       expect(results).not_to include(reg_bob_music)
     end
+
+    it 'filters by organization_id via event_registration_organizations' do
+      organization = create(:organization)
+      create(:event_registration_organization, event_registration: reg_alice_art, organization: organization)
+
+      results = EventRegistration.search_by_params(organization_id: organization.id)
+      expect(results).to include(reg_alice_art)
+      expect(results).not_to include(reg_bob_music)
+    end
   end
 
   describe "cancellation emails" do

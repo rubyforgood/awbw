@@ -129,5 +129,14 @@ RSpec.describe Story, type: :model do
       expect(results).to include(published_story)
       expect(results).not_to include(draft_story, old_story)
     end
+
+    it 'filters by organization_id' do
+      organization = create(:organization)
+      org_story = create(:story, organization: organization)
+
+      results = Story.search_by_params(organization_id: organization.id)
+      expect(results).to include(org_story)
+      expect(results).not_to include(published_story, draft_story, old_story)
+    end
   end
 end
