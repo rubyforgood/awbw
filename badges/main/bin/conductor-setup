@@ -7,6 +7,15 @@
 set -e
 cd $(dirname "$0")/..
 
+# Activate mise so the project's Ruby/Node are on PATH. This script runs
+# under /bin/sh, which does not source ~/.zshenv, so the shims-in-zshenv
+# install documented in CONTRIBUTING.md does not apply here.
+if command -v mise > /dev/null 2>&1; then
+  eval "$(mise activate sh)"
+elif [ -x /opt/homebrew/bin/mise ]; then
+  eval "$(/opt/homebrew/bin/mise activate sh)"
+fi
+
 if [ -z "$CONDUCTOR_ROOT_PATH" ]; then
   echo "Not running inside Conductor. Falling back to normal setup..."
 

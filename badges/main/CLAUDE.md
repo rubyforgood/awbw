@@ -183,11 +183,12 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## Ruby Version Manager
 
-This project uses [mise](https://mise.jdx.dev/) to manage the Ruby version. Before running any `bundle exec` or Ruby command, activate mise:
-```bash
-eval "$(command /opt/homebrew/bin/mise activate zsh)"
-```
-The `ai/` scripts include this automatically.
+This project uses [mise](https://mise.jdx.dev/) to manage the Ruby version (read from [`.ruby-version`](.ruby-version) via the `idiomatic_version_file_enable_tools` setting in `mise.toml`).
+
+Standard mise activation (`eval "$(mise activate <shell>)"` in your shell rc, per the [mise install guide](https://mise.jdx.dev/getting-started.html)) is sufficient for `bin/setup`, `bundle exec`, and Ruby commands run from a terminal. Scripts that run in contexts where the shell rc isn't sourced handle activation themselves:
+
+- `bin/conductor-setup` activates mise explicitly (runs under `/bin/sh`, which doesn't source your interactive shell config)
+- `ai/*` scripts source `ai/.ruby-env`
 
 ## Testing
 
