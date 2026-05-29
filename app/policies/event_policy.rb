@@ -43,7 +43,6 @@ class EventPolicy < ApplicationPolicy
 
   # Use caution - This allows pasting scripts
   def google_analytics?
-    debugger
     admin?
   end
 
