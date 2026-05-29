@@ -409,39 +409,40 @@
         </div>
       </div>
     <% end %>
-
-    <div data-controller="dropdown">
-      <button
-        type="button"
-        id="snippets_button"
-        class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
-        data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"snippets":"hidden"}, {"snippets_arrow":"rotate-180"}, {"snippets_button":"rounded-md rounded-t-md"}]'
-      >
-        Google Snippets
-        <svg
-          id="snippets_arrow"
-          class="w-6 h-6 shrink-0"
-          fill="currentColor"
-          viewBox="0 0 20 20"
+    <% if allowed_to?(:google_analytics?, @event) %>
+      <div data-controller="dropdown">
+        <button
+          type="button"
+          id="snippets_button"
+          class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+          data-action="dropdown#toggle"
+          data-dropdown-payload-param='[{"snippets":"hidden"}, {"snippets_arrow":"rotate-180"}, {"snippets_button":"rounded-md rounded-t-md"}]'
         >
-          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-        </svg>
-      </button>
+          Google Snippets
+          <svg
+            id="snippets_arrow"
+            class="w-6 h-6 shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
 
-      <div id="snippets" class="hidden border border-gray-300 p-4 rounded-b-md">
-        <div class="grid grid-cols-1 gap-4">
-          <%= f.input :ga4_snippet, as: :text, label: "GA4 Snippet",
-                      input_html: { rows: 6, class: "font-mono text-sm w-full rounded border-gray-300 shadow-sm px-3 py-2" } %>
+        <div id="snippets" class="hidden border border-gray-300 p-4 rounded-b-md">
+          <div class="grid grid-cols-1 gap-4">
+            <%= f.input :ga4_snippet, as: :text, label: "GA4 Snippet",
+                          input_html: { rows: 6, class: "font-mono text-sm w-full rounded border-gray-300 shadow-sm px-3 py-2" } %>
 
-          <%= f.input :gtm_head_snippet, as: :text, label: "GTM Head Snippet",
-                      input_html: { rows: 6, class: "font-mono text-sm w-full rounded border-gray-300 shadow-sm px-3 py-2" } %>
+            <%= f.input :gtm_head_snippet, as: :text, label: "GTM Head Snippet",
+                          input_html: { rows: 6, class: "font-mono text-sm w-full rounded border-gray-300 shadow-sm px-3 py-2" } %>
 
-          <%= f.input :gtm_body_snippet, as: :text, label: "GTM Body Snippet",
-                      input_html: { rows: 6, class: "font-mono text-sm w-full rounded border-gray-300 shadow-sm px-3 py-2" } %>
+            <%= f.input :gtm_body_snippet, as: :text, label: "GTM Body Snippet",
+                          input_html: { rows: 6, class: "font-mono text-sm w-full rounded border-gray-300 shadow-sm px-3 py-2" } %>
+          </div>
         </div>
       </div>
-    </div>
+    <% end %>
 
   </div>
 

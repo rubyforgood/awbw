@@ -41,6 +41,12 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
+  # Use caution - This allows pasting scripts
+  def google_analytics?
+    debugger
+    admin?
+  end
+
   alias_rule :preview?, to: :edit?
 
   private
