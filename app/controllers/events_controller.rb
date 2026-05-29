@@ -266,41 +266,6 @@ class EventsController < ApplicationController
   end
 
   def event_params
-    params.require(:event).permit(:cost,
-                                  :created_by_id,
-                                  :location_id,
-                                  :title,
-                                  :pre_title,
-                                  :videoconference_url,
-                                  :videoconference_label,
-                                  :rhino_header,
-                                  :rhino_description,
-                                  :autoshow_cost,
-                                  :autoshow_date,
-                                  :autoshow_location,
-                                  :autoshow_registration,
-                                  :autoshow_time,
-                                  :autoshow_title,
-                                  :autoshow_videoconference_link,
-                                  :autoshow_videoconference_label,
-                                  :autoshow_pre_date_text,
-                                  :autoshow_registration_close,
-                                  :public_registration_enabled,
-                                  :pre_title,
-                                  :pre_date_text,
-                                  :featured,
-                                  :start_date, :end_date,
-                                  :registration_close_date,
-                                  :published,
-                                  :publicly_visible,
-                                  :publicly_featured,
-                                  :ga4_snippet,
-                                  :gtm_head_snippet,
-                                  :gtm_body_snippet,
-                                  category_ids: [],
-                                  sector_ids: [],
-                                  primary_asset_attributes: [ :id, :file, :_destroy ],
-                                  gallery_assets_attributes: [ :id, :file, :_destroy ]
-                                  )
+    authorized(params.require(:event))
   end
 end
