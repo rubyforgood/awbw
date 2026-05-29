@@ -81,13 +81,10 @@ class EventPolicy < ApplicationPolicy
                   gallery_assets_attributes: [ :id, :file, :_destroy ]
         ]
 
-    permitted += [ :ga4_snippet, :gtm_head_snippet, :gtm_body_snippet ] if admin?
+    permitted.prepend(:ga4_snippet, :gtm_head_snippet, :gtm_body_snippet) if admin?
+    debugger
 
-    params.permit(*permitted,
-      category_ids: [],
-      sector_ids: [],
-      primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ])
+    params.permit(*permitted)
   end
 
   alias_rule :preview?, to: :edit?
