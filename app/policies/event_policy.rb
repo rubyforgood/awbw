@@ -82,7 +82,6 @@ class EventPolicy < ApplicationPolicy
         ]
 
     permitted.prepend(:ga4_snippet, :gtm_head_snippet, :gtm_body_snippet) if admin?
-    debugger
 
     params.permit(*permitted)
   end
