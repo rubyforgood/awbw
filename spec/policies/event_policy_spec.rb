@@ -164,6 +164,26 @@ RSpec.describe EventPolicy, type: :policy do
     end
   end
 
+  describe "#google_analytics?" do
+    context "with admin user" do
+      subject { policy_for(record: published_event, user: admin_user) }
+
+      it { is_expected.to be_allowed_to(:google_analytics?) }
+    end
+
+    context "with regular user" do
+      subject { policy_for(record: published_event, user: regular_user) }
+
+      it { is_expected.not_to be_allowed_to(:google_analytics?) }
+    end
+
+    context "with no user" do
+      subject { policy_for(record: published_event, user: nil) }
+
+      it { is_expected.not_to be_allowed_to(:google_analytics?) }
+    end
+  end
+
   describe "#preview?" do
     it "is an alias of :edit? authorization rule" do
       policy = policy_for(record: published_event, user: admin_user)

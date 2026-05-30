@@ -16,6 +16,7 @@
     <%= vite_stylesheet_tag "application.css" %>
     <%= vite_client_tag %>
     <%= vite_javascript_tag "application" %>
+    <%= yield :head %>
 
     <!--
   If using a TypeScript entrypoint file:
@@ -30,6 +31,7 @@
 
   <body class="<%= controller.controller_name %> <%= controller.action_name %>
       flex flex-col min-h-screen bg-white">
+    <%= yield :body_start %>
     <%= render "shared/svg_symbols" %>
     <div class="flex-grow flex flex-col" id="main">
       <div class="sticky top-0 left-0 w-full z-50 print:hidden">
