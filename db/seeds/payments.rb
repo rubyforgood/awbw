@@ -79,7 +79,7 @@
 
   puts "  Payment made but allocation reverted)"
   payment1 = CashPayment.find_or_create_by!(
-    payer: bob,
+    person: bob,
     amount_cents: event_cost_cents,
     amount_cents_remaining: event_cost_cents
   ) do |p|
@@ -101,7 +101,7 @@
 
   puts "  Overpayment with full allocation (Alice pays $6000, covers 4 people)"
   payment2 = CashPayment.find_or_create_by!(
-    payer: alice,
+    person: alice,
     amount_cents: 600000,
     amount_cents_remaining: 0
   ) do |p|
@@ -114,7 +114,7 @@
 
   puts "  Payment with remaining available ($2000 payment, $1500 allocated, $500 remaining)"
   payment3 = CashPayment.find_or_create_by!(
-    payer: frank,
+    person: frank,
     amount_cents: 200000,
     amount_cents_remaining: 50000
   ) do |p|
@@ -130,7 +130,7 @@
 
   puts "  Full refund ($1500 payment, fully allocated, fully refunded)"
   payment4 = CashPayment.find_or_create_by!(
-    payer: gary,
+    person: gary,
     amount_cents: event_cost_cents,
     amount_cents_remaining: 0
   ) do |p|
@@ -148,7 +148,7 @@
 
   puts "  Creating Scenario 8: Payment with no allocations ($10000, full amount remaining)"
   CashPayment.find_or_create_by!(
-    payer: holly,
+    person: holly,
     amount_cents: 1000000,
     amount_cents_remaining: 1000000
   ) do |p|
@@ -157,7 +157,7 @@
 
   puts "  Partial payment"
   payment9 = CashPayment.find_or_create_by!(
-    payer: iris,
+    person: iris,
     amount_cents: 100000,
     amount_cents_remaining: 0
   ) do |p|

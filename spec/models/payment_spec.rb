@@ -4,126 +4,139 @@ RSpec.describe Payment, type: :model do
   describe "associations" do
     subject { create(:payment) }
 
-    it { should belong_to(:payer).required }
-    it { should belong_to(:payable).required }
-    it { should belong_to(:event).optional }
+    it { should belong_to(:person).optional }
+    it { should belong_to(:organization).optional }
   end
 
   describe "validations" do
-    describe "with build subject" do
-      subject { build(:payment) }
+    subject { build(:payment) }
 
-      it { should validate_presence_of(:currency) }
-      it { should validate_presence_of(:status) }
-      it { should validate_numericality_of(:amount_cents) }
-      it { should validate_inclusion_of(:status).in_array(Payment::STRIPE_PAYMENT_STATUSES) }
-      it { should validate_inclusion_of(:payment_type).in_array(Payment::PAYMENT_TYPES) }
-    end
+    it { should validate_presence_of(:currency) }
+    it { should validate_numericality_of(:amount_cents) }
 
-    describe "stripe_payment_intent_id conditional presence" do
-      it "requires stripe_payment_intent_id for stripe payments" do
-        payment = build(:payment, payment_type: "stripe", stripe_payment_intent_id: nil)
+    describe "payer_type" do
+      it "is required when auto_set cannot determine it" do
+        payment = build(:payment, person: nil, organization: nil, payer_type: nil)
         expect(payment).not_to be_valid
-        expect(payment.errors[:stripe_payment_intent_id]).to be_present
+        expect(payment.errors[:payer_type]).to include("can't be blank")
       end
 
-      it "does not require stripe_payment_intent_id for scholarship payments" do
-        payment = build(:payment, :scholarship, :succeeded, amount_cents: 1000)
+      it "auto-sets from person when only person is present" do
+        payment = build(:payment, person: create(:person), organization: nil, payer_type: nil)
+        expect(payment).to be_valid
+        expect(payment.payer_type).to eq("Person")
+      end
+
+      it "auto-sets from organization when only organization is present" do
+        payment = build(:payment, person: nil, organization: create(:organization), payer_type: nil)
+        expect(payment).to be_valid
+        expect(payment.payer_type).to eq("Organization")
+      end
+
+      it "accepts valid values" do
+        payment = build(:payment, payer_type: "Organization")
         expect(payment).to be_valid
       end
+
+      it "rejects invalid values when both person and organization are present" do
+        person = create(:person)
+        org = create(:organization)
+        payment = build(:payment, person: person, organization: org, payer_type: "Invalid")
+        expect(payment).not_to be_valid
+        expect(payment.errors[:payer_type]).to be_present
+      end
     end
 
-    describe "with create subject for uniqueness" do
-      subject { create(:payment) }
-
-      it { should validate_uniqueness_of(:stripe_payment_intent_id).case_insensitive }
-      it { should validate_uniqueness_of(:stripe_charge_id).case_insensitive.allow_nil }
-    end
-
-    describe "defaults" do
-      it "defaults currency to 'usd'" do
-        payment = Payment.new
-        expect(payment.currency).to eq("usd")
+    describe "at_least_one_payer" do
+      it "is invalid without a person or organization" do
+        payment = build(:payment, person: nil, organization: nil)
+        expect(payment).not_to be_valid
+        expect(payment.errors[:base]).to include("At least one payer (person or organization) must be present")
       end
 
-      it "defaults status to 'pending'" do
-        payment = Payment.new
-        expect(payment.status).to eq("pending")
+      it "is valid with a person" do
+        payment = build(:payment, person: create(:person), organization: nil)
+        expect(payment).to be_valid
+      end
+
+      it "is valid with an organization" do
+        payment = build(:payment, person: nil, organization: create(:organization))
+        expect(payment).to be_valid
       end
     end
   end
 
   describe "constants" do
-    it "defines PAYMENT_TYPES" do
-      expect(Payment::PAYMENT_TYPES).to eq(%w[stripe scholarship check purchase_order other refund])
-    end
-
-    it "defines STRIPE_PAYMENT_STATUSES" do
-      expect(Payment::STRIPE_PAYMENT_STATUSES).to eq(%w[
-        pending
-        requires_action
-        processing
-        succeeded
-        failed
-        canceled
-        refunded
-        partially_refunded
-      ])
+    it "defines PAYER_TYPES" do
+      expect(Payment::PAYER_TYPES).to eq(%w[Person Organization])
     end
   end
 
   describe "scopes" do
-    let(:user) { create(:user) }
-    let(:event1) { create(:event) }
-    let(:event2) { create(:event) }
+    let(:person1) { create(:person) }
+    let(:person2) { create(:person) }
+    let(:org) { create(:organization) }
 
-    describe ".for_payable" do
-      let!(:payment1) { create(:payment, payable: event1) }
-      let!(:payment2) { create(:payment, payable: event2) }
+    describe ".by_type" do
+      let!(:cash_payment) { create(:payment, type: "CashPayment") }
+      let!(:check_payment) { create(:payment, type: "CheckPayment", check_number: "123") }
 
-      it "returns payments for the specified payable" do
-        expect(Payment.for_payable(event1)).to include(payment1)
-        expect(Payment.for_payable(event1)).not_to include(payment2)
+      it "filters by payment type" do
+        expect(Payment.by_type("CashPayment")).to include(cash_payment)
+        expect(Payment.by_type("CashPayment")).not_to include(check_payment)
       end
     end
 
-    describe ".successful" do
-      let!(:succeeded_payment) { create(:payment, status: "succeeded") }
-      let!(:pending_payment) { create(:payment, status: "pending") }
-      let!(:failed_payment) { create(:payment, status: "failed") }
+    describe ".search_by_params" do
+      let!(:person_payment) { create(:payment, person: person1, organization: nil) }
+      let!(:org_payment) { create(:payment, person: nil, organization: org) }
 
-      it "returns only payments with succeeded status" do
-        expect(Payment.successful).to include(succeeded_payment)
-        expect(Payment.successful).not_to include(pending_payment)
-        expect(Payment.successful).not_to include(failed_payment)
+      it "filters by person_id" do
+        result = Payment.search_by_params({ person_id: person1.id })
+        expect(result).to include(person_payment)
+        expect(result).not_to include(org_payment)
+      end
+
+      it "filters by organization_id" do
+        result = Payment.search_by_params({ organization_id: org.id })
+        expect(result).to include(org_payment)
+        expect(result).not_to include(person_payment)
+      end
+
+      it "filters by payer_type" do
+        result = Payment.search_by_params({ payer_type: "Person" })
+        expect(result).to include(person_payment)
+        expect(result).not_to include(org_payment)
       end
     end
 
-    describe ".scholarships" do
-      let!(:scholarship_payment) { create(:payment, :scholarship, :succeeded, amount_cents: 1000) }
-      let!(:stripe_payment) { create(:payment, :succeeded) }
+    describe ".has_remaining" do
+      let!(:has_remaining) { create(:payment, amount_cents_remaining: 500) }
+      let!(:fully_allocated) { create(:payment, amount_cents_remaining: 0) }
 
-      it "returns only scholarship payments" do
-        expect(Payment.scholarships).to include(scholarship_payment)
-        expect(Payment.scholarships).not_to include(stripe_payment)
+      it "filters payments with remaining amount" do
+        expect(Payment.has_remaining("yes")).to include(has_remaining)
+        expect(Payment.has_remaining("yes")).not_to include(fully_allocated)
+      end
+
+      it "filters payments with no remaining amount" do
+        expect(Payment.has_remaining("no")).to include(fully_allocated)
+        expect(Payment.has_remaining("no")).not_to include(has_remaining)
       end
     end
+  end
 
-    describe ".pendingish" do
-      let!(:pending_payment) { create(:payment, status: "pending") }
-      let!(:requires_action_payment) { create(:payment, status: "requires_action") }
-      let!(:processing_payment) { create(:payment, status: "processing") }
-      let!(:succeeded_payment) { create(:payment, status: "succeeded") }
-      let!(:failed_payment) { create(:payment, status: "failed") }
+  describe "#payer" do
+    it "returns the person when payer_type is Person" do
+      person = create(:person)
+      payment = build(:payment, person: person, organization: nil)
+      expect(payment.payer).to eq(person)
+    end
 
-      it "returns payments with pending, requires_action, or processing status" do
-        result = Payment.pendingish
-        expect(result).to include(pending_payment)
-        expect(result).to include(requires_action_payment)
-        expect(result).to include(processing_payment)
-        expect(result).not_to include(succeeded_payment)
-        expect(result).not_to include(failed_payment)
-      end
+    it "returns the organization when payer_type is Organization" do
+      org = create(:organization)
+      payment = build(:payment, person: nil, organization: org)
+      expect(payment.payer).to eq(org)
     end
   end
 end

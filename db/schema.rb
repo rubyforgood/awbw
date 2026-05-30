@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_115248) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_30_000000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -797,13 +797,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_115248) do
     t.string "check_number"
     t.datetime "created_at", null: false
     t.string "currency", default: "usd", null: false
+    t.integer "organization_id"
     t.bigint "pay_charge_id"
-    t.bigint "payer_id", null: false
     t.string "payer_type", null: false
+    t.bigint "person_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
-    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer"
-    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer_type_and_payer_id"
+    t.index ["organization_id"], name: "index_payments_on_organization_id"
+    t.index ["person_id"], name: "index_payments_on_person_id"
   end
 
   create_table "people", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1512,6 +1513,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_115248) do
   add_foreign_key "pay_charges", "pay_subscriptions", column: "subscription_id"
   add_foreign_key "pay_payment_methods", "pay_customers", column: "customer_id"
   add_foreign_key "pay_subscriptions", "pay_customers", column: "customer_id"
+  add_foreign_key "payments", "organizations"
+  add_foreign_key "payments", "people"
   add_foreign_key "people", "users", column: "created_by_id"
   add_foreign_key "people", "users", column: "updated_by_id"
   add_foreign_key "person_form_form_fields", "form_fields"

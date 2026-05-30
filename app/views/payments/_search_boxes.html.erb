@@ -5,12 +5,10 @@
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
   <%= form_tag payments_path, method: :get, class: "space-y-4",
     data: {
-      controller: "collection search-type-select",
-      collection_search_type_select_outlet: "[data-type-picker]",
+      controller: "collection",
       turbo_frame: "payment_results",
       collection_unselected_class: default_btn,
-      collection_selected_class: selected_btn,
-      type_picker: ""
+      collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div>
@@ -35,47 +33,35 @@
         <%= select_tag "payer_type",
           options_for_select(["Person", "Organization"], params[:payer_type]),
           include_blank: true,
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-          data: { action: "search-type-select#toggle" } %>
+          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
       </div>
 
-      <template data-search-type-select-target="template" data-type="Person">
-        <div>
-          <label for="payer_id" class="text-sm font-medium text-gray-500 mb-1 block">Payer</label>
+      <div>
+        <label for="person_id" class="text-sm font-medium text-gray-500 mb-1 block">Person</label>
 
-          <%= select_tag "payer_id",
-            options_for_select(Person.where(id: params[:payer_id]).map { |p| [p.full_name, p.id] }),
-            include_blank: true,
-            class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-            data: {
-              controller: "remote-select",
-              remote_select_model_value: "person"
-            },
-            prompt: "Search for a person" %>
-        </div>
-      </template>
+        <%= select_tag "person_id",
+          options_for_select(Person.where(id: params[:person_id]).map { |p| [p.full_name, p.id] }),
+          include_blank: true,
+          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+          data: {
+            controller: "remote-select",
+            remote_select_model_value: "person"
+          },
+          prompt: "Search for a person" %>
+      </div>
 
-      <template data-search-type-select-target="template" data-type="Organization">
-        <div>
-          <label for="payer_id" class="text-sm font-medium text-gray-500 mb-1 block">Payer</label>
+      <div>
+        <label for="organization_id" class="text-sm font-medium text-gray-500 mb-1 block">Organization</label>
 
-          <%= select_tag "payer_id",
-            options_for_select(Organization.where(id: params[:payer_id]).map { |o| [o.name, o.id] }),
-            include_blank: true,
-            class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-            data: {
-              controller: "remote-select",
-              remote_select_model_value: "organization"
-            },
-            prompt: "Search for an organization" %>
-        </div>
-      </template>
-
-      <div data-search-type-select-target="pickerContainer">
-        <div>
-          <label class="text-sm font-medium text-gray-500 mb-1 block italic">Select Payer Type</label>
-          <div class="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 cursor-not-allowed min-h-[2.2rem]"></div>
-        </div>
+        <%= select_tag "organization_id",
+          options_for_select(Organization.where(id: params[:organization_id]).map { |o| [o.name, o.id] }),
+          include_blank: true,
+          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+          data: {
+            controller: "remote-select",
+            remote_select_model_value: "organization"
+          },
+          prompt: "Search for an organization" %>
       </div>
 
       <div class="md:col-span-4 flex gap-2 justify-end"><%= submit_tag "Search", class: "btn btn-primary" %><%= link_to "Clear filters", payments_path, class: "btn btn-secondary", data: { action: "collection#clearAndSubmit" } %></div>

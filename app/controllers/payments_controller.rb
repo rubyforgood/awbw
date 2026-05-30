@@ -19,7 +19,7 @@ class PaymentsController < ApplicationController
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
       if @allocatable.is_a?(EventRegistration)
-        @payment.payer = @allocatable.registrant
+        @payment.person = @allocatable.registrant
       end
     end
   end
@@ -71,7 +71,7 @@ class PaymentsController < ApplicationController
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
       if @allocatable.is_a?(EventRegistration)
-        @payment.payer = @allocatable.registrant
+        @payment.person = @allocatable.registrant
       end
     end
 
@@ -83,7 +83,7 @@ class PaymentsController < ApplicationController
   private
 
   def payment_params
-    params.require(:payment).permit(:type, :payer_type, :payer_id, :amount_dollars, :currency, :check_number, :allocatable_sgid)
+    params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :amount_dollars, :currency, :check_number, :allocatable_sgid)
   end
 
   def locate_allocatable
@@ -93,8 +93,7 @@ class PaymentsController < ApplicationController
 
   def build_payment_attributes(payment_params, allocatable)
     attrs = payment_params.except(:allocatable_sgid)
-    attrs[:payer_type] = params[:payment][:payer_type].presence || "Person"
-    attrs[:payer_id] = params[:payment][:payer_id].presence || (allocatable.try(:registrant_id) if allocatable.is_a?(EventRegistration))
+    attrs[:person_id] ||= allocatable.try(:registrant_id) if allocatable.is_a?(EventRegistration)
     attrs
   end
 

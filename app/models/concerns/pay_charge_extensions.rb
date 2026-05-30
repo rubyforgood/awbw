@@ -19,7 +19,7 @@ module PayChargeExtensions
     return unless person
 
     ExternalProcessorPayment.create!(
-      payer: person,
+      person: person,
       amount_cents: amount,
       amount_cents_remaining: amount,
       currency: currency,
@@ -40,7 +40,7 @@ module PayChargeExtensions
 
       Refund.create!(
         refundable: external_payment,
-        recipient: external_payment.payer,
+        recipient: external_payment.person,
         amount_cents: stripe_refund["amount"],
         method: "stripe",
         stripe_refund_id: stripe_refund["id"]

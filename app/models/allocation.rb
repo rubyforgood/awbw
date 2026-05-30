@@ -54,11 +54,6 @@ class Allocation < ApplicationRecord
     when "no" then where("reverted_id IS NULL AND amount >= 0")
     end
   }
-  scope :by_payer, ->(payer_type, payer_id) {
-    if payer_type.present? && payer_id.present?
-      where("source_type LIKE ? AND source_id IN (?)", "%Payment", Payment.where(payer_type: payer_type, payer_id: payer_id).select(:id))
-    end
-  }
   scope :by_allocatable_id, ->(allocatable_type, allocatable_id) {
     where(allocatable_type: allocatable_type, allocatable_id: allocatable_id) if allocatable_type.present? && allocatable_id.present?
   }
@@ -68,7 +63,13 @@ class Allocation < ApplicationRecord
     results = results.by_source_type(params[:source_type]) if params[:source_type].present?
     results = results.by_allocatable_type(params[:allocatable_type]) if params[:allocatable_type].present?
     results = results.has_reverted(params[:has_reverted]) if params[:has_reverted].present? && params[:has_reverted] != "all"
-    results = results.by_payer(params[:payer_type], params[:payer_id]) if params[:payer_type].present? && params[:payer_id].present?
+    if params[:payer_type].present? || params[:person_id].present? || params[:organization_id].present?
+      payment_ids = Payment.all
+      payment_ids = payment_ids.where(payer_type: params[:payer_type]) if params[:payer_type].present?
+      payment_ids = payment_ids.where(person_id: params[:person_id]) if params[:person_id].present?
+      payment_ids = payment_ids.where(organization_id: params[:organization_id]) if params[:organization_id].present?
+      results = results.where("source_type LIKE ? AND source_id IN (?)", "%Payment", payment_ids.select(:id))
+    end
     results = results.by_allocatable_id(params[:allocatable_type], params[:allocatable_id]) if params[:allocatable_type].present? && params[:allocatable_id].present?
     results
   end

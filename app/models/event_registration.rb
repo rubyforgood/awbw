@@ -155,13 +155,16 @@ class EventRegistration < ApplicationRecord
     end
   end
 
+  # TODO: This method references removed columns (payment_type, status, event) and
+  # associations (payments) that no longer exist on the current Payment model.
+  # Needs to be rewritten to work with the new person/organization payer fields.
   def create_refund_payments
     paid_cents = payments.successful.sum(:amount_cents)
     return if paid_cents <= 0
 
     payments.create!(
       amount_cents: -paid_cents,
-      payer: registrant,
+      person: registrant,
       event: event,
       payment_type: "refund",
       status: "refunded",

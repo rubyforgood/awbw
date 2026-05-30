@@ -53,13 +53,13 @@ RSpec.describe EventRegistration, type: :model do
   describe "#scholarship?" do
     it "returns true when registration has a scholarship payment" do
       reg = create(:event_registration)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: reg.registrant.user, amount_cents: 1099)
+      create(:payment, :scholarship, :succeeded, payable: reg, person: reg.registrant, amount_cents: 1099)
       expect(reg).to be_scholarship
     end
 
     it "returns false when registration has only stripe payments" do
       reg = create(:event_registration)
-      create(:payment, :succeeded, payable: reg, payer: reg.registrant.user, amount_cents: 1099)
+      create(:payment, :succeeded, payable: reg, person: reg.registrant, amount_cents: 1099)
       expect(reg).not_to be_scholarship
     end
 
@@ -77,13 +77,13 @@ RSpec.describe EventRegistration, type: :model do
 
     it "returns false when scholarship exists but tasks not completed" do
       reg = create(:event_registration, scholarship_tasks_completed: false)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: reg.registrant.user, amount_cents: 1099)
+      create(:payment, :scholarship, :succeeded, payable: reg, person: reg.registrant, amount_cents: 1099)
       expect(reg.scholarship_tasks_met?).to be false
     end
 
     it "returns true when scholarship exists and tasks completed" do
       reg = create(:event_registration, scholarship_tasks_completed: true)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: reg.registrant.user, amount_cents: 1099)
+      create(:payment, :scholarship, :succeeded, payable: reg, person: reg.registrant, amount_cents: 1099)
       expect(reg.scholarship_tasks_met?).to be true
     end
   end
@@ -94,13 +94,13 @@ RSpec.describe EventRegistration, type: :model do
 
     it "returns true for active, paid, non-scholarship registration" do
       reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1099)
+      create(:payment, :succeeded, payable: reg, person: user.person, amount_cents: 1099)
       expect(reg).to be_joinable
     end
 
     it "returns false when not active" do
       reg = create(:event_registration, event: event, registrant: user.person, status: "cancelled")
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1099)
+      create(:payment, :succeeded, payable: reg, person: user.person, amount_cents: 1099)
       expect(reg).not_to be_joinable
     end
 
@@ -111,13 +111,13 @@ RSpec.describe EventRegistration, type: :model do
 
     it "returns false for scholarship with tasks not completed" do
       reg = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: false)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: user, amount_cents: 1099)
+      create(:payment, :scholarship, :succeeded, payable: reg, person: user.person, amount_cents: 1099)
       expect(reg).not_to be_joinable
     end
 
     it "returns true for scholarship with tasks completed" do
       reg = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: true)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: user, amount_cents: 1099)
+      create(:payment, :scholarship, :succeeded, payable: reg, person: user.person, amount_cents: 1099)
       expect(reg).to be_joinable
     end
 
@@ -129,15 +129,15 @@ RSpec.describe EventRegistration, type: :model do
 
     it "returns true for partial scholarship + partial payment covering full cost" do
       reg = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: true)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: user, amount_cents: 500)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 599)
+      create(:payment, :scholarship, :succeeded, payable: reg, person: user.person, amount_cents: 500)
+      create(:payment, :succeeded, payable: reg, person: user.person, amount_cents: 599)
       expect(reg).to be_joinable
     end
 
     it "returns false for partial scholarship + partial payment not covering full cost" do
       reg = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: true)
-      create(:payment, :scholarship, :succeeded, payable: reg, payer: user, amount_cents: 500)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 100)
+      create(:payment, :scholarship, :succeeded, payable: reg, person: user.person, amount_cents: 500)
+      create(:payment, :succeeded, payable: reg, person: user.person, amount_cents: 100)
       expect(reg).not_to be_joinable
     end
   end
@@ -159,19 +159,19 @@ RSpec.describe EventRegistration, type: :model do
 
     it "returns true when payments cover cost" do
       reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1000)
+      create(:payment, :succeeded, payable: reg, person: user.person, amount_cents: 1000)
       expect(reg).to be_paid_in_full
     end
 
     it "returns false when payments are insufficient" do
       reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 500)
+      create(:payment, :succeeded, payable: reg, person: user.person, amount_cents: 500)
       expect(reg).not_to be_paid_in_full
     end
 
     it "returns correct result when payments are preloaded" do
       reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 1000)
+      create(:payment, :succeeded, payable: reg, person: user.person, amount_cents: 1000)
 
       preloaded = EventRegistration.includes(:payments).find(reg.id)
       expect(preloaded.payments).to be_loaded
@@ -180,7 +180,7 @@ RSpec.describe EventRegistration, type: :model do
 
     it "returns correct result when preloaded payments are insufficient" do
       reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, :succeeded, payable: reg, payer: user, amount_cents: 500)
+      create(:payment, :succeeded, payable: reg, person: user.person, amount_cents: 500)
 
       preloaded = EventRegistration.includes(:payments).find(reg.id)
       expect(preloaded.payments).to be_loaded
@@ -189,7 +189,7 @@ RSpec.describe EventRegistration, type: :model do
 
     it "ignores non-succeeded payments when preloaded" do
       reg = create(:event_registration, event: event, registrant: user.person)
-      create(:payment, payable: reg, payer: user, amount_cents: 1000, status: "pending")
+      create(:payment, payable: reg, person: user.person, amount_cents: 1000, status: "pending")
 
       preloaded = EventRegistration.includes(:payments).find(reg.id)
       expect(preloaded.payments).to be_loaded
