@@ -148,7 +148,11 @@ module ApplicationHelper
   end
 
   def navbar_bg_class
-    staging_environment? ? "bg-red-600" : "bg-primary"
+    if staging_environment? && !params[:nav_bg_primary].present?
+      "bg-red-600"
+    else
+      "bg-primary"
+    end
   end
 
   def staging_environment?

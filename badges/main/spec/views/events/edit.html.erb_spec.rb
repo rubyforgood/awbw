@@ -22,6 +22,7 @@ RSpec.describe "events/edit", type: :view do
     allow(view).to receive(:allowed_to?).with(:manage?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:index?, Event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:destroy?, event).and_return(true)
+    allow(view).to receive(:allowed_to?).with(:google_analytics?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:index?, with: Admin::AhoyActivityPolicy).and_return(false)
   end
 
