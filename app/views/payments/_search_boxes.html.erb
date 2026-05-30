@@ -32,7 +32,7 @@
 
         <%= select_tag "payer_type",
           options_for_select(["Person", "Organization"], params[:payer_type]),
-          include_blank: true,
+          include_blank: "All",
           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
       </div>
 
