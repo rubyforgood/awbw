@@ -7,12 +7,8 @@ class AllocationsController < ApplicationController
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
       @allocations = @allocatable.allocations.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
     else
-      if turbo_frame_request?
-        @allocations = Allocation.search_by_params(params).includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
-        render :allocation_results
-      else
-        @allocations = Allocation.search_by_params(params).includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
-      end
+      @allocations = Allocation.search_by_params(params).includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+      render :allocation_results if turbo_frame_request?
     end
   end
 
