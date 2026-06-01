@@ -58,13 +58,13 @@
 
               <td class="px-6 py-4 whitespace-nowrap text-sm text-left font-medium">
                 <% if allocation.source.respond_to?(:payer) %>
-                  <%= link_to "View", payment_path(allocation.source), class: "text-blue-600 hover:text-blue-800" %>
+                  <%= link_to "View", payment_path(allocation.source), data: {turbo_frame: "_top"}, class: "text-blue-600 hover:text-blue-800" %>
                 <% elsif allocation.source.is_a?(Discount) %>
                   <%= button_to "Remove", discount_path(allocation.source), method: :delete,
                         class: "cursor-pointer text-danger hover:text-danger-dark",
-                        data: { turbo_confirm: "Remove this discount?" } %>
+                        data: { turbo_confirm: "Remove this discount?", turbo_frame: "_top" } %>
                 <% else %>
-                  <%= link_to "View", edit_scholarship_path(allocation.source), class: "text-blue-600 hover:text-blue-800" %>
+                  <%= link_to "View", edit_scholarship_path(allocation.source), data: {turbo_frame: "_top"}, class: "text-blue-600 hover:text-blue-800" %>
                 <% end %>
               </td>
             </tr>
