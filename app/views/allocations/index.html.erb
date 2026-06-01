@@ -1,19 +1,13 @@
 <div class="max-w-6xl mx-auto">
-  <div class="flex justify-between items-center mb-6">
+  <div class="mb-6">
     <% if @allocatable %>
-      <h1 class="text-2xl font-bold">
-        Allocations
-      </h1>
-      <h2 class="text-xl font-medium">
-        <% if @allocatable.is_a?(EventRegistration) %>
-          <%= @allocatable.registrant.full_name %>
-          -
-          <%= @allocatable.event.title %>
-        <% else %>
-          <%= @allocatable.model_name.human %>
-        <% end %>
-      </h2>
-      <%= link_to "← Back", allocations_path(allocatable_sgid: params[:allocatable_sgid]), class: "btn btn-secondary" %>
+      <% if @allocatable.respond_to?(:event) %>
+        <%= link_to "← Manage registrants", manage_event_path(@allocatable.event), class: "text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block" %>
+      <% end %>
+      <h1 class="text-2xl font-semibold text-gray-900">Allocations</h1>
+      <% if @allocatable.respond_to?(:registrant) %>
+        <p class="text-gray-600 mt-1"><%= @allocatable.registrant.full_name %> — <%= @allocatable.event.title %></p>
+      <% end %>
     <% else %>
       <h1 class="text-2xl font-bold">All Allocations</h1>
     <% end %>
