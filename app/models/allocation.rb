@@ -16,9 +16,7 @@ class Allocation < ApplicationRecord
   def adjust_source_remaining
     return unless source.is_a?(Payment)
 
-    source.with_lock do
-      source.update!(amount_cents_remaining: source.amount_cents_remaining - amount)
-    end
+    source.update!(amount_cents_remaining: source.amount_cents_remaining - amount)
   end
 
   def reverted?

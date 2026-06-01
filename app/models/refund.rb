@@ -12,11 +12,7 @@ class Refund < ApplicationRecord
   after_create :adjust_payment_remaining
 
   def adjust_payment_remaining
-    return unless refundable.is_a?(Payment)
-
-    refundable.with_lock do
-      refundable.update!(amount_cents_remaining: refundable.amount_cents_remaining - amount_cents)
-    end
+    refundable.update!(amount_cents_remaining: refundable.amount_cents_remaining - amount_cents)
   end
 
   def amount_dollars
