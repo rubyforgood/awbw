@@ -34,7 +34,7 @@ RSpec.describe Payment, type: :model do
       end
 
       it "accepts valid values" do
-        payment = build(:payment, payer_type: "Organization")
+        payment = build(:payment, person: nil, organization: create(:organization), payer_type: "Organization")
         expect(payment).to be_valid
       end
 
@@ -135,7 +135,7 @@ RSpec.describe Payment, type: :model do
 
     it "returns the organization when payer_type is Organization" do
       org = create(:organization)
-      payment = build(:payment, person: nil, organization: org)
+      payment = create(:payment, person: nil, organization: org)
       expect(payment.payer).to eq(org)
     end
   end

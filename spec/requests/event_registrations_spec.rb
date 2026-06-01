@@ -44,7 +44,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
         rows = CSV.parse(response.body)
         expect(rows.size).to be >= 1
-        expect(rows.first).to eq([ "First name", "Last name", "Email", "Event", "Scholarship recipient", "Scholarship tasks completed" ])
+        expect(rows.first).to eq([ "First name", "Last name", "Email", "Phone", "Event", "Status", "Scholarship", "Scholarship completed", "Payment status", "Payment total" ])
 
         data_rows = rows.drop(1)
         expect(data_rows).not_to be_empty
@@ -53,9 +53,13 @@ RSpec.describe "EventRegistrations", type: :request do
           person.first_name.to_s,
           person.last_name.to_s,
           person.preferred_email.to_s,
+          person.phone_number.to_s,
           event.title.to_s,
+          "Registered",
           "No",
-          "No"
+          "No",
+          "Not paid in full",
+          ""
         ]
         expect(data_rows).to include(expected_row)
       end

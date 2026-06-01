@@ -141,6 +141,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/video_recordings/new.html.erb"          => "admin-only bg-blue-100",
     "app/views/users/new.html.erb"                     => "admin-only bg-blue-100",
     "app/views/windows_types/new.html.erb"             => "admin-only bg-blue-100",
+    "app/views/scholarships/new.html.erb"              => "admin-only bg-blue-100",
     "app/views/workshop_variations/new.html.erb"       => "admin-only bg-blue-100",
     "app/views/workshops/new.html.erb"                 => "admin-only bg-blue-100",
     # edit
@@ -162,6 +163,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/windows_types/edit.html.erb"            => "admin-only bg-blue-100",
     "app/views/workshop_ideas/edit.html.erb"           => "admin-only bg-blue-100",
     "app/views/workshop_variation_ideas/edit.html.erb" => "admin-only bg-blue-100",
+    "app/views/scholarships/edit.html.erb"             => "admin-only bg-blue-100",
     "app/views/workshop_variations/edit.html.erb"      => "admin-only bg-blue-100",
     "app/views/workshops/edit.html.erb"                => "admin-only bg-blue-100",
 
