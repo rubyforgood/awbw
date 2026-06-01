@@ -207,5 +207,14 @@ RSpec.describe CommunityNews, type: :model do
       expect(results).to include(news_alpha)
       expect(results).not_to include(news_beta)
     end
+
+    it 'filters by organization_id' do
+      organization = create(:organization)
+      org_news = create(:community_news, author: user_with_person, organization: organization)
+
+      results = CommunityNews.search_by_params(organization_id: organization.id)
+      expect(results).to include(org_news)
+      expect(results).not_to include(news_alpha, news_beta)
+    end
   end
 end

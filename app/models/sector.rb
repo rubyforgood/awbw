@@ -24,7 +24,8 @@ class Sector < ApplicationRecord
     "Other"
   ]
 
-  STORY_DISPLAY_TEXT = "Which sectors apply?"
+  STORY_DISPLAY_TEXT = "Which sectors does this story fit into?"
+  VIDEO_DISPLAY_TEXT = "Which sectors apply?"
 
   has_many :sectorable_items, dependent: :destroy
   has_many :workshops, through: :sectorable_items,

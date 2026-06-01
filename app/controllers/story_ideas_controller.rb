@@ -11,6 +11,7 @@ class StoryIdeasController < ApplicationController
                            .paginate(page: params[:page], per_page: per_page)
                            .decorate
     @story_ideas_count = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+    @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
   end
 
   def show
@@ -125,7 +126,7 @@ class StoryIdeasController < ApplicationController
     @users = users.distinct.order("people.first_name, people.last_name")
 
     @story_population_type = CategoryType.find_by(name: "StoryPopulation")
-    @story_population_categories = @story_population_type&.categories&.published&.order(:name) || []
+    @story_population_categories = @story_population_type&.categories&.published&.ordered_by_position_and_name || []
     @sectors = Sector.published.order(:name)
     submitted_sector_ids = Array(params.dig(:story_idea, :sector_ids)).reject(&:blank?)
     submitted_category_ids = Array(params.dig(:story_idea, :category_ids)).reject(&:blank?)

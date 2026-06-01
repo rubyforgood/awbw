@@ -1,265 +1,103 @@
 # frozen_string_literal: true
 
 class MonthlyReportsController < ApplicationController
-  def monthly_select_type
-    authorize! :monthly_report, to: :monthly_select_type?
-    check_feature_flag
-  end
+  def index
+    authorize! MonthlyReport
+    @organization = Organization.find_by(id: params[:organization_id])
 
-  def monthly
-    authorize! :monthly_report, to: :monthly?
-    check_feature_flag
-    return if performed?
+    if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 25
+      base_scope = authorized_scope(MonthlyReport.includes(:created_by, :windows_type, :organization))
+      filtered = base_scope.search(params)
+      @monthly_reports_unpaginated = filtered
+      @monthly_reports = filtered.paginate(page: params[:page], per_page: per_page)
+      @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+      compute_participant_totals(filtered, @monthly_reports)
 
-    build_month_and_year
-    find_form_builder
-    load_agencies
-    @workshop_log_summary_page = show_feature?(:new_workshop_log)
-
-    if (@report = current_user.submitted_monthly_report(@date,
-                                                        @form_builder.windows_type,
-                                                        @agency_id))
-      redirect_to(action: :edit, id: @report,
-                   month: @month, year: @year,
-                   form_builder_id: @form_builder.id, agency_id: @agency_id)
+      render :index_lazy
     else
-      render_form
-      render :new
-    end
-  end
-
-  def create
-    check_feature_flag
-    build_new_report
-    authorize! @report
-
-    if params[:sectorable_items]
-      if @report.save
-        flash[:notice] = "Your Monthly report has been successfully submitted."
-        redirect_to "/"
-      else
-        @form_builder = FormBuilder.find(@report.owner_id)
-        build_month_and_year
-        load_agencies
-        @agency_id = report_params["organization_id"]
-
-        flash[:alert] = "There was a problem submitting your form: " +
-                        "#{@report.errors.full_messages.join(" ")}"
-        render :new
-      end
-    else
-      flash[:alert] = "Please select some populations that attended this monthly report!!!"
-
-      @total_ongoing    = 0
-      @total_first_time = 0
-
-      find_form_builder
-      # @report.report_form_field_answers.build( log_fields )
-      render :new
-    end
-  end
-
-  def edit
-    check_feature_flag
-    build_month_and_year
-    find_form_builder
-    @report = Report.find(params[:id])
-
-    authorize! @report
-    @agencies  = current_user.organizations.
-                 where(windows_type_id: @report.windows_type_id)
-    @month = @report.date.month
-    @year  =  @report.date.year
-
-    find_workshop_logs
-    find_combined_workshop_logs(@agency_id)
-  end
-
-  def update
-    check_feature_flag
-    @report = MonthlyReport.find params[:id]
-    authorize! @report
-
-    if params[:report]
-      ActiveRecord::Base.transaction do
-        @report.update_attributes(report_params)
-        @saved = @report.delete_and_update_all(quotes_params, log_fields,
-                                                params[:image])
-      end
-
-      if @saved
-        flash[:notice] = "Thanks for reporting on a update report. "
-        redirect_to root_path
-      else
-        @agencies  = current_user.organizations.
-                       where(windows_type_id: @report.windows_type_id)
-
-        flash[:alert] = "ERROR!!!!!!!!!!!!!!"
-        render :edit
-      end
-    else
-      flash[:alert] = "Please select some populations that attended this report!!!"
-      redirect_to edit_report_path(@report)
+      base_scope = authorized_scope(MonthlyReport.all)
+      @monthly_reports_unpaginated = base_scope.search(params)
+      @count_display = @monthly_reports_unpaginated.count
+      set_index_variables
+      render :index
     end
   end
 
   def show
-    @monthly_report = Report.find(params[:id]).decorate
+    @monthly_report = MonthlyReport.includes(
+      :organization, :windows_type, { created_by: :person },
+      { quotes: :workshop },
+      { gallery_assets: { file_attachment: :blob } }
+    ).find(params[:id]).decorate
     authorize! @monthly_report
-    @answers      = @monthly_report.report_form_field_answers
-
-    if @monthly_report
-      render :show
-    else
-      redirect_to root_path, error: "Unable to find that Workshop Log."
-    end
+    @answers    = @monthly_report.report_form_field_answers.includes(:form_field)
+    @updated_by = Ahoy::Event.where(resource_type: "MonthlyReport", resource_id: @monthly_report.id)
+                              .where("name LIKE 'update.%'")
+                              .order(time: :desc)
+                              .first&.user
   end
-
 
   private
 
-  def load_agencies
-    @agencies  = current_user.organizations.
-                   where(windows_type_id: @form_builder.windows_type_id).uniq
-  end
+  # Aggregates "Total # On-going Participants" and "Total # First-Time Participants"
+  # answers across MRs by joining report_form_field_answers → form_fields. Values
+  # are stored as text on the answers table, so we CAST to UNSIGNED (MySQL — non-
+  # numeric strings cast to 0). Sets @grand_totals (across the unpaginated filtered
+  # set) and @participant_lookup (per-row lookup for the current page).
+  def compute_participant_totals(filtered_scope, page_scope)
+    ongoing_field_ids    = MonthlyReport.participant_field_ids(MonthlyReport::PARTICIPANT_ONGOING_QUESTION)
+    first_time_field_ids = MonthlyReport.participant_field_ids(MonthlyReport::PARTICIPANT_FIRST_TIME_QUESTION)
 
-  def render_form
-    @workshop_list = Workshop.created_by_id(current_user.id)
-                             .where(published: true, windows_type: 3)
-                             .order(title: :asc)
-
-    build_month_and_year
-    build_report
-    find_form_builder
-    build_report_form_fields
-    find_workshop_logs
-    find_combined_workshop_logs(@agency_id)
-  end
-
-  def find_form_builder
-    if params[:form_builder_id]
-      @form_builder = FormBuilder.find(params[:form_builder_id]).decorate
-    else
-      @form_builder = FormBuilder
-        .monthly
-        .find_by(windows_type_id: @agency.windows_type_id)
-        .decorate
-    end
-
-    agency     = params[:agency_id] ? Organization.find(params[:agency_id]) : current_user.organizations.where(windows_type_id: @form_builder.windows_type).first
-    @agency_id = agency.id unless agency.nil?
-  end
-
-  def build_report
-    @report = Report.new(
-      type: @form_builder.report_type,
-      windows_type: @form_builder.windows_type,
-      date: @date
-    )
-
-    @report.media_files.build
-  end
-
-  def build_new_report
-    @report = current_user.reports.build(report_params)
-    @report.report_form_field_answers.build(log_fields)
-    # @report.media_files.build( file: media_files_params ) unless media_files_params.blank?
-
-    quotes = []
-    quotes_params.each { |q|
-      quotes << Quote.new(quote: q[:quote], age: q[:age], gender: q[:gender])
+    sum_for = ->(field_ids, report_ids) {
+      return 0 if field_ids.empty?
+      ReportFormFieldAnswer.where(form_field_id: field_ids, report_id: report_ids)
+        .sum(Arel.sql("CAST(report_form_field_answers.answer AS UNSIGNED)")).to_i
     }
 
-    @report.quotes = quotes
+    filtered_ids = filtered_scope.select(:id)
+    @grand_totals = {
+      ongoing:    sum_for.call(ongoing_field_ids,    filtered_ids),
+      first_time: sum_for.call(first_time_field_ids, filtered_ids)
+    }
 
-    @report.date = build_date
-  end
+    page_ids = page_scope.map(&:id)
+    @participant_lookup = Hash.new { |h, k| h[k] = { ongoing: 0, first_time: 0 } }
+    return if page_ids.empty?
 
-  def check_feature_flag
-    redirect_to "/" if show_feature?(:no_monthly_reports)
-  end
-
-  def build_report_form_fields
-    return unless @form_builder.form_fields
-
-    @form_builder.form_fields.where(status: 1).each do |field|
-      if field.multiple_choice?
-        field.answer_options.each do |option|
-          @report.report_form_field_answers.new(
-            form_field: field,
-            answer_option: option
-          )
-        end
-      else
-        @report.report_form_field_answers.new(
-          form_field: field
-        )
+    ReportFormFieldAnswer
+      .where(form_field_id: ongoing_field_ids + first_time_field_ids, report_id: page_ids)
+      .pluck(:report_id, :form_field_id, :answer)
+      .each do |report_id, field_id, answer|
+        key = ongoing_field_ids.include?(field_id) ? :ongoing : :first_time
+        @participant_lookup[report_id][key] = answer.to_i
       end
+  end
+
+  def set_index_variables
+    cache_key_prefix = "monthly_reports/index_dropdowns/#{current_user&.id}"
+    @month_year_options = Rails.cache.fetch("#{cache_key_prefix}/month_year", expires_in: 5.minutes) do
+      scoped = authorized_scope(MonthlyReport.all)
+      scoped.group("DATE_FORMAT(COALESCE(reports.date, reports.created_at, NOW()), '%Y-%m')")
+            .select("DATE_FORMAT(COALESCE(reports.date, reports.created_at, NOW()), '%Y-%m') AS ym,
+                     MAX(COALESCE(reports.date, reports.created_at)) AS max_dt")
+            .order("max_dt DESC")
+            .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
     end
-  end
-
-  def find_workshop_logs
-    @workshop_logs = current_user.organization_monthly_workshop_logs(
-      @report.date, @report.windows_type
-    )
-
-    logs = @workshop_logs.map { |k, v| v }.flatten
-    @total_ongoing    = logs.reduce(0) { |sum, l| sum = sum + l.num_ongoing }
-    @total_first_time = logs.reduce(0) { |sum, l| sum = sum + l.num_first_time }
-  end
-
-  def find_combined_workshop_logs(agency_id)
-    combined_windows_type = WindowsType.where(short_name: "Combined").first
-    @combined_workshop_logs = current_user.organization_workshop_logs(
-    @report.date, combined_windows_type, agency_id)
-  end
-
-  def build_month_and_year
-    @month = params[:month] ? params[:month] : Date.current.month
-    @year  = params[:year] ? params[:year] : Date.current.year
-    @date  = Date.new(@year.to_i, @month.to_i)
-  end
-
-  def report_params
-    params[:report].delete(:form_file) if params[:report][:form_file].blank?
-
-    params[:report][:media_files_attributes].each do |k, v|
-      params[:report][:media_files_attributes].delete(k) if params[:report][:media_files_attributes][k][:file].blank?
+    @year_options = Rails.cache.fetch("#{cache_key_prefix}/year", expires_in: 5.minutes) do
+      scoped = authorized_scope(MonthlyReport.all)
+      scoped.pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(reports.date, reports.created_at, NOW()))")).sort.reverse
     end
 
-    params.require(:report).permit(
-      :type, :organization_id, :date, :owner_id, :workshop_id,
-      :owner_type, :windows_type_id, :other_description,
-      media_files_attributes: [ :file ],
-      report_form_field_answers_attributes:
-        [ :form_field_id, :answer_option_id, :answer, :_create ]
-    )
-  end
-
-  def media_files_params
-    params[:report].require(:media_files_attributes)
-  end
-
-  def log_fields
-    log_fields_params.map do |k, v|
-      { form_field_id: k, answer: v, report_id: @report.id }
-    end
-  end
-
-  def log_fields_params
-    params.require(:log_fields)
-  end
-
-  def quotes_params
-    return [] if params[:quotes].nil?
-    params[:quotes].permit!.map { |k, v| v }
-  end
-
-  def build_date
-    @month = Date.current.month
-    @year  = Date.current.year
-    @date = params[:report][:date] ?
-              Date.strptime(params[:report][:date], "%Y-%m") :
-              Date.new(@year.to_i, @month.to_i)
+    scoped_users = authorized_scope(User.all, as: :colleagues)
+    @users = scoped_users.or(User.where(id: @monthly_reports_unpaginated.select(:created_by_id)))
+                         .joins(:person)
+                         .distinct
+                         .select("users.id, users.email, users.person_id, people.first_name, people.last_name")
+                         .order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
+    @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
+    @workshops = Workshop.where(id: @monthly_reports_unpaginated.select(:workshop_id).distinct)
+                         .includes(:windows_type)
+                         .order(:title)
   end
 end

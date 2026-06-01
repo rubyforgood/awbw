@@ -127,7 +127,7 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create ]
   end
   resources :faqs
-  resources :notifications, only: [ :index, :show ] do
+  resources :notifications, only: [ :index, :show, :update ] do
     member do
       post :resend
     end
@@ -140,6 +140,7 @@ Rails.application.routes.draw do
       get :populations_served
     end
     resources :comments, only: [ :index, :create ]
+    resources :monthly_reports, only: :index
   end
   resources :payments, only: [ :new, :create, :show, :index ] do
     collection do
@@ -155,15 +156,11 @@ Rails.application.routes.draw do
   resources :affiliations
   resources :quotes
 
-  resources :monthly_reports
+  resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }
   get "reports/:id/edit_story", to: "reports#edit_story", as: "reports_edit_story"
   put "reports/update_story/:id", to: "reports#update_story", as: "reports_update_story"
   post "reports/share_story", to: "reports#create_story", as: "create_story"
   get "reports/share_story", to: "reports#share_story"
-
-  get "reports/monthly", to: "monthly_reports#monthly"
-  get "reports/monthly_select_type", to: "monthly_reports#monthly_select_type"
-  get "monthly_reports", to: "monthly_reports#monthly"
 
   get "reports/annual", to: "reports#annual"
   resources :reports

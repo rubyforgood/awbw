@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_30_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -474,6 +474,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_000000) do
     t.text "description"
     t.datetime "end_date", precision: nil
     t.boolean "featured", default: false, null: false
+    t.text "ga4_snippet"
+    t.text "gtm_body_snippet"
+    t.text "gtm_head_snippet"
     t.boolean "inactive", default: true, null: false
     t.integer "location_id"
     t.string "pre_date_text"
@@ -634,6 +637,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_000000) do
     t.integer "parent_notification_id"
     t.string "recipient_email", null: false
     t.string "recipient_role", null: false
+    t.boolean "responded", default: false, null: false
     t.integer "root_notification_id"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["kind"], name: "index_notifications_on_kind"

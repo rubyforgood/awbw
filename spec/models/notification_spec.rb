@@ -44,6 +44,44 @@ RSpec.describe Notification do
     end
   end
 
+  describe ".responded_status" do
+    let!(:fyi_responded)     { create(:notification, kind: "contact_us_fyi", responded: true) }
+    let!(:fyi_not_responded) { create(:notification, kind: "contact_us_fyi", responded: false) }
+    let!(:contact_us)        { create(:notification, kind: "contact_us") }
+    let!(:other)             { create(:notification, kind: "reset_password_fyi") }
+
+    it "returns only responded contact_us_fyi notifications for 'yes'" do
+      expect(Notification.responded_status("yes")).to contain_exactly(fyi_responded)
+    end
+
+    it "returns only unresponded contact_us_fyi notifications for 'no'" do
+      expect(Notification.responded_status("no")).to contain_exactly(fyi_not_responded)
+    end
+
+    it "returns notifications other than contact_us_fyi for 'na'" do
+      expect(Notification.responded_status("na")).to contain_exactly(contact_us, other)
+    end
+
+    it "returns all notifications for blank/unknown values" do
+      expect(Notification.responded_status("")).to contain_exactly(fyi_responded, fyi_not_responded, contact_us, other)
+      expect(Notification.responded_status("bogus")).to contain_exactly(fyi_responded, fyi_not_responded, contact_us, other)
+    end
+  end
+
+  describe "#requires_response?" do
+    it "returns true for contact_us_fyi kind" do
+      expect(build(:notification, kind: "contact_us_fyi").requires_response?).to be true
+    end
+
+    it "returns false for contact_us kind (auto-confirmation to submitter)" do
+      expect(build(:notification, kind: "contact_us").requires_response?).to be false
+    end
+
+    it "returns false for other kinds" do
+      expect(build(:notification, kind: "reset_password_fyi").requires_response?).to be false
+    end
+  end
+
   describe '#resend?' do
     it 'returns true when notification has a parent' do
       parent = create(:notification)

@@ -132,6 +132,22 @@ RSpec.describe PersonPolicy, type: :policy do
         expect(sql).to include('`affiliations`.`inactive` = FALSE')
         expect(sql).to include('`users`.`locked_at` IS NULL')
       end
+
+      it "excludes people whose user account is locked" do
+        regular = create(:user)
+        searchable = create(:person, profile_is_searchable: true)
+        create(:affiliation, person: searchable, inactive: false, end_date: nil)
+        locked = create(:person, profile_is_searchable: true, user: create(:user, :locked))
+        create(:affiliation, person: locked, inactive: false, end_date: nil)
+        unlinked = create(:person, profile_is_searchable: true, user: nil)
+        create(:affiliation, person: unlinked, inactive: false, end_date: nil)
+
+        policy = described_class.new(Person, user: regular)
+        scope = policy.apply_scope(Person.all, type: :active_record_relation)
+
+        expect(scope).to include(searchable, unlinked)
+        expect(scope).not_to include(locked)
+      end
     end
   end
 end

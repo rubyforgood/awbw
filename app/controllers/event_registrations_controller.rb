@@ -12,6 +12,7 @@ class EventRegistrationsController < ApplicationController
     @event_registrations_count = filtered.size
     @event_registrations = filtered.includes(registrant: [ :user, { avatar_attachment: :blob } ], event: :event_forms).paginate(page: params[:page], per_page: per_page)
     @events = Event.order(start_date: :desc)
+    @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
     @filtered_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
     @selected_registrant = Person.find_by(id: params[:registrant_id]) if params[:registrant_id].present?
 

@@ -9,6 +9,7 @@ RSpec.describe "story_ideas/index", type: :view do
     # Simulate a single page of paginated results
     assign(:story_ideas,
            StoryIdeaDecorator.decorate_collection(paginated([ story_idea1, story_idea2 ])))
+    assign(:organizations, [])
   end
 
   it "renders a list of story_ideas" do
