@@ -3,9 +3,6 @@ FactoryBot.define do
     association :registrant, factory: :person
     association :event
 
-    trait :scholarship do
-      scholarship_recipient { true }
-      scholarship_tasks_completed { true }
-    end
+
   end
 end

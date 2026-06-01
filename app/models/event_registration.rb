@@ -95,6 +95,15 @@ class EventRegistration < ApplicationRecord
     paid_in_full?
   end
 
+  def scholarship?
+    scholarships.exists?
+  end
+
+  def scholarship_tasks_met?
+    return true if scholarships.empty?
+    scholarships.all?(&:tasks_completed?)
+  end
+
   def allocations_sum
     allocations.sum(:amount)
   end

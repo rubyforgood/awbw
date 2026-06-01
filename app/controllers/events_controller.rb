@@ -63,7 +63,7 @@ class EventsController < ApplicationController
     authorize! @event
     @event = @event.decorate
     @event_registrations = @event.event_registrations
-      .includes(:payments, registrant: [ :user, :contact_methods ])
+      .includes(registrant: [ :user, :contact_methods ])
       .joins(:registrant)
       .select { |r| r.registrant.preferred_email.present? }
     @sample_registration = @event_registrations.first
@@ -85,7 +85,7 @@ class EventsController < ApplicationController
     days_until = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
 
     if registrations.empty?
-      redirect_to remind_event_path(@event), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event), alert: "Please select at least one recipient."
       return
     end
 
