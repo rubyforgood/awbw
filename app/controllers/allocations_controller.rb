@@ -74,7 +74,6 @@ class AllocationsController < ApplicationController
         end
 
         if @allocation.save
-          @source.update!(amount_cents_remaining: @source.amount_cents_remaining - amount_val)
           flash[:notice] = "Allocation created. $#{'%.2f' % @source.remaining_dollars} remaining on payment."
           redirect_to payment_path(@source)
         else
@@ -107,8 +106,6 @@ class AllocationsController < ApplicationController
       ActiveRecord::Base.transaction do
         if @revert.save
           @allocation.update!(reverted_id: @revert.id)
-
-          payment.update!(amount_cents_remaining: payment.amount_cents_remaining + @allocation.amount)
 
           redirect_to payment_path(payment), notice: "Allocation reverted"
         else

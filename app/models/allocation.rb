@@ -11,6 +11,16 @@ class Allocation < ApplicationRecord
 
   validate :reverted_requires_positive_amount, :negative_cannot_be_reverted
 
+  after_create :adjust_source_remaining
+
+  def adjust_source_remaining
+    return unless source.is_a?(Payment)
+
+    source.with_lock do
+      source.update!(amount_cents_remaining: source.amount_cents_remaining - amount)
+    end
+  end
+
   def reverted?
     reverted_id.present?
   end

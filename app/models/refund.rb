@@ -9,6 +9,16 @@ class Refund < ApplicationRecord
   validates :method, inclusion: { in: METHODS }
   validates :stripe_refund_id, uniqueness: true, allow_nil: true
 
+  after_create :adjust_payment_remaining
+
+  def adjust_payment_remaining
+    return unless refundable.is_a?(Payment)
+
+    refundable.with_lock do
+      refundable.update!(amount_cents_remaining: refundable.amount_cents_remaining - amount_cents)
+    end
+  end
+
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents
   end
