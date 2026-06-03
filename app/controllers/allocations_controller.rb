@@ -1,4 +1,7 @@
 class AllocationsController < ApplicationController
+  PERMITTED_SOURCE_TYPES = %w[Payment Scholarship Refund Discount].freeze
+  PERMITTED_ALLOCATABLE_TYPES = %w[EventRegistration].freeze
+
   before_action :authenticate_user!
 
   def index
@@ -35,8 +38,8 @@ class AllocationsController < ApplicationController
       amount: amount_val
     )
 
-    if @allocation.source_type && @allocation.source_id
-      @source = @allocation.source_type.constantize.find_by(id: @allocation.source_id)
+    if @allocation.source_type.present? && @allocation.source_id
+      @source = find_source(@allocation.source_type, @allocation.source_id)
     end
 
     if @allocation.allocatable_type == "EventRegistration" && @allocation.allocatable.present?
@@ -131,6 +134,15 @@ class AllocationsController < ApplicationController
     end
 
     true
+  end
+
+  def find_source(type, id)
+    case type
+    when "Payment" then Payment.find_by(id: id)
+    when "Scholarship" then Scholarship.find_by(id: id)
+    when "Refund" then Refund.find_by(id: id)
+    when "Discount" then Discount.find_by(id: id)
+    end
   end
 
   def allocation_params

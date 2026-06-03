@@ -1,4 +1,5 @@
 class PaymentsController < ApplicationController
+  PERMITTED_PAYMENT_TYPES = %w[CashPayment CheckPayment ExternalProcessorPayment].freeze
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 10
@@ -14,7 +15,10 @@ class PaymentsController < ApplicationController
   def new
     authorize!
     payment_type = params[:type]
-    @payment = payment_type.safe_constantize.new
+    unless PERMITTED_PAYMENT_TYPES.include?(payment_type)
+      redirect_to payments_path, alert: "Invalid payment type" and return
+    end
+    @payment = permitted_payment_type(payment_type).new
 
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
@@ -26,7 +30,13 @@ class PaymentsController < ApplicationController
 
   def create
     authorize!
-    payment_class = params[:payment][:type].presence&.safe_constantize || CashPayment
+    payment_class = permitted_payment_type(params[:payment][:type])
+
+    unless payment_class
+      @payment = Payment.new(payment_params.except(:allocatable_sgid, :type))
+      @payment.errors.add(:type, "is not a valid payment type")
+      render :new, status: :unprocessable_content and return
+    end
 
     allocatable = locate_allocatable
 
@@ -40,7 +50,7 @@ class PaymentsController < ApplicationController
         flash[:notice] = "Allocation created. $#{'%.2f' % @payment.reload.remaining_dollars} remaining on payment."
         redirect_path = allocations_path(allocatable_sgid: allocatable.to_sgid.to_s)
       else
-        @payment = payment_class.new(payment_params.except(:allocatable_sgid))
+        @payment = payment_class.new(payment_params.except(:allocatable_sgid, :type))
         @payment.save!
         redirect_path = payments_path
       end
@@ -66,7 +76,10 @@ class PaymentsController < ApplicationController
   def allocation_form
     authorize!
     payment_type = params[:type].presence
-    @payment = payment_type.safe_constantize.new
+    unless PERMITTED_PAYMENT_TYPES.include?(payment_type)
+      head :unprocessable_content and return
+    end
+    @payment = permitted_payment_type(payment_type).new
 
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
@@ -82,6 +95,11 @@ class PaymentsController < ApplicationController
 
   private
 
+  def permitted_payment_type(type)
+    return nil unless type.present? && PERMITTED_PAYMENT_TYPES.include?(type)
+    type.constantize
+  end
+
   def payment_params
     params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :amount_dollars, :currency, :check_number, :allocatable_sgid)
   end
@@ -92,7 +110,7 @@ class PaymentsController < ApplicationController
   end
 
   def build_payment_attributes(payment_params, allocatable)
-    attrs = payment_params.except(:allocatable_sgid)
+    attrs = payment_params.except(:allocatable_sgid, :type)
     attrs[:person_id] ||= allocatable.try(:registrant_id) if allocatable.is_a?(EventRegistration)
     attrs
   end
