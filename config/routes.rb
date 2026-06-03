@@ -99,8 +99,8 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :index, :create ]
   end
-  resources :scholarships, only: [ :new, :create, :edit, :update, :destroy ]
-  resources :discounts, only: [ :create, :destroy ] do
+  resources :scholarships, only: [ :new, :create, :show, :edit, :update, :destroy ]
+  resources :discounts, only: [ :create, :show, :destroy ] do
     collection do
       post :allocation_form
     end
@@ -151,7 +151,7 @@ Rails.application.routes.draw do
     post :revert, on: :member
   end
 
-  resources :refunds, only: [ :new, :create ]
+  resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
   resources :affiliations
   resources :quotes

@@ -1,7 +1,4 @@
 class AllocationsController < ApplicationController
-  PERMITTED_SOURCE_TYPES = %w[Payment Scholarship Refund Discount].freeze
-  PERMITTED_ALLOCATABLE_TYPES = %w[EventRegistration].freeze
-
   before_action :authenticate_user!
 
   def index
@@ -60,36 +57,34 @@ class AllocationsController < ApplicationController
     end
 
     @source.with_lock do
-      if @source.is_a?(Payment)
-        if @allocation.amount > @source.amount_cents_remaining
-          @allocation.errors.add(:base, "Cannot exceed remaining amount ($#{@source.remaining_dollars})")
+      if @source.respond_to?(:amount_cents_remaining) && @allocation.amount > @source.amount_cents_remaining
+        @allocation.errors.add(:base, "Cannot exceed remaining amount ($#{@source.remaining_dollars})")
 
-          flash.now[:error] = @allocation.errors.full_messages.join(", ")
-          respond_to do |format|
-              format.turbo_stream { render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages"), status: :unprocessable_content }
-              format.html { render :new, status: :unprocessable_content }
-            end
-          return
-        end
+        flash.now[:error] = @allocation.errors.full_messages.join(", ")
+        respond_to do |format|
+            format.turbo_stream { render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages"), status: :unprocessable_content }
+            format.html { render :new, status: :unprocessable_content }
+          end
+        return
+      end
 
-        if @allocation.save
-          flash[:notice] = "Allocation created. $#{'%.2f' % @source.remaining_dollars} remaining on payment."
-          redirect_to payment_path(@source)
-        else
-          render :new, status: :unprocessable_content
-        end
+      if @allocation.save
+        flash[:notice] = "Allocation created."
+        redirect_to source_path(@source)
+      else
+        render :new, status: :unprocessable_content
       end
     end
   end
 
   def revert
-    authorize!
-
     @allocation = Allocation.find(params[:id])
+
+    authorize! @allocation
 
     if @allocation.reverted?
       flash[:error] = "This allocation has already been reverted"
-      redirect_to payment_path(@allocation.source)
+      redirect_to source_path(@allocation.source)
       return
     end
 
@@ -99,23 +94,23 @@ class AllocationsController < ApplicationController
       amount: -@allocation.amount
     )
 
-    payment = @allocation.source
+    @allocation.source.with_lock do
+      if @revert.save
+        @allocation.update!(reverted_id: @revert.id)
 
-    payment.with_lock do
-      ActiveRecord::Base.transaction do
-        if @revert.save
-          @allocation.update!(reverted_id: @revert.id)
-
-          redirect_to payment_path(payment), notice: "Allocation reverted"
-        else
-          flash[:error] = @revert.errors.full_messages.join(", ")
-          redirect_to payment_path(@allocation.source)
-        end
+        redirect_to source_path(@allocation.source), notice: "Allocation reverted"
+      else
+        flash[:error] = @revert.errors.full_messages.join(", ")
+        redirect_to source_path(@allocation.source)
       end
     end
   end
 
   private
+
+  def source_path(source)
+    polymorphic_path(source.becomes(source.class.base_class))
+  end
 
   def validate_event_registration_cost(amount_val)
     event_reg = @allocation.allocatable

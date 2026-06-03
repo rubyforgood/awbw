@@ -1,5 +1,10 @@
 class ScholarshipsController < ApplicationController
-  before_action :set_scholarship, only: [ :edit, :update, :destroy ]
+  before_action :set_scholarship, only: [ :show, :edit, :update, :destroy ]
+
+  def show
+    @scholarship = Scholarship.find(params[:id])
+    authorize! @scholarship
+  end
 
   def new
     @allocatable = locate_allocatable

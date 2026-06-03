@@ -1,4 +1,9 @@
 class DiscountsController < ApplicationController
+  def show
+    @discount = Discount.find(params[:id])
+    authorize! @discount
+  end
+
   def create
     authorize!
 

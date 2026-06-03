@@ -1,6 +1,11 @@
 class RefundsController < ApplicationController
   before_action :authenticate_user!
 
+  def show
+    @refund = Refund.find(params[:id])
+    authorize! @refund
+  end
+
   def new
     authorize!
     if params[:payment_sgid].present?

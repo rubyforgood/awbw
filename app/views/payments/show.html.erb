@@ -81,7 +81,7 @@
 
                 <td class="px-4 py-3 text-right text-sm font-medium">
                   <% unless allocation.reverted? || allocation.amount.to_i < 0 %>
-                    <%= button_to "revert", revert_allocation_path(allocation), method: :post, class: "cursor-pointer text-danger hover:text-danger-dark", data: { turbo_confirm: "are you sure you want to revert this allocation? the funds will be returned to the payment." } %>
+                    <%= button_to "revert", revert_allocation_path(allocation), method: :post, class: "cursor-pointer text-danger hover:text-danger-dark", data: { turbo_confirm: "are you sure you want to revert this allocation?" } %>
                   <% end %>
                 </td>
               </tr>
