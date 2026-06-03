@@ -1,0 +1,122 @@
+require "rails_helper"
+
+RSpec.describe "Allocations", type: :request do
+  let(:admin)     { create(:user, :admin) }
+  let(:event)     { create(:event, cost_cents: 10_000) }
+  let(:reg)       { create(:event_registration, event:) }
+
+  before { sign_in admin }
+
+  describe "POST /allocations" do
+    context "with a Scholarship source" do
+      let(:scholarship) { create(:scholarship) }
+
+      it "creates an allocation and redirects to scholarship" do
+        expect {
+          post allocations_path, params: {
+            allocation: {
+              source_type: "Scholarship",
+              source_id: scholarship.id,
+              allocatable_type: "EventRegistration",
+              allocatable_id: reg.id,
+              amount_dollars: "10.00"
+            }
+          }
+        }.to change(Allocation, :count).by(1)
+
+        expect(response).to redirect_to(scholarship_path(scholarship))
+        expect(Allocation.last.source).to eq(scholarship)
+        expect(Allocation.last.amount).to eq(1000)
+      end
+    end
+
+    context "with a Refund source" do
+      let(:payment) { create(:payment, amount_cents: 5000, amount_cents_remaining: 5000) }
+      let(:refund)  { create(:refund, refundable: payment, recipient: create(:person), amount_cents: 1000, method: "check") }
+
+      it "creates an allocation and redirects to refund" do
+        expect {
+          post allocations_path, params: {
+            allocation: {
+              source_type: "Refund",
+              source_id: refund.id,
+              allocatable_type: "EventRegistration",
+              allocatable_id: reg.id,
+              amount_dollars: "5.00"
+            }
+          }
+        }.to change(Allocation, :count).by(1)
+
+        expect(response).to redirect_to(refund_path(refund))
+        expect(Allocation.last.source).to eq(refund)
+      end
+    end
+
+    context "with a Discount source" do
+      let(:discount) { create(:discount) }
+
+      it "creates an allocation and redirects to discount" do
+        expect {
+          post allocations_path, params: {
+            allocation: {
+              source_type: "Discount",
+              source_id: discount.id,
+              allocatable_type: "EventRegistration",
+              allocatable_id: reg.id,
+              amount_dollars: "10.00"
+            }
+          }
+        }.to change(Allocation, :count).by(1)
+
+        expect(response).to redirect_to(discount_path(discount))
+        expect(Allocation.last.source).to eq(discount)
+      end
+    end
+  end
+
+  describe "POST /allocations/:id/revert" do
+    context "with a Scholarship source" do
+      let(:scholarship) { create(:scholarship) }
+      let!(:allocation) { create(:allocation, source: scholarship, allocatable: reg, amount: 1000) }
+
+      it "reverts the allocation and redirects to scholarship" do
+        expect {
+          post revert_allocation_path(allocation)
+        }.to change(Allocation, :count).by(1)
+
+        expect(response).to redirect_to(scholarship_path(scholarship))
+        expect(allocation.reload.reverted?).to be true
+        expect(Allocation.last.amount).to eq(-1000)
+      end
+    end
+
+    context "with a Refund source" do
+      let(:payment)   { create(:payment, amount_cents: 5000, amount_cents_remaining: 5000) }
+      let(:refund)    { create(:refund, refundable: payment, recipient: create(:person), amount_cents: 1000, method: "check") }
+      let!(:allocation) { create(:allocation, source: refund, allocatable: reg, amount: 500) }
+
+      it "reverts the allocation and redirects to refund" do
+        expect {
+          post revert_allocation_path(allocation)
+        }.to change(Allocation, :count).by(1)
+
+        expect(response).to redirect_to(refund_path(refund))
+        expect(allocation.reload.reverted?).to be true
+      end
+    end
+
+    context "with a Discount source" do
+      let(:discount)   { create(:discount) }
+      let!(:allocation) { create(:allocation, source: discount, allocatable: reg, amount: 1000) }
+
+      it "reverts the allocation and redirects to discount" do
+        expect {
+          post revert_allocation_path(allocation)
+        }.to change(Allocation, :count).by(1)
+
+        expect(response).to redirect_to(discount_path(discount))
+        expect(allocation.reload.reverted?).to be true
+      end
+    end
+  end
+end
