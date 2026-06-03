@@ -11,8 +11,6 @@ class EventRegistration < ApplicationRecord
   has_many :scholarships, -> { distinct },
     through: :allocations, source: :source, source_type: "Scholarship"
 
-  before_destroy :create_refund_payments
-
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   before_create :generate_slug
@@ -167,23 +165,6 @@ class EventRegistration < ApplicationRecord
     registrant.affiliations.active.includes(:organization).find_each do |aff|
       event_registration_organizations.create(organization: aff.organization)
     end
-  end
-
-  # TODO: This method references removed columns (payment_type, status, event) and
-  # associations (payments) that no longer exist on the current Payment model.
-  # Needs to be rewritten to work with the new person/organization payer fields.
-  def create_refund_payments
-    paid_cents = payments.successful.sum(:amount_cents)
-    return if paid_cents <= 0
-
-    payments.create!(
-      amount_cents: -paid_cents,
-      person: registrant,
-      event: event,
-      payment_type: "refund",
-      status: "refunded",
-      currency: "usd"
-    )
   end
 
   def generate_slug
