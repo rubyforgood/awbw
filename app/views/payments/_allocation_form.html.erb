@@ -1,7 +1,7 @@
 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
   <h3 class="text-lg font-medium mb-4">New Payment</h3>
   <%= simple_form_for @payment, as: :payment, url: payments_path do |f| %>
-    <%= hidden_field_tag "payment[allocatable_sgid]", params[:allocatable_sgid] %>
+    <%= hidden_field_tag "payment[allocatable_sgid]", @allocatable&.to_sgid&.to_s || params[:allocatable_sgid] %>
     <%= f.input :type, as: :hidden, input_html: { value: @payment.type } %>
     <%= f.input :payer_type, as: :select, collection: Payment::PAYER_TYPES, required: true, prompt: false %>
     <%= f.input :person_id,
@@ -33,7 +33,7 @@
     <% end %>
     <div class="flex gap-2 mt-4">
       <%= f.button :submit, "Create Payment", class: "btn btn-primary" %>
-      <%= link_to "Cancel", allocations_path(allocatable_sgid: params[:allocatable_sgid]), class: "btn btn-secondary" %>
+      <%= link_to "Cancel", allocations_path(allocatable_sgid: @allocatable&.to_sgid&.to_s || params[:allocatable_sgid]), class: "btn btn-secondary" %>
     </div>
   <% end %>
 </div>
