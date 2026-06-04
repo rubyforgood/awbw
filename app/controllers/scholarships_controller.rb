@@ -10,8 +10,8 @@ class ScholarshipsController < ApplicationController
     @allocatable = locate_allocatable
     redirect_to allocations_path, alert: "Allocatable not found." unless @allocatable
 
-    @scholarship = Scholarship.new
-    @scholarship.allocations.build(allocatable: @allocatable, amount: 0)
+    @scholarship = Scholarship.new(recipient: @allocatable.registrant)
+    @scholarship.build_allocation(allocatable: @allocatable, amount: 0)
     authorize! @scholarship
   end
 
@@ -19,8 +19,8 @@ class ScholarshipsController < ApplicationController
     @allocatable = locate_allocatable
     redirect_to allocations_path, alert: "Allocatable not found." and return unless @allocatable
 
-    @scholarship = Scholarship.new(scholarship_params)
-    @scholarship.allocations.build(allocatable: @allocatable, amount: 0)
+    @scholarship = Scholarship.new(scholarship_params.merge(recipient: @allocatable.registrant))
+    @scholarship.build_allocation(allocatable: @allocatable, amount: 0)
     authorize! @scholarship
 
     if @scholarship.save
@@ -31,12 +31,12 @@ class ScholarshipsController < ApplicationController
   end
 
   def edit
-    @allocatable = @scholarship.allocatable
+    @allocatable = @scholarship.allocation&.allocatable
     authorize! @scholarship
   end
 
   def update
-    @allocatable = @scholarship.allocatable
+    @allocatable = @scholarship.allocation&.allocatable
     authorize! @scholarship
 
     if @scholarship.update(scholarship_params)
@@ -47,7 +47,7 @@ class ScholarshipsController < ApplicationController
   end
 
   def destroy
-    @allocatable = @scholarship.allocatable
+    @allocatable = @scholarship.allocation&.allocatable
     authorize! @scholarship
     @scholarship.destroy!
 
