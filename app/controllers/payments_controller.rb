@@ -152,11 +152,17 @@ class PaymentsController < ApplicationController
 
     if allocatable.is_a?(EventRegistration)
       event_cost = allocatable.event.cost_cents
+
+      if event_cost.blank?
+        payment.errors.add(:base, "Cannot allocate to a free event.")
+        raise ActiveRecord::RecordInvalid.new(payment)
+      end
+
       already_allocated = allocatable.allocations_sum
       remaining_needed = event_cost - already_allocated
 
       if remaining_needed <= 0
-        payment.errors.add(:base, "Event Registration is already fully paid.")
+        payment.errors.add(:base, "Event registration is already fully paid.")
         raise ActiveRecord::RecordInvalid.new(payment)
       end
 

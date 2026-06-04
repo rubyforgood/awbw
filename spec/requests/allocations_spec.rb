@@ -72,6 +72,76 @@ RSpec.describe "Allocations", type: :request do
         expect(Allocation.last.source).to eq(discount)
       end
     end
+
+    context "with an EventRegistration that is a free event" do
+      let(:scholarship) { create(:scholarship) }
+      let(:free_event)  { create(:event, cost_cents: nil) }
+      let(:free_reg)    { create(:event_registration, event: free_event) }
+
+      it "does not create an allocation" do
+        expect {
+          post allocations_path, params: {
+            allocation: {
+              source_type: "Scholarship",
+              source_id: scholarship.id,
+              allocatable_type: "EventRegistration",
+              allocatable_id: free_reg.id,
+              amount_dollars: "10.00"
+            }
+          }
+        }.not_to change(Allocation, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
+    context "with an EventRegistration that is fully paid" do
+      let(:scholarship) { create(:scholarship) }
+
+      before do
+        create(:allocation, source: create(:payment, amount_cents: event.cost_cents, amount_cents_remaining: event.cost_cents), allocatable: reg, amount: event.cost_cents)
+      end
+
+      it "does not create an allocation" do
+        expect {
+          post allocations_path, params: {
+            allocation: {
+              source_type: "Scholarship",
+              source_id: scholarship.id,
+              allocatable_type: "EventRegistration",
+              allocatable_id: reg.id,
+              amount_dollars: "5.00"
+            }
+          }
+        }.not_to change(Allocation, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
+    context "with an EventRegistration exceeding remaining cost" do
+      let(:scholarship) { create(:scholarship) }
+
+      before do
+        create(:allocation, source: create(:payment, amount_cents: event.cost_cents, amount_cents_remaining: event.cost_cents), allocatable: reg, amount: 7_000)
+      end
+
+      it "does not create an allocation" do
+        expect {
+          post allocations_path, params: {
+            allocation: {
+              source_type: "Scholarship",
+              source_id: scholarship.id,
+              allocatable_type: "EventRegistration",
+              allocatable_id: reg.id,
+              amount_dollars: "35.00"
+            }
+          }
+        }.not_to change(Allocation, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
   end
 
   describe "POST /allocations/:id/revert" do

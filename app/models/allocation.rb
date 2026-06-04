@@ -91,7 +91,7 @@ class Allocation < ApplicationRecord
 
     if event_reg.event.cost_cents.blank?
       errors.add(:base, "Cannot allocate to a free event.")
-    elsif event_reg.paid_in_full?
+    elsif amount.to_i > 0 && event_reg.paid_in_full?
       errors.add(:base, "Event registration is already fully paid.")
     elsif amount.to_i > 0 && amount > event_reg.remaining_cost
       remaining = event_reg.remaining_cost
