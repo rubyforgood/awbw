@@ -10,6 +10,7 @@ class Allocation < ApplicationRecord
   validates :allocatable_id, presence: true
 
   validate :reverted_requires_positive_amount, :negative_cannot_be_reverted
+  validate :validate_event_registration_cost, if: -> { allocatable_type == "EventRegistration" }
 
   after_create :adjust_source_remaining
 
@@ -83,6 +84,20 @@ class Allocation < ApplicationRecord
   end
 
   private
+
+  def validate_event_registration_cost
+    event_reg = allocatable
+    return unless event_reg.is_a?(EventRegistration)
+
+    if event_reg.event.cost_cents.blank?
+      errors.add(:base, "Cannot allocate to a free event.")
+    elsif event_reg.paid_in_full?
+      errors.add(:base, "Event registration is already fully paid.")
+    elsif amount.to_i > 0 && amount > event_reg.remaining_cost
+      remaining = event_reg.remaining_cost
+      errors.add(:base, "Cannot allocate more than remaining event cost. Remaining: $#{'%.2f' % (remaining / 100.0)}")
+    end
+  end
 
   def reverted_requires_positive_amount
     if reverted_id.present? && amount.to_i < 0

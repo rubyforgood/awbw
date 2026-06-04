@@ -39,17 +39,6 @@ class AllocationsController < ApplicationController
       @source = find_source(@allocation.source_type, @allocation.source_id)
     end
 
-    if @allocation.allocatable_type == "EventRegistration" && @allocation.allocatable.present?
-      unless validate_event_registration_cost(amount_val)
-        flash.now[:error] = @allocation.errors.full_messages.join(", ")
-        respond_to do |format|
-            format.turbo_stream { render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages"), status: :unprocessable_content }
-            format.html { render :new, status: :unprocessable_content }
-          end
-        return
-      end
-    end
-
     unless @source.present?
       @allocation.errors.add(:base, "Source is required")
       render :new, status: :unprocessable_content
@@ -72,7 +61,11 @@ class AllocationsController < ApplicationController
         flash[:notice] = "Allocation created."
         redirect_to source_path(@source)
       else
-        render :new, status: :unprocessable_content
+        flash.now[:error] = @allocation.errors.full_messages.join(", ")
+        respond_to do |format|
+            format.turbo_stream { render turbo_stream: turbo_stream.replace("flash_now", partial: "shared/flash_messages"), status: :unprocessable_content }
+            format.html { render :new, status: :unprocessable_content }
+          end
       end
     end
   end
@@ -110,25 +103,6 @@ class AllocationsController < ApplicationController
 
   def source_path(source)
     polymorphic_path(source.becomes(source.class.base_class))
-  end
-
-  def validate_event_registration_cost(amount_val)
-    event_reg = @allocation.allocatable
-    event = event_reg.event
-    if event.cost_cents.blank?
-      @allocation.errors.add(:base, "Cannot allocate to a free event.")
-      return false
-    end
-    current_allocated = event_reg.allocations_sum || 0
-    new_total = current_allocated + amount_val
-
-    if new_total > event.cost_cents
-      remaining = [ event.cost_cents - current_allocated, 0 ].max
-      @allocation.errors.add(:base, "Cannot allocate more than remaining event cost. remaining: $#{'%.2f' % (remaining / 100.0)}")
-      return false
-    end
-
-    true
   end
 
   def find_source(type, id)
