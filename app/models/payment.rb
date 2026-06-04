@@ -6,7 +6,7 @@ class Payment < ApplicationRecord
   belongs_to :person, optional: true
   belongs_to :organization, optional: true
 
-  validates :amount_cents, numericality: true
+  validates :amount_cents, numericality: { greater_than: 0 }
   validates :currency, presence: true
   validates :payer_type, presence: true, inclusion: { in: PAYER_TYPES }
 
