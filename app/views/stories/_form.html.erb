@@ -262,6 +262,15 @@
 
   <div class="flex flex-col md:flex-row md:space-x-4">
     <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :author_id,
+                  as: :select,
+                  label: "Display author",
+                  collection: @authors,
+                  selected: f.object.author_id || current_user&.id,
+                  input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+    </div>
+
+    <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :created_by_id,
                   collection: @users.map { |u| [ u.full_name_with_email, u.id ] },
                   prompt: "Select an author",

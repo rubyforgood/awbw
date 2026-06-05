@@ -1,5 +1,6 @@
 FactoryBot.define do
   factory :event do
+    association :author, factory: :user
     association :created_by, factory: :user
     title { "sample title" }
     description { "sample description" }

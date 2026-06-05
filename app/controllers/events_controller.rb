@@ -222,6 +222,9 @@ class EventsController < ApplicationController
         .select { |type, _| type.nil? || (type.published? && !type.story_specific? && !type.profile_specific?) }
         .sort_by { |type, _| type&.name.to_s.downcase }
     @sectors = Sector.published.order(:name)
+    @authors = authorized_scope(User.has_access.or(User.where(id: @event.author_id)))
+                   .includes(:person)
+                   .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
   end
 
   def set_event
@@ -230,6 +233,7 @@ class EventsController < ApplicationController
 
   def event_params
     params.require(:event).permit(:cost,
+                                  :author_id,
                                   :created_by_id,
                                   :location_id,
                                   :title,

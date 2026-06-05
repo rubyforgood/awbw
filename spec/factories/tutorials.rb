@@ -1,5 +1,7 @@
 FactoryBot.define do
   factory :tutorial do
+    association :author, factory: :user
+    association :created_by, factory: :user
     title { "MyString" }
     body { "MyText" }
     featured { false }

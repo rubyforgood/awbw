@@ -70,6 +70,14 @@
                   input_html: { class: "w-full rounded border-gray-300 px-2 py-1", min: 1, step: 1 },
                   label_html: { class: "font-medium mb-1 block" } %>
     </div>
+    <div class="flex-1 min-w-[200px]">
+      <%= f.input :author_id,
+                  as: :select,
+                  label: "Display author",
+                  collection: @authors,
+                  selected: f.object.author_id || f.object.created_by_id || current_user&.id,
+                  input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+    </div>
   </div>
 
   <!-- Third Row -->

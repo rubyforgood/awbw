@@ -149,10 +149,9 @@ class ResourcesController < ApplicationController
     @resource.build_downloadable_asset if @resource.downloadable_asset.blank?
     @resource.gallery_assets.build
     @windows_types = WindowsType.all
-    @authors = authorized_scope(User.has_access.or(User.where(id: @resource.created_by_id)))
+    @authors = authorized_scope(User.has_access.or(User.where(id: @resource.author_id)))
                    .includes(:person)
-                   .order("people.first_name, people.last_name")
-                   .map { |u| [ u.full_name, u.id ] }
+                   .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
     @categories_grouped =
       Category
         .includes(:category_type)
@@ -171,7 +170,7 @@ class ResourcesController < ApplicationController
   def resource_params
     params.require(:resource).permit(
       :rhino_body, :kind, :male, :female, :title, :featured, :published, :publicly_visible, :publicly_featured,
-      :agency, :author, :filemaker_code, :windows_type_id, :position,
+      :agency, :author, :author_id, :filemaker_code, :windows_type_id, :position,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       downloadable_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],

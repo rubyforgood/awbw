@@ -3,6 +3,7 @@ FactoryBot.define do
     association :windows_type
     association :organization
     association :workshop
+    association :author, factory: :user
     association :created_by, factory: :user
     association :updated_by, factory: :user
     sequence(:title) { |n| "Story #{n}" }

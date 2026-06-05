@@ -1,4 +1,5 @@
 <%= simple_form_for(@tutorial, html: { multipart: true }) do |f| %>
+  <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
   <%= render 'shared/errors', resource: @tutorial if @tutorial.errors.any? %>
 
   <div class="p-3">
@@ -27,6 +28,14 @@
         <%= f.input :position,
                     as: :integer,
                     hint: "Order to display videos in (lower numbers display first)" %>
+      </div>
+      <div class="flex-1">
+        <%= f.input :author_id,
+                    as: :select,
+                    label: "Display author",
+                    collection: @authors,
+                    selected: f.object.author_id || current_user&.id,
+                    input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
       </div>
     </div>
 

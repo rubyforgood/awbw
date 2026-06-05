@@ -3,6 +3,9 @@ class Tutorial < ApplicationRecord
 
   has_rich_text :rhino_body
 
+  belongs_to :author, class_name: "User", optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable

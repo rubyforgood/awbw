@@ -4,6 +4,7 @@ class Story < ApplicationRecord
 
   has_rich_text :rhino_body
 
+  belongs_to :author, class_name: "User", optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
@@ -48,7 +49,7 @@ class Story < ApplicationRecord
     attributes person_first: "people.first_name", person_last: "people.last_name"
     options :all, type: :text, default: true, default_operator: :or
 
-    scope { join_rich_texts.left_joins(created_by: :person) }
+    scope { join_rich_texts.left_joins(author: :person) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
     options :action_text_body, type: :text, default: true, default_operator: :or
   end

@@ -42,6 +42,7 @@ class TutorialsController < ApplicationController
 
   def create
     @tutorial = Tutorial.new(tutorial_params)
+    @tutorial.created_by ||= current_user
     authorize! @tutorial
 
     success = false
@@ -108,6 +109,9 @@ class TutorialsController < ApplicationController
         .select { |type, _| type.nil? || type.published? }
         .sort_by { |type, _| type&.name.to_s.downcase }
     @sectors = Sector.published.order(:name)
+    @authors = authorized_scope(User.has_access.or(User.where(id: @tutorial.author_id)))
+                   .includes(:person)
+                   .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
   end
 
   private
@@ -120,6 +124,7 @@ class TutorialsController < ApplicationController
   def tutorial_params
     params.require(:tutorial).permit(
       :title, :body, :rhino_body, :position, :youtube_url,
+      :author_id, :created_by_id,
       :featured, :published, :publicly_visible, :publicly_featured,
       category_ids: [],
       sector_ids: [],
