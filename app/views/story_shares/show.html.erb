@@ -84,6 +84,9 @@
         <%= render "assets/display_assets", resource: @story, link: true %>
       </div>
     <% end %>
+
+    <!-- Share Section -->
+    <%= render "stories/share_links", story: @story, url: story_share_url(@story) %>
   </div>
 </section>
 

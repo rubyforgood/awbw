@@ -30,6 +30,9 @@ application.register("column-toggle", ColumnToggleController)
 import CommentEditToggleController from "./comment_edit_toggle_controller"
 application.register("comment-edit-toggle", CommentEditToggleController)
 
+import CopyLinkController from "./copy_link_controller"
+application.register("copy-link", CopyLinkController)
+
 import DirtyFormController from "./dirty_form_controller"
 application.register("dirty-form", DirtyFormController)
 

@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (34) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (35) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -262,6 +262,7 @@ end
 - `column_toggle` — Toggle table column visibility
 - `comment_edit_toggle` — Inline comment editing mode
 - `confirm_email` — Email confirmation UI
+- `copy_link` — Copy a direct shareable URL to the clipboard
 - `dirty_form` — Unsaved changes detection
 - `dismiss` — Dismissable elements
 - `dropdown` — Dropdown menus with keyboard/click-outside handling

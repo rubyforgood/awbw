@@ -1,0 +1,50 @@
+<%# Direct shareable link + social/email share targets for a single story.
+    Locals: story (decorated or plain), url (canonical public share URL string). %>
+<% encoded_url   = CGI.escape(url) %>
+<% encoded_title = CGI.escape(story.title) %>
+<div class="border-t border-gray-300 pt-6 mt-6" data-controller="copy-link">
+  <h3 class="font-semibold text-lg mb-3">Share this story</h3>
+
+  <div class="flex flex-col sm:flex-row gap-2 sm:items-center mb-4">
+    <input
+      type="text"
+      data-copy-link-target="input"
+      value="<%= url %>"
+      readonly
+      aria-label="Direct link to this story"
+      class="w-full sm:max-w-md px-3 py-2 bg-gray-100 border border-gray-300 rounded font-mono text-sm overflow-x-auto whitespace-nowrap cursor-text"
+    >
+    <button type="button" data-action="copy-link#copy" class="btn btn-secondary-outline whitespace-nowrap">
+      <i class="fa-solid fa-link mr-1"></i>
+      <span data-copy-link-target="label">Copy link</span>
+    </button>
+  </div>
+
+  <div class="flex space-x-4">
+    <%= link_to "mailto:?subject=#{encoded_title}&body=#{encoded_url}",
+                class: "text-gray-600 hover:text-gray-800",
+                title: "Share by email" do %>
+      <i class="fa-solid fa-envelope fa-lg"></i>
+    <% end %>
+    <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{encoded_url}",
+                target: "_blank", rel: "noopener noreferrer",
+                class: "text-blue-600 hover:text-blue-800", title: "Share on Facebook" do %>
+      <i class="fab fa-facebook-square fa-lg"></i>
+    <% end %>
+    <%= link_to "https://twitter.com/intent/tweet?url=#{encoded_url}&text=#{encoded_title}",
+                target: "_blank", rel: "noopener noreferrer",
+                class: "text-sky-500 hover:text-sky-700", title: "Share on X" do %>
+      <i class="fab fa-x-twitter fa-lg"></i>
+    <% end %>
+    <%= link_to "https://www.linkedin.com/sharing/share-offsite/?url=#{encoded_url}",
+                target: "_blank", rel: "noopener noreferrer",
+                class: "text-blue-700 hover:text-blue-900", title: "Share on LinkedIn" do %>
+      <i class="fab fa-linkedin fa-lg"></i>
+    <% end %>
+    <%= link_to "https://pinterest.com/pin/create/button/?url=#{encoded_url}&description=#{encoded_title}",
+                target: "_blank", rel: "noopener noreferrer",
+                class: "text-red-600 hover:text-red-800", title: "Share on Pinterest" do %>
+      <i class="fab fa-pinterest-square fa-lg"></i>
+    <% end %>
+  </div>
+</div>

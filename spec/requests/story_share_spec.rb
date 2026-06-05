@@ -103,6 +103,12 @@ RSpec.describe "/story_share", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it "renders a copyable direct link to the story" do
+        get story_share_path(public_story)
+        expect(response.body).to include(story_share_url(public_story))
+        expect(response.body).to include("Copy link")
+      end
+
       it "cannot view published-only story" do
         get story_share_path(published_story)
         expect(response).to redirect_to(root_path)
