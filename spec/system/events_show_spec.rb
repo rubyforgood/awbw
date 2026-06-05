@@ -446,7 +446,10 @@ RSpec.describe "Event show page", type: :system do
   # --------------------------------------------------
 
   describe "registration button updates via Turbo", js: true do
-    before { driven_by(:selenium_chrome_headless) }
+    before do
+      driven_by(:selenium_chrome_headless)
+      event.update!(cost_cents: 0)
+    end
 
     it "updates Register to show registration link without full page reload" do
       sign_in(user)
