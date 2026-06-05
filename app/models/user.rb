@@ -82,6 +82,10 @@ class User < ApplicationRecord
   end
 
   scope :has_access, -> { where(locked_at: nil, inactive: [ false, nil ]).where.not(confirmed_at: nil) }
+  # Users selectable as a story/idea author. Unlike has_access, email confirmation
+  # is not required: facilitators are real people who should be creditable
+  # regardless of whether they have confirmed their email.
+  scope :selectable_as_author, -> { where(locked_at: nil, inactive: [ false, nil ]) }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all

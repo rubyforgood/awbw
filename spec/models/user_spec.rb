@@ -248,6 +248,25 @@ RSpec.describe User do
     end
   end
 
+  describe ".selectable_as_author" do
+    let!(:confirmed_user) { create(:user) }
+    let!(:unconfirmed_user) { create(:user, :unconfirmed) }
+    let!(:inactive_user) { create(:user, inactive: true) }
+    let!(:locked_user) { create(:user, :locked) }
+
+    it "includes facilitators whose email is not yet confirmed" do
+      expect(User.selectable_as_author).to include(unconfirmed_user)
+    end
+
+    it "includes facilitators with confirmed emails" do
+      expect(User.selectable_as_author).to include(confirmed_user)
+    end
+
+    it "excludes inactive and locked users" do
+      expect(User.selectable_as_author).not_to include(inactive_user, locked_user)
+    end
+  end
+
   describe '.search_by_params' do
     let!(:admin_user) { create(:user, email: 'alice@example.com', super_user: true) }
     let!(:regular_user) { create(:user, email: 'bob@example.com', super_user: false) }
