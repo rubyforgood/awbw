@@ -170,6 +170,12 @@ RSpec.describe "/story_ideas", type: :request do
         post story_ideas_url, params: { story_idea: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)
       end
+
+      it "labels the body error as 'Body', not 'Rhino body'" do
+        post story_ideas_url, params: { story_idea: invalid_attributes }
+        expect(response.body).to include("Body can&#39;t be blank")
+        expect(response.body).not_to include("Rhino body")
+      end
     end
 
     describe "PATCH /update" do

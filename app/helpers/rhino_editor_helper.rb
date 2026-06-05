@@ -1,16 +1,17 @@
 module RhinoEditorHelper
   # custom rhino editor with stimulus controller attached to edit raw source html
-  def rhino_editor(form, base_attribute_name, label: nil, hint: nil)
+  def rhino_editor(form, base_attribute_name, label: nil, hint: nil, required: false)
     rhino_attr = :"rhino_#{base_attribute_name}"
     field_id = form.field_id(rhino_attr)
     value = form.object.public_send(rhino_attr)
 
     label_tag =
       if label.present?
+        label_content = required ? safe_join([ label, " ", content_tag(:abbr, "*", title: "required", class: "text-red-600 no-underline") ]) : label
         form.label(
           base_attribute_name,
-          label,
-          class: "block font-medium mb-1 text-gray-700 text optional"
+          label_content,
+          class: "block font-medium mb-1 text-gray-700 text #{required ? "required" : "optional"}"
         )
       end
 

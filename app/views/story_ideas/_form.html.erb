@@ -111,6 +111,7 @@
     <% else %>
       <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
         <%= rhino_editor(f, :body,
+                      required: true,
                       label: "Please share details about your participant(s) (while maintaining confidentiality)
                       and their workshop goals, including what happened during the workshop, and how creating made an impact.
                       Include direct quotes whenever possible.",

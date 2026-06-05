@@ -33,6 +33,8 @@ en:
   hello: "Hello world"
   activerecord:
     attributes:
+      story_idea:
+        rhino_body: "Body"
       workshop_variation:
         rhino_body: "Details"
       workshop_variation_idea:
