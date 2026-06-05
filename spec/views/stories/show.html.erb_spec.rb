@@ -19,4 +19,9 @@ RSpec.describe "stories/show", type: :view do
     expect(rendered).to match(/MyBody/)
     expect(rendered).to match(story.author_credit)
   end
+
+  it "does not render the 'Change photo' control, even for admins" do
+    render
+    expect(rendered).not_to match(/Change photo/)
+  end
 end
