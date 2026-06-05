@@ -111,3 +111,6 @@ application.register("remote-select", RemoteSelectController)
 import MixedChartController from "./mixed_chart_controller"
 application.register("mixed-chart", MixedChartController)
 
+import LightboxController from "./lightbox_controller"
+application.register("lightbox", LightboxController)
+

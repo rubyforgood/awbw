@@ -1,12 +1,28 @@
 <!-- Gallery Media -->
 <% gallery_assets = resource.gallery_assets.select { |img| img.file.attached? } %>
 <% align = (defined?(align) && align.present?) ? align.to_s : "center" %>
+<% link = (defined?(link) ? link : nil) %>
 <% if gallery_assets.any? %>
-  <div class="<%= resource.class.table_name %>-gallery text-<%= align %> mb-4">
+  <div class="<%= resource.class.table_name %>-gallery text-<%= align %> mb-4"
+       data-controller="lightbox"
+       data-action="keydown.esc@window->lightbox#closeOnEscape keydown.left@window->lightbox#prev keydown.right@window->lightbox#next">
     <div class="flex flex-wrap justify-<%= align %> gap-4 <%= 'mx-auto' if align == 'center' %> max-w-4xl">
-      <% gallery_assets.each_with_index do |gallery_assets, idx| %>
-        <%= render "assets/display_image", item: gallery_assets, idx: idx, variant: :gallery, link: (defined?(link) ? link : nil) %>
+      <% gallery_assets.each_with_index do |gallery_asset, idx| %>
+        <% if link && gallery_asset.file.content_type.to_s.start_with?("image/") %>
+          <a href="<%= url_for(gallery_asset.file) %>"
+             class="flex grow"
+             data-lightbox-target="item"
+             data-caption="<%= gallery_asset.file.filename %>"
+             data-action="lightbox#open:prevent">
+            <%= render "assets/display_image", item: gallery_asset, idx: idx, variant: :gallery, link: false %>
+          </a>
+        <% else %>
+          <%= render "assets/display_image", item: gallery_asset, idx: idx, variant: :gallery, link: link %>
+        <% end %>
       <% end %>
     </div>
+    <% if link %>
+      <%= render "assets/lightbox" %>
+    <% end %>
   </div>
 <% end %>

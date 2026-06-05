@@ -1,0 +1,35 @@
+<div class="hidden fixed inset-0 z-50 items-center justify-center bg-black/80 p-4"
+     tabindex="-1"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Image gallery"
+     data-lightbox-target="modal"
+     data-action="click->lightbox#backdropClose">
+  <button type="button"
+          class="absolute top-4 right-4 text-white/80 hover:text-white text-3xl leading-none px-2"
+          aria-label="Close"
+          data-action="lightbox#close">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+  <button type="button"
+          class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl leading-none px-2"
+          aria-label="Previous image"
+          data-lightbox-target="prev"
+          data-action="lightbox#prev">
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+  <figure class="flex max-h-full max-w-4xl flex-col items-center">
+    <img class="max-h-[80vh] max-w-full rounded object-contain shadow-lg"
+         alt=""
+         data-lightbox-target="image">
+    <figcaption class="mt-3 text-center text-sm text-white/80"
+                data-lightbox-target="counter"></figcaption>
+  </figure>
+  <button type="button"
+          class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl leading-none px-2"
+          aria-label="Next image"
+          data-lightbox-target="next"
+          data-action="lightbox#next">
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>
+</div>

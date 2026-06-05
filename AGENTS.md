@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (34) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (35) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -267,6 +267,7 @@ end
 - `dropdown` — Dropdown menus with keyboard/click-outside handling
 - `file_preview` — File upload preview
 - `inactive_toggle` — Gray out expired affiliations
+- `lightbox` — Inline image gallery modal with next/previous navigation
 - `optimistic_bookmark` — Instant bookmark UI feedback
 - `org_toggle` — Organization toggle UI
 - `paginated_fields` — Client-side pagination of nested fields
