@@ -126,14 +126,18 @@ module Events
       attendees = number_of_attendees(form_params)
       amount = @event.cost_cents * attendees
 
+      metadata = { event_registration_id: registration.id }
+      comments_field = @form.form_fields.find_by(field_key: "payment_comments")
+      if comments_field && form_params[comments_field.id.to_s].present?
+        metadata[:payment_comments] = form_params[comments_field.id.to_s]
+      end
+
       person.set_payment_processor :stripe
 
       person.payment_processor.checkout(
         mode: "payment",
-        metadata: { event_registration_id: registration.id },
-        payment_intent_data: {
-          metadata: { event_registration_id: registration.id }
-        },
+        metadata: metadata,
+        payment_intent_data: { metadata: metadata },
         line_items: [ {
           price_data: {
             currency: "usd",
