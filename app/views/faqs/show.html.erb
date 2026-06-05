@@ -1,12 +1,24 @@
 <% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
-<div class="<%= DomainTheme.bg_class_for(:faqs) %> border border-gray-200 rounded-xl shadow p-6">
-      <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+  <!-- FAQ header banner -->
+  <div class="<%= DomainTheme.bg_class_for(:faqs, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:faqs, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:faqs, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:faqs, intensity: 900) %> uppercase tracking-wide">FAQ</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
         <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <%= link_to "FAQs", faqs_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% if allowed_to?(:edit?, @faq) %>
           <%= link_to "Edit", edit_faq_path(@faq), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% end %>
       </div>
+    </div>
+  </div>
+  <div class="<%= DomainTheme.bg_class_for(:faqs) %> p-4 sm:p-8 space-y-6">
       <h1 class="text-2xl font-semibold text-gray-900 mb-6">
         <%= @faq.class.model_name.human %>
         Details
@@ -16,4 +28,5 @@
           <%= render @faq, hide_options: true %>
         </div>
       </div>
+  </div>
 </div>

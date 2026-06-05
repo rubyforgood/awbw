@@ -1,7 +1,15 @@
 <% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
-<div class="<%= DomainTheme.bg_class_for(:resources) %> border border-gray-200 rounded-xl shadow p-6">
-      <!-- Top Right Utility Links -->
-      <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+  <!-- Tutorial header banner -->
+  <div class="<%= DomainTheme.bg_class_for(:tutorials, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:tutorials, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:tutorials, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:tutorials, intensity: 900) %> uppercase tracking-wide">Tutorial</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
         <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <%= link_to Tutorial.model_name.human(count: 2), tutorials_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
         <% if allowed_to?(:edit?, @tutorial) %>
@@ -12,7 +20,9 @@
           <%= render "bookmarks/editable_bookmark_button", resource: @tutorial.object %>
         </span>
       </div>
-
+    </div>
+  </div>
+  <div class="<%= DomainTheme.bg_class_for(:tutorials) %> p-4 sm:p-8 space-y-6">
       <!-- Resource Card -->
       <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
 
@@ -45,4 +55,5 @@
         </div>
 
       </div>
+  </div>
 </div>

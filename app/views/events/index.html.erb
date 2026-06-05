@@ -1,18 +1,17 @@
 <%= render "shared/public_welcome_banner" %>
 
 <% content_for(:page_bg_class, "public") %>
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-  <!-- Header Row -->
-  <div class="w-full">
-    <div class="flex items-start justify-between mb-6">
-      <div class="pr-6">
-        <h1 class="text-2xl font-semibold mb-2">Events</h1>
-
-        <p class="text-gray-600 max-w-2xl">
-          Join us for our virtual events including art workshops, facilitator trainings and other opportunities to create, connect and be in community
-        </p>
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow overflow-hidden">
+  <!-- Events header banner -->
+  <div class="<%= DomainTheme.bg_class_for(:events, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:events, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:events, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+        <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:events, intensity: 900) %> uppercase tracking-wide">Events</span>
       </div>
-      <div class="text-right text-end">
+      <div class="flex flex-wrap gap-2">
         <% if allowed_to?(:new?, Event) %>
           <div class="admin-only bg-blue-100">
             <%= link_to "New event",
@@ -22,10 +21,11 @@
         <% end %>
       </div>
     </div>
-    <!-- Divider -->
-    <div class="w-full mt-6">
-      <hr class="border-gray-300 mb-6">
-    </div>
+  </div>
+  <div class="<%= DomainTheme.bg_class_for(:events) %> p-4 sm:p-8 space-y-6">
+    <p class="text-gray-600 max-w-2xl">
+      Join us for our virtual events including art workshops, facilitator trainings and other opportunities to create, connect and be in community
+    </p>
 
     <% if @events.any? %>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

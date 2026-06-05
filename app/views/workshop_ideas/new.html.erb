@@ -1,18 +1,27 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_ideas, intensity: 200) %> border border-gray-200 rounded-xl shadow p-6">
-      <div class="flex items-center justify-between mb-3">
-        <h1 class="text-2xl font-semibold text-gray-900">
-          New Workshop Idea
-        </h1>
-        <p>We encourage you to create your own workshop or a
-          <%= link_to "variation of an existing workshop",
-                      new_workshop_variation_idea_path,
-                      class: "text-blue-500 hover:underline" %>.
-          <br>Please enter the details of your creation below. Most fields are optional.</p>
-      </div>
-      <div class="space-y-6">
-        <div class="bg-white rounded mt-4 p-6">
-          <%= render "form" %>
-        </div>
-      </div>
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+  <!-- Workshop idea header banner -->
+  <div class="<%= DomainTheme.bg_class_for(:workshop_ideas, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:workshop_ideas, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center gap-2">
+      <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:workshop_ideas, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+      </svg>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:workshop_ideas, intensity: 900) %> uppercase tracking-wide">New Workshop Idea</span>
+    </div>
+  </div>
+  <div class="<%= DomainTheme.bg_class_for(:workshop_ideas) %> p-4 sm:p-8 space-y-6">
+
+    <p class="text-gray-700 leading-relaxed">
+      We encourage you to create your own workshop or a
+      <%= link_to "variation of an existing workshop",
+                  new_workshop_variation_idea_path,
+                  class: "text-blue-500 hover:underline" %>.
+      Please enter the details of your creation below. Most fields are optional.
+    </p>
+
+    <div class="bg-white rounded mt-4 p-6">
+      <%= render "form" %>
+    </div>
+
+  </div>
 </div>

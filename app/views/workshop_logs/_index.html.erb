@@ -11,19 +11,21 @@
    ) || [0, 0, 0, 0, 0, 0] %>
 
       <div class="space-y-6">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-2xl font-semibold text-gray-900">
-            <%= WorkshopLog.model_name.human.pluralize %> (<%= number_with_delimiter(workshop_logs_count) %>)
-          </h1>
-          <div class="flex gap-2">
-            <%= link_to "New #{WorkshopLog.model_name.human.downcase}",
-                        new_workshop_log_path(organization_id: params[:organization_id],
-                                              workshop_id: params[:workshop_id],
-                                              created_by_id: current_user.id),
-                        class: "btn btn-primary" %>
+        <% unless local_assigns[:hide_header] %>
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-semibold text-gray-900">
+              <%= WorkshopLog.model_name.human.pluralize %> (<%= number_with_delimiter(workshop_logs_count) %>)
+            </h1>
+            <div class="flex gap-2">
+              <%= link_to "New #{WorkshopLog.model_name.human.downcase}",
+                          new_workshop_log_path(organization_id: params[:organization_id],
+                                                workshop_id: params[:workshop_id],
+                                                created_by_id: current_user.id),
+                          class: "btn btn-primary" %>
+            </div>
           </div>
-        </div>
+        <% end %>
 
         <!-- Filter form -->
         <%= render "workshop_logs/search_boxes" %>

@@ -1,17 +1,24 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:organizations) %> border border-gray-200 rounded-xl shadow p-6">
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
-        <div id="organization_count">
-          <h1 class="text-2xl font-semibold text-gray-900">Organizations</h1>
-        </div>
+<div class="max-w-7xl mx-auto border border-gray-200 rounded-xl shadow overflow-hidden">
+  <!-- Organizations header banner -->
+  <div class="<%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:organizations, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:organizations, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        </svg>
+        <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:organizations, intensity: 900) %> uppercase tracking-wide">Organizations</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
         <% if allowed_to?(:new?, Organization) %>
           <%= link_to "New Organization",
                       new_organization_path,
                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
         <% end %>
       </div>
-
+    </div>
+  </div>
+  <div class="<%= DomainTheme.bg_class_for(:organizations) %> p-4 sm:p-8 space-y-6">
       <!-- Optional filters -->
       <%= render "search_boxes" %>
 
@@ -53,4 +60,5 @@
           <div class="h-8 w-10 bg-gray-200 rounded"></div>
         </div>
       <% end %>
+  </div>
 </div>

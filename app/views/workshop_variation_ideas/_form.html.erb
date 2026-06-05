@@ -46,7 +46,7 @@
           },
           prompt: "Search by title",
           label: "Workshop",
-          label_html: { class: "block text-sm font-medium text-gray-700 mb-1 #{ 'readonly' if promoted_to_variation}" } %>
+          label_html: { class: "block font-medium text-gray-700 mb-1 #{ 'readonly' if promoted_to_variation}" } %>
       </div>
       <div>
         <%= f.input :windows_type_id,
@@ -75,7 +75,7 @@
                       selected: (params[:organization_id].presence || (f.object.organization_id || (@organizations.count == 1 ? @organizations.first.id : nil))),
                       input_html: { value: params[:organization_id].presence || f.object.organization_id || @organization_id,
                                     class: "#{ "readonly" if promoted_to_variation } block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
-                      label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
+                      label_html: { class: "block font-medium text-gray-700 mb-1" } %>
         <% else %>
           <%= f.hidden_field :organization_id,
                              value: f.object.organization_id || current_user.person.primary_organization&.id %>

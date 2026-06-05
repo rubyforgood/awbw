@@ -1,17 +1,23 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas, intensity: 200) %> border border-gray-200 rounded-xl shadow p-6">
-      <div class="flex items-center justify-between mb-3">
-        <h1 class="text-2xl font-semibold text-gray-900">New workshop variation idea</h1>
-      </div>
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+  <!-- Workshop variation idea header banner -->
+  <div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:workshop_variation_ideas, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center gap-2">
+      <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:workshop_variation_ideas, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3"></path>
+      </svg>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:workshop_variation_ideas, intensity: 900) %> uppercase tracking-wide">New Workshop Variation Idea</span>
+    </div>
+  </div>
+  <div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas) %> p-4 sm:p-8 space-y-6">
 
-      <p class="text-gray-700 leading-relaxed mb-4">
-        Sharing your unique workshop variations strengthens our curriculum for our entire community.
-        We deeply value your innovations and welcome your feedback anytime.
-      </p>
+    <p class="text-gray-700 leading-relaxed">
+      Sharing your unique workshop variations strengthens our curriculum for our entire community.
+      <br>
+      We deeply value your innovations and welcome your feedback anytime.
+    </p>
 
-      <div class="space-y-6">
-        <div class="mt-4">
-          <%= render "form", workshop_variation_idea: @workshop_variation_idea %>
-        </div>
-      </div>
+    <%= render "form", workshop_variation_idea: @workshop_variation_idea %>
+
+  </div>
 </div>

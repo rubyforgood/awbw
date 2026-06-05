@@ -1,18 +1,22 @@
 <% content_for(:page_bg_class, "public") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_variations) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-semibold text-gray-900">
-        <%= WorkshopVariation.model_name.human.pluralize %> (<%= @workshop_variations_count %>)
-      </h1>
-      <div class="flex gap-2">
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+  <!-- Workshop variations header banner -->
+  <div class="<%= DomainTheme.bg_class_for(:workshop_variations, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:workshop_variations, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:workshop_variations, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path>
+        </svg>
+        <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:workshop_variations, intensity: 900) %> uppercase tracking-wide">Workshop Variations (<%= @workshop_variations_count %>)</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
         <%= link_to "New #{WorkshopVariation.model_name.human.downcase}",
                     new_workshop_variation_path,
                     class: "btn btn-primary-outline" %>
       </div>
     </div>
-
+  </div>
+  <div class="<%= DomainTheme.bg_class_for(:workshop_variations) %> p-4 sm:p-8 space-y-6">
     <%= render "search_boxes" %>
 
     <div class="rounded-xl bg-white p-6">
@@ -86,4 +90,3 @@
     <% end %>
   </div>
 </div>
-

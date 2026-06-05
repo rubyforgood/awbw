@@ -1,38 +1,41 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_logs) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+  <!-- Workshop log header banner -->
+  <div class="<%= DomainTheme.bg_class_for(:workshop_logs, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:workshop_logs, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center gap-2">
+      <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:workshop_logs, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+      </svg>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:workshop_logs, intensity: 900) %> uppercase tracking-wide">New Workshop Log</span>
+    </div>
+  </div>
+  <div class="<%= DomainTheme.bg_class_for(:workshop_logs) %> p-4 sm:p-8 space-y-6">
 
-      <!-- Header -->
-      <div class="mb-8 space-y-4">
-        <!-- Alert -->
-        <div id="notification_monthly"
-             class="hidden relative rounded-md border border-green-300 bg-green-50 text-green-800 px-4 py-3 text-sm flex items-start justify-between">
-          <span>
-            A monthly report has already been submitted for this month.
-            To submit an additional workshop log, please contact your program manager.
-          </span>
-          <button type="button"
-                  class="text-green-700 hover:text-green-900 font-semibold ml-4"
-                  data-dismiss="alert"
-                  aria-label="Close">
-            &times;
-          </button>
-        </div>
+    <!-- Alert -->
+    <div id="notification_monthly"
+         class="hidden relative rounded-md border border-green-300 bg-green-50 text-green-800 px-4 py-3 text-sm flex items-start justify-between">
+      <span>
+        A monthly report has already been submitted for this month.
+        To submit an additional workshop log, please contact your program manager.
+      </span>
+      <button type="button"
+              class="text-green-700 hover:text-green-900 font-semibold ml-4"
+              data-dismiss="alert"
+              aria-label="Close">
+        &times;
+      </button>
+    </div>
 
-        <!-- Title -->
-        <h1 class="text-2xl font-semibold text-gray-900">
-          New <%= @workshop_log.class.model_name.human.downcase %>
-        </h1>
+    <!-- Description -->
+    <p class="text-gray-700 leading-relaxed">
+      An optional tool to track data from your art workshops.
+      <br>
+      If you don't see the workshop you facilitated listed in the dropdown menu, you can type in a new title in the field below.
+    </p>
 
-        <!-- Description -->
-        <p class="text-gray-700 leading-relaxed">
-          An optional tool to track data from your art workshops. If you don't see the workshop you facilitated listed in the dropdown menu, you can type in a new title in the field below.
-        </p>
-      </div>
+    <div class="bg-white rounded mt-4 p-6">
+      <%= render "form" %>
+    </div>
 
-      <div class="space-y-6">
-        <div class="bg-white rounded mt-4 p-6">
-          <%= render "form" %>
-        </div>
-      </div>
-
+  </div>
 </div>

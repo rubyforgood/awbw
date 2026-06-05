@@ -1,30 +1,35 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="<%= DomainTheme.bg_class_for(:story_ideas, intensity: 200) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex items-center justify-between mb-3">
-    <h1 class="text-2xl font-semibold text-gray-900">New <%= @story_idea.class.model_name.human.downcase %></h1>
-  </div>
-
-  <div class="mb-6 text-gray-700 leading-relaxed">
-    At A Window Between Worlds, we value every story you share. Your voice helps paint a picture of the positive impact
-    of art on people and communities, inspiring others to use art in similarly powerful and far reaching ways.
-    <br><br>
-    Thank you for considering submitting to our
-    <%= link_to "Story Share", "https://www.awbw.org/stories",
-                target: "_blank", class: "text-blue-600 hover:text-blue-800" %>.
-    Stories are typically short (200-400 words) and describe an art workshop you did and the impact it had on someone.
-    You can write about art workshops you've done with clients, family, friends, colleagues, community members,
-    volunteers, and yourself. To help your stories make the greatest impact, check out these
-    <%= link_to "tips for stories", resource_path(1011), class: "text-blue-600 hover:text-blue-800" %>
-    <br><br>
-    <span class="italic">
-      Please note: edits may be made, and not all stories
-      will be published to the site, but may still be used in other places.
-    </span>
-  </div>
-
-  <div class="space-y-6">
-    <div class="mt-4">
-      <%= render "form", story_idea: @story_idea %>
+<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+  <!-- Story idea header banner -->
+  <div class="<%= DomainTheme.bg_class_for(:story_ideas, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:story_ideas, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center gap-2">
+      <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:story_ideas, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+      </svg>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:story_ideas, intensity: 900) %> uppercase tracking-wide">New Story Idea</span>
     </div>
+  </div>
+  <div class="<%= DomainTheme.bg_class_for(:story_ideas) %> p-4 sm:p-8 space-y-6">
+
+    <div class="text-gray-700 leading-relaxed">
+      At A Window Between Worlds, we value every story you share. Your voice helps paint a picture of the positive impact
+      of art on people and communities, inspiring others to use art in similarly powerful and far reaching ways.
+      <br><br>
+      Thank you for considering submitting to our
+      <%= link_to "Story Share", "https://www.awbw.org/stories",
+                  target: "_blank", class: "text-blue-600 hover:text-blue-800" %>.
+      Stories are typically short (200-400 words) and describe an art workshop you did and the impact it had on someone.
+      You can write about art workshops you've done with clients, family, friends, colleagues, community members,
+      volunteers, and yourself. To help your stories make the greatest impact, check out these
+      <%= link_to "tips for stories", resource_path(1011), class: "text-blue-600 hover:text-blue-800" %>
+      <br><br>
+      <span class="italic">
+        Please note: edits may be made to your story idea, and not all stories
+        will be published to the site, but may still be used in other places.
+      </span>
+    </div>
+
+    <%= render "form", story_idea: @story_idea %>
+
   </div>
 </div>

@@ -1,5 +1,17 @@
 <% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
-<div class="workshop-show max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:workshops) %> border border-gray-200 rounded-xl shadow p-6 print:border-none print:shadow-none">
+<div class="workshop-show max-w-7xl mx-auto border border-gray-200 rounded-xl shadow overflow-hidden print:border-none print:shadow-none">
+  <!-- Workshop header banner -->
+  <div class="<%= DomainTheme.bg_class_for(:workshops, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:workshops, intensity: 300) %> px-8 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:workshops, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+        </svg>
+        <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:workshops, intensity: 900) %> uppercase tracking-wide">Workshop</span>
+      </div>
+    </div>
+  </div>
+  <div class="<%= DomainTheme.bg_class_for(:workshops) %> p-6 print:border-none print:shadow-none">
   <div class="flex flex-col gap-6">
     <!-- Main Workshop Show -->
     <div id="show" class="flex-1">
@@ -19,5 +31,6 @@
         }, { once: true });
       </script>
     </div>
+  </div>
   </div>
 </div>
