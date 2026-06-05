@@ -151,10 +151,7 @@ class EventRegistrationsController < ApplicationController
     @event_registration.event_registration_organizations
       .find_or_create_by!(organization: organization)
 
-    redirect_to params[:return_to] == "manage" ?
-      manage_event_path(@event_registration.event) :
-      registration_ticket_path(@event_registration.slug),
-      notice: "Organization linked successfully."
+    redirect_to manage_event_path(@event_registration.event), notice: "Organization linked successfully."
   end
 
   def destroy
@@ -241,5 +238,4 @@ class EventRegistrationsController < ApplicationController
         form_field_id: field.id
       )&.text
   end
-
 end
