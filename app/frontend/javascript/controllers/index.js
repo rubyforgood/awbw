@@ -84,6 +84,9 @@ application.register("searchable-checkbox", SearchableCheckboxController)
 import SearchableSelectController from "./searchable_select_controller"
 application.register("searchable-select", SearchableSelectController)
 
+import SectionFilterController from "./section_filter_controller"
+application.register("section-filter", SectionFilterController)
+
 import ShareUrlController from "./share_url_controller"
 application.register("share-url", ShareUrlController)
 

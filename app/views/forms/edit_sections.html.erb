@@ -13,6 +13,8 @@
       <legend class="text-sm font-medium text-gray-700 mb-3">Select sections to include:</legend>
       <div class="space-y-2">
         <% FormBuilderService::SECTIONS.each do |key, section| %>
+          <% next if key == :scholarship && @form.role != "scholarship" %>
+          <% next if key != :scholarship && @form.role == "scholarship" %>
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" name="sections[]" value="<%= key %>"
                    class="rounded border-gray-300 text-blue-600"
