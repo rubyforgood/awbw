@@ -96,6 +96,8 @@ Rails.application.routes.draw do
     member do
       get :confirm
       post :process_confirm
+      get :link_organization
+      post :select_organization
     end
     resources :comments, only: [ :index, :create ]
   end

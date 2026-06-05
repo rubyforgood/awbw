@@ -128,6 +128,35 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
+  def link_organization
+    @event_registration = EventRegistration.includes(:event, registrant: :person_forms).find(params[:id])
+    authorize! @event_registration, to: :link_organization?
+    @person = @event_registration.registrant
+    @submitted_org_name = find_submitted_agency_name(@event_registration)
+    @potential_matches = if @submitted_org_name.present?
+      Organization.remote_search(@submitted_org_name).limit(10)
+    else
+      Organization.none
+    end
+  end
+
+  def select_organization
+    @event_registration = EventRegistration.find(params[:id])
+    authorize! @event_registration, to: :select_organization?
+    @person = @event_registration.registrant
+    organization = Organization.find(params[:organization_id])
+
+    Affiliation.find_or_create_by!(person: @person, organization: organization)
+
+    @event_registration.event_registration_organizations
+      .find_or_create_by!(organization: organization)
+
+    redirect_to params[:return_to] == "manage" ?
+      manage_event_path(@event_registration.event) :
+      registration_ticket_path(@event_registration.slug),
+      notice: "Organization linked successfully."
+  end
+
   def destroy
     authorize! @event_registration
     event = @event_registration.event
@@ -197,4 +226,20 @@ class EventRegistrationsController < ApplicationController
       end
     end
   end
+
+  def find_submitted_agency_name(registration)
+    form = registration.event.registration_form
+    return nil unless form
+
+    field = form.form_fields.find_by(field_key: "agency_name")
+    return nil unless field
+
+    PersonFormFormField
+      .joins(person_form: :person)
+      .find_by(
+        person_forms: { person_id: registration.registrant_id, form_id: form.id },
+        form_field_id: field.id
+      )&.text
+  end
+
 end
