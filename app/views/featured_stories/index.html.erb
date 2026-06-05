@@ -1,0 +1,29 @@
+<% content_for(:page_bg_class, "public") %>
+<%= render "shared/public_welcome_banner" %>
+
+<div class="w-full max-w-4xl mx-auto <%= DomainTheme.bg_class_for(:stories) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex items-start justify-between mb-4">
+    <div class="pr-6">
+      <h2 class="text-2xl font-semibold">Reorder featured stories</h2>
+      <p class="text-gray-600 mt-2">Drag the stories into the order they should appear in the highlighted stories section of the home page.</p>
+    </div>
+
+    <div class="text-right text-end">
+      <%= link_to "Back to stories", stories_path, class: "btn btn-primary-outline" %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-md p-4 mt-4">
+    <% if @stories.present? %>
+      <div
+        class="space-y-2 animate-fade"
+        data-controller="sortable"
+        data-sortable-url-value="<%= featured_story_path(id: ":id") %>"
+        data-testid="featured-story-list">
+        <%= render partial: "featured_story", collection: @stories, as: :story %>
+      </div>
+    <% else %>
+      <p class="text-start text-gray-500 mt-2">No featured stories yet. Mark a story as featured to curate the home page order.</p>
+    <% end %>
+  </div>
+</div>

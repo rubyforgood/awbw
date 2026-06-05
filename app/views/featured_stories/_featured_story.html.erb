@@ -1,0 +1,25 @@
+<div
+  id="<%= dom_id story %>"
+  class="flex items-center gap-3 bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors"
+  data-sortable-id="<%= story.id %>">
+  <i class="fa-solid fa-grip-vertical text-gray-400 cursor-move" data-sortable-handle=""></i>
+
+  <div class="w-16 h-12 shrink-0 rounded bg-gray-200 overflow-hidden">
+    <%= render "assets/display_image",
+               resource: story,
+               width: 16, height: 12,
+               link: false,
+               link_to_object: false,
+               file: story.display_image,
+               variant: :gallery %>
+  </div>
+
+  <div class="grow min-w-0">
+    <p class="font-semibold text-gray-900 truncate"><%= story.title %></p>
+    <% unless story.published? %>
+      <span class="text-xs font-medium text-amber-700">Not published — hidden from the home page</span>
+    <% end %>
+  </div>
+
+  <%= link_to "Edit", edit_story_path(story), class: "btn btn-secondary-outline shrink-0" %>
+</div>

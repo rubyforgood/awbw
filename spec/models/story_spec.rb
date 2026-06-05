@@ -139,4 +139,41 @@ RSpec.describe Story, type: :model do
       expect(results).not_to include(published_story, draft_story, old_story)
     end
   end
+
+  describe "positioning of featured stories" do
+    it "assigns sequential positions within the featured set as stories are created" do
+      first = create(:story, :featured)
+      second = create(:story, :featured)
+
+      expect([ first.position, second.position ]).to eq([ 1, 2 ])
+    end
+
+    it "scopes positions to featured, so non-featured stories keep their own sequence" do
+      featured = create(:story, :featured)
+      non_featured = create(:story)
+
+      expect(featured.position).to eq(1)
+      expect(non_featured.position).to eq(1)
+    end
+
+    it "reorders the featured set when a position is assigned" do
+      first = create(:story, :featured)
+      second = create(:story, :featured)
+      third = create(:story, :featured)
+
+      third.update!(position: 1)
+
+      expect(first.reload.position).to eq(2)
+      expect(second.reload.position).to eq(3)
+      expect(third.reload.position).to eq(1)
+    end
+
+    it "orders the featured scope by position" do
+      first = create(:story, :featured, :published)
+      second = create(:story, :featured, :published)
+      second.update!(position: 1)
+
+      expect(Story.featured.order(:position)).to eq([ second, first ])
+    end
+  end
 end

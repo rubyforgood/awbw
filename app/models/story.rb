@@ -2,6 +2,12 @@ class Story < ApplicationRecord
   include AuthorCreditable
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
 
+  # Featured stories are curated into a manual order (drag-and-drop) so the
+  # home page can control which stories surface first. Scoping on :featured
+  # keeps a contiguous sequence within the featured set, independent of the
+  # much larger pool of non-featured stories.
+  positioned on: :featured
+
   has_rich_text :rhino_body
 
   belongs_to :created_by, class_name: "User"

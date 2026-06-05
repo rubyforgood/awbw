@@ -162,6 +162,7 @@ Rails.application.routes.draw do
   get "search/:model", to: "search#index"
   resources :story_ideas
   resources :stories
+  resources :featured_stories, only: [ :index, :update ]
   resources :story_shares, only: [ :index, :show ]
   resources :video_recordings
   resources :user_forms
