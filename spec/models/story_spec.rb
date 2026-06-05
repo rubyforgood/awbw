@@ -3,6 +3,21 @@ require 'rails_helper'
 RSpec.describe Story, type: :model do
   it_behaves_like "author_creditable", factory: :story
 
+  describe "#author_credit with a free-text author_name" do
+    let(:author_user) { create(:user, :with_person) }
+    let(:story) { create(:story, created_by: author_user, author_credit_preference: "full_name") }
+
+    it "returns the free-text name, overriding the created_by person and credit preference" do
+      story.update!(author_name: "Jane (first name only)")
+      expect(story.author_credit).to eq("Jane (first name only)")
+    end
+
+    it "falls back to the created_by person when author_name is blank" do
+      story.update!(author_name: "")
+      expect(story.author_credit).to eq(author_user.person.full_name)
+    end
+  end
+
   describe "#attach_assets_from_idea!" do
     let(:idea) { create(:story_idea) }
     let(:story) { create(:story, story_idea: idea) }

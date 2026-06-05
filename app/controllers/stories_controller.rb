@@ -62,6 +62,9 @@ class StoriesController < ApplicationController
 
   def create
     @story = Story.new(story_params.except(:category_ids, :sector_ids))
+    # A free-text author name covers facilitators who aren't in the CMS, so an
+    # author User may not be selected. Fall back to the current admin as creator.
+    @story.created_by_id ||= current_user.id
     authorize! @story
 
     success = false
@@ -131,7 +134,7 @@ class StoriesController < ApplicationController
                             .references(:users)
                             .order(:created_at)
     @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
-    @users = User.has_access.includes(:person).left_joins(:person).order(Arel.sql("people.first_name IS NULL, LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email)"))
+    @users = User.includes(:person).left_joins(:person).order(Arel.sql("people.first_name IS NULL, LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email)"))
     @windows_types = WindowsType.all
     @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
     @categories_grouped =
@@ -189,7 +192,7 @@ class StoriesController < ApplicationController
     params.require(:story).permit(
       :title, :rhino_body, :featured, :published, :publicly_visible, :publicly_featured, :youtube_url, :website_url,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
-      :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id, :author_credit_preference,
+      :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id, :author_credit_preference, :author_name,
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],

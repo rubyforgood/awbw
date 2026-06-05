@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_04_120000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -899,6 +899,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
 
   create_table "stories", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "author_credit_preference"
+    t.string "author_name"
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false

@@ -286,6 +286,12 @@
                     style: custom_caret_style,
                     onchange: select_caret_onchange
                   } %>
+
+      <%= f.input :author_name,
+                  as: :string,
+                  label: "Or type an author name",
+                  hint: "Use for facilitators not in the CMS, or where we only have a first name. Overrides the dropdown and credit preference.",
+                  input_html: { class: "w-full px-3 py-2 border border-gray-300 rounded-lg" } %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">

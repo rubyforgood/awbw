@@ -20,6 +20,8 @@ module AuthorCreditable
   }.freeze
 
   def author_credit
+    free_text = try(:author_name)
+    return free_text if free_text.present?
     person = created_by&.person
     case author_credit_preference
     when "full_name" then person&.full_name || "Anonymous"

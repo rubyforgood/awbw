@@ -211,6 +211,28 @@ RSpec.describe "/stories", type: :request do
 
         expect(response).to redirect_to(story_url(Story.last))
       end
+
+      it "creates a story with a free-text author name and no selected author" do
+        attributes = base_attributes.merge(author_name: "Unlisted Facilitator")
+        attributes.delete(:created_by_id)
+
+        expect {
+          post stories_url, params: { story: attributes }
+        }.to change(Story, :count).by(1)
+
+        story = Story.last
+        expect(story.author_name).to eq("Unlisted Facilitator")
+        expect(story.created_by).to eq(admin)
+        expect(story.author_credit).to eq("Unlisted Facilitator")
+      end
+    end
+
+    describe "GET /new" do
+      it "includes inactive facilitators in the author dropdown" do
+        inactive_user = create(:user, :with_person, inactive: true)
+        get new_story_url
+        expect(response.body).to include(inactive_user.full_name_with_email)
+      end
     end
   end
 
