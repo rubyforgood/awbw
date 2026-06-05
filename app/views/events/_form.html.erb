@@ -368,7 +368,7 @@
                                    else
                                      @registration_forms.find { |rf| rf.name == ShortEventRegistrationFormBuilder::FORM_NAME }&.id
                                    end %>
-              <select name="event[registration_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
+              <select name="registration_form_id" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
                 <option value="">No registration form</option>
                 <% @registration_forms.each do |reg_form| %>
                   <% label = case reg_form.name

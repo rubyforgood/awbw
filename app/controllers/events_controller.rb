@@ -219,7 +219,7 @@ class EventsController < ApplicationController
   end
 
   def assign_event_forms(event)
-    form_id = params.dig(:event, :registration_form_id)
+    form_id = params[:registration_form_id]
     return unless form_id
 
     if form_id.blank?

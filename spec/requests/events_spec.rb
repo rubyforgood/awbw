@@ -378,6 +378,49 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "registration form selection" do
+    let(:reg_form) { create(:form, :standalone, name: "Short Registration") }
+
+    before { sign_in admin }
+
+    def unpermitted_params_during
+      captured = []
+      subscriber = ActiveSupport::Notifications.subscribe("unpermitted_parameters.action_controller") do |*args|
+        captured.concat(args.last[:keys])
+      end
+      yield
+      captured
+    ensure
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+    end
+
+    it "links the selected registration form on create without an unpermitted param" do
+      unpermitted = unpermitted_params_during do
+        post events_path, params: valid_params.merge(registration_form_id: reg_form.id)
+      end
+
+      expect(unpermitted).not_to include(:registration_form_id)
+      expect(Event.last.registration_form).to eq(reg_form)
+    end
+
+    it "links the selected registration form on update without an unpermitted param" do
+      unpermitted = unpermitted_params_during do
+        patch event_path(event), params: { event: { title: "Updated" }, registration_form_id: reg_form.id }
+      end
+
+      expect(unpermitted).not_to include(:registration_form_id)
+      expect(event.reload.registration_form).to eq(reg_form)
+    end
+
+    it "removes the registration form when blank is submitted" do
+      create(:event_form, event: event, form: reg_form, role: "registration")
+
+      patch event_path(event), params: { event: { title: "Updated" }, registration_form_id: "" }
+
+      expect(event.reload.registration_form).to be_nil
+    end
+  end
+
   describe "Google Analytics snippets" do
     context "as admin" do
       before { sign_in admin }
