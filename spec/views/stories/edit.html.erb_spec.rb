@@ -36,6 +36,14 @@ RSpec.describe "stories/edit", type: :view do
     end
   end
 
+  it "renders a blank author option so an already-set author can be cleared" do
+    render
+
+    assert_select "select[name=?]", "story[created_by_id]" do
+      assert_select "option[value=?]", "", text: "Select an author"
+    end
+  end
+
   it "does not render the Website button when website_url is nil" do
     story.update(website_url: nil)
     assign(:story, story.decorate)
