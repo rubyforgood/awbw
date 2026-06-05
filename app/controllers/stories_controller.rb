@@ -74,6 +74,7 @@ class StoriesController < ApplicationController
         elsif params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@story)
         end
+        StoryServices::NotifyIdeaAuthorOfPublication.call(@story)
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -100,6 +101,7 @@ class StoriesController < ApplicationController
         if params[:promote_idea_assets] == "true"
           @story.attach_assets_from_idea!
         end
+        StoryServices::NotifyIdeaAuthorOfPublication.call(@story)
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e

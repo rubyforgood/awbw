@@ -1,0 +1,35 @@
+<h1>Your story has been published</h1>
+
+<div style="margin-top: 36px; text-align: left;">
+  <p>
+    Hello <strong><%= @user&.full_name %></strong>,
+  </p>
+
+  <p>
+    Great news — the story idea you submitted has been turned into a published story on the AWBW Portal. Thank you for sharing it with us.
+  </p>
+
+  <div style="text-align: center; background-color: #f3f4f6; border-radius: 6px; padding: 24px; margin: 16px 0;">
+    <h2 style="font-size: 22px; font-weight: bold; color: #166534; margin: 0 0 8px; font-family: Lato, sans-serif;">
+      <%= @story.title %>
+    </h2>
+
+    <p style="font-size: 13px; color: #6b7280; margin: 0;">
+      Published on <%= @story.created_at
+                              .in_time_zone("Pacific Time (US & Canada)")
+                              .strftime("%B %-d, %Y") %>
+    </p>
+  </div>
+</div>
+
+<p>
+  <%= link_to "View your story",
+              polymorphic_url(@story),
+              style: "display:inline-block;
+                      padding:10px 16px;
+                      background:#2563eb;
+                      color:#ffffff;
+                      text-decoration:none;
+                      border-radius:6px;
+                      font-weight:bold;" %>
+</p>

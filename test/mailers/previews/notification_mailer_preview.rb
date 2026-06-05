@@ -66,6 +66,20 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.idea_submitted_fyi(notification)
   end
 
+  def story_published
+    story = Story.where.not(story_idea_id: nil).first || Story.first
+    user = story&.story_idea&.created_by || story&.created_by || User.first
+    notification = find_valid_notification("story_published") ||
+      Notification.create!(
+        noticeable: story || User.first,
+        notification_type: 0,
+        kind: "story_published",
+        recipient_role: "person",
+        recipient_email: user&.email || "preview@example.com"
+      )
+    NotificationMailer.story_published(notification)
+  end
+
   def report_submitted_fyi
     notification = find_valid_notification("report_submitted_fyi") ||
       Notification.create!(

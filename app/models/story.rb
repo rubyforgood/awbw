@@ -15,6 +15,7 @@ class Story < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
+  has_many :notifications, as: :noticeable, dependent: :destroy
 
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },

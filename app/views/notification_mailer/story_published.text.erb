@@ -1,0 +1,16 @@
+Your story has been published
+
+Hello <%= @user&.full_name %>,
+
+Great news — the story idea you submitted has been turned into a published story on the AWBW Portal. Thank you for sharing it with us.
+
+<%= @story.title %>
+Published on <%= @story.created_at
+                        .in_time_zone("Pacific Time (US & Canada)")
+                        .strftime("%B %-d, %Y") %>
+
+View your story:
+<%= polymorphic_url(@story) %>
+
+--
+This is an automated message from AWBW.

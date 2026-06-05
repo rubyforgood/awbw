@@ -210,6 +210,36 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#story_published" do
+    let(:author) { create(:user) }
+    let(:story_idea) { create(:story_idea, created_by: author, updated_by: author) }
+    let(:story) do
+      create(:story, :published, title: "A Brave New Story",
+             story_idea: story_idea, created_by: author, updated_by: author)
+    end
+    let(:notification) do
+      create(:notification, kind: "story_published", noticeable: story,
+             recipient_role: "person", recipient_email: author.email)
+    end
+
+    it "renders without raising" do
+      expect {
+        described_class.story_published(notification).deliver_now
+      }.not_to raise_error
+    end
+
+    it "sends to the idea author" do
+      mail = described_class.story_published(notification)
+      expect(mail.to).to eq([ author.email ])
+    end
+
+    it "announces the published story" do
+      mail = described_class.story_published(notification)
+      expect(mail.body.encoded).to include("A Brave New Story")
+      expect(mail.body.encoded).to include("published")
+    end
+  end
+
   describe "#reset_password_fyi" do
     let(:user) { create(:user, email: "user@example.com") }
     let(:notification) { create(:notification, kind: "reset_password_fyi", noticeable: user) }

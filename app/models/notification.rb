@@ -27,6 +27,7 @@ class Notification < ApplicationRecord
     event_registration_cancelled_fyi
     idea_submitted
     idea_submitted_fyi
+    story_published
     report_submitted
     report_submitted_fyi
     workshop_log_submitted
@@ -45,6 +46,7 @@ class Notification < ApplicationRecord
   NOTICEABLE_TYPES = %w[
     EventRegistration
     Report
+    Story
     StoryIdea
     User
     WorkshopLog
@@ -66,6 +68,7 @@ class Notification < ApplicationRecord
     [ "Event: event registration confirmed", "Event registration confirmed" ],
     [ "Idea: confirmation (all)", "has been received" ],
     [ "Idea: confirmation: workshop log", "workshop log has been received" ],
+    [ "Story: idea published", "story idea has been published" ],
     [ "User: confirm new email", "Confirm your new email address" ],
     [ "User: password reset", "Password reset request" ],
     [ "User: unlock instructions", "Unlock instructions" ],

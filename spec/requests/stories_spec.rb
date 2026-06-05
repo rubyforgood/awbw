@@ -211,6 +211,31 @@ RSpec.describe "/stories", type: :request do
 
         expect(response).to redirect_to(story_url(Story.last))
       end
+
+      context "when promoting a story idea into a published story" do
+        let(:submitter)  { create(:user) }
+        let(:story_idea) { create(:story_idea, created_by: submitter, updated_by: submitter) }
+
+        it "notifies the idea author by email" do
+          expect {
+            post stories_url, params: {
+              story: base_attributes.merge(story_idea_id: story_idea.id, published: true)
+            }
+          }.to change { Notification.where(kind: "story_published").count }.by(1)
+
+          notification = Notification.where(kind: "story_published").last
+          expect(notification.recipient_email).to eq(submitter.email)
+          expect(notification.recipient_role).to eq("person")
+        end
+
+        it "does not notify when the promoted story is left unpublished" do
+          expect {
+            post stories_url, params: {
+              story: base_attributes.merge(story_idea_id: story_idea.id, published: false)
+            }
+          }.not_to change { Notification.where(kind: "story_published").count }
+        end
+      end
     end
   end
 

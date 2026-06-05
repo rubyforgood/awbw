@@ -65,6 +65,18 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def story_published(notification)
+    @notification = notification
+    @story = notification.noticeable.decorate
+    @story_idea = @story.story_idea
+    @user = @story_idea&.created_by
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Your story idea has been published"
+    )
+  end
+
   def report_submitted_fyi(notification)
     @notification = notification
     @noticeable   = notification.noticeable
