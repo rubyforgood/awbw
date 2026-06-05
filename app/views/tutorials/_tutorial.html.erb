@@ -1,0 +1,44 @@
+<article id="tutorial-<%= tutorial.id %>"
+         class="tutorial-block scroll-mt-24">
+
+  <header class="mb-4 flex w-full items-center gap-4">
+    <h2 class="text-2xl">
+      <%= link_to title_with_badges(tutorial, font_size: "text-2xl"),
+                  tutorial_path(tutorial),
+                  data: {turbo_frame: "_top"},
+                  class: "hover:underline" %>
+    </h2>
+    <% if allowed_to?(:edit?, tutorial) %>
+      <%= link_to "Edit",
+                  edit_tutorial_path(tutorial),
+                  data: {turbo_frame: "_top"},
+                  class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+    <% end %>
+    <%= link_to "View", tutorial_path(tutorial),
+                  data: { turbo_frame: "_top"},
+                  class: "ml-auto btn btn-secondary-outline" %>
+  </header>
+
+  <!-- Embedded Video -->
+  <% if tutorial.youtube_url.present? %>
+    <div class="mb-2">
+      <div class="relative w-full overflow-hidden rounded-lg shadow-sm" style="padding-top: 56.25%;">
+        <iframe
+          src="<%= youtube_embed_url(tutorial.youtube_url) %>"
+          title="<%= tutorial.title %>"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          class="absolute inset-0 h-full w-full border-0">
+        </iframe>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Body -->
+  <% if tutorial.rhino_body.present? %>
+    <div class="prose prose-gray max-w-none mb-2">
+      <%= tutorial.rhino_body %>
+    </div>
+  <% end %>
+
+</article>

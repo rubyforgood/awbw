@@ -1,0 +1,46 @@
+<%= turbo_frame_tag "question_library" do %>
+  <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+    <h3 class="text-lg font-semibold text-gray-800 mb-2">Add questions from library</h3>
+    <p class="text-sm text-gray-500 mb-4">Select questions from other forms to add to this form.</p>
+
+    <% if @available_fields.present? %>
+      <%= form_with url: add_questions_form_path(@form), method: :post do |f| %>
+        <div data-controller="question-library" class="space-y-4">
+          <%# Search filter %>
+          <input type="text"
+                 placeholder="Filter questions..."
+                 data-question-library-target="search"
+                 data-action="input->question-library#filter"
+                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm">
+
+          <div class="max-h-96 overflow-y-auto space-y-4" data-question-library-target="list">
+            <% @available_fields.each do |group, fields| %>
+              <div data-question-library-target="group">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2 capitalize sticky top-0 bg-gray-50 py-1"><%= group.presence || "Ungrouped" %></h4>
+                <div class="space-y-1">
+                  <% fields.uniq(&:field_key).each do |field| %>
+                    <label class="flex items-center gap-3 p-2 bg-white rounded border border-gray-100 hover:bg-gray-50 cursor-pointer"
+                           data-question-library-target="item"
+                           data-question-text="<%= field.question.downcase %>">
+                      <input type="checkbox" name="source_field_ids[]" value="<%= field.id %>"
+                             class="h-4 w-4 text-blue-600 rounded border-gray-300">
+                      <div class="flex-1">
+                        <span class="text-sm text-gray-800"><%= field.question %></span>
+                        <span class="text-xs text-gray-400 ml-2 font-mono"><%= field.field_key %></span>
+                      </div>
+                      <span class="text-xs text-gray-500"><%= field.answer_type.humanize %></span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+          <button type="submit" class="btn btn-primary text-sm">Add selected questions</button>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="text-sm text-gray-400">No additional questions available to add.</p>
+    <% end %>
+  </div>
+<% end %>

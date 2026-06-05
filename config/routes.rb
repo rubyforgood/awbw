@@ -124,6 +124,12 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create ]
   end
   resources :faqs
+  resources :forms do
+    member do
+      get :question_library
+      post :add_questions
+    end
+  end
   resources :notifications, only: [ :index, :show ] do
     member do
       post :resend
