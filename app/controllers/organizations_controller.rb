@@ -34,20 +34,20 @@ class OrganizationsController < ApplicationController
     track_view(@organization)
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
-    @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m')")
-                                       .select("DATE_FORMAT(COALESCE(date, created_at, NOW()), '%Y-%m') AS ym,
-       MAX(COALESCE(date, created_at)) AS max_dt")
+    @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
+                                       .select("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m') AS ym,
+       MAX(COALESCE(workshop_held_on, created_at)) AS max_dt")
                                        .order("max_dt DESC")
                                        .map { |record| [ Date.strptime(record.ym, "%Y-%m").strftime("%B %Y"), record.ym ] }
 
     @year_options = workshop_logs.pluck(
-      Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(date, created_at, NOW()))")
+      Arel.sql("DISTINCT EXTRACT(YEAR FROM COALESCE(workshop_held_on, created_at, NOW()))")
     ).sort.reverse
     @organizations = Organization.where(id: @organization.id)
     @per_page = params[:per_page] || 10
     @workshop_logs_unpaginated = workshop_logs
                                  .includes(:workshop, :windows_type, created_by: :person)
-                                 .order(date: :desc, created_at: :desc)
+                                 .order(workshop_held_on: :desc, created_at: :desc)
     @workshop_logs_count = @workshop_logs_unpaginated.count
     @workshop_logs = @workshop_logs_unpaginated.paginate(page: params[:page], per_page: @per_page)
 
@@ -87,6 +87,20 @@ class OrganizationsController < ApplicationController
     @organization = Organization.new(organization_params)
     authorize! @organization
 
+    unless params[:skip_duplicate_check].present?
+      @duplicates = find_duplicate_organizations(@organization.name)
+      if @duplicates.any?
+        @name = @organization.name
+        @blocked = @duplicates.any? { |d| d[:blocked] }
+        set_form_variables
+        respond_to do |format|
+          format.html { render :new, status: :unprocessable_content }
+          format.turbo_stream
+        end
+        return
+      end
+    end
+
     if @organization.save
       assign_associations(@organization) if params.dig(:organization, :category_ids)
       redirect_to @organization, notice: "Organization was successfully created."
@@ -113,8 +127,22 @@ class OrganizationsController < ApplicationController
 
   def destroy
     authorize! @organization
-    @organization.destroy!
-    redirect_to organizations_path, notice: "Organization was successfully destroyed."
+
+    if @organization.destroy
+      redirect_to organizations_path, notice: "Organization was successfully destroyed."
+    else
+      redirect_to edit_organization_path(@organization), alert: "Unable to delete this organization: #{@organization.errors.full_messages.to_sentence}."
+    end
+  rescue ActiveRecord::InvalidForeignKey
+    redirect_to edit_organization_path(@organization), alert: "Unable to delete this organization because it has associated records that cannot be removed."
+  end
+
+  def check_duplicates
+    authorize!
+
+    @name = params[:name]
+    @duplicates = find_duplicate_organizations(@name)
+    @blocked = @duplicates.any? { |d| d[:blocked] }
   end
 
   # Optional hooks for setting variables for forms or index
@@ -160,7 +188,7 @@ class OrganizationsController < ApplicationController
       sector_counts[primary_sector] += 1 if primary_sector
     end
     @sectors_by_people = sector_counts.sort_by { |_sector, count| -count }
-end
+  end
 
   private
 
@@ -220,5 +248,61 @@ end
         :_destroy
       ]
     )
+  end
+
+  def find_duplicate_organizations(name)
+    return [] if name.blank?
+
+    normalized = normalize(name)
+    input_words = words(name)
+
+    # fallback if all words were ignored
+    search_word = input_words.first || name.to_s.downcase
+
+    candidates = Organization
+      .where("LOWER(name) LIKE ?", "%#{search_word}%")
+      .select(:id, :name)
+
+    candidates.map do |org|
+      org_normalized = normalize(org.name)
+
+      exact = org_normalized == normalized
+
+      partial =
+        org_normalized.include?(normalized) ||
+        normalized.include?(org_normalized)
+
+      similar = exact || partial
+
+      {
+        id: org.id,
+        name: org.name,
+        match_type: exact ? "exact" : "approximate",
+        name_match: similar,
+        blocked: exact
+      }
+    end.select { |d| d[:name_match] }
+  end
+
+  def normalize(name)
+    name.to_s.downcase.gsub(/[^a-z0-9]/, "")
+  end
+
+  IGNORE_WORDS_LAST_ONLY = %w[combined childrens adult]
+  IGNORE_WORDS_ALWAYS = %w[of the and inc]
+
+  def words(name)
+    all_words = name
+      .to_s
+      .downcase
+      .gsub(/[^a-z0-9\s]/, "")
+      .split
+
+    last_word = all_words.last
+
+    all_words.reject do |w|
+      IGNORE_WORDS_ALWAYS.include?(w) ||
+        (IGNORE_WORDS_LAST_ONLY.include?(w) && w != last_word)
+    end
   end
 end

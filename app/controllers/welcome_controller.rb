@@ -2,7 +2,6 @@ class WelcomeController < ApplicationController
   skip_before_action :authenticate_user!
 
   before_action :find_user_by_welcome_instructions_token
-  before_action :validate_welcome_instructions_token
 
   # Skip authorization check for welcome pages
   def verify_authorized
@@ -35,12 +34,6 @@ class WelcomeController < ApplicationController
     @user = User.find_by(welcome_instructions_token: params[:welcome_instructions_token])
     return if @user
     redirect_to root_path, alert: "Invalid invitation link." and return
-  end
-
-  def validate_welcome_instructions_token
-    return if @user.welcome_instructions_token_valid?
-    redirect_to root_path,
-                alert: "This invitation link has expired. Please contact an administrator." and return
   end
 
   def password_params

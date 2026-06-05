@@ -23,9 +23,11 @@ Rails.application.routes.draw do
   devise_for :users,
              controllers: { registrations: "registrations",
                             confirmations: "confirmations",
-                            passwords: "passwords" }
+                            passwords: "passwords",
+                            unlocks: "unlocks" }
   devise_scope :user do
     get "/confirm/:confirmation_token", to: "confirmations#show", as: :confirm
+    get "/users/confirmation/resend", to: "confirmations#resend", as: :resend_user_confirmation
   end
   get "users/change_password", to: "users#change_password", as: "change_password"
   post "users/update_password", to: "users#update_password", as: "update_password"
@@ -34,7 +36,7 @@ Rails.application.routes.draw do
   resources :users, only: [ :new, :index, :show, :edit, :update, :create, :destroy ] do
     collection do
       get :check_duplicates
-      post :retry_new
+      get :flow_diagram
     end
     member do
       post :send_reset_password_instructions
@@ -48,8 +50,6 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :index, :create ]
   end
-
-  post "workshop_logs/validate_new", to: "workshop_logs#validate_new"
 
   get "contact_us", to: "contact_us#index"
   post "contact_us", to: "contact_us#create"
@@ -92,10 +92,13 @@ Rails.application.routes.draw do
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
+  post "registration/:slug/pay", to: "events/registrations#pay", as: :registration_pay
   resources :event_registrations do
     member do
       get :confirm
       post :process_confirm
+      get :link_organization
+      post :select_organization
     end
     resources :comments, only: [ :index, :create ]
   end
@@ -107,11 +110,19 @@ Rails.application.routes.draw do
       patch :update_sections
     end
   end
+  resources :scholarships, only: [ :new, :create, :show, :edit, :update, :destroy ]
+  resources :discounts, only: [ :create, :show, :destroy ] do
+    collection do
+      post :allocation_form
+    end
+  end
   resources :events do
     member do
       get :manage
+      get :preview_reminder
       patch :preview
       post :copy_registration_form
+      post :send_reminder
     end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
@@ -119,41 +130,48 @@ Rails.application.routes.draw do
   resources :people do
     collection do
       get :check_duplicates
-      post :retry_new
+    end
+    member do
+      get :workshop_logs
+      get :checkout
     end
     resources :comments, only: [ :index, :create ]
   end
   resources :faqs
-  resources :forms do
-    member do
-      get :question_library
-      post :add_questions
-    end
-  end
-  resources :notifications, only: [ :index, :show ] do
+  resources :notifications, only: [ :index, :show, :update ] do
     member do
       post :resend
     end
   end
   resources :organizations do
-   member do
-     get :populations_served
-   end
-   resources :comments, only: [ :index, :create ]
- end
+    collection do
+      get :check_duplicates
+    end
+    member do
+      get :populations_served
+    end
+    resources :comments, only: [ :index, :create ]
+    resources :monthly_reports, only: :index
+  end
+  resources :payments, only: [ :new, :create, :show, :index ] do
+    collection do
+      post :allocation_form
+    end
+  end
+  resources :allocations, only: [ :new, :create, :index ] do
+    post :revert, on: :member
+  end
+
+  resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
   resources :affiliations
   resources :quotes
 
-  resources :monthly_reports
+  resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }
   get "reports/:id/edit_story", to: "reports#edit_story", as: "reports_edit_story"
   put "reports/update_story/:id", to: "reports#update_story", as: "reports_update_story"
   post "reports/share_story", to: "reports#create_story", as: "create_story"
   get "reports/share_story", to: "reports#share_story"
-
-  get "reports/monthly", to: "monthly_reports#monthly"
-  get "reports/monthly_select_type", to: "monthly_reports#monthly_select_type"
-  get "monthly_reports", to: "monthly_reports#monthly"
 
   get "reports/annual", to: "reports#annual"
   resources :reports
@@ -178,7 +196,7 @@ Rails.application.routes.draw do
   resources :windows_types
   resources :workshop_ideas
   resources :workshop_logs
-  resources :workshop_log_creation_wizard
+
   resources :workshop_variation_ideas
   resources :workshop_variations
   resources :workshops do

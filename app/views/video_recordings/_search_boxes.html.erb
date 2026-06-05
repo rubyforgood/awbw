@@ -56,7 +56,7 @@
 
         <%= select_tag "categories",
                        options_for_select(
-                         @category_types.flat_map { |ct| ct.categories.ordered_by_position_and_name.map { |c| ["#{ct.title}: #{c.name}", c.id] } },
+                         @category_types.flat_map { |ct| ct.categories.ordered_by_position_and_name.map { |c| ["#{ct.name.titleize}: #{c.name}", c.id] } },
                          Array(params[:categories]).map(&:to_i)
                        ),
                        multiple: true,

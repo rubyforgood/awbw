@@ -68,4 +68,17 @@ RSpec.describe "Taggings index", type: :request do
       expect(response.body).to include("No items have this tag combination")
     end
   end
+
+  describe "as a guest (unauthenticated)" do
+    it "renders the index page" do
+      get taggings_path
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "shows published tagged items when filtering by sector" do
+      get taggings_path(sector_names_all: sector_1.name)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Art for Healing")
+    end
+  end
 end

@@ -39,7 +39,7 @@ RSpec.describe Workshop, type: :model do
         mentionable_id: resource.id
       )
 
-      mentions = workshop.all_mentions_grouped
+      mentions = workshop.mentionee_records_grouped
       expect(mentions).to have_key("Workshop")
       expect(mentions).to have_key("Resource")
       expect(mentions["Workshop"]).to include(other_workshop)
@@ -64,7 +64,7 @@ RSpec.describe Workshop, type: :model do
         mentionable_id: other_workshop.id
       )
 
-      mentions = workshop.all_mentions_grouped
+      mentions = workshop.mentionee_records_grouped
       expect(mentions["Workshop"]).to include(other_workshop)
       expect(mentions["Workshop"].count).to eq(1) # deduplicated
     end

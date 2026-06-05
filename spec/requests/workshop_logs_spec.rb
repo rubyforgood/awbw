@@ -10,7 +10,7 @@ RSpec.describe "/workshop_logs", type: :request do
 
   let(:valid_attributes) do
     {
-      date: Date.current,
+      workshop_held_on: Date.current,
       workshop_id: workshop.id,
       organization_id: organization.id,
       windows_type_id: windows_type.id,
@@ -27,7 +27,7 @@ RSpec.describe "/workshop_logs", type: :request do
 
   let(:external_title_attributes) do
     {
-      date: Date.current,
+      workshop_held_on: Date.current,
       workshop_id: nil,
       external_workshop_title: "Community Art Workshop",
       organization_id: organization.id,
@@ -44,7 +44,7 @@ RSpec.describe "/workshop_logs", type: :request do
 
   let(:invalid_attributes) do
     {
-      date: nil,
+      workshop_held_on: nil,
       workshop_id: nil
     }
   end
@@ -318,6 +318,47 @@ RSpec.describe "/workshop_logs", type: :request do
         }
         expect(response).to have_http_status(:unprocessable_content)
       end
+    end
+  end
+
+  describe "DELETE /destroy" do
+    it "destroys the workshop log and redirects to index" do
+      workshop_log = create(:workshop_log, valid_attributes)
+
+      expect {
+        delete workshop_log_path(workshop_log)
+      }.to change(WorkshopLog, :count).by(-1)
+
+      expect(response).to redirect_to(workshop_logs_path)
+    end
+
+    it "preserves created_by_id param in redirect when present" do
+      workshop_log = create(:workshop_log, valid_attributes)
+
+      delete workshop_log_path(workshop_log), params: { created_by_id: user.id }
+
+      expect(response).to redirect_to(workshop_logs_path(created_by_id: user.id))
+    end
+
+    it "does not allow destroying another user's workshop log" do
+      other_user = create(:user)
+      workshop_log = create(:workshop_log, valid_attributes.merge(created_by_id: other_user.id))
+
+      expect {
+        delete workshop_log_path(workshop_log)
+      }.not_to change(WorkshopLog, :count)
+    end
+
+    it "allows admin to destroy any workshop log" do
+      admin = create(:user, :admin)
+      sign_in admin
+      workshop_log = create(:workshop_log, valid_attributes)
+
+      expect {
+        delete workshop_log_path(workshop_log)
+      }.to change(WorkshopLog, :count).by(-1)
+
+      expect(response).to redirect_to(workshop_logs_path)
     end
   end
 end

@@ -368,7 +368,8 @@ RSpec.describe "Event show page", type: :system do
     context "user registered and paid for a paid event" do
       before do
         registration = create(:event_registration, event: event, registrant: user.person)
-        create(:payment, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+        payment = create(:payment, person: user.person, amount_cents: event.cost_cents, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: registration, amount: event.cost_cents)
       end
 
       it "shows linked 'Join on' domain" do
@@ -394,8 +395,9 @@ RSpec.describe "Event show page", type: :system do
 
     context "user has full scholarship with tasks completed" do
       before do
-        registration = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: true)
-        create(:payment, :scholarship, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+        registration = create(:event_registration, event: event, registrant: user.person)
+        scholarship = create(:scholarship, tasks_completed: true, amount_cents: event.cost_cents)
+        create(:allocation, source: scholarship, allocatable: registration, amount: event.cost_cents)
       end
 
       it "shows linked 'Join on' domain" do
@@ -408,8 +410,9 @@ RSpec.describe "Event show page", type: :system do
 
     context "user has scholarship but tasks not completed" do
       before do
-        registration = create(:event_registration, event: event, registrant: user.person, scholarship_tasks_completed: false)
-        create(:payment, :scholarship, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+        registration = create(:event_registration, event: event, registrant: user.person)
+        scholarship = create(:scholarship, tasks_completed: false, amount_cents: event.cost_cents)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 0)
       end
 
       it "does not show the join link" do
@@ -424,7 +427,8 @@ RSpec.describe "Event show page", type: :system do
       before do
         event.update!(autoshow_videoconference_link: false)
         registration = create(:event_registration, event: event, registrant: user.person)
-        create(:payment, :succeeded, payable: registration, payer: user, amount_cents: event.cost_cents)
+        payment = create(:payment, person: user.person, amount_cents: event.cost_cents, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: registration, amount: event.cost_cents)
       end
 
       it "hides the join link even when joinable" do
@@ -442,7 +446,10 @@ RSpec.describe "Event show page", type: :system do
   # --------------------------------------------------
 
   describe "registration button updates via Turbo", js: true do
-    before { driven_by(:selenium_chrome_headless) }
+    before do
+      driven_by(:selenium_chrome_headless)
+      event.update!(cost_cents: 0)
+    end
 
     it "updates Register to show registration link without full page reload" do
       sign_in(user)

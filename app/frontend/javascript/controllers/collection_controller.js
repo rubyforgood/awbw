@@ -3,6 +3,8 @@ import { Controller } from "@hotwired/stimulus";
 // Connects to data-controller="collection"
 export default class extends Controller {
   static classes = ["unselected", "selected"];
+  static outlets = ["search-type-select"];
+
   connect() {
     this.element.addEventListener("change", (event) => {
       const { type } = event.target;
@@ -21,7 +23,13 @@ export default class extends Controller {
       }
     });
     this.element.addEventListener("input", (event) => {
-      if (event.target.type === "text") {
+      // skip submit on tom-select keyboard input
+      const target = event.target;
+      if (target.type !== "text") return;
+
+      const isTomSelect = target.closest(".ts-control");
+
+      if (!isTomSelect) {
         this.debouncedSubmit();
       }
     });
@@ -57,19 +65,30 @@ export default class extends Controller {
   clearAndSubmit(event) {
     event.preventDefault();
 
-    this.element.querySelectorAll('input[type="text"], input[type="search"]').forEach(input => {
-      input.value = '';
-    });
-    this.element.querySelectorAll('select').forEach(select => {
+    this.element
+      .querySelectorAll('input[type="text"], input[type="search"]')
+      .forEach((input) => {
+        input.value = "";
+      });
+    this.element.querySelectorAll("select").forEach((select) => {
       select.selectedIndex = 0;
     });
-    this.element.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
-      if (input.checked) {
-        this.toggleClass(input);
-      }
-      input.checked = false;
-    });
+    this.element
+      .querySelectorAll('input[type="checkbox"], input[type="radio"]')
+      .forEach((input) => {
+        if (input.checked) {
+          this.toggleClass(input);
+        }
+        input.checked = false;
+      });
     this.element.reset();
+
+    if (this.hasSearchTypeSelectOutlet) {
+      this.searchTypeSelectOutlets.forEach((controller) => {
+        controller.toggle({ target: { value: "" } });
+      });
+    }
+
     this.submitForm();
   }
 

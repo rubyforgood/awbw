@@ -38,9 +38,7 @@
           <% end %>
         </div>
 
-        <%= turbo_frame_tag :sectors_tags, src: tags_sectors_path do %>
-          <% render "loading" %>
-        <% end %>
+        <%= render "tags/sectors" %>
       </section>
 
       <!-- CATEGORIES -->
@@ -64,9 +62,7 @@
           <% end %>
         </div>
 
-        <%= turbo_frame_tag :categories_tags, src: tags_categories_path do %>
-          <%= render "loading" %>
-        <% end %>
+        <%= render "tags/categories" %>
       </section>
     </div>
   </div>

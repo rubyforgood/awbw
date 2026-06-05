@@ -51,6 +51,7 @@
                 <%= link_to title_with_badges(story).html_safe,
                                   story_path(story),
                                   target: story.external_link? ? "_blank" : "", rel: "noopener noreferrer",
+                                  data: { turbo_frame: "_top" },
                                   class: "font-bold hover:text-indigo-800 hover:underline" %>
               </span>
             </td>
@@ -76,10 +77,12 @@
                                   class: "btn btn-secondary-outline" %>
                 <% if allowed_to?(:edit?, story) %>
                   <%= link_to "Details", story_path(story, no_redirect: true),
+                                    data: { turbo_frame: "_top" },
                                     class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
                 <% end %>
               <% else %>
                 <%= link_to "View", story_path(story),
+                                  data: { turbo_frame: "_top" },
                                   class: "btn btn-secondary-outline" %>
               <% end %>
               <% if allowed_to?(:edit?, story) %>

@@ -61,13 +61,6 @@ class UsersController < ApplicationController
     set_form_variables
   end
 
-  def retry_new
-    @user = User.new(user_params)
-    authorize! @user
-    set_form_variables
-    render :new
-  end
-
   def edit
     @user = User.includes(comments: [ :created_by, :updated_by ]).find(params[:id])
     authorize! @user
@@ -86,8 +79,11 @@ class UsersController < ApplicationController
         @duplicates = find_duplicate_users(@email, exclude_person_id: @person_id)
         if @duplicates.any?
           @blocked = @duplicates.any? { |d| d[:blocked] }
-          @stored_params = params[:user]&.to_unsafe_h || {}
-          render :check_duplicates
+          set_form_variables
+          respond_to do |format|
+            format.html { render :new, status: :unprocessable_content }
+            format.turbo_stream
+          end
           return
         end
       end
@@ -121,7 +117,6 @@ class UsersController < ApplicationController
     @person_id = params[:person_id]
     @duplicates = find_duplicate_users(@email, exclude_person_id: @person_id)
     @blocked = @duplicates.any? { |d| d[:blocked] }
-    @stored_params = { email: @email }
   end
 
   def update
@@ -308,6 +303,11 @@ class UsersController < ApplicationController
                            page: params[:page],
                            number_of_items_per_page: params[:number_of_items_per_page]),
                 notice: "Invitation sent to #{@user.email}."
+  end
+
+  # Visual reference for admins triaging user account challenges
+  def flow_diagram
+    authorize!
   end
 
   # =========================================================

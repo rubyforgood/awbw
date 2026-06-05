@@ -1,0 +1,72 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="max-w-4xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="mb-6">
+    <%= link_to "← Manage registrants", manage_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block" %>
+    <h1 class="text-2xl font-semibold text-gray-900">
+      Send reminder email
+    </h1>
+    <p class="text-gray-600 mt-1">
+      <%= @event.title %>
+    </p>
+  </div>
+  <% if @event_registrations.empty? %>
+    <p class="text-gray-600 mb-4">There are no registrants with an email address to send a reminder to.</p>
+    <%= link_to "Back to manage", manage_event_path(@event), class: "btn btn-secondary-outline" %>
+  <% else %>
+    <%= form_with url: send_reminder_event_path(@event), method: :post, local: true do |f| %>
+      <h2 class="text-lg font-semibold text-gray-800 mb-2 pb-2 border-b border-gray-200">Recipients</h2>
+      <p class="text-gray-600 mb-3">
+        Choose who will receive this reminder:
+      </p>
+      <div class="overflow-x-auto border border-gray-200 rounded-lg mb-6">
+        <table class="w-full border-collapse">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-10">
+                <input type="checkbox" id="recipients_select_all" class="rounded border-gray-300" checked aria-label="Select all" onclick="document.querySelectorAll('.recipient-checkbox').forEach(function(c){ c.checked = document.getElementById('recipients_select_all').checked })">
+              </th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            <% @event_registrations.each do |reg| %>
+              <% person = reg.registrant %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2">
+                  <%= check_box_tag "registration_ids[]", reg.id, true, class: "recipient-checkbox rounded border-gray-300", id: "registration_ids_#{reg.id}" %>
+                </td>
+                <td class="px-4 py-2 text-sm text-gray-900"><%= person.full_name %></td>
+                <td class="px-4 py-2 text-sm text-gray-700"><%= person.preferred_email %></td>
+                <td class="px-4 py-2 text-sm">
+                  <% if @event.object.cost_cents.to_i > 0 %>
+                    <% if reg.paid_in_full? %>
+                      <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-green-50 text-green-700 border-green-200">Paid</span>
+                    <% else %>
+                      <% due_cents = @event.object.cost_cents - reg.allocations_sum %>
+                      <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-amber-50 text-amber-700 border-amber-200">$<%= "%.2f" % (due_cents / 100.0) %> due</span>
+                    <% end %>
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <% if @reminder_preview_html.present? %>
+        <div class="mb-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">Preview (sample registrant)</h2>
+          <div class="border border-gray-200 rounded-lg bg-white overflow-hidden">
+            <div class="email-preview overflow-auto max-h-[70vh] p-4" style="font-family: Lato, sans-serif;">
+              <%= raw @reminder_preview_html %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+      <%= f.submit "Send reminder", class: "btn btn-primary", data: { turbo_confirm: "Send reminder emails to the selected registrant(s)?" } %>
+    <% end %>
+  <% end %>
+</div>

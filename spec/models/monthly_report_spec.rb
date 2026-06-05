@@ -1,25 +1,17 @@
 require 'rails_helper'
 
 RSpec.describe MonthlyReport do
-  it 'is a type of Report' do
-    expect(build(:monthly_report)).to be_a(Report)
+  it "uses the reports table" do
+    expect(MonthlyReport.table_name).to eq("reports")
   end
 
-  describe 'associations' do
-    # Inherited from Report
-    # Add specific MonthlyReport associations if any
+  it "sets type to 'MonthlyReport' on create" do
+    report = create(:monthly_report)
+    expect(report.type).to eq("MonthlyReport")
   end
 
-  describe 'validations' do
-    # Inherited from Report
-    # Add specific MonthlyReport validations if any
+  it "default-scopes queries to type='MonthlyReport'" do
+    create(:monthly_report)
+    expect(MonthlyReport.all.pluck(:type).uniq).to eq([ "MonthlyReport" ])
   end
-
-  it 'is valid with valid attributes' do
-    # Note: Factory needs associations uncommented for create (from Report factory)
-    # expect(build(:monthly_report)).to be_valid
-    # pending("Requires functional user/organization/windows_type factories and associations")
-  end
-
-  # Add tests specific to MonthlyReport if any
 end

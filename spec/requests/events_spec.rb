@@ -364,4 +364,59 @@ RSpec.describe "Events", type: :request do
       end
     end
   end
+
+  describe "Google Analytics snippets" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "saves snippet fields on update" do
+        patch event_path(event), params: { event: {
+          ga4_snippet: "<script>console.log('GA4')</script>",
+          gtm_head_snippet: "<script>console.log('GTM Head')</script>",
+          gtm_body_snippet: "<script>console.log('GTM Body')</script>"
+        } }
+        event.reload
+        expect(event.ga4_snippet).to eq("<script>console.log('GA4')</script>")
+        expect(event.gtm_head_snippet).to eq("<script>console.log('GTM Head')</script>")
+        expect(event.gtm_body_snippet).to eq("<script>console.log('GTM Body')</script>")
+      end
+
+      it "renders snippets on show page" do
+        event.update!(
+          ga4_snippet: "<script>console.log('GA4')</script>",
+          gtm_head_snippet: "<script>console.log('GTM Head')</script>",
+          gtm_body_snippet: "<script>console.log('GTM Body')</script>"
+        )
+        get event_path(event)
+        expect(response.body).to include("console.log('GA4')")
+        expect(response.body).to include("console.log('GTM Head')")
+        expect(response.body).to include("console.log('GTM Body')")
+      end
+
+      it "does not render snippets when not set" do
+        get event_path(event)
+        expect(response.body).not_to include("ga4_snippet")
+        expect(response.body).not_to include("gtm_head_snippet")
+        expect(response.body).not_to include("gtm_body_snippet")
+      end
+    end
+
+    context "as non-admin owner" do
+      let(:owned_event) { create(:event, created_by: user) }
+
+      before { sign_in user }
+
+      it "ignores snippet params on update" do
+        patch event_path(owned_event), params: { event: {
+          ga4_snippet: "<script>alert('xss')</script>",
+          gtm_head_snippet: "<script>alert('xss')</script>",
+          gtm_body_snippet: "<script>alert('xss')</script>"
+        } }
+        owned_event.reload
+        expect(owned_event.ga4_snippet).to be_nil
+        expect(owned_event.gtm_head_snippet).to be_nil
+        expect(owned_event.gtm_body_snippet).to be_nil
+      end
+    end
+  end
 end

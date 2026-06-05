@@ -1,12 +1,1 @@
-<%= turbo_frame_tag :sectors_tags do %>
-  <div class="flex flex-wrap gap-2">
-    <% @sectors.each do |sector| %>
-      <% cache sector do %>
-        <%= render "sectors/tagging_label",
-               sector: sector,
-               bg_color: "bg-white",
-               bg_hover_color: "bg-lime-200" %>
-      <% end %>
-    <% end %>
-  </div>
-<% end %>
+<%= render "sectors" %>

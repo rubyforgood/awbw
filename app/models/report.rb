@@ -26,8 +26,7 @@ class Report < ApplicationRecord
   # has_many through
   has_many :form_fields, through: :form
   has_many :all_quotable_item_quotes,
-           ->(wl) { where(quotable_id: wl.id,
-                          quotable_type: %w[WorkshopLog Report]) }, # needed bc some are stored w type Report
+           ->(r) { where(quotable_id: r.id, quotable_type: "Report") },
            class_name: "QuotableItemQuote",
            inverse_of: :quotable
   has_many :quotes, through: :all_quotable_item_quotes, dependent: :nullify
@@ -69,8 +68,6 @@ class Report < ApplicationRecord
       where("EXTRACT(YEAR FROM COALESCE(reports.date, reports.created_at)) = ?", year.to_i)
     end }
   scope :ordered_by_date, -> { order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")) }
-  scope :workshop_logs, -> { where(type: "WorkshopLog") }
-
   def self.search(params)
     logs = is_a?(ActiveRecord::Relation) ? self : all
     logs = logs.created_by_id(params[:created_by_id]) if params[:created_by_id].present?
@@ -88,14 +85,12 @@ class Report < ApplicationRecord
       case type
       when "MonthlyReport"
         "#{type} - Monthly Report Date: #{date_label} - User: #{created_by.full_name if created_by}"
-      when "Report"
+      else
         if owner_type and owner_type == "Resource"
           "#{type} - #{owner ? owner_type : "[ EMPTY ]"} - User: #{created_by.full_name if created_by}"
         else
           "#{type} - #{owner ? owner.type : "[ EMPTY ]"} - User: #{created_by.full_name if created_by}"
         end
-      else
-        "#{type} - #{owner ? owner.communal_label(self) : "[ EMPTY ]"} - User: #{created_by.full_name if created_by}"
       end
     end
   end
@@ -134,9 +129,9 @@ class Report < ApplicationRecord
 
   def form_builder
     if type and type.include? "Monthly"
-      if windows_type and windows_type.name == "ADULT WORKSHOP LOG"
+      if windows_type and windows_type.name == "Adult"
         FormBuilder.find(4)
-      elsif windows_type and windows_type.name == "CHILDREN WORKSHOP LOG"
+      elsif windows_type and windows_type.name == "Children"
         FormBuilder.find(2)
       end
     elsif owner and owner_type.include? "FormBuilder"

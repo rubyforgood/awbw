@@ -7,7 +7,7 @@ module DomainTheme
     workshop_logs:            :teal,
     resources:                :violet,
     community_news:           :orange,
-    stories:                  :rose,
+    stories:                  :fuchsia,
     events:                   :blue,
     people:                   :sky,
     organizations:            :emerald,
@@ -24,11 +24,11 @@ module DomainTheme
 
     workshop_ideas:           :indigo,
     workshop_variation_ideas: :purple,
-    story_ideas:              :rose,
+    story_ideas:              :fuchsia,
     event_registrations:      :blue,
 
     banners:                  :yellow,
-    users:                    :fuchsia,
+    users:                    :rose,
 
     admin_only:               :blue,
     user_only:                :amber,

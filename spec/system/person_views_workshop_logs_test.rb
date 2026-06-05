@@ -24,7 +24,7 @@ RSpec.describe "People can view a submitted workshop log" do
           workshop_id: @workshop1.id,
           organization_id: @organization.id,
           created_by_id: @user.id,
-          date: 1.day.ago,
+          workshop_held_on: 1.day.ago,
           adults_first_time: 4,
           adults_ongoing: 10,
           children_first_time: 2,
@@ -36,7 +36,7 @@ RSpec.describe "People can view a submitted workshop log" do
           workshop_id: @workshop2.id,
           organization_id: @organization.id,
           created_by_id: @user.id,
-          date: 2.months.ago,
+          workshop_held_on: 2.months.ago,
           adults_first_time: 2,
           adults_ongoing: 8,
           children_first_time: 1,
@@ -65,9 +65,9 @@ RSpec.describe "People can view a submitted workshop log" do
       end
 
       it "displays all workshop logs with correct information" do
-        expect(page).to have_content(@workshop_log1.date.strftime("%b %d, %Y"))
+        expect(page).to have_content(@workshop_log1.workshop_held_on.strftime("%b %d, %Y"))
         expect(page).to have_content(@workshop1.title)
-        expect(page).to have_content("#{@user.first_name} #{@user.last_name}")
+        expect(page).to have_content("#{@user.person.first_name} #{@user.person.last_name}")
         expect(page).to have_content("5")
         expect(page).to have_content("3")
         expect(page).to have_content("10")
@@ -76,21 +76,21 @@ RSpec.describe "People can view a submitted workshop log" do
         expect(page).to have_content("--")
         expect(page).to have_content("Grand Total:")
 
-        expect(page).to have_content(@workshop_log2.date.strftime("%b %d, %Y"))
+        expect(page).to have_content(@workshop_log2.workshop_held_on.strftime("%b %d, %Y"))
         expect(page).to have_content(@workshop2.title)
-        expect(page).to have_content("#{@user.first_name} #{@user.last_name}")
+        expect(page).to have_content("#{@user.person.first_name} #{@user.person.last_name}")
       end
 
       it "filters workshop logs by month submitted" do
         expect(page).to have_content("Month Submitted")
         find("#month_and_year").click
-        month_filter = @workshop_log2.date.strftime("%B %Y")
+        month_filter = @workshop_log2.workshop_held_on.strftime("%B %Y")
         select month_filter, from: "month_and_year"
         sleep 0.5
-        expect(page).to have_content(@workshop_log2.date.strftime("%b %d, %Y"))
+        expect(page).to have_content(@workshop_log2.workshop_held_on.strftime("%b %d, %Y"))
         expect(page).to have_content(@workshop2.title)
-        expect(page).to have_content("#{@user.first_name} #{@user.last_name}")
-        expect(page).not_to have_content(@workshop_log1.date.strftime("%b %d, %Y"))
+        expect(page).to have_content("#{@user.person.first_name} #{@user.person.last_name}")
+        expect(page).not_to have_content(@workshop_log1.workshop_held_on.strftime("%b %d, %Y"))
         expect(page).not_to have_content(@workshop1.title)
       end
     end

@@ -5,7 +5,7 @@ class Workshop < ApplicationRecord
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include ActiveModel::Dirty
-  include Mentioner
+  include Mentionable
 
   # Define rich text fields for mentions functionality
   def self.mentionable_rich_text_fields
@@ -14,7 +14,7 @@ class Workshop < ApplicationRecord
       :rhino_introduction, :rhino_opening_circle, :rhino_demonstration, :rhino_warm_up,
       :rhino_visualization, :rhino_creation, :rhino_closing, :rhino_notes, :rhino_tips,
       :rhino_misc1, :rhino_misc2, :rhino_extra_field, :rhino_objective_spanish,
-      :rhino_materials_spanish, :rhino_optional_materials_spanish, :rhino_age_range_spanish,
+      :rhino_materials_spanish, :rhino_optional_materials_spanish,
       :rhino_setup_spanish, :rhino_introduction_spanish, :rhino_opening_circle_spanish,
       :rhino_demonstration_spanish, :rhino_warm_up_spanish, :rhino_visualization_spanish,
       :rhino_creation_spanish, :rhino_closing_spanish, :rhino_notes_spanish,
@@ -33,7 +33,7 @@ class Workshop < ApplicationRecord
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
   has_many :associated_resources, class_name: "Resource", foreign_key: "workshop_id", dependent: :restrict_with_error
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
-  has_many :workshop_logs, dependent: :destroy, as: :owner
+  has_many :workshop_logs, dependent: :restrict_with_error
   has_many :workshop_resources, dependent: :destroy
   has_many :workshop_series_children, # When this workshop is the parent in a series
            -> { order(:position) },
@@ -98,7 +98,6 @@ class Workshop < ApplicationRecord
   has_rich_text :rhino_objective_spanish
   has_rich_text :rhino_materials_spanish
   has_rich_text :rhino_optional_materials_spanish
-  has_rich_text :rhino_age_range_spanish
   has_rich_text :rhino_setup_spanish
   has_rich_text :rhino_introduction_spanish
   has_rich_text :rhino_opening_circle_spanish
@@ -124,14 +123,12 @@ class Workshop < ApplicationRecord
   # Validations
   validates_presence_of :title
   # validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
-  validates_length_of :age_range, maximum: 16
   validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :quotes, reject_if: proc { |object| object["quote"].nil? }
-  accepts_nested_attributes_for :workshop_logs, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :workshop_series_children,
                                 reject_if: proc { |attributes| attributes["workshop_child_id"].blank? },
                                 allow_destroy: true

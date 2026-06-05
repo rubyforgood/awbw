@@ -15,7 +15,6 @@ RSpec.describe "/workshop_ideas", type: :request do
       created_by_id: regular_user.id,
       updated_by_id: regular_user.id,
       windows_type_id: windows_type.id,
-      age_range: "10–14",
       time_creation: 30
     }
   end
@@ -226,43 +225,43 @@ RSpec.describe "/workshop_ideas", type: :request do
 
   context "as a guest" do
     describe "GET /index" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get workshop_ideas_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "POST /create" do
-      it "does not create and redirects to root" do
+      it "does not create and redirects to new user session path" do
         expect {
           post workshop_ideas_path,
                params: { workshop_idea: valid_attributes }
         }.not_to change(WorkshopIdea, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "PATCH /update" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         idea = create(:workshop_idea, valid_attributes)
 
         patch workshop_idea_path(idea),
               params: { workshop_idea: { title: "Updated" } }
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "DELETE /destroy" do
-      it "does not delete and redirects to root" do
+      it "does not delete and redirects to new user session path" do
         idea = create(:workshop_idea, valid_attributes)
 
         expect {
           delete workshop_idea_path(idea)
         }.not_to change(WorkshopIdea, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end

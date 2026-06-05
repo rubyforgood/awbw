@@ -70,8 +70,8 @@ jobs:
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
 
-      - name: Run tests
-        run: bundle exec rspec
+      - name: Run tests and publish results
+        run: bundle exec rspec --format progress --format json --out tmp/rspec_results.json
         env:
           RAILS_ENV: test
           # AWS credentials
@@ -85,3 +85,10 @@ jobs:
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           CI: "true"
+
+      - name: Publish test results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: rspec-results
+          path: tmp/rspec_results.json

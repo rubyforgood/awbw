@@ -41,6 +41,17 @@ RSpec.describe "/story_ideas", type: :request do
         get story_ideas_url
         expect(response).to be_successful
       end
+
+      it "filters story ideas by organization_id" do
+        org = create(:organization)
+        matching = create(:story_idea, organization: org)
+        excluded = create(:story_idea)
+
+        get story_ideas_url(organization_id: org.id)
+        expect(response).to be_successful
+        expect(response.body).to include(story_idea_path(matching))
+        expect(response.body).not_to include(story_idea_path(excluded))
+      end
     end
 
     describe "GET /show" do
@@ -222,58 +233,58 @@ RSpec.describe "/story_ideas", type: :request do
 
   context "as guest" do
     describe "GET /index" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get story_ideas_url
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "GET /show" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         story_idea = create(:story_idea)
         get story_idea_url(story_idea)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "GET /new" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get new_story_idea_url
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "POST /create" do
-      it "does not create a StoryIdea and redirects to root" do
+      it "does not create a StoryIdea and redirects to new user session path" do
         expect {
           post story_ideas_url, params: { story_idea: valid_attributes }
         }.not_to change(StoryIdea, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "PATCH /update" do
-      it "does not update StoryIdea and redirects to root" do
+      it "does not update StoryIdea and redirects to new user session path" do
         story_idea = create(:story_idea, title: "Original Title")
 
         patch story_idea_url(story_idea),
               params: { story_idea: { title: "Updated Title" } }
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
         expect(story_idea.reload.title).to eq("Original Title")
       end
     end
 
     describe "DELETE /destroy" do
-      it "does not delete StoryIdea and redirects to root" do
+      it "does not delete StoryIdea and redirects to new user session path" do
         story_idea = create(:story_idea)
 
         expect {
           delete story_idea_url(story_idea)
         }.not_to change(StoryIdea, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end

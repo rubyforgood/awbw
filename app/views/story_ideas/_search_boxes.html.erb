@@ -16,6 +16,17 @@
       </div>
     </div>
 
+    <!-- Organization -->
+    <div class="w-full md:w-auto md:min-w-[220px]">
+      <%= label_tag :organization_id, "Organization", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :organization_id,
+                     options_from_collection_for_select(@organizations, :id, :name, params[:organization_id]),
+                     include_blank: "All organizations",
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                     onchange: "this.form.submit()" %>
+    </div>
+
     <!-- Clear filters -->
     <div class="w-full md:w-auto">
       <%= link_to "Clear filters", story_ideas_path,

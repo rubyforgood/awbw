@@ -85,7 +85,6 @@ class WorkshopIdeasController < ApplicationController
 
   # Optional hooks for setting variables for forms or index
   def set_form_variables
-    @age_ranges = Category.includes(:category_type).where("category_types.name = 'AgeRange'").pluck(:name)
     @potential_series_workshops = authorized_scope(Workshop.published).includes(:windows_type).order(:title)
     @sectors = Sector.published
     @windows_types = WindowsType.all
@@ -117,7 +116,6 @@ class WorkshopIdeasController < ApplicationController
       :time_hours, :time_intro, :time_minutes,
       :time_opening, :time_opening_circle, :time_warm_up,
 
-      :age_range, :age_range_spanish,
       :closing, :closing_spanish,
       :creation, :creation_spanish,
       :demonstration, :demonstration_spanish,
@@ -155,7 +153,6 @@ class WorkshopIdeasController < ApplicationController
       :rhino_objective_spanish,
       :rhino_materials_spanish,
       :rhino_optional_materials_spanish,
-      :rhino_age_range_spanish,
       :rhino_setup_spanish,
       :rhino_introduction_spanish,
       :rhino_opening_circle_spanish,

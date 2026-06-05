@@ -2,7 +2,7 @@ require "rails_helper"
 require "csv"
 
 RSpec.describe "EventRegistrations", type: :request do
-  let(:regular_user) { create(:user, :with_person, first_name: "John", last_name: "Doe", email: "john.doe@example.com") }
+  let(:regular_user) { create(:user, :with_person, email: "john.doe@example.com") }
   let(:admin)        { create(:user, :with_person, super_user: true) }
   let(:other_user)   { create(:user, :with_person) }
 
@@ -23,6 +23,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response).to have_http_status(:success)
       end
 
+      it "filters registrations by organization_id" do
+        organization = create(:organization)
+        matching_reg = create(:event_registration)
+        create(:event_registration_organization, event_registration: matching_reg, organization: organization)
+
+        get event_registrations_path(organization_id: organization.id)
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(matching_reg.registrant.first_name)
+        expect(response.body).not_to include(existing_registration.registrant.first_name)
+      end
+
       it "exports CSV with headers and data only (no captions)" do
         get event_registrations_path, params: { format: :csv }
 
@@ -33,7 +44,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
         rows = CSV.parse(response.body)
         expect(rows.size).to be >= 1
-        expect(rows.first).to eq([ "First name", "Last name", "Email", "Event", "Scholarship recipient", "Scholarship tasks completed" ])
+        expect(rows.first).to eq([ "First name", "Last name", "Email", "Phone", "Event", "Status", "Scholarship", "Scholarship completed", "Payment status", "Payment total" ])
 
         data_rows = rows.drop(1)
         expect(data_rows).not_to be_empty
@@ -42,9 +53,13 @@ RSpec.describe "EventRegistrations", type: :request do
           person.first_name.to_s,
           person.last_name.to_s,
           person.preferred_email.to_s,
+          person.phone_number.to_s,
           event.title.to_s,
+          "Registered",
           "No",
-          "No"
+          "No",
+          "Not paid in full",
+          ""
         ]
         expect(data_rows).to include(expected_row)
       end
@@ -342,9 +357,9 @@ RSpec.describe "EventRegistrations", type: :request do
   # ============================================================
   context "as a guest" do
     describe "GET /event_registrations" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get event_registrations_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
@@ -355,16 +370,16 @@ RSpec.describe "EventRegistrations", type: :request do
                params: { event_registration: { event_id: event.id, registrant_id: regular_user.person.id } }
         }.not_to change(EventRegistration, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
     describe "PATCH /event_registrations/:id" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         patch event_registration_path(existing_registration),
               params: { event_registration: { event_id: new_event.id } }
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
 
@@ -374,7 +389,7 @@ RSpec.describe "EventRegistrations", type: :request do
           delete event_registration_path(existing_registration)
         }.not_to change(EventRegistration, :count)
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end

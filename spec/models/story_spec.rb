@@ -3,6 +3,95 @@ require 'rails_helper'
 RSpec.describe Story, type: :model do
   it_behaves_like "author_creditable", factory: :story
 
+  describe "#attach_assets_from_idea!" do
+    let(:idea) { create(:story_idea) }
+    let(:story) { create(:story, story_idea: idea) }
+
+    before do
+      create(:gallery_asset, :with_file, owner: idea)
+      create(:gallery_asset, :with_file, owner: idea)
+      create(:gallery_asset, :with_file, owner: idea)
+    end
+
+    it "promotes the first gallery asset to primary" do
+      story.attach_assets_from_idea!
+      story.reload
+
+      expect(story.primary_asset).to be_present
+      expect(story.primary_asset.file).to be_attached
+    end
+
+    it "keeps remaining gallery assets as gallery" do
+      story.attach_assets_from_idea!
+      story.reload
+
+      expect(story.gallery_assets.count).to eq(2)
+      story.gallery_assets.each do |asset|
+        expect(asset.file).to be_attached
+      end
+    end
+
+    it "appends idea assets after existing gallery assets" do
+      create(:gallery_asset, :with_file, owner: story)
+
+      story.attach_assets_from_idea!
+
+      expect(story.assets.count).to eq(4)
+    end
+
+    it "does nothing without a linked idea" do
+      story_without_idea = create(:story, story_idea: nil)
+      expect { story_without_idea.attach_assets_from_idea! }.not_to change { story_without_idea.assets.count }
+    end
+
+    context "when user uploaded a primary asset" do
+      before { create(:primary_asset, :with_file, owner: story) }
+
+      it "keeps the user-uploaded primary" do
+        original_blob_id = story.primary_asset.file.blob_id
+
+        story.attach_assets_from_idea!
+        story.reload
+
+        expect(story.primary_asset.file.blob_id).to eq(original_blob_id)
+      end
+
+      it "adds all idea assets as gallery" do
+        story.attach_assets_from_idea!
+        story.reload
+
+        expect(story.gallery_assets.count).to eq(3)
+      end
+
+      it "does not create a second primary asset" do
+        story.attach_assets_from_idea!
+        story.reload
+
+        expect(story.assets.where(type: "PrimaryAsset").count).to eq(1)
+      end
+    end
+
+    context "when user uploaded gallery assets" do
+      before { create(:gallery_asset, :with_file, owner: story) }
+
+      it "keeps user-uploaded gallery assets" do
+        original_blob_id = story.gallery_assets.first.file.blob_id
+
+        story.attach_assets_from_idea!
+        story.reload
+
+        expect(story.gallery_assets.map(&:file).map(&:blob_id)).to include(original_blob_id)
+      end
+
+      it "promotes first idea gallery to primary when no primary exists" do
+        story.attach_assets_from_idea!
+        story.reload
+
+        expect(story.primary_asset).to be_present
+      end
+    end
+  end
+
   describe '.search_by_params' do
     let!(:published_story) { create(:story, :published, title: 'Healing Through Art') }
     let!(:draft_story) { create(:story, title: 'Unpublished Draft', published: false) }
@@ -39,6 +128,15 @@ RSpec.describe Story, type: :model do
       results = Story.search_by_params(title: 'Healing', published: 'true')
       expect(results).to include(published_story)
       expect(results).not_to include(draft_story, old_story)
+    end
+
+    it 'filters by organization_id' do
+      organization = create(:organization)
+      org_story = create(:story, organization: organization)
+
+      results = Story.search_by_params(organization_id: organization.id)
+      expect(results).to include(org_story)
+      expect(results).not_to include(published_story, draft_story, old_story)
     end
   end
 end

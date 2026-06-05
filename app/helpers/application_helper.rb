@@ -1,4 +1,61 @@
 module ApplicationHelper
+  INDEX_BUTTON_ICONS = {
+    community_news:      "fa-newspaper",
+    stories:             "fa-book-open",
+    story_ideas:         "fa-lightbulb",
+    workshop_logs:       "fa-clipboard-list",
+    event_registrations: "fa-ticket",
+    monthly_reports:     "fa-file-lines",
+    events:              "fa-calendar-days",
+    people:              "fa-user",
+    organizations:       "fa-building",
+    workshops:           "fa-chalkboard-user",
+    resources:           "fa-book"
+  }.freeze
+
+  # Themed card-style link to a filtered index. The collection drives the
+  # model identity (DomainTheme color + default label + default icon + count
+  # + default index path). Pass `params:` for filter params, or `path:` to
+  # override entirely (e.g. nested routes).
+  def index_button(collection, params: {}, path: nil, label: nil, icon: nil, hide_count: false, hide_icon: false, data: {})
+    klass = collection.klass
+    key = klass.name.underscore.pluralize.to_sym
+    label ||= key.to_s.humanize
+    icon  ||= INDEX_BUTTON_ICONS[key] || "fa-folder"
+    path  ||= send("#{klass.model_name.route_key}_path", params)
+
+    bg       = DomainTheme.bg_class_for(key, intensity: 50)
+    hover_bg = DomainTheme.bg_class_for(key, intensity: 50, hover: true)
+    text     = DomainTheme.text_class_for(key)
+    border   = DomainTheme.border_class_for(key)
+
+    link_to path,
+            data: { turbo_prefetch: false }.merge(data),
+            class: "group flex items-center gap-3 w-full px-3 py-2 rounded-lg
+                    border #{border} #{bg} #{hover_bg}
+                    transition-colors duration-200 shadow-sm" do
+      icon_tag = if hide_icon
+        "".html_safe
+      else
+        content_tag(:span, class: "#{text} w-5 text-center") do
+          content_tag(:i, "", class: "fa-solid #{icon}")
+        end
+      end
+
+      label_tag = content_tag(:span, label, class: "font-medium #{text} truncate")
+
+      count_tag = if hide_count
+        "".html_safe
+      else
+        content_tag(:span,
+                    number_with_delimiter(collection.count),
+                    class: "ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-white #{text} border #{border}")
+      end
+
+      icon_tag + label_tag + count_tag
+    end
+  end
+
   def search_page(params)
     params[:search] ? params[:search][:page] : 1
   end
@@ -40,36 +97,6 @@ module ApplicationHelper
 
     content_tag(:div, id: "banner-news", class: "bg-yellow-200 text-black text-center px-4 py-2") do
       content_tag(:div, safe_content.html_safe, class: "font-medium")
-    end
-  end
-
-  def ra_path(obj, action = nil)
-    action = action.nil? ? "" : "#{action}_"
-
-    if obj.form_builder and obj.form_builder.name == "Share a Story"
-      if action.empty?
-        return report_path(obj)
-      else
-        return send("reports_#{action}story_path", obj)
-      end
-    end
-
-    unless obj.respond_to? :type
-      if action.empty?
-        return share_idea_show_path(obj)
-      else
-        return edit_workshop_path(obj)
-      end
-    end
-
-    if obj.type == "WorkshopLog"
-      send("#{action}workshop_log_path", obj)
-    elsif obj.type != "WorkshopLog" and action == "edit_"
-      send("#{action}report_path", obj, form_builder_id: obj.form_builder,
-           month: obj.date.month,
-           year: obj.date.year)
-    else
-      send("#{action}report_path", obj)
     end
   end
 
@@ -121,7 +148,11 @@ module ApplicationHelper
   end
 
   def navbar_bg_class
-    staging_environment? ? "bg-red-600" : "bg-primary"
+    if staging_environment? && !params[:nav_bg_primary].present?
+      "bg-red-600"
+    else
+      "bg-primary"
+    end
   end
 
   def staging_environment?

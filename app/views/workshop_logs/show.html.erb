@@ -1,13 +1,17 @@
 <% content_for(:page_bg_class, "admin-or-owner-or-member") %>
 <div class="<%= DomainTheme.bg_class_for(:workshop_logs) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex flex-wrap justify-end gap-2 mb-4">
+  <div class="flex flex-wrap justify-end items-center gap-2 mb-4">
     <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <% if allowed_to?(:index?, WorkshopLog) %>
       <%= link_to "My Workshop Logs", workshop_logs_path(created_by_id: current_user.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <% end %>
+    <% if allowed_to?(:manage?, WorkshopLog) %>
+      <%= link_to "All workshop logs", workshop_logs_path, class: "text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded px-2 py-1" %>
+    <% end %>
     <% if allowed_to?(:edit?, @workshop_log) %>
       <%= link_to "Edit", edit_workshop_log_path(@workshop_log), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <% end %>
+    <%= render "bookmarks/editable_bookmark_button", resource: @workshop_log %>
   </div>
 
   <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
@@ -62,7 +66,7 @@
           <% else %>
             —
           <% end %>
-          <br><span class="text-gray-400"><%= @workshop_log.date&.strftime("%B %d, %Y") || "—" %></span>
+          <br><span class="text-gray-400"><%= @workshop_log.workshop_held_on&.strftime("%B %d, %Y") || "—" %></span>
         </div>
         <div>
           <span class="font-semibold text-gray-700">Created by:</span>
@@ -136,6 +140,18 @@
         </table>
       </div>
     </div>
+
+    <!-- Sectors -->
+    <% if @workshop_log.sectors.any? %>
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Sectors</h2>
+        <div class="flex flex-wrap gap-1">
+          <% @workshop_log.sectors.each do |sector| %>
+            <%= render "sectors/tagging_label", sector: sector %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
 
     <!-- Responses -->
     <% if @answers.any? %>

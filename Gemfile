@@ -15,7 +15,7 @@ gem "vite_rails"
 gem "jquery-rails"
 gem "jbuilder", "~> 2.0"
 
-gem "devise", "~> 4.9.4"
+gem "devise", "~> 5.0.4"
 gem "draper"
 gem "aws-sdk-s3"
 
@@ -23,7 +23,6 @@ gem "puma", "~> 6.0" # Add Puma as the web server
 
 gem "cocoon", "~> 1.2.6"
 
-gem "wicked"
 gem "search_cop"
 gem "httparty"
 gem "will_paginate", "~> 3.1.7"
@@ -50,7 +49,7 @@ gem "maxmind-geoip2", "~> 1.5", ">= 1.5.1"
 # Stylesheet inlining for email
 gem "premailer-rails" # applies any style tag classes to html elements for better email client compatibility
 
-gem "bcrypt", "3.1.16"
+gem "bcrypt", "~> 3.1", ">= 3.1.22"
 gem "json", ">= 2.6", "< 3" # or simply: gem "json", "~> 2.7"
 gem "ostruct"
 gem "simple_form"
@@ -66,6 +65,11 @@ gem "action_policy", "~> 0.7.6"
 gem "active_storage_validations", "~> 3.0"
 
 gem "solid_cache"
+
+# Payments
+gem "pay", "~> 11.4"
+gem "stripe", "~> 18.0"
+gem "receipts", "~> 2.4"
 
 group :development do
   gem "rubocop-rails-omakase", require: false

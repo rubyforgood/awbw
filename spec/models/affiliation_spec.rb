@@ -35,6 +35,12 @@ RSpec.describe Affiliation do
     it 'excludes records with past end date' do
       expect(described_class.active).not_to include(inactive_by_end_date)
     end
+
+    it 'qualifies end_date when joined with organizations (which also has end_date)' do
+      expect {
+        described_class.active.joins(:organization).to_a
+      }.not_to raise_error
+    end
   end
 
   describe '#set_inactive_from_dates' do

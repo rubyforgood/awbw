@@ -24,7 +24,7 @@ RSpec.describe Resource, type: :model do
         mentionable_id: other_resource.id
       )
 
-      mentions = resource.all_mentions_grouped
+      mentions = resource.mentionee_records_grouped
       expect(mentions).to have_key("Workshop")
       expect(mentions).to have_key("Resource")
       expect(mentions["Workshop"]).to include(workshop)
@@ -47,7 +47,7 @@ RSpec.describe Resource, type: :model do
         mentionable_id: workshop.id
       )
 
-      mentions = resource.all_mentions_grouped
+      mentions = resource.mentionee_records_grouped
       expect(mentions).to have_key("Workshop")
       expect(mentions["Workshop"]).to include(workshop)
     end

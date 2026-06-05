@@ -1,23 +1,7 @@
-# CLAUDE.md
+# This is a Ruby on Rails application.
+<!-- Keep code style rules in sync with .github/copilot-instructions.md -->
 
-## Architecture Reference
-
-For detailed architecture, models, controllers, services, and testing structure, read `AGENTS.md`.
-
-## Project Overview
-
-This is a Ruby on Rails 8.1 application (Ruby 4.0.1) — the Portal for A Window Between Worlds (AWBW). It manages workshops, resources, community news, stories, and events for workshop leaders.
-
-## Tech Stack
-
-- **Backend:** Rails 8.1, Ruby 4.0.1, MySQL (via Trilogy adapter)
-- **Frontend:** Vite, Tailwind CSS v4, Stimulus, Turbo Rails
-- **Auth:** Devise with JWT token support
-- **Authorization:** ActionPolicy (app/policies/)
-- **Rich text:** ActionText with Rhino editor (TipTap-based)
-- **File uploads:** ActiveStorage with DigitalOcean Spaces
-- **Background jobs:** SolidQueue
-- **Caching:** SolidCache
+For project overview, tech stack, architecture reference (models, controllers, services, testing), and more, read `AGENTS.md`.
 
 ## Setup
 
@@ -30,6 +14,32 @@ If you just need frontend dependencies:
 ```
 npm ci
 ```
+
+## AI Instruction Files
+
+When the user says "AI files", "AI instructions", "tell AI to", or "remember to always", these are the files.
+If you notice the user repeatedly correcting the same pattern, suggest adding it to the AI files with a concrete proposal.
+
+| File | Purpose |
+|---|---|
+| `CLAUDE.md` | Coding rules and conventions (this file) |
+| `AGENTS.md` | Architecture reference + project details |
+| `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) |
+| `ai/` | Shell script shortcuts for common dev tasks |
+
+## Related Files
+
+When changing a model or controller, check whether these related files need updates:
+
+| If you change... | Also check... |
+|---|---|
+| Model | Decorator, policy, factory, model spec |
+| Controller | Policy, request spec, routing spec, views |
+| View | System spec, Stimulus controller (if interactive) |
+| Service | Service spec |
+| Decorator | Decorator spec |
+| Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
+| Add/remove model, concern, service, or gem | AGENTS.md |
 
 ## Code Style
 
@@ -89,88 +99,67 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - **No parentheses around conditions:** `if foo` not `if (foo)`
 - **No semicolons** to separate statements
 
+## Casing
+
+- **Use sentence case** for UI labels, headings, and display text — not title case
+- "Age range" not "Age Range", "Art type" not "Art Type"
+- Use `.underscore.humanize` to convert PascalCase model/type names to sentence case (e.g., `"AgeRange".underscore.humanize` → `"Age range"`)
+- Avoid `.titleize` for user-facing labels — it produces title case
+- **Exception:** when a category type name prefixes a category name (e.g., "Age Range: 3-5"), use `.titleize` for the prefix
+
 ## HTML/ERB Formatting
 
 ### Tag Attributes
 - **Closing `>` on same line as last attribute** — do not put `>` on its own line
 - When attributes span multiple lines, keep the closing `>` with the last attribute
-- Good: `<div class="..." id="...">` or `<div class="...\n     id="...">`
-- Bad: `<div class="...\n     id="..."\n  >`
-
-## Related Files
-
-When changing a model or controller, check whether these related files need updates:
-
-| If you change... | Also check... |
-|---|---|
-| Model | Decorator, policy, factory, model spec |
-| Controller | Policy, request spec, routing spec, views |
-| View | System spec, Stimulus controller (if interactive) |
-| Service | Service spec |
-| Decorator | Decorator spec |
-| Add/remove model, concern, service, or gem | AGENTS.md, `.github/copilot-instructions.md` |
-| Code style rules | `.github/copilot-instructions.md` (keep in sync) |
-
-## Key Directories
-
-- `app/services/` — Business logic service objects
-- `app/decorators/` — Draper decorators for view presentation
-- `app/policies/` — ActionPolicy authorization rules
-- `app/presenters/` — Presentation objects
-- `app/frontend/` — Vite/JS components (Stimulus controllers, etc.)
-
-## Testing
-
-- **Framework:** RSpec (`bundle exec rspec`)
-- **Factories:** FactoryBot (spec/factories/)
-- **Matchers:** Shoulda Matchers
-- **System tests:** Capybara with Selenium
-- **Coverage:** SimpleCov
-
-Run all tests:
-```
-bundle exec rspec
-```
-
-Run a single test file:
-```
-bundle exec rspec spec/models/some_model_spec.rb
-```
-
-## Linting
-
-```
-bundle exec rubocop
-```
-
-Auto-fix:
-```
-bundle exec rubocop -a
-```
-
-## Security Scanning
-
-```
-bundle exec brakeman
-bundle exec bundle-audit check --update
-```
+- Example (GOOD):
+  ```erb
+  <div class="relative z-10 w-full bg-white text-gray-800 py-2 px-4"
+       id="dropdown">
+  ```
+- Example (BAD):
+  ```erb
+  <div class="relative z-10 w-full bg-white text-gray-800 py-2 px-4"
+       id="dropdown"
+  >
+  ```
 
 ## JavaScript
 
-- ES6+ syntax, ESM imports/exports
+- ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
+- Use `const` for fixed values — not `SCREAMING_SNAKE_CASE` constants (e.g., `const styleId = "foo"` not `const STYLE_ID = "foo"`)
 - **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
 - **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
+- **Prefer Font Awesome (free)** icons over inline SVGs — use `icon("fa-solid fa-foo")` helper. Inline SVGs are acceptable when a specific icon design is preferred.
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
 - Controller naming: `[name]_controller.js`
 - Keep controllers focused and small
-- **Use Stimulus targets and data attributes** to reference DOM elements — avoid `this.element.querySelector` and direct DOM queries. Declare `static targets = [...]` and use `data-[controller]-target` attributes in views.
-- **Use Stimulus shorthand action descriptors and shorthand pairs** — omit the event when it's the default for that element (e.g., `input` for `<input>`/`<textarea>`, `click` for `<button>`/`<a>`, `submit` for `<form>`). Write `controller#action` not `input->controller#action` on an input element. Only specify the event when using a non-default (e.g., `change->controller#action` on an input). See [Stimulus Actions](https://stimulus.hotwired.dev/reference/actions#event-shorthand).
+
+### Stimulus Conventions
+
+Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introduction) and reference docs. Key rules:
+
+**Targets over querySelector** — declare `static targets = [...]` and use `data-[controller]-target` attributes in views. Never use `this.element.querySelector` or `document.getElementById` to find elements that could be targets. Exception: elements outside the controller's scope (e.g., in a parent view).
+
+**Values API for state** — use `static values = { name: Type }` for any state that persists or drives UI. Do not store state in instance variables when a value would work. Use `[name]ValueChanged()` callbacks for reactive updates instead of manual syncing.
+
+**Actions over manual listeners** — use `data-action` attributes instead of `addEventListener` in `connect()`. Omit the event when it's the default for the element (`click` for buttons/links, `input` for inputs/textareas, `submit` for forms, `change` for selects). Use `@window` or `@document` suffixes for global events when possible (e.g., `resize@window->controller#layout`). Use action options like `:prevent` and `:stop` instead of calling `event.preventDefault()` in methods.
+
+**Classes API for CSS** — use `static classes = [...]` when CSS classes need to be configurable from HTML. For standard Tailwind utilities used internally (e.g., `"hidden"`), hardcoding is acceptable.
+
+**Outlets for cross-controller communication** — use `static outlets = [...]` to reference other controllers instead of `document.getElementById` or custom events when the relationship is stable.
+
+**Lifecycle discipline** — every listener, timer, or observer created in `connect()` must be cleaned up in `disconnect()`. Store bound handler references so they can be removed. Use `initialize()` for one-time setup (e.g., binding functions).
+
+**Target lifecycle callbacks** — use `[name]TargetConnected(element)` and `[name]TargetDisconnected(element)` to respond to dynamically added/removed targets (e.g., cocoon nested fields, Turbo streams).
+
+**Visibility** — toggle the `hidden` class via `classList.toggle("hidden", condition)` instead of setting `style.display`. Use `class="hidden"` in HTML for initial hidden state, not `style="display:none"`.
 
 ## Migrations
 
-- Name migration files using **real UTC timestamps** with the current time (e.g., `20260228143052` for 14:30:52 UTC), not padded zeros (e.g., `20260228140000`) or sequential numbers (e.g., `20260228000007`)
-- The last 6 digits are HHMMSS — use the actual current time, not `000000` or rounded values
-- Multiple branches adding migrations on the same date will collide if they use sequential or zero-padded numbering
+- Name migration files using **UTC timestamps** (e.g., `20260228143000`), not sequential numbers (e.g., `20260228000007`)
+- Multiple branches adding migrations on the same date will collide if they use sequential numbering
+- **Migrations must be reversible** — always use explicit `up`/`down` methods instead of `change` when the rollback isn't trivially invertible. Guard `down` operations with `if_exists: true`, `column_exists?`, `index_exists?`, and `foreign_key_exists?` so rollbacks are idempotent and recover from partial failures
 
 ## Git
 
@@ -181,13 +170,31 @@ bundle exec bundle-audit check --update
 
 ## PRs
 
-- After completing work, **create a pull request** using `gh pr create`
-- Once the PR is created, **prepend the PR number to the branch name** (e.g., rename `maebeale/fix-login` to `maebeale/1234-fix-login`) using `git branch -m` and `git push origin -u` with the new name, then delete the old remote branch
+- **Push to a draft PR early** — push commits and create a draft PR (`gh pr create --draft`) as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
+- After completing work, **mark the PR ready** using `gh pr ready`
+- **Do not rename branches after creating a PR** — deleting the old remote branch auto-closes the PR on GitHub, and the head ref cannot be changed after creation
 - Use `docs/pull_request_template.md` for PR description structure
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
-- **On every push**, update the PR title and description to reflect the current diff
+- **On every push**, update the PR title and content to reflect the current diff — preserve any existing images/screenshots in the description
+- **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
+- **On every push**, add PR review comments on notable lines of code — decisions, trade-offs, non-obvious logic, or anything a reviewer should understand. Use `gh api` to post line comments on the diff
+
+## Ruby Version Manager
+
+This project uses [mise](https://mise.jdx.dev/) to manage the Ruby version (read from [`.ruby-version`](.ruby-version) via the `idiomatic_version_file_enable_tools` setting in `mise.toml`).
+
+Standard mise activation (`eval "$(mise activate <shell>)"` in your shell rc, per the [mise install guide](https://mise.jdx.dev/getting-started.html)) is sufficient for `bin/setup`, `bundle exec`, and Ruby commands run from a terminal. Scripts that run in contexts where the shell rc isn't sourced handle activation themselves:
+
+- `bin/conductor-setup` activates mise explicitly (runs under `/bin/sh`, which doesn't source your interactive shell config)
+- `ai/*` scripts source `ai/.ruby-env`
+
+## Testing
+
+- **Bug fixes require a failing test first** — before writing any fix code, write a test that reproduces the bug and confirm it fails. Only then write the code to make it pass.
+- Follow the red-green-refactor cycle: failing test, minimal fix, then refactor
+- Be careful with system/JS tests — avoid patterns that lead to flakiness
 
 ## Quick Commands
 

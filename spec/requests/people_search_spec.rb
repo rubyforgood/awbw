@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "People search", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:turbo_headers) { { "Turbo-Frame" => "people_results" } }
+  let(:turbo_headers) { { "Turbo-Frame" => "people_results", "Accept" => "text/html" } }
 
   before { sign_in admin }
 
@@ -17,12 +17,14 @@ RSpec.describe "People search", type: :request do
 
     it "returns all people when no filters are applied" do
       get people_path, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
       expect(response.body).to include("Alice")
       expect(response.body).to include("Bob")
     end
 
     it "filters by contact_info" do
       get people_path, params: { contact_info: "Alice" }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
       expect(response.body).to include("Alice")
       expect(response.body).not_to include("Bob")
     end
@@ -32,6 +34,7 @@ RSpec.describe "People search", type: :request do
       create(:affiliation, person: person_alice, organization: org)
 
       get people_path, params: { organization_name: "Unique Org" }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
       expect(response.body).to include("Alice")
       expect(response.body).not_to include("Bob")
     end

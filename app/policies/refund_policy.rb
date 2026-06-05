@@ -1,0 +1,2 @@
+class RefundPolicy < ApplicationPolicy
+end

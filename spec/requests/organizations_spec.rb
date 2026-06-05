@@ -52,6 +52,19 @@ RSpec.describe "/organizations", type: :request do
       get organization_url(organization)
       expect(response).to be_successful
     end
+
+    it "hides the Monthly reports row when there are no monthly reports" do
+      organization = Organization.create!(valid_attributes)
+      get organization_url(organization)
+      expect(response.body).not_to include("Monthly reports")
+    end
+
+    it "shows the Monthly reports row when monthly reports exist" do
+      organization = Organization.create!(valid_attributes)
+      create(:monthly_report, organization: organization)
+      get organization_url(organization)
+      expect(response.body).to include("Monthly reports")
+    end
   end
 
   describe "GET /new" do
@@ -66,6 +79,19 @@ RSpec.describe "/organizations", type: :request do
       organization = Organization.create!(valid_attributes)
       get edit_organization_url(organization)
       expect(response).to be_successful
+    end
+
+    it "hides the Monthly reports row when there are no monthly reports" do
+      organization = Organization.create!(valid_attributes)
+      get edit_organization_url(organization)
+      expect(response.body).not_to include("Monthly reports")
+    end
+
+    it "shows the Monthly reports row when monthly reports exist" do
+      organization = Organization.create!(valid_attributes)
+      create(:monthly_report, organization: organization)
+      get edit_organization_url(organization)
+      expect(response.body).to include("Monthly reports")
     end
   end
 
@@ -190,6 +216,155 @@ RSpec.describe "/organizations", type: :request do
       organization = Organization.create!(valid_attributes)
       delete organization_url(organization)
       expect(response).to redirect_to(organizations_url)
+    end
+
+    context "when the organization has affiliations" do
+      it "does not destroy and redirects with an alert" do
+        organization = Organization.create!(valid_attributes)
+        create(:affiliation, organization: organization)
+
+        expect {
+          delete organization_url(organization)
+        }.not_to change(Organization, :count)
+
+        expect(response).to redirect_to(edit_organization_url(organization))
+        expect(flash[:alert]).to include("Unable to delete this organization")
+      end
+
+      it "renders the alert on the page after following the redirect" do
+        organization = Organization.create!(valid_attributes)
+        create(:affiliation, organization: organization)
+
+        delete organization_url(organization)
+        follow_redirect!
+
+        expect(response.body).to include("Unable to delete this organization")
+      end
+    end
+
+    context "when the organization has event registrations" do
+      it "does not destroy and redirects with an alert" do
+        organization = Organization.create!(valid_attributes)
+        create(:event_registration_organization, organization: organization)
+
+        expect {
+          delete organization_url(organization)
+        }.not_to change(Organization, :count)
+
+        expect(response).to redirect_to(edit_organization_url(organization))
+        expect(flash[:alert]).to include("Unable to delete this organization")
+      end
+
+      it "renders the alert on the page after following the redirect" do
+        organization = Organization.create!(valid_attributes)
+        create(:event_registration_organization, organization: organization)
+
+        delete organization_url(organization)
+        follow_redirect!
+
+        expect(response.body).to include("Unable to delete this organization")
+      end
+    end
+
+    context "when the organization has associated workshop logs" do
+      it "does not destroy and redirects with an alert" do
+        organization = Organization.create!(valid_attributes)
+        create(:workshop_log, organization: organization, created_by: admin)
+
+        expect {
+          delete organization_url(organization)
+        }.not_to change(Organization, :count)
+
+        expect(response).to redirect_to(edit_organization_url(organization))
+        expect(flash[:alert]).to include("associated records that cannot be removed")
+      end
+
+      it "renders the alert on the page after following the redirect" do
+        organization = Organization.create!(valid_attributes)
+        create(:workshop_log, organization: organization, created_by: admin)
+
+        delete organization_url(organization)
+        follow_redirect!
+
+        expect(response.body).to include("associated records that cannot be removed")
+      end
+    end
+  end
+
+  describe "POST /create with duplicate check" do
+    let!(:existing_org) { create(:organization, name: "Healing Through Art") }
+
+    context "when exact duplicate exists" do
+      it "blocks creation and shows duplicate warning" do
+        expect {
+          post organizations_url, params: { organization: valid_attributes.merge(name: "Healing Through Art") }
+        }.not_to change(Organization, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
+    context "when similar duplicate exists" do
+      it "blocks creation and shows duplicate warning" do
+        expect {
+          post organizations_url, params: { organization: valid_attributes.merge(name: "Healing Through Art Center") }
+        }.not_to change(Organization, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
+    context "when no duplicate exists" do
+      it "creates the organization normally" do
+        expect {
+          post organizations_url, params: { organization: valid_attributes.merge(name: "Completely Different Org") }
+        }.to change(Organization, :count).by(1)
+
+        expect(response).to redirect_to(organization_url(Organization.last))
+      end
+    end
+
+    context "with skip_duplicate_check param" do
+      it "creates organization without duplicate check" do
+        expect {
+          post organizations_url, params: {
+            organization: valid_attributes.merge(name: "Healing Through Art Center"),
+            skip_duplicate_check: "1"
+          }
+        }.to change(Organization, :count).by(1)
+
+        expect(response).to redirect_to(organization_url(Organization.last))
+      end
+    end
+  end
+
+  describe "POST /create turbo stream duplicate check" do
+    context "when similar duplicate exists" do
+      let!(:existing_org) { create(:organization, name: "Healing Through Art") }
+
+      it "returns turbo stream with skip checkbox" do
+        post organizations_url, params: {
+          organization: valid_attributes.merge(name: "Healing Through Art Center")
+        }, as: :turbo_stream
+
+        expect(response.media_type).to eq(Mime[:turbo_stream])
+        expect(response.body).to include("skip_duplicate_check")
+        expect(response.body).to include("similar match")
+      end
+    end
+
+    context "when exact duplicate exists" do
+      let!(:existing_org) { create(:organization, name: "Healing Through Art") }
+
+      it "returns turbo stream without skip checkbox" do
+        post organizations_url, params: {
+          organization: valid_attributes.merge(name: "Healing Through Art")
+        }, as: :turbo_stream
+
+        expect(response.media_type).to eq(Mime[:turbo_stream])
+        expect(response.body).not_to include("skip_duplicate_check")
+        expect(response.body).to include("exact match")
+      end
     end
   end
 end

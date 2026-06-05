@@ -15,7 +15,7 @@ RSpec.describe 'Passwords', type: :request do
 
       follow_redirect!
       expect(flash[:notice]).to eq(
-       "You will receive an email with instructions on how to reset your password in a few minutes. Contact us if you don't receive an email.")
+        "You will receive an email with instructions on how to reset your password in a few minutes. Email us or fill out our Contact Us form if you don't receive an email.")
     end
   end
 end

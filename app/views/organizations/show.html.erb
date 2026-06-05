@@ -226,26 +226,20 @@
         </div>
       <% end %>
     <hr class="my-8 border-gray-200">
-    <% if allowed_to?(:show_workshop_logs?, @organization) && @organization.profile_show_workshop_logs? %>
+    <% if allowed_to?(:show_workshop_logs?, @organization) %>
         <div class="organization-only <%= DomainTheme.bg_class_for(:user_only) %>
           border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm">
           <!-- Header -->
           <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3
             border-b <%= DomainTheme.border_class_for(:user_only) %>">
             <h2 class="text-xl font-semibold text-gray-800">
-              Workshop Logs submitted
+              Associated records
             </h2>
             <span class="text-sm text-amber-700 italic">Only visible to you</span>
           </div>
           <!-- Content -->
-          <div class="section-content px-3 sm:px-4 py-4 sm:py-6">
-            <% organization_workshop_logs = @organization.affiliated_workshop_logs
-                                                       .includes(:workshop, :windows_type, created_by: :person) %>
-            <%= render "workshop_logs/index",
-                       workshop_logs: organization_workshop_logs.paginate(page: params[:page] || 1,
-                                                                           per_page: params[:per_page] || 10),
-                       workshop_logs_unpaginated: organization_workshop_logs,
-                       workshop_logs_count: organization_workshop_logs.count %>
+          <div class="section-content px-6 sm:px-7 py-4 sm:py-6">
+            <%= render "associated_records", organization: @organization %>
           </div>
         </div>
       <% end %>

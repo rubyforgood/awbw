@@ -54,6 +54,17 @@ RSpec.describe "/community_news", type: :request do
       get community_news_index_url
       expect(response).to be_successful
     end
+
+    it "filters by organization_id on lazy turbo-frame request" do
+      org = create(:organization)
+      matching = CommunityNews.create!(valid_attributes.merge(title: "Org Match", organization: org))
+      other    = CommunityNews.create!(valid_attributes.merge(title: "Other Match"))
+
+      get community_news_index_url(organization_id: org.id), headers: { "Turbo-Frame" => "community_news_results" }
+      expect(response).to be_successful
+      expect(response.body).to include(matching.title)
+      expect(response.body).not_to include(other.title)
+    end
   end
 
   describe "GET /show" do

@@ -65,6 +65,32 @@ RSpec.describe PersonPolicy, type: :policy do
     end
   end
 
+  describe "#workshop_logs?" do
+    context "with admin user" do
+      subject { policy_for(record: owned_person, user: admin_user) }
+
+      it { is_expected.to be_allowed_to(:workshop_logs?) }
+    end
+
+    context "with owner" do
+      subject { policy_for(record: owned_person, user: owner_user) }
+
+      it { is_expected.to be_allowed_to(:workshop_logs?) }
+    end
+
+    context "with regular user who is not the owner" do
+      subject { policy_for(record: searchable_person, user: regular_user) }
+
+      it { is_expected.not_to be_allowed_to(:workshop_logs?) }
+    end
+
+    context "with no user" do
+      subject { policy_for(record: searchable_person, user: nil) }
+
+      it { is_expected.not_to be_allowed_to(:workshop_logs?) }
+    end
+  end
+
   describe "#edit?" do
     context "with admin user" do
       subject { policy_for(record: searchable_person, user: admin_user) }
@@ -98,11 +124,29 @@ RSpec.describe PersonPolicy, type: :policy do
     context "with regular user" do
       let(:policy) { policy_for(record: Person, user: regular_user) }
 
-      it "filters to searchable people with active affiliations" do
+      it "filters to searchable people with active affiliations and unlocked users" do
         scope = policy.apply_scope(Person.all, type: :active_record_relation)
-        expect(scope.to_sql).to include('`people`.`profile_is_searchable` = TRUE')
-        expect(scope.to_sql).to include('INNER JOIN `affiliations`')
-        expect(scope.to_sql).to include('`affiliations`.`inactive` = FALSE')
+        sql = scope.to_sql
+        expect(sql).to include('`people`.`profile_is_searchable` = TRUE')
+        expect(sql).to include('INNER JOIN `affiliations`')
+        expect(sql).to include('`affiliations`.`inactive` = FALSE')
+        expect(sql).to include('`users`.`locked_at` IS NULL')
+      end
+
+      it "excludes people whose user account is locked" do
+        regular = create(:user)
+        searchable = create(:person, profile_is_searchable: true)
+        create(:affiliation, person: searchable, inactive: false, end_date: nil)
+        locked = create(:person, profile_is_searchable: true, user: create(:user, :locked))
+        create(:affiliation, person: locked, inactive: false, end_date: nil)
+        unlinked = create(:person, profile_is_searchable: true, user: nil)
+        create(:affiliation, person: unlinked, inactive: false, end_date: nil)
+
+        policy = described_class.new(Person, user: regular)
+        scope = policy.apply_scope(Person.all, type: :active_record_relation)
+
+        expect(scope).to include(searchable, unlinked)
+        expect(scope).not_to include(locked)
       end
     end
   end

@@ -1,7 +1,7 @@
 <div class="nested-fields row mb-2">
   <!-- Hidden associations -->
   <%= f.input :form_field_id, as: :hidden, input_html: { value: field.id } %>
-  <%= f.input :report_id, as: :hidden, input_html: { value: report_id } %>
+  <%= f.input :workshop_log_id, as: :hidden, input_html: { value: workshop_log_id } %>
 
   <div class="col-md-10">
     <% if f.object.form_field&.answer_options&.any? %>

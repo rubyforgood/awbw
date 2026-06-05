@@ -1,5 +1,14 @@
 <% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
 
+<% content_for :head do %>
+  <%= @event.ga4_snippet&.html_safe %>
+  <%= @event.gtm_head_snippet&.html_safe %>
+<% end %>
+
+<% content_for :body_start do %>
+  <%= @event.gtm_body_snippet&.html_safe %>
+<% end %>
+
 <% if @preview %>
   <div class="bg-amber-50 border border-amber-300 text-amber-800 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">
     <span><span class="font-medium">Preview</span> — unsaved changes</span>

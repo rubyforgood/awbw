@@ -74,6 +74,8 @@ admin_user = User.find_by(email: "umberto.user@example.com")
     pub_issue: "II/3",
     published: true,
     featured: true,
+    publicly_visible: true,
+    publicly_featured: true,
     searchable: true,
     created_by: admin_user,
     created_at: Time.zone.parse("2005-03-01 02:45:03")
@@ -101,6 +103,8 @@ admin_user = User.find_by(email: "umberto.user@example.com")
     description: "Gives participants a voice to explore their abuse and what directions they can choose to take for their future. By externalizing their own story onto a doll, it becomes a safe place to explore, often becoming a way to discover feelings and thoughts never before claimed.",
     pub_issue: "II/6",
     published: true,
+    publicly_visible: true,
+    publicly_featured: true,
     searchable: true,
     created_by: admin_user,
     created_at: Time.zone.parse("2005-03-01 02:45:04")
@@ -323,31 +327,41 @@ admin_user = User.find_by(email: "umberto.user@example.com")
 end
 
 # Duplicate-title workshops to exercise ID disambiguation in search
+# Covers: same title/author/type (true dupes), same title/different author, same title/different type
 [
-  {
-    title: "Healing Through Color",
-    windows_type: adult_wt,
-    full_name: "Maria Torres",
-    month: 3,
-    year: 2020,
-    description: "Uses color mixing and painting to help participants explore emotions and find calm. Participants create a personal color wheel that maps feelings to colors.",
-    published: true,
-    searchable: true,
-    created_by: admin_user
-  },
-  {
-    title: "Healing Through Color",
-    windows_type: adult_wt,
-    full_name: "James Whitfield",
-    month: 9,
-    year: 2022,
-    description: "A revised version exploring color as a pathway to emotional awareness. Participants blend watercolors while discussing how color connects to memory and healing.",
-    published: true,
-    searchable: true,
-    created_by: admin_user
-  }
+  # Same title, same author, same windows type (true dupes — different years)
+  { title: "Healing Through Color", full_name: "Maria Torres", windows_type: adult_wt,
+    month: 3, year: 2020,
+    description: "Uses color mixing and painting to help participants explore emotions and find calm.",
+    published: true, searchable: true, created_by: admin_user },
+  { title: "Healing Through Color", full_name: "Maria Torres", windows_type: adult_wt,
+    month: 6, year: 2024,
+    description: "Revised edition with new guided prompts for exploring emotions through color.",
+    published: true, searchable: true, created_by: admin_user },
+  # Same title, different author, same windows type
+  { title: "Healing Through Color", full_name: "James Whitfield", windows_type: adult_wt,
+    month: 9, year: 2022,
+    description: "A revised version exploring color as a pathway to emotional awareness.",
+    published: true, searchable: true, created_by: admin_user },
+  # Same title, same author, different windows type
+  { title: "Healing Through Color", full_name: "Maria Torres", windows_type: children_wt,
+    month: 1, year: 2023,
+    description: "Adapted for children: color mixing and painting to explore emotions through play.",
+    published: true, searchable: true, created_by: admin_user },
+  # Same title as existing seed workshop, different author and windows type
+  { title: "Inspirational Scrolls", full_name: "Linda Park", windows_type: combined_wt,
+    month: 5, year: 2021,
+    description: "A combined-audience version of Inspirational Scrolls for mixed-age groups.",
+    published: true, searchable: true, created_by: admin_user },
+  # Same title as existing, same author, same type (true dupe)
+  { title: "Feelings Collages", full_name: "Lisa Cohen", windows_type: adult_wt,
+    month: 11, year: 2019,
+    description: "Updated edition with new collage prompts exploring a wider range of emotions.",
+    published: true, searchable: true, created_by: admin_user }
 ].each do |workshop_data|
-  Workshop.create!(workshop_data)
+  Workshop.where(title: workshop_data[:title], full_name: workshop_data[:full_name],
+                 windows_type: workshop_data[:windows_type], year: workshop_data[:year])
+          .first_or_create!(workshop_data)
 end
 
 puts "Assigning workshop categories and sectors…"
@@ -576,7 +590,7 @@ puts "Creating Persons and Affiliations for seed users…"
 [
   User.find_by(email: "umberto.user@example.com"),
   User.find_by(email: "amy.user@example.com"),
-  User.find_by(email: "priya.user@example.com")
+  User.find_by(email: "aisha.user@example.com")
 ].compact.each do |user|
   next if user.person.present?
 
@@ -847,25 +861,229 @@ WorkshopVariationIdea.all.sample(2).each_with_index do |idea, i|
 end
 
 puts "Creating WorkshopLogs…"
-5.times do
-  workshop = Workshop.all.sample
-  next unless workshop
+aisha_user = User.find_by(email: "aisha.user@example.com")
+aisha_org = aisha_user&.person&.affiliations&.first&.organization || Organization.first
+all_workshops = Workshop.all.to_a.shuffle
 
-  WorkshopLog.create!(
-    workshop_id: workshop.id,
-    organization_id: Organization.all.sample&.id,
-    windows_type_id: WindowsType.all.sample&.id,
-    created_by_id: User.first&.id,
-    date: Date.today - rand(1..90).days,
-    children_ongoing: rand(0..5),
-    teens_ongoing: rand(0..3),
-    adults_ongoing: rand(0..10),
-    children_first_time: rand(0..2),
-    teens_first_time: rand(0..2),
-    adults_first_time: rand(0..4),
-    created_at: Time.current - rand(1..90).days,
-    updated_at: Time.current - rand(1..40).days
-  )
+if aisha_user && all_workshops.any? && WorkshopLog.where(created_by_id: aisha_user.id).none?
+  # 30 logs for Aisha's primary workshop
+  primary_workshop = all_workshops.shift
+  30.times do |i|
+    WorkshopLog.create!(
+      workshop_id: primary_workshop.id,
+      organization_id: aisha_org.id,
+      windows_type_id: primary_workshop.windows_type_id || WindowsType.first.id,
+      created_by_id: aisha_user.id,
+      workshop_held_on: Date.today - (i * 7 + rand(0..3)).days,
+      children_ongoing: rand(1..6),
+      teens_ongoing: rand(0..4),
+      adults_ongoing: rand(2..12),
+      children_first_time: rand(0..3),
+      teens_first_time: rand(0..2),
+      adults_first_time: rand(0..5),
+      created_at: Time.current - (i * 7).days,
+      updated_at: Time.current - (i * 7).days
+    )
+  end
+
+  # Up to 10 other workshops with varying log counts (1–15)
+  other_workshops = all_workshops.first(10)
+  log_counts = [ 15, 12, 9, 7, 5, 4, 3, 2, 1, 1 ]
+  other_workshops.each_with_index do |workshop, idx|
+    count = log_counts[idx] || 1
+    count.times do |i|
+      WorkshopLog.create!(
+        workshop_id: workshop.id,
+        organization_id: aisha_org.id,
+        windows_type_id: workshop.windows_type_id || WindowsType.first.id,
+        created_by_id: aisha_user.id,
+        workshop_held_on: Date.today - (i * 14 + rand(0..6)).days,
+        children_ongoing: rand(0..5),
+        teens_ongoing: rand(0..3),
+        adults_ongoing: rand(1..10),
+        children_first_time: rand(0..2),
+        teens_first_time: rand(0..2),
+        adults_first_time: rand(0..4),
+        created_at: Time.current - (i * 14).days,
+        updated_at: Time.current - (i * 14).days
+      )
+    end
+  end
+  puts "  Created 89 logs for Aisha on 11 workshops"
+end
+
+# A few logs for the admin user as well
+if WorkshopLog.where(created_by_id: User.first&.id).none?
+  5.times do
+    workshop = Workshop.all.sample
+    next unless workshop
+
+    WorkshopLog.create!(
+      workshop_id: workshop.id,
+      organization_id: Organization.all.sample&.id,
+      windows_type_id: WindowsType.all.sample&.id,
+      created_by_id: User.first&.id,
+      workshop_held_on: Date.today - rand(1..90).days,
+      children_ongoing: rand(0..5),
+      teens_ongoing: rand(0..3),
+      adults_ongoing: rand(0..10),
+      children_first_time: rand(0..2),
+      teens_first_time: rand(0..2),
+      adults_first_time: rand(0..4),
+      created_at: Time.current - rand(1..90).days,
+      updated_at: Time.current - rand(1..40).days
+    )
+  end
+end
+
+puts "Creating MonthlyReports…"
+if MonthlyReport.none?
+  adult_mr_fb    = FormBuilder.find_by(id: 4)
+  children_mr_fb = FormBuilder.find_by(id: 2)
+
+  # Stub the MR form fields in dev. (Production seeds them via migrations.) One
+  # canonical wording per question is used across both form_builders so seeds
+  # don't duplicate the wording variants prod accumulated over time.
+  mr_question_specs = [
+    { key: :ongoing,       question: MonthlyReport::PARTICIPANT_ONGOING_QUESTION,    answer_type: :free_form_input_one_line,  answer_datatype: :number_integer,    position: 10 },
+    { key: :first_time,    question: MonthlyReport::PARTICIPANT_FIRST_TIME_QUESTION, answer_type: :free_form_input_one_line,  answer_datatype: :number_integer,    position: 9 },
+    { key: :highlight,     question: "Share a highlight for this month",                  answer_type: :free_form_input_paragraph, answer_datatype: :text_alphanumeric, position: 8 },
+    { key: :challenges,    question: "Share challenges for this month",                   answer_type: :free_form_input_paragraph, answer_datatype: :text_alphanumeric, position: 7 },
+    { key: :staff_changes, question: "List any Windows Program staff changes this month", answer_type: :free_form_input_paragraph, answer_datatype: :text_alphanumeric, position: 6 },
+    { key: :help,          question: "Anything we can do to help you?",                   answer_type: :free_form_input_paragraph, answer_datatype: :text_alphanumeric, position: 5 }
+  ]
+
+  mr_form_fields = {}
+  [ adult_mr_fb, children_mr_fb ].compact.each do |fb|
+    form = fb.forms.first || fb.forms.create!
+    mr_form_fields[fb.id] = mr_question_specs.to_h do |spec|
+      ff = form.form_fields.where(question: spec[:question], status: 1)
+                           .first_or_create!(answer_type: spec[:answer_type],
+                                             answer_datatype: spec[:answer_datatype],
+                                             position: spec[:position])
+      [ spec[:key], ff ]
+    end
+  end
+
+  fb_for_windows_type = ->(wt) {
+    if wt&.short_name == "Children" && children_mr_fb
+      children_mr_fb
+    else
+      adult_mr_fb
+    end
+  }
+
+  highlight_samples = [
+    "Participants opened up about their goals in ways they hadn't before. The collage activity drew out a lot of joy.",
+    "A first-time participant shared that the workshop was the first space she'd felt safe in months.",
+    "We finished a group project that everyone contributed to — it's now hanging in the common area.",
+    "Two long-time participants stepped into peer-leader roles this month."
+  ]
+  challenges_samples = [
+    "Attendance dipped mid-month due to weather and transit disruptions.",
+    "We had a hard time keeping the teen group focused after a difficult facility incident.",
+    "Supplies ran short toward the end of the month; we improvised with paper and pens.",
+    "Several participants moved out of the shelter, breaking continuity for the group."
+  ]
+  staff_changes_samples = [
+    "No staff changes this month.",
+    "Welcomed a new co-facilitator on the 15th — she's been a great addition.",
+    "Our intern wrapped up her placement. We're recruiting a replacement.",
+    "Lead facilitator out for two sessions on family leave."
+  ]
+  help_samples = [
+    "Additional watercolor supplies would let us run the journal workshop more often.",
+    "More guidance on facilitating mixed-age groups would be welcome.",
+    "Continued support with translation materials for our Spanish-speaking participants.",
+    "Nothing additional at this time — thank you for the check-in."
+  ]
+
+  mr_sector_pool = Sector.all.to_a
+  mr_quote_pool  = Quote.all.to_a
+
+  create_monthly_report = ->(organization:, created_by:, date:) {
+    wt = organization&.windows_type || WindowsType.first
+    report = MonthlyReport.create!(
+      organization_id: organization.id,
+      windows_type_id: wt.id,
+      created_by_id: created_by.id,
+      date: date,
+      created_at: date,
+      updated_at: date
+    )
+    fb = fb_for_windows_type.call(wt)
+    fields = fb && mr_form_fields[fb.id]
+    if fields
+      answers = {
+        ongoing:       rand(10..50).to_s,
+        first_time:    rand(2..15).to_s,
+        highlight:     highlight_samples.sample,
+        challenges:    challenges_samples.sample,
+        staff_changes: staff_changes_samples.sample,
+        help:          help_samples.sample
+      }
+      answers.each do |key, value|
+        ReportFormFieldAnswer.create!(report_id: report.id,
+                                      form_field: fields[key],
+                                      answer: value)
+      end
+    end
+
+    # ~50% of MRs get sectors (matches prod's 52%)
+    if mr_sector_pool.any? && rand < 0.5
+      mr_sector_pool.sample(rand(1..3)).each do |sector|
+        SectorableItem.find_or_create_by!(sector_id: sector.id,
+                                          sectorable_type: "Report",
+                                          sectorable_id: report.id)
+      end
+    end
+
+    # ~65% of MRs get a quote (matches prod's 66%)
+    if mr_quote_pool.any? && rand < 0.65
+      QuotableItemQuote.find_or_create_by!(quotable_type: "Report",
+                                           quotable_id: report.id,
+                                           quote: mr_quote_pool.sample)
+    end
+
+    report
+  }
+
+  if aisha_user
+    # 30 monthly reports for Aisha (30 months of history)
+    30.times do |i|
+      create_monthly_report.call(
+        organization: aisha_org,
+        created_by: aisha_user,
+        date: (Date.today - i.months).beginning_of_month
+      )
+    end
+
+    # Additional batches under varying older dates to mimic prod's long tail
+    report_counts = [ 15, 12, 9, 7, 5, 4, 3, 2, 1, 1 ]
+    report_counts.each_with_index do |count, batch|
+      count.times do |i|
+        create_monthly_report.call(
+          organization: aisha_org,
+          created_by: aisha_user,
+          date: (Date.today - (i + batch * 2).months).beginning_of_month
+        )
+      end
+    end
+    puts "  Created monthly reports for Aisha across #{1 + report_counts.size} batches"
+  end
+
+  # A few monthly reports for the admin user as well
+  admin_user = User.first
+  if admin_user && admin_user != aisha_user
+    5.times do
+      create_monthly_report.call(
+        organization: Organization.all.sample || aisha_org,
+        created_by: admin_user,
+        date: (Date.today - rand(1..30).months).beginning_of_month
+      )
+    end
+  end
+  puts "  Created #{MonthlyReport.count} monthly reports total"
 end
 
 puts "Creating Stories…"
@@ -1320,13 +1538,13 @@ You are welcome to participate in our <a href="/awbw/programs-sac.php">Survivor'
   {
     id: 12, question: "How do I get a scholarship for Leadership Training?",
     answer: %(
-We award all scholarships based on need and availability of funds to agencies serving domestic violence clients. We ask those interested in applying for scholarship funding to submit a <a href="/awbw/programs-leadership_training-scholarships_application.php">Scholarship Request</a> 4 weeks in advance of the chosen training. <a href="/awbw/programs-leadership_training-scholarships.php">Click here</a> to see the guidelines.
+We award all scholarships based on need and avaishability of funds to agencies serving domestic violence clients. We ask those interested in applying for scholarship funding to submit a <a href="/awbw/programs-leadership_training-scholarships_application.php">Scholarship Request</a> 4 weeks in advance of the chosen training. <a href="/awbw/programs-leadership_training-scholarships.php">Click here</a> to see the guidelines.
     ), published: true, ordering: 120
   },
   {
     id: 13, question: "I need more art supplies to hold my Windows Workshops. How can AWBW help?",
     answer: %(
-AWBW awards Art Supply Scholarships to active reporting programs. All scholarship grants are based on need, availability of funds and strength of monthly reporting. Programs must report for a minimum of three months to be eligible to receive an art supply scholarship and must continue to hold weekly workshops and report monthly for a period of one year.<br /><br />AWBW programs that have been awarded art supply scholarships will be reimbursed for art supplies bought at any purveyor of their choosing as long as they submit receipts attached to AWBW's reimbursement form.<br /><br />Visit our <a href="/awbw/programs-women_windows-art_supplies.php">recommended supply resource list</a> for information on where you can order art supplies.<br /><br />AWBW also offers some free art supplies from our donated goods shopping area. Programs in good standing can make an appointment to "free shop" at our Venice location.
+AWBW awards Art Supply Scholarships to active reporting programs. All scholarship grants are based on need, avaishability of funds and strength of monthly reporting. Programs must report for a minimum of three months to be eligible to receive an art supply scholarship and must continue to hold weekly workshops and report monthly for a period of one year.<br /><br />AWBW programs that have been awarded art supply scholarships will be reimbursed for art supplies bought at any purveyor of their choosing as long as they submit receipts attached to AWBW's reimbursement form.<br /><br />Visit our <a href="/awbw/programs-women_windows-art_supplies.php">recommended supply resource list</a> for information on where you can order art supplies.<br /><br />AWBW also offers some free art supplies from our donated goods shopping area. Programs in good standing can make an appointment to "free shop" at our Venice location.
     ), published: true, ordering: 110
   },
   {
@@ -1374,7 +1592,7 @@ faqs.each do |faq_data|
   end
 end
 
-puts "Creating Tutorials…"
+puts "Creating Video Recordings…"
 [
   {
     title: "Getting Started: Your First Workshop",
@@ -1440,7 +1658,7 @@ puts "Creating Tutorials…"
     featured: true,
     position: 6,
     is_instructional: false,
-    is_podcast: false
+    is_podcast: true
   }
 ].each do |video_data|
   VideoRecording.where(title: video_data[:title]).first_or_create!(video_data)
@@ -1448,10 +1666,10 @@ end
 
 puts "Creating Bookmarks for seed users…"
 amy = User.find_by(email: "amy.user@example.com")
-priya = User.find_by(email: "priya.user@example.com")
+aisha = User.find_by(email: "aisha.user@example.com")
 
-if amy && priya
-  excluded_person_ids = [ amy.person_id, priya.person_id ].compact
+if amy && aisha
+  excluded_person_ids = [ amy.person_id, aisha.person_id ].compact
 
   # Two records per bookmarkable type (where available)
   pairs = {
@@ -1459,11 +1677,11 @@ if amy && priya
     "Event"                => Event.order(:id).limit(2).to_a,
     "Organization"         => Organization.order(:id).limit(2).to_a,
     "Person"               => Person.where.not(id: excluded_person_ids).order(:id).limit(2).to_a,
-    "Report"               => Report.order(:id).limit(2).to_a,
+    "Report"               => Report.where.not(type: "WorkshopLog").order(:id).limit(2).to_a,
     "Resource"             => Resource.order(:id).limit(2).to_a,
     "Story"                => Story.order(:id).limit(2).to_a,
     "StoryIdea"            => StoryIdea.order(:id).limit(2).to_a,
-    "Tutorial"             => Tutorial.order(:id).limit(2).to_a,
+    "VideoRecording"       => VideoRecording.order(:id).limit(2).to_a,
     "Workshop"             => Workshop.order(:id).limit(2).to_a,
     "WorkshopIdea"         => WorkshopIdea.order(:id).limit(2).to_a,
     "WorkshopLog"          => WorkshopLog.order(:id).limit(2).to_a,
@@ -1471,265 +1689,169 @@ if amy && priya
     "WorkshopVariationIdea" => WorkshopVariationIdea.order(:id).limit(2).to_a
   }.reject { |_, v| v.empty? }
 
-  # 3 types are shared between Amy and Priya for tally testing
+  # 3 types are shared between Amy and Aisha for tally testing
   shared_types = pairs.keys.first(3)
 
   pairs.each do |type, records|
     if shared_types.include?(type)
       # Both users bookmark the first record
-      [ amy, priya ].each { |u| u.bookmarks.find_or_create_by!(bookmarkable: records.first) }
+      [ amy, aisha ].each { |u| u.bookmarks.find_or_create_by!(bookmarkable: records.first) }
     else
-      # Each user gets a different record (Priya falls back to first if only one exists)
+      # Each user gets a different record (Aisha falls back to first if only one exists)
       amy.bookmarks.find_or_create_by!(bookmarkable: records.first)
-      priya.bookmarks.find_or_create_by!(bookmarkable: records.last)
+      aisha.bookmarks.find_or_create_by!(bookmarkable: records.last)
     end
   end
 
-  puts "  Created #{amy.bookmarks.count} bookmarks for Amy, #{priya.bookmarks.count} for Priya"
+  puts "  Created #{amy.bookmarks.count} bookmarks for Amy, #{aisha.bookmarks.count} for Aisha"
   shared = amy.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id) &
-           priya.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id)
+           aisha.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id)
   puts "  #{shared.size} bookmarks shared between both users"
 end
 
+puts "Creating Notifications…"
+contact_us_samples = [
+  { from: "jordan.hayes@example.com", subject: "Question about facilitating Comfort Journals" },
+  { from: "priya.patel@example.com",  subject: "Interested in starting a chapter" },
+  { from: "sam.wong@example.com",     subject: "Press inquiry — Survivor Voices article" },
+  { from: "lee.morgan@example.com",   subject: "Donation receipt request" },
+  { from: "chris.alvarez@example.com", subject: "Workshop materials availability" },
+  { from: "robin.singh@example.com",  subject: "Volunteer opportunities" }
+]
+
+reply_to_email = ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+sample_user = User.where.not(person_id: nil).first
+
+contact_us_samples.each_with_index do |sample, i|
+  delivered_at = (contact_us_samples.size - i).days.ago
+
+  Notification.find_or_create_by!(
+    recipient_email: sample[:from],
+    email_subject: "We received your message",
+    kind: "contact_us"
+  ) do |n|
+    n.noticeable = sample_user&.person
+    n.recipient_role = "person"
+    n.notification_type = 0
+    n.delivered_at = delivered_at
+  end
+
+  Notification.find_or_create_by!(
+    recipient_email: reply_to_email,
+    email_subject: "[FYI] New contact form submission from #{sample[:from]}: #{sample[:subject]}",
+    kind: "contact_us_fyi"
+  ) do |n|
+    n.noticeable = sample_user&.person
+    n.recipient_role = "admin"
+    n.notification_type = 0
+    n.delivered_at = delivered_at
+    # Mark older submissions as already responded so the green checks are visible
+    n.responded = i < (contact_us_samples.size / 2)
+  end
+end
+
+# A few non-contact-us notifications so the em-dash rendering is visible too
+[
+  { kind: "event_registration_confirmation_fyi", subject: "[FYI] New event registration" },
+  { kind: "idea_submitted_fyi", subject: "[FYI] New story idea submission by a contributor" },
+  { kind: "workshop_log_submitted_fyi", subject: "New WorkshopLog submission" }
+].each_with_index do |attrs, i|
+  Notification.find_or_create_by!(
+    recipient_email: reply_to_email,
+    email_subject: attrs[:subject],
+    kind: attrs[:kind]
+  ) do |n|
+    n.noticeable = sample_user&.person
+    n.recipient_role = "admin"
+    n.notification_type = 0
+    n.delivered_at = (i + 1).days.ago
+  end
+end
+
+puts "  Created #{Notification.where(kind: %w[contact_us contact_us_fyi]).count} contact_us notifications " \
+     "(#{Notification.where(kind: 'contact_us_fyi', responded: true).count} marked responded)"
+
 # ─── Ahoy visits & events (analytics charts) ───────────────────────────
-puts "Creating Ahoy visits and events for analytics charts…"
+if Ahoy::Visit.any?
+  puts "Skipping Ahoy seed data (#{Ahoy::Visit.count} visits already exist)"
+else
+  puts "Creating Ahoy visits and events for analytics charts…"
 
-ahoy_users = [
-  User.find_by(email: "amy.user@example.com"),
-  User.find_by(email: "priya.user@example.com"),
-  nil # anonymous visitor
-].compact
+  all_non_staff = User.where(super_user: false).where.not(confirmed_at: nil).to_a
+  ahoy_users = (all_non_staff.sample([ all_non_staff.size, 8 ].min) + [ nil ]).compact
 
-cities = [ "Los Angeles", "San Diego", "Portland", "Seattle", "Denver" ]
-browsers = %w[Chrome Safari Firefox Edge]
-devices = %w[Desktop Mobile Tablet]
+  cities = [ "Los Angeles", "San Diego", "Portland", "Seattle", "Denver" ]
+  browsers = %w[Chrome Safari Firefox Edge]
+  devices = %w[Desktop Mobile Tablet]
 
-# Create visits spread over the past month
-ahoy_visits = []
-30.times do |day_offset|
-  rand(2..4).times do
-    user = ahoy_users.sample
-    visit = Ahoy::Visit.create!(
-      visit_token: SecureRandom.uuid,
-      visitor_token: SecureRandom.uuid,
-      user: user,
-      started_at: (30 - day_offset).days.ago + rand(0..23).hours,
-      browser: browsers.sample,
-      device_type: devices.sample,
-      city: cities.sample,
-      country: "US",
-      landing_page: %w[/workshops /resources /stories /].sample
-    )
-    ahoy_visits << visit
+  # Create visits spread over the past month, with some users browsing more than others
+  ahoy_visits = []
+  # Give each visit-user a weight so some browse heavily, others lightly
+  visit_user_weights = ahoy_users.each_with_object({}) do |user, h|
+    h[user] = rand(1..5)
   end
-end
+  visit_user_weights[nil] = 2 # anonymous visitors
 
-# Gather real records for view/print events
-view_targets = {
-  "workshop" => Workshop.published.limit(6).to_a,
-  "resource" => Resource.published.limit(6).to_a,
-  "person" => Person.limit(4).to_a,
-  "story" => Story.published.limit(4).to_a,
-  "event" => Event.limit(3).to_a,
-  "community_news" => CommunityNews.published.limit(3).to_a,
-  "workshop_variation" => WorkshopVariation.published.limit(3).to_a,
-  "tutorial" => Tutorial.limit(3).to_a
-}.reject { |_, v| v.empty? }
-
-# ── view.* events (populates "Content Types People View Most" pie chart) ──
-view_targets.each do |resource_name, records|
-  weight = resource_name == "workshop" ? 8 : (resource_name == "resource" ? 5 : 3)
-  weight.times do
-    record = records.sample
-    visit = ahoy_visits.sample
-    Ahoy::Event.create!(
-      visit: visit,
-      user: visit.user,
-      name: "view.#{resource_name}",
-      resource_type: record.class.name,
-      resource_id: record.id,
-      properties: { resource_type: record.class.name, resource_id: record.id, resource_title: record.try(:title) || record.try(:name) },
-      time: visit.started_at + rand(1..300).seconds
-    )
+  30.times do |day_offset|
+    rand(3..6).times do
+      user = visit_user_weights.max_by { |_u, w| rand**(1.0 / w) }.first
+      visit = Ahoy::Visit.create!(
+        visit_token: SecureRandom.uuid,
+        visitor_token: SecureRandom.uuid,
+        user: user,
+        started_at: (30 - day_offset).days.ago + rand(0..23).hours,
+        browser: browsers.sample,
+        device_type: devices.sample,
+        city: cities.sample,
+        country: "US",
+        landing_page: %w[/workshops /resources /stories /].sample
+      )
+      ahoy_visits << visit
+    end
   end
-end
 
-# ── print.* events ──
-%w[workshop resource story community_news].each do |resource_name|
-  next unless view_targets[resource_name]&.any?
+  # Gather real records for view/print events
+  view_targets = {
+    "workshop" => Workshop.published.limit(6).to_a,
+    "resource" => Resource.published.limit(6).to_a,
+    "person" => Person.limit(4).to_a,
+    "story" => Story.published.limit(4).to_a,
+    "event" => Event.limit(3).to_a,
+    "community_news" => CommunityNews.published.limit(3).to_a,
+    "workshop_variation" => WorkshopVariation.published.limit(3).to_a,
+    "video_recording" => VideoRecording.limit(3).to_a
+  }.reject { |_, v| v.empty? }
 
-  rand(2..4).times do
-    record = view_targets[resource_name].sample
-    visit = ahoy_visits.sample
-    Ahoy::Event.create!(
-      visit: visit,
-      user: visit.user,
-      name: "print.#{resource_name}",
-      resource_type: record.class.name,
-      resource_id: record.id,
-      properties: { resource_type: record.class.name, resource_id: record.id, resource_title: record.try(:title) || record.try(:name) },
-      time: visit.started_at + rand(60..600).seconds
-    )
-  end
-end
-
-# ── download.resource events ──
-if view_targets["resource"]&.any?
-  3.times do
-    record = view_targets["resource"].sample
-    visit = ahoy_visits.sample
-    Ahoy::Event.create!(
-      visit: visit,
-      user: visit.user,
-      name: "download.resource",
-      resource_type: "Resource",
-      resource_id: record.id,
-      properties: { resource_type: "Resource", resource_id: record.id, resource_title: record.try(:title) },
-      time: visit.started_at + rand(60..600).seconds
-    )
-  end
-end
-
-# ── filter.workshops / search.workshops events (populates category/sector/windows type charts) ──
-seed_categories = Category.joins(:category_type).where(published: true).limit(15).to_a
-seed_sectors = Sector.where(published: true).limit(10).to_a
-seed_windows_types = WindowsType.all.to_a
-
-search_titles = [ "self care", "container of feelings", "self-care", "resilience", "touchstones",
-                  "domestic violence", "grief", "personal needs flower", "butterfly", "may you be" ]
-search_authors = [ "fabian", "aaron", "power and control wheel", "aaron mason", "Janet Hughes" ]
-search_full_texts = [ "anxiety", "we rise", "luck", "collage", "mental wellness",
-                      "mental well-being", "friendship", "transforming", "north star" ]
-
-# Filter events with categories, sectors, and windows types
-12.times do
-  visit = ahoy_visits.sample
-  cats = seed_categories.sample(rand(1..3)).map { |c| { id: c.id, name: c.name, type: c.category_type&.name } }
-  secs = seed_sectors.sample(rand(1..2)).map { |s| { id: s.id, name: s.name } }
-  wts = seed_windows_types.sample(rand(1..2)).map(&:id)
-
-  props = {
-    resource_type: "Workshop",
-    result_count: rand(3..40),
-    filters: { categories: cats, sectors: secs, windows_types: wts }
-  }
-
-  Ahoy::Event.create!(
-    visit: visit,
-    user: visit.user,
-    name: "filter.workshops",
-    properties: props,
-    time: visit.started_at + rand(10..120).seconds
-  )
-end
-
-# Search events with keywords AND filters
-10.times do
-  visit = ahoy_visits.sample
-  cats = seed_categories.sample(rand(1..2)).map { |c| { id: c.id, name: c.name, type: c.category_type&.name } }
-  secs = seed_sectors.sample(rand(1..2)).map { |s| { id: s.id, name: s.name } }
-  wts = seed_windows_types.sample(rand(1..2)).map(&:id)
-
-  props = {
-    resource_type: "Workshop",
-    result_count: rand(1..20),
-    keywords: {
-      title: search_titles.sample,
-      author: search_authors.sample,
-      full_text: search_full_texts.sample
-    },
-    filters: { categories: cats, sectors: secs, windows_types: wts }
-  }
-
-  Ahoy::Event.create!(
-    visit: visit,
-    user: visit.user,
-    name: "search.workshops",
-    properties: props,
-    time: visit.started_at + rand(10..120).seconds
-  )
-end
-
-# ── search_zero.workshops events (populates "No Results" chart) ──
-zero_queries = [ "watercolor techniques for teens", "music therapy", "yoga breathing",
-                 "sand tray", "outdoor art", "digital collage", "puppet making 101",
-                 "grief journaling advanced" ]
-zero_queries.each do |query|
-  visit = ahoy_visits.sample
-  rand(1..3).times do
-    Ahoy::Event.create!(
-      visit: visit,
-      user: visit.user,
-      name: "search_zero.workshops",
-      properties: {
-        resource_type: "Workshop",
-        result_count: 0,
-        query: query,
-        keywords: { full_text: query }
-      },
-      time: visit.started_at + rand(10..300).seconds
-    )
-  end
-end
-
-# ── browse.taggings events (supplements tagging charts) ──
-5.times do
-  visit = ahoy_visits.sample
-  Ahoy::Event.create!(
-    visit: visit,
-    user: visit.user,
-    name: "browse.taggings",
-    properties: {
-      sectors: seed_sectors.sample(rand(1..3)).map(&:name),
-      categories: seed_categories.sample(rand(1..3)).map(&:name),
-      page_result_count: rand(5..30)
-    },
-    time: visit.started_at + rand(10..300).seconds
-  )
-end
-
-# ── filter.resources / search.resources events ──
-resource_keywords = [ "art supplies guide", "facilitator handbook", "trauma informed", "group activity",
-                      "healing through art", "coloring pages", "workshop template" ]
-resource_kinds = %w[pdf video link document]
-
-5.times do
-  visit = ahoy_visits.sample
-  Ahoy::Event.create!(
-    visit: visit,
-    user: visit.user,
-    name: "filter.resources",
-    properties: { resource_type: "Resource", result_count: rand(2..15), filters: { kind: resource_kinds.sample } },
-    time: visit.started_at + rand(10..120).seconds
-  )
-end
-
-5.times do
-  visit = ahoy_visits.sample
-  Ahoy::Event.create!(
-    visit: visit,
-    user: visit.user,
-    name: "search.resources",
-    properties: { resource_type: "Resource", result_count: rand(1..10), keywords: { full_text: resource_keywords.sample } },
-    time: visit.started_at + rand(10..120).seconds
-  )
-end
-
-# ── create.* events (populates "Content Creation Velocity" chart) ──
-if view_targets["workshop"]&.any?
-  %w[workshop_idea story_idea workshop_log quote bookmark].each do |model_name|
-    klass = model_name.classify.safe_constantize
-    next unless klass
-
-    records = klass.limit(3).to_a
-    next if records.empty?
-
-    records.each do |record|
+  # ── view.* events (populates "Content Types People View Most" pie chart) ──
+  # Generate enough view events across varied users so engagement differs from logins
+  view_targets.each do |resource_name, records|
+    weight = resource_name == "workshop" ? 20 : (resource_name == "resource" ? 12 : 6)
+    weight.times do
+      record = records.sample
       visit = ahoy_visits.sample
       Ahoy::Event.create!(
         visit: visit,
         user: visit.user,
-        name: "create.#{model_name}",
+        name: "view.#{resource_name}",
+        resource_type: record.class.name,
+        resource_id: record.id,
+        properties: { resource_type: record.class.name, resource_id: record.id, resource_title: record.try(:title) || record.try(:name) },
+        time: visit.started_at + rand(1..300).seconds
+      )
+    end
+  end
+
+  # ── print.* events ──
+  %w[workshop resource story community_news].each do |resource_name|
+    next unless view_targets[resource_name]&.any?
+
+    rand(4..8).times do
+      record = view_targets[resource_name].sample
+      visit = ahoy_visits.sample
+      Ahoy::Event.create!(
+        visit: visit,
+        user: visit.user,
+        name: "print.#{resource_name}",
         resource_type: record.class.name,
         resource_id: record.id,
         properties: { resource_type: record.class.name, resource_id: record.id, resource_title: record.try(:title) || record.try(:name) },
@@ -1737,6 +1859,211 @@ if view_targets["workshop"]&.any?
       )
     end
   end
-end
 
-puts "  Created #{Ahoy::Visit.count} visits, #{Ahoy::Event.count} events"
+  # ── download.resource events ──
+  if view_targets["resource"]&.any?
+    3.times do
+      record = view_targets["resource"].sample
+      visit = ahoy_visits.sample
+      Ahoy::Event.create!(
+        visit: visit,
+        user: visit.user,
+        name: "download.resource",
+        resource_type: "Resource",
+        resource_id: record.id,
+        properties: { resource_type: "Resource", resource_id: record.id, resource_title: record.try(:title) },
+        time: visit.started_at + rand(60..600).seconds
+      )
+    end
+  end
+
+  # ── filter.workshops / search.workshops events (populates category/sector/windows type charts) ──
+  seed_categories = Category.joins(:category_type).where(published: true).limit(15).to_a
+  seed_sectors = Sector.where(published: true).limit(10).to_a
+  seed_windows_types = WindowsType.all.to_a
+
+  search_titles = [ "self care", "container of feelings", "self-care", "resilience", "touchstones",
+                    "domestic violence", "grief", "personal needs flower", "butterfly", "may you be" ]
+  search_authors = [ "fabian", "aaron", "power and control wheel", "aaron mason", "Janet Hughes" ]
+  search_full_texts = [ "anxiety", "we rise", "luck", "collage", "mental wellness",
+                        "mental well-being", "friendship", "transforming", "north star" ]
+
+  # Filter events with categories, sectors, and windows types
+  20.times do
+    visit = ahoy_visits.sample
+    cats = seed_categories.sample(rand(1..3)).map { |c| { id: c.id, name: c.name, type: c.category_type&.name } }
+    secs = seed_sectors.sample(rand(1..2)).map { |s| { id: s.id, name: s.name } }
+    wts = seed_windows_types.sample(rand(1..2)).map(&:id)
+
+    props = {
+      resource_type: "Workshop",
+      result_count: rand(3..40),
+      filters: { categories: cats, sectors: secs, windows_types: wts }
+    }
+
+    Ahoy::Event.create!(
+      visit: visit,
+      user: visit.user,
+      name: "filter.workshops",
+      properties: props,
+      time: visit.started_at + rand(10..120).seconds
+    )
+  end
+
+  # Search events with keywords AND filters
+  15.times do
+    visit = ahoy_visits.sample
+    cats = seed_categories.sample(rand(1..2)).map { |c| { id: c.id, name: c.name, type: c.category_type&.name } }
+    secs = seed_sectors.sample(rand(1..2)).map { |s| { id: s.id, name: s.name } }
+    wts = seed_windows_types.sample(rand(1..2)).map(&:id)
+
+    props = {
+      resource_type: "Workshop",
+      result_count: rand(1..20),
+      keywords: {
+        title: search_titles.sample,
+        author: search_authors.sample,
+        full_text: search_full_texts.sample
+      },
+      filters: { categories: cats, sectors: secs, windows_types: wts }
+    }
+
+    Ahoy::Event.create!(
+      visit: visit,
+      user: visit.user,
+      name: "search.workshops",
+      properties: props,
+      time: visit.started_at + rand(10..120).seconds
+    )
+  end
+
+  # ── search_zero.workshops events (populates "No Results" chart) ──
+  zero_queries = [ "watercolor techniques for teens", "music therapy", "yoga breathing",
+                   "sand tray", "outdoor art", "digital collage", "puppet making 101",
+                   "grief journaling advanced" ]
+  zero_queries.each do |query|
+    visit = ahoy_visits.sample
+    rand(1..3).times do
+      Ahoy::Event.create!(
+        visit: visit,
+        user: visit.user,
+        name: "search_zero.workshops",
+        properties: {
+          resource_type: "Workshop",
+          result_count: 0,
+          query: query,
+          keywords: { full_text: query }
+        },
+        time: visit.started_at + rand(10..300).seconds
+      )
+    end
+  end
+
+  # ── search.taggings events (supplements tagging charts) ──
+  50.times do
+    visit = ahoy_visits.sample
+    Ahoy::Event.create!(
+      visit: visit,
+      user: visit.user,
+      name: "search.taggings",
+      properties: {
+        sectors: seed_sectors.sample(rand(1..3)).map(&:name),
+        categories: seed_categories.sample(rand(1..3)).map(&:name),
+        page_result_count: rand(5..30)
+      },
+      time: visit.started_at + rand(10..300).seconds
+    )
+  end
+
+  # ── filter.resources / search.resources events ──
+  resource_keywords = [ "art supplies guide", "facilitator handbook", "trauma informed", "group activity",
+                        "healing through art", "coloring pages", "workshop template" ]
+  resource_kinds = %w[pdf video link document]
+
+  5.times do
+    visit = ahoy_visits.sample
+    Ahoy::Event.create!(
+      visit: visit,
+      user: visit.user,
+      name: "filter.resources",
+      properties: { resource_type: "Resource", result_count: rand(2..15), filters: { kind: resource_kinds.sample } },
+      time: visit.started_at + rand(10..120).seconds
+    )
+  end
+
+  5.times do
+    visit = ahoy_visits.sample
+    Ahoy::Event.create!(
+      visit: visit,
+      user: visit.user,
+      name: "search.resources",
+      properties: { resource_type: "Resource", result_count: rand(1..10), keywords: { full_text: resource_keywords.sample } },
+      time: visit.started_at + rand(10..120).seconds
+    )
+  end
+
+  # ── create.* events (populates "Content Creation Velocity" chart) ──
+  if view_targets["workshop"]&.any?
+    %w[workshop_idea story_idea workshop_variation_idea workshop_log quote bookmark].each do |model_name|
+      klass = model_name.classify.safe_constantize
+      next unless klass
+
+      records = klass.limit(3).to_a
+      next if records.empty?
+
+      records.each do |record|
+        visit = ahoy_visits.sample
+        Ahoy::Event.create!(
+          visit: visit,
+          user: visit.user,
+          name: "create.#{model_name}",
+          resource_type: record.class.name,
+          resource_id: record.id,
+          properties: { resource_type: record.class.name, resource_id: record.id, resource_title: record.try(:title) || record.try(:name) },
+          time: visit.started_at + rand(60..600).seconds
+        )
+      end
+    end
+  end
+
+  # ── auth.login events (populates "Portal usage" charts) ──
+  # Simulate realistic login patterns: some users log in daily, others weekly
+  all_seeded_users = User.where(super_user: false).where.not(confirmed_at: nil).to_a
+  if all_seeded_users.any?
+    # Assign each user a login frequency: heavy, moderate, or light
+    all_seeded_users.each do |user|
+      frequency = %i[heavy moderate light light light].sample
+      login_days = case frequency
+      when :heavy   then (0..89).to_a.sample(rand(40..70))
+      when :moderate then (0..89).to_a.sample(rand(12..25))
+      when :light    then (0..89).to_a.sample(rand(2..6))
+      end
+
+      login_days.sort.each do |day_offset|
+        started = day_offset.days.ago + rand(6..22).hours
+        visit = Ahoy::Visit.create!(
+          visit_token: SecureRandom.uuid,
+          visitor_token: SecureRandom.uuid,
+          user: user,
+          started_at: started,
+          browser: browsers.sample,
+          device_type: devices.sample,
+          city: cities.sample,
+          country: "US",
+          landing_page: "/"
+        )
+        ahoy_visits << visit
+
+        Ahoy::Event.create!(
+          visit: visit,
+          user: user,
+          name: "auth.login",
+          properties: { sign_in_count: rand(1..200) },
+          time: started + rand(0..30).seconds
+        )
+      end
+    end
+  end
+
+  puts "  Created #{Ahoy::Visit.count} visits, #{Ahoy::Event.count} events"
+end

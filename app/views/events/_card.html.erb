@@ -77,6 +77,7 @@
       <% if user_signed_in? %>
         <%= button_to "Register",
                     event_registrant_registration_path(event_id: event),
+                    data: { turbo: !event.object.cost_cents.to_i.positive? },
                     class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
       <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
         <%= link_to "Register",

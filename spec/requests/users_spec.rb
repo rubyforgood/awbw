@@ -15,8 +15,6 @@ RSpec.describe "/users", type: :request do
 
   let(:invalid_attributes) do
     {
-      first_name: "",
-      last_name: nil,
       email: "invalid_email", # assuming format validation exists
       password: "short",
       password_confirmation: "different"
@@ -53,9 +51,9 @@ RSpec.describe "/users", type: :request do
     end
 
     context "as guest" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get users_url
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
@@ -87,9 +85,9 @@ RSpec.describe "/users", type: :request do
     end
 
     context "as guest" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get user_url(user)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
@@ -117,9 +115,9 @@ RSpec.describe "/users", type: :request do
     end
 
     context "as guest" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get new_user_url
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
@@ -149,9 +147,9 @@ RSpec.describe "/users", type: :request do
     end
 
     context "as guest" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         get edit_user_url(user)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
@@ -200,9 +198,9 @@ RSpec.describe "/users", type: :request do
     end
 
     context "as guest" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         post users_url, params: { user: valid_attributes }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
@@ -254,15 +252,15 @@ RSpec.describe "/users", type: :request do
       before { sign_in regular_user }
 
       it "redirects to root" do
-        patch user_url(user), params: { user: { first_name: "Hack" } }
+        patch user_url(user), params: { user: { email: "hack@example.com" } }
         expect(response).to redirect_to(root_path)
       end
     end
 
     context "as guest" do
-      it "redirects to root" do
-        patch user_url(user), params: { user: { first_name: "Hack" } }
-        expect(response).to redirect_to(root_path)
+      it "redirects to new user session path" do
+        patch user_url(user), params: { user: { email: "hack@example.com" } }
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
@@ -319,9 +317,9 @@ RSpec.describe "/users", type: :request do
         }.not_to change(User, :count)
       end
 
-      it "redirects to root" do
+      it "redirects to new user session path" do
         delete user_url(user)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
@@ -373,7 +371,7 @@ RSpec.describe "/users", type: :request do
         post toggle_lock_status_user_url(user)
         user.reload
         expect(user.locked_at).to eq(original)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
@@ -407,11 +405,11 @@ RSpec.describe "/users", type: :request do
     end
 
     context "as guest" do
-      it "does not confirm email and redirects to root" do
+      it "does not confirm email and redirects to new user session path" do
         post confirm_email_user_url(user)
         user.reload
         expect(user.confirmed_at).to be_nil
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
@@ -575,7 +573,7 @@ RSpec.describe "/users", type: :request do
         post send_welcome_instructions_user_url(user)
         user.reload
         expect(user.welcome_instructions_token).to be_nil
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
@@ -606,9 +604,9 @@ RSpec.describe "/users", type: :request do
     end
 
     context "as guest" do
-      it "redirects to root" do
+      it "redirects to new user session path" do
         post send_reset_password_instructions_user_url(user)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end

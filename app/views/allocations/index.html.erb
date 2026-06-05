@@ -1,0 +1,71 @@
+<div class="max-w-6xl mx-auto">
+  <div class="mb-6">
+    <% if @allocatable %>
+      <% if @allocatable.respond_to?(:event) %>
+        <%= link_to "← Manage registrants", manage_event_path(@allocatable.event), class: "text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block" %>
+      <% end %>
+      <h1 class="text-2xl font-semibold text-gray-900">Allocations</h1>
+      <% if @allocatable.respond_to?(:registrant) %>
+        <p class="text-gray-600 mt-1"><%= @allocatable.registrant.full_name %> — <%= @allocatable.event.title %></p>
+      <% end %>
+    <% else %>
+      <h1 class="text-2xl font-bold">All Allocations</h1>
+    <% end %>
+  </div>
+
+  <% unless params[:allocatable_sgid].present? %>
+    <%= render 'search_boxes' %>
+    <% result_src = allocations_path + "?" + request.query_string %>
+    <%= turbo_frame_tag :allocation_results, src: result_src, data: { turbo: "temporary" } do %>
+      <div class="min-h-screen">
+        <div class="animate-pulse">
+          <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div class="bg-gray-50 px-6 py-3 flex gap-16">
+              <div class="h-4 w-12 bg-gray-200 rounded"></div>
+              <div class="h-4 w-20 bg-gray-200 rounded"></div>
+              <div class="h-4 w-16 bg-gray-200 rounded"></div>
+              <div class="h-4 w-20 bg-gray-200 rounded"></div>
+              <div class="h-4 w-24 bg-gray-200 rounded"></div>
+              <div class="h-4 w-14 bg-gray-200 rounded ml-auto"></div>
+            </div>
+
+            <% 10.times do %>
+              <div class="border-t border-gray-200 px-6 py-4 flex gap-16">
+                <div class="h-4 w-20 bg-gray-200 rounded"></div>
+                <div class="h-4 w-32 bg-gray-200 rounded"></div>
+                <div class="h-4 w-16 bg-gray-200 rounded"></div>
+                <div class="h-4 w-20 bg-gray-200 rounded"></div>
+                <div class="h-4 w-32 bg-gray-200 rounded"></div>
+                <div class="h-4 w-10 bg-gray-200 rounded ml-auto"></div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="flex justify-center mt-6 space-x-2 animate-pulse">
+          <div class="h-8 w-10 bg-gray-200 rounded"></div>
+          <div class="h-8 w-10 bg-gray-200 rounded"></div>
+          <div class="h-8 w-10 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <% if @allocatable.is_a?(EventRegistration) %>
+      <div id="payment-form" class="flex gap-2 mb-4">
+        <%= button_to "Add Cash Payment", 
+            allocation_form_payments_path(type: "CashPayment", allocatable_sgid: params[:allocatable_sgid]),
+            class: "btn btn-secondary" %>
+
+        <%= button_to "Add Check Payment", 
+            allocation_form_payments_path(type: "CheckPayment", allocatable_sgid: params[:allocatable_sgid]),
+            class: "btn btn-secondary" %>
+
+        <%= button_to "Add Discount", 
+            allocation_form_discounts_path(allocatable_sgid: params[:allocatable_sgid]),
+            class: "btn btn-secondary" %>
+      </div>
+      <div id="discount-form"></div>
+    <% end %>
+    <%= render template: "allocations/allocation_results" %>
+  <% end %>
+</div>

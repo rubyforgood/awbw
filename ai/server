@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Start development services (web + vite).
+# Uses CONDUCTOR_PORT (Conductor's assigned workspace port) if set,
+# otherwise probes for a free port starting at 3000.
+# Derives a unique Vite port (server_port + 1) to avoid collisions.
+set -euo pipefail
+source "$(dirname "$0")/.ruby-env"
+
+if [ -n "${CONDUCTOR_PORT:-}" ]; then
+  server_port="$CONDUCTOR_PORT"
+else
+  server_port=3000
+  while lsof -iTCP:"$server_port" -sTCP:LISTEN -n -P >/dev/null 2>&1; do
+    server_port=$((server_port + 1))
+  done
+  echo "ai/server: CONDUCTOR_PORT unset, picked free port $server_port"
+fi
+
+export VITE_RUBY_PORT=$((server_port + 1))
+bin/dev -p "$server_port"

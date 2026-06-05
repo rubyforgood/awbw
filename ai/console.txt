@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-# Open a Rails console.
-#
-# Usage:
-#   ai/console
-#   ai/console --sandbox
-set -euo pipefail
-bundle exec rails console "$@"

@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview manage copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview manage preview_reminder send_reminder copy_registration_form ]
 
   def index
     authorize!
@@ -39,7 +39,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :manage?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:payments, :comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob } ])
+      .includes(:comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.attendance_status(params[:attendance_status]) if params[:attendance_status].present?
@@ -57,6 +57,43 @@ class EventsController < ApplicationController
           disposition: "attachment"
       end
     end
+  end
+
+  def preview_reminder
+    authorize! @event
+    @event = @event.decorate
+    @event_registrations = @event.event_registrations
+      .includes(registrant: [ :user, :contact_methods ])
+      .joins(:registrant)
+      .select { |r| r.registrant.preferred_email.present? }
+    @sample_registration = @event_registrations.first
+    @days_until_event = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
+
+    if @sample_registration
+      mail = EventMailer.event_registration_reminder(@sample_registration, days_until_event: @days_until_event)
+      @reminder_preview_html = mail.html_part&.body&.decoded
+    end
+  end
+
+  def send_reminder
+    authorize! @event, to: :send_reminder?
+    allowed_ids = Array(params[:registration_ids]).map(&:to_i).reject(&:zero?)
+    registrations = @event.event_registrations
+      .where(id: allowed_ids)
+      .includes(registrant: [ :user, :contact_methods ])
+      .select { |r| r.registrant.preferred_email.present? }
+    days_until = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
+
+    if registrations.empty?
+      redirect_to preview_reminder_event_path(@event), alert: "Please select at least one recipient."
+      return
+    end
+
+    registrations.each do |event_registration|
+      EventMailer.event_registration_reminder(event_registration, days_until_event: days_until).deliver_later
+    end
+
+    redirect_to manage_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
   end
 
   def create
@@ -165,7 +202,7 @@ class EventsController < ApplicationController
       .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
       .map(&:organization).compact.uniq
     org_names = orgs.map(&:name).join("; ")
-    total_cents = registration.successful_payments_total_cents
+    total_cents = registration.allocations_sum
     payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
     payment_status = cost_required ? (registration.paid_in_full? ? "Paid in full" : "Not paid in full") : ""
     [
@@ -174,8 +211,8 @@ class EventsController < ApplicationController
       person.preferred_email.presence || "",
       person.phone_number.presence || "",
       org_names.presence || "",
-      registration.scholarship_recipient? ? "Yes" : "No",
-      registration.scholarship_tasks_completed? ? "Yes" : "No",
+      registration.scholarships.any? ? "Yes" : "No",
+      registration.scholarships.completed.any? ? "Yes" : "No",
       payment_status,
       payment_total
     ]
@@ -229,38 +266,6 @@ class EventsController < ApplicationController
   end
 
   def event_params
-    params.require(:event).permit(:cost,
-                                  :created_by_id,
-                                  :location_id,
-                                  :title,
-                                  :pre_title,
-                                  :videoconference_url,
-                                  :videoconference_label,
-                                  :rhino_header,
-                                  :rhino_description,
-                                  :autoshow_cost,
-                                  :autoshow_date,
-                                  :autoshow_location,
-                                  :autoshow_registration,
-                                  :autoshow_time,
-                                  :autoshow_title,
-                                  :autoshow_videoconference_link,
-                                  :autoshow_videoconference_label,
-                                  :autoshow_pre_date_text,
-                                  :autoshow_registration_close,
-                                  :public_registration_enabled,
-                                  :pre_title,
-                                  :pre_date_text,
-                                  :featured,
-                                  :start_date, :end_date,
-                                  :registration_close_date,
-                                  :published,
-                                  :publicly_visible,
-                                  :publicly_featured,
-                                  category_ids: [],
-                                  sector_ids: [],
-                                  primary_asset_attributes: [ :id, :file, :_destroy ],
-                                  gallery_assets_attributes: [ :id, :file, :_destroy ]
-                                  )
+    authorized(params.require(:event))
   end
 end

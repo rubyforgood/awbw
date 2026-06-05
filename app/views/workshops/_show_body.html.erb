@@ -95,7 +95,6 @@
         <% end %>
 
         <% workshop_sections = { "Objective" => workshop.rhino_objective,
-                                 "Age range" => workshop.age_range,
                                  "Materials" => workshop.rhino_materials,
                                  "Optional materials" => workshop.rhino_optional_materials,
                                  "Suggested time frame" => workshop.time_frame_total,
@@ -128,15 +127,12 @@
           </div>
         <% end %>
 
-        <% if workshop.primary_asset&.file&.attached? ||
-          workshop.gallery_assets.any? { |img| img.persisted? && img.file.attached? } %>
+        <% if workshop.gallery_assets.any? { |img| img.persisted? && img.file.attached? } %>
           <div class="workshop-gallery single-workshop-detail mb-4">
             <h3 class="text-lg font-semibold mb-1">Gallery</h3>
             <hr class="border-gray-300 mb-2">
 
             <div class="flex flex-wrap gap-4">
-                <%= render "assets/display_image", item: workshop.primary_asset, item_type: "Main", link: true %>
-
                 <% workshop.gallery_assets.each_with_index do |gallery_assets, idx| %>
                   <%= render "assets/display_image", item: gallery_assets, idx: idx, link: true %>
                 <% end %>
@@ -155,7 +151,6 @@
         <!-- Spanish -->
         <div id="spanish-content" data-tabs-target="tabContent" class="hidden">
           <% workshop_sections_spanish = { "Objetivo" => workshop.rhino_objective_spanish,
-                                           "Rango de edad" => workshop.age_range_spanish,
                                            "Materiales" => workshop.rhino_materials_spanish,
                                            "Materiales opcionales" => workshop.rhino_optional_materials_spanish,
                                            "Setup" => workshop.rhino_setup_spanish,

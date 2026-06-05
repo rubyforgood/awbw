@@ -9,6 +9,14 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def workshop_logs?
+    admin? || owner?
+  end
+
+  def checkout?
+    admin?
+  end
+
   def edit?
     admin?
   end
@@ -30,7 +38,7 @@ class PersonPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    relation.searchable.with_active_affiliations
+    relation.searchable.with_active_affiliations.where_user_not_locked
   end
 
   private

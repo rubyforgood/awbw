@@ -81,6 +81,7 @@ class Story < ApplicationRecord
     stories = stories.facilitator_spotlights(params[:facilitator_spotlights]) if params[:facilitator_spotlights].present?
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    stories = stories.where(organization_id: params[:organization_id]) if params[:organization_id].present?
     stories
   end
 
@@ -106,9 +107,16 @@ class Story < ApplicationRecord
 
   def attach_assets_from_idea!
     return unless story_idea
-    assets.destroy_all
-    story_idea.assets.find_each do |asset|
-      new_asset = assets.build(type: asset.type)
+
+    has_primary = primary_asset&.file&.attached?
+    story_idea.assets.order(:id).each do |asset|
+      new_type = if !has_primary && asset.type == "GalleryAsset"
+        has_primary = true
+        "PrimaryAsset"
+      else
+        "GalleryAsset"
+      end
+      new_asset = assets.build(type: new_type)
       new_asset.file.attach(asset.file.blob)
     end
 

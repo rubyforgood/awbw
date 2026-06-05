@@ -57,11 +57,15 @@ module Events
       )
 
       if result.success?
-        if scholarship_params.any?
-          create_or_update_scholarship_submission(result.event_registration.registrant, scholarship_params)
+        registration = result.event_registration
+
+        if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 && credit_card_payment?(form_params)
+          checkout_session = create_stripe_checkout_session(registration, form_params)
+          redirect_to checkout_session.url, allow_other_host: true, status: :see_other
+        else
+          redirect_to registration_ticket_path(registration.slug),
+                      notice: "You have been successfully registered!"
         end
-        redirect_to registration_ticket_path(result.event_registration.slug),
-                    notice: "You have been successfully registered!"
       else
         @form_fields = visible_form_fields
         @event = @event.decorate
@@ -102,6 +106,50 @@ module Events
     end
 
     private
+
+    def credit_card_payment?(form_params)
+      payment_method_field = @form.form_fields.find_by(field_key: "payment_method")
+      return false unless payment_method_field
+
+      form_params[payment_method_field.id.to_s] == "Credit Card"
+    end
+
+    def number_of_attendees(form_params)
+      attendees_field = @form.form_fields.find_by(field_key: "number_of_attendees")
+      return 1 unless attendees_field
+
+      form_params[attendees_field.id.to_s].to_i
+    end
+
+    def create_stripe_checkout_session(registration, form_params)
+      person = registration.registrant
+      attendees = number_of_attendees(form_params)
+      amount = @event.cost_cents * attendees
+
+      metadata = { event_registration_id: registration.id }
+      comments_field = @form.form_fields.find_by(field_key: "payment_comments")
+      if comments_field && form_params[comments_field.id.to_s].present?
+        metadata[:payment_comments] = form_params[comments_field.id.to_s]
+      end
+
+      person.set_payment_processor :stripe
+
+      person.payment_processor.checkout(
+        mode: "payment",
+        metadata: metadata,
+        payment_intent_data: { metadata: metadata },
+        line_items: [ {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Registration: #{@event.title}" },
+            unit_amount: amount
+          },
+          quantity: 1
+        } ],
+        success_url: registration_ticket_url(registration.slug, checkout: "success"),
+        cancel_url: registration_ticket_url(registration.slug, checkout: "cancelled")
+      )
+    end
 
     def set_event
       @event = Event.find(params[:event_id])

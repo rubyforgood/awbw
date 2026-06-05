@@ -18,7 +18,7 @@
       </div>
 
       <!-- Story Card -->
-      <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
+      <div class="bg-white rounded-lg shadow-md p-6 space-y-2">
 
         <!-- Title -->
         <div class="font-semibold text-gray-900 mb-2">
@@ -26,7 +26,7 @@
         </div>
 
         <!-- Meta Data (exact screenshot style) -->
-        <div class="text-sm text-gray-600 space-y-0.5 mb-6">
+        <div class="text-sm text-gray-600 space-y-0.5">
           <p><strong>Story by:</strong>
             <% if @story.created_by.person&.profile_is_searchable %>
               <%= link_to @story.author_credit, person_path(@story.created_by) %>

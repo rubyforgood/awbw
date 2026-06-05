@@ -81,6 +81,9 @@ RSpec.describe "Workshops", type: :system do
         # Clear all filters
         click_link "Clear filters"
 
+        # Wait for filters to actually clear before asserting
+        expect(page).not_to have_link("Clear filters")
+
         # Both workshops should reappear
         expect(page).to have_content(workshop_adult.title)
         expect(page).to have_content(workshop_child.title)
@@ -111,6 +114,36 @@ RSpec.describe "Workshops", type: :system do
         sign_in(create(:user))
 
         workshop = create(:workshop, :published)
+        create(:gallery_asset, :with_file, owner: workshop)
+
+        visit workshop_path(workshop)
+
+        within ".workshop-gallery" do
+          links = all("a.display-image-link")
+          expect(links.length).to be >= 1
+
+          links.each do |link|
+            expect(link[:target]).to eq("_blank")
+            expect(link[:rel]).to include("noopener")
+          end
+        end
+      end
+
+      it "hides the gallery section when there are no gallery images" do
+        sign_in(create(:user))
+
+        workshop = create(:workshop, :published)
+        create(:primary_asset, :with_file, owner: workshop)
+
+        visit workshop_path(workshop)
+
+        expect(page).to have_no_css(".workshop-gallery")
+      end
+
+      it "does not show the primary image in the gallery" do
+        sign_in(create(:user))
+
+        workshop = create(:workshop, :published)
         create(:primary_asset, :with_file, owner: workshop)
         create(:gallery_asset, :with_file, owner: workshop)
 
@@ -118,12 +151,7 @@ RSpec.describe "Workshops", type: :system do
 
         within ".workshop-gallery" do
           links = all("a.display-image-link")
-          expect(links.length).to be >= 2
-
-          links.each do |link|
-            expect(link[:target]).to eq("_blank")
-            expect(link[:rel]).to include("noopener")
-          end
+          expect(links.length).to eq(1)
         end
       end
     end

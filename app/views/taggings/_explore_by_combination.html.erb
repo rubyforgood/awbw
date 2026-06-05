@@ -23,7 +23,7 @@
           <% selected_sectors =
                @sector_names_all.to_s.split("--").map(&:strip).reject(&:blank?) %>
 
-          <% Sector.published.has_taggings.order(:name).each do |sector| %>
+          <% @sectors.each do |sector| %>
             <label class="flex items-center gap-2 px-3 py-1 text-sm cursor-pointer
                         hover:bg-lime-50">
               <input type="checkbox"
@@ -60,13 +60,7 @@
                              .map(&:downcase)
           %>
 
-          <% Category.published
-                     .has_taggings
-                     .joins(:category_type)
-                     .select("categories.*, category_types.name AS category_type_name")
-                     .distinct
-                     .order("category_type_name ASC, categories.name ASC")
-                     .each do |category| %>
+          <% @categories.each do |category| %>
 
             <label class="flex items-center gap-2 px-3 py-1 text-sm cursor-pointer
                       hover:bg-lime-50">
@@ -79,7 +73,7 @@
                         focus:ring-lime-500" />
 
               <span class="text-gray-900">
-                    <%= "#{category.category_type&.name}: " if category.category_type %>
+                    <%= "#{category.category_type&.name&.titleize}: " if category.category_type %>
                 <%= category.name %>
                   </span>
             </label>

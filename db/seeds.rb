@@ -1,6 +1,10 @@
 # Disable email delivery during seeding
 ActionMailer::Base.perform_deliveries = false
 
+def seed(file)
+  require_relative "seeds/#{file}"
+end
+
 puts "Creating Users…"
 
 # Helper: case-insensitive find-or-create by name
@@ -54,22 +58,23 @@ unless amy.person.present?
 end
 
 # Non-Admin 2
-priya = User.find_or_create_by!(email: "priya.user@example.com") do |user|
+aisha = User.find_or_create_by!(email: "aisha.user@example.com") do |user|
   user.password = "password"
   user.super_user = false
   user.confirmed_at = Time.current
 end
 
-unless priya.person.present?
+unless aisha.person.present?
   person = Person.create!(
-    first_name: "Priya",
+    first_name: "Aisha",
     last_name: "Sharma",
-    email: priya.email,
-    created_by: priya,
-    updated_by: priya,
-    profile_is_searchable: true
+    email: aisha.email,
+    created_by: aisha,
+    updated_by: aisha,
+    profile_is_searchable: true,
+    profile_show_workshop_logs: true
   )
-  priya.update!(person: person)
+  aisha.update!(person: person)
 end
 
 # Orphaned
@@ -256,16 +261,16 @@ unless invited_no_person.confirmed_at.present?
 end
 
 # Only reset seed-user passwords, not every user in the database
-seed_emails = %w[umberto.user@example.com amy.user@example.com priya.user@example.com orphaned_reports@awbw.org]
+seed_emails = %w[umberto.user@example.com amy.user@example.com aisha.user@example.com orphaned_reports@awbw.org]
 user_password = Devise::Encryptor.digest(User, "password")
 User.where(email: seed_emails).update_all(encrypted_password: user_password)
 
 puts "Creating WindowsTypes…"
-adult_type = WindowsType.where(name: "ADULT WINDOWS")
+adult_type = WindowsType.where(name: "Adult")
                         .first_or_create!(legacy_id: 1, short_name: "Adult")
-childrens_type = WindowsType.where(name: "CHILDREN'S WINDOWS")
+childrens_type = WindowsType.where(name: "Children")
                             .first_or_create!(legacy_id: 2, short_name: "Children")
-combined_type = WindowsType.where(name: "ADULT & CHILDREN COMBINED (FAMILY) WINDOWS")
+combined_type = WindowsType.where(name: "Combined")
                            .first_or_create!(legacy_id: 3, short_name: "Combined")
 
 puts "Creating FormBuilders…"
@@ -286,7 +291,7 @@ awbw_org = Organization.find_or_create_by!(name: ENV.fetch("ORGANIZATION_NAME", 
   org.organization_status = OrganizationStatus.find_by!(name: "Active")
 end
 
-[ admin, amy, priya ].each do |user|
+[ admin, amy, aisha ].each do |user|
   next unless user.person.present? && user.person.affiliations.empty?
 
   Affiliation.create!(
@@ -429,10 +434,7 @@ category_type_categories.each do |category_type_name, category_name, _legacy_id|
 end
 
 puts "Setting AgeRange category positions…"
-age_range_order = [ "3-5", "6-12", "13-17", "18+", "Mixed-age groups", "Family windows" ]
-age_range_order.each_with_index do |name, i|
-  Category.where("LOWER(name) = LOWER(?)", name).update_all(position: i + 1)
-end
+Category.heal_position_column!
 
 puts "Creating StoryPopulation CategoryType…"
 story_population_type = find_or_create_by_name!(CategoryType, "StoryPopulation") do |ct|
@@ -470,3 +472,14 @@ workshop_env_type.update!(display_text: "Workshop Environments", story_specific:
   end
   cat.update!(published: true) unless cat.published?
 end
+
+puts "Creating standalone registration forms…"
+unless Form.standalone.exists?(name: ShortEventRegistrationFormBuilder::FORM_NAME)
+  ShortEventRegistrationFormBuilder.build_standalone!
+end
+
+unless Form.standalone.exists?(name: ExtendedEventRegistrationFormBuilder::FORM_NAME)
+  ExtendedEventRegistrationFormBuilder.build_standalone!
+end
+
+seed "payments"

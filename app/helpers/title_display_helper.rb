@@ -55,6 +55,17 @@ module TitleDisplayHelper
       )
     end
 
+    # --- Instructional badge ---
+    if record.respond_to?(:is_instructional) && record.is_instructional?
+      icon = content_tag(:span, content_tag(:i, "", class: "fa-solid fa-graduation-cap"), class: "inline-flex justify-center w-5")
+      fragments << content_tag(
+        :span,
+        icon + content_tag(:span, "Instructional", class: "ml-1"),
+        class: "inline-flex items-center pl-2 pr-3 py-0.5 rounded-full
+              text-sm font-medium bg-teal-100 text-teal-800 whitespace-nowrap"
+      )
+    end
+
     # --- Promoted from story idea badge ---
     if record.respond_to?(:story_idea) && record.story_idea.present?
       icon = content_tag(:span, content_tag(:i, "", class: "fa-solid fa-arrow-up-from-bracket"), class: "inline-flex justify-center w-5")

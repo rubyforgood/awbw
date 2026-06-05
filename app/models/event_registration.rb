@@ -1,13 +1,15 @@
 class EventRegistration < ApplicationRecord
+  include RemoteSearchable
+
   belongs_to :registrant, class_name: "Person"
   belongs_to :event
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :event_registration_organizations, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :organizations, through: :event_registration_organizations
-  has_many :payments, as: :payable
-
-  before_destroy :create_refund_payments
+  has_many :allocations, as: :allocatable
+  has_many :scholarships, -> { distinct },
+    through: :allocations, source: :source, source_type: "Scholarship"
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
@@ -34,7 +36,6 @@ class EventRegistration < ApplicationRecord
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :attendance_status, ->(status) { where(status: status) }
-  scope :scholarship, -> { where(scholarship_recipient: true) }
   scope :keyword, ->(term) {
     return none if term.blank?
 
@@ -68,6 +69,11 @@ class EventRegistration < ApplicationRecord
     elsif params[:event_name].present?
       registrations = registrations.event_title(params[:event_name].downcase.strip)
     end
+    if params[:organization_id].present?
+      registrations = registrations.joins(:event_registration_organizations)
+                                   .where(event_registration_organizations: { organization_id: params[:organization_id] })
+                                   .distinct
+    end
     registrations
   end
 
@@ -87,33 +93,30 @@ class EventRegistration < ApplicationRecord
     paid_in_full?
   end
 
-  # Sum of successful payment amounts, using preloaded collection when available
-  def successful_payments_total_cents
-    if payments.loaded?
-      payments.select(&:succeeded?).sum(&:amount_cents)
-    else
-      payments.successful.sum(:amount_cents)
-    end
-  end
-
-  # True if event is free, scholarship recipient, or total successful payments >= event.cost_cents
-  def paid_in_full?
-    return true if event.cost_cents.to_i <= 0
-    return true if scholarship_recipient?
-    successful_payments_total_cents >= event.cost_cents.to_i
-  end
-
   def scholarship?
-    payments.scholarships.exists?
+    scholarships.exists?
   end
 
   def scholarship_tasks_met?
-    return true unless scholarship?
-    scholarship_tasks_completed?
+    return true if scholarships.empty?
+    scholarships.all?(&:tasks_completed?)
+  end
+
+  def allocations_sum
+    allocations.sum(:amount)
+  end
+
+  def remaining_cost
+    [ event.cost_cents - allocations_sum, 0 ].max
+  end
+
+  def paid_in_full?
+    return true if event.cost_cents.to_i <= 0
+    allocations_sum >= event.cost_cents.to_i
   end
 
   def joinable?
-    active? && paid? && scholarship_tasks_met?
+    active? && paid?
   end
 
   def attendance_status_label
@@ -128,26 +131,40 @@ class EventRegistration < ApplicationRecord
     end
   end
 
+  remote_searchable_by :registrant,
+    scope: ->(query) {
+      return none if query.blank?
+
+      words = query.split.flat_map { |w| w.split(/[\s\-]+/) }.reject(&:blank?)
+      return none if words.blank?
+
+      pattern = "%#{words.join('%')}%"
+      active
+        .joins(:registrant, :event)
+        .where(
+          "people.first_name LIKE :p
+           OR people.last_name LIKE :p
+           OR people.email LIKE :p
+           OR people.legal_first_name LIKE :p
+           OR people.email_2 LIKE :p
+           OR events.title LIKE :p",
+          p: pattern
+        )
+    }
+
+  def remote_search_label
+    {
+      id: id,
+      label: "#{registrant.full_name} - #{event.title} (##{id})"
+    }
+  end
+
   private
 
   def snapshot_registrant_organizations
     registrant.affiliations.active.includes(:organization).find_each do |aff|
       event_registration_organizations.create(organization: aff.organization)
     end
-  end
-
-  def create_refund_payments
-    paid_cents = payments.successful.sum(:amount_cents)
-    return if paid_cents <= 0
-
-    payments.create!(
-      amount_cents: -paid_cents,
-      payer: registrant,
-      event: event,
-      payment_type: "refund",
-      status: "refunded",
-      currency: "usd"
-    )
   end
 
   def generate_slug

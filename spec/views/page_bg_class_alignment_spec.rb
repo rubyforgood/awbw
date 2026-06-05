@@ -46,6 +46,7 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     "app/views/workshop_logs/new.html.erb"             => "admin-or-auth",
     "app/views/monthly_reports/new.html.erb"           => "admin-or-auth",
+    "app/views/monthly_reports/index.html.erb"         => "admin-or-auth",
     "app/views/reports/new.html.erb"                   => "admin-or-auth",
 
     # ─── admin-or-public-or-authpublished ───
@@ -70,7 +71,7 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     "app/views/reports/edit.html.erb"                  => "admin-or-owner",
     "app/views/workshop_logs/edit.html.erb"            => "admin-or-owner",
-    "app/views/monthly_reports/edit.html.erb"          => "admin-or-owner",
+    "app/views/people/workshop_logs.html.erb"          => "admin-or-owner",
 
     "app/views/notifications/show.html.erb"            => "admin-or-owner",
     "app/views/organizations/show.html.erb"            => "admin-or-auth",
@@ -91,6 +92,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/admin/ahoy_activities/index.html.erb"   => "admin-only bg-blue-100",
     "app/views/admin/analytics/index.html.erb"         => "admin-only bg-blue-100",
     "app/views/bookmarks/tally.html.erb"               => "admin-only bg-blue-100",
+    "app/views/users/flow_diagram.html.erb"            => "admin-only bg-blue-100",
     "app/views/dedupes/index.html.erb"                 => "admin-only bg-blue-100",
     "app/views/dedupes/preview.html.erb"               => "admin-only bg-blue-100",
     "app/views/taggings/matrix.html.erb"               => "admin-only bg-blue-100",
@@ -101,6 +103,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/categories/index.html.erb"              => "admin-only bg-blue-100",
     "app/views/category_types/index.html.erb"          => "admin-only bg-blue-100",
     "app/views/events/manage.html.erb"                 => "admin-only bg-blue-100",
+    "app/views/events/preview_reminder.html.erb"       => "admin-only bg-blue-100",
     "app/views/event_registrations/index.html.erb"     => "admin-only bg-blue-100",
     "app/views/notifications/index.html.erb"           => "admin-only bg-blue-100",
     "app/views/organization_statuses/index.html.erb"   => "admin-only bg-blue-100",
@@ -138,6 +141,10 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/video_recordings/new.html.erb"          => "admin-only bg-blue-100",
     "app/views/users/new.html.erb"                     => "admin-only bg-blue-100",
     "app/views/windows_types/new.html.erb"             => "admin-only bg-blue-100",
+    "app/views/scholarships/new.html.erb"              => "admin-only bg-blue-100",
+    "app/views/scholarships/show.html.erb"             => "admin-only bg-blue-100",
+    "app/views/refunds/show.html.erb"                  => "admin-only bg-blue-100",
+    "app/views/discounts/show.html.erb"                => "admin-only bg-blue-100",
     "app/views/workshop_variations/new.html.erb"       => "admin-only bg-blue-100",
     "app/views/workshops/new.html.erb"                 => "admin-only bg-blue-100",
     # edit
@@ -159,6 +166,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/windows_types/edit.html.erb"            => "admin-only bg-blue-100",
     "app/views/workshop_ideas/edit.html.erb"           => "admin-only bg-blue-100",
     "app/views/workshop_variation_ideas/edit.html.erb" => "admin-only bg-blue-100",
+    "app/views/scholarships/edit.html.erb"             => "admin-only bg-blue-100",
     "app/views/workshop_variations/edit.html.erb"      => "admin-only bg-blue-100",
     "app/views/workshops/edit.html.erb"                => "admin-only bg-blue-100",
 
@@ -169,6 +177,7 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     # ─── admin-only confirm/interstitial ───
     "app/views/event_registrations/confirm.html.erb"     => "admin-only bg-blue-100",
+    "app/views/event_registrations/link_organization.html.erb" => "admin-only bg-blue-100",
     "app/views/users/confirm_email_change.html.erb"      => "admin-only bg-blue-100",
     "app/views/users/confirm_email_manual.html.erb"      => "admin-only bg-blue-100"
   }.freeze

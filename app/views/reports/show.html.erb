@@ -25,7 +25,7 @@
           <p><span class="font-semibold text-gray-700">Workshop Type:</span> <%= @workshop_log.workshop&.windows_type&.short_name || "—" %></p>
         </div>
         <div>
-          <p><span class="font-semibold text-gray-700">Workshop date:</span> <%= @workshop_log.date&.strftime("%B %d, %Y") || "—" %></p>
+          <p><span class="font-semibold text-gray-700">Workshop date:</span> <%= @workshop_log.workshop_held_on&.strftime("%B %d, %Y") || "—" %></p>
           <p><span class="font-semibold text-gray-700">Log created:</span> <%= @workshop_log.created_at.strftime("%b %d, %Y") %></p>
           <p><span class="font-semibold text-gray-700">Log updated:</span> <%= @workshop_log.updated_at.strftime("%b %d, %Y") %></p>
         </div>

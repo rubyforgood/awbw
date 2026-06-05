@@ -9,6 +9,10 @@ class NotificationPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def update?
+    admin?
+  end
+
   def resend?
     admin? && record.resendable?
   end

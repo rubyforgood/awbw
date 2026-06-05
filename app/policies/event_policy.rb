@@ -33,6 +33,59 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def preview_reminder?
+    manage?
+  end
+
+  def send_reminder?
+    manage?
+  end
+
+  # Use caution - This allows pasting scripts
+  def google_analytics?
+    admin?
+  end
+
+  params_filter do |params|
+    permitted = [ :cost,
+                  :created_by_id,
+                  :location_id,
+                  :title,
+                  :pre_title,
+                  :videoconference_url,
+                  :videoconference_label,
+                  :rhino_header,
+                  :rhino_description,
+                  :autoshow_cost,
+                  :autoshow_date,
+                  :autoshow_location,
+                  :autoshow_registration,
+                  :autoshow_time,
+                  :autoshow_title,
+                  :autoshow_videoconference_link,
+                  :autoshow_videoconference_label,
+                  :autoshow_pre_date_text,
+                  :autoshow_registration_close,
+                  :public_registration_enabled,
+                  :pre_title,
+                  :pre_date_text,
+                  :featured,
+                  :start_date, :end_date,
+                  :registration_close_date,
+                  :published,
+                  :publicly_visible,
+                  :publicly_featured,
+                  category_ids: [],
+                  sector_ids: [],
+                  primary_asset_attributes: [ :id, :file, :_destroy ],
+                  gallery_assets_attributes: [ :id, :file, :_destroy ]
+        ]
+
+    permitted.prepend(:ga4_snippet, :gtm_head_snippet, :gtm_body_snippet) if admin?
+
+    params.permit(*permitted)
+  end
+
   alias_rule :preview?, to: :edit?
 
   private

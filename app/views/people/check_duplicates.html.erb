@@ -3,11 +3,21 @@
     <div class="bg-white border border-gray-200 rounded-2xl shadow-lg p-6 sm:p-8">
       <div class="flex items-center mb-6">
         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
-          <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          <svg
+            class="h-6 w-6 text-yellow-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
           </svg>
         </div>
+
         <h1 class="ml-4 text-xl font-semibold text-gray-900">Possible duplicate person</h1>
       </div>
 
@@ -54,7 +64,7 @@
             <div class="text-gray-500 text-xs mt-0.5">
               <% if dup[:labeled_emails].present? %>
                 <% dup[:labeled_emails].each_with_index do |entry, i| %>
-                  <span class="text-gray-400"><%= entry[:label] %>:</span> <%= entry[:value] %><%= ", " unless i == dup[:labeled_emails].size - 1 %>
+                  <span class="text-gray-400"><%= entry[:label] %>:</span><%= entry[:value] %><%= ", " unless i == dup[:labeled_emails].size - 1 %>
                 <% end %>
               <% else %>
                 No email
@@ -79,36 +89,13 @@
 
       <% if @email.present? && @duplicates.any? { |d| d[:labeled_emails]&.any? { |e| e[:value]&.downcase == @email.downcase } } %>
         <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-6">
-          Multiple people can share the same email address, but each user account requires a unique email.
-          If you plan to create a user account for this person, they will need a different email than the one shown above.
-        </p>
-      <% end %>
-
-      <% if @had_avatar %>
-        <p class="text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6">
-          The photo you uploaded will need to be re-added after creating this person.
+          Multiple people can share the same email address, but each user account requires a unique email. If you plan to create a user account for this person, they will need a different email than the one shown above.
         </p>
       <% end %>
 
       <div class="flex flex-col items-center gap-3">
-        <div class="flex gap-3">
-          <%= form_with url: retry_new_people_path, method: :post, data: { turbo: false } do %>
-            <%= hidden_fields_for_params(@stored_params, "person") %>
-            <button type="submit" class="btn btn-secondary-outline">Go back</button>
-          <% end %>
-
-          <% unless @blocked %>
-            <%= form_with url: people_path, method: :post, data: { turbo: false } do %>
-              <%= hidden_fields_for_params(@stored_params, "person") %>
-              <input type="hidden" name="person[created_by_id]" value="<%= current_user.id %>">
-              <input type="hidden" name="person[updated_by_id]" value="<%= current_user.id %>">
-              <input type="hidden" name="skip_duplicate_check" value="1">
-              <button type="submit" class="btn btn-primary">Create anyway</button>
-            <% end %>
-          <% end %>
-        </div>
-
         <% shareable_url = check_duplicates_people_url(first_name: @first_name, last_name: @last_name, email: @email) %>
+
         <%= mail_to "",
               "Ask a colleague",
               subject: "Possible duplicate person: #{@first_name} #{@last_name}",
