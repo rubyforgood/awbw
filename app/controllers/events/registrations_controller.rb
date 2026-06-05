@@ -3,7 +3,7 @@ module Events
     before_action :authenticate_user!, only: [ :create, :destroy ]
     before_action :set_event, only: [ :create, :destroy ]
     before_action :set_registrant, only: [ :create, :destroy ]
-    before_action :set_event_registration, only: [ :show, :resend_confirmation, :cancel, :reactivate ]
+    before_action :set_event_registration, only: [ :show, :resend_confirmation, :cancel, :reactivate, :pay ]
 
     def show
       authorize! @event_registration, to: :show_public?
@@ -42,6 +42,18 @@ module Events
       else
         redirect_to registration_ticket_path(@event_registration.slug), alert: "Registration is not cancelled."
       end
+    end
+
+    def pay
+      authorize! @event_registration, to: :show_public?
+
+      unless @event_registration.event.cost_cents.to_i > 0 && !@event_registration.paid_in_full?
+        redirect_to registration_ticket_path(@event_registration.slug), alert: "No payment is due."
+        return
+      end
+
+      @event = @event_registration.event
+      redirect_to_stripe_checkout(@event_registration)
     end
 
     def create
@@ -173,7 +185,7 @@ module Events
 
     def redirect_to_stripe_checkout(registration)
       person = registration.registrant
-      amount = @event.cost_cents
+      amount = registration.remaining_cost
 
       person.set_payment_processor :stripe
 

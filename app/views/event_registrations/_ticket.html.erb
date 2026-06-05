@@ -71,17 +71,29 @@
         <% end %>
         <%= render "events/videoconference_link", event: event_registration.event.decorate, joinable: event_registration.joinable? %>
       </div>
-      <% if event_registration.event.cost_cents.to_i > 0 && !event_registration.paid? %>
-        <% paid_cents = event_registration.allocations_sum %>
-        <% due_cents = event_registration.event.cost_cents - paid_cents %>
-        <div class="text-center mt-2">
-          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
-            $<%= "%.2f" % (due_cents / 100.0) %> payment is due
-          </span>
-          <% if paid_cents > 0 %>
-            <p class="text-xs text-gray-500 mt-1">$<%= "%.2f" % (paid_cents / 100.0) %> paid</p>
-          <% end %>
-        </div>
+      <% if event_registration.event.cost_cents.to_i > 0 %>
+        <% if event_registration.paid? %>
+          <div class="text-center mt-2">
+            <span class="inline-flex items-center gap-1 rounded-full text-sm font-medium border px-3 py-1 bg-green-50 text-green-700 border-green-200">
+              Paid
+            </span>
+          </div>
+        <% else %>
+          <% paid_cents = event_registration.allocations_sum %>
+          <% due_cents = event_registration.event.cost_cents - paid_cents %>
+          <div class="text-center mt-2">
+            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+              $<%= "%.2f" % (due_cents / 100.0) %> payment is due
+            </span>
+            <div class="mt-3">
+              <%= button_to "Pay with Credit Card",
+                            registration_pay_path(event_registration.slug),
+                            data: { turbo: false },
+                            class: "btn px-6 py-2 text-sm uppercase font-telefon text-white hover:bg-white",
+                            style: "background-color: rgb(170, 46, 0); border: 2px solid rgb(170, 46, 0);" %>
+            </div>
+          </div>
+        <% end %>
       <% end %>
       <!-- Divider -->
       <div class="border-t border-gray-200"></div>
