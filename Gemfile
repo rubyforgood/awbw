@@ -112,3 +112,6 @@ gem "opentelemetry-instrumentation-all"
 
 # Error monitoring (production-only via initializer guard)
 gem "honeybadger", "~> 6.4"
+
+# Structured request logging (production-only via initializer guard)
+gem "lograge"

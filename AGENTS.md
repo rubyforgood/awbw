@@ -309,6 +309,7 @@ RuboCop linting on PRs and pushes to main.
 | Feature flags | FeatureFlipper |
 | Error monitoring | Honeybadger |
 | Observability | OpenTelemetry (Honeycomb via OTLP exporter) |
+| Structured logging | Lograge (JSON format, production-only) |
 | Analytics | Ahoy (events + visits), Chartkick, Groupdate, Blazer |
 | Audit/change logging | Approximated via Ahoy (may adopt PaperTrail or Audited in the future) |
 | Geocoding | Geocoder + MaxMind GeoIP2 |

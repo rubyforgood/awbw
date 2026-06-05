@@ -1,0 +1,19 @@
+name: Notify Honeybadger deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  honeybadger-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Honeybadger of deploy
+        env:
+          HONEYBADGER_API_KEY: ${{ secrets.HONEYBADGER_API_KEY }}
+        run: |
+          curl --silent --show-error --fail \
+            -X POST https://api.honeybadger.io/v1/deploys \
+            -H "X-API-Key: $HONEYBADGER_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"deploy\":{\"environment\":\"production\",\"revision\":\"${{ github.sha }}\",\"repository\":\"${{ github.repository }}\",\"local_username\":\"${{ github.actor }}\"}}"

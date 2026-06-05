@@ -1,0 +1,32 @@
+# Vector configuration for forwarding Rails lograge JSON to Honeybadger Insights.
+# This is a reference config — not loaded by Rails.
+# Deploy to /etc/vector/vector.yaml on the server running Vector.
+
+sources:
+  app:
+    type: "file"
+    include: ["/home/app/shared/log/*.log"]
+
+transforms:
+  parse_logs:
+    type: "remap"
+    inputs: ["app"]
+    source: |
+      payload, err = parse_json(string!(.message))
+      if err == null {
+        .payload = payload
+        del(.message)
+      }
+
+sinks:
+  honeybadger_events:
+    type: "http"
+    inputs: ["parse_logs"]
+    uri: "https://api.honeybadger.io/v1/events"
+    request:
+      headers:
+        X-API-Key: "PROJECT_API_KEY"
+    encoding:
+      codec: "json"
+    framing:
+      method: "newline_delimited"
