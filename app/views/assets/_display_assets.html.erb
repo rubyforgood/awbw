@@ -1,4 +1,7 @@
+<% hero_extra_classes ||= "" %>
+<% gallery_width ||= "32" %>
+<% gallery_height ||= gallery_width %>
 <div class="assets">
-  <%= render "assets/display_image", resource: resource, file: (defined?(file) ? file : nil), variant: (defined?(variant) ? variant : :hero), link: (defined?(link) ? link : nil) %>
-  <%= render "assets/display_gallery_media", resource: resource, link: (defined?(link) ? link : nil), align: (defined?(align) ? align : nil) %>
+  <%= render "assets/display_image", resource: resource, file: (defined?(file) ? file : nil), variant: (defined?(variant) ? variant : :hero), link: (defined?(link) ? link : nil), extra_image_classes: hero_extra_classes %>
+  <%= render "assets/display_gallery_media", resource: resource, link: (defined?(link) ? link : nil), align: (defined?(align) ? align : nil), width: gallery_width, height: gallery_height %>
 </div>

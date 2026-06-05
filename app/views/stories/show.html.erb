@@ -60,7 +60,8 @@
           <div id="upload-progress-bar" class="h-full w-0 bg-blue-500 transition-[width] duration-200 ease-out"></div>
         </div>
         <div id="hero-image">
-          <%= render "assets/display_assets", resource: @story, link: true %>
+          <%= render "assets/display_assets", resource: @story, link: true,
+                     hero_extra_classes: "max-w-2xl mx-auto", gallery_width: "48", gallery_height: "48" %>
         </div>
 
         <!-- Story Body Text -->

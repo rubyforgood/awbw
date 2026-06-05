@@ -2,11 +2,11 @@
 
 class DisplayImagePresenter
   WIDTH_CLASSES = {
-    "18" => "w-18", "24" => "w-24", "32" => "w-32", "full" => "w-full"
+    "18" => "w-18", "24" => "w-24", "32" => "w-32", "48" => "w-48", "full" => "w-full"
   }.freeze
 
   HEIGHT_CLASSES = {
-    "14" => "h-14", "18" => "h-18", "24" => "h-24", "32" => "h-32", "full" => "h-full"
+    "14" => "h-14", "18" => "h-18", "24" => "h-24", "32" => "h-32", "48" => "h-48", "full" => "h-full"
   }.freeze
 
   PDF_PREVIEW_SIZES = { hero: [ 1200, 1200 ], gallery: [ 300, 300 ], index: [ 300, 300 ] }.freeze

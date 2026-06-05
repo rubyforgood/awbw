@@ -92,6 +92,12 @@ RSpec.describe DisplayImagePresenter do
         expect(result.image_classes).to include("h-32")
       end
 
+      it "maps width and height of 48 to w-48 and h-48" do
+        result = described_class.call(file: "test.jpg", variant: :gallery, width: "48", height: "48", view_context: view_context)
+        expect(result.image_classes).to include("w-48")
+        expect(result.image_classes).to include("h-48")
+      end
+
       it "builds index wrapper classes with dimensions" do
         result = described_class.call(file: "test.jpg", variant: :index, width: "24", height: "24", view_context: view_context)
         expect(result.wrapper_classes).to include("index-size")

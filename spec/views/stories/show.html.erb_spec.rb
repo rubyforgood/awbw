@@ -19,4 +19,29 @@ RSpec.describe "stories/show", type: :view do
     expect(rendered).to match(/MyBody/)
     expect(rendered).to match(story.author_credit)
   end
+
+  context "with primary and gallery images" do
+    let(:story_with_images) do
+      created = create(:story, created_by: user, updated_by: user)
+      create(:primary_asset, :with_file, owner: created)
+      create(:gallery_asset, :with_file, owner: created)
+      created.reload
+    end
+
+    before do
+      assign(:story, story_with_images.decorate)
+    end
+
+    it "constrains and centers the primary image so it does not render too large" do
+      render
+      expect(rendered).to include("max-w-2xl")
+      expect(rendered).to include("mx-auto")
+    end
+
+    it "renders gallery images at the enlarged size" do
+      render
+      expect(rendered).to include("w-48")
+      expect(rendered).to include("h-48")
+    end
+  end
 end
