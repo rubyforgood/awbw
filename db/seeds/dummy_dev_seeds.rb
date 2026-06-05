@@ -957,9 +957,9 @@ if MonthlyReport.none?
   [ adult_mr_fb, children_mr_fb ].compact.each do |fb|
     form = fb.forms.first || fb.forms.create!
     mr_form_fields[fb.id] = mr_question_specs.to_h do |spec|
-      ff = form.form_fields.where(question: spec[:question], status: 1)
+      ff = form.form_fields.where(name: spec[:question], status: 1)
                            .first_or_create!(answer_type: spec[:answer_type],
-                                             answer_datatype: spec[:answer_datatype],
+                                             input_type: spec[:answer_datatype],
                                              position: spec[:position])
       [ spec[:key], ff ]
     end
@@ -1134,6 +1134,23 @@ puts "Creating Stories…"
        )
 end
 
+
+puts "Creating standalone registration forms…"
+unless Form.standalone.exists?(name: "Registration")
+  FormBuilderService.new(
+    name: "Registration",
+    sections: %i[person_identifier],
+    role: "registration"
+  ).call
+end
+
+unless Form.standalone.find_by(role: "scholarship")
+  FormBuilderService.new(
+    name: "Scholarship Application",
+    sections: %i[scholarship],
+    role: "scholarship"
+  ).call
+end
 
 puts "Creating Event Registrations…"
 
