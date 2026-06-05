@@ -3,6 +3,25 @@ require 'rails_helper'
 RSpec.describe Story, type: :model do
   it_behaves_like "author_creditable", factory: :story
 
+  describe "author credit preference default" do
+    it "defaults a blank preference from the author's display name preference" do
+      author = create(:person, display_name_preference: "first_name_only")
+      story = create(:story, author: author, author_credit_preference: nil)
+      expect(story.author_credit_preference).to eq("first_name_only")
+    end
+
+    it "does not override an explicitly set preference" do
+      author = create(:person, display_name_preference: "first_name_only")
+      story = create(:story, author: author, author_credit_preference: "anonymous")
+      expect(story.author_credit_preference).to eq("anonymous")
+    end
+
+    it "leaves the preference blank when there is no author" do
+      story = create(:story, author: nil, author_credit_preference: nil)
+      expect(story.author_credit_preference).to be_nil
+    end
+  end
+
   describe "#attach_assets_from_idea!" do
     let(:idea) { create(:story_idea) }
     let(:story) { create(:story, story_idea: idea) }

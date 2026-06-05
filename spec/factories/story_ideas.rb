@@ -7,6 +7,7 @@ FactoryBot.define do
     rhino_body { "<p>My Body</p>" }
     permission_given { true }
     author_credit_preference { "full_name" }
+    association :author, factory: :person
     association :created_by, factory: :user
     association :updated_by, factory: :user
 

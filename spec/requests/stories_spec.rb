@@ -124,6 +124,7 @@ RSpec.describe "/stories", type: :request do
             windows_type: wt_adult,
             workshop: ws_art,
             organization: org_alpha,
+            author: author_alice.person,
             created_by: author_alice).tap do |s|
             s.update_columns(created_at: 3.days.ago, updated_at: 1.day.ago)
           end
@@ -135,6 +136,7 @@ RSpec.describe "/stories", type: :request do
             windows_type: wt_children,
             workshop: ws_music,
             organization: org_zulu,
+            author: author_zara.person,
             created_by: author_zara).tap do |s|
             s.update_columns(created_at: 1.day.ago, updated_at: 3.days.ago)
           end

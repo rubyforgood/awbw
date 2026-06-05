@@ -20,7 +20,7 @@ module AuthorCreditable
   }.freeze
 
   def author_credit
-    person = created_by&.person
+    person = credited_person
     case author_credit_preference
     when "full_name" then person&.full_name || "Anonymous"
     when "first_name_last_initial"
@@ -32,5 +32,11 @@ module AuthorCreditable
     when "anonymous" then "Anonymous"
     else person&.name || "Anonymous"
     end
+  end
+
+  # The person credited as the author. Models with a direct author association
+  # (Story, StoryIdea) override this; the rest derive it from the creating user.
+  def credited_person
+    created_by&.person
   end
 end

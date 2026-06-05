@@ -9,7 +9,7 @@ class StoriesController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
       base_scope = authorized_scope(Story.includes(:windows_type, :organization, :workshop,
-                                                   :created_by, :bookmarks, :primary_asset,
+                                                   :author, :created_by, :bookmarks, :primary_asset,
                                                    :story_idea))
       filtered = base_scope.search_by_params(params)
       sortable = %w[title updated_at created_at windows_type workshop author organization]
@@ -62,6 +62,7 @@ class StoriesController < ApplicationController
 
   def create
     @story = Story.new(story_params.except(:category_ids, :sector_ids))
+    @story.created_by = current_user
     authorize! @story
 
     success = false
@@ -127,11 +128,7 @@ class StoriesController < ApplicationController
     @story_idea = StoryIdea.find(params[:story_idea_id]) if params[:story_idea_id].present?
     @user = User.find(params[:user_id]) if params[:user_id].present?
     @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
-    @story_ideas = authorized_scope(StoryIdea.includes(:created_by))
-                            .references(:users)
-                            .order(:created_at)
     @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
-    @users = User.has_access.includes(:person).left_joins(:person).order(Arel.sql("people.first_name IS NULL, LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email)"))
     @windows_types = WindowsType.all
     @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
     @categories_grouped =
@@ -174,7 +171,7 @@ class StoriesController < ApplicationController
       scope.left_joins(:workshop)
            .reorder(Workshop.arel_table[:title].public_send(dir))
     when "author"
-      scope.left_joins(created_by: :person)
+      scope.left_joins(:author)
            .reorder(Person.arel_table[:first_name].public_send(dir))
     when "organization"
       scope.left_joins(:organization)
@@ -189,7 +186,7 @@ class StoriesController < ApplicationController
     params.require(:story).permit(
       :title, :rhino_body, :featured, :published, :publicly_visible, :publicly_featured, :youtube_url, :website_url,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
-      :created_by_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id, :author_credit_preference,
+      :author_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id, :author_credit_preference,
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
@@ -206,6 +203,7 @@ class StoriesController < ApplicationController
       external_workshop_title: idea.external_workshop_title,
       windows_type_id: idea.windows_type_id,
       youtube_url: idea.youtube_url,
+      author_id: idea.author_id,
       author_credit_preference: idea.author_credit_preference
     }
   end

@@ -14,6 +14,7 @@ class StoryIdea < ApplicationRecord
 
   has_rich_text :rhino_body
 
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :organization
@@ -47,6 +48,10 @@ class StoryIdea < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
+
+  def credited_person
+    author
+  end
 
   def name
     "StoryIdea ##{id}"

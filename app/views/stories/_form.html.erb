@@ -206,21 +206,6 @@
 
   <div class="flex flex-col md:flex-row md:space-x-4 mt-4">
     <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :author_credit_preference,
-                  as: :select,
-                  collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
-                  prompt: "Select a preference",
-                  selected: f.object.author_credit_preference || story_idea&.author_credit_preference,
-                  label: "Author credit preference",
-                  hint: "Controls how the author's name is displayed",
-                  input_html: {
-                    class: select_caret_class(blank: f.object.author_credit_preference.blank?),
-                    style: custom_caret_style,
-                    onchange: select_caret_onchange
-                  } %>
-    </div>
-
-    <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :youtube_url, as: :text,
                   label: "YouTube URL",
                   hint: "(Embed a YouTube video)",
@@ -233,64 +218,10 @@
                   hint: "(open in external website instead)",
                   input_html: { rows: 1, class: "w-full" } %>
     </div>
-  </div>
-
-  <% if story_idea %>
-    <div class="flex flex-col md:flex-row md:space-x-4">
-      <div class="flex-1 mb-4 md:mb-0">
-        Story idea author credit:
-        <br>
-        <% if story_idea.created_by.person %>
-          <%= person_profile_button(story_idea.created_by.person, display_name: story_idea.author_credit, subtitle: story_idea.created_by.person.full_name) %>
-        <% else %>
-          <%= story_idea.author_credit %>
-        <% end %>
-        <br>
-        Story idea "author credit preference":
-        <br>
-        <div class="italic"><%= link_to story_idea.author_credit_preference, edit_story_idea_path(story_idea, anchor: "publish-preferences"), class: "hover:underline hover:text-blue-600" %></div>
-      </div>
-
-      <% if f.object.persisted? %>
-        <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
-          Last updated by:
-          <br>
-          <%= f.object.updated_by&.full_name %>
-          <br>
-          <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
-        </div>
-      <% end %>
-    </div>
-  <% elsif f.object.persisted? %>
-    <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
-      Last updated by:
-      <br>
-      <%= f.object.updated_by&.full_name %>
-      <br>
-      <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
-    </div>
-  <% end %>
-
-  <div class="flex flex-col md:flex-row md:space-x-4">
-    <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :created_by_id,
-                  collection: @users.map { |u| [ u.full_name_with_email, u.id ] },
-                  prompt: "Select an author",
-                  label: (f.object.created_by&.person ? (
-                    link_to "Story author",
-                            person_path(f.object.created_by.person),
-                            class: "hover:underline") : "Story author").html_safe,
-                  label_html: { class: "block font-medium mb-1 text-gray-700" },
-                  input_html: {
-                    class: select_caret_class(blank: f.object.created_by_id.blank?),
-                    style: custom_caret_style,
-                    onchange: select_caret_onchange
-                  } %>
-    </div>
 
     <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :spotlighted_facilitator_id,
-                  collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                  collection: person_select_options(@people),
                   prompt: "Select a facilitator",
                   label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted facilitator",
                                                                          person_path(f.object.spotlighted_facilitator_id),
@@ -302,27 +233,58 @@
                     onchange: select_caret_onchange
                   } %>
     </div>
+  </div>
+
+  <div class="flex flex-col md:flex-row md:space-x-4">
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :author_id,
+                  collection: person_select_options(@people),
+                  prompt: "Select an author",
+                  label: (f.object.author ? (
+                    link_to "Story author",
+                            person_path(f.object.author),
+                            class: "hover:underline") : "Story author").html_safe,
+                  label_html: { class: "block font-medium mb-1 text-gray-700" },
+                  input_html: {
+                    class: select_caret_class(blank: f.object.author_id.blank?),
+                    style: custom_caret_style,
+                    onchange: select_caret_onchange
+                  } %>
+    </div>
 
     <div class="flex-1 mb-4 md:mb-0">
-      <% story_idea_label = if f.object.story_idea
-        (link_to "Source story idea",
-                 story_idea_path(f.object.story_idea), class: "hover:underline")
-      else
-        "Source story idea"
-      end %>
-      <%= f.input :story_idea_id,
-                  collection: @story_ideas, label_method: :full_name,
-                  value_method: :id,
-                  selected: f.object.story_idea_id || @story_idea&.id,
-                  label: story_idea_label.html_safe,
-                  prompt: "Select idea",
+      <%= f.input :author_credit_preference,
+                  as: :select,
+                  collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
+                  prompt: "Select a preference",
+                  selected: f.object.author_credit_preference || story_idea&.author_credit_preference || f.object.author&.display_name_preference,
+                  label: "Author credit preference",
+                  hint: "Defaults to the author's name display preference; controls how their name is shown",
                   input_html: {
-                    class: select_caret_class(blank: f.object.story_idea_id.blank?),
+                    class: select_caret_class(blank: f.object.author_credit_preference.blank?),
                     style: custom_caret_style,
                     onchange: select_caret_onchange
                   } %>
     </div>
   </div>
+
+  <% if story_idea %>
+    <div class="mb-4 text-sm text-gray-600 text-right">
+      From
+      <%= link_to "Story Idea # #{story_idea.id}", story_idea_path(story_idea), class: "font-medium text-gray-700 underline" %>
+      by
+      <% if story_idea.author %>
+        <%= link_to story_idea.author_credit, person_path(story_idea.author), class: "font-medium text-gray-800 underline" %>
+      <% else %>
+        <span class="font-medium text-gray-800"><%= story_idea.author_credit %></span>
+      <% end %>
+      (preference "<%= link_to AuthorCreditable::ADMIN_FORM_OPTIONS.key(story_idea.author_credit_preference) || story_idea.author_credit_preference&.humanize,
+                               edit_story_idea_path(story_idea, anchor: "publish-preferences"),
+                               class: "italic underline hover:text-blue-600" %>")
+    </div>
+  <% end %>
+
+  <%= f.hidden_field :story_idea_id, value: f.object.story_idea_id || @story_idea&.id %>
 
   <!-- Remaining tags accordion -->
   <% if remaining_categories.any? %>

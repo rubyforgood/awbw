@@ -1,8 +1,16 @@
 RSpec.shared_examples "author_creditable" do |factory:|
   describe "#author_credit" do
-    let(:author_user) { create(:user, :with_person) }
-    let(:person) { author_user.person }
-    let(:record) { create(factory, created_by: author_user) }
+    let(:person) { create(:person) }
+    # Story/StoryIdea credit a direct author association; other includers derive
+    # the credited person from the creating user.
+    let(:has_author_association) { described_class.reflect_on_association(:author).present? }
+    let(:record) do
+      if has_author_association
+        create(factory, author: person)
+      else
+        create(factory, created_by: create(:user, person: person))
+      end
+    end
 
     context "when author_credit_preference is full_name" do
       it "returns the person's full name" do
@@ -46,10 +54,13 @@ RSpec.shared_examples "author_creditable" do |factory:|
       end
     end
 
-    context "when user has no person" do
+    context "when there is no credited person" do
       it "returns Anonymous" do
-        user_without_person = create(:user, person: nil)
-        record.update!(created_by: user_without_person)
+        if has_author_association
+          record.update!(author: nil)
+        else
+          record.update!(created_by: create(:user, person: nil))
+        end
         expect(record.author_credit).to eq("Anonymous")
       end
     end

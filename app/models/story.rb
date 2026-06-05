@@ -4,6 +4,7 @@ class Story < ApplicationRecord
 
   has_rich_text :rhino_body
 
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
@@ -36,6 +37,10 @@ class Story < ApplicationRecord
   validates :title, presence: true, uniqueness: true
   validates :rhino_body, presence: true
 
+  # Default the credit preference from the author's own name display preference,
+  # while leaving it overridable per story.
+  before_validation :default_author_credit_preference
+
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
@@ -48,7 +53,7 @@ class Story < ApplicationRecord
     attributes person_first: "people.first_name", person_last: "people.last_name"
     options :all, type: :text, default: true, default_operator: :or
 
-    scope { join_rich_texts.left_joins(created_by: :person) }
+    scope { join_rich_texts.left_joins(:author) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
     options :action_text_body, type: :text, default: true, default_operator: :or
   end
@@ -85,8 +90,16 @@ class Story < ApplicationRecord
     stories
   end
 
+  def credited_person
+    author
+  end
+
   def name
     title
+  end
+
+  def default_author_credit_preference
+    self.author_credit_preference ||= author&.display_name_preference
   end
 
   def organization_name

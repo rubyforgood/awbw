@@ -1,4 +1,14 @@
 module PersonHelper
+  # Builds [ label, id ] pairs for a person select. Shows just the name, adding
+  # the email only to disambiguate people who share a full name.
+  def person_select_options(people)
+    duplicate_names = people.map(&:full_name).tally.select { |_, count| count > 1 }.keys.to_set
+    people.map do |person|
+      label = duplicate_names.include?(person.full_name) ? person.full_name_with_email : person.full_name
+      [ label, person.id ]
+    end
+  end
+
   def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false)
     if inactive
       bg = "bg-gray-100"
