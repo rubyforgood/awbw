@@ -59,8 +59,8 @@ module Events
       if result.success?
         registration = result.event_registration
 
-        if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 && credit_card_payment?(form_params)
-          checkout_session = create_stripe_checkout_session(registration, form_params)
+        if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 && credit_card_payment?(registration_params)
+          checkout_session = create_stripe_checkout_session(registration)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
         else
           redirect_to registration_ticket_path(registration.slug),
@@ -108,29 +108,17 @@ module Events
     private
 
     def credit_card_payment?(form_params)
-      payment_method_field = @form.form_fields.find_by(field_key: "payment_method")
+      payment_method_field = @form.form_fields.find_by(field_identifier: "payment_method")
       return false unless payment_method_field
 
       form_params[payment_method_field.id.to_s] == "Credit Card"
     end
 
-    def number_of_attendees(form_params)
-      attendees_field = @form.form_fields.find_by(field_key: "number_of_attendees")
-      return 1 unless attendees_field
-
-      form_params[attendees_field.id.to_s].to_i
-    end
-
-    def create_stripe_checkout_session(registration, form_params)
+    def create_stripe_checkout_session(registration)
       person = registration.registrant
-      attendees = number_of_attendees(form_params)
-      amount = @event.cost_cents * attendees
+      amount = @event.cost_cents
 
       metadata = { event_registration_id: registration.id }
-      comments_field = @form.form_fields.find_by(field_key: "payment_comments")
-      if comments_field && form_params[comments_field.id.to_s].present?
-        metadata[:payment_comments] = form_params[comments_field.id.to_s]
-      end
 
       person.set_payment_processor :stripe
 
