@@ -42,5 +42,24 @@ RSpec.describe "Admin::Home", type: :request do
       get admin_path
       expect(response).to have_http_status(:ok)
     end
+
+    it "surfaces a summary of ideas pending review" do
+      create(:story_idea)
+      create(:workshop_variation_idea)
+
+      get admin_path
+
+      expect(response.body).to include("waiting for review")
+      expect(response.body).to include("Story ideas")
+      expect(response.body).to include("Workshop variation ideas")
+    end
+
+    it "omits the review summary when nothing is pending" do
+      create(:story_idea, :with_story)
+
+      get admin_path
+
+      expect(response.body).not_to include("waiting for review")
+    end
   end
 end

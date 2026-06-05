@@ -25,6 +25,9 @@ class StoryIdea < ApplicationRecord
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :stories
 
+  # Ideas awaiting admin review have not yet been promoted into a published Story.
+  scope :pending_review, -> { where.missing(:stories) }
+
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy

@@ -5,6 +5,7 @@ module Admin
     def index
       authorize! :home, to: :index?
 
+      @review_summary     = PendingReviewSummary.new
       @system_cards       = system_cards
       @user_content_cards = user_content_cards
       @reference_cards    = reference_cards

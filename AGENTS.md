@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~66 files |
-| `app/services/` | Service objects for complex logic | ~21 files |
+| `app/services/` | Service objects for complex logic | ~22 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
 | `app/models/concerns/` | Shared model modules | 12 concerns |
 
@@ -181,6 +181,7 @@ end
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
 - `DisplayImagePresenter` — Image display logic
+- `PendingReviewSummary` — Counts unpromoted ideas per admin review queue (story/workshop/variation) for the admin dashboard
 
 ### Event Registrations
 

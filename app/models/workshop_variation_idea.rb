@@ -46,6 +46,8 @@ class WorkshopVariationIdea < ApplicationRecord
 
   # Scopes
   scope :workshop_id, ->(workshop_id) { where(workshop_id: workshop_id) if workshop_id.present? }
+  # Ideas awaiting admin review have not yet been promoted into a WorkshopVariation.
+  scope :pending_review, -> { where.missing(:workshop_variations) }
 
   def title
     name

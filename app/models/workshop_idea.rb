@@ -72,6 +72,8 @@ class WorkshopIdea < ApplicationRecord
   has_rich_text :rhino_extra_field_spanish
 
   # Scopes
+  # Ideas awaiting admin review have not yet been promoted into a Workshop.
+  scope :pending_review, -> { where.missing(:workshops) }
   scope :title, ->(title) { where("workshop_ideas.title like ?", "%#{ title }%") }
   scope :author_name, ->(author_name) { joins(:created_by).
     where("users.first_name like ? or users.last_name like ? or users.email like ?",

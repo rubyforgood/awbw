@@ -46,6 +46,18 @@ RSpec.describe StoryIdea, type: :model do
     end
   end
 
+  describe ".pending_review" do
+    it "includes ideas that have not been promoted to a story" do
+      idea = create(:story_idea)
+      expect(StoryIdea.pending_review).to include(idea)
+    end
+
+    it "excludes ideas that have been promoted to a story" do
+      idea = create(:story_idea, :with_story)
+      expect(StoryIdea.pending_review).not_to include(idea)
+    end
+  end
+
   describe '.search_by_params' do
     let!(:idea_alpha) { create(:story_idea, title: 'Art Healing Journey') }
     let!(:idea_beta) { create(:story_idea, title: 'Community Impact Report') }
