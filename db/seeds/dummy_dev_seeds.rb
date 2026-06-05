@@ -918,16 +918,16 @@ end
 
 
 puts "Creating standalone registration forms…"
-unless Form.standalone.exists?(name: "Short Event Registration")
+unless Form.standalone.exists?(name: FormBuilderService::SHORT_REGISTRATION_FORM_NAME)
   FormBuilderService.new(
-    name: "Short Event Registration",
+    name: FormBuilderService::SHORT_REGISTRATION_FORM_NAME,
     sections: %i[person_identifier consent marketing scholarship]
   ).call
 end
 
-unless Form.standalone.exists?(name: "Extended Event Registration")
+unless Form.standalone.exists?(name: FormBuilderService::EXTENDED_REGISTRATION_FORM_NAME)
   FormBuilderService.new(
-    name: "Extended Event Registration",
+    name: FormBuilderService::EXTENDED_REGISTRATION_FORM_NAME,
     sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
   ).call
 end
@@ -942,8 +942,8 @@ end
 
 puts "Creating Events with shared forms…"
 admin_user = User.find_by(email: "umberto.user@example.com")
-long_form = Form.standalone.find_by!(name: "Extended Event Registration")
-short_form = Form.standalone.find_by!(name: "Short Event Registration")
+long_form = Form.standalone.find_by!(name: FormBuilderService::EXTENDED_REGISTRATION_FORM_NAME)
+short_form = Form.standalone.find_by!(name: FormBuilderService::SHORT_REGISTRATION_FORM_NAME)
 scholarship_form = Form.standalone.scholarship_application.first!
 
 # Each entry: [title, form_type, cost_cents, scholarship?, visibility]

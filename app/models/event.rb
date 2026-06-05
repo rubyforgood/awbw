@@ -149,7 +149,7 @@ class Event < ApplicationRecord
   def build_public_registration_form
     return if event_forms.registration.exists?
 
-    form_name = title&.match?(/training/i) ? "Extended Event Registration" : "Short Event Registration"
+    form_name = title&.match?(/training/i) ? FormBuilderService::EXTENDED_REGISTRATION_FORM_NAME : FormBuilderService::SHORT_REGISTRATION_FORM_NAME
     form = Form.standalone.find_by(name: form_name)
     return unless form
 

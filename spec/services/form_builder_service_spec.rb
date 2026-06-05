@@ -89,7 +89,7 @@ RSpec.describe FormBuilderService do
     context "with multiple sections (short event registration)" do
       let(:form) do
         described_class.new(
-          name: "Short Event Registration",
+          name: FormBuilderService::SHORT_REGISTRATION_FORM_NAME,
           sections: %i[person_identifier consent marketing scholarship]
         ).call
       end
@@ -108,7 +108,7 @@ RSpec.describe FormBuilderService do
     context "with multiple sections (extended event registration)" do
       let(:form) do
         described_class.new(
-          name: "Extended Event Registration",
+          name: FormBuilderService::EXTENDED_REGISTRATION_FORM_NAME,
           sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
         ).call
       end

@@ -1,4 +1,7 @@
 class FormBuilderService
+  SHORT_REGISTRATION_FORM_NAME = "Short Event Registration"
+  EXTENDED_REGISTRATION_FORM_NAME = "Extended Event Registration"
+
   SECTIONS = {
     person_identifier: { label: "Person identifier", method: :build_person_identifier_fields },
     person_contact_info: { label: "Person contact info", method: :build_person_contact_info_fields },

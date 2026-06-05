@@ -4,7 +4,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
   let(:event) { create(:event, :published, :publicly_visible) }
   let(:form) do
     f = FormBuilderService.new(
-      name: "Extended Event Registration",
+      name: FormBuilderService::EXTENDED_REGISTRATION_FORM_NAME,
       sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
     ).call
     event.event_forms.create!(form: f, role: "registration")

@@ -386,16 +386,16 @@
               <% default_form_id = if current_reg_form
                                      current_reg_form.id
                                    elsif @event.title&.match?(/training/i)
-                                     @registration_forms.find { |rf| rf.name == "Extended Event Registration" }&.id
+                                     @registration_forms.find { |rf| rf.name == FormBuilderService::EXTENDED_REGISTRATION_FORM_NAME }&.id
                                    else
-                                     @registration_forms.find { |rf| rf.name == "Short Event Registration" }&.id
+                                     @registration_forms.find { |rf| rf.name == FormBuilderService::SHORT_REGISTRATION_FORM_NAME }&.id
                                    end %>
               <select name="event[registration_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
                 <option value="">No registration form</option>
                 <% @registration_forms.each do |reg_form| %>
                   <% label = case reg_form.name
-                             when "Extended Event Registration", "Public Registration" then "Extended registration form"
-                             when "Short Event Registration", "Short Registration" then "Short registration form"
+                             when FormBuilderService::EXTENDED_REGISTRATION_FORM_NAME, "Public Registration" then "Extended registration form"
+                             when FormBuilderService::SHORT_REGISTRATION_FORM_NAME, "Short Registration" then "Short registration form"
                              else reg_form.name
                              end %>
                   <option value="<%= reg_form.id %>" <%= "selected" if reg_form.id == default_form_id %>><%= label %> (<%= reg_form.form_fields.size %> fields)</option>
