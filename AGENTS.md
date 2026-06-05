@@ -187,9 +187,6 @@ end
 
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
-- `ExtendedEventRegistrationFormBuilder` — Extended registration form builder
-- `ShortEventRegistrationFormBuilder` — Short registration form builder
-- `ScholarshipApplicationFormBuilder` — Scholarship form builder
 
 ### Notifications
 

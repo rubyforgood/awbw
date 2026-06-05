@@ -473,13 +473,4 @@ workshop_env_type.update!(display_text: "Workshop Environments", story_specific:
   cat.update!(published: true) unless cat.published?
 end
 
-puts "Creating standalone registration forms…"
-unless Form.standalone.exists?(name: ShortEventRegistrationFormBuilder::FORM_NAME)
-  ShortEventRegistrationFormBuilder.build_standalone!
-end
-
-unless Form.standalone.exists?(name: ExtendedEventRegistrationFormBuilder::FORM_NAME)
-  ExtendedEventRegistrationFormBuilder.build_standalone!
-end
-
 seed "payments"
