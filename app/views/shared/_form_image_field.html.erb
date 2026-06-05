@@ -80,7 +80,7 @@
       <div data-file-preview-target="filename"
            class="text-center text-sm text-gray-500 break-all max-w-[8rem]">
         <%= if blob.present? && blob.respond_to?(:persisted?) && blob.persisted?
-              link_to(blob.filename.to_s, url_for(file), class: "underline")
+              link_to(blob.filename.to_s, url_for(file), class: "underline", target: "_blank", rel: "noopener")
             else
               "No file selected"
             end
