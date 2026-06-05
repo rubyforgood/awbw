@@ -14,52 +14,61 @@
         <p class="text-sm font-medium text-red-700">Error: No payment found</p>
       </div>
     <% end %>
-    <%= f.input :recipient_type, as: :select, collection: ["Person", "Organization"], include_blank: true, input_html: { data: { action: "search-type-select#toggle" } } %>
-    <template data-search-type-select-target="template" data-type="Person">
-      <%= f.input :recipient_id,
-        collection: [],
-        include_blank: true,
-        input_html: {
-          data: {
-            controller: "remote-select",
-            remote_select_model_value: "person"
-          }
-        },
-        prompt: "Search for a person",
-        label: "Recipient" %>
-    </template>
-    <template data-search-type-select-target="template" data-type="Organization">
-      <%= f.input :recipient_id,
-        collection: [],
-        include_blank: true,
-        input_html: {
-          data: {
-            controller: "remote-select",
-            remote_select_model_value: "organization"
-          }
-        },
-        prompt: "Search for an organization",
-        label: "Recipient" %>
-    </template>
-    <div data-search-type-select-target="pickerContainer">
-      <div>
-        <label class="text-sm font-medium text-gray-500 mb-1 block italic">Select Recipient Type</label>
-        <div class="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 cursor-not-allowed min-h-[2.2rem]"></div>
+    <% if @payment.is_a?(ExternalProcessorPayment) %>
+      <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+        <p class="text-sm text-blue-700">This refund will be processed via Stripe and returned to the original payment method.</p>
       </div>
-    </div>
-    <div class="mb-4">
-      <span class="text-sm font-medium text-gray-700">Method</span>
-      <div class="mt-1 flex gap-4">
-        <%= f.collection_radio_buttons :method, [["Check", "check"], ["Cash", "cash"]], :last, :first, checked: "check" do |b| %>
-          <label class="flex items-center gap-2">
-            <%= b.radio_button %> <%= b.text %>
-          </label>
-        <% end %>
+    <% end %>
+
+    <% unless @payment.is_a?(ExternalProcessorPayment) %>
+      <%= f.input :recipient_type, as: :select, collection: ["Person", "Organization"], include_blank: true, input_html: { data: { action: "search-type-select#toggle" } } %>
+      <template data-search-type-select-target="template" data-type="Person">
+        <%= f.input :recipient_id,
+          collection: [],
+          include_blank: true,
+          input_html: {
+            data: {
+              controller: "remote-select",
+              remote_select_model_value: "person"
+            }
+          },
+          prompt: "Search for a person",
+          label: "Recipient" %>
+      </template>
+      <template data-search-type-select-target="template" data-type="Organization">
+        <%= f.input :recipient_id,
+          collection: [],
+          include_blank: true,
+          input_html: {
+            data: {
+              controller: "remote-select",
+              remote_select_model_value: "organization"
+            }
+          },
+          prompt: "Search for an organization",
+          label: "Recipient" %>
+      </template>
+      <div data-search-type-select-target="pickerContainer">
+        <div>
+          <label class="text-sm font-medium text-gray-500 mb-1 block italic">Select Recipient Type</label>
+          <div class="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 cursor-not-allowed min-h-[2.2rem]"></div>
+        </div>
       </div>
-    </div>
+      <div class="mb-4">
+        <span class="text-sm font-medium text-gray-700">Method</span>
+        <div class="mt-1 flex gap-4">
+          <%= f.collection_radio_buttons :method, [["Check", "check"], ["Cash", "cash"]], :last, :first, checked: "check" do |b| %>
+            <label class="flex items-center gap-2">
+              <%= b.radio_button %> <%= b.text %>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
     <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
     <div class="mt-6">
-      <%= f.button :submit, "Create Refund", class: "btn btn-primary" %>
+      <%= f.button :submit, @payment.is_a?(ExternalProcessorPayment) ? "Refund via Stripe" : "Create Refund", class: "btn btn-primary" %>
       <% if @payment.present? %>
         <%= link_to "Cancel", payment_path(@payment), class: "btn btn-secondary ml-2" %>
       <% else %>

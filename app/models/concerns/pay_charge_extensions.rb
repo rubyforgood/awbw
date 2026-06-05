@@ -76,10 +76,6 @@ module PayChargeExtensions
         method: "stripe",
         stripe_refund_id: stripe_refund["id"]
       )
-
-      external_payment.update!(
-        amount_cents_remaining: external_payment.amount_cents_remaining - stripe_refund["amount"]
-      )
     end
   end
 end
