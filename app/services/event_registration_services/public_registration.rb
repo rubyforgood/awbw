@@ -2,15 +2,16 @@ module EventRegistrationServices
   class PublicRegistration
     Result = Struct.new(:success?, :event_registration, :errors, keyword_init: true)
 
-    def self.call(event:, form:, form_params:, scholarship_requested: false)
-      new(event:, form:, form_params:, scholarship_requested:).call
+    def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil)
+      new(event:, form:, form_params:, scholarship_requested:, person:).call
     end
 
-    def initialize(event:, form:, form_params:, scholarship_requested: false)
+    def initialize(event:, form:, form_params:, scholarship_requested: false, person: nil)
       @event = event
       @form = form
       @form_params = form_params
       @scholarship_requested = scholarship_requested
+      @person = person
       @errors = []
     end
 
@@ -76,6 +77,8 @@ module EventRegistrationServices
     end
 
     def find_or_create_person
+      return @person if @person
+
       names = resolve_names
       first_name = names[:first_name]
       last_name = field_value("last_name")&.strip

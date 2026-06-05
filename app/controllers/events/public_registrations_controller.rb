@@ -53,7 +53,8 @@ module Events
         event: @event,
         form: @form,
         form_params: registration_params,
-        scholarship_requested: @scholarship
+        scholarship_requested: @scholarship,
+        person: current_user&.person
       )
 
       if result.success?
