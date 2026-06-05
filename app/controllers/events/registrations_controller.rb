@@ -7,6 +7,13 @@ module Events
 
     def show
       authorize! @event_registration, to: :show_public?
+
+      case params[:checkout]
+      when "success"
+        flash.now[:notice] = "Your payment was successful! You are registered for this event."
+      when "cancelled"
+        flash.now[:alert] = "Payment was cancelled. Your registration is saved but payment is still due."
+      end
     end
 
     def resend_confirmation
@@ -45,9 +52,13 @@ module Events
         existing.update!(status: "registered")
         send_registration_notifications(existing)
         success = "Your registration has been reactivated."
-        respond_to do |format|
-          format.turbo_stream { flash.now[:notice] = success }
-          format.html { redirect_to registration_ticket_path(existing.slug), notice: success }
+        if requires_payment?(existing)
+          redirect_to_stripe_checkout(existing)
+        else
+          respond_to do |format|
+            format.turbo_stream { flash.now[:notice] = success }
+            format.html { redirect_to registration_ticket_path(existing.slug), notice: success }
+          end
         end
         return
       end
@@ -56,11 +67,15 @@ module Events
       authorize! @event_registration
 
       if @event_registration.save
-        send_registration_notifications(@event_registration)
-        success = "You have successfully registered for this event."
-        respond_to do |format|
-          format.turbo_stream { flash.now[:notice] = success }
-          format.html { redirect_to registration_ticket_path(@event_registration.slug), notice: success }
+        if requires_payment?(@event_registration)
+          redirect_to_stripe_checkout(@event_registration)
+        else
+          send_registration_notifications(@event_registration)
+          success = "You have successfully registered for this event."
+          respond_to do |format|
+            format.turbo_stream { flash.now[:notice] = success }
+            format.html { redirect_to registration_ticket_path(@event_registration.slug), notice: success }
+          end
         end
       else
         error = @event_registration.errors.full_messages.to_sentence
@@ -150,6 +165,37 @@ module Events
 
     def set_event_registration
       @event_registration = EventRegistration.find_by!(slug: params[:slug])
+    end
+
+    def requires_payment?(registration)
+      @event.cost_cents.to_i > 0 && !registration.paid_in_full?
+    end
+
+    def redirect_to_stripe_checkout(registration)
+      person = registration.registrant
+      amount = @event.cost_cents
+
+      person.set_payment_processor :stripe
+
+      checkout_session = person.payment_processor.checkout(
+        mode: "payment",
+        metadata: { event_registration_id: registration.id },
+        payment_intent_data: {
+          metadata: { event_registration_id: registration.id }
+        },
+        line_items: [ {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Registration: #{@event.title}" },
+            unit_amount: amount
+          },
+          quantity: 1
+        } ],
+        success_url: registration_ticket_url(registration.slug, checkout: "success"),
+        cancel_url: registration_ticket_url(registration.slug, checkout: "cancelled")
+      )
+
+      redirect_to checkout_session.url, allow_other_host: true, status: :see_other
     end
   end
 end
