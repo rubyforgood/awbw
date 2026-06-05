@@ -45,7 +45,7 @@ class FormBuilderService
     professional_info: %w[primary_service_area workshop_environments client_life_experiences primary_age_group],
     marketing: %w[referral_source training_motivation interested_in_more],
     scholarship: %w[scholarship_eligibility impact_description implementation_plan additional_comments],
-    payment: %w[number_of_attendees payment_method],
+    payment: %w[payment_method],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions]
   }.freeze
@@ -305,10 +305,6 @@ class FormBuilderService
   def build_payment_fields(form, position)
     position = add_header(form, position, "Payment Information", group: "payment")
 
-    position = add_field(form, position, "Number of Attendees", :free_form_input_one_line,
-                         key: "number_of_attendees", group: "payment", required: true,
-                         hint: "How many people are you registering (including yourself)?",
-                         datatype: :number_integer)
     position = add_field(form, position, "Payment Method", :multiple_choice_radio,
                          key: "payment_method", group: "payment", required: true,
                          options: [ "Credit Card", "Check", "Purchase Order", "Other" ])

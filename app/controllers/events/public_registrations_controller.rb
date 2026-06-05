@@ -151,7 +151,7 @@ module Events
     def visible_form_fields
       scope = @form.form_fields
 
-      person = current_user&.person
+      person = current_user&.person if params[:as_visitor] != "true"
       if person
         # Always hide logged_out_only fields for logged-in users with known data
         known_identifiers = person_known_identifiers(person)

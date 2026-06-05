@@ -25,6 +25,10 @@
             <td class="px-4 py-2 text-right text-sm space-x-3">
               <%= link_to "View", form_path(form), class: "text-blue-600 hover:text-blue-800 underline" %>
               <%= link_to "Edit", edit_form_path(form), class: "text-blue-600 hover:text-blue-800 underline" %>
+              <% if allowed_to?(:destroy?, form) && form.event_forms.none? %>
+                <%= link_to "Delete", form_path(form), class: "text-red-600 hover:text-red-800 underline",
+                            data: { turbo_method: :delete, turbo_confirm: "Delete \"#{form.display_name}\"?" } %>
+              <% end %>
             </td>
           </tr>
         <% end %>

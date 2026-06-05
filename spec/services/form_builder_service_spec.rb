@@ -64,7 +64,7 @@ RSpec.describe FormBuilderService do
 
       it "creates payment fields" do
         keys = form.form_fields.pluck(:field_identifier).compact
-        expect(keys).to include("number_of_attendees", "payment_method")
+        expect(keys).to include("payment_method")
       end
     end
 

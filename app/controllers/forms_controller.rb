@@ -52,6 +52,12 @@ class FormsController < ApplicationController
 
   def destroy
     authorize! @form
+
+    if @form.event_forms.exists?
+      redirect_to @form, alert: "Cannot delete this form — it is linked to one or more events. Remove the form from all events first."
+      return
+    end
+
     @form.destroy!
     redirect_to forms_path, notice: "Form deleted."
   end
