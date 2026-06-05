@@ -1,0 +1,17 @@
+<%= turbo_frame_tag :gallery_results do %>
+  <p class="text-sm text-gray-500 mb-4">
+    <%= pluralize(@count, "image") %><%= " matching “#{@query}”" if @query.present? %>
+  </p>
+
+  <% if @gallery_assets.any? %>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade">
+      <% @gallery_assets.each do |gallery_asset| %>
+        <%= render "gallery_assets/card", gallery_asset: gallery_asset %>
+      <% end %>
+    </div>
+
+    <div class="pagination flex justify-center mt-6 w-full"><%= tailwind_paginate @gallery_assets %></div>
+  <% else %>
+    <p class="text-gray-500 text-center py-10">No images match your search. Try a different term.</p>
+  <% end %>
+<% end %>

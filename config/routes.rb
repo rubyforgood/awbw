@@ -120,6 +120,7 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create ]
   end
   resources :faqs
+  resources :gallery_assets, only: [ :index, :update ]
   resources :notifications, only: [ :index, :show, :update ] do
     member do
       post :resend
