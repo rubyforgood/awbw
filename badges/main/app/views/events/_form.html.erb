@@ -163,7 +163,6 @@
         </div>
       </div>
 
-      <% if show_feature?(:stripe_payments) %>
         <div>
           <div class="flex items-center justify-between gap-2 mb-1">
             <%= f.label :cost, "Event Cost", class: "block font-medium" %>
@@ -189,7 +188,6 @@
               <%= f.object.errors[:cost].join(", ") %></p>
           <% end %>
         </div>
-      <% end %>
 
     </div>
 

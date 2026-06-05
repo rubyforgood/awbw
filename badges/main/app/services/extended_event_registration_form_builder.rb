@@ -216,6 +216,9 @@ class ExtendedEventRegistrationFormBuilder
     position = add_field(form, position, "Payment Method", :multiple_choice_radio,
                          key: "payment_method", group: "payment", required: true,
                          options: [ "Credit Card", "Check", "Purchase Order", "Other" ])
+    position = add_field(form, position, "Payment Comments", :free_form_input_paragraph,
+                         key: "payment_comments", group: "payment", required: false,
+                         hint: "Any comments about your payment?")
 
     position
   end

@@ -1,0 +1,61 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="max-w-2xl mx-auto py-8 px-4">
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+    <div class="mb-6">
+      <%= link_to "← Back to manage", manage_event_path(@event_registration.event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    </div>
+
+    <h1 class="text-xl font-semibold text-gray-900 mb-2">Link Organization</h1>
+    <p class="text-gray-600 mb-6">Registrant: <strong><%= @person.full_name %></strong></p>
+
+    <% if @submitted_org_name.present? %>
+      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+        <p class="text-sm text-gray-500 mb-1">Submitted organization name on registration form:</p>
+        <p class="text-base font-medium text-gray-800"><%= @submitted_org_name %></p>
+      </div>
+    <% else %>
+      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+        <p class="text-sm text-gray-500">No organization was submitted on the registration form.</p>
+      </div>
+    <% end %>
+
+    <% if @potential_matches.any? %>
+      <h2 class="text-lg font-semibold text-gray-800 mb-3">Potential matches</h2>
+      <div class="space-y-2 mb-8">
+        <% @potential_matches.each do |org| %>
+          <%= form_with url: select_organization_event_registration_path(@event_registration),
+                        method: :post,
+                        data: { turbo_frame: "_top" },
+                        class: "flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3" do %>
+            <%= hidden_field_tag :organization_id, org.id %>
+            <%= hidden_field_tag :return_to, params[:return_to] %>
+            <div>
+              <p class="font-medium text-gray-800"><%= org.name %></p>
+              <p class="text-xs text-gray-500"><%= org.city_state %></p>
+            </div>
+            <%= submit_tag "Select", class: "rounded-md bg-blue-900 px-4 py-1.5 text-white text-sm font-medium hover:bg-blue-800 transition cursor-pointer" %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <h2 class="text-lg font-semibold text-gray-800 mb-3">Or search all organizations</h2>
+    <%= form_with url: select_organization_event_registration_path(@event_registration),
+                  method: :post,
+                  data: { turbo_frame: "_top" },
+                  class: "space-y-4" do %>
+      <%= hidden_field_tag :return_to, params[:return_to] %>
+      <div>
+        <%= label_tag :organization_id, "Organization", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= select_tag :organization_id,
+                       options_from_collection_for_select([], :id, :name),
+                       include_blank: true,
+                       class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                       data: { controller: "remote-select", remote_select_model_value: "organization" },
+                       prompt: "Type to search organizations…" %>
+      </div>
+      <%= submit_tag "Link organization",
+                     class: "rounded-md bg-blue-900 px-6 py-2 text-white font-semibold hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
+    <% end %>
+  </div>
+</div>

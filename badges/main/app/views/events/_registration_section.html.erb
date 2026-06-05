@@ -23,6 +23,7 @@
         <% if user_signed_in? %>
           <%= button_to button_text,
                         event_registrant_registration_path(event_id: event),
+                        data: { turbo: !event.object.cost_cents.to_i.positive? },
                         class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
                         style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
         <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>

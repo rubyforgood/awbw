@@ -39,7 +39,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :manage?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:payments, :comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob } ])
+      .includes(:comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.attendance_status(params[:attendance_status]) if params[:attendance_status].present?
@@ -63,7 +63,7 @@ class EventsController < ApplicationController
     authorize! @event
     @event = @event.decorate
     @event_registrations = @event.event_registrations
-      .includes(:payments, registrant: [ :user, :contact_methods ])
+      .includes(registrant: [ :user, :contact_methods ])
       .joins(:registrant)
       .select { |r| r.registrant.preferred_email.present? }
     @sample_registration = @event_registrations.first
@@ -85,7 +85,7 @@ class EventsController < ApplicationController
     days_until = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
 
     if registrations.empty?
-      redirect_to remind_event_path(@event), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event), alert: "Please select at least one recipient."
       return
     end
 
@@ -202,7 +202,7 @@ class EventsController < ApplicationController
       .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
       .map(&:organization).compact.uniq
     org_names = orgs.map(&:name).join("; ")
-    total_cents = registration.successful_payments_total_cents
+    total_cents = registration.allocations_sum
     payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
     payment_status = cost_required ? (registration.paid_in_full? ? "Paid in full" : "Not paid in full") : ""
     [
@@ -211,8 +211,8 @@ class EventsController < ApplicationController
       person.preferred_email.presence || "",
       person.phone_number.presence || "",
       org_names.presence || "",
-      registration.scholarship_recipient? ? "Yes" : "No",
-      registration.scholarship_tasks_completed? ? "Yes" : "No",
+      registration.scholarships.any? ? "Yes" : "No",
+      registration.scholarships.completed.any? ? "Yes" : "No",
       payment_status,
       payment_total
     ]

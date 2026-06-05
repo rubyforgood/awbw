@@ -13,6 +13,10 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def checkout?
+    admin?
+  end
+
   def edit?
     admin?
   end

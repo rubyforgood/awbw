@@ -9,7 +9,6 @@
       <%= @event.title %>
     </p>
   </div>
-
   <% if @event_registrations.empty? %>
     <p class="text-gray-600 mb-4">There are no registrants with an email address to send a reminder to.</p>
     <%= link_to "Back to manage", manage_event_path(@event), class: "btn btn-secondary-outline" %>
@@ -42,12 +41,10 @@
                 <td class="px-4 py-2 text-sm text-gray-700"><%= person.preferred_email %></td>
                 <td class="px-4 py-2 text-sm">
                   <% if @event.object.cost_cents.to_i > 0 %>
-                    <% if reg.scholarship_recipient? && reg.successful_payments_total_cents <= 0 %>
-                      <span class="text-gray-400">—</span>
-                    <% elsif reg.paid_in_full? %>
+                    <% if reg.paid_in_full? %>
                       <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-green-50 text-green-700 border-green-200">Paid</span>
                     <% else %>
-                      <% due_cents = @event.object.cost_cents - reg.successful_payments_total_cents %>
+                      <% due_cents = @event.object.cost_cents - reg.allocations_sum %>
                       <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-amber-50 text-amber-700 border-amber-200">$<%= "%.2f" % (due_cents / 100.0) %> due</span>
                     <% end %>
                   <% else %>
@@ -59,7 +56,6 @@
           </tbody>
         </table>
       </div>
-
       <% if @reminder_preview_html.present? %>
         <div class="mb-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">Preview (sample registrant)</h2>
@@ -70,7 +66,6 @@
           </div>
         </div>
       <% end %>
-
       <%= f.submit "Send reminder", class: "btn btn-primary", data: { turbo_confirm: "Send reminder emails to the selected registrant(s)?" } %>
     <% end %>
   <% end %>

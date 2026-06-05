@@ -1,6 +1,8 @@
 class Person < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable
 
+  pay_customer default_payment_processor: :stripe
+
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
@@ -20,6 +22,7 @@ class Person < ApplicationRecord
            dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
+  has_many :scholarships, foreign_key: :recipient_id, dependent: :destroy
   has_many :events, through: :event_registrations
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
@@ -232,4 +235,17 @@ class Person < ApplicationRecord
       errors.add(:base, "A person named #{first_name} #{last_name} with this email already exists")
     end
   end
+  ## Consider adding additional person info to be saved on stripes customer records
+  # def stripe_attributes(pay_customer)
+  #   {
+  #     address: {
+  #       city: pay_customer.owner.city,
+  #       country: pay_customer.owner.country
+  #     },
+  #     metadata: {
+  #       pay_customer_id: pay_customer.id,
+  #       user_id: id # or pay_customer.owner_id
+  #     }
+  #   }
+  # end
 end

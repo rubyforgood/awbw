@@ -1,0 +1,43 @@
+<div class="max-w-6xl mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Payments</h1>
+    <div class="flex gap-2"><%= link_to "Add Cash Payment", new_payment_path(type: "CashPayment"), class: "btn btn-secondary" %><%= link_to "Add Check Payment", new_payment_path(type: "CheckPayment"), class: "btn btn-secondary" %></div>
+  </div>
+
+  <%= render 'search_boxes' %>
+  <% result_src = payments_path + "?" + request.query_string %>
+
+  <%= turbo_frame_tag :payment_results, src: result_src, data: { turbo: "temporary" } do %>
+    <div class="min-h-screen">
+      <div class="animate-pulse">
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div class="bg-gray-50 px-6 py-3 flex gap-16">
+            <div class="h-4 w-12 bg-gray-200 rounded"></div>
+            <div class="h-4 w-20 bg-gray-200 rounded"></div>
+            <div class="h-4 w-16 bg-gray-200 rounded"></div>
+            <div class="h-4 w-20 bg-gray-200 rounded"></div>
+            <div class="h-4 w-24 bg-gray-200 rounded"></div>
+            <div class="h-4 w-14 bg-gray-200 rounded ml-auto"></div>
+          </div>
+
+          <% 10.times do %>
+            <div class="border-t border-gray-200 px-6 py-4 flex gap-16">
+              <div class="h-4 w-20 bg-gray-200 rounded"></div>
+              <div class="h-4 w-32 bg-gray-200 rounded"></div>
+              <div class="h-4 w-16 bg-gray-200 rounded"></div>
+              <div class="h-4 w-20 bg-gray-200 rounded"></div>
+              <div class="h-4 w-32 bg-gray-200 rounded"></div>
+              <div class="h-4 w-10 bg-gray-200 rounded ml-auto"></div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="flex justify-center mt-6 space-x-2 animate-pulse">
+        <div class="h-8 w-10 bg-gray-200 rounded"></div>
+        <div class="h-8 w-10 bg-gray-200 rounded"></div>
+        <div class="h-8 w-10 bg-gray-200 rounded"></div>
+      </div>
+    </div>
+  <% end %>
+</div>

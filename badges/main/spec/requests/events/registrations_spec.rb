@@ -185,6 +185,8 @@ RSpec.describe "Events::Registrations", type: :request do
   end
 
   describe "POST /events/:event_id/registrations" do
+    let(:event) { create(:event, cost_cents: 0) }
+
     context "when successful" do
       it "creates a registration and returns turbo stream" do
         expect {

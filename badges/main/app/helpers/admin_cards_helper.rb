@@ -34,7 +34,9 @@ module AdminCardsHelper
       custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
       model_card(:workshop_ideas, icon: "💡", intensity: 100),
       model_card(:workshop_variation_ideas, icon: "🔀", intensity: 100),
-      model_card(:workshop_logs, icon: "📝", intensity: 100)
+      model_card(:workshop_logs, icon: "📝", intensity: 100),
+      model_card(:payments, icon: "💳"),
+      model_card(:allocations, icon: "📤")
     ]
   end
 

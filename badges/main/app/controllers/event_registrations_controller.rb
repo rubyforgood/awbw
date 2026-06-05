@@ -128,6 +128,32 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
+  def link_organization
+    @event_registration = EventRegistration.includes(:event, registrant: :person_forms).find(params[:id])
+    authorize! @event_registration, to: :link_organization?
+    @person = @event_registration.registrant
+    @submitted_org_name = find_submitted_agency_name(@event_registration)
+    @potential_matches = if @submitted_org_name.present?
+      Organization.remote_search(@submitted_org_name).limit(10)
+    else
+      Organization.none
+    end
+  end
+
+  def select_organization
+    @event_registration = EventRegistration.find(params[:id])
+    authorize! @event_registration, to: :select_organization?
+    @person = @event_registration.registrant
+    organization = Organization.find(params[:organization_id])
+
+    Affiliation.find_or_create_by!(person: @person, organization: organization)
+
+    @event_registration.event_registration_organizations
+      .find_or_create_by!(organization: organization)
+
+    redirect_to manage_event_path(@event_registration.event), notice: "Organization linked successfully."
+  end
+
   def destroy
     authorize! @event_registration
     event = @event_registration.event
@@ -166,7 +192,7 @@ class EventRegistrationsController < ApplicationController
   def event_registration_params
     params.require(:event_registration).permit(
       :event_id, :registrant_id, :status,
-      :scholarship_requested, :scholarship_recipient, :scholarship_tasks_completed,
+      :scholarship_requested,
       organization_ids: [],
       comments_attributes: [ :id, :body, :_destroy ]
     )
@@ -182,19 +208,40 @@ class EventRegistrationsController < ApplicationController
 
   def csv_export(registrations)
     CSV.generate(headers: true) do |csv|
-      csv << [ "First name", "Last name", "Email", "Event", "Scholarship recipient", "Scholarship tasks completed" ]
+      csv << [ "First name", "Last name", "Email", "Phone", "Event", "Status", "Scholarship", "Scholarship completed", "Payment status", "Payment total" ]
       registrations.find_each do |er|
         r = er.registrant
         e = er.event
+        total_cents = er.allocations_sum
+        cost_required = e&.cost_cents.to_i > 0
         csv << [
           r&.first_name.to_s,
           r&.last_name.to_s,
           r&.preferred_email.to_s,
+          r&.phone_number.to_s,
           e&.title.to_s,
-          er.scholarship_recipient? ? "Yes" : "No",
-          er.scholarship_tasks_completed? ? "Yes" : "No"
+          er.attendance_status_label,
+          er.scholarships.any? ? "Yes" : "No",
+          er.scholarships.completed.any? ? "Yes" : "No",
+          cost_required ? (er.paid_in_full? ? "Paid in full" : "Not paid in full") : "",
+          total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
         ]
       end
     end
+  end
+
+  def find_submitted_agency_name(registration)
+    form = registration.event.registration_form
+    return nil unless form
+
+    field = form.form_fields.find_by(field_key: "agency_name")
+    return nil unless field
+
+    PersonFormFormField
+      .joins(person_form: :person)
+      .find_by(
+        person_forms: { person_id: registration.registrant_id, form_id: form.id },
+        form_field_id: field.id
+      )&.text
   end
 end

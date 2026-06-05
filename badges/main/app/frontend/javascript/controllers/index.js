@@ -57,6 +57,9 @@ application.register("paginated-fields", PaginatedFieldsController)
 import PasswordToggleController from "./password_toggle_controller"
 application.register("password-toggle", PasswordToggleController)
 
+import SearchTypeSelectController from "./search_type_select_controller"
+application.register("search-type-select", SearchTypeSelectController)
+
 import PrefetchLazyController from "./prefetch_lazy_controller"
 application.register("prefetch-lazy", PrefetchLazyController)
 
@@ -110,4 +113,7 @@ application.register("remote-select", RemoteSelectController)
 
 import MixedChartController from "./mixed_chart_controller"
 application.register("mixed-chart", MixedChartController)
+
+import CurrencyInputController from "./currency_input_controller"
+application.register("currency-input", CurrencyInputController)
 

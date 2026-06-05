@@ -69,6 +69,29 @@
       "note": "Stakeholder requirement for admin to add google analytics"
     },
     {
+      "warning_type": "Redirect",
+      "warning_code": 18,
+      "fingerprint": "8bd9fcd1b6db28ab535e9df9d41178dfd5ee48bf0ebccd46eef54c902e7cbaad",
+      "check_name": "Redirect",
+      "message": "Possible unprotected redirect",
+      "file": "app/controllers/people_controller.rb",
+      "line": 119,
+      "link": "https://brakemanscanner.org/docs/warning_types/redirect/",
+      "code": "redirect_to(Person.find(params[:id]).payment_processor.checkout(:mode => \"payment\", :metadata => ({ :person_id => Person.find(params[:id]).id }), :payment_intent_data => ({ :metadata => ({ :person_id => Person.find(params[:id]).id }) }), :line_items => ([{ :price_data => ({ :currency => \"usd\", :product_data => ({ :name => \"Donation to A Window Between Worlds\" }), :unit_amount => (((params[:amount].to_i * 100).to_i or 1000)) }), :quantity => 1 }]), :success_url => person_url(Person.find(params[:id]), :checkout => \"success\"), :cancel_url => person_url(Person.find(params[:id]), :checkout => \"cancelled\")).url, :allow_other_host => true, :status => :see_other)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "PeopleController",
+        "method": "checkout"
+      },
+      "user_input": "Person.find(params[:id]).payment_processor.checkout(:mode => \"payment\", :metadata => ({ :person_id => Person.find(params[:id]).id }), :payment_intent_data => ({ :metadata => ({ :person_id => Person.find(params[:id]).id }) }), :line_items => ([{ :price_data => ({ :currency => \"usd\", :product_data => ({ :name => \"Donation to A Window Between Worlds\" }), :unit_amount => (((params[:amount].to_i * 100).to_i or 1000)) }), :quantity => 1 }]), :success_url => person_url(Person.find(params[:id]), :checkout => \"success\"), :cancel_url => person_url(Person.find(params[:id]), :checkout => \"cancelled\")).url",
+      "confidence": "Weak",
+      "cwe_id": [
+        601
+      ],
+      "note": "stripe API"
+    },
+    {
       "warning_type": "Mass Assignment",
       "warning_code": 70,
       "fingerprint": "abea946803acd0f0fe12c3bcd54e9b5b04d04f78ff6672e38a6cb8db02e3b5eb",
