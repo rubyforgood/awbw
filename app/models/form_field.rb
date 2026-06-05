@@ -2,6 +2,7 @@ class FormField < ApplicationRecord
   belongs_to :form, inverse_of: :form_fields
   has_many :form_field_answer_options, dependent: :destroy
   has_many :report_form_field_answers, dependent: :destroy
+  has_many :form_answers, dependent: :nullify
   has_many :childs, foreign_key: "parent_id", class_name: "FormField"
 
   # has_many through

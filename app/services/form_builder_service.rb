@@ -104,7 +104,7 @@ class FormBuilderService
     "background" => :logged_out_only,
     "professional" => :answers_on_file,
     "marketing" => :answers_on_file,
-    "payment" => :answers_on_file,
+    "payment" => :always_ask,
     "scholarship" => :always_ask,
     "consent" => :answers_on_file,
     "post_event_feedback" => :answers_on_file
