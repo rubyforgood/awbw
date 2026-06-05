@@ -8,6 +8,11 @@ Rails.application.routes.draw do
   # end
   resources :primary_assets
   resources :rich_text_assets
+  resources :gallery_assets, only: [ :destroy ] do
+    member do
+      post :make_primary
+    end
+  end
 
   namespace :images do
     resources :primary_images, only: [ :show ]
