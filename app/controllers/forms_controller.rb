@@ -28,7 +28,7 @@ class FormsController < ApplicationController
     form = FormBuilderService.new(
       name: params[:name].presence || "New Form",
       sections: sections,
-      scholarship_application: params[:scholarship_application] == "1"
+      role: params[:role].presence
     ).call
 
     redirect_to edit_form_path(form), notice: "Form created with #{form.form_fields.size} fields."
@@ -99,10 +99,6 @@ class FormsController < ApplicationController
   def preview_form_fields
     scope = @form.form_fields
 
-    unless params[:preview_scholarship].present?
-      scope = scope.where.not(visibility: :scholarship_only)
-    end
-
     if params[:preview_logged_in].present?
       scope = scope.where.not(visibility: :logged_out_only)
     end
@@ -116,7 +112,7 @@ class FormsController < ApplicationController
 
   def form_params
     params.require(:form).permit(
-      :name, :hide_answered_person_questions, :hide_answered_form_questions,
+      :name, :role, :hide_answered_person_questions, :hide_answered_form_questions,
       form_fields_attributes: [
         :id, :name, :answer_type, :required, :hint_text,
         :field_identifier, :section, :position, :visibility, :one_time, :_destroy

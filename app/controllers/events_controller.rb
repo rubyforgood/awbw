@@ -183,26 +183,26 @@ class EventsController < ApplicationController
 
   def assign_event_forms(event)
     form_id = params.dig(:event, :registration_form_id)
-    return unless form_id
-
     if form_id.blank?
       event.event_forms.registration.destroy_all
     else
       form = Form.standalone.find_by(id: form_id)
-      return unless form
-
-      existing = event.event_forms.registration.first
-      if existing
-        existing.update!(form: form) unless existing.form_id == form.id.to_i
-      else
-        event.event_forms.create!(form: form, role: "registration")
+      if form
+        existing = event.event_forms.registration.first
+        if existing
+          existing.update!(form: form) unless existing.form_id == form.id.to_i
+        else
+          event.event_forms.create!(form: form, role: "registration")
+        end
       end
     end
 
-    scholarship_form = Form.standalone.scholarship_application.first
-    if scholarship_form && event.cost_cents.to_i > 0
-      event.event_forms.find_or_create_by!(form: scholarship_form, role: "scholarship")
-    elsif event.cost_cents.to_i == 0
+    if params.dig(:event, :scholarship_enabled) == "1"
+      form = Form.standalone.find_by(role: "scholarship")
+      if form && !event.event_forms.scholarship.exists?
+        event.event_forms.create!(form: form, role: "scholarship")
+      end
+    else
       event.event_forms.scholarship.destroy_all
     end
   end
@@ -212,7 +212,7 @@ class EventsController < ApplicationController
     @event.build_primary_asset if @event.primary_asset.blank?
     @event.gallery_assets.build
     @locations = Location.order(:city, :state)
-    @registration_forms = Form.standalone.where(scholarship_application: false).order(:name)
+    @registration_forms = Form.standalone.where(role: [nil, "", "registration"]).order(:name)
     @categories_grouped =
       Category
         .includes(:category_type)

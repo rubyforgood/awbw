@@ -17,7 +17,7 @@ FactoryBot.define do
     end
 
     trait :scholarship do
-      scholarship_application { true }
+      role { "scholarship" }
       name { "Scholarship Application" }
     end
   end

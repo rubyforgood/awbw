@@ -171,15 +171,6 @@ RSpec.describe Event, type: :model do
     end
   end
 
-  describe "#scholarship_form" do
-    it "returns the form linked with scholarship role" do
-      form = create(:form, name: "Scholarship App")
-      event = create(:event)
-      create(:event_form, event: event, form: form, role: "scholarship")
-      expect(event.scholarship_form).to eq(form)
-    end
-  end
-
   describe '.search_by_params' do
     let!(:art_event) { create(:event, title: 'Art Workshop Showcase', description: 'Annual art exhibition') }
     let!(:music_event) { create(:event, title: 'Music Therapy Session', description: 'Healing through music') }

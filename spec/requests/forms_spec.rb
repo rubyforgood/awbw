@@ -108,18 +108,6 @@ RSpec.describe "Forms", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("First Name")
     end
-
-    it "filters scholarship-only fields when toggle is off" do
-      form = FormBuilderService.new(name: "Full", sections: %i[person_identifier scholarship]).call
-      get form_path(form)
-      expect(response.body).not_to include("Scholarship Application")
-    end
-
-    it "shows scholarship fields when toggle is on" do
-      form = FormBuilderService.new(name: "Full", sections: %i[person_identifier scholarship]).call
-      get form_path(form, preview_scholarship: "1")
-      expect(response.body).to include("Scholarship Application")
-    end
   end
 
   describe "GET /forms/:id/edit_sections" do

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_10_113404) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_05_163603) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -547,6 +547,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_113404) do
     t.datetime "created_at", null: false
     t.integer "form_id", null: false
     t.bigint "person_id", null: false
+    t.string "role", default: "registration", null: false
     t.datetime "updated_at", null: false
     t.index ["form_id"], name: "index_form_submissions_on_form_id"
     t.index ["person_id"], name: "index_form_submissions_on_person_id"
@@ -560,7 +561,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_113404) do
     t.string "name"
     t.integer "owner_id"
     t.string "owner_type"
-    t.boolean "scholarship_application", default: false, null: false
+    t.string "role"
     t.json "sections"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"

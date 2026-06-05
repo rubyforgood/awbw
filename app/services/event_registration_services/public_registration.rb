@@ -254,11 +254,11 @@ module EventRegistrationServices
     end
 
     def save_form_answers(submission)
-      @form.form_fields.find_each do |field|
-        next if field.group_header?
-        next if field.field_identifier == "confirm_email"
+      @form_params.each do |field_id, raw_value|
+        field = @form.form_fields.find_by(id: field_id)
+        next unless field
+        next if field.group_header? || field.field_identifier == "confirm_email"
 
-        raw_value = @form_params[field.id.to_s]
         text = if raw_value.is_a?(Array)
           raw_value.reject(&:blank?).join(", ")
         else

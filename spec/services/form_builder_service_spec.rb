@@ -12,9 +12,9 @@ RSpec.describe FormBuilderService do
       expect(form.sections).to eq(%w[person_identifier consent])
     end
 
-    it "sets scholarship_application flag" do
-      form = described_class.new(name: "Scholarship", sections: %i[scholarship], scholarship_application: true).call
-      expect(form.scholarship_application).to be true
+    it "sets role flag" do
+      form = described_class.new(name: "Scholarship", sections: %i[scholarship], role: "scholarship").call
+      expect(form.role).to eq "scholarship"
     end
 
     it "creates fields with sequential positions" do

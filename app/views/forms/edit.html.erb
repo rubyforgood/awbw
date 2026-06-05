@@ -26,6 +26,14 @@
         <%= f.text_field :name, class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
       </div>
 
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Form role</label>
+        <%= f.select :role,
+              [["General", ""], ["Registration", "registration"], ["Scholarship", "scholarship"]],
+              { selected: @form.role || "" },
+              class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
+      </div>
+
       <div class="flex flex-wrap gap-x-6 gap-y-2">
         <label class="flex items-center gap-2 cursor-pointer">
           <%= f.check_box :hide_answered_person_questions, class: "rounded border-gray-300 text-blue-600" %>
@@ -50,10 +58,6 @@
           <div class="flex items-center gap-1.5">
             <span class="text-xs px-1.5 py-0.5 rounded-full bg-white text-gray-600 border border-gray-300">Always ask</span>
             <span class="text-xs text-gray-500">Always shown to all users</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Scholarship-only</span>
-            <span class="text-xs text-gray-500">Shown only when registering for scholarship</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="text-xs px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Logged out only</span>

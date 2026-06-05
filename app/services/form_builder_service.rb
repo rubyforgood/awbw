@@ -11,17 +11,17 @@ class FormBuilderService
     post_event_feedback: { label: "Post-event feedback", method: :build_post_event_feedback_fields }
   }.freeze
 
-  def initialize(name:, sections:, scholarship_application: false)
+  def initialize(name:, sections:, role: nil)
     @name = name
     @sections = sections.map(&:to_sym)
-    @scholarship_application = scholarship_application
+    @role = role
   end
 
   def call
     form = Form.create!(
       name: @name,
       sections: @sections.map(&:to_s),
-      scholarship_application: @scholarship_application
+      role: @role
     )
 
     position = 0
@@ -105,7 +105,7 @@ class FormBuilderService
     "professional" => :answers_on_file,
     "marketing" => :answers_on_file,
     "payment" => :answers_on_file,
-    "scholarship" => :scholarship_only,
+    "scholarship" => :always_ask,
     "consent" => :answers_on_file,
     "post_event_feedback" => :answers_on_file
   }.freeze

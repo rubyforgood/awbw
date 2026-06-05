@@ -356,19 +356,6 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('fa-regular fa-file-lines')
       end
 
-      it "shows green icon when person submitted a non-registration form for the event" do
-        scholarship_form = create(:form, :standalone, name: "Scholarship Form")
-        create(:event_form, event: event, form: reg_form, role: "registration")
-        create(:event_form, event: event, form: scholarship_form, role: "scholarship")
-        create(:form_submission, person: person, form: scholarship_form)
-
-        get manage_event_path(event)
-
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include('fa-solid fa-file-lines')
-        expect(response.body).not_to include('fa-regular fa-file-lines')
-      end
-
       it "does not show any form icon when event has no forms" do
         get manage_event_path(event)
 

@@ -932,11 +932,11 @@ unless Form.standalone.exists?(name: "Extended Event Registration")
   ).call
 end
 
-unless Form.standalone.scholarship_application.exists?
+unless Form.standalone.find_by(role: "scholarship")
   FormBuilderService.new(
     name: "Scholarship Application",
     sections: %i[scholarship],
-    scholarship_application: true
+    role: "scholarship"
   ).call
 end
 
@@ -944,38 +944,37 @@ puts "Creating Events with shared forms…"
 admin_user = User.find_by(email: "umberto.user@example.com")
 long_form = Form.standalone.find_by!(name: "Extended Event Registration")
 short_form = Form.standalone.find_by!(name: "Short Event Registration")
-scholarship_form = Form.standalone.scholarship_application.first!
 
-# Each entry: [title, form_type, cost_cents, scholarship?, visibility]
+# Each entry: [title, form_type, cost_cents, visibility]
 # form_type: :long, :short, or :none
 dev_events = [
-  [ "AWBW Facilitator Training", :long, 15_000, true,
+  [ "AWBW Facilitator Training", :long, 15_000,
     { published: true, featured: true, publicly_visible: true } ],
-  [ "Facilitator Training: Trauma-Informed Art Practices", :long, 12_000, true,
+  [ "Facilitator Training: Trauma-Informed Art Practices", :long, 12_000,
     { published: true, featured: true } ],
-  [ "A Year of Healing and Rebuilding Together Wellness Day", :short, 0, false,
+  [ "A Year of Healing and Rebuilding Together Wellness Day", :short, 0,
     { published: true, publicly_visible: true, publicly_featured: true, featured: true } ],
-  [ "Youth Creativity Day", :short, 0, false,
+  [ "Youth Creativity Day", :short, 0,
     { published: true, publicly_visible: true, publicly_featured: true } ],
-  [ "Mindful Art for Survivors Workshop", :short, 5_000, true,
+  [ "Mindful Art for Survivors Workshop", :short, 5_000,
     { published: true, publicly_visible: true, publicly_featured: true } ],
-  [ "Community Open Studio Night", :none, 0, false,
+  [ "Community Open Studio Night", :none, 0,
     { published: true, featured: true } ],
-  [ "Annual Celebration of Voices", :none, 0, false,
+  [ "Annual Celebration of Voices", :none, 0,
     { published: true, publicly_visible: true } ],
-  [ "Art as Healing: Virtual Group Session", :short, 0, false,
+  [ "Art as Healing: Virtual Group Session", :short, 0,
     { published: true, featured: true } ],
-  [ "Leaders in Creativity: Facilitator Roundtable", :short, 0, false,
+  [ "Leaders in Creativity: Facilitator Roundtable", :short, 0,
     { published: true, publicly_visible: true } ],
-  [ "Family Creative Expression Day", :short, 0, false,
+  [ "Family Creative Expression Day", :short, 0,
     { published: true, publicly_visible: true, publicly_featured: true } ],
-  [ "Creative Safety & Support Workshop", :short, 2_500, true,
+  [ "Creative Safety & Support Workshop", :short, 2_500,
     { published: true, featured: true } ],
-  [ "Healing Through Art: Spring Community Gathering", :short, 0, false,
+  [ "Healing Through Art: Spring Community Gathering", :short, 0,
     { published: true, publicly_visible: true } ]
 ]
 
-dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visibility), i|
+dev_events.each_with_index do |(title, form_type, cost_cents, visibility), i|
   start_date = Time.current + (5 + i * 5).days
   end_date = start_date + rand(2..4).hours
   registration_close = start_date - rand(2..7).days
@@ -1001,10 +1000,17 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
     end
     event.update!(public_registration_enabled: true) unless event.public_registration_enabled?
   end
+end
 
-  if scholarship
-    EventForm.find_or_create_by!(event: event, role: "scholarship") do |ef|
-      ef.form = scholarship_form
+# Link scholarship form to events that offer scholarships
+scholarship_form = Form.standalone.find_by(role: "scholarship")
+if scholarship_form
+  %w[Facilitator Training: Trauma-Informed Art Practices Mindful Art for Survivors Workshop].each do |title|
+    event = Event.find_by(title: title)
+    if event
+      EventForm.find_or_create_by!(event: event, role: "scholarship") do |ef|
+        ef.form = scholarship_form
+      end
     end
   end
 end
@@ -1154,12 +1160,6 @@ if facilitator_training
     end
     # Mario Johnson (no user) did NOT fill out the form — registration without form submission
   end
-
-  # Amy also filled out the scholarship form
-  scholarship_f = facilitator_training.scholarship_form
-  if scholarship_f && amy_person
-    form_submissions << { person: amy_person, form: scholarship_f }
-  end
 end
 
 # Trauma Training (extended form)
@@ -1173,12 +1173,6 @@ if trauma_training
     # Angel Garcia (no user) filled out the form — person without user + form
     form_submissions << { person: angel_g, form: reg_form } if angel_g
     # Linda Williams (no user) did NOT fill out the form
-  end
-
-  # Jessica filled out the scholarship form
-  scholarship_f = trauma_training.scholarship_form
-  if scholarship_f && jessica_b
-    form_submissions << { person: jessica_b, form: scholarship_f }
   end
 end
 
@@ -1196,13 +1190,10 @@ if wellness_day
   end
 end
 
-# Mindful Art (short form, has scholarship) — Amy filled out both
+# Mindful Art (short form, has scholarship) — Amy filled out the form
 if mindful_art
   reg_form = mindful_art.registration_form
   form_submissions << { person: amy_person, form: reg_form } if reg_form && amy_person
-
-  scholarship_f = mindful_art.scholarship_form
-  form_submissions << { person: amy_person, form: scholarship_f } if scholarship_f && amy_person
 end
 
 # Youth Day (short form) — Maria filled it out

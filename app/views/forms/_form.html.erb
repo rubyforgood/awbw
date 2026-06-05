@@ -7,7 +7,9 @@
                   input_html: { class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
     </div>
     <div class="flex items-center pt-6">
-      <%= f.input :scholarship_application, as: :boolean %>
+      <%= f.input :role, collection: [["Registration", "registration"], ["Scholarship", "scholarship"]],
+                  include_blank: "General", label: "Form role",
+                  input_html: { class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
     </div>
   </div>
 

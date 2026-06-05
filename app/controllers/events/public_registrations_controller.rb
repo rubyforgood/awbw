@@ -20,6 +20,7 @@ module Events
 
       @form_fields = visible_form_fields
       @scholarship = scholarship_mode?
+      @scholarship_form = @event.scholarship_form if @scholarship
       @event = @event.decorate
     end
 
@@ -32,12 +33,15 @@ module Events
       end
 
       @form = registration_form
-      form_params = params.dig(:public_registration, :form_fields)&.to_unsafe_h || {}
+      @scholarship = scholarship_mode?
+      @scholarship_form = @event.scholarship_form if @scholarship
 
-      @field_errors = validate_required_fields(form_params)
+      all_params = params.dig(:public_registration, :form_fields)&.to_unsafe_h || {}
+      registration_params, scholarship_params = split_form_params(all_params)
+
+      @field_errors = validate_required_fields(registration_params)
       if @field_errors.any?
         @form_fields = visible_form_fields
-        @scholarship = scholarship_mode?
         @event = @event.decorate
         render :new, status: :unprocessable_content
         return
@@ -48,11 +52,14 @@ module Events
       result = EventRegistrationServices::PublicRegistration.call(
         event: @event,
         form: @form,
-        form_params: form_params,
-        scholarship_requested: scholarship_mode?
+        form_params: registration_params,
+        scholarship_requested: @scholarship
       )
 
       if result.success?
+        if scholarship_params.any?
+          create_or_update_scholarship_submission(result.event_registration.registrant, scholarship_params)
+        end
         redirect_to registration_ticket_path(result.event_registration.slug),
                     notice: "You have been successfully registered!"
       else
@@ -108,12 +115,41 @@ module Events
       params[:scholarship_requested] == "true"
     end
 
+    def split_form_params(all_params)
+      reg_field_ids = @form.form_fields.pluck(:id).map(&:to_s)
+      registration = all_params.slice(*reg_field_ids)
+
+      scholarship = {}
+      if @scholarship_form
+        scholarship_field_ids = @scholarship_form.form_fields.pluck(:id).map(&:to_s)
+        scholarship = all_params.slice(*scholarship_field_ids)
+      end
+
+      [ registration, scholarship ]
+    end
+
+    def create_or_update_scholarship_submission(person, scholarship_params)
+      scholarship_form = @event.scholarship_form
+      return unless scholarship_form
+
+      submission = FormSubmission.find_or_create_by!(
+        person: person, form: scholarship_form, role: "scholarship"
+      )
+
+      scholarship_params.each do |field_id, raw_value|
+        field = scholarship_form.form_fields.find_by(id: field_id)
+        next unless field
+        next if field.group_header?
+
+        text = raw_value.is_a?(Array) ? raw_value.reject(&:blank?).join(", ") : raw_value.to_s
+
+        record = submission.form_answers.find_or_initialize_by(form_field: field)
+        record.update!(submitted_answer: text, question_name_when_answered: field.name)
+      end
+    end
+
     def visible_form_fields
       scope = @form.form_fields
-
-      unless scholarship_mode?
-        scope = scope.where.not(visibility: :scholarship_only)
-      end
 
       person = current_user&.person
       if person
