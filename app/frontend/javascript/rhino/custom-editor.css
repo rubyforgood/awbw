@@ -44,6 +44,24 @@ custom-rhino-editor table .column-resize-handle {
 custom-rhino-editor table p {
   margin: 0;
 }
+/*
+ * Issue #1521: collapse double-height empty paragraphs in the editor.
+ *
+ * Empty spacer paragraphs (`<p><br></p>`, common in legacy/imported stories)
+ * are parsed by ProseMirror as a paragraph containing a hard break, and then a
+ * `ProseMirror-trailingBreak` <br> is appended for editing. The two <br>s render
+ * as two blank lines, doubling the gap between paragraphs and making published
+ * stories hard to read while editing.
+ *
+ * Hide the redundant content break so the editor shows a single blank line. The
+ * <br> is only hidden (still in the DOM), so saved content and the published
+ * view are unchanged. Scoped to a content <br> that is immediately followed by
+ * the trailing break, so intentional in-paragraph line breaks are untouched.
+ */
+custom-rhino-editor .trix-content p > br:first-child:not(.ProseMirror-trailingBreak):has(+ br.ProseMirror-trailingBreak:last-child) {
+  display: none;
+}
+
 custom-rhino-editor a {
   text-decoration: underline;
   color: #2563eb; /* Tailwind blue-600 */

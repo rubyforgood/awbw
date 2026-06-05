@@ -135,6 +135,42 @@ RSpec.describe "Stories", type: :system do
         expect(page).to have_current_path(story_path(story))
         expect(page).to have_content("A New Title")
       end
+
+      # Issue #1521: legacy empty spacer paragraphs (`<p><br></p>`) were rendered
+      # by the editor as double-height blank lines, making stories hard to read
+      # while editing. They should collapse to a single blank line.
+      it "renders empty spacer paragraphs as a single blank line in the editor" do
+        user = create(:user, :admin)
+        sign_in(user)
+        story = create(
+          :story,
+          created_by: user,
+          rhino_body: "<p>First paragraph.</p><p><br></p><p>Second paragraph.</p>"
+        )
+
+        visit edit_story_path(story)
+
+        expect(page).to have_css(".trix-content p", minimum: 3, wait: 10)
+        expect(page).to have_css(".trix-content p", text: "First paragraph.")
+
+        heights = page.evaluate_script(<<~JS)
+          (() => {
+            const ps = Array.from(document.querySelectorAll(".trix-content p"));
+            const textP = ps.find(p => p.textContent.trim().length > 0);
+            const emptyP = ps.find(p => p.textContent.trim().length === 0);
+            return {
+              text: textP ? textP.getBoundingClientRect().height : null,
+              empty: emptyP ? emptyP.getBoundingClientRect().height : null
+            };
+          })()
+        JS
+
+        expect(heights["text"]).to be > 0
+        expect(heights["empty"]).to be > 0
+        # A single blank line ≈ one text line. Before the fix the spacer was two
+        # lines tall (a content <br> plus ProseMirror's trailing break).
+        expect(heights["empty"]).to be <= heights["text"] * 1.5
+      end
     end
   end
 end
