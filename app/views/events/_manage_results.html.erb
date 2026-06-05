@@ -1,20 +1,28 @@
 <%= turbo_frame_tag :manage_results do %>
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-controller="column-toggle">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-      <p class="text-sm text-gray-500">
-        <%= @event_registrations.size %> registrant<%= "s" if @event_registrations.size != 1 %>
-      </p>
+      <p class="text-sm text-gray-500"><%= @event_registrations.size %> registrant<%= "s" if @event_registrations.size != 1 %></p>
+
       <label class="inline-flex items-center gap-2 cursor-pointer select-none">
         <span class="text-sm text-gray-500">Confirmed</span>
-        <input type="checkbox" data-column-toggle-target="toggle" data-action="column-toggle#toggle" class="sr-only">
+
+        <input
+          type="checkbox"
+          data-column-toggle-target="toggle"
+          data-action="column-toggle#toggle"
+          class="sr-only"
+        >
+
         <span class="relative inline-block w-9 h-5">
           <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
           <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
         </span>
       </label>
     </div>
+
     <% event_form_ids = @event.form_ids %>
     <% form_submissions = event_form_ids.any? ? PersonForm.joins(:form).where(form_id: event_form_ids, person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
+
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <table class="w-full border-collapse border border-gray-200">
@@ -23,22 +31,28 @@
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization(s)</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Scholarship</th>
+
               <% if @event.cost_cents.to_i > 0 %>
                 <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment status</th>
               <% end %>
+
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col>Confirmed</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Attendance status</th>
               <th class="px-4 py-2"></th>
             </tr>
           </thead>
+
           <tbody class="divide-y divide-gray-200">
             <% @event_registrations.each do |registration| %>
               <% person = registration.registrant %>
+
               <tr class="hover:bg-gray-50 transition-colors duration-150">
                 <td class="px-4 py-2">
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
+
                   <div class="flex items-center gap-1">
                     <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
+
                     <% if event_form_ids.any? && (submissions = form_submissions[person.id]) %>
                       <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
                       <% tooltip_parts = submissions.map { |name, ts| "#{name} — Submitted #{ts.strftime('%B %d, %Y at %l:%M %P')}" } %>
@@ -53,15 +67,18 @@
                     <% elsif event_form_ids.any? %>
                       <i class="fa-regular fa-file-lines text-gray-300" title="No registration form submitted"></i>
                     <% end %>
+
                     <% if registration.comments.any? %>
                       <% latest_comment = registration.comments.first %>
                       <i class="fa-solid fa-message text-purple-400" title="<%= registration.comments.size %> comment<%= 's' if registration.comments.size != 1 %> — Latest (<%= latest_comment.created_at.strftime('%Y-%m-%d') %>): <%= latest_comment.body.truncate(100) %>"></i>
                     <% end %>
+
                     <% if @duplicate_emails&.include?(person.preferred_email&.downcase) %>
                       <i class="fa-solid fa-triangle-exclamation text-amber-500" title="Multiple registrants share this email address — this may cause login conflicts"></i>
                     <% end %>
                   </div>
                 </td>
+
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <% if registration.organizations.any? %>
                     <ul class="space-y-0.5">
@@ -73,45 +90,56 @@
                     <span class="text-gray-400">—</span>
                   <% end %>
                 </td>
+
                 <td class="px-4 py-2 text-sm">
-                  <% if registration.scholarship_requested? && registration.scholarship_recipient? && registration.scholarship_tasks_completed? %>
-                    <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200" title="Scholarship completed">
-                      <i class="fas fa-graduation-cap"></i>
-                      <span>Completed</span>
-                    </span>
-                  <% elsif registration.scholarship_requested? && registration.scholarship_recipient? %>
-                    <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-blue-50 text-blue-700 border-blue-200" title="Scholarship approved">
-                      <i class="fas fa-graduation-cap"></i>
-                      <span>Approved</span>
-                    </span>
-                  <% elsif registration.scholarship_requested? %>
-                    <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200" title="Scholarship requested">
-                      <i class="fas fa-graduation-cap"></i>
-                      <span>Requested</span>
-                    </span>
+                  <% if (s = registration.scholarships.first) %>
+                    <% if s.tasks_completed? %>
+                      <%= link_to edit_scholarship_path(s),
+                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200 hover:opacity-80",
+                                  data: { turbo_frame: "_top" } do %>
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Completed</span>
+                      <% end %>
+                    <% else %>
+                      <%= link_to edit_scholarship_path(s),
+                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-blue-50 text-blue-700 border-blue-200 hover:opacity-80",
+                                  data: { turbo_frame: "_top" } do %>
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Recipient</span>
+                      <% end %>
+                    <% end %>
                   <% else %>
-                    <span class="text-gray-400">—</span>
+                    <% if registration.scholarship_requested? %>
+                      <%= link_to new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s),
+                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200 hover:opacity-80",
+                                  data: { turbo_frame: "_top" } do %>
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Requested</span>
+                      <% end %>
+                    <% else %>
+                      <%= link_to new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s),
+                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-gray-50 text-gray-400 border-gray-200 hover:opacity-80",
+                                  data: { turbo_frame: "_top" } do %>
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Create</span>
+                      <% end %>
+                    <% end %>
                   <% end %>
                 </td>
+
                 <% if @event.cost_cents.to_i > 0 %>
                   <td class="px-4 py-2 text-sm">
-                    <% if registration.scholarship_recipient? && registration.successful_payments_total_cents <= 0 %>
-                      <span class="text-gray-400">—</span>
-                    <% elsif registration.paid_in_full? %>
-                      <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200">
-                        <i class="fas fa-circle-check"></i>
-                        <span>Paid</span>
-                      </span>
-                    <% else %>
-                      <% paid_cents = registration.successful_payments_total_cents %>
-                      <% due_cents = @event.cost_cents - paid_cents %>
-                      <span class="inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200" title="<%= "$%.2f paid" % (paid_cents / 100.0) if paid_cents > 0 %>">
-                        <i class="fas fa-circle-exclamation"></i>
-                        <span>$<%= "%.2f" % (due_cents / 100.0) %> due</span>
-                      </span>
+                    <% paid_cents = registration.allocations_sum %>
+                    <% due_cents = @event.cost_cents - paid_cents %>
+                    <% is_paid = registration.paid_in_full? %>
+
+                    <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s), class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 #{is_paid ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'} hover:opacity-80", title: (!is_paid && paid_cents > 0 ? "$%.2f paid" % (paid_cents / 100.0) : nil), data: { turbo_frame: "_top" } do %>
+                      <i class="fas <%= is_paid ? 'fa-circle-check' : 'fa-circle-exclamation' %>"></i>
+                      <span><%= is_paid ? 'Paid' : "$%.2f due" % (due_cents / 100.0) %></span>
                     <% end %>
                   </td>
                 <% end %>
+
                 <td class="px-4 py-2 text-center align-top hidden" data-column-toggle-col>
                   <% if person.user.present? %>
                     <%= render "users/confirmed_status", user: person.user, invite_params: {} %>
@@ -122,12 +150,9 @@
                                 data: { turbo_frame: "_top" } %>
                   <% end %>
                 </td>
-                <td class="px-4 py-2 text-sm text-nowrap">
-                  <%= render "event_registrations/attendance_status_badge", registration: registration %>
-                </td>
-                <td class="px-4 py-2 text-right text-sm">
-                  <%= link_to "Edit", edit_event_registration_path(registration, return_to: "manage"), class: "text-blue-600 hover:text-blue-800 underline", data: { turbo_frame: "_top" } %>
-                </td>
+
+                <td class="px-4 py-2 text-sm text-nowrap"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
+                <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "manage"), class: "text-blue-600 hover:text-blue-800 underline", data: { turbo_frame: "_top" } %></td>
               </tr>
             <% end %>
           </tbody>

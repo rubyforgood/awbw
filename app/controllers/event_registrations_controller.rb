@@ -166,7 +166,7 @@ class EventRegistrationsController < ApplicationController
   def event_registration_params
     params.require(:event_registration).permit(
       :event_id, :registrant_id, :status,
-      :scholarship_requested, :scholarship_recipient, :scholarship_tasks_completed,
+      :scholarship_requested,
       organization_ids: [],
       comments_attributes: [ :id, :body, :_destroy ]
     )
@@ -182,17 +182,23 @@ class EventRegistrationsController < ApplicationController
 
   def csv_export(registrations)
     CSV.generate(headers: true) do |csv|
-      csv << [ "First name", "Last name", "Email", "Event", "Scholarship recipient", "Scholarship tasks completed" ]
+      csv << [ "First name", "Last name", "Email", "Phone", "Event", "Status", "Scholarship", "Scholarship completed", "Payment status", "Payment total" ]
       registrations.find_each do |er|
         r = er.registrant
         e = er.event
+        total_cents = er.allocations_sum
+        cost_required = e&.cost_cents.to_i > 0
         csv << [
           r&.first_name.to_s,
           r&.last_name.to_s,
           r&.preferred_email.to_s,
+          r&.phone_number.to_s,
           e&.title.to_s,
-          er.scholarship_recipient? ? "Yes" : "No",
-          er.scholarship_tasks_completed? ? "Yes" : "No"
+          er.attendance_status_label,
+          er.scholarships.any? ? "Yes" : "No",
+          er.scholarships.completed.any? ? "Yes" : "No",
+          cost_required ? (er.paid_in_full? ? "Paid in full" : "Not paid in full") : "",
+          total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
         ]
       end
     end

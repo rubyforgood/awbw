@@ -92,12 +92,19 @@ Rails.application.routes.draw do
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
+  post "registration/:slug/pay", to: "events/registrations#pay", as: :registration_pay
   resources :event_registrations do
     member do
       get :confirm
       post :process_confirm
     end
     resources :comments, only: [ :index, :create ]
+  end
+  resources :scholarships, only: [ :new, :create, :show, :edit, :update, :destroy ]
+  resources :discounts, only: [ :create, :show, :destroy ] do
+    collection do
+      post :allocation_form
+    end
   end
   resources :events do
     member do
@@ -116,6 +123,7 @@ Rails.application.routes.draw do
     end
     member do
       get :workshop_logs
+      get :checkout
     end
     resources :comments, only: [ :index, :create ]
   end
@@ -135,6 +143,16 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create ]
     resources :monthly_reports, only: :index
   end
+  resources :payments, only: [ :new, :create, :show, :index ] do
+    collection do
+      post :allocation_form
+    end
+  end
+  resources :allocations, only: [ :new, :create, :index ] do
+    post :revert, on: :member
+  end
+
+  resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
   resources :affiliations
   resources :quotes

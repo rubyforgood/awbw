@@ -1,0 +1,2 @@
+class CashPayment < Payment
+end

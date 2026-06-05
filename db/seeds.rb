@@ -1,6 +1,10 @@
 # Disable email delivery during seeding
 ActionMailer::Base.perform_deliveries = false
 
+def seed(file)
+  require_relative "seeds/#{file}"
+end
+
 puts "Creating Users…"
 
 # Helper: case-insensitive find-or-create by name
@@ -481,3 +485,5 @@ end
 unless Form.standalone.exists?(name: ScholarshipApplicationFormBuilder::FORM_NAME)
   ScholarshipApplicationFormBuilder.build_standalone!
 end
+
+seed "payments"

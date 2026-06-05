@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_03_120000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -176,6 +176,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
     t.index ["user_id"], name: "index_ahoy_visits_on_user_id"
     t.index ["visit_token"], name: "index_ahoy_visits_on_visit_token", unique: true
     t.index ["visitor_token", "started_at"], name: "index_ahoy_visits_on_visitor_token_and_started_at"
+  end
+
+  create_table "allocations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "allocatable_id", null: false
+    t.string "allocatable_type", null: false
+    t.integer "amount", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "reverted_id"
+    t.bigint "source_id", null: false
+    t.string "source_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["allocatable_type", "allocatable_id"], name: "index_allocations_on_allocatable"
+    t.index ["allocatable_type", "allocatable_id"], name: "index_allocations_on_allocatable_type_and_allocatable_id"
+    t.index ["reverted_id"], name: "fk_rails_4e7a74eb48"
+    t.index ["source_type", "source_id"], name: "index_allocations_on_source"
+    t.index ["source_type", "source_id"], name: "index_allocations_on_source_type_and_source_id"
   end
 
   create_table "answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -400,6 +416,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
     t.index ["contactable_type", "contactable_id"], name: "index_contact_methods_on_contactable"
   end
 
+  create_table "discounts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "event_forms", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "event_id", null: false
@@ -425,9 +447,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
     t.datetime "created_at", null: false
     t.bigint "event_id"
     t.bigint "registrant_id", null: false
-    t.boolean "scholarship_recipient", default: false, null: false
     t.boolean "scholarship_requested", default: false, null: false
-    t.boolean "scholarship_tasks_completed", default: false, null: false
     t.string "slug"
     t.string "status", default: "registered", null: false
     t.datetime "updated_at", null: false
@@ -676,31 +696,119 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
     t.index ["windows_type_id"], name: "index_organizations_on_windows_type_id"
   end
 
+  create_table "pay_charges", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount", null: false
+    t.integer "amount_refunded"
+    t.integer "application_fee_amount"
+    t.datetime "created_at", null: false
+    t.string "currency"
+    t.bigint "customer_id", null: false
+    t.json "data"
+    t.json "metadata"
+    t.json "object"
+    t.string "processor_id", null: false
+    t.string "stripe_account"
+    t.bigint "subscription_id"
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["customer_id", "processor_id"], name: "index_pay_charges_on_customer_id_and_processor_id", unique: true
+    t.index ["subscription_id"], name: "index_pay_charges_on_subscription_id"
+  end
+
+  create_table "pay_customers", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data"
+    t.boolean "default"
+    t.datetime "deleted_at", precision: nil
+    t.json "object"
+    t.bigint "owner_id"
+    t.string "owner_type"
+    t.string "processor", null: false
+    t.string "processor_id"
+    t.string "stripe_account"
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id", "deleted_at"], name: "pay_customer_owner_index", unique: true
+    t.index ["processor", "processor_id"], name: "index_pay_customers_on_processor_and_processor_id", unique: true
+  end
+
+  create_table "pay_merchants", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data"
+    t.boolean "default"
+    t.bigint "owner_id"
+    t.string "owner_type"
+    t.string "processor", null: false
+    t.string "processor_id"
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id", "processor"], name: "index_pay_merchants_on_owner_type_and_owner_id_and_processor"
+  end
+
+  create_table "pay_payment_methods", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.json "data"
+    t.boolean "default"
+    t.string "payment_method_type"
+    t.string "processor_id", null: false
+    t.string "stripe_account"
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["customer_id", "processor_id"], name: "index_pay_payment_methods_on_customer_id_and_processor_id", unique: true
+  end
+
+  create_table "pay_subscriptions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.decimal "application_fee_percent", precision: 8, scale: 2
+    t.datetime "created_at", null: false
+    t.datetime "current_period_end", precision: nil
+    t.datetime "current_period_start", precision: nil
+    t.bigint "customer_id", null: false
+    t.json "data"
+    t.datetime "ends_at", precision: nil
+    t.json "metadata"
+    t.boolean "metered"
+    t.string "name", null: false
+    t.json "object"
+    t.string "pause_behavior"
+    t.datetime "pause_resumes_at", precision: nil
+    t.datetime "pause_starts_at", precision: nil
+    t.string "payment_method_id"
+    t.string "processor_id", null: false
+    t.string "processor_plan", null: false
+    t.integer "quantity", default: 1, null: false
+    t.string "status", null: false
+    t.string "stripe_account"
+    t.datetime "trial_ends_at", precision: nil
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["customer_id", "processor_id"], name: "index_pay_subscriptions_on_customer_id_and_processor_id", unique: true
+    t.index ["metered"], name: "index_pay_subscriptions_on_metered"
+    t.index ["pause_starts_at"], name: "index_pay_subscriptions_on_pause_starts_at"
+  end
+
+  create_table "pay_webhooks", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "event"
+    t.string "event_type"
+    t.string "processor"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "payments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents", null: false
+    t.integer "amount_cents_remaining", null: false
+    t.string "check_number"
     t.datetime "created_at", null: false
     t.string "currency", default: "usd", null: false
-    t.bigint "event_id"
-    t.string "failure_code"
-    t.string "failure_message"
-    t.bigint "payable_id", null: false
-    t.string "payable_type", null: false
-    t.bigint "payer_id", null: false
+    t.integer "organization_id"
+    t.bigint "pay_charge_id"
     t.string "payer_type", null: false
-    t.string "payment_type", default: "stripe", null: false
-    t.string "status", null: false
-    t.string "stripe_charge_id"
-    t.json "stripe_metadata"
-    t.string "stripe_payment_intent_id"
+    t.bigint "person_id"
+    t.string "type", null: false
     t.datetime "updated_at", null: false
-    t.index ["event_id"], name: "index_payments_on_event_id"
-    t.index ["payable_type", "payable_id", "status"], name: "index_payments_on_payable_type_and_payable_id_and_status"
-    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable"
-    t.index ["payable_type", "payable_id"], name: "index_payments_on_payable_type_and_payable_id"
-    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer"
-    t.index ["payer_type", "payer_id"], name: "index_payments_on_payer_type_and_payer_id"
-    t.index ["stripe_charge_id"], name: "index_payments_on_stripe_charge_id"
-    t.index ["stripe_payment_intent_id"], name: "index_payments_on_stripe_payment_intent_id", unique: true
+    t.index ["organization_id"], name: "index_payments_on_organization_id"
+    t.index ["person_id"], name: "index_payments_on_person_id"
   end
 
   create_table "people", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -801,6 +909,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
     t.index ["workshop_id"], name: "index_quotes_on_workshop_id"
   end
 
+  create_table "refunds", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "method", null: false
+    t.bigint "recipient_id", null: false
+    t.string "recipient_type", null: false
+    t.bigint "refundable_id", null: false
+    t.string "refundable_type", null: false
+    t.string "stripe_refund_id"
+    t.datetime "updated_at", null: false
+    t.index ["recipient_type", "recipient_id"], name: "index_refunds_on_recipient"
+    t.index ["refundable_type", "refundable_id"], name: "index_refunds_on_refundable"
+    t.index ["stripe_refund_id"], name: "index_refunds_on_stripe_refund_id"
+  end
+
   create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "answer", size: :long
     t.integer "answer_option_id"
@@ -876,6 +999,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
     t.index ["published"], name: "index_resources_on_published"
     t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
     t.index ["workshop_id"], name: "index_resources_on_workshop_id"
+  end
+
+  create_table "scholarships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "recipient_id", null: false
+    t.boolean "tasks_completed", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["recipient_id"], name: "index_scholarships_on_recipient_id"
   end
 
   create_table "sectorable_items", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1341,6 +1473,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
   add_foreign_key "affiliations", "people"
   add_foreign_key "affiliations", "users"
   add_foreign_key "age_ranges", "windows_types"
+  add_foreign_key "allocations", "allocations", column: "reverted_id"
   add_foreign_key "banners", "users", column: "created_by_id"
   add_foreign_key "banners", "users", column: "updated_by_id"
   add_foreign_key "blazer_audits", "blazer_queries", column: "query_id"
@@ -1382,7 +1515,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"
-  add_foreign_key "payments", "events"
+  add_foreign_key "pay_charges", "pay_customers", column: "customer_id"
+  add_foreign_key "pay_charges", "pay_subscriptions", column: "subscription_id"
+  add_foreign_key "pay_payment_methods", "pay_customers", column: "customer_id"
+  add_foreign_key "pay_subscriptions", "pay_customers", column: "customer_id"
+  add_foreign_key "payments", "organizations"
+  add_foreign_key "payments", "people"
   add_foreign_key "people", "users", column: "created_by_id"
   add_foreign_key "people", "users", column: "updated_by_id"
   add_foreign_key "person_form_form_fields", "form_fields"
@@ -1401,6 +1539,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_155200) do
   add_foreign_key "resources", "users", column: "created_by_id"
   add_foreign_key "resources", "windows_types"
   add_foreign_key "resources", "workshops"
+  add_foreign_key "scholarships", "people", column: "recipient_id"
   add_foreign_key "sectorable_items", "sectors"
   add_foreign_key "stories", "organizations"
   add_foreign_key "stories", "people", column: "spotlighted_facilitator_id"
