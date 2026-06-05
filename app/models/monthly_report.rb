@@ -67,7 +67,7 @@ class MonthlyReport < Report
   scope :ordered_by_date, -> { order(Arel.sql("COALESCE(reports.date, reports.created_at) DESC")) }
 
   def self.participant_field_ids(question)
-    FormField.where(question: question, status: 1).pluck(:id)
+    FormField.where(name: question, status: 1).pluck(:id)
   end
 
   def self.search(params)
@@ -109,14 +109,14 @@ class MonthlyReport < Report
 
   def on_going_participants
     if form_builder
-      field = form_builder.form_fields.find_by(question: PARTICIPANT_ONGOING_QUESTION, status: 1)
+      field = form_builder.form_fields.find_by(name: PARTICIPANT_ONGOING_QUESTION, status: 1)
       field.answer(self) if field
     end
   end
 
   def new_participants
     if form_builder
-      field = form_builder.form_fields.find_by(question: PARTICIPANT_FIRST_TIME_QUESTION, status: 1)
+      field = form_builder.form_fields.find_by(name: PARTICIPANT_FIRST_TIME_QUESTION, status: 1)
       field.answer(self) if field
     end
   end
