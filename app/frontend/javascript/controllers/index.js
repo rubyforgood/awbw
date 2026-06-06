@@ -75,6 +75,9 @@ application.register("prefetch-lazy", PrefetchLazyController)
 import PrintOptionsController from "./print_options_controller"
 application.register("print-options", PrintOptionsController)
 
+import RevealSectionController from "./reveal_section_controller"
+application.register("reveal-section", RevealSectionController)
+
 import RhinoSourceController from "./rhino_source_controller"
 application.register("rhino-source", RhinoSourceController)
 

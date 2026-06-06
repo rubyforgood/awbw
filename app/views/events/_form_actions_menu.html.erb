@@ -1,11 +1,11 @@
-<% dropdown_id = "forms-menu-#{SecureRandom.hex(4)}" %>
+<% dropdown_id = "form-actions-menu-#{SecureRandom.hex(4)}" %>
 <% item_class = "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
 <div data-controller="dropdown" class="relative">
   <button type="button"
           data-action="dropdown#toggle"
           data-dropdown-payload-param='[{"<%= dropdown_id %>":"hidden"}]'
           class="btn btn-utility-outline">
-    <span>Forms</span>
+    <span>Form actions</span>
     <i class="fa-solid fa-chevron-down w-3 h-3 text-gray-400"></i>
   </button>
 
