@@ -365,6 +365,159 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /events/:id/manage with payment and scholarship filters" do
+    let(:event) { create(:event, cost_cents: 1_000) }
+    let(:paid_person) { create(:person, first_name: "Paid", last_name: "Person") }
+    let(:unpaid_person) { create(:person, first_name: "Unpaid", last_name: "Person") }
+    let(:scholarship_person) { create(:person, first_name: "Scholar", last_name: "Person") }
+
+    let!(:paid_reg) do
+      reg = create(:event_registration, event: event, registrant: paid_person)
+      create(:allocation, source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000),
+                          allocatable: reg, amount: 1_000)
+      reg
+    end
+    let!(:unpaid_reg) { create(:event_registration, event: event, registrant: unpaid_person) }
+    let(:pending_scholarship_person) { create(:person, first_name: "Pending", last_name: "Person") }
+    let!(:scholarship_reg) do
+      reg = create(:event_registration, event: event, registrant: scholarship_person)
+      scholarship = create(:scholarship, recipient: scholarship_person, tasks_completed: true, amount_cents: 1_000)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1_000)
+      reg
+    end
+    let!(:pending_scholarship_reg) do
+      reg = create(:event_registration, event: event, registrant: pending_scholarship_person)
+      scholarship = create(:scholarship, recipient: pending_scholarship_person, tasks_completed: false, amount_cents: 1_000)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 0)
+      reg
+    end
+
+    before { sign_in admin }
+
+    it "filters to paid-in-full registrants" do
+      get manage_event_path(event, payment_status: "paid")
+      expect(response.body).to include("Paid Person")
+      expect(response.body).to include("Scholar Person")
+      expect(response.body).not_to include("Unpaid Person")
+    end
+
+    it "filters to not-paid-in-full registrants" do
+      get manage_event_path(event, payment_status: "unpaid")
+      expect(response.body).to include("Unpaid Person")
+      expect(response.body).not_to include("Paid Person")
+    end
+
+    it "filters to all scholarship recipients" do
+      get manage_event_path(event, scholarship: "yes")
+      expect(response.body).to include("Scholar Person")
+      expect(response.body).to include("Pending Person")
+      expect(response.body).not_to include("Paid Person")
+      expect(response.body).not_to include("Unpaid Person")
+    end
+
+    it "filters to recipients whose tasks are complete" do
+      get manage_event_path(event, scholarship: "complete")
+      expect(response.body).to include("Scholar Person")
+      expect(response.body).not_to include("Pending Person")
+    end
+
+    it "filters to recipients whose tasks are not complete" do
+      get manage_event_path(event, scholarship: "incomplete")
+      expect(response.body).to include("Pending Person")
+      expect(response.body).not_to include("Scholar Person")
+    end
+  end
+
+  describe "GET /events/:id/manage with state and county filters" do
+    let(:ca_person) { create(:person, first_name: "Cali", last_name: "Person") }
+    let(:ny_person) { create(:person, first_name: "York", last_name: "Person") }
+    # Same county name ("Kings") in a different state, to prove disambiguation.
+    let(:ca_kings_person) { create(:person, first_name: "Caliking", last_name: "Person") }
+
+    let!(:ca_reg) { create(:event_registration, event: event, registrant: ca_person) }
+    let!(:ny_reg) { create(:event_registration, event: event, registrant: ny_person) }
+    let!(:ca_kings_reg) { create(:event_registration, event: event, registrant: ca_kings_person) }
+
+    before do
+      create(:address, addressable: ca_person, state: "CA", county: "Los Angeles")
+      create(:address, addressable: ny_person, state: "NY", county: "Kings")
+      create(:address, addressable: ca_kings_person, state: "CA", county: "Kings")
+      sign_in admin
+    end
+
+    it "filters registrants by state" do
+      get manage_event_path(event, state: "CA")
+      expect(response.body).to include("Cali Person")
+      expect(response.body).not_to include("York Person")
+    end
+
+    it "filters registrants by a state-scoped county value" do
+      get manage_event_path(event, county: "NY|Kings")
+      expect(response.body).to include("York Person")
+      expect(response.body).not_to include("Cali Person")
+      expect(response.body).not_to include("Caliking Person")
+    end
+
+    it "filters registrants by a hyphenated registrant id list" do
+      get manage_event_path(event, registrant_ids: ca_person.id.to_s)
+      expect(response.body).to include("Cali Person")
+      expect(response.body).not_to include("York Person")
+    end
+
+    it "filters registrants by sector" do
+      sector = create(:sector)
+      create(:sectorable_item, sector: sector, sectorable: ca_person)
+
+      get manage_event_path(event, sector: sector.id)
+      expect(response.body).to include("Cali Person")
+      expect(response.body).not_to include("York Person")
+    end
+  end
+
+  describe "GET /events/:id/dashboard" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:person) { create(:person) }
+    let(:organization) { create(:organization, name: "Overview Org") }
+    let!(:registration) do
+      create(:affiliation, person: person, organization: organization)
+      create(:event_registration, event: event, registrant: person, status: "registered")
+    end
+
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders the dashboard with registrant count and organizations" do
+        get dashboard_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Dashboard")
+        expect(response.body).to include("Overview Org")
+      end
+
+      it "renders the payments section with totals for a paid event" do
+        create(:allocation, source: create(:payment, amount_cents: 6_000, amount_cents_remaining: 6_000),
+                            allocatable: registration, amount: 6_000)
+
+        get dashboard_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Registration fees")
+        expect(response.body).to include("Cont ed fees")
+        expect(response.body).to include("Paid")
+        expect(response.body).to include("$60.00")
+      end
+    end
+
+    context "as non-admin non-owner" do
+      before { sign_in user }
+
+      it "redirects" do
+        get dashboard_event_path(event)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "Google Analytics snippets" do
     context "as admin" do
       before { sign_in admin }

@@ -50,6 +50,124 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".registrant_ids" do
+    it "returns registrations for the registrants in a hyphenated id list" do
+      person_a = create(:person)
+      person_b = create(:person)
+      person_c = create(:person)
+      reg_a = create(:event_registration, registrant: person_a)
+      reg_b = create(:event_registration, registrant: person_b)
+      reg_c = create(:event_registration, registrant: person_c)
+
+      results = EventRegistration.registrant_ids("#{person_a.id}-#{person_b.id}")
+      expect(results).to include(reg_a, reg_b)
+      expect(results).not_to include(reg_c)
+    end
+  end
+
+  describe ".registrant_sector" do
+    it "returns registrations whose registrant belongs to the sector" do
+      sector = create(:sector)
+      in_sector = create(:person)
+      create(:sectorable_item, sector: sector, sectorable: in_sector)
+      out_sector = create(:person)
+      reg_in = create(:event_registration, registrant: in_sector)
+      reg_out = create(:event_registration, registrant: out_sector)
+
+      results = EventRegistration.registrant_sector(sector.id)
+      expect(results).to include(reg_in)
+      expect(results).not_to include(reg_out)
+    end
+  end
+
+  describe "payment and scholarship scopes" do
+    let(:event) { create(:event, cost_cents: 1000) }
+    let(:paid_reg) { create(:event_registration, event: event) }
+    let(:unpaid_reg) { create(:event_registration, event: event) }
+    let(:scholarship_reg) { create(:event_registration, event: event) }
+    let(:incomplete_scholarship_reg) { create(:event_registration, event: event) }
+
+    before do
+      create(:allocation, source: create(:payment, amount_cents: 1000, amount_cents_remaining: 1000),
+                          allocatable: paid_reg, amount: 1000)
+      create(:allocation, source: create(:payment, amount_cents: 400, amount_cents_remaining: 400),
+                          allocatable: unpaid_reg, amount: 400)
+      completed = create(:scholarship, recipient: scholarship_reg.registrant, tasks_completed: true, amount_cents: 1000)
+      create(:allocation, source: completed, allocatable: scholarship_reg, amount: 1000)
+      incomplete = create(:scholarship, recipient: incomplete_scholarship_reg.registrant, tasks_completed: false, amount_cents: 1000)
+      create(:allocation, source: incomplete, allocatable: incomplete_scholarship_reg, amount: 0)
+    end
+
+    describe ".paid_in_full" do
+      it "returns registrations whose allocations cover the cost" do
+        results = EventRegistration.paid_in_full
+        expect(results).to include(paid_reg, scholarship_reg)
+        expect(results).not_to include(unpaid_reg)
+      end
+    end
+
+    describe ".not_paid_in_full" do
+      it "returns registrations still owing money" do
+        results = EventRegistration.not_paid_in_full
+        expect(results).to include(unpaid_reg)
+        expect(results).not_to include(paid_reg, scholarship_reg)
+      end
+    end
+
+    describe ".with_scholarship" do
+      it "returns only registrations funded by a scholarship" do
+        results = EventRegistration.with_scholarship
+        expect(results).to include(scholarship_reg, incomplete_scholarship_reg)
+        expect(results).not_to include(paid_reg, unpaid_reg)
+      end
+    end
+
+    describe ".scholarship_tasks_completed" do
+      it "returns recipients whose scholarship tasks are complete" do
+        results = EventRegistration.scholarship_tasks_completed
+        expect(results).to include(scholarship_reg)
+        expect(results).not_to include(incomplete_scholarship_reg, paid_reg, unpaid_reg)
+      end
+    end
+
+    describe ".scholarship_tasks_incomplete" do
+      it "returns recipients whose scholarship tasks are not complete" do
+        results = EventRegistration.scholarship_tasks_incomplete
+        expect(results).to include(incomplete_scholarship_reg)
+        expect(results).not_to include(scholarship_reg, paid_reg, unpaid_reg)
+      end
+    end
+
+    describe ".scholarship_status" do
+      it "maps 'yes' to all recipients" do
+        expect(EventRegistration.scholarship_status("yes")).to include(scholarship_reg, incomplete_scholarship_reg)
+        expect(EventRegistration.scholarship_status("yes")).not_to include(paid_reg, unpaid_reg)
+      end
+
+      it "maps 'complete' to completed-task recipients" do
+        expect(EventRegistration.scholarship_status("complete")).to include(scholarship_reg)
+        expect(EventRegistration.scholarship_status("complete")).not_to include(incomplete_scholarship_reg)
+      end
+
+      it "maps 'incomplete' to incomplete-task recipients" do
+        expect(EventRegistration.scholarship_status("incomplete")).to include(incomplete_scholarship_reg)
+        expect(EventRegistration.scholarship_status("incomplete")).not_to include(scholarship_reg)
+      end
+    end
+
+    describe ".payment_status" do
+      it "maps 'paid' to paid_in_full" do
+        expect(EventRegistration.payment_status("paid")).to include(paid_reg)
+        expect(EventRegistration.payment_status("paid")).not_to include(unpaid_reg)
+      end
+
+      it "maps 'unpaid' to not_paid_in_full" do
+        expect(EventRegistration.payment_status("unpaid")).to include(unpaid_reg)
+        expect(EventRegistration.payment_status("unpaid")).not_to include(paid_reg)
+      end
+    end
+  end
+
   describe "#scholarship?" do
     it "returns true when registration has a scholarship" do
       reg = create(:event_registration)

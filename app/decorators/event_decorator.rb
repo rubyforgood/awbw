@@ -21,6 +21,22 @@ class EventDecorator < ApplicationDecorator
     start_date.strftime("%B %d, %Y")
   end
 
+  # Weekday-prefixed date range (e.g. "Thu-Fri, Jan 1-2, 2026") that collapses the
+  # year — and the month/weekday where possible — so nothing repeats unnecessarily.
+  def date_range
+    s = start_date.in_time_zone(Time.zone)
+    e = (end_date || start_date).in_time_zone(Time.zone)
+    return s.strftime("%a, %b %-d, %Y") if s.to_date == e.to_date
+
+    if s.year == e.year && s.month == e.month
+      "#{s.strftime('%a')}-#{e.strftime('%a')}, #{s.strftime('%b')} #{s.strftime('%-d')}-#{e.strftime('%-d')}, #{s.strftime('%Y')}"
+    elsif s.year == e.year
+      "#{s.strftime('%a, %b %-d')} - #{e.strftime('%a, %b %-d')}, #{s.strftime('%Y')}"
+    else
+      "#{s.strftime('%a, %b %-d, %Y')} - #{e.strftime('%a, %b %-d, %Y')}"
+    end
+  end
+
   def detail(length: nil)
     length ? description&.truncate(length) : description
   end
