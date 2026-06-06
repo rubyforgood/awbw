@@ -253,6 +253,33 @@ RSpec.describe EventDashboard do
     end
   end
 
+  # An outstanding scholarship (tasks not yet completed) has a zero allocation,
+  # so the registration's full cost still sits in outstanding_cents. The grand
+  # total must not also add the awarded amount, or it double-counts that cost
+  # and climbs above the full-price total_cents.
+  context "with an outstanding (unapplied) scholarship" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:recipient) { create(:person) }
+    let!(:registration) { create(:event_registration, event: event, registrant: recipient, status: "registered") }
+
+    before do
+      scholarship = create(:scholarship, recipient: recipient, amount_cents: 10_000, tasks_completed: false)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+    end
+
+    it "still reports the awarded amount on the scholarship card headline" do
+      expect(dashboard.scholarship_total_cents).to eq(10_000)
+      expect(dashboard.scholarship_total_cents).to eq(
+        dashboard.completed_scholarship_cents + dashboard.outstanding_scholarship_cents
+      )
+    end
+
+    it "does not let the grand total exceed the full-price total" do
+      expect(dashboard.grand_total_cents).to eq(dashboard.total_cents)
+      expect(dashboard.grand_total_cents).to eq(10_000)
+    end
+  end
+
   context "with a free event" do
     let(:event) { create(:event, cost_cents: 0) }
 

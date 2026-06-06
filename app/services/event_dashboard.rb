@@ -71,9 +71,12 @@ class EventDashboard
   end
 
   # Everything accounted for: registration fees (received + still owed),
-  # scholarships awarded, and continuing-education fees.
+  # scholarship dollars already applied, and continuing-education fees.
+  # Outstanding scholarships are excluded here: their cost still sits in
+  # outstanding_cents, so adding the award would double-count it and push the
+  # grand total above total_cents.
   def grand_total_cents
-    registration_subtotal_cents + scholarship_total_cents + cont_ed_total_cents
+    registration_subtotal_cents + applied_scholarship_cents + cont_ed_total_cents
   end
 
   def paid_count
@@ -240,6 +243,13 @@ class EventDashboard
 
   def allocated_by_registration
     @allocated_by_registration ||= registration_allocations.group(:allocatable_id).sum(:amount)
+  end
+
+  # Scholarship dollars actually applied to registrations. Outstanding
+  # scholarships have a zero allocation (see Scholarship#sync_allocation_amount),
+  # so this counts only money that has reduced a registrant's balance.
+  def applied_scholarship_cents
+    registration_allocations.where(source_type: "Scholarship").sum(:amount)
   end
 
   def scholarships
