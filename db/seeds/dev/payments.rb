@@ -1,5 +1,5 @@
-  # Payment seeds - can be run independently
-  # Usage:  "rails runner db/seeds/payments.rb"
+  # Payment seeds (dev-only) - run via `rake db:seed:payments`, or as part of
+  # `rake db:seed:dev`. Can also be run independently: "rails runner db/seeds/dev/payments.rb"
 
   puts "Seeding Payments, Allocations, and Refunds..."
 
