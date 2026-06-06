@@ -756,6 +756,46 @@ Person.where(
   end
 end
 
+puts "Assigning addresses and sectors to people…"
+# Curated state/county pairs so the event overview's States and Counties cards
+# show a recognizable spread rather than scattered random values.
+person_locations = [
+  { state: "CA", county: "Los Angeles", city: "Los Angeles", locality: "LA City" },
+  { state: "CA", county: "Orange", city: "Santa Ana", locality: "Orange County" },
+  { state: "CA", county: "San Francisco", city: "San Francisco", locality: "Northern CA" },
+  { state: "NY", county: "Kings", city: "Brooklyn", locality: "Outside CA" },
+  { state: "TX", county: "Travis", city: "Austin", locality: "Outside CA" },
+  { state: "WA", county: "King", city: "Seattle", locality: "Outside CA" },
+  { state: "IL", county: "Cook", city: "Chicago", locality: "Outside CA" }
+]
+person_sector_pool = Sector.all.to_a
+
+Person.find_each.with_index do |person, i|
+  if person.addresses.empty?
+    loc = person_locations[i % person_locations.size]
+    person.addresses.create!(
+      address_type: "personal",
+      street_address: Faker::Address.street_address,
+      city: loc[:city],
+      state: loc[:state],
+      county: loc[:county],
+      locality: loc[:locality],
+      zip_code: Faker::Address.zip_code,
+      primary: true
+    )
+  end
+
+  if person_sector_pool.any? && person.sectors.empty?
+    person_sector_pool.sample(rand(1..3)).each do |sector|
+      SectorableItem.find_or_create_by!(
+        sector_id: sector.id,
+        sectorable_type: "Person",
+        sectorable_id: person.id
+      )
+    end
+  end
+end
+
 puts "Creating CommunityNews…"
 [
   "Workshop Spotlight: Building Confidence Through Art",
@@ -854,7 +894,9 @@ end
 
 puts "Linking some WorkshopVariations to WorkshopVariationIdeas…"
 WorkshopVariationIdea.all.sample(2).each_with_index do |idea, i|
-  variation = WorkshopVariation.where(workshop_variation_idea_id: nil).sample
+  # Only link variations that pass validation — skips any legacy/invalid rows
+  # so update! doesn't fail on records this seed didn't create.
+  variation = WorkshopVariation.where(workshop_variation_idea_id: nil).find(&:valid?)
   next unless variation
 
   variation.update!(workshop_variation_idea_id: idea.id, published: i > 0)
@@ -1152,6 +1194,80 @@ unless Form.standalone.find_by(role: "scholarship")
   ).call
 end
 
+puts "Creating Events with shared forms…"
+admin_user = User.find_by(email: "umberto.user@example.com")
+registration_form = Form.standalone.find_by!(role: "registration")
+scholarship_form = Form.standalone.find_by!(role: "scholarship")
+
+# Each entry: [title, form_type, cost_cents, scholarship?, visibility, span_days]
+# form_type: :long, :short, or :none. span_days (optional) makes a multi-day event.
+dev_events = [
+  [ "AWBW Facilitator Training", :long, 15_000, true,
+    { published: true, featured: true, publicly_visible: true } ],
+  [ "Facilitator Training: Trauma-Informed Art Practices", :long, 12_000, true,
+    { published: true, featured: true }, 3 ],
+  [ "A Year of Healing and Rebuilding Together Wellness Day", :short, 0, false,
+    { published: true, publicly_visible: true, publicly_featured: true, featured: true } ],
+  [ "Youth Creativity Day", :short, 0, false,
+    { published: true, publicly_visible: true, publicly_featured: true } ],
+  [ "Mindful Art for Survivors Workshop", :short, 5_000, true,
+    { published: true, publicly_visible: true, publicly_featured: true } ],
+  [ "Community Open Studio Night", :none, 0, false,
+    { published: true, featured: true } ],
+  [ "Annual Celebration of Voices", :none, 0, false,
+    { published: true, publicly_visible: true } ],
+  [ "Art as Healing: Virtual Group Session", :short, 0, false,
+    { published: true, featured: true } ],
+  [ "Leaders in Creativity: Facilitator Roundtable", :short, 0, false,
+    { published: true, publicly_visible: true } ],
+  [ "Family Creative Expression Day", :short, 0, false,
+    { published: true, publicly_visible: true, publicly_featured: true } ],
+  [ "Creative Safety & Support Workshop", :short, 2_500, true,
+    { published: true, featured: true } ],
+  [ "Healing Through Art: Spring Community Gathering", :short, 0, false,
+    { published: true, publicly_visible: true } ]
+]
+
+dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visibility, span_days), i|
+  # Soonest events sort last; index order is start_date DESC, so reversing the
+  # offset puts the first two entries (the data-rich trainings) at the top of the list.
+  start_date = Time.current + ((dev_events.length - i) * 5).days
+  end_date = start_date + (span_days ? (span_days - 1).days : 0) + rand(2..4).hours
+  registration_close = start_date - rand(2..7).days
+  registerable = form_type != :none
+
+  desc_content = Faker::Lorem.paragraph(sentence_count: 6)
+  event = Event.find_or_create_by!(title: title) do |e|
+    e.description = desc_content
+    e.rhino_description = desc_content
+    e.start_date = start_date
+    e.end_date = end_date
+    e.registration_close_date = registration_close
+    e.cost_cents = cost_cents
+    e.public_registration_enabled = false
+    e.created_by = admin_user
+    visibility.each { |k, v| e.send(:"#{k}=", v) }
+  end
+
+  # Keep the demo schedule current and deterministic on re-seed — find_or_create_by!
+  # only sets dates on create, so without this an existing DB keeps stale dates and
+  # neither the index ordering nor the multi-day span would update.
+  event.update!(start_date: start_date, end_date: end_date, registration_close_date: registration_close)
+
+  if registerable
+    EventForm.find_or_create_by!(event: event, role: "registration") do |ef|
+      ef.form = registration_form
+    end
+    event.update!(public_registration_enabled: true) unless event.public_registration_enabled?
+  end
+
+  if scholarship
+    EventForm.find_or_create_by!(event: event, role: "scholarship") do |ef|
+      ef.form = scholarship_form
+    end
+  end
+end
+
 puts "Creating Event Registrations…"
 
 # Key people for named scenarios
@@ -1188,7 +1304,7 @@ registrations_data = []
 # Kim Davis: cancelled (has user)
 if facilitator_training
   [
-    { person: amy_person, status: "registered", scholarship_recipient: true, scholarship_tasks_completed: false },
+    { person: amy_person, status: "registered", scholarship_requested: true },
     { person: maria_j, status: "registered" },
     { person: anna_g, status: "attended" },
     { person: mario_j, status: "registered" },
@@ -1207,7 +1323,7 @@ end
 if trauma_training
   [
     { person: sarah_s, status: "registered" },
-    { person: jessica_b, status: "registered", scholarship_recipient: true, scholarship_tasks_completed: true },
+    { person: jessica_b, status: "registered", scholarship_requested: true },
     { person: angel_g, status: "registered" },
     { person: linda_w, status: "no_show" }
   ].each do |data|
@@ -1271,9 +1387,7 @@ registrations_data.each do |data|
     event: data[:event],
     registrant: data[:person],
     status: data[:status] || "registered",
-    scholarship_recipient: data[:scholarship_recipient] || false,
-    scholarship_tasks_completed: data[:scholarship_tasks_completed] || false,
-    scholarship_requested: data[:scholarship_recipient] || false
+    scholarship_requested: data[:scholarship_requested] || false
   )
 end
 
@@ -1386,6 +1500,91 @@ form_submissions.each do |data|
       question_name_when_answered: field.name
     )
   end
+end
+
+puts "Creating Scholarships, Payments, and Allocations…"
+# Gives the paid dev events real money + scholarship records so the event
+# overview dashboard (registrants / received / outstanding / scholarships)
+# shows meaningful numbers. Registrations and applications (registration-form
+# submissions) are created above; this fills in the financial side.
+#
+# Each registration is funded at most once — the guard skips any registration
+# that already has allocations, so the section is safe to re-run.
+
+org_payer = Organization.find_by(name: "Angel Step Inn")
+
+# Mirrors ScholarshipsController: build the scholarship with a $0 allocation,
+# then set the amount + tasks_completed so sync_allocation_amount funds the
+# allocation only when the recipient's tasks are complete.
+award_scholarship = ->(registration, amount_cents:, tasks_completed:) do
+  scholarship = Scholarship.new(recipient: registration.registrant)
+  scholarship.build_allocation(allocatable: registration, amount: 0)
+  scholarship.save!
+  scholarship.update!(amount_cents: amount_cents, tasks_completed: tasks_completed)
+  scholarship
+end
+
+# payer is a Person or an Organization; kind is :cash or :check.
+record_payment = ->(registration, payer:, amount_cents:, kind: :cash) do
+  payer_attrs = payer.is_a?(Organization) ? { organization: payer } : { person: payer }
+  created_at = rand(3..30).days.ago
+  payment = case kind
+  when :check
+    CheckPayment.create!(**payer_attrs, amount_cents: amount_cents, check_number: "CHK-#{rand(10_000..99_999)}", created_at: created_at)
+  else
+    CashPayment.create!(**payer_attrs, amount_cents: amount_cents, created_at: created_at)
+  end
+  Allocation.create!(source: payment, allocatable: registration, amount: amount_cents, created_at: created_at)
+end
+
+# Funds a registration once. `scholarship` and `payments` describe what to build.
+fund_registration = ->(event, person, scholarship: nil, payments: []) do
+  return unless event && person
+  registration = EventRegistration.find_by(event: event, registrant: person)
+  return unless registration
+  return if registration.allocations.exists?
+
+  award_scholarship.(registration, **scholarship) if scholarship
+  payments.each { |payment| record_payment.(registration, **payment) }
+end
+
+# --- AWBW Facilitator Training ($150) ---
+# Amy: pending scholarship (tasks incomplete → $0 allocated) + partial cash → still owes
+fund_registration.(facilitator_training, amy_person,
+  scholarship: { amount_cents: 10_000, tasks_completed: false },
+  payments: [ { payer: amy_person, amount_cents: 5_000, kind: :cash } ])
+# Maria: paid in full by cash
+fund_registration.(facilitator_training, maria_j,
+  payments: [ { payer: maria_j, amount_cents: 15_000, kind: :cash } ])
+# Anna: paid in full by check from her organization (org-payer scenario)
+fund_registration.(facilitator_training, anna_g,
+  payments: [ { payer: org_payer || anna_g, amount_cents: 15_000, kind: :check } ])
+# Mario: partial cash → still owes
+fund_registration.(facilitator_training, mario_j,
+  payments: [ { payer: mario_j, amount_cents: 5_000, kind: :cash } ])
+
+# --- Facilitator Training: Trauma-Informed Art Practices ($120) ---
+# Sarah: paid in full by check
+fund_registration.(trauma_training, sarah_s,
+  payments: [ { payer: sarah_s, amount_cents: 12_000, kind: :check } ])
+# Jessica: completed scholarship ($80) + cash for the remainder → paid in full
+fund_registration.(trauma_training, jessica_b,
+  scholarship: { amount_cents: 8_000, tasks_completed: true },
+  payments: [ { payer: jessica_b, amount_cents: 4_000, kind: :cash } ])
+# Angel: partial cash → still owes
+fund_registration.(trauma_training, angel_g,
+  payments: [ { payer: angel_g, amount_cents: 6_000, kind: :cash } ])
+
+# --- Mindful Art for Survivors Workshop ($50) ---
+# Amy: paid in full by cash
+fund_registration.(mindful_art, amy_person,
+  payments: [ { payer: amy_person, amount_cents: 5_000, kind: :cash } ])
+
+[ facilitator_training, trauma_training, mindful_art ].compact.each do |event|
+  dashboard = EventDashboard.new(event)
+  puts "  #{event.title}: #{dashboard.registrant_count} registrants, " \
+       "received #{dashboard.received_cents / 100.0}, outstanding #{dashboard.outstanding_cents / 100.0}, " \
+       "scholarships #{dashboard.scholarship_total_cents / 100.0} (#{dashboard.scholarship_recipient_count})"
 end
 
 puts "Creating Resources…"

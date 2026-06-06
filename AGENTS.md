@@ -48,22 +48,22 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~66 files |
-| `app/services/` | Service objects for complex logic | ~21 files |
+| `app/models/` | ActiveRecord models | ~73 files |
+| `app/services/` | Service objects for complex logic | ~23 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
-| `app/models/concerns/` | Shared model modules | 12 concerns |
+| `app/models/concerns/` | Shared model modules | 13 concerns |
 
 ### Presentation
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~63 files |
-| `app/views/` | ERB templates | ~465 files |
-| `app/decorators/` | Draper decorators for view logic | ~36 files |
-| `app/policies/` | ActionPolicy authorization rules | ~44 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~69 files |
+| `app/views/` | ERB templates | ~504 files |
+| `app/decorators/` | Draper decorators for view logic | ~37 files |
+| `app/policies/` | ActionPolicy authorization rules | ~49 files |
 | `app/presenters/` | Presentation objects | 1 file |
 | `app/helpers/` | View helpers | ~19 files |
-| `app/mailers/` | ActionMailer classes | 6 files |
+| `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
 ### Frontend
@@ -172,6 +172,7 @@ end
 
 ### Business Logic
 
+- `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total)
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas

@@ -35,7 +35,89 @@ class EventRegistration < ApplicationRecord
     OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name", name: "%#{registrant_name}%") }
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
+  scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
   scope :attendance_status, ->(status) { where(status: status) }
+  scope :registrant_state, ->(state) {
+    joins(registrant: :addresses)
+      .where(addresses: { inactive: false, state: state })
+      .distinct
+  }
+  # Accepts "STATE|County" (from the manage filter) to scope to a county within
+  # a specific state, or a bare county name for backward compatibility.
+  scope :registrant_county, ->(value) {
+    state, county = value.to_s.include?("|") ? value.split("|", 2) : [ nil, value.to_s ]
+    next none if county.blank?
+    conditions = { inactive: false, county: county }
+    conditions[:state] = state if state.present?
+    joins(registrant: :addresses).where(addresses: conditions).distinct
+  }
+  scope :registrant_sector, ->(sector_id) {
+    joins(registrant: :sectorable_items)
+      .where(sectorable_items: { sector_id: sector_id })
+      .distinct
+  }
+  scope :with_scholarship, -> {
+    where(<<~SQL.squish)
+      EXISTS (
+        SELECT 1 FROM allocations
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+      )
+    SQL
+  }
+  scope :scholarship_tasks_completed, -> { with_scholarship_where_tasks(true) }
+  scope :scholarship_tasks_incomplete, -> { with_scholarship_where_tasks(false) }
+  scope :with_scholarship_where_tasks, ->(completed) {
+    where(<<~SQL.squish, completed)
+      EXISTS (
+        SELECT 1 FROM allocations
+        INNER JOIN scholarships ON scholarships.id = allocations.source_id
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+          AND allocations.source_type = 'Scholarship'
+          AND scholarships.tasks_completed = ?
+      )
+    SQL
+  }
+  scope :scholarship_status, ->(value) {
+    case value
+    when "yes" then with_scholarship
+    when "complete" then scholarship_tasks_completed
+    when "incomplete" then scholarship_tasks_incomplete
+    end
+  }
+  scope :paid_in_full, -> {
+    where(<<~SQL.squish)
+      COALESCE((
+        SELECT SUM(allocations.amount) FROM allocations
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+      ), 0) >= COALESCE((
+        SELECT events.cost_cents FROM events WHERE events.id = event_registrations.event_id
+      ), 0)
+    SQL
+  }
+  scope :not_paid_in_full, -> {
+    where(<<~SQL.squish)
+      COALESCE((
+        SELECT events.cost_cents FROM events WHERE events.id = event_registrations.event_id
+      ), 0) > 0
+      AND COALESCE((
+        SELECT SUM(allocations.amount) FROM allocations
+        WHERE allocations.allocatable_type = 'EventRegistration'
+          AND allocations.allocatable_id = event_registrations.id
+      ), 0) < COALESCE((
+        SELECT events.cost_cents FROM events WHERE events.id = event_registrations.event_id
+      ), 0)
+    SQL
+  }
+  scope :payment_status, ->(value) {
+    case value
+    when "paid" then paid_in_full
+    when "unpaid" then not_paid_in_full
+    end
+  }
   scope :keyword, ->(term) {
     return none if term.blank?
 
