@@ -12,7 +12,9 @@
   <div id="<%= dropdown_id %>"
        data-dropdown-target="content"
        class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
-    <%= link_to "Public registration", new_event_public_registration_path(@event), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
-    <%= link_to "Scholarship version", new_event_public_registration_path(@event, scholarship_requested: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+    <%= link_to "Public registration", new_event_public_registration_path(@event, as_visitor: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+    <% if @event.scholarship_form %>
+      <%= link_to "Scholarship version", new_event_public_registration_path(@event, scholarship_requested: true, as_visitor: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+    <% end %>
   </div>
 </div>
