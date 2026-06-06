@@ -153,6 +153,10 @@ RSpec.describe EventRegistration, type: :model do
         expect(EventRegistration.scholarship_status("incomplete")).to include(incomplete_scholarship_reg)
         expect(EventRegistration.scholarship_status("incomplete")).not_to include(scholarship_reg)
       end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.scholarship_status("bogus")).to include(scholarship_reg, incomplete_scholarship_reg, paid_reg, unpaid_reg)
+      end
     end
 
     describe ".payment_status" do
@@ -164,6 +168,10 @@ RSpec.describe EventRegistration, type: :model do
       it "maps 'unpaid' to not_paid_in_full" do
         expect(EventRegistration.payment_status("unpaid")).to include(unpaid_reg)
         expect(EventRegistration.payment_status("unpaid")).not_to include(paid_reg)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.payment_status("bogus")).to include(paid_reg, unpaid_reg)
       end
     end
   end

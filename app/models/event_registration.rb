@@ -85,6 +85,7 @@ class EventRegistration < ApplicationRecord
     when "yes" then with_scholarship
     when "complete" then scholarship_tasks_completed
     when "incomplete" then scholarship_tasks_incomplete
+    else all
     end
   }
   scope :paid_in_full, -> {
@@ -116,6 +117,7 @@ class EventRegistration < ApplicationRecord
     case value
     when "paid" then paid_in_full
     when "unpaid" then not_paid_in_full
+    else all
     end
   }
   scope :keyword, ->(term) {
