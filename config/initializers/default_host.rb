@@ -7,9 +7,10 @@
 
 if Rails.env.development?
   port = ENV.fetch("PORT", 3000)
-  workspace_port = ENV["WORKSPACE_PORT"]
-  # Use awbw.local in a workspace so browsers treat all workspaces as the
-  # same origin — passwords and cookies carry over regardless of port.
+  workspace_port = ENV["WORKSPACE_PORT"].presence
+  # Use awbw.local in a workspace so all workspaces share the same hostname
+  # (site) — saved passwords and cookies carry over across ports, since they
+  # are scoped by host rather than full origin.
   # Requires 127.0.0.1 awbw.local in /etc/hosts.
   hostname = workspace_port ? "awbw.local" : "localhost"
   default_host = "#{hostname}:#{port}"

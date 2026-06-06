@@ -7,7 +7,7 @@
 #
 # WORKSPACE_PORT gives each parallel workspace its own database. Under Conductor
 # it is derived from CONDUCTOR_PORT by the bin/conductor-* scripts.
-<% workspace_port = ENV["WORKSPACE_PORT"] %>
+<% workspace_port = ENV["WORKSPACE_PORT"].presence %>
 
 base: &base
   adapter: trilogy
