@@ -16,9 +16,9 @@
         <%= render "form_actions_menu" %>
       <% end %>
       <%= render "bulk_actions_menu" %>
-      <% if allowed_to?(:edit?, @event) %>
-        <%= link_to "Add registrant", new_event_registration_path(event_id: @event.id, return_to: "manage"), class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-      <% end %>
+<% if allowed_to?(:new?, EventRegistration) %>
+  <%= link_to "Add registrant", new_event_registration_path(event_id: @event.id, return_to: "manage"), class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+<% end %>
     </div>
   </div>
 
