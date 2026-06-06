@@ -14,7 +14,7 @@ invited = User.find_or_create_by!(email: "invited.pending@example.com") do |user
   user.super_user = false
   user.confirmed_at = Time.current
 end
-unless invited.confirmed_at.present?
+unless invited.welcome_instructions_token.present?
   invited.update_columns(
     confirmed_at: nil,
     welcome_instructions_token: Devise.friendly_token,
@@ -112,7 +112,7 @@ stale_invited = User.find_or_create_by!(email: "stale.invite@example.com") do |u
   user.super_user = false
   user.confirmed_at = Time.current
 end
-unless stale_invited.confirmed_at.present?
+unless stale_invited.welcome_instructions_token.present?
   stale_invited.update_columns(
     confirmed_at: nil,
     welcome_instructions_token: Devise.friendly_token,
@@ -138,7 +138,7 @@ recent_invited = User.find_or_create_by!(email: "recent.invite@example.com") do 
   user.super_user = false
   user.confirmed_at = Time.current
 end
-unless recent_invited.confirmed_at.present?
+unless recent_invited.welcome_instructions_token.present?
   recent_invited.update_columns(
     confirmed_at: nil,
     welcome_instructions_token: Devise.friendly_token,
@@ -173,7 +173,7 @@ invited_no_person = User.find_or_create_by!(email: "invited.noperson@example.com
   user.super_user = false
   user.confirmed_at = Time.current
 end
-unless invited_no_person.confirmed_at.present?
+unless invited_no_person.welcome_instructions_token.present?
   invited_no_person.update_columns(
     confirmed_at: nil,
     welcome_instructions_token: Devise.friendly_token,
