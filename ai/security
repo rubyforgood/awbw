@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Security scan: Brakeman (Rails static analysis) + bundler-audit (gem CVEs).
+# Mirrors the CI security scan. Unrelated to the /audit design/accessibility skill.
+# Runs both tools even if the first reports issues, and exits non-zero if either fails.
+set -uo pipefail
+source "$(dirname "$0")/.ruby-env"
+
+status=0
+
+echo "→ Brakeman — Rails security static analysis"
+bin/brakeman --no-pager || status=1
+
+echo
+echo "→ bundler-audit — known CVEs in gems"
+bin/bundler-audit || status=1
+
+exit $status
