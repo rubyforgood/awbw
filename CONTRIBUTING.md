@@ -100,8 +100,8 @@ DATABASE_URL=trilogy://user:password@host:port/database?encoding=utf8mb4&collati
 
 - Running mise should have run `rake db:seed`
   - This will populate the basic data needed to use the app
-- To add more sample data for development, run `rake db:dev:seed`
-  - This will add sample workshops, community news, stories, resources, FAQs, and more
+- To add more sample data for development, run `rake db:seed:dev`
+  - This will add sample workshops, community news, stories, resources, FAQs, payments, and more
 - To see your data
   - The home page will show Workshops, CommunityNews, Resources, Events, and Stories
   - The [Admin Home](http://localhost:3000/admin) provides CRUD access for most models
