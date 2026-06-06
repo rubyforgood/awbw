@@ -1,0 +1,298 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <%# Top bar: back link + actions %>
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+    <%= link_to "← Event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <div class="flex gap-2">
+      <%= link_to "Manage registrants", manage_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+      <%= link_to "View", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    </div>
+  </div>
+
+  <%# Centered title block %>
+  <div class="text-center mb-8">
+    <%= link_to @event.title, edit_event_path(@event), class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
+    <h1 class="text-3xl font-bold text-gray-900 mt-1 flex items-center justify-center gap-2">
+      <i class="fa-solid fa-chart-simple text-blue-600"></i>
+      Dashboard
+    </h1>
+    <% if @event.start_date.present? %>
+      <p class="text-sm text-gray-500 mt-2">
+        <%= @event.date_range %>
+      </p>
+    <% end %>
+  </div>
+
+  <%# Money cards (paid events only) — shown first %>
+  <% if @dashboard.free? %>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center text-sm text-gray-500 mb-4">
+      <i class="fa-solid fa-tag text-gray-400 mr-1"></i> Free event — no payments or scholarships
+    </div>
+  <% else %>
+    <%# Money reads as an equation: Grand total = Registration fees + Scholarships + Cont ed fees.
+        Each addend owns Paid/Completed + Outstanding sub-rows (nested inside its card).
+        Grand total is a full-width hero; the three addends sit in a row beneath it. %>
+    <div class="space-y-3 sm:space-y-4 mb-4">
+      <%# Grand total — full-width headline read as an inline equation:
+          $grand = $registration + $scholarships + $cont_ed. Left-aligned; the headline
+          figure dominates while the addends stay muted, and the row wraps on mobile. %>
+      <%= link_to manage_event_path(@event),
+            class: "block rounded-xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm hover:border-indigo-300 transition-colors" do %>
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 text-indigo-600 text-xs font-semibold uppercase tracking-wide">
+            <i class="fa-solid fa-coins"></i>
+            <span>Grand total</span>
+          </div>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm">
+            <i class="fa-solid fa-users text-gray-400"></i>
+            <%= pluralize(@dashboard.registrant_count, "registrant") %>
+          </span>
+        </div>
+        <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span class="text-3xl sm:text-4xl font-bold text-indigo-700 tabular-nums"><%= number_to_currency(@dashboard.grand_total_cents / 100.0) %></span>
+          <span class="text-2xl font-light text-gray-300 select-none">=</span>
+          <span class="h-9 w-px bg-gray-200" aria-hidden="true"></span>
+          <div class="leading-tight">
+            <p class="text-lg sm:text-xl font-semibold text-green-600 tabular-nums"><%= number_to_currency(@dashboard.registration_subtotal_cents / 100.0) %></p>
+            <p class="text-xs text-gray-500">Registration fees</p>
+          </div>
+          <span class="text-2xl font-light text-gray-300 select-none">+</span>
+          <div class="leading-tight">
+            <p class="text-lg sm:text-xl font-semibold text-fuchsia-600 tabular-nums"><%= number_to_currency(@dashboard.scholarship_total_cents / 100.0) %></p>
+            <p class="text-xs text-gray-500">Scholarships</p>
+          </div>
+          <span class="text-2xl font-light text-gray-300 select-none">+</span>
+          <div class="leading-tight">
+            <p class="text-lg sm:text-xl font-semibold text-teal-600 tabular-nums"><%= number_to_currency(@dashboard.cont_ed_total_cents / 100.0) %></p>
+            <p class="text-xs text-gray-500">Cont ed fees</p>
+          </div>
+        </div>
+      <% end %>
+
+      <%# The three addends: Registration fees + Scholarships + Cont ed fees. Each owns
+          paid/completed + outstanding sub-rows that expand to the registrants behind the figure. %>
+      <div class="flex flex-col sm:flex-row sm:items-stretch gap-3 sm:gap-4">
+        <%# Payments = Paid + Outstanding %>
+        <div class="flex-1 rounded-xl border border-green-200 bg-white p-4 shadow-sm">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5 text-green-600 text-xs font-semibold uppercase tracking-wide">
+              <i class="fa-solid fa-sack-dollar"></i>
+              <span>Registration fees</span>
+            </div>
+            <%= link_to manage_event_path(@event),
+                  class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
+                  title: "View all registrants" do %>
+              <i class="fa-solid fa-users text-gray-400"></i>
+              <%= pluralize(@dashboard.registrant_count, "registrant") %>
+            <% end %>
+          </div>
+          <p class="text-2xl sm:text-3xl font-bold text-green-700 mt-2 tabular-nums break-words"><%= number_to_currency(@dashboard.registration_subtotal_cents / 100.0) %></p>
+
+          <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
+            <%= render "dashboard_money_row", label: "Paid", icon: "fa-money-bill-wave",
+                  amount_cents: @dashboard.received_cents,
+                  count: @dashboard.paid_count, registrants: @dashboard.paid_registrants,
+                  filter_path: manage_event_path(@event, payment_status: "paid") %>
+            <%= render "dashboard_money_row", label: "Due", icon: "fa-hourglass-half",
+                  icon_color: @dashboard.unpaid_count.positive? ? "text-white" : "text-gray-400",
+                  icon_bg: @dashboard.unpaid_count.positive? ? "bg-orange-500" : nil,
+                  amount_cents: @dashboard.outstanding_cents,
+                  count: @dashboard.unpaid_count, registrants: @dashboard.unpaid_registrants,
+                  filter_path: manage_event_path(@event, payment_status: "unpaid") %>
+          </div>
+        </div>
+
+        <%# Scholarships = Completed + Outstanding %>
+        <div class="flex-1 rounded-xl border border-fuchsia-200 bg-white p-4 shadow-sm">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5 text-fuchsia-600 text-xs font-semibold uppercase tracking-wide">
+              <i class="fa-solid fa-graduation-cap"></i>
+              <span>Scholarships</span>
+            </div>
+            <%= link_to manage_event_path(@event, scholarship: "yes"),
+                  class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
+                  title: "View scholarship recipients" do %>
+              <i class="fa-solid fa-user-graduate text-gray-400"></i>
+              <%= pluralize(@dashboard.scholarship_recipient_count, "recipient") %>
+            <% end %>
+          </div>
+          <p class="text-2xl sm:text-3xl font-bold text-fuchsia-700 mt-2 tabular-nums break-words"><%= number_to_currency(@dashboard.scholarship_total_cents / 100.0) %></p>
+
+          <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
+            <%= render "dashboard_money_row", label: "Completed", icon: "fa-circle-check",
+                  amount_cents: @dashboard.completed_scholarship_cents,
+                  count: @dashboard.completed_scholarship_registrants.size, registrants: @dashboard.completed_scholarship_registrants,
+                  filter_path: manage_event_path(@event, registrant_ids: @dashboard.completed_scholarship_registrants.map(&:id).join("-")) %>
+            <%= render "dashboard_money_row", label: "Incomplete", icon: "fa-hourglass-half",
+                  icon_color: @dashboard.outstanding_scholarship_registrants.any? ? "text-white" : "text-gray-400",
+                  icon_bg: @dashboard.outstanding_scholarship_registrants.any? ? "bg-orange-500" : nil,
+                  amount_cents: @dashboard.outstanding_scholarship_cents,
+                  count: @dashboard.outstanding_scholarship_registrants.size, registrants: @dashboard.outstanding_scholarship_registrants,
+                  filter_path: manage_event_path(@event, registrant_ids: @dashboard.outstanding_scholarship_registrants.map(&:id).join("-")) %>
+          </div>
+        </div>
+
+        <%# Cont ed fees = Paid + Outstanding %>
+        <div class="flex-1 rounded-xl border border-teal-200 bg-white p-4 shadow-sm">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5 text-teal-600 text-xs font-semibold uppercase tracking-wide">
+              <i class="fa-solid fa-award"></i>
+              <span>Cont ed fees</span>
+            </div>
+            <%= link_to manage_event_path(@event),
+                  class: "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:border-gray-300 hover:text-gray-800 transition-colors",
+                  title: "View all registrants" do %>
+              <i class="fa-solid fa-users text-gray-400"></i>
+              <%= pluralize(@dashboard.registrant_count, "registrant") %>
+            <% end %>
+          </div>
+          <p class="text-2xl sm:text-3xl font-bold text-teal-700 mt-2 tabular-nums break-words"><%= number_to_currency(@dashboard.cont_ed_total_cents / 100.0) %></p>
+
+          <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
+            <%= render "dashboard_money_row", label: "Paid", icon: "fa-money-bill-wave",
+                  amount_cents: @dashboard.cont_ed_paid_cents,
+                  count: @dashboard.cont_ed_paid_count, registrants: @dashboard.cont_ed_paid_registrants,
+                  filter_path: manage_event_path(@event, registrant_ids: @dashboard.cont_ed_paid_registrants.map(&:id).join("-")) %>
+            <%= render "dashboard_money_row", label: "Due", icon: "fa-hourglass-half",
+                  icon_color: @dashboard.cont_ed_unpaid_count.positive? ? "text-white" : "text-gray-400",
+                  icon_bg: @dashboard.cont_ed_unpaid_count.positive? ? "bg-orange-500" : nil,
+                  amount_cents: @dashboard.cont_ed_outstanding_cents,
+                  count: @dashboard.cont_ed_unpaid_count, registrants: @dashboard.cont_ed_unpaid_registrants,
+                  filter_path: manage_event_path(@event, registrant_ids: @dashboard.cont_ed_unpaid_registrants.map(&:id).join("-")) %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Headcount cards — each expands to reveal its full list %>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <details class="bg-white rounded-xl border border-sky-200 p-4 shadow-sm">
+      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold text-sky-700">
+            <i class="fa-solid fa-users text-sky-600"></i>
+            <span class="tabular-nums shrink-0">
+              <%= link_to @dashboard.registrant_count, manage_event_path(@event, registrant_ids: @dashboard.registrants.map(&:id).join("-")), class: "hover:underline" %>
+            </span>
+            <span class="truncate">Registrants</span>
+          </h3>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Active registrations<% if @dashboard.inactive_registration_count.positive? %> · <%= @dashboard.inactive_registration_count %> inactive<% end %></p>
+      </summary>
+      <div class="mt-3 pt-3 border-t border-gray-100">
+        <% if @dashboard.registrants.any? %>
+          <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
+            <% @dashboard.registrants.each do |registrant| %>
+              <li>
+                <%= link_to registrant.name, person_path(registrant), class: "block truncate rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-sm text-gray-400">None yet</p>
+        <% end %>
+      </div>
+    </details>
+
+    <details class="bg-white rounded-xl border border-emerald-200 p-4 shadow-sm">
+      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold text-emerald-700">
+            <i class="fa-solid fa-building text-emerald-600"></i>
+            <span class="tabular-nums shrink-0">
+              <%= link_to @dashboard.organization_count, manage_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")), class: "hover:underline" %>
+            </span>
+            <span class="truncate">Organizations</span>
+          </h3>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+      </summary>
+      <div class="mt-3 pt-3 border-t border-gray-100">
+        <% if @dashboard.organizations.any? %>
+          <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
+            <% @dashboard.organizations.each do |organization| %>
+              <li class="flex items-center gap-1.5">
+                <%= link_to organization_path(organization), class: "text-emerald-600 hover:text-emerald-800 shrink-0", title: "View #{organization.name} profile" do %>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                <% end %>
+                <%= link_to manage_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "flex items-center justify-between gap-2 flex-1 min-w-0 rounded px-1 py-0.5 hover:bg-gray-50", title: "Registrants from #{organization.name}" do %>
+                  <span class="truncate min-w-0"><%= organization.name %></span>
+                  <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.organization_counts.fetch(organization.id, 0) %></span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-sm text-gray-400">None yet</p>
+        <% end %>
+      </div>
+    </details>
+
+    <details class="bg-white rounded-xl border border-lime-200 p-4 shadow-sm">
+      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold text-lime-700">
+            <i class="fa-solid fa-layer-group text-lime-600"></i>
+            <span class="tabular-nums shrink-0">
+              <%= link_to @dashboard.sectors.size, manage_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")), class: "hover:underline" %>
+            </span>
+            <span class="truncate">Sectors</span>
+          </h3>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+      </summary>
+      <div class="mt-3 pt-3 border-t border-gray-100">
+        <% if @dashboard.sectors.any? %>
+          <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
+            <% @dashboard.sectors.each do |sector| %>
+              <li>
+                <%= link_to manage_event_path(@event, sector: sector.id), class: "flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50", title: sector.name do %>
+                  <span class="truncate min-w-0"><%= sector.name %></span>
+                  <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.sector_counts.fetch(sector.id, 0) %></span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-sm text-gray-400">None yet</p>
+        <% end %>
+      </div>
+    </details>
+
+    <details class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold text-slate-700">
+            <i class="fa-solid fa-location-dot text-slate-600"></i>
+            <span class="tabular-nums shrink-0">
+              <%= link_to @dashboard.states.size, manage_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")), class: "hover:underline" %>
+            </span>
+            <span class="truncate">States</span>
+          </h3>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+      </summary>
+      <div class="mt-3 pt-3 border-t border-gray-100">
+        <% if @dashboard.states.any? %>
+          <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
+            <% @dashboard.states.each do |state| %>
+              <li>
+                <%= link_to manage_event_path(@event, state: state), class: "flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+                  <span><%= state %></span>
+                  <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.state_counts.fetch(state, 0) %></span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-sm text-gray-400">None yet</p>
+        <% end %>
+      </div>
+    </details>
+  </div>
+</div>

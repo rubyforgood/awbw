@@ -43,6 +43,7 @@ class Sector < ApplicationRecord
   # Scopes
   scope :sector_name, ->(sector_name) {
     sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }
+  scope :sector_ids, ->(ids) { where(id: ids.to_s.split("-").map(&:to_i)) }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
   scope :has_published_taggings, -> {
     subqueries = Tag::TAGGABLE_META.map do |_key, data|
@@ -60,6 +61,7 @@ class Sector < ApplicationRecord
   scope :filter_scope, ->(params) do
     filtered = self.all
     filtered = filtered.sector_name(params[:sector_name])
+    filtered = filtered.sector_ids(params[:sector_ids]) if params[:sector_ids].present?
     filtered = filtered.published if params[:published] == "true"
     filtered = filtered.where(published: false) if params[:published] == "false"
     filtered

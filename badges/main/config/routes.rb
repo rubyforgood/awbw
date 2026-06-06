@@ -118,6 +118,7 @@ Rails.application.routes.draw do
   end
   resources :events do
     member do
+      get :dashboard
       get :manage
       get :preview_reminder
       patch :preview

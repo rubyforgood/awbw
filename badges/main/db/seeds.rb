@@ -1,10 +1,6 @@
 # Disable email delivery during seeding
 ActionMailer::Base.perform_deliveries = false
 
-def seed(file)
-  require_relative "seeds/#{file}"
-end
-
 puts "Creating Users…"
 
 # Helper: case-insensitive find-or-create by name
@@ -488,5 +484,3 @@ workshop_env_type.update!(display_text: "Workshop Environments", story_specific:
   end
   cat.update!(published: true) unless cat.published?
 end
-
-seed "payments"

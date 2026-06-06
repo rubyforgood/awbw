@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview manage preview_reminder send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard manage preview_reminder send_reminder copy_registration_form ]
 
   def index
     authorize!
@@ -35,6 +35,12 @@ class EventsController < ApplicationController
     render :show
   end
 
+  def dashboard
+    authorize! @event, to: :manage?
+    @event = @event.decorate
+    @dashboard = EventDashboard.new(@event)
+  end
+
   def manage
     authorize! @event, to: :manage?
     @event = @event.decorate
@@ -43,7 +49,14 @@ class EventsController < ApplicationController
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.attendance_status(params[:attendance_status]) if params[:attendance_status].present?
+    scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
+    scope = scope.scholarship_status(params[:scholarship]) if params[:scholarship].present?
+    scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
+    scope = scope.registrant_state(params[:state]) if params[:state].present?
+    scope = scope.registrant_county(params[:county]) if params[:county].present?
+    scope = scope.registrant_sector(params[:sector]) if params[:sector].present?
     @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
+    @dashboard = EventDashboard.new(@event)
 
     emails = @event_registrations.map { |r| r.registrant.preferred_email&.downcase }.compact
     @duplicate_emails = emails.tally.select { |_, count| count > 1 }.keys.to_set
