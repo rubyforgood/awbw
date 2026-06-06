@@ -23,5 +23,6 @@ class ChangePaymentsPayerToPersonOrganization < ActiveRecord::Migration[8.1]
 
     add_column :payments, :payer_id, :bigint unless column_exists?(:payments, :payer_id)
     add_index :payments, [ :payer_type, :payer_id ], name: "index_payments_on_payer", if_not_exists: true
+    add_index :payments, [ :payer_type, :payer_id ], name: "index_payments_on_payer_type_and_payer_id", if_not_exists: true
   end
 end
