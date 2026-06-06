@@ -66,6 +66,23 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).not_to include(story_in_other_org.title)
       end
 
+      it "shows the empty-state message when no stories match" do
+        get stories_url(title: "no-such-story-zzz"), headers: { "Turbo-Frame" => "story_results" }
+        expect(response.body).to include("No stories found")
+      end
+
+      it "filters by title and body query together" do
+        match = Story.create!(base_attributes.merge(title: "Best Story Match", rhino_body: "healing through art", published: true))
+        title_only = Story.create!(base_attributes.merge(title: "Best Story Other", rhino_body: "something else", published: true))
+        body_only = Story.create!(base_attributes.merge(title: "Unrelated Tale", rhino_body: "healing through art", published: true))
+
+        get stories_url(title: "Best Story", query: "healing"), headers: { "Turbo-Frame" => "story_results" }
+
+        expect(response.body).to include(match.title)
+        expect(response.body).not_to include(title_only.title)
+        expect(response.body).not_to include(body_only.title)
+      end
+
       describe "external link handling" do
         let(:turbo_headers) { { "Turbo-Frame" => "story_results" } }
 
