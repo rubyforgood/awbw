@@ -198,12 +198,45 @@ Standard mise activation (`eval "$(mise activate <shell>)"` in your shell rc, pe
 - Follow the red-green-refactor cycle: failing test, minimal fix, then refactor
 - Be careful with system/JS tests — avoid patterns that lead to flakiness
 
+## Session recap
+
+When the user says **"recap"**, **"ai recap"**, or runs **`ai/recap`**, review the full conversation and report two parts:
+
+1. **Recap** — what was accomplished this session.
+2. **Unresolved** — dropped threads, unanswered questions, unfinished tasks, and unresolved disagreements (from either side).
+
+This is an agent task — NOT the `/audit` skill (design/accessibility review, only on an explicit `/audit`) and NOT `ai/security` (the security scan). The `ai/recap` script only emits the trigger word; the agent does the work per this section.
+
+**Format the Unresolved part as a bulleted list with a count header.**
+
+If nothing is unresolved:
+```
+- Nothing unresolved
+  - All tasks completed, questions answered, and threads closed
+```
+
+If there are unresolved items:
+```
+- 3 unresolved items below
+  - 1. Item title
+    - Description of what's unresolved
+  - 2. Item title
+    - Description of what's unresolved
+  - 3. Item title
+    - Description of what's unresolved
+```
+
+### After submitting a PR
+
+After creating or submitting a pull request, automatically perform the session recap (Recap + Unresolved) using the format above.
+
 ## Quick Commands
 
 See `ai/` directory for executable scripts:
 
 | Command | What it does |
 |---|---|
+| `ai/recap` | Session recap: accomplishments + unresolved items (see above) |
 | `ai/test [args]` | Run RSpec |
 | `ai/lint` | Rubocop on all files |
 | `ai/lint --fix` | Auto-fix lint issues |
@@ -211,3 +244,6 @@ See `ai/` directory for executable scripts:
 | `ai/console` | Rails console |
 | `ai/routes -g pattern` | Search Rails routes |
 | `ai/db-migrate` | Run database migrations |
+| `ai/security` | Security scan: Brakeman + bundler-audit (mirrors CI) |
+
+> **"ai <name>" means the `ai/` script of that name** (e.g. "ai test" → `ai/test`, "ai security" → `ai/security`) — shell scripts in `ai/`, not slash-command skills. If a referenced `ai/<name>` script doesn't exist, ask what's intended rather than substituting a similarly named skill. (`ai/recap` is special — it triggers the agent **Session recap** behavior above, not a real script's output; never confuse it with the `/audit` design skill or the `ai/security` scan.)
