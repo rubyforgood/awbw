@@ -26,7 +26,7 @@ class Person < ApplicationRecord
   has_many :events, through: :event_registrations
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
-  has_many :person_forms, dependent: :destroy
+  has_many :form_submissions, dependent: :destroy
 
   # Asset associations
   has_one_attached :avatar, dependent: :purge do |attachable|

@@ -15,6 +15,9 @@ application.register("autosave", AutosaveController)
 import CarouselController from "./carousel_controller"
 application.register("carousel", CarouselController)
 
+import ChipSelectController from "./chip_select_controller"
+application.register("chip-select", ChipSelectController)
+
 import CocoonController from "./cocoon_controller"
 application.register("cocoon", CocoonController)
 
@@ -42,6 +45,9 @@ application.register("dropdown", DropdownController)
 import FilePreviewController from "./file_preview_controller"
 application.register("file-preview", FilePreviewController)
 
+import FormFieldsSortableController from "./form_fields_sortable_controller"
+application.register("form-fields-sortable", FormFieldsSortableController)
+
 import InactiveToggleController from "./inactive_toggle_controller"
 application.register("inactive-toggle", InactiveToggleController)
 
@@ -53,6 +59,9 @@ application.register("org-toggle", OrgToggleController)
 
 import PaginatedFieldsController from "./paginated_fields_controller"
 application.register("paginated-fields", PaginatedFieldsController)
+
+import QuestionLibraryController from "./question_library_controller"
+application.register("question-library", QuestionLibraryController)
 
 import PasswordToggleController from "./password_toggle_controller"
 application.register("password-toggle", PasswordToggleController)
@@ -77,6 +86,9 @@ application.register("searchable-checkbox", SearchableCheckboxController)
 
 import SearchableSelectController from "./searchable_select_controller"
 application.register("searchable-select", SearchableSelectController)
+
+import SectionFilterController from "./section_filter_controller"
+application.register("section-filter", SectionFilterController)
 
 import ShareUrlController from "./share_url_controller"
 application.register("share-url", ShareUrlController)

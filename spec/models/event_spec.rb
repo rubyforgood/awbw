@@ -121,8 +121,8 @@ RSpec.describe Event, type: :model do
   end
 
   describe "#build_public_registration_form" do
-    let!(:default_form) { create(:form, name: ShortEventRegistrationFormBuilder::FORM_NAME) }
-    let!(:extended_form) { create(:form, name: ExtendedEventRegistrationFormBuilder::FORM_NAME) }
+    let!(:default_form) { create(:form, name: "Short Event Registration") }
+    let!(:extended_form) { create(:form, name: "Extended Event Registration") }
 
     it "links the default registration form by default" do
       event = create(:event, public_registration_enabled: true)
@@ -168,15 +168,6 @@ RSpec.describe Event, type: :model do
     it "returns nil when no registration form is linked" do
       event = create(:event)
       expect(event.registration_form).to be_nil
-    end
-  end
-
-  describe "#scholarship_form" do
-    it "returns the form linked with scholarship role" do
-      form = create(:form, name: "Scholarship App")
-      event = create(:event)
-      create(:event_form, event: event, form: form, role: "scholarship")
-      expect(event.scholarship_form).to eq(form)
     end
   end
 

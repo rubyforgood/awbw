@@ -3,10 +3,10 @@ FactoryBot.define do
     # Association: belongs_to :form
     association :form
 
-    question { Faker::Lorem.sentence }
+    name { Faker::Lorem.sentence }
     status { :active } # Default to active
     answer_type { :free_form_input_one_line } # Default type
-    answer_datatype { :text_alphanumeric } # Default datatype
+    input_type { :text_alphanumeric } # Default datatype
     sequence(:position) { |n| n }
     parent_id { nil }
 

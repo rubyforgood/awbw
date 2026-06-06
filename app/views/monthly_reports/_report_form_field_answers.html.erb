@@ -8,25 +8,25 @@
 
   <div class="label-plus-comment">
     <% unless answers.include?(log_field.id) %>
-      <label class='bold'><%= "#{log_field.question}" %><% if log_field.is_required %><%= " *" %><% end %></label>
+      <label class='bold'><%= "#{log_field.name}" %><% if log_field.required %><%= " *" %><% end %></label>
     <% end %>
 
-    <% unless answers.include?(log_field.instructional_hint) %>
-      <div class='custom-smaller'><%= log_field.instructional_hint %></div>
+    <% unless answers.include?(log_field.hint_text) %>
+      <div class='custom-smaller'><%= log_field.hint_text %></div>
     <% end %>
   </div>
 
-  <% answers.push(log_field.id, log_field.instructional_hint) %>
+  <% answers.push(log_field.id, log_field.hint_text) %>
 
   <%= form.hidden_field :answer_option_id, id: "log-field-#{log_field.id}" %>
 
   <% if log_field.multiple_choice? %>
     <% answer_option = answer.answer_option %>
-    <% if log_field.input_type == :radio_button %>
+    <% if log_field.form_helper_type == :radio_button %>
       <% log_field.answer_options.each do |answer_option| %>
         <% next if answers.include?("#{answer_option.id}-#{log_field.id}") %>
         <% answers.push("#{answer_option.id}-#{log_field.id}") %>
-        <%= form.send(log_field.input_type, :_create, 1, onclick: 'deselectCheckboxesIfSelected($(this));', class: "js-answer-button-radio-#{log_field.id}", id: "js-answer-button-radio-#{answer_option.id}", data: { log_field_id: log_field.id }, checked: log_field.checked(@old_report, answer_option.name)) %>
+        <%= form.send(log_field.form_helper_type, :_create, 1, onclick: 'deselectCheckboxesIfSelected($(this));', class: "js-answer-button-radio-#{log_field.id}", id: "js-answer-button-radio-#{answer_option.id}", data: { log_field_id: log_field.id }, checked: log_field.checked(@old_report, answer_option.name)) %>
         <%= hidden_field({}, :answer_option_id, value: answer_option.id) %>
         <% label_txt = answer_option.name.titleize %>
         <% style = 'text-transform: uppercase;' if label_txt.downcase == 'lgbtqia' %>
@@ -35,9 +35,9 @@
       <% end %>
     <% else %>
       <div class='form-group'>
-        <%= form.send(log_field.input_type, :_create, checked: log_field.selected(@old_report, answer_option.id)) %>
+        <%= form.send(log_field.form_helper_type, :_create, checked: log_field.selected(@old_report, answer_option.id)) %>
         <label class='inline'><%= answer_option.name %></label>
-        <% if log_field.question == 'Workshop Details' %>
+        <% if log_field.name == 'Workshop Details' %>
           <br>
         <% end %>
         <%= form.hidden_field :answer_option_id, value: answer_option.id %>
@@ -45,13 +45,13 @@
     <% end %>
   <% else %>
     <div class='form-group'>
-      <% unless log_field.input_type == :hidden_field %>
-        <%= form.send(log_field.input_type, :answer, class: "#{log_field.question.downcase.gsub(' ', '-')} form-control", required: log_field.is_required, value: log_field.answer(@old_report)) %>
+      <% unless log_field.form_helper_type == :hidden_field %>
+        <%= form.send(log_field.form_helper_type, :answer, class: "#{log_field.name.downcase.gsub(' ', '-')} form-control", required: log_field.required, value: log_field.answer(@old_report)) %>
       <% end %>
     </div>
 
-    <% if log_field.question == 'Share challenges for this month' ||
-      (log_field.question == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2) %>
+    <% if log_field.name == 'Share challenges for this month' ||
+      (log_field.name == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2) %>
       <br />
       <script>
         window.quotesIndex = 0;

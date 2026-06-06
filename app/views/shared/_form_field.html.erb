@@ -1,14 +1,14 @@
 <% case field.html_input_type %>
 <% when :label %>
   <div class="label-plus-comment">
-    <label><%= field.question %> <%= "*" if field.is_required? %></label>
-    <div class="custom-smaller"> <%= field.instructional_hint %> </div>
+    <label><%= field.name %> <%= "*" if field.required? %></label>
+    <div class="custom-smaller"> <%= field.hint_text %> </div>
   </div>
 
 <% when :group_header %>
   <div class="label-plus-comment">
-    <label><%= field.question %> </label>
-    <div class="custom-smaller"><%= field.instructional_hint %></div>
+    <label><%= field.name %> </label>
+    <div class="custom-smaller"><%= field.hint_text %></div>
       <div class="custom-smaller">(No percentages please. Enter 1 instead of 1/2)</div>
   </div>
 
@@ -18,16 +18,16 @@
         <% field.childs.each do |f| %>
           <div class="form-group text-form-group">
             <div class="label-plus-comment">
-              <label><%= f.question %></label>
+              <label><%= f.name %></label>
               <div class="custom-smaller">
-                <%= f.instructional_hint %>
+                <%= f.hint_text %>
               </div>
             </div>
 
             <input type="text"
              name="log_fields[<%= f.id %>]" class="form-control"
-             id="<%= f.question.downcase.tr(" /", "_") %>"
-             <%= 'required' if f.is_required %>
+             id="<%= f.name.downcase.tr(" /", "_") %>"
+             <%= 'required' if f.required %>
              oninvalid="scroll_here(this);"
              value="<%= f.answer( report ) %>"
              onkeyup="setNumberParticipantsLeft(this);"
@@ -43,26 +43,26 @@
 <% when :text %>
   <div class="form-group <%= field.html_input_type %>-form-group">
     <div class="label-plus-comment">
-      <label><%= field.question %> <%= "*" if field.is_required? %></label>
-      <div class="custom-smaller"> <%= field.instructional_hint %> </div>
+      <label><%= field.name %> <%= "*" if field.required? %></label>
+      <div class="custom-smaller"> <%= field.hint_text %> </div>
     </div>
 
     <input type="<%= field.html_input_type %>"
      name="log_fields[<%= field.id %>]" class="form-control"
-     <%= 'required' if field.is_required %>
+     <%= 'required' if field.required %>
      oninvalid="scroll_here(this);" value="<%= field.answer( report ) %>"
-     id="<%= field.question.tr(" ", "-").tr("#","") %>"/>
+     id="<%= field.name.tr(" ", "-").tr("#","") %>"/>
   </div>
 
 <% when :textarea %>
   <div class="form-group <%= field.html_input_type %>-form-group">
 
     <div class="label-plus-comment">
-      <label><%= field.question %> <%= "*" if field.is_required? %></label>
-      <div class="custom-smaller"> <%= field.instructional_hint %> </div>
+      <label><%= field.name %> <%= "*" if field.required? %></label>
+      <div class="custom-smaller"> <%= field.hint_text %> </div>
     </div>
 
-    <textarea name="log_fields[<%= field.id %>]" class="form-control" <%= 'required=required' if field.is_required %>
+    <textarea name="log_fields[<%= field.id %>]" class="form-control" <%= 'required=required' if field.required %>
         oninvalid="scroll_here(this);"><%= field.answer( report ) if field.answer( report ) %></textarea>
   </div>
 
@@ -74,9 +74,9 @@
           <%= @count %>.
           <% @count +=1 %>
         <% end %>
-        <%= field.question %> <%= "*" if field.is_required? %>
+        <%= field.name %> <%= "*" if field.required? %>
       </label>
-      <div class="custom-smaller"> <%= field.instructional_hint %> </div>
+      <div class="custom-smaller"> <%= field.hint_text %> </div>
     </div>
 
     <% field.answer_options.each do |answer_option| %>

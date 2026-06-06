@@ -2,10 +2,17 @@ require "rails_helper"
 
 RSpec.describe EventRegistrationServices::PublicRegistration do
   let(:event) { create(:event, :published, :publicly_visible) }
-  let(:form) { ExtendedEventRegistrationFormBuilder.build!(event) }
+  let(:form) do
+    f = FormBuilderService.new(
+      name: "Extended Event Registration",
+      sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
+    ).call
+    event.event_forms.create!(form: f, role: "registration")
+    f
+  end
 
   def field_id(key)
-    form.form_fields.find_by!(field_key: key).id.to_s
+    form.form_fields.find_by!(field_identifier: key).id.to_s
   end
 
   def base_form_params(first_name:, last_name:, email:)

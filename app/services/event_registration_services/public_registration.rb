@@ -2,15 +2,16 @@ module EventRegistrationServices
   class PublicRegistration
     Result = Struct.new(:success?, :event_registration, :errors, keyword_init: true)
 
-    def self.call(event:, form:, form_params:, scholarship_requested: false)
-      new(event:, form:, form_params:, scholarship_requested:).call
+    def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil)
+      new(event:, form:, form_params:, scholarship_requested:, person:).call
     end
 
-    def initialize(event:, form:, form_params:, scholarship_requested: false)
+    def initialize(event:, form:, form_params:, scholarship_requested: false, person: nil)
       @event = event
       @form = form
       @form_params = form_params
       @scholarship_requested = scholarship_requested
+      @person = person
       @errors = []
     end
 
@@ -34,12 +35,12 @@ module EventRegistrationServices
             existing.update!(status: "registered")
             send_notifications(existing)
           end
-          update_person_form(person)
+          update_form_submission(person)
           return Result.new(success?: true, event_registration: existing, errors: [])
         end
 
         event_registration = create_event_registration(person)
-        create_person_form(person)
+        create_form_submission(person)
 
         send_notifications(event_registration)
 
@@ -59,7 +60,7 @@ module EventRegistrationServices
     private
 
     def field_value(key)
-      field = @form.form_fields.find_by(field_key: key)
+      field = @form.form_fields.find_by(field_identifier: key)
       return nil unless field
       @form_params[field.id.to_s]
     end
@@ -76,6 +77,8 @@ module EventRegistrationServices
     end
 
     def find_or_create_person
+      return @person if @person
+
       names = resolve_names
       first_name = names[:first_name]
       last_name = field_value("last_name")&.strip
@@ -127,7 +130,7 @@ module EventRegistrationServices
         state: new_state,
         zip_code: field_value("mailing_zip"),
         locality: "Unknown",
-        address_type: "mailing",
+        address_type: field_value("mailing_address_type")&.downcase || "mailing",
         primary: true
       )
     end
@@ -226,8 +229,8 @@ module EventRegistrationServices
       end
     end
 
-    def collect_ids_from_checkboxes(field_key)
-      field = @form.form_fields.find_by(field_key: field_key)
+    def collect_ids_from_checkboxes(identifier)
+      field = @form.form_fields.find_by(field_identifier: identifier)
       return [] unless field
 
       value = @form_params[field.id.to_s]
@@ -241,31 +244,32 @@ module EventRegistrationServices
       )
     end
 
-    def create_person_form(person)
-      person_form = PersonForm.create!(person: person, form: @form)
-      save_form_fields(person_form)
-      person_form
+    def create_form_submission(person)
+      submission = FormSubmission.create!(person: person, form: @form)
+      save_form_answers(submission)
+      submission
     end
 
-    def update_person_form(person)
-      person_form = PersonForm.find_or_create_by!(person: person, form: @form)
-      save_form_fields(person_form)
-      person_form
+    def update_form_submission(person)
+      submission = FormSubmission.find_or_create_by!(person: person, form: @form)
+      save_form_answers(submission)
+      submission
     end
 
-    def save_form_fields(person_form)
-      @form.form_fields.where(status: :active).find_each do |field|
-        next if field.group_header?
+    def save_form_answers(submission)
+      @form_params.each do |field_id, raw_value|
+        field = @form.form_fields.find_by(id: field_id)
+        next unless field
+        next if field.group_header? || field.field_identifier == "confirm_email"
 
-        raw_value = @form_params[field.id.to_s]
         text = if raw_value.is_a?(Array)
           raw_value.reject(&:blank?).join(", ")
         else
           raw_value.to_s
         end
 
-        record = person_form.person_form_form_fields.find_or_initialize_by(form_field: field)
-        record.update!(text: text)
+        record = submission.form_answers.find_or_initialize_by(form_field: field)
+        record.update!(submitted_answer: text, question_name_when_answered: field.name)
       end
     end
 

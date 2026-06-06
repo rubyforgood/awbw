@@ -178,6 +178,7 @@ end
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
+- `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
 - `DisplayImagePresenter` — Image display logic
@@ -186,9 +187,6 @@ end
 
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
-- `ExtendedEventRegistrationFormBuilder` — Extended registration form builder
-- `ShortEventRegistrationFormBuilder` — Short registration form builder
-- `ScholarshipApplicationFormBuilder` — Scholarship form builder
 
 ### Notifications
 

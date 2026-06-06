@@ -1,0 +1,73 @@
+<%
+  field = f.object
+
+  visibility_options = [
+    [ "Always ask", "always_ask" ],
+    [ "Logged out only", "logged_out_only" ],
+    [ "Answers on file", "answers_on_file" ]
+  ]
+
+  visibility_styles = {
+    always_ask: "bg-white text-gray-600 border-gray-300",
+    logged_out_only: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    answers_on_file: "bg-amber-100 text-amber-700 border-amber-200"
+  }
+%>
+<div class="nested-fields flex items-center gap-3 <%= field.group_header? ? 'pl-3 pr-6' : 'px-6' %> py-3 border-b border-gray-100 hover:bg-gray-50"
+     data-sortable-id="<%= field.id %>"
+     <% if field.section.present? %>data-section="<%= field.section %>"<% end %>
+     <% if field.group_header? %>data-group-header<% end %>>
+  <div class="cursor-grab text-gray-400 hover:text-gray-600" data-sortable-handle>
+    <i class="fa-solid fa-grip-vertical"></i>
+  </div>
+
+  <%= f.hidden_field :id if field.persisted? %>
+  <%= f.hidden_field :position, value: field.position %>
+
+  <% if field.group_header? %>
+    <div class="flex-1 flex items-center gap-3">
+      <%= f.select :visibility, visibility_options,
+            {},
+            class: "text-xs rounded-full border px-2 py-0.5 cursor-pointer",
+            data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "chip-select#update" } %>
+      <%= f.text_field :name, required: true, class: "flex-1 text-lg font-semibold text-gray-800 rounded border-gray-300 shadow-sm px-2 py-1" %>
+      <div class="ml-auto">
+        <%= link_to_remove_association "Remove", f,
+              class: "text-sm text-gray-400 hover:text-red-600 underline" %>
+      </div>
+    </div>
+  <% else %>
+    <div class="flex-1 flex flex-wrap items-center gap-2">
+      <%= f.select :visibility, visibility_options,
+            {},
+            class: "text-xs rounded-full border px-2 py-0.5 shrink-0 cursor-pointer",
+            data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "chip-select#update" } %>
+      <%= f.text_field :name, required: true, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+      <%
+        type_order = %w[free_form_input_one_line free_form_input_paragraph multiple_choice_radio multiple_choice_checkbox no_user_input group_header]
+        type_labels = {
+          "group_header" => "Section header",
+          "free_form_input_one_line" => "One line",
+          "free_form_input_paragraph" => "Paragraph",
+          "multiple_choice_radio" => "Multiple choice radio",
+          "multiple_choice_checkbox" => "Multiple choice checkbox",
+          "no_user_input" => "Informational-only"
+        }
+        type_options = type_order.map { |t| [ type_labels[t] || t.titleize.gsub("_", " "), t ] }
+      %>
+      <%= f.select :answer_type, type_options,
+            {},
+            class: "flex-[2_1_11rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+      <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0">
+        <%= f.check_box :required, class: "rounded border-gray-300 text-blue-600" %>
+        Required
+      </label>
+      <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0" title="Hide if already answered on any form (not just this event)">
+        <%= f.check_box :one_time, class: "rounded border-gray-300 text-amber-600" %>
+        One-time
+      </label>
+      <%= link_to_remove_association "Remove", f,
+            class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0 ml-auto" %>
+    </div>
+  <% end %>
+</div>

@@ -43,7 +43,7 @@ RSpec.describe "Event show page", type: :system do
 
     context "when event has a public registration form" do
       before do
-        create(:form, name: ShortEventRegistrationFormBuilder::FORM_NAME)
+        create(:form, name: "Short Event Registration")
         event.update!(public_registration_enabled: true)
       end
 

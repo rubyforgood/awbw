@@ -7,7 +7,7 @@ class ReportFormFieldAnswer < ApplicationRecord
   belongs_to :answer_option, optional: true
 
   def name
-    "#{form_field.question} - #{response}" unless form_field.nil?
+    "#{form_field.name} - #{response}" unless form_field.nil?
   end
 
   def response

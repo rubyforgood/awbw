@@ -45,7 +45,7 @@
                 </thead>
 
                 <% all_event_form_ids = @event_registrations.flat_map { |er| er.event.event_forms.map(&:form_id) }.uniq %>
-                <% submitted_pairs = all_event_form_ids.any? ? PersonForm.where(form_id: all_event_form_ids, person_id: @event_registrations.map(&:registrant_id).uniq).pluck(:person_id, :form_id).to_set : Set.new %>
+                <% submitted_pairs = all_event_form_ids.any? ? FormSubmission.where(form_id: all_event_form_ids, person_id: @event_registrations.map(&:registrant_id).uniq).pluck(:person_id, :form_id).to_set : Set.new %>
                 <tbody class="divide-y divide-gray-200">
                   <% @event_registrations.each do |event_registration| %>
                     <tr id="<%= dom_id(event_registration) %>" class="hover:bg-gray-50 transition-colors duration-150">

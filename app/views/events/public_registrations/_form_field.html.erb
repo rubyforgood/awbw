@@ -1,4 +1,4 @@
-<%# locals: (field:, value: nil) %>
+<%# locals: (field:, value: nil, label: nil) %>
 <% return if field.group_header? %>
 
 <% error = @field_errors&.dig(field.id) %>
@@ -6,14 +6,14 @@
 
 <div class="mb-5">
   <label class="block text-sm font-medium text-gray-700 mb-1" for="public_registration_form_fields_<%= field.id %>">
-    <%= field.question %>
-    <% if field.is_required %>
+    <%= label || field.name %>
+    <% if field.required %>
       <span class="text-red-500">*</span>
     <% end %>
   </label>
 
-  <% if field.instructional_hint.present? %>
-    <p class="text-xs text-gray-500 mb-1"><%= field.instructional_hint %></p>
+  <% if field.hint_text.present? %>
+    <p class="text-xs text-gray-500 mb-1"><%= field.hint_text %></p>
   <% end %>
 
   <% field_name = "public_registration[form_fields][#{field.id}]" %>
@@ -21,11 +21,11 @@
 
   <% case field.answer_type %>
   <% when "free_form_input_one_line" %>
-    <% if field.field_key&.end_with?("_state") %>
+    <% if field.field_identifier&.end_with?("_state") %>
       <select name="<%= field_name %>"
               id="<%= field_id %>"
               class="w-full rounded-md border <%= error_border %> px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              <%= "required" if field.is_required %>>
+              <%= "required" if field.required %>>
         <option value="">Select a state</option>
         <% us_states.each do |name, abbr| %>
           <option value="<%= abbr %>" <%= "selected" if value == abbr %>><%= name %> (<%= abbr %>)</option>
@@ -33,7 +33,7 @@
       </select>
     <% else %>
       <%
-        input_type = case field.field_key
+        html_type = case field.field_identifier
                      when /email(?!_type)/ then "email"
                      when "phone" then "tel"
                      when "agency_website" then "url"
@@ -43,12 +43,12 @@
         extra_attrs = []
         extra_attrs << 'min="1" step="1" pattern="[0-9]*" inputmode="numeric"' if field.number_integer?
       %>
-      <input type="<%= input_type %>"
+      <input type="<%= html_type %>"
              name="<%= field_name %>"
              id="<%= field_id %>"
              value="<%= value %>"
              class="w-full rounded-md border <%= error_border %> px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-             <%= "required" if field.is_required %>
+             <%= "required" if field.required %>
              <%= raw(extra_attrs.join(" ")) %>>
     <% end %>
 
@@ -57,7 +57,7 @@
               id="<%= field_id %>"
               rows="4"
               class="w-full rounded-md border <%= error_border %> px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              <%= "required" if field.is_required %>><%= value %></textarea>
+              <%= "required" if field.required %>><%= value %></textarea>
 
   <% when "multiple_choice_radio" %>
     <div class="flex flex-wrap gap-4 mt-1">
@@ -67,8 +67,8 @@
                  name="<%= field_name %>"
                  value="<%= ffao.answer_option.name %>"
                  class="text-blue-600 focus:ring-blue-500"
-                 <%= "checked" if value == ffao.answer_option.name || (value.blank? && field.field_key == "interested_in_more" && ffao.answer_option.name == "Yes") %>
-                 <%= "required" if field.is_required %>>
+                 <%= "checked" if value == ffao.answer_option.name || (value.blank? && field.field_identifier == "interested_in_more" && ffao.answer_option.name == "Yes") %>
+                 <%= "required" if field.required %>>
           <%= ffao.answer_option.name %>
         </label>
       <% end %>
@@ -78,9 +78,9 @@
     <% checkbox_name = "public_registration[form_fields][#{field.id}][]" %>
     <% selected_values = Array(value) %>
 
-    <% if field.field_key.in?(%w[primary_service_area workshop_environments client_life_experiences primary_age_group]) %>
+    <% if field.field_identifier.in?(%w[primary_service_area workshop_environments client_life_experiences primary_age_group]) %>
       <%# Professional fields: render dynamic sector/category options %>
-      <% if field.field_key == "primary_service_area" %>
+      <% if field.field_identifier == "primary_service_area" %>
         <% options = Sector.published.order(:name) %>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
           <% options.each do |sector| %>
@@ -100,7 +100,7 @@
           "workshop_environments" => "WorkshopEnvironment",
           "client_life_experiences" => "StoryPopulation",
           "primary_age_group" => "AgeRange"
-        }[field.field_key] %>
+        }[field.field_identifier] %>
         <% ct = CategoryType.find_by(name: category_type_name) %>
         <% options = ct&.categories&.published&.order(:position, :name) || [] %>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
@@ -135,6 +135,6 @@
   <% end %>
 
   <% if error %>
-    <p class="text-xs text-red-600 mt-1"><%= field.question %> <%= error %></p>
+    <p class="text-xs text-red-600 mt-1"><%= field.name %> <%= error %></p>
   <% end %>
 </div>
