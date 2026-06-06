@@ -102,6 +102,14 @@ Rails.application.routes.draw do
     end
     resources :comments, only: [ :index, :create ]
   end
+  resources :forms do
+    member do
+      patch :reorder_field
+      put :reorder_fields
+      get :edit_sections
+      patch :update_sections
+    end
+  end
   resources :scholarships, only: [ :new, :create, :show, :edit, :update, :destroy ]
   resources :discounts, only: [ :create, :show, :destroy ] do
     collection do

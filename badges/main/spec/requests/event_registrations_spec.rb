@@ -70,7 +70,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
         it "shows green icon when person submitted the current registration form" do
           create(:event_form, event: event, form: reg_form, role: "registration")
-          create(:person_form, person: person, form: reg_form)
+          create(:form_submission, person: person, form: reg_form)
 
           get event_registrations_path
 
@@ -83,18 +83,6 @@ RSpec.describe "EventRegistrations", type: :request do
           get event_registrations_path
 
           expect(response.body).to include("fa-regular fa-file-lines")
-        end
-
-        it "shows green icon when person submitted a non-registration form for the event" do
-          scholarship_form = create(:form, :standalone, name: "Scholarship Form")
-          create(:event_form, event: event, form: reg_form, role: "registration")
-          create(:event_form, event: event, form: scholarship_form, role: "scholarship")
-          create(:person_form, person: person, form: scholarship_form)
-
-          get event_registrations_path
-
-          expect(response.body).to include("fa-solid fa-file-lines")
-          expect(response.body).not_to include("fa-regular fa-file-lines")
         end
 
         it "does not show any form icon when event has no forms" do

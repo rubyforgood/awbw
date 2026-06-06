@@ -9,6 +9,7 @@ RSpec.describe Form do
     it { should have_many(:events).through(:event_forms) }
     it { should have_many(:form_fields).dependent(:destroy).inverse_of(:form) }
     it { should have_many(:user_forms) }
+    it { should have_many(:form_submissions) }
     it { should have_many(:reports) } # As :owner
 
     it { should accept_nested_attributes_for(:form_fields).allow_destroy(true) }
@@ -27,13 +28,13 @@ RSpec.describe Form do
   #   pending("Requires functional owner factory and association uncommented")
   # end
 
-  describe ".scholarship_application" do
-    it "returns only forms marked as scholarship applications" do
+  describe ".where(role: 'scholarship')" do
+    it "returns only forms with scholarship role" do
       regular_form = create(:form)
-      scholarship_form = create(:form, scholarship_application: true)
+      scholarship_form = create(:form, role: "scholarship")
 
-      expect(Form.scholarship_application).to include(scholarship_form)
-      expect(Form.scholarship_application).not_to include(regular_form)
+      expect(Form.where(role: "scholarship")).to include(scholarship_form)
+      expect(Form.where(role: "scholarship")).not_to include(regular_form)
     end
   end
 

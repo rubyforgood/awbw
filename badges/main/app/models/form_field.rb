@@ -2,19 +2,19 @@ class FormField < ApplicationRecord
   belongs_to :form, inverse_of: :form_fields
   has_many :form_field_answer_options, dependent: :destroy
   has_many :report_form_field_answers, dependent: :destroy
+  has_many :form_answers, dependent: :nullify
   has_many :childs, foreign_key: "parent_id", class_name: "FormField"
 
   # has_many through
   has_many :answer_options, through: :form_field_answer_options
 
   # Validations
-  validates_presence_of :question
+  validates_presence_of :name
 
   # Enum
   enum :status, [ :inactive, :active ]
+  enum :visibility, [ :always_ask, :scholarship_only, :logged_out_only, :answers_on_file ]
 
-  # TODO: Rails 6.1 requires enums to be symbols
-  # need additional refactoring in methods that call answer_type & answer_datatype to account for change to enum
   enum :answer_type, [
     :free_form_input_one_line,
     :free_form_input_paragraph,
@@ -24,7 +24,7 @@ class FormField < ApplicationRecord
     :group_header
   ]
 
-  enum :answer_datatype, [
+  enum :input_type, [
     :text_alphanumeric,
     :number_integer,
     :number_decimal,
@@ -38,57 +38,44 @@ class FormField < ApplicationRecord
   scope :published, -> { where(status: "active") }
 
   # Methods
-  def name
-    question
-  end
-
   def multiple_choice?
-    answer_type ? answer_type.include?("multiple choice") : false
+    answer_type ? answer_type.include?("multiple_choice") : false
   end
 
   def html_id
-    self.question.tr(" /#,')(.", "_").downcase
+    self.name.tr(" /#,')(.", "_").downcase
   end
 
   def html_input_type
+    return :child unless parent_id.nil?
+
     case answer_type
-
-    when !self.parent_id.nil?
-      :child
-
-    when "free-form input - one line"
-      self.parent_id.nil? ? :text : :child
-
-    when "free-form input - paragraph"
+    when "free_form_input_one_line"
+      :text
+    when "free_form_input_paragraph"
       :textarea
-
-    when "multiple choice - checkbox"
+    when "multiple_choice_checkbox"
       :checkbox
-
-    when "multiple choice - radio"
+    when "multiple_choice_radio"
       :radio
-
-    when "no user input"
-      !self.childs.empty? ? :group_header : :label
-
+    when "no_user_input", "group_header"
+      childs.any? ? :group_header : :label
     else
       :hidden
     end
   end
 
-  # This one bellow should be removed and use
-  # html_input_type
-  def input_type
+  def form_helper_type
     case answer_type
-    when "free-form input - one line"
+    when "free_form_input_one_line"
       :text_field
-    when "free-form input - paragraph"
+    when "free_form_input_paragraph"
       :text_area
-    when "multiple choice - checkbox"
+    when "multiple_choice_checkbox"
       :check_box
-    when "multiple choice - radio"
+    when "multiple_choice_radio"
       :radio_button
-    when "no user input"
+    when "no_user_input", "group_header"
       :label
     else
       :hidden_field

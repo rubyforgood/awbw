@@ -1,0 +1,38 @@
+<div class="max-w-5xl mx-auto py-8 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold">Forms</h1>
+    <%= link_to "New Form", new_form_path, class: "btn btn-primary" %>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <table class="w-full border-collapse">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Fields</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Events</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Submissions</th>
+          <th class="px-4 py-2"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @forms.each do |form| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= form.display_name %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_fields.size %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= form.events.size %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_submissions.size %></td>
+            <td class="px-4 py-2 text-right text-sm space-x-3">
+              <%= link_to "View", form_path(form), class: "text-blue-600 hover:text-blue-800 underline" %>
+              <%= link_to "Edit", edit_form_path(form), class: "text-blue-600 hover:text-blue-800 underline" %>
+              <% if allowed_to?(:destroy?, form) && form.event_forms.none? %>
+                <%= link_to "Delete", form_path(form), class: "text-red-600 hover:text-red-800 underline",
+                            data: { turbo_method: :delete, turbo_confirm: "Delete \"#{form.display_name}\"?" } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

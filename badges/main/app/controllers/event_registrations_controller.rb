@@ -129,7 +129,7 @@ class EventRegistrationsController < ApplicationController
   end
 
   def link_organization
-    @event_registration = EventRegistration.includes(:event, registrant: :person_forms).find(params[:id])
+    @event_registration = EventRegistration.includes(:event, registrant: :form_submissions).find(params[:id])
     authorize! @event_registration, to: :link_organization?
     @person = @event_registration.registrant
     @submitted_org_name = find_submitted_agency_name(@event_registration)
@@ -234,14 +234,14 @@ class EventRegistrationsController < ApplicationController
     form = registration.event.registration_form
     return nil unless form
 
-    field = form.form_fields.find_by(field_key: "agency_name")
+    field = form.form_fields.find_by(field_identifier: "agency_name")
     return nil unless field
 
-    PersonFormFormField
-      .joins(person_form: :person)
+    FormAnswer
+      .joins(form_submission: :person)
       .find_by(
-        person_forms: { person_id: registration.registrant_id, form_id: form.id },
+        form_submissions: { person_id: registration.registrant_id, form_id: form.id },
         form_field_id: field.id
-      )&.text
+      )&.submitted_answer
   end
 end

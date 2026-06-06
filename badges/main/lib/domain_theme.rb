@@ -18,6 +18,7 @@ module DomainTheme
     categories:               :lime,
     category_types:            :lime,
 
+    forms:                    :stone,
     faqs:                     :pink,
     video_recordings:         :cyan,
 

@@ -1,0 +1,144 @@
+<div class="max-w-2xl mx-auto py-8 px-4">
+  <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+    <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= link_to "Edit", edit_form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% if allowed_to?(:destroy?, @form) && @form.event_forms.none? %>
+      <%= link_to "Delete", form_path(@form), class: "text-sm text-red-600 hover:text-red-800 px-2 py-1",
+                  data: { turbo_method: :delete, turbo_confirm: "Delete \"#{@form.display_name}\"?" } %>
+    <% end %>
+  </div>
+  <h1 class="text-2xl font-semibold mb-6"><%= @form.display_name %></h1>
+
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+    <div class="bg-blue-900 text-white px-6 py-4">
+      <div class="flex items-center gap-8">
+        <div class="shrink-0">
+          <%= image_tag("logo.png", alt: "Organization logo", class: "h-8 w-auto") %>
+        </div>
+        <h2 class="text-xl font-semibold tracking-wide"><%= @form.display_name %></h2>
+      </div>
+    </div>
+
+    <div class="px-6 py-6">
+      <%
+        has_logged_out = @form.form_fields.where(visibility: :logged_out_only).exists?
+        has_answers_on_file = @form.form_fields.where(visibility: :answers_on_file).exists?
+        has_conditions = (has_logged_out && @form.hide_answered_person_questions?) || (has_answers_on_file && @form.hide_answered_form_questions?)
+
+        preview_logged_in = params[:preview_logged_in].present?
+        preview_answered = params[:preview_answered].present?
+      %>
+
+      <div class="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-3 space-y-2">
+        <p class="text-xs font-medium text-blue-800">Preview mode</p>
+        <% if has_conditions %>
+          <p class="text-xs text-blue-600 mb-1">Toggle to simulate how the form appears under different conditions:</p>
+          <div class="flex flex-wrap gap-4">
+            <% if has_logged_out && @form.hide_answered_person_questions? %>
+              <%
+                logged_in_params = request.query_parameters.dup
+                if preview_logged_in
+                  logged_in_params.delete("preview_logged_in")
+                else
+                  logged_in_params["preview_logged_in"] = "1"
+                end
+              %>
+              <%= link_to form_path(@form, logged_in_params), class: "flex items-center gap-2 no-underline" do %>
+                <span class="text-xs text-blue-700">User logged in</span>
+                <span class="relative inline-block w-7 h-4 rounded-full <%= preview_logged_in ? 'bg-blue-600' : 'bg-gray-300' %>">
+                  <span class="absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform duration-200 <%= preview_logged_in ? 'translate-x-3' : 'translate-x-0' %>"></span>
+                </span>
+              <% end %>
+            <% end %>
+            <% if has_answers_on_file && @form.hide_answered_form_questions? %>
+              <%
+                answered_params = request.query_parameters.dup
+                if preview_answered
+                  answered_params.delete("preview_answered")
+                else
+                  answered_params["preview_answered"] = "1"
+                end
+              %>
+              <%= link_to form_path(@form, answered_params), class: "flex items-center gap-2 no-underline" do %>
+                <span class="text-xs text-blue-700">Answers on file</span>
+                <span class="relative inline-block w-7 h-4 rounded-full <%= preview_answered ? 'bg-blue-600' : 'bg-gray-300' %>">
+                  <span class="absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform duration-200 <%= preview_answered ? 'translate-x-3' : 'translate-x-0' %>"></span>
+                </span>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-xs text-blue-600">No conditional visibility configured. All fields always shown.</p>
+        <% end %>
+      </div>
+
+      <%
+        fields_by_id_check = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
+        email_row = if fields_by_id_check["confirm_email"] && fields_by_id_check["primary_email_type"]
+          { keys: %w[primary_email confirm_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" }
+        elsif fields_by_id_check["confirm_email"]
+          { keys: %w[primary_email confirm_email], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" }
+        else
+          { keys: %w[primary_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "primary_email" => "md:col-span-2" } }
+        end
+
+        row_groups = [
+          { keys: %w[first_name last_name], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+          { keys: %w[nickname pronouns], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+          email_row,
+          { keys: %w[secondary_email secondary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "secondary_email" => "md:col-span-2" } },
+          { keys: %w[mailing_street mailing_address_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+          { keys: %w[mailing_city mailing_state mailing_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
+          { keys: %w[phone phone_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+          { keys: %w[agency_name agency_position], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+          { keys: %w[agency_city agency_state agency_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
+          { keys: %w[payment_method], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" }
+        ]
+
+        identifier_to_group = {}
+        row_groups.each { |g| g[:keys].each { |k| identifier_to_group[k] = g } }
+
+        fields_by_identifier = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
+        rendered_ids = {}
+
+        has_secondary_email = fields_by_identifier["secondary_email"].present?
+        email_label_overrides = if has_secondary_email
+          { "primary_email" => "Primary Email", "confirm_email" => "Confirm Primary Email", "primary_email_type" => "Primary Email Type" }
+        else
+          {}
+        end
+      %>
+
+      <fieldset disabled>
+        <% @form_fields.each do |field| %>
+          <% next if field.field_identifier.present? && rendered_ids[field.field_identifier] %>
+
+          <% if field.group_header? %>
+            <div class="pt-6 pb-2 border-b border-gray-200 mb-4">
+              <h3 class="text-lg font-semibold text-gray-800"><%= field.name %></h3>
+            </div>
+          <% elsif (group = field.field_identifier.present? && identifier_to_group[field.field_identifier]) %>
+            <div class="<%= group[:grid] %>">
+              <% group[:keys].each do |key| %>
+                <% row_field = fields_by_identifier[key] %>
+                <% next unless row_field %>
+                <% rendered_ids[key] = true %>
+                <% span = group.dig(:spans, key) %>
+                <% label_override = email_label_overrides[key] %>
+                <% if span %>
+                  <div class="<%= span %>">
+                    <%= render "events/public_registrations/form_field", field: row_field, value: nil, label: label_override %>
+                  </div>
+                <% else %>
+                  <%= render "events/public_registrations/form_field", field: row_field, value: nil, label: label_override %>
+                <% end %>
+              <% end %>
+            </div>
+          <% else %>
+            <%= render "events/public_registrations/form_field", field: field, value: nil %>
+          <% end %>
+        <% end %>
+      </fieldset>
+    </div>
+  </div>
+</div>

@@ -115,6 +115,29 @@
       "note": ""
     },
     {
+      "warning_type": "Mass Assignment",
+      "warning_code": 105,
+      "fingerprint": "ba14f5d8dca1d3100eac5857e323dd0fa62631bec9ad13f7cfa0f8dbdf46fa16",
+      "check_name": "PermitAttributes",
+      "message": "Potentially dangerous key allowed for mass assignment",
+      "file": "app/controllers/forms_controller.rb",
+      "line": 121,
+      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
+      "code": "params.require(:form).permit(:name, :role, :hide_answered_person_questions, :hide_answered_form_questions, :form_fields_attributes => ([:id, :name, :answer_type, :required, :hint_text, :field_identifier, :section, :position, :visibility, :one_time, :_destroy]))",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "FormsController",
+        "method": "form_params"
+      },
+      "user_input": ":role",
+      "confidence": "Medium",
+      "cwe_id": [
+        915
+      ],
+      "note": "admin only"
+    },
+    {
       "warning_type": "Cross-Site Scripting",
       "warning_code": 2,
       "fingerprint": "cb7f2b64b6a3f1ac5ad1ebdcf54b9e93efedf16267a1b26153b4aafbcaeec5c5",

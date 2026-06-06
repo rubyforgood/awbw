@@ -142,7 +142,7 @@
       <% if @answers.any? %>
         <% @answers.each do |answer| %>
           <div class="border-b border-gray-200 pb-2">
-            <p class="text-sm font-semibold text-gray-700"><%= answer.form_field.question %></p>
+            <p class="text-sm font-semibold text-gray-700"><%= answer.form_field.name %></p>
             <p class="text-gray-800"><%= answer.response.presence || "—" %></p>
           </div>
         <% end %>

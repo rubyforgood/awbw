@@ -122,8 +122,8 @@
          <% @report.log_fields.each do |field| %>
            <%= render 'shared/form_field', :field => field, :report => @report %>
 
-           <% if field.question == 'Share challenges for this month' ||
-    (field.question == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2) %>
+           <% if field.name == 'Share challenges for this month' ||
+    (field.name == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2) %>
              <br />
              <script>
                window.quotesIndex = 0;

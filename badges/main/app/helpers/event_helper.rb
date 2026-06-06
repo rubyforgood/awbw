@@ -78,14 +78,14 @@ module EventHelper
   end
 
   def display_response_text(field, response)
-    return tag.span("—", class: "text-gray-400") if response&.text.blank?
+    return tag.span("—", class: "text-gray-400") if response&.submitted_answer.blank?
 
-    if field.field_key == "primary_service_area"
-      response.text.split(", ").map { |id| Sector.find_by(id: id)&.name }.compact.join(", ").presence || response.text
-    elsif field.field_key.in?(%w[workshop_environments client_life_experiences primary_age_group])
-      response.text.split(", ").map { |id| Category.find_by(id: id)&.name }.compact.join(", ").presence || response.text
+    if field.field_identifier == "primary_service_area"
+      response.submitted_answer.split(", ").map { |id| Sector.find_by(id: id)&.name }.compact.join(", ").presence || response.submitted_answer
+    elsif field.field_identifier.in?(%w[workshop_environments client_life_experiences primary_age_group])
+      response.submitted_answer.split(", ").map { |id| Category.find_by(id: id)&.name }.compact.join(", ").presence || response.submitted_answer
     else
-      response.text
+      response.submitted_answer
     end
   end
 end
