@@ -19,7 +19,7 @@ gem "devise", "~> 5.0.4"
 gem "draper"
 gem "aws-sdk-s3"
 
-gem "puma", "~> 7.2.1"
+gem "puma", "~> 7.2", ">= 7.2.1" # Add Puma as the web server
 
 gem "cocoon", "~> 1.2.6"
 
@@ -69,7 +69,6 @@ gem "solid_cache"
 # Payments
 gem "pay", "~> 11.4"
 gem "stripe", "~> 18.0"
-gem "receipts", "~> 2.4"
 
 group :development do
   gem "rubocop-rails-omakase", require: false
