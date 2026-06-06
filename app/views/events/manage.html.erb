@@ -12,7 +12,10 @@
     </div>
     <div class="flex items-center gap-2">
       <% if allowed_to?(:edit?, @event) %>
-        <%= render "forms_menu" %>
+        <%= link_to "Add registrant", new_event_registration_path(event_id: @event.id, return_to: "manage"), class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <% if @event.event_forms.registration.exists? %>
+          <%= render "forms_menu" %>
+        <% end %>
       <% end %>
       <%= render "bulk_actions_menu" %>
       <% if allowed_to?(:edit?, @event) %>
