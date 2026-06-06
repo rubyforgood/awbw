@@ -274,12 +274,28 @@ combined_type = WindowsType.where(name: "Combined")
                            .first_or_create!(legacy_id: 3, short_name: "Combined")
 
 puts "Creating FormBuilders…"
-FormBuilder.where(name: "Adult Monthly Report", windows_type: adult_type).first_or_create!(id: 4)
-FormBuilder.where(name: "Adult Workshop Log", windows_type: adult_type).first_or_create!(id: 3)
-FormBuilder.where(name: "Children's Monthly Report", windows_type: childrens_type).first_or_create!(id: 2)
-FormBuilder.where(name: "Children's Workshop Log", windows_type: childrens_type).first_or_create!(id: 1)
-FormBuilder.where(name: "Share a Story", windows_type: combined_type).first_or_create!(id: 7)
-FormBuilder.where(name: "Family Workshop Log", windows_type: combined_type).first_or_create!(id: 5)
+# Keyed on the fixed id (the app references these ids), reconciling name and
+# windows_type on every run so reseeding survives WindowsType records being
+# recreated (e.g. after a name change).
+form_builders = {
+  4 => [ "Adult Monthly Report", adult_type ],
+  3 => [ "Adult Workshop Log", adult_type ],
+  2 => [ "Children's Monthly Report", childrens_type ],
+  1 => [ "Children's Workshop Log", childrens_type ],
+  7 => [ "Share a Story", combined_type ],
+  5 => [ "Family Workshop Log", combined_type ]
+}
+form_builders.each do |id, (name, windows_type)|
+  FormBuilder.find_or_initialize_by(id: id).update!(name: name, windows_type: windows_type)
+end
+
+# Prune duplicate canonical form builders left by older seed versions that
+# created this set at auto-increment ids. Only exact name duplicates outside the
+# pinned ids with no dependent forms are removed, so form-bearing records (prod
+# builders are seeded via migrations and own forms) are never touched.
+FormBuilder.where(name: form_builders.values.map(&:first))
+           .where.not(id: form_builders.keys)
+           .each { |duplicate| duplicate.destroy! if duplicate.forms.empty? }
 
 puts "Creating OrganizationStatuses…"
 OrganizationStatus::ORGANIZATION_STATUSES.each do |status|
