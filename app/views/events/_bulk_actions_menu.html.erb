@@ -1,0 +1,18 @@
+<% dropdown_id = "bulk-actions-menu-#{SecureRandom.hex(4)}" %>
+<% item_class = "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
+<div data-controller="dropdown" class="relative">
+  <button type="button"
+          data-action="dropdown#toggle"
+          data-dropdown-payload-param='[{"<%= dropdown_id %>":"hidden"}]'
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-md border border-gray-300 shadow-sm bg-white text-sm text-gray-700 hover:bg-gray-50">
+    <span>Bulk actions</span>
+    <i class="fa-solid fa-chevron-down w-3 h-3 text-gray-400"></i>
+  </button>
+
+  <div id="<%= dropdown_id %>"
+       data-dropdown-target="content"
+       class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
+    <%= link_to "Send reminder", preview_reminder_event_path(@event), class: item_class %>
+    <%= link_to "Download CSV", manage_event_path(@event, format: :csv), class: item_class, data: { turbo_frame: "_top" } %>
+  </div>
+</div>

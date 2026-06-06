@@ -1,0 +1,22 @@
+<% dropdown_id = "forms-menu-#{SecureRandom.hex(4)}" %>
+<% item_class = "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
+<div data-controller="dropdown" class="relative">
+  <button type="button"
+          data-action="dropdown#toggle"
+          data-dropdown-payload-param='[{"<%= dropdown_id %>":"hidden"}]'
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-md border border-gray-300 shadow-sm bg-white text-sm text-gray-700 hover:bg-gray-50">
+    <span>Forms</span>
+    <i class="fa-solid fa-chevron-down w-3 h-3 text-gray-400"></i>
+  </button>
+
+  <div id="<%= dropdown_id %>"
+       data-dropdown-target="content"
+       class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
+    <%= link_to "Add registrant", new_event_registration_path(event_id: @event.id, return_to: "manage"), class: item_class %>
+    <% if @event.event_forms.registration.exists? %>
+      <div class="my-1 border-t border-gray-100"></div>
+      <%= link_to "Public registration", new_event_public_registration_path(@event), class: item_class, target: "_blank" %>
+      <%= link_to "Scholarship version", new_event_public_registration_path(@event, scholarship_requested: true), class: item_class, target: "_blank" %>
+    <% end %>
+  </div>
+</div>
