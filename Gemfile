@@ -92,6 +92,7 @@ group :development, :test do
   gem "pry-coolline"
   gem "pry-rails"
   gem "rspec-rails"
+  gem "parallel_tests"
   gem "simplecov", require: false
   gem "simplecov_json_formatter", require: false
   gem "selenium-webdriver"

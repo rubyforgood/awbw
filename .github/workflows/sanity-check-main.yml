@@ -53,7 +53,7 @@ jobs:
       - name: Run RSpec (SimpleCov JSON + summary via at_exit)
         env:
           RAILS_ENV: test
-          CI: "true"
+          COVERAGE: "true"
         run: bundle exec rspec
 
       - name: Generate coverage badge

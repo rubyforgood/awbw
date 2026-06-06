@@ -29,6 +29,11 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    # GitHub-hosted ubuntu-latest runners have 4 vCPUs; split the suite across
+    # 4 parallel_tests processes (each with its own database) to cut wall time.
+    env:
+      PARALLEL_TEST_PROCESSORS: 4
+
     services:
       mysql:
         image: mysql:8.0
@@ -54,9 +59,9 @@ jobs:
           node-version: 22
       - run: npm ci
 
-      - name: Setup database
+      - name: Setup databases
         run: |
-          bundle exec rake db:create db:schema:load
+          bundle exec rake parallel:create parallel:load_schema
         env:
           RAILS_ENV: test
           # AWS credentials
@@ -71,7 +76,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
 
       - name: Run tests and publish results
-        run: bundle exec rspec --format progress --format json --out tmp/rspec_results.json
+        run: bundle exec parallel_rspec spec/
         env:
           RAILS_ENV: test
           # AWS credentials
@@ -91,4 +96,4 @@ jobs:
         if: always()
         with:
           name: rspec-results
-          path: tmp/rspec_results.json
+          path: tmp/rspec_results/
