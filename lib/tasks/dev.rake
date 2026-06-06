@@ -1,7 +1,12 @@
 namespace :db do
   namespace :seed do
     desc "Generate representative sample data for development"
-    task dev: [ :environment, "db:seed", "db:seed:dummy", "db:seed:payments" ]
+    task dev: [ :environment, "db:seed", "db:seed:users", "db:seed:dummy", "db:seed:payments" ]
+
+    desc "Seed dev-only user variations (invite/lock/confirmation states)"
+    task users: :environment do
+      load Rails.root.join("db/seeds/dev/users.rb")
+    end
 
     desc "Seed generic dummy dev data (workshops, people, stories, etc.)"
     task dummy: :environment do
