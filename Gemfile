@@ -19,7 +19,7 @@ gem "devise", "~> 5.0.4"
 gem "draper"
 gem "aws-sdk-s3"
 
-gem "puma", "~> 6.0" # Add Puma as the web server
+gem "puma", "~> 7.2" # Add Puma as the web server
 
 gem "cocoon", "~> 1.2.6"
 
