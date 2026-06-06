@@ -5,8 +5,16 @@ class ChangePaymentsPayerToPersonOrganization < ActiveRecord::Migration[8.1]
 
     remove_column :payments, :payer_id, if_exists: true
 
-    add_reference :payments, :person, foreign_key: true unless column_exists?(:payments, :person_id)
-    add_reference :payments, :organization, type: :integer, foreign_key: true unless column_exists?(:payments, :organization_id)
+    unless column_exists?(:payments, :person_id)
+      add_column :payments, :person_id, :bigint
+    end
+    add_index :payments, :person_id, if_not_exists: true
+    add_foreign_key :payments, :people, column: :person_id unless foreign_key_exists?(:payments, :people, column: :person_id)
+    unless column_exists?(:payments, :organization_id)
+      add_column :payments, :organization_id, :integer
+    end
+    add_index :payments, :organization_id, if_not_exists: true
+    add_foreign_key :payments, :organizations, column: :organization_id unless foreign_key_exists?(:payments, :organizations, column: :organization_id)
   end
 
   def down
