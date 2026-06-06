@@ -818,7 +818,7 @@ DEPENDENCIES
   premailer-rails
   pry-coolline
   pry-rails
-  puma (~> 7.2)
+  puma (~> 7.2, >= 7.2.1)
   rack-mini-profiler (~> 4.0)
   rails (~> 8.1.0)
   receipts (~> 2.4)
