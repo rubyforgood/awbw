@@ -60,7 +60,13 @@ FileUtils.chdir APP_ROOT do
 
   puts "\n== Running Rails migrations and seeds =="
   system! "bin/rails db:migrate"
-  system! "bin/rails db:seed"
+  # --seed-dev loads the full dev sample dataset (db:seed:dev chains the base
+  # db:seed first); plain db:seed stays the default for CI and lean setups.
+  if ARGV.include?("--seed-dev")
+    system! "bin/rails db:seed:dev"
+  else
+    system! "bin/rails db:seed"
+  end
 
   puts "\n== Preparing test database =="
   system! "RAILS_ENV=test bin/rails db:drop"
