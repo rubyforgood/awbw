@@ -1,6 +1,8 @@
 <% content_for(:page_bg_class, "public") %>
-<div class="flex flex-wrap items-center gap-2 mb-4">
-  <%= link_to "← Back to Event", event_path(@event_registration.event, reg: @event_registration.slug), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+<div class="max-w-2xl mx-auto flex flex-wrap items-center gap-2 px-4 pt-4">
+  <%= link_to event_path(@event_registration.event, reg: @event_registration.slug), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i> Back to event
+  <% end %>
   <div class="ml-auto flex gap-2">
     <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
   <% if allowed_to?(:index?, EventRegistration) %>

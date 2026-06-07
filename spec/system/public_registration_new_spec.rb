@@ -25,7 +25,7 @@ RSpec.describe "Public registration new page", type: :system do
     it "shows a back link to the event page" do
       visit new_event_public_registration_path(event)
 
-      expect(page).to have_link("Back to Event", href: event_path(event))
+      expect(page).to have_link("Back to event", href: event_path(event))
     end
   end
 
