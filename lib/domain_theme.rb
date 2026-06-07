@@ -30,6 +30,13 @@ module DomainTheme
     banners:                  :yellow,
     users:                    :rose,
 
+    # Event dashboard cards
+    payments:                 :green,
+    scholarships:             :fuchsia,
+    continuing_education:     :teal,
+    event_dashboard:          :indigo,
+    addresses:                :slate,
+
     admin_only:               :blue,
     user_only:                :amber,
     person_bio:               :purple,
