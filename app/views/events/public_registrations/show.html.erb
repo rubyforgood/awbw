@@ -2,10 +2,11 @@
 
 <% reg = @form_submission.person.event_registrations.find_by(event: @event) %>
 <% back_path = reg&.slug.present? ? registration_ticket_path(reg.slug) : event_path(@event) %>
+<% back_label = reg&.slug.present? ? "Back to ticket" : "Back to event" %>
 <div class="max-w-2xl mx-auto px-4 pt-4">
   <div class="flex flex-wrap items-center gap-2">
     <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Back to registration
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
     <% end %>
     <% if reg && allowed_to?(:index?, EventRegistration) %>
       <%= link_to "Registration", edit_event_registration_path(reg), class: "ml-auto admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
