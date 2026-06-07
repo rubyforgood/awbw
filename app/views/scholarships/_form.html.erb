@@ -1,4 +1,7 @@
-<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="scholarship-preview">
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+         data-controller="scholarship-preview"
+         data-scholarship-preview-event-cost-value="<%= @allocatable.respond_to?(:event) ? @allocatable.event.cost_cents.to_i : 0 %>"
+         data-scholarship-preview-other-allocated-value="<%= @allocatable.respond_to?(:event) ? (@allocatable.allocations_sum.to_i - f.object.allocation&.amount.to_i) : 0 %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
       <i class="fa-solid fa-graduation-cap"></i>
@@ -16,12 +19,18 @@
           <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (@allocatable.event.cost_cents.to_f / 100) %></dd>
         </div>
         <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Still owed</dt>
-          <dd class="mt-1 text-sm font-semibold <%= owed_cents.zero? ? "text-green-700" : "text-gray-900" %> tabular-nums">$<%= "%.2f" % (owed_cents.to_f / 100) %></dd>
-        </div>
-        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
           <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Scholarship allocated</dt>
           <dd data-scholarship-preview-target="allocated" class="mt-1 text-sm font-semibold <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> tabular-nums">$<%= "%.2f" % (allocated_cents.to_f / 100) %></dd>
+        </div>
+        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Still owed</dt>
+          <dd data-scholarship-preview-target="owed" class="mt-1">
+            <% paid = owed_cents <= 0 %>
+            <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-medium <%= paid ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700" %>">
+              <i class="fas <%= paid ? "fa-circle-check" : "fa-circle-exclamation" %>"></i>
+              <%= paid ? "Paid" : "$#{"%.2f" % (owed_cents.to_f / 100)} due" %>
+            </span>
+          </dd>
         </div>
       </dl>
     <% end %>

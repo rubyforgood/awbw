@@ -4,11 +4,13 @@
   <%# Top bar: back link + secondary links, matching the registration edit page %>
   <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
     <% if @allocatable.respond_to?(:event) %>
-      <%= link_to manage_event_path(@allocatable.event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
-        <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
+      <%= link_to edit_event_registration_path(@allocatable), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Registration
       <% end %>
     <% else %>
-      <span></span>
+      <%= link_to scholarships_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Scholarships
+      <% end %>
     <% end %>
     <div class="flex items-center gap-3">
       <%= link_to "View", scholarship_path(@scholarship), class: "text-sm text-gray-500 hover:text-gray-700" %>
@@ -16,23 +18,21 @@
     </div>
   </div>
 
-  <%# Title block: event context above, action below %>
-  <div class="text-center mb-8">
-    <% if @allocatable.respond_to?(:event) %>
-      <%= link_to @allocatable.event.title, event_path(@allocatable.event),
-                  class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
-    <% end %>
-    <h1 class="mt-1 flex items-center justify-center gap-3 text-3xl sm:text-4xl font-extrabold text-black">
-      <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"></i>
-      Edit scholarship
-    </h1>
-    <% if @scholarship.recipient.present? %>
-      <p class="mt-2 text-sm text-gray-500"><%= @scholarship.recipient.full_name %></p>
-    <% end %>
-  </div>
+  <%= render "shared/event_page_header",
+             title: "Edit scholarship",
+             icon: "fa-solid fa-graduation-cap",
+             color: :scholarships,
+             event: (@allocatable.event if @allocatable.respond_to?(:event)),
+             person: @scholarship.recipient %>
 
   <%= form_with model: @scholarship, class: "space-y-6" do |f| %>
     <%= render "form", f: f %>
+  <% end %>
+
+  <% if @event %>
+    <div class="mt-6">
+      <%= render "form_submission" %>
+    </div>
   <% end %>
 
   <%= render "shared/audit_info", resource: @scholarship %>

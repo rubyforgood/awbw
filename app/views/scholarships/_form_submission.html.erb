@@ -1,0 +1,38 @@
+<%# ---- Form submission — the recipient's scholarship-section answers from their
+    registration form, with a jump link to the full public submission (where the
+    complete application, if any, lives). ---- %>
+<% submission_params = @allocatable.try(:slug).present? ? { reg: @allocatable.slug } : { person_id: @scholarship.recipient_id } %>
+<% answered = @scholarship_answers.to_a.any? { |_field, response| response&.submitted_answer.present? } %>
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:event_registrations, intensity: 100) %> <%= DomainTheme.text_class_for(:event_registrations, intensity: 600) %>">
+      <i class="fa-solid fa-file-lines"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700">Form submission</h2>
+    <% if @form_submission %>
+      <%= link_to event_public_registration_path(@event, **submission_params),
+                  class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                  target: "_blank", rel: "noopener" do %>
+        View full submission
+        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="p-4">
+    <% if answered %>
+      <dl class="space-y-3">
+        <% @scholarship_answers.each do |field, response| %>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400"><%= field.name %></dt>
+            <dd class="mt-0.5 text-sm text-gray-900 whitespace-pre-line"><%= display_response_text(field, response) %></dd>
+          </div>
+        <% end %>
+      </dl>
+    <% elsif @form_submission %>
+      <p class="text-sm text-gray-400">No scholarship questions were answered on this submission.</p>
+    <% else %>
+      <p class="text-sm text-gray-400">No form submission on file for this registrant.</p>
+    <% end %>
+  </div>
+</section>
