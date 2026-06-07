@@ -63,7 +63,7 @@ class EventRegistrationsController < ApplicationController
       respond_to do |format|
         format.html {
           case params[:return_to]
-          when "manage" then redirect_to manage_event_path(@event_registration.event), alert: @event_registration.errors.full_messages.to_sentence
+          when "registrants" then redirect_to registrants_event_path(@event_registration.event), alert: @event_registration.errors.full_messages.to_sentence
           else redirect_to event_registrations_path, alert: @event_registration.errors.full_messages.to_sentence
           end
         }
@@ -87,14 +87,14 @@ class EventRegistrationsController < ApplicationController
         format.turbo_stream
         format.html {
           case params[:return_to]
-          when "manage" then redirect_to manage_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
+          when "registrants" then redirect_to registrants_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
           when "index" then redirect_to event_registrations_path, notice: "Registration was successfully updated.", status: :see_other
           when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
           else
             # No explicit origin: keep admins in the management context (the
             # roster) rather than dropping them on the public registration show.
             if allowed_to?(:manage?, with: EventRegistrationPolicy)
-              redirect_to manage_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
+              redirect_to registrants_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
             else
               redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
             end
@@ -135,7 +135,7 @@ class EventRegistrationsController < ApplicationController
     )
 
     case params[:return_to]
-    when "manage" then redirect_to manage_event_path(@event_registration.event), notice: result.summary
+    when "registrants" then redirect_to registrants_event_path(@event_registration.event), notice: result.summary
     when "index" then redirect_to event_registrations_path, notice: result.summary
     else redirect_to registration_ticket_path(@event_registration.slug), notice: result.summary
     end
@@ -164,7 +164,7 @@ class EventRegistrationsController < ApplicationController
     @event_registration.event_registration_organizations
       .find_or_create_by!(organization: organization)
 
-    redirect_to manage_event_path(@event_registration.event), notice: "Organization linked successfully."
+    redirect_to registrants_event_path(@event_registration.event), notice: "Organization linked successfully."
   end
 
   def destroy
@@ -177,7 +177,7 @@ class EventRegistrationsController < ApplicationController
     end
 
     case params[:return_to]
-    when "manage" then redirect_to manage_event_path(event)
+    when "registrants" then redirect_to registrants_event_path(event)
     else redirect_to event_registrations_path
     end
   end

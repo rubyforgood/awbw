@@ -1,4 +1,4 @@
-<%= turbo_frame_tag :manage_results do %>
+<%= turbo_frame_tag :registrants_results do %>
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-controller="column-toggle">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
       <p class="text-sm text-gray-500"><%= @event_registrations.size %> registrant<%= "s" if @event_registrations.size != 1 %></p>
@@ -88,7 +88,7 @@
                       <% end %>
                     </ul>
                   <% else %>
-                    <%= link_to link_organization_event_registration_path(registration, return_to: "manage"),
+                    <%= link_to link_organization_event_registration_path(registration, return_to: "registrants"),
                                 class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 bg-amber-50 text-amber-700 border-amber-200 hover:opacity-80",
                                 data: { turbo_frame: "_top" } do %>
                       <span>Pending</span>
@@ -157,7 +157,7 @@
                 </td>
 
                 <td class="px-4 py-2 text-sm text-nowrap"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
-                <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "manage"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
+                <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
               </tr>
             <% end %>
           </tbody>

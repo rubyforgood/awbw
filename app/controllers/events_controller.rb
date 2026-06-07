@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background manage staff recipients preview_reminder send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff recipients preview_reminder send_reminder copy_registration_form ]
 
   def index
     authorize!
@@ -47,7 +47,7 @@ class EventsController < ApplicationController
     @dashboard = EventDashboard.new(@event)
   end
 
-  def manage
+  def registrants
     authorize! @event, to: :manage?
     @event = @event.decorate
     scope = @event.event_registrations
@@ -129,7 +129,7 @@ class EventsController < ApplicationController
       EventMailer.event_registration_reminder(event_registration, days_until_event: days_until).deliver_later
     end
 
-    redirect_to manage_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
+    redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
   end
 
   def create

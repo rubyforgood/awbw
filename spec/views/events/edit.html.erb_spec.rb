@@ -48,7 +48,7 @@ RSpec.describe "events/edit", type: :view do
 
     expect(rendered).to have_link("View event", href: event_path(event))
     expect(rendered).to have_link("Dashboard", href: dashboard_event_path(event))
-    expect(rendered).to have_link("Registrants", href: manage_event_path(event))
+    expect(rendered).to have_link("Registrants", href: registrants_event_path(event))
   end
 
   it "renders submit button" do

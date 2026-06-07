@@ -65,7 +65,7 @@ RSpec.describe "Scholarships", type: :request do
         delete scholarship_path(scholarship)
       }.to change(Scholarship, :count).by(-1)
 
-      expect(response).to redirect_to(manage_event_path(event))
+      expect(response).to redirect_to(registrants_event_path(event))
       expect(flash[:notice]).to eq("Scholarship removed.")
     end
   end

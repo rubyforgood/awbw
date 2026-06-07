@@ -111,27 +111,27 @@ RSpec.describe "EventRegistrations", type: :request do
       it "creates registration and redirects admin to confirm page" do
         expect {
           post event_registrations_path,
-               params: { return_to: "manage", event_registration: { event_id: event.id, registrant_id: admin.person.id } }
+               params: { return_to: "registrants", event_registration: { event_id: event.id, registrant_id: admin.person.id } }
         }.to change(EventRegistration, :count).by(1)
 
         registration = EventRegistration.last
-        expect(response).to redirect_to(confirm_event_registration_path(registration, return_to: "manage"))
+        expect(response).to redirect_to(confirm_event_registration_path(registration, return_to: "registrants"))
       end
     end
 
     describe "GET /event_registrations/:id/confirm" do
       it "renders the confirm page" do
-        get confirm_event_registration_path(existing_registration, return_to: "manage")
+        get confirm_event_registration_path(existing_registration, return_to: "registrants")
         expect(response).to have_http_status(:success)
       end
     end
 
     describe "POST /event_registrations/:id/process_confirm" do
-      it "redirects to manage page when return_to is manage" do
+      it "redirects to registrants page when return_to is registrants" do
         post process_confirm_event_registration_path(existing_registration),
-             params: { return_to: "manage" }
+             params: { return_to: "registrants" }
 
-        expect(response).to redirect_to(manage_event_path(existing_registration.event))
+        expect(response).to redirect_to(registrants_event_path(existing_registration.event))
         expect(flash[:notice]).to eq("Registration created.")
       end
 
@@ -146,7 +146,7 @@ RSpec.describe "EventRegistrations", type: :request do
         allow(NotificationServices::CreateNotification).to receive(:call)
 
         post process_confirm_event_registration_path(existing_registration),
-             params: { return_to: "manage", send_confirmation_email: "1" }
+             params: { return_to: "registrants", send_confirmation_email: "1" }
 
         expect(flash[:notice]).to include("Registration confirmation email sent")
         expect(flash[:notice]).not_to include("Admin notification")
@@ -156,7 +156,7 @@ RSpec.describe "EventRegistrations", type: :request do
         allow(NotificationServices::CreateNotification).to receive(:call)
 
         post process_confirm_event_registration_path(existing_registration),
-             params: { return_to: "manage", send_admin_fyi: "1" }
+             params: { return_to: "registrants", send_admin_fyi: "1" }
 
         expect(flash[:notice]).to include("Admin notification email sent")
         expect(flash[:notice]).not_to include("Registration confirmation")
@@ -166,7 +166,7 @@ RSpec.describe "EventRegistrations", type: :request do
         allow(NotificationServices::CreateNotification).to receive(:call)
 
         post process_confirm_event_registration_path(existing_registration),
-             params: { return_to: "manage", send_confirmation_email: "1", send_admin_fyi: "1" }
+             params: { return_to: "registrants", send_confirmation_email: "1", send_admin_fyi: "1" }
 
         expect(flash[:notice]).to include("Registration confirmation email sent")
         expect(flash[:notice]).to include("Admin notification email sent")
@@ -179,7 +179,7 @@ RSpec.describe "EventRegistrations", type: :request do
         person.reload
 
         post process_confirm_event_registration_path(existing_registration),
-             params: { return_to: "manage", create_user: "1" }
+             params: { return_to: "registrants", create_user: "1" }
 
         expect(flash[:notice]).to include("User account created")
         expect(person.reload.user).to be_present
@@ -192,7 +192,7 @@ RSpec.describe "EventRegistrations", type: :request do
         person.reload
 
         post process_confirm_event_registration_path(existing_registration),
-             params: { return_to: "manage", create_user: "1", send_invite: "1" }
+             params: { return_to: "registrants", create_user: "1", send_invite: "1" }
 
         expect(flash[:notice]).to include("User account created")
         expect(flash[:notice]).to include("System invite sent")
@@ -200,7 +200,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
       it "skips with no actions when nothing selected" do
         post process_confirm_event_registration_path(existing_registration),
-             params: { return_to: "manage" }
+             params: { return_to: "registrants" }
 
         expect(flash[:notice]).to eq("Registration created.")
       end
@@ -213,7 +213,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
         # No explicit return_to: admins land back on the management roster, not
         # the public registration show.
-        expect(response).to redirect_to(manage_event_path(new_event))
+        expect(response).to redirect_to(registrants_event_path(new_event))
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
 

@@ -274,7 +274,7 @@ RSpec.describe "Events", type: :request do
     end
   end
 
-  describe "GET /events/:id/manage" do
+  describe "GET /events/:id/registrants" do
     let(:person) { create(:person) }
     let!(:registration) { create(:event_registration, event: event, registrant: person) }
 
@@ -282,13 +282,13 @@ RSpec.describe "Events", type: :request do
 
     context "with unknown filter params" do
       it "does not crash on an invalid payment_status" do
-        get manage_event_path(event, payment_status: "bogus")
+        get registrants_event_path(event, payment_status: "bogus")
 
         expect(response).to have_http_status(:ok)
       end
 
       it "does not crash on an invalid scholarship status" do
-        get manage_event_path(event, scholarship: "bogus")
+        get registrants_event_path(event, scholarship: "bogus")
 
         expect(response).to have_http_status(:ok)
       end
@@ -296,7 +296,7 @@ RSpec.describe "Events", type: :request do
 
     context "confirmed column toggle" do
       it "renders the slide toggle for confirmed column" do
-        get manage_event_path(event)
+        get registrants_event_path(event)
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include('data-controller="column-toggle"')
@@ -304,14 +304,14 @@ RSpec.describe "Events", type: :request do
       end
 
       it "renders confirmed column header hidden by default" do
-        get manage_event_path(event)
+        get registrants_event_path(event)
 
         expect(response.body).to include("data-column-toggle-col")
       end
 
       context "when registrant has a confirmed user" do
         it "shows confirmed check icon" do
-          get manage_event_path(event)
+          get registrants_event_path(event)
 
           expect(response.body).to include("fa-check-circle")
         end
@@ -321,7 +321,7 @@ RSpec.describe "Events", type: :request do
         let(:person) { create(:person, user: create(:user, :unconfirmed, welcome_instructions_sent_at: 1.day.ago)) }
 
         it "shows clock icon" do
-          get manage_event_path(event)
+          get registrants_event_path(event)
 
           expect(response.body).to include("fa-solid fa-clock")
         end
@@ -331,7 +331,7 @@ RSpec.describe "Events", type: :request do
         let(:person) { create(:person, user: create(:user, :unconfirmed)) }
 
         it "shows invite button" do
-          get manage_event_path(event)
+          get registrants_event_path(event)
 
           expect(response.body).to include("Invite")
         end
@@ -341,7 +341,7 @@ RSpec.describe "Events", type: :request do
         let(:person) { create(:person, user: nil) }
 
         it "shows create user link" do
-          get manage_event_path(event)
+          get registrants_event_path(event)
 
           expect(response.body).to include("Create user")
         end
@@ -355,7 +355,7 @@ RSpec.describe "Events", type: :request do
         create(:event_form, event: event, form: reg_form, role: "registration")
         create(:form_submission, person: person, form: reg_form)
 
-        get manage_event_path(event)
+        get registrants_event_path(event)
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include('fa-solid fa-file-lines')
@@ -364,14 +364,14 @@ RSpec.describe "Events", type: :request do
       it "shows gray icon when person has not submitted any form" do
         create(:event_form, event: event, form: reg_form, role: "registration")
 
-        get manage_event_path(event)
+        get registrants_event_path(event)
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include('fa-regular fa-file-lines')
       end
 
       it "does not show any form icon when event has no forms" do
-        get manage_event_path(event)
+        get registrants_event_path(event)
 
         expect(response).to have_http_status(:ok)
         expect(response.body).not_to include('fa-file-lines')
@@ -379,7 +379,7 @@ RSpec.describe "Events", type: :request do
     end
   end
 
-  describe "GET /events/:id/manage with payment and scholarship filters" do
+  describe "GET /events/:id/registrants with payment and scholarship filters" do
     let(:event) { create(:event, cost_cents: 1_000) }
     let(:paid_person) { create(:person, first_name: "Paid", last_name: "Person") }
     let(:unpaid_person) { create(:person, first_name: "Unpaid", last_name: "Person") }
@@ -409,20 +409,20 @@ RSpec.describe "Events", type: :request do
     before { sign_in admin }
 
     it "filters to paid-in-full registrants" do
-      get manage_event_path(event, payment_status: "paid")
+      get registrants_event_path(event, payment_status: "paid")
       expect(response.body).to include("Paid Person")
       expect(response.body).to include("Scholar Person")
       expect(response.body).not_to include("Unpaid Person")
     end
 
     it "filters to not-paid-in-full registrants" do
-      get manage_event_path(event, payment_status: "unpaid")
+      get registrants_event_path(event, payment_status: "unpaid")
       expect(response.body).to include("Unpaid Person")
       expect(response.body).not_to include("Paid Person")
     end
 
     it "filters to all scholarship recipients" do
-      get manage_event_path(event, scholarship: "yes")
+      get registrants_event_path(event, scholarship: "yes")
       expect(response.body).to include("Scholar Person")
       expect(response.body).to include("Pending Person")
       expect(response.body).not_to include("Paid Person")
@@ -430,19 +430,19 @@ RSpec.describe "Events", type: :request do
     end
 
     it "filters to recipients whose tasks are complete" do
-      get manage_event_path(event, scholarship: "complete")
+      get registrants_event_path(event, scholarship: "complete")
       expect(response.body).to include("Scholar Person")
       expect(response.body).not_to include("Pending Person")
     end
 
     it "filters to recipients whose tasks are not complete" do
-      get manage_event_path(event, scholarship: "incomplete")
+      get registrants_event_path(event, scholarship: "incomplete")
       expect(response.body).to include("Pending Person")
       expect(response.body).not_to include("Scholar Person")
     end
   end
 
-  describe "GET /events/:id/manage with state and county filters" do
+  describe "GET /events/:id/registrants with state and county filters" do
     let(:ca_person) { create(:person, first_name: "Cali", last_name: "Person") }
     let(:ny_person) { create(:person, first_name: "York", last_name: "Person") }
     # Same county name ("Kings") in a different state, to prove disambiguation.
@@ -460,20 +460,20 @@ RSpec.describe "Events", type: :request do
     end
 
     it "filters registrants by state" do
-      get manage_event_path(event, state: "CA")
+      get registrants_event_path(event, state: "CA")
       expect(response.body).to include("Cali Person")
       expect(response.body).not_to include("York Person")
     end
 
     it "filters registrants by a state-scoped county value" do
-      get manage_event_path(event, county: "NY|Kings")
+      get registrants_event_path(event, county: "NY|Kings")
       expect(response.body).to include("York Person")
       expect(response.body).not_to include("Cali Person")
       expect(response.body).not_to include("Caliking Person")
     end
 
     it "filters registrants by a hyphenated registrant id list" do
-      get manage_event_path(event, registrant_ids: ca_person.id.to_s)
+      get registrants_event_path(event, registrant_ids: ca_person.id.to_s)
       expect(response.body).to include("Cali Person")
       expect(response.body).not_to include("York Person")
     end
@@ -482,7 +482,7 @@ RSpec.describe "Events", type: :request do
       sector = create(:sector)
       create(:sectorable_item, sector: sector, sectorable: ca_person)
 
-      get manage_event_path(event, sector: sector.id)
+      get registrants_event_path(event, sector: sector.id)
       expect(response.body).to include("Cali Person")
       expect(response.body).not_to include("York Person")
     end
