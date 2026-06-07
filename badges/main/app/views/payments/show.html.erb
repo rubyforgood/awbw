@@ -32,6 +32,12 @@
         <dd class="mt-1 text-sm text-gray-900"><%= @payment.check_number %></dd>
       </div>
     <% end %>
+    <% if @payment.memo.present? %>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Memo</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @payment.memo %></dd>
+      </div>
+    <% end %>
     <% if @payment.pay_charge_id.present? %>
       <div>
         <dt class="text-sm font-medium text-gray-500">Pay Charge ID</dt>

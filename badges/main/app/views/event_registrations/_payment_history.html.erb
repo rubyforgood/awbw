@@ -1,0 +1,55 @@
+<%# ---- Allocations — a cost/allocated/due summary (matching the scholarship
+    edit page). The per-allocation line items live on the linked allocations
+    page; this card shows totals only. ---- %>
+<% cost_cents = event_registration.event.cost_cents.to_i %>
+<% paid_cents = event_registration.allocations_sum %>
+<% due_cents = cost_cents - paid_cents %>
+<%# Free event with nothing allocated — nothing to manage, so hide the section. %>
+<% return if cost_cents <= 0 && event_registration.allocations.empty? %>
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:payments, intensity: 100) %> <%= DomainTheme.text_class_for(:payments, intensity: 600) %>">
+      <i class="fa-solid fa-dollar-sign"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700">Registration allocations</h2>
+    <%= link_to allocations_path(allocatable_sgid: event_registration.to_sgid.to_s),
+                class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                target: "_blank", rel: "noopener" do %>
+      View all
+      <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+    <% end %>
+  </div>
+
+  <div class="p-4">
+    <% if cost_cents > 0 %>
+      <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Registration cost</dt>
+          <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (cost_cents / 100.0) %></dd>
+        </div>
+        <div class="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount allocated</dt>
+          <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (paid_cents / 100.0) %></dd>
+        </div>
+        <% amount_due = due_cents > 0 %>
+        <div class="rounded-lg border px-4 py-3 <%= amount_due ? "border-amber-300 bg-amber-50" : "border-gray-300 bg-gray-50" %>">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</dt>
+          <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= amount_due ? "text-amber-700" : "text-gray-500" %>">
+            <% if amount_due %>
+              <i class="fa-solid fa-circle-exclamation"></i>
+              $<%= "%.2f" % (due_cents / 100.0) %>
+            <% else %>
+              <i class="fa-solid fa-thumbs-up"></i>
+              Paid up
+            <% end %>
+          </dd>
+        </div>
+      </dl>
+    <% else %>
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-0.5 text-xs font-medium text-gray-500">
+        <i class="fa-solid fa-gift"></i>
+        Free event — no payment required
+      </span>
+    <% end %>
+  </div>
+</section>

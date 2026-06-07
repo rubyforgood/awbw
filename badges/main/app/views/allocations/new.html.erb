@@ -43,9 +43,9 @@
     <div class="mt-6">
       <%= f.button :submit, "Create Allocation", class: "btn btn-primary" %>
       <% if source.present? %>
-        <%= link_to "Cancel", payment_path(source), class: "btn btn-secondary ml-2" %>
+        <%= link_to "Cancel", payment_path(source), class: "btn btn-secondary-outline ml-2" %>
       <% else %>
-        <%= link_to "Cancel", payments_path, class: "btn btn-secondary ml-2" %>
+        <%= link_to "Cancel", payments_path, class: "btn btn-secondary-outline ml-2" %>
       <% end %>
     </div>
   <% end %>

@@ -33,6 +33,7 @@ class ScholarshipsController < ApplicationController
   def edit
     @allocatable = @scholarship.allocation&.allocatable
     authorize! @scholarship
+    load_scholarship_submission
   end
 
   def update
@@ -60,6 +61,25 @@ class ScholarshipsController < ApplicationController
 
   def set_scholarship
     @scholarship = Scholarship.find(params[:id])
+  end
+
+  # Pull the recipient's scholarship-section answers from the event's
+  # registration form submission, plus a link to the full public submission.
+  def load_scholarship_submission
+    return unless @allocatable.respond_to?(:event)
+
+    @event = @allocatable.event
+    form = @event&.registration_form
+    return unless form
+
+    @form_submission = form.form_submissions.find_by(person: @scholarship.recipient)
+    answers = @form_submission ? @form_submission.form_answers.index_by(&:form_field_id) : {}
+
+    @scholarship_answers = form.form_fields
+      .select { |field| field.section == "scholarship" || field.scholarship_only? }
+      .reject { |field| field.group_header? || field.no_user_input? }
+      .sort_by { |field| field.position.to_i }
+      .map { |field| [ field, answers[field.id] ] }
   end
 
   def locate_allocatable

@@ -44,6 +44,7 @@ class DiscountsController < ApplicationController
 
   def allocation_form
     authorize!
+    @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid]) if params[:allocatable_sgid].present?
 
     respond_to do |format|
       format.turbo_stream

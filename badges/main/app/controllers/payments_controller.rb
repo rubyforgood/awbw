@@ -24,6 +24,7 @@ class PaymentsController < ApplicationController
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
       if @allocatable.is_a?(EventRegistration)
         @payment.person = @allocatable.registrant
+        @payment.organization = @allocatable.organizations.first
       end
     end
   end
@@ -94,6 +95,7 @@ class PaymentsController < ApplicationController
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
       if @allocatable.is_a?(EventRegistration)
         @payment.person = @allocatable.registrant
+        @payment.organization = @allocatable.organizations.first
       end
     end
 
@@ -110,7 +112,7 @@ class PaymentsController < ApplicationController
   end
 
   def payment_params
-    params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :amount_dollars, :currency, :check_number, :allocatable_sgid)
+    params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :amount_dollars, :currency, :check_number, :memo, :allocatable_sgid)
   end
 
   def locate_allocatable

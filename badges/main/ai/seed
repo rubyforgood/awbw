@@ -2,6 +2,13 @@
 # Load the full dev sample dataset into the workspace database.
 # Sourcing .ruby-env sets WORKSPACE_PORT so seeds land in the per-workspace DB
 # (awbw_development_$PORT) the app actually serves — not the unsuffixed default.
+#
+# db:prepare bootstraps a brand-new workspace DB: it creates the database and
+# loads the schema when it doesn't exist yet, and is a cheap no-op (just applies
+# any pending migrations) when it does. db:seed:dev then layers the dev sample
+# data on top — it runs the base db:seed itself, so we don't call that separately.
 set -euo pipefail
 source "$(dirname "$0")/.ruby-env"
+
+bundle exec rails db:prepare
 bundle exec rails db:seed:dev "$@"

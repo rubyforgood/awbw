@@ -48,7 +48,7 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~73 files |
+| `app/models/` | ActiveRecord models | ~74 files |
 | `app/services/` | Service objects for complex logic | ~23 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
 | `app/models/concerns/` | Shared model modules | 13 concerns |
@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (36) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (50) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -275,6 +275,7 @@ end
 - `remote_select` — AJAX-powered select dropdown
 - `reveal_section` — Expand a collapsible section and scroll to it when loaded via matching URL hash
 - `rhino_source` — Rich text editor integration
+- `scholarship_preview` — Live-preview the scholarship's allocated amount as the edit form changes
 - `searchable_checkbox` — TomSelect checkbox-style multi-select
 - `searchable_select` — Tom Select autocomplete
 - `share_url` — URL sharing/copying

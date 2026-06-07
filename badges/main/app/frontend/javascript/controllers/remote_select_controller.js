@@ -71,6 +71,11 @@ export default class extends Controller {
         padding: 0 !important;
         line-height: 1.5rem !important;
       }
+      /* Opaque white field so colored card backgrounds don't show through */
+      .remote-select-container .ts-wrapper,
+      .remote-select-container .ts-control {
+        background-color: #fff !important;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -86,6 +91,13 @@ export default class extends Controller {
     icon.className = "fa-solid fa-magnifying-glass remote-select-icon";
     icon.setAttribute("aria-hidden", "true");
     container.appendChild(icon);
+  }
+
+  // Deselect the current value so the control is ready for the next pick.
+  // Used by controllers (e.g. org-toggle) that consume a selection and want
+  // to reuse the same search box to add another.
+  clear() {
+    if (this.select) this.select.clear();
   }
 
   disconnect() {
