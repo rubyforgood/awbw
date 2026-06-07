@@ -99,6 +99,8 @@ This codebase (Rails 8.1)
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
+| `Grant` | Donated funds (polymorphic `donor`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
+| `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
 | `Report` | STI base class for MonthlyReport |
 | `WorkshopLog` | Standalone model for workshop log submissions (attendance, form fields) |
 
@@ -110,6 +112,7 @@ This codebase (Rails 8.1)
 ### Polymorphic Associations
 
 - **Bookmarks** (`bookmarkable`): Workshop, Event, Resource, etc.
+- **Grant donor** (`donor`): Organization, Person
 - **Assets** (`owner`): Workshop, Story, Resource, Report, etc.
 - **Comments** (`commentable`): User, Person, Organization, etc.
 - **Categorizable/Sectorable** items: Workshop, Story, Resource, etc.
@@ -206,7 +209,7 @@ All inherit from `ApplicationDecorator` which provides:
 - `display_image` — selects primary/gallery/downloadable asset intelligently
 - `link_target` — polymorphic path generation
 
-Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator.
+Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator.
 
 ## Policies (ActionPolicy)
 

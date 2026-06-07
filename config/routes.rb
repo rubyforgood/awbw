@@ -110,6 +110,7 @@ Rails.application.routes.draw do
       patch :update_sections
     end
   end
+  resources :grants
   resources :scholarships, only: [ :new, :create, :show, :edit, :update, :destroy ]
   resources :discounts, only: [ :create, :show, :destroy ] do
     collection do

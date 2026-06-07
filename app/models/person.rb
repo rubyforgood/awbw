@@ -23,6 +23,7 @@ class Person < ApplicationRecord
   # has_many through
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
   has_many :scholarships, foreign_key: :recipient_id, dependent: :destroy
+  has_many :grants, as: :donor, dependent: :destroy
   has_many :events, through: :event_registrations
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items

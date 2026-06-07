@@ -12,6 +12,7 @@ module DomainTheme
     people:                   :sky,
     organizations:            :emerald,
     quotes:                   :slate,
+    grants:                   :green,
 
     tags:                     :lime,
     sectors:                  :lime,
