@@ -111,6 +111,29 @@ class Organization < ApplicationRecord
     direct.or(legacy).distinct
   end
 
+  # Classifies this organization as a facilitator program relative to a reference
+  # ("current") facilitator affiliation — typically a registrant's affiliation
+  # captured through the event registration form:
+  #   :new        — the reference is the organization's first facilitator
+  #                 affiliation (none started before it)
+  #   :ongoing    — the organization already had a facilitator affiliation that
+  #                 was still active when the reference one started
+  #   :reinstated — the organization had facilitator affiliation(s) before, but
+  #                 they all ended before the reference one started (a lapse)
+  def facilitator_status(current_affiliation)
+    reference_start = current_affiliation.start_date || Date.current
+
+    earlier = affiliations.facilitators
+      .where.not(id: current_affiliation.id)
+      .where.not(start_date: nil)
+      .where("affiliations.start_date < ?", reference_start)
+
+    return :new unless earlier.exists?
+
+    active_overlap = earlier.where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", reference_start)
+    active_overlap.exists? ? :ongoing : :reinstated
+  end
+
   # Methods
   def led_by?(user)
     return false unless leader

@@ -20,6 +20,29 @@ RSpec.describe EventDashboard do
     let(:sector2) { create(:sector, name: "Mental Health") }
     let(:sector_excluded) { create(:sector, name: "Veterans & Military") }
 
+    let(:story_population) { create(:category_type, name: "StoryPopulation") }
+    let(:experience1) { create(:category, name: "Veterans", category_type: story_population) }
+    let(:experience2) { create(:category, name: "Survivors", category_type: story_population) }
+    let(:experience_excluded) { create(:category, name: "Elders", category_type: story_population) }
+
+    let(:workshop_environment) { create(:category_type, name: "WorkshopEnvironment") }
+    let(:setting1) { create(:category, name: "Clinical", category_type: workshop_environment) }
+    let(:setting2) { create(:category, name: "Educational", category_type: workshop_environment) }
+    let(:setting_excluded) { create(:category, name: "Virtually", category_type: workshop_environment) }
+
+    let(:age_range) { create(:category_type, name: "AgeRange") }
+    let(:age_group1) { create(:category, name: "Adults", category_type: age_range) }
+    let(:age_group2) { create(:category, name: "Teens", category_type: age_range) }
+    let(:age_group_excluded) { create(:category, name: "Children", category_type: age_range) }
+
+    # Age group is read from the registration form's "primary_age_group" answers
+    # (", "-joined AgeRange category ids), not from profile tags.
+    let(:registration_form) { create(:form, name: "Registration") }
+    let(:age_group_field) do
+      create(:form_field, form: registration_form, field_identifier: "primary_age_group",
+                          name: "Primary Age Group(s) Served", answer_type: :multiple_choice_checkbox)
+    end
+
     let!(:reg1) do
       # Affiliation exists before registration so it is captured in the snapshot.
       create(:affiliation, person: person1, organization: org_a)
@@ -55,6 +78,31 @@ RSpec.describe EventDashboard do
       create(:sectorable_item, sector: sector1, sectorable: person2)
       create(:sectorable_item, sector: sector2, sectorable: person2)
       create(:sectorable_item, sector: sector_excluded, sectorable: cancelled_person)
+
+      # Life experiences (StoryPopulation categories) on registrants; the excluded
+      # one belongs to the cancelled person.
+      create(:categorizable_item, category: experience1, categorizable: person1)
+      create(:categorizable_item, category: experience1, categorizable: person2)
+      create(:categorizable_item, category: experience2, categorizable: person2)
+      create(:categorizable_item, category: experience_excluded, categorizable: cancelled_person)
+
+      # Workshop settings (WorkshopEnvironment categories) on registrants; the
+      # excluded one belongs to the cancelled person.
+      create(:categorizable_item, category: setting1, categorizable: person1)
+      create(:categorizable_item, category: setting1, categorizable: person2)
+      create(:categorizable_item, category: setting2, categorizable: person2)
+      create(:categorizable_item, category: setting_excluded, categorizable: cancelled_person)
+
+      # Primary age group(s) served, captured as "primary_age_group" answers on
+      # each registrant's registration submission (", "-joined AgeRange ids).
+      # person1 → Adults; person2 → Adults + Teens; cancelled → Children (ignored).
+      create(:event_form, event: event, form: registration_form, role: "registration")
+      create(:form_answer, form_field: age_group_field, submitted_answer: age_group1.id.to_s,
+                           form_submission: create(:form_submission, person: person1, form: registration_form))
+      create(:form_answer, form_field: age_group_field, submitted_answer: "#{age_group1.id}, #{age_group2.id}",
+                           form_submission: create(:form_submission, person: person2, form: registration_form))
+      create(:form_answer, form_field: age_group_field, submitted_answer: age_group_excluded.id.to_s,
+                           form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
 
       # States from active registrant addresses; inactive address excluded.
       create(:address, addressable: person1, state: "CA", county: "Los Angeles")
@@ -135,6 +183,14 @@ RSpec.describe EventDashboard do
         expect(dashboard.organization_count).to eq(3)
       end
 
+      it "buckets each program as new when it is the registrant's first facilitator affiliation" do
+        expect(dashboard.program_status_counts).to eq(new: 3, ongoing: 0, reinstated: 0)
+      end
+
+      it "totals the program-status breakdown to the organization count" do
+        expect(dashboard.program_status_counts.values.sum).to eq(dashboard.organization_count)
+      end
+
       it "counts distinct registrants per organization" do
         expect(dashboard.organization_counts).to eq(org_a.id => 1, org_b.id => 1, org_c.id => 1)
       end
@@ -171,6 +227,89 @@ RSpec.describe EventDashboard do
       end
     end
 
+    describe "sector primary/additional split (overlapping)" do
+      before do
+        # person1 names sector1 as primary; person2 names sector2 as primary. Both
+        # also carry sector1 as a tag, so sector1 is primary for person1 AND an
+        # additional sector for person2 — the counts overlap (don't partition).
+        service_field = create(:form_field, form: registration_form, field_identifier: "primary_service_area",
+                                            answer_type: :multiple_choice_checkbox)
+        create(:form_answer, form_field: service_field, submitted_answer: sector1.id.to_s,
+                             form_submission: FormSubmission.find_by!(person: person1, form: registration_form))
+        create(:form_answer, form_field: service_field, submitted_answer: sector2.id.to_s,
+                             form_submission: FormSubmission.find_by!(person: person2, form: registration_form))
+      end
+
+      it "counts distinct sectors named as a primary service area" do
+        expect(dashboard.primary_sector_count).to eq(2)
+      end
+
+      it "counts sectors carried as a non-primary tag, overlapping the primary count" do
+        # sector1 is a tag for person2, who named sector2 (not sector1) as primary.
+        expect(dashboard.additional_sector_count).to eq(1)
+      end
+    end
+
+    describe "life experiences" do
+      it "returns unique life-experience categories across active registrants" do
+        expect(dashboard.life_experiences).to contain_exactly(experience1, experience2)
+      end
+
+      it "counts distinct registrants per life experience" do
+        expect(dashboard.life_experience_counts).to eq(experience1.id => 2, experience2.id => 1)
+      end
+
+      it "returns the registrant ids tagged with a life experience" do
+        expect(dashboard.life_experience_registrant_ids).to contain_exactly(person1.id, person2.id)
+      end
+
+      it "maps each life experience to its registrant ids" do
+        map = dashboard.life_experience_registrant_ids_by_category
+        expect(map[experience1.id]).to contain_exactly(person1.id, person2.id)
+        expect(map[experience2.id]).to contain_exactly(person2.id)
+      end
+    end
+
+    describe "settings" do
+      it "returns unique setting categories across active registrants" do
+        expect(dashboard.settings).to contain_exactly(setting1, setting2)
+      end
+
+      it "counts distinct registrants per setting" do
+        expect(dashboard.settings_counts).to eq(setting1.id => 2, setting2.id => 1)
+      end
+
+      it "returns the registrant ids tagged with a setting" do
+        expect(dashboard.settings_registrant_ids).to contain_exactly(person1.id, person2.id)
+      end
+
+      it "maps each setting to its registrant ids" do
+        map = dashboard.settings_registrant_ids_by_category
+        expect(map[setting1.id]).to contain_exactly(person1.id, person2.id)
+        expect(map[setting2.id]).to contain_exactly(person2.id)
+      end
+    end
+
+    describe "age groups (from registration responses)" do
+      it "returns unique age-group categories from registrants' registration answers" do
+        expect(dashboard.age_groups).to contain_exactly(age_group1, age_group2)
+      end
+
+      it "counts distinct registrants per age group" do
+        expect(dashboard.age_group_counts).to eq(age_group1.id => 2, age_group2.id => 1)
+      end
+
+      it "returns the registrant ids who answered the age group question" do
+        expect(dashboard.age_group_registrant_ids).to contain_exactly(person1.id, person2.id)
+      end
+
+      it "maps each age group to its registrant ids" do
+        map = dashboard.age_group_registrant_ids_by_category
+        expect(map[age_group1.id]).to contain_exactly(person1.id, person2.id)
+        expect(map[age_group2.id]).to contain_exactly(person2.id)
+      end
+    end
+
     describe "states" do
       it "returns unique states from active registrants' active addresses" do
         expect(dashboard.states).to eq(%w[CA NY])
@@ -188,6 +327,146 @@ RSpec.describe EventDashboard do
     describe "counties" do
       it "returns unique [ state, county ] pairs from active registrants' active addresses" do
         expect(dashboard.counties).to eq([ [ "CA", "Los Angeles" ], [ "NY", "Kings" ] ])
+      end
+    end
+
+    describe "countries" do
+      it "returns the registrant ids that have a country on file, excluding inactive and cancelled" do
+        expect(dashboard.country_registrant_ids).to contain_exactly(person1.id, person2.id)
+      end
+
+      it "counts only active registrants' active addresses" do
+        expect(dashboard.country_counts.values.sum).to eq(2)
+      end
+
+      it "maps each country to its registrant ids" do
+        expect(dashboard.country_registrant_ids_by_country.values.flatten).to contain_exactly(person1.id, person2.id)
+      end
+    end
+
+    describe "school districts" do
+      before do
+        person1.addresses.first.update!(district: "Los Angeles Unified")
+        person2.addresses.where(inactive: false).first.update!(district: "Garden Grove Unified")
+        cancelled_person.addresses.first.update!(district: "Excluded Unified")
+      end
+
+      it "lists distinct school districts from active registrants' addresses" do
+        expect(dashboard.school_districts).to eq([ "Garden Grove Unified", "Los Angeles Unified" ])
+      end
+
+      it "counts distinct registrants per district" do
+        expect(dashboard.school_district_counts).to eq("Los Angeles Unified" => 1, "Garden Grove Unified" => 1)
+      end
+
+      it "returns the registrant ids behind each district, excluding cancelled" do
+        expect(dashboard.school_district_registrant_ids).to contain_exactly(person1.id, person2.id)
+      end
+    end
+
+    describe "location labels" do
+      it "labels a US address by its state abbreviation" do
+        domestic = create(:person)
+        create(:event_registration, event: event, registrant: domestic, status: "registered")
+        create(:address, addressable: domestic, state: "tx", country: "United States")
+
+        expect(dashboard.location_label_by_registrant[domestic.id]).to eq("TX")
+      end
+
+      it "labels an international address by its ISO 3-letter country code" do
+        intl = create(:person)
+        create(:event_registration, event: event, registrant: intl, status: "registered")
+        create(:address, addressable: intl, state: "ON", country: "Canada")
+
+        expect(dashboard.location_label_by_registrant[intl.id]).to eq("CAN")
+      end
+    end
+  end
+
+  describe "scholarship applicants" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:registration_form) { create(:form, name: "Registration") }
+    let(:scholarship_form) { create(:form, :scholarship) }
+    # impact_description belongs to the scholarship section wherever it is asked.
+    let!(:impact_field) do
+      create(:form_field, form: scholarship_form, name: "How will this impact the people you serve?",
+                          field_identifier: "impact_description")
+    end
+
+    # "Most" recipient: registered with scholarship requested, so the scholarship
+    # answers ride along on the registration submission.
+    let(:embedded_applicant) { create(:person, first_name: "Tara", last_name: "Gallagher") }
+    # "Few" recipient: a separate scholarship submission alongside registration.
+    let(:separate_applicant) { create(:person, first_name: "Lucero", last_name: "Sosa") }
+    let(:non_applicant) { create(:person, first_name: "Pat", last_name: "Plain") }
+
+    before do
+      create(:event_form, :registration, event: event, form: registration_form)
+      create(:event_form, :scholarship, event: event, form: scholarship_form)
+
+      create(:event_registration, event: event, registrant: embedded_applicant, status: "registered", scholarship_requested: true)
+      create(:event_registration, event: event, registrant: separate_applicant, status: "registered", scholarship_requested: true)
+      create(:event_registration, event: event, registrant: non_applicant, status: "registered", scholarship_requested: false)
+
+      # Embedded: scholarship answer captured on the registration submission.
+      reg_submission = create(:form_submission, person: embedded_applicant, form: registration_form)
+      create(:form_answer, form_submission: reg_submission, form_field: impact_field, submitted_answer: "To serve survivors.")
+
+      # Separate: scholarship answer on a dedicated scholarship submission.
+      sch_submission = create(:form_submission, person: separate_applicant, form: scholarship_form, role: "scholarship")
+      create(:form_answer, form_submission: sch_submission, form_field: impact_field, submitted_answer: "To support youth.")
+    end
+
+    it "returns only registrants who requested a scholarship, sorted by name" do
+      expect(dashboard.scholarship_applicants).to eq([ separate_applicant, embedded_applicant ])
+    end
+
+    it "gathers scholarship answers wherever they were captured, keyed by applicant" do
+      answers = dashboard.scholarship_answers_by_applicant
+
+      expect(answers[embedded_applicant.id].map(&:submitted_answer)).to eq([ "To serve survivors." ])
+      expect(answers[separate_applicant.id].map(&:submitted_answer)).to eq([ "To support youth." ])
+      expect(answers).not_to have_key(non_applicant.id)
+    end
+
+    it "de-duplicates a question answered on both the registration and scholarship submissions" do
+      sch_submission = create(:form_submission, person: embedded_applicant, form: scholarship_form, role: "scholarship")
+      create(:form_answer, form_submission: sch_submission, form_field: impact_field, submitted_answer: "Duplicate answer.")
+
+      expect(dashboard.scholarship_answers_by_applicant[embedded_applicant.id].size).to eq(1)
+    end
+
+    it "gathers header (service area / age group) answers keyed by applicant and identifier" do
+      service_field = create(:form_field, form: registration_form, name: "Primary service area", field_identifier: "primary_service_area")
+      reg_submission = FormSubmission.find_by(person: embedded_applicant, form: registration_form)
+      create(:form_answer, form_submission: reg_submission, form_field: service_field, submitted_answer: "5")
+
+      header = dashboard.header_answers_by_applicant
+
+      expect(header[embedded_applicant.id]["primary_service_area"].submitted_answer).to eq("5")
+      expect(header).not_to have_key(non_applicant.id)
+    end
+
+    describe "shout outs" do
+      let(:org_with_bio) { create(:organization, name: "New Economics for Women", description: "Fights for economic justice for women.") }
+      let(:org_without_bio) { create(:organization, name: "Quiet Org", description: "") }
+
+      it "pairs each recipient who has an affiliated org with a bio to that org and its description" do
+        create(:affiliation, person: embedded_applicant, organization: org_with_bio)
+
+        shoutout = dashboard.scholarship_shoutouts.find { |s| s.recipient == embedded_applicant }
+        expect(shoutout.organization).to eq(org_with_bio)
+        expect(shoutout.bio).to eq("Fights for economic justice for women.")
+      end
+
+      it "omits recipients with no affiliated organization" do
+        expect(dashboard.scholarship_shoutouts.map(&:recipient)).not_to include(separate_applicant)
+      end
+
+      it "omits recipients whose organization has no bio on file" do
+        create(:affiliation, person: separate_applicant, organization: org_without_bio)
+
+        expect(dashboard.scholarship_shoutouts.map(&:recipient)).not_to include(separate_applicant)
       end
     end
   end
@@ -358,6 +637,85 @@ RSpec.describe EventDashboard do
       expect(dashboard.organizations).to be_empty
       expect(dashboard.sectors).to be_empty
       expect(dashboard.states).to be_empty
+    end
+
+    it "reports an empty program-status breakdown" do
+      expect(dashboard.program_status_counts).to eq(new: 0, ongoing: 0, reinstated: 0)
+    end
+  end
+
+  context "program-status breakdown across registrants' programs" do
+    let(:event) { create(:event) }
+
+    let(:new_org) { create(:organization, name: "New Program") }
+    let(:ongoing_org) { create(:organization, name: "Ongoing Program") }
+    let(:reinstated_org) { create(:organization, name: "Reinstated Program") }
+
+    let(:new_facilitator) { create(:person) }
+    let(:ongoing_facilitator) { create(:person) }
+    let(:reinstated_facilitator) { create(:person) }
+    let(:cancelled_facilitator) { create(:person) }
+
+    before do
+      # New program: the registrant's affiliation is the org's first facilitator.
+      create(:affiliation, organization: new_org, person: new_facilitator,
+             title: "Facilitator", start_date: Date.new(2026, 1, 1))
+
+      # Ongoing program: a facilitator was already active before this registrant.
+      create(:affiliation, organization: ongoing_org,
+             title: "Facilitator", start_date: Date.new(2023, 1, 1), end_date: nil)
+      create(:affiliation, organization: ongoing_org, person: ongoing_facilitator,
+             title: "Facilitator", start_date: Date.new(2026, 1, 1))
+
+      # Reinstated program: a prior facilitator ended before this registrant's.
+      create(:affiliation, organization: reinstated_org,
+             title: "Facilitator", start_date: Date.new(2020, 1, 1), end_date: Date.new(2021, 1, 1))
+      create(:affiliation, organization: reinstated_org, person: reinstated_facilitator,
+             title: "Facilitator", start_date: Date.new(2026, 1, 1))
+
+      # Cancelled registrant's program must be ignored.
+      create(:affiliation, organization: new_org, person: cancelled_facilitator,
+             title: "Facilitator", start_date: Date.new(2026, 2, 1))
+
+      create(:event_registration, event: event, registrant: new_facilitator, status: "registered")
+      create(:event_registration, event: event, registrant: ongoing_facilitator, status: "registered")
+      create(:event_registration, event: event, registrant: reinstated_facilitator, status: "registered")
+      create(:event_registration, event: event, registrant: cancelled_facilitator, status: "cancelled")
+    end
+
+    it "buckets each active registrant's program by its facilitator status" do
+      expect(dashboard.program_status_counts).to eq(new: 1, ongoing: 1, reinstated: 1)
+    end
+
+    it "maps each registrant to their organization's program status" do
+      statuses = dashboard.program_statuses_by_registrant
+
+      expect(statuses[new_facilitator.id]).to eq([ :new ])
+      expect(statuses[ongoing_facilitator.id]).to eq([ :ongoing ])
+      expect(statuses[reinstated_facilitator.id]).to eq([ :reinstated ])
+      expect(statuses).not_to have_key(cancelled_facilitator.id)
+    end
+  end
+
+  context "program-status breakdown for non-facilitator affiliations" do
+    let(:event) { create(:event) }
+    let(:org) { create(:organization, name: "Day Job Agency") }
+    let(:person) { create(:person) }
+
+    before do
+      # The registrant's only affiliation is a job title, not a facilitator role —
+      # the kind the recipients page surfaces. The program still belongs in the
+      # breakdown so the buckets total the organization count.
+      create(:affiliation, organization: org, person: person, title: "Outreach Specialist", start_date: 1.year.ago)
+      create(:event_registration, event: event, registrant: person, status: "registered")
+    end
+
+    it "counts the organization as a new program even without a facilitator affiliation" do
+      expect(dashboard.program_status_counts).to eq(new: 1, ongoing: 0, reinstated: 0)
+    end
+
+    it "keeps the breakdown total equal to the organization count" do
+      expect(dashboard.program_status_counts.values.sum).to eq(dashboard.organization_count)
     end
   end
 end

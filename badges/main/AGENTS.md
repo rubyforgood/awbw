@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (35) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (36) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -286,6 +286,7 @@ end
 - `timeframe` — Date range filtering
 - `toggle_lock` — Lock/unlock toggle UI
 - `toggle_user_icon` — User icon visibility toggle
+- `us_map_chart` — US states choropleth map (event Background states breakdown)
 
 ### JS Dependencies
 
@@ -294,6 +295,7 @@ end
 | TipTap + ProseMirror | Rich text editor (Rhino) |
 | Tom Select | Advanced select components |
 | Chart.js + Chartkick | Analytics charts |
+| chartjs-chart-geo + us-atlas | US choropleth map (states breakdown) |
 | Swiper | Image carousels |
 | SortableJS | Drag-and-drop sorting |
 | Tippy.js | Tooltips |

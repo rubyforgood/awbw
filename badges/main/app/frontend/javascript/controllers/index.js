@@ -39,6 +39,15 @@ application.register("dirty-form", DirtyFormController)
 import DismissController from "./dismiss_controller"
 application.register("dismiss", DismissController)
 
+import FlipCardController from "./flip_card_controller"
+application.register("flip-card", FlipCardController)
+
+import ExpandableCardController from "./expandable_card_controller"
+application.register("expandable-card", ExpandableCardController)
+
+import ExpandableCardsController from "./expandable_cards_controller"
+application.register("expandable-cards", ExpandableCardsController)
+
 import DropdownController from "./dropdown_controller"
 application.register("dropdown", DropdownController)
 
@@ -105,6 +114,9 @@ application.register("tag-link-loading", TagLinkLoadingController)
 import TabsController from "./tabs_controller"
 application.register("tabs", TabsController)
 
+import TableSortController from "./table_sort_controller"
+application.register("table-sort", TableSortController)
+
 import TagsSyncListHeightsController from "./tags_sync_list_heights_controller"
 application.register("tags-sync-list-heights", TagsSyncListHeightsController)
 
@@ -128,6 +140,12 @@ application.register("remote-select", RemoteSelectController)
 
 import MixedChartController from "./mixed_chart_controller"
 application.register("mixed-chart", MixedChartController)
+
+import UsMapChartController from "./us_map_chart_controller"
+application.register("us-map-chart", UsMapChartController)
+
+import WorldMapChartController from "./world_map_chart_controller"
+application.register("world-map-chart", WorldMapChartController)
 
 import CurrencyInputController from "./currency_input_controller"
 application.register("currency-input", CurrencyInputController)
