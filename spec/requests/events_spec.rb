@@ -532,6 +532,310 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /events/:id/background" do
+    let(:event) { create(:event) }
+    let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
+    let(:organization) { create(:organization, name: "Background Org") }
+    let!(:registration) do
+      create(:affiliation, person: person, organization: organization)
+      create(:event_registration, event: event, registrant: person, status: "registered")
+    end
+
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders the registrant roster with names and program" do
+        get background_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Get to know the registrants")
+        expect(response.body).to include("Ada")
+        expect(response.body).to include("Lovelace")
+        expect(response.body).to include("Background Org")
+      end
+
+      it "links each registrant row to their profile" do
+        get background_event_path(event)
+
+        expect(response.body).to include(person_path(person))
+      end
+
+      it "shows a countries breakdown from registrant addresses" do
+        create(:address, addressable: person, state: "CA", country: "Canada", inactive: false)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("Canada")
+        expect(response.body).to include("Countries")
+      end
+
+      it "shows a location column with the registrant's state abbreviation" do
+        create(:address, addressable: person, state: "WY", country: nil, inactive: false)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("Location")
+        expect(response.body).to include("WY")
+      end
+
+      it "shows the ISO country code in the location column for international registrants" do
+        create(:address, addressable: person, state: "ON", country: "Canada", inactive: false)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("CAN")
+      end
+
+      it "shows a school districts breakdown from registrant addresses" do
+        create(:address, addressable: person, state: "CA", district: "Compton Unified", inactive: false)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("School districts")
+        expect(response.body).to include("Compton Unified")
+      end
+
+      it "shows a sectors count box from registrants' sectors" do
+        create(:sectorable_item, sector: create(:sector, name: "Sexual Assault"), sectorable: person)
+        create(:sectorable_item, sector: create(:sector, name: "Mental Health"), sectorable: person)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("Sectors")
+        expect(response.body).to include("Sexual Assault")
+      end
+
+      it "labels the organizations count box and breaks it down by program status" do
+        get background_event_path(event)
+
+        expect(response.body).to include("Organizations")
+        expect(response.body).to match(/\d+ new · \d+ ongoing · \d+ reinstated/)
+      end
+
+      it "renders the states breakdown as a US choropleth map fed by per-state counts" do
+        create(:address, addressable: person, state: "CA", inactive: false)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("States")
+        expect(response.body).to include('data-controller="us-map-chart"')
+        expect(response.body).to include("CA")
+      end
+
+      it "excludes registrants with an inactive status" do
+        cancelled = create(:person, first_name: "Grace", last_name: "Hopper")
+        create(:event_registration, event: event, registrant: cancelled, status: "cancelled")
+
+        get background_event_path(event)
+
+        expect(response.body).to include("Lovelace")
+        expect(response.body).not_to include("Hopper")
+      end
+
+      it "shows a primary age group breakdown from registration responses" do
+        registration_form = create(:form, name: "Registration")
+        field = create(:form_field, form: registration_form, field_identifier: "primary_age_group",
+                                    answer_type: :multiple_choice_checkbox)
+        create(:event_form, event: event, form: registration_form, role: "registration")
+        age_range = create(:category_type, name: "AgeRange")
+        adults = create(:category, name: "Adults", category_type: age_range)
+        submission = create(:form_submission, person: person, form: registration_form)
+        create(:form_answer, form_submission: submission, form_field: field, submitted_answer: adults.id.to_s)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("Primary age group")
+        expect(response.body).to include("Adults")
+        # Percentages render as always-visible text (not hover-only), so they read on mobile.
+        expect(response.body).to include("100.0%")
+      end
+
+      it "shows a life experiences breakdown from registrants' StoryPopulation tags" do
+        story_population = create(:category_type, name: "StoryPopulation")
+        experience = create(:category, name: "Veterans", category_type: story_population)
+        create(:categorizable_item, category: experience, categorizable: person)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("Life experiences")
+        expect(response.body).to include("Veterans")
+      end
+
+      it "shows no-data boxes for life experiences and settings when registrants have no tags" do
+        get background_event_path(event)
+
+        expect(response.body).to include("Life experiences")
+        expect(response.body).to include("No life experiences from registration answers yet.")
+        expect(response.body).to include("Settings")
+        expect(response.body).to include("No settings from registration answers yet.")
+      end
+
+      it "links scholarship recipients to their entry on the recipients page" do
+        scholarship = create(:scholarship, recipient: person)
+        create(:allocation, source: scholarship, allocatable: registration)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("fa-graduation-cap")
+        expect(response.body).to include("#{recipients_event_path(event)}#scholarship_#{scholarship.id}")
+      end
+
+      it "does not show a recipients link for registrants without a scholarship" do
+        get background_event_path(event)
+
+        expect(response.body).not_to include("#scholarship_")
+      end
+    end
+
+    context "as non-admin non-owner" do
+      before { sign_in user }
+
+      it "redirects" do
+        get background_event_path(event)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "GET /events/:id/staff" do
+    let(:public_event) { create(:event, :published, :publicly_visible) }
+    let(:staff_member) { create(:person, first_name: "Ada", last_name: "Lovelace") }
+
+    it "renders the staff for a publicly visible event without authentication" do
+      create(:event_registration, event: public_event, registrant: staff_member, status: "registered")
+
+      get staff_event_path(public_event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Meet the staff")
+      expect(response.body).to include("Ada Lovelace")
+    end
+
+    it "excludes registrants with an inactive status" do
+      cancelled = create(:person, first_name: "Grace", last_name: "Hopper")
+      create(:event_registration, event: public_event, registrant: staff_member, status: "registered")
+      create(:event_registration, event: public_event, registrant: cancelled, status: "cancelled")
+
+      get staff_event_path(public_event)
+
+      expect(response.body).to include("Ada Lovelace")
+      expect(response.body).not_to include("Grace Hopper")
+    end
+
+    context "when the event has ended" do
+      let(:ended_event) { create(:event, :published, :ended) }
+
+      it "redirects an unauthenticated visitor" do
+        get staff_event_path(ended_event)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "allows an admin to view" do
+        sign_in admin
+        get staff_event_path(ended_event)
+        expect(response).to have_http_status(:ok)
+      end
+    end
+  end
+
+  describe "GET /events/:id/recipients" do
+    let(:event) { create(:event, start_date: 1.month.from_now, end_date: 1.month.from_now + 1.day) }
+    let(:registration_form) { create(:form, name: "Registration") }
+    let(:scholarship_form) { create(:form, :scholarship) }
+    let(:applicant) { create(:person, first_name: "Tara", last_name: "Gallagher") }
+    let(:impact_field) do
+      create(:form_field, form: scholarship_form, name: "How will this help the people you serve?",
+                          field_identifier: "impact_description")
+    end
+    let(:service_area_field) do
+      create(:form_field, form: registration_form, name: "Primary service area", field_identifier: "primary_service_area")
+    end
+
+    before do
+      create(:event_form, :registration, event: event, form: registration_form)
+      create(:event_form, :scholarship, event: event, form: scholarship_form)
+      create(:event_registration, event: event, registrant: applicant, status: "registered", scholarship_requested: true)
+
+      # Service area captured as a registration answer (resolved from the sector id).
+      sector = create(:sector, name: "Sexual Assault")
+      reg_submission = create(:form_submission, person: applicant, form: registration_form)
+      create(:form_answer, form_submission: reg_submission, form_field: service_area_field, submitted_answer: sector.id.to_s)
+
+      # Scholarship answer rides on a separate scholarship submission.
+      sch_submission = create(:form_submission, person: applicant, form: scholarship_form, role: "scholarship")
+      create(:form_answer, form_submission: sch_submission, form_field: impact_field, submitted_answer: "It will let me reach more survivors.")
+    end
+
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders each applicant with their service area resolved from the form answer and scholarship answers" do
+        get recipients_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Tara Gallagher")
+        expect(response.body).to include("Sexual Assault")
+        expect(response.body).to include("How will this help the people you serve?")
+        expect(response.body).to include("It will let me reach more survivors.")
+      end
+
+      it "renders the collapsible card controls and an expand/collapse-all button" do
+        get recipients_event_path(event)
+
+        expect(response.body).to include('data-controller="expandable-cards"')
+        expect(response.body).to include("Collapse all")
+        expect(response.body).to include('data-controller="expandable-card"')
+        expect(response.body).to include("expandable-card#toggle")
+        expect(response.body).to include('data-expandable-card-target="body"')
+      end
+
+      it "shows the non-facilitator affiliation's title and linked organization, excluding facilitator roles" do
+        org = create(:organization, name: "Safe Harbor of Sheboygan")
+        create(:affiliation, person: applicant, organization: org,
+                             title: "Prevention, Education, and Outreach Specialist", start_date: 1.year.ago)
+        create(:affiliation, person: applicant, organization: create(:organization, name: "Facilitator Org"),
+                             title: "Facilitator", start_date: 1.year.ago)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Prevention, Education, and Outreach Specialist")
+        expect(response.body).to include("Safe Harbor of Sheboygan")
+        expect(response.body).to include(organization_path(org))
+        expect(response.body).not_to include("Facilitator Org")
+      end
+
+      it "excludes registrants who did not request a scholarship" do
+        other = create(:person, first_name: "Pat", last_name: "Plain")
+        create(:event_registration, event: event, registrant: other, status: "registered", scholarship_requested: false)
+
+        get recipients_event_path(event)
+
+        expect(response.body).not_to include("Pat Plain")
+      end
+
+      it "shouts out each recipient's organization with its linked profile and bio" do
+        org = create(:organization, name: "New Economics for Women", description: "Fights for economic justice for women.")
+        create(:affiliation, person: applicant, organization: org)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Shout out scholarship programs")
+        expect(response.body).to include("New Economics for Women")
+        expect(response.body).to include(organization_path(org))
+        expect(response.body).to include("Fights for economic justice for women.")
+      end
+    end
+
+    context "as non-admin non-owner" do
+      before { sign_in user }
+
+      it "redirects" do
+        get recipients_event_path(event)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "Google Analytics snippets" do
     context "as admin" do
       before { sign_in admin }

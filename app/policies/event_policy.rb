@@ -17,6 +17,10 @@ class EventPolicy < ApplicationPolicy
     end
   end
 
+  def staff?
+    show?
+  end
+
   def register?
     authenticated? && record.published?
   end
@@ -35,6 +39,14 @@ class EventPolicy < ApplicationPolicy
 
   def dashboard?
     admin? || owner?
+  end
+
+  def background?
+    admin? || owner?
+  end
+
+  def recipients?
+    manage?
   end
 
   def preview_reminder?

@@ -1,8 +1,8 @@
 class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
-  skip_before_action :authenticate_user!, only: [ :index, :show ]
+  skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard manage preview_reminder send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard background manage staff recipients preview_reminder send_reminder copy_registration_form ]
 
   def index
     authorize!
@@ -41,6 +41,12 @@ class EventsController < ApplicationController
     @dashboard = EventDashboard.new(@event)
   end
 
+  def background
+    authorize! @event, to: :background?
+    @event = @event.decorate
+    @dashboard = EventDashboard.new(@event)
+  end
+
   def manage
     authorize! @event, to: :manage?
     @event = @event.decorate
@@ -70,6 +76,23 @@ class EventsController < ApplicationController
           disposition: "attachment"
       end
     end
+  end
+
+  def staff
+    authorize! @event, to: :staff?
+    @event = @event.decorate
+    @staff = @event.event_registrations
+      .active
+      .includes(registrant: [ { avatar_attachment: :blob }, { affiliations: :organization } ])
+      .joins(:registrant)
+      .order(Arel.sql("people.first_name, people.last_name"))
+      .map(&:registrant)
+  end
+
+  def recipients
+    authorize! @event, to: :recipients?
+    @event = @event.decorate
+    @dashboard = EventDashboard.new(@event)
   end
 
   def preview_reminder
