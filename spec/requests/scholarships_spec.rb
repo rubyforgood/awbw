@@ -60,7 +60,7 @@ RSpec.describe "Scholarships", type: :request do
   end
 
   describe "DELETE /scholarships/:id" do
-    it "removes the scholarship and redirects to the manage page with a notice" do
+    it "removes the scholarship and redirects to the registrants page with a notice" do
       expect {
         delete scholarship_path(scholarship)
       }.to change(Scholarship, :count).by(-1)
