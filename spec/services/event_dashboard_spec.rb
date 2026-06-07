@@ -227,6 +227,29 @@ RSpec.describe EventDashboard do
       end
     end
 
+    describe "sector primary/additional split (overlapping)" do
+      before do
+        # person1 names sector1 as primary; person2 names sector2 as primary. Both
+        # also carry sector1 as a tag, so sector1 is primary for person1 AND an
+        # additional sector for person2 — the counts overlap (don't partition).
+        service_field = create(:form_field, form: registration_form, field_identifier: "primary_service_area",
+                                            answer_type: :multiple_choice_checkbox)
+        create(:form_answer, form_field: service_field, submitted_answer: sector1.id.to_s,
+                             form_submission: FormSubmission.find_by!(person: person1, form: registration_form))
+        create(:form_answer, form_field: service_field, submitted_answer: sector2.id.to_s,
+                             form_submission: FormSubmission.find_by!(person: person2, form: registration_form))
+      end
+
+      it "counts distinct sectors named as a primary service area" do
+        expect(dashboard.primary_sector_count).to eq(2)
+      end
+
+      it "counts sectors carried as a non-primary tag, overlapping the primary count" do
+        # sector1 is a tag for person2, who named sector2 (not sector1) as primary.
+        expect(dashboard.additional_sector_count).to eq(1)
+      end
+    end
+
     describe "life experiences" do
       it "returns unique life-experience categories across active registrants" do
         expect(dashboard.life_experiences).to contain_exactly(experience1, experience2)
