@@ -78,14 +78,26 @@ module EventHelper
   end
 
   def display_response_text(field, response)
-    return tag.span("—", class: "text-gray-400") if response&.submitted_answer.blank?
+    text = resolve_answer_text(field, response&.submitted_answer)
+    return tag.span("—", class: "text-gray-400") if text.blank?
+    text
+  end
 
-    if field.field_identifier == "primary_service_area"
-      response.submitted_answer.split(", ").map { |id| Sector.find_by(id: id)&.name }.compact.join(", ").presence || response.submitted_answer
-    elsif field.field_identifier.in?(%w[workshop_environments client_life_experiences primary_age_group])
-      response.submitted_answer.split(", ").map { |id| Category.find_by(id: id)&.name }.compact.join(", ").presence || response.submitted_answer
+  # Resolve a stored answer to readable text, mapping the sector/category ids
+  # behind the professional fields to their names. Returns nil for a blank
+  # answer (unlike display_response_text, which renders a placeholder), so it
+  # suits inline header values on the scholarship recipients page.
+  def resolve_answer_text(field, submitted_answer)
+    return if submitted_answer.blank?
+
+    ids = submitted_answer.split(", ")
+    case field&.field_identifier
+    when "primary_service_area"
+      ids.filter_map { |id| Sector.find_by(id: id)&.name }.join(", ").presence || submitted_answer
+    when "workshop_environments", "client_life_experiences", "primary_age_group"
+      ids.filter_map { |id| Category.find_by(id: id)&.name }.join(", ").presence || submitted_answer
     else
-      response.submitted_answer
+      submitted_answer
     end
   end
 end
