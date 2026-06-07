@@ -221,17 +221,18 @@ class EventDashboard
     @organization_registrant_ids ||= organization_registrant_ids_by_org.values.flat_map(&:to_a).uniq
   end
 
-  # Organization names per registrant id (Person id), for registrant tooltips.
-  # Built from the same snapshot + active-affiliation data as the organizations
-  # breakdown, so the names match the Organizations count.
+  # Organization names per registrant id (Person id), for labeling and tooltips
+  # in the registrant list. Built from the same snapshot + active-affiliation data
+  # as the organizations breakdown, so the names match the Organizations count.
+  # Names are deduped and sorted; registrants with multiple orgs get all of them.
   def organization_names_by_registrant
     @organization_names_by_registrant ||= begin
-      names_by_id = organizations.index_by(&:id)
+      names_by_org = organizations.index_by(&:id)
       organization_registrant_ids_by_org.each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(organization_id, person_ids), map|
-        organization = names_by_id[organization_id]
-        next unless organization
-        person_ids.each { |person_id| map[person_id] << organization.name }
-      end
+        name = names_by_org[organization_id]&.name
+        next unless name
+        person_ids.each { |person_id| map[person_id] << name }
+      end.transform_values { |names| names.uniq.sort }
     end
   end
 

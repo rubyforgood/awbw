@@ -219,8 +219,8 @@
   <% end %>
 
   <%# Headcount cards — each expands to reveal its full list %>
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm">
+  <div class="grid grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4">
+    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm lg:col-span-4">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
@@ -238,10 +238,11 @@
         <% if @dashboard.registrants.any? %>
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.registrants.each do |registrant| %>
+              <% org_names = @dashboard.organization_names_by_registrant[registrant.id] %>
               <li>
-                <%= link_to registrant.name, manage_event_path(@event, registrant_ids: registrant.id),
-                      title: [ registrant.name, *@dashboard.organization_names_by_registrant[registrant.id] ].join(" · "),
-                      class: "block truncate rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" %>
+                <%= link_to manage_event_path(@event, registrant_ids: registrant.id), class: "block truncate rounded px-1 -mx-1 py-0.5 hover:bg-gray-50", title: [ registrant.name, org_names.present? ? "(#{org_names.join(", ")})" : nil ].compact.join(" ") do %>
+                  <%= registrant.name %><% if org_names.present? %> <span class="text-gray-400">(<%= org_names.join(", ") %>)</span><% end %>
+                <% end %>
               </li>
             <% end %>
           </ul>
@@ -251,7 +252,7 @@
       </div>
     </details>
 
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm">
+    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm lg:col-span-3">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:organizations, intensity: 700) %>">
@@ -286,7 +287,7 @@
       </div>
     </details>
 
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm">
+    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm lg:col-span-3">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:sectors, intensity: 700) %>">
@@ -318,7 +319,7 @@
       </div>
     </details>
 
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm">
+    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm lg:col-span-2">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:addresses, intensity: 700) %>">

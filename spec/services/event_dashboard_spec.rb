@@ -150,10 +150,11 @@ RSpec.describe EventDashboard do
         expect(map[org_c.id].to_a).to contain_exactly(person2.id)
       end
 
-      it "maps each registrant id to its organization names (for tooltips)" do
-        map = dashboard.organization_names_by_registrant
-        expect(map[person1.id]).to contain_exactly("Alpha Org", "Beta Org")
-        expect(map[person2.id]).to contain_exactly("Gamma Org")
+      it "maps each registrant to its organization names, deduped and sorted" do
+        names = dashboard.organization_names_by_registrant
+        expect(names[person1.id]).to eq([ "Alpha Org", "Beta Org" ])
+        expect(names[person2.id]).to eq([ "Gamma Org" ])
+        expect(names).not_to have_key(cancelled_person.id)
       end
     end
 
