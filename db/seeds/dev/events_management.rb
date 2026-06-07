@@ -28,7 +28,7 @@ scholarship_form = Form.standalone.find_by!(role: "scholarship")
 # Each entry: [title, form_type, cost_cents, scholarship?, visibility, span_days]
 # form_type: :long, :short, or :none. span_days (optional) makes a multi-day event.
 dev_events = [
-  [ "AWBW Facilitator Training", :long, 15_000, true,
+  [ "AWBW Facilitator Training", :long, 150_000, true,
     { published: true, featured: true, publicly_visible: true } ],
   [ "Facilitator Training: Trauma-Informed Art Practices", :long, 12_000, true,
     { published: true, featured: true }, 3 ],
@@ -75,10 +75,11 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
     visibility.each { |k, v| e.send(:"#{k}=", v) }
   end
 
-  # Keep the demo schedule current and deterministic on re-seed — find_or_create_by!
-  # only sets dates on create, so without this an existing DB keeps stale dates and
-  # neither the index ordering nor the multi-day span would update.
-  event.update!(start_date: start_date, end_date: end_date, registration_close_date: registration_close)
+  # Keep the demo schedule and pricing current and deterministic on re-seed —
+  # find_or_create_by! only sets these on create, so without this an existing DB
+  # keeps stale dates/cost and neither the index ordering, the multi-day span, nor
+  # the registration fee would update.
+  event.update!(start_date: start_date, end_date: end_date, registration_close_date: registration_close, cost_cents: cost_cents)
 
   if registerable
     EventForm.find_or_create_by!(event: event, role: "registration") do |ef|
@@ -215,6 +216,22 @@ registrations_data.each do |data|
     status: data[:status] || "registered",
     scholarship_requested: data[:scholarship_requested] || false
   )
+end
+
+# Give the flagship training a full cohort so the dashboard demo has volume: top
+# up to 15 active registrants with generated people (the named scenario
+# registrants above are kept; this only fills the remainder). Emails are
+# deterministic so re-seeding is idempotent.
+if facilitator_training
+  (15 - facilitator_training.event_registrations.active.count).times do |i|
+    person = Person.find_or_create_by!(email: "facilitator.cohort.#{i + 1}@seed.example.com") do |p|
+      p.first_name = Faker::Name.first_name
+      p.last_name = Faker::Name.last_name
+    end
+    EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) do |reg|
+      reg.status = "registered"
+    end
+  end
 end
 
 # Backfill slugs for any registrations created before the generate_slug callback existed
