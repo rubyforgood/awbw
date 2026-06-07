@@ -75,7 +75,8 @@ RSpec.describe "events/show", type: :view do
   it "renders action links" do
     render
 
-    expect(rendered).to have_link("Edit", href: edit_event_path(event))
+    expect(rendered).to have_link("Dashboard", href: dashboard_event_path(event))
+    expect(rendered).to have_link("Registrants", href: manage_event_path(event))
     expect(rendered).to have_link("Events", href: events_path)
   end
 

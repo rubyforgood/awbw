@@ -36,7 +36,7 @@ class EventsController < ApplicationController
   end
 
   def dashboard
-    authorize! @event, to: :manage?
+    authorize! @event
     @event = @event.decorate
     @dashboard = EventDashboard.new(@event)
   end
