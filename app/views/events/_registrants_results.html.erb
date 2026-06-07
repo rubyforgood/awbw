@@ -1,7 +1,19 @@
 <%= turbo_frame_tag :registrants_results do %>
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-controller="column-toggle">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-      <p class="text-sm text-gray-500"><%= @event_registrations.size %> registrant<%= "s" if @event_registrations.size != 1 %></p>
+      <% current_filter = params[:attendance_status].present? ? nil : (params[:status_filter].presence || "active") %>
+      <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Attendance filter">
+        <%= link_to registrants_event_path(@event, status_filter: "active", keyword: params[:keyword].presence),
+              data: { turbo_frame: "_top" },
+              class: "px-3 py-1 rounded-md transition-colors #{current_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+          Active <span class="text-gray-400">(<%= @active_count %>)</span>
+        <% end %>
+        <%= link_to registrants_event_path(@event, status_filter: "inactive", keyword: params[:keyword].presence),
+              data: { turbo_frame: "_top" },
+              class: "px-3 py-1 rounded-md transition-colors #{current_filter == "inactive" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+          Inactive <span class="text-gray-400">(<%= @inactive_count %>)</span>
+        <% end %>
+      </nav>
 
       <label class="inline-flex items-center gap-2 cursor-pointer select-none">
         <span class="text-sm text-gray-500">Confirmed</span>
