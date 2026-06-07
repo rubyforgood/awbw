@@ -396,6 +396,17 @@ RSpec.describe "EventRegistrations", type: :request do
           delete event_registration_path(existing_registration)
         }.to change(EventRegistration, :count).by(-1)
       end
+
+      it "refuses to delete a registration with payments on record" do
+        payment = create(:payment, person: regular_user.person, amount_cents: 1000, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: existing_registration, amount: 1000)
+
+        expect {
+          delete event_registration_path(existing_registration)
+        }.not_to change(EventRegistration, :count)
+
+        expect(flash[:alert]).to include("can't be deleted")
+      end
     end
 
     describe "organization linking" do

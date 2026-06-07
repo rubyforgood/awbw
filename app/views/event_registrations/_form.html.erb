@@ -437,7 +437,7 @@
 
     <%# ---- Footer actions ---- %>
     <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
-      <% if allowed_to?(:destroy?, f.object) %>
+      <% if allowed_to?(:destroy?, f.object) && f.object.deletable? %>
         <%= link_to event_registration_path(@event_registration, return_to: params[:return_to].presence),
                     class: "btn btn-danger-outline",
                     data: { turbo: true, turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } do %>

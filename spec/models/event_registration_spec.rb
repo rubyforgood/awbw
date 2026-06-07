@@ -107,6 +107,52 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#attended?" do
+    it "returns true for attended status" do
+      expect(create(:event_registration, status: "attended")).to be_attended
+    end
+
+    it "returns true for incomplete_attendance status" do
+      expect(create(:event_registration, status: "incomplete_attendance")).to be_attended
+    end
+
+    it "returns false for registered, cancelled, and no_show statuses" do
+      expect(create(:event_registration, status: "registered")).not_to be_attended
+      expect(create(:event_registration, status: "cancelled")).not_to be_attended
+      expect(create(:event_registration, status: "no_show")).not_to be_attended
+    end
+  end
+
+  describe "#deletable?" do
+    it "returns true for a plain registration with no allocations or attendance" do
+      reg = create(:event_registration, status: "registered")
+      expect(reg).to be_deletable
+    end
+
+    it "returns false when the registration has a payment allocation" do
+      reg = create(:event_registration, status: "registered")
+      payment = create(:payment, person: reg.registrant, amount_cents: 1000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1000)
+      expect(reg).not_to be_deletable
+    end
+
+    it "returns false when the registration has a scholarship allocation" do
+      reg = create(:event_registration, status: "registered")
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 1000)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1000)
+      expect(reg).not_to be_deletable
+    end
+
+    it "returns false when the registration has attendance on record" do
+      expect(create(:event_registration, status: "attended")).not_to be_deletable
+      expect(create(:event_registration, status: "incomplete_attendance")).not_to be_deletable
+    end
+
+    it "returns true for a cancelled registration with no allocations" do
+      expect(create(:event_registration, status: "cancelled")).to be_deletable
+    end
+  end
+
   describe ".registrant_ids" do
     it "returns registrations for the registrants in a hyphenated id list" do
       person_a = create(:person)
