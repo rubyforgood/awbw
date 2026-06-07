@@ -148,7 +148,7 @@ RSpec.describe "Event show page", type: :system do
         sign_in(user)
         visit event_path(event)
 
-        expect(page).to have_text("View Registration")
+        expect(page).to have_text("View ticket")
         expect(page).to have_text("Add to Your Calendar")
         expect(page).to have_text("Google")
         expect(page).to have_text("Office 365")
@@ -185,12 +185,12 @@ RSpec.describe "Event show page", type: :system do
         expect(page).not_to have_button("De-register")
       end
 
-      it "shows 'View Registration' for registered user" do
+      it "shows 'View ticket' for registered user" do
         sign_in(user)
         visit event_path(event)
 
         expect(page).to have_text("Event ended")
-        expect(page).to have_text("View Registration")
+        expect(page).to have_text("View ticket")
       end
 
       it "hides calendar links" do
@@ -220,10 +220,10 @@ RSpec.describe "Event show page", type: :system do
     context "guest with reg slug param" do
       let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-      it "shows 'View Registration' badge and calendar links" do
+      it "shows 'View ticket' badge and calendar links" do
         visit event_path(event, reg: registration.slug)
 
-        expect(page).to have_text("View Registration")
+        expect(page).to have_text("View ticket")
         expect(page).to have_text("Add to Your Calendar")
         expect(page).not_to have_button("Register")
       end
@@ -458,7 +458,7 @@ RSpec.describe "Event show page", type: :system do
       visit event_path(event)
 
       expect(page).to have_button("Register")
-      expect(page).not_to have_text("View Registration")
+      expect(page).not_to have_text("View ticket")
 
       click_button "Register"
 
@@ -466,10 +466,10 @@ RSpec.describe "Event show page", type: :system do
       expect(page).to have_current_path(event_path(event))
       expect(page).not_to have_button("Register")
 
-      # "View Registration" is a clickable link to the registration show page
-      expect(page).to have_link("View Registration")
+      # "View ticket" is a clickable link to the registration show page
+      expect(page).to have_link("View ticket")
       registration = EventRegistration.last
-      expect(page).to have_link("View Registration", href: registration_ticket_path(registration.slug))
+      expect(page).to have_link("View ticket", href: registration_ticket_path(registration.slug))
     end
   end
 

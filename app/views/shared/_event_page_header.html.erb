@@ -1,0 +1,40 @@
+<%#
+  Shared edit/management page title block: the action heading with a domain
+  icon, then the event context (title + training date) and the person below it,
+  centered. Keeps the scholarship, registration, and allocations pages aligned.
+
+  Locals:
+    title:    heading text (e.g. "Edit scholarship")
+    icon:     Font Awesome classes (e.g. "fa-solid fa-graduation-cap")
+    color:    DomainTheme key for the icon tint (e.g. :scholarships)
+    event:    optional Event for context (title + training date)
+    person:   optional Person, linked to their profile
+    trailing: optional pre-rendered HTML shown under the context (e.g. a badge)
+%>
+<% event = local_assigns[:event] %>
+<% person = local_assigns[:person] %>
+<div class="text-center mb-8">
+  <h1 class="flex items-center justify-center gap-3 text-3xl sm:text-4xl font-extrabold text-black">
+    <i class="<%= icon %> <%= DomainTheme.text_class_for(color, intensity: 600) %>"></i>
+    <%= title %>
+  </h1>
+
+  <% if event.present? %>
+    <p class="mt-2 text-sm text-gray-500">
+      <%= link_to event.title, local_assigns[:event_url].presence || event_path(event), class: "font-semibold text-gray-600 hover:underline" %>
+      <% if event.start_date.present? %>
+        <span class="text-gray-400">&middot;</span> <%= event.decorate.times(display_day: true, display_date: true) %>
+      <% end %>
+    </p>
+  <% end %>
+
+  <% if person.present? %>
+    <p class="mt-1 text-sm text-gray-500">
+      <%= link_to person.full_name, person_path(person), class: "hover:underline" %>
+    </p>
+  <% end %>
+
+  <% if local_assigns[:trailing].present? %>
+    <div class="mt-4 flex justify-center"><%= trailing %></div>
+  <% end %>
+</div>

@@ -1,0 +1,28 @@
+<%# Polymorphic "Allocated to" cell for the allocations index — a clickable
+    descriptor that works for any allocatable type, linking through when a route
+    exists (e.g. an event registration jumps to its admin page). Locals:
+    allocation. ---%>
+<% allocatable = allocation.allocatable %>
+<% if allocatable %>
+  <% descriptor = allocatable_descriptor(allocatable) %>
+  <% if descriptor[:path] %>
+    <%= link_to descriptor[:path], class: "group inline-flex max-w-xs items-center gap-1.5", data: { turbo_frame: "_top" } do %>
+      <span class="min-w-0">
+        <span class="block truncate font-medium text-gray-800 group-hover:underline"><%= descriptor[:title] %></span>
+        <% if descriptor[:subtitle].present? %>
+          <span class="block truncate text-xs text-gray-500"><%= descriptor[:subtitle] %></span>
+        <% end %>
+      </span>
+      <i class="fa-solid fa-arrow-up-right-from-square shrink-0 text-[0.6rem] text-gray-400"></i>
+    <% end %>
+  <% else %>
+    <span class="block max-w-xs">
+      <span class="block truncate font-medium text-gray-800"><%= descriptor[:title] %></span>
+      <% if descriptor[:subtitle].present? %>
+        <span class="block truncate text-xs text-gray-500"><%= descriptor[:subtitle] %></span>
+      <% end %>
+    </span>
+  <% end %>
+<% else %>
+  <span class="text-gray-500"><%= allocation.allocatable_type.underscore.titleize %></span>
+<% end %>

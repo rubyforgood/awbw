@@ -1,17 +1,23 @@
-<div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-  <h3 class="text-lg font-medium mb-4">New Discount</h3>
-  <%= form_with model: Discount.new, url: discounts_path, class: "space-y-4" do |f| %>
+<div class="bg-green-200 border-2 border-green-400 rounded-lg p-4 mb-4">
+  <h3 class="text-lg font-medium mb-4">New discount</h3>
+  <%= form_with model: Discount.new, url: discounts_path do |f| %>
     <%= hidden_field_tag :"discount[allocatable_sgid]", params[:allocatable_sgid] %>
-    <div>
-      <%= f.label :amount_dollars, "Amount ($)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.text_field :amount_dollars,
-            class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-            placeholder: "0.00",
-            data: { controller: "currency-input", action: "currency-input#format" } %>
+
+    <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
+      <div class="mb-4">
+        <%= f.label :amount_dollars, "Amount ($)", class: "block font-medium mb-1 text-gray-700" %>
+        <%= f.text_field :amount_dollars,
+              class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+              placeholder: "0.00",
+              data: { controller: "currency-input", action: "currency-input#format" } %>
+      </div>
+
+      <%= render "allocations/allocated_to", allocatable: @allocatable %>
     </div>
-    <div class="flex gap-2">
-      <%= f.submit "Create Discount", class: "btn btn-primary" %>
-      <%= link_to "Cancel", allocations_path(allocatable_sgid: params[:allocatable_sgid]), class: "btn btn-secondary" %>
+
+    <div class="flex gap-2 mt-4">
+      <%= f.submit "Submit", class: "btn btn-primary" %>
+      <%= link_to "Cancel", allocations_path(allocatable_sgid: params[:allocatable_sgid]), class: "btn btn-secondary-outline" %>
     </div>
   <% end %>
 </div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_05_163603) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_07_210000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -444,6 +444,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_163603) do
   end
 
   create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.boolean "ce_credit_requested", default: false, null: false
     t.datetime "created_at", null: false
     t.bigint "event_id"
     t.bigint "registrant_id", null: false
@@ -648,6 +649,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_163603) do
   end
 
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "channel", default: "autoemail", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "delivered_at"
     t.text "email_body_html"
@@ -665,11 +667,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_163603) do
     t.string "recipient_role", null: false
     t.boolean "responded", default: false, null: false
     t.integer "root_notification_id"
+    t.integer "sender_id"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["kind"], name: "index_notifications_on_kind"
     t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
     t.index ["parent_notification_id"], name: "index_notifications_on_parent_notification_id"
     t.index ["root_notification_id"], name: "index_notifications_on_root_notification_id"
+    t.index ["sender_id"], name: "index_notifications_on_sender_id"
   end
 
   create_table "organization_obligations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -827,6 +831,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_163603) do
     t.string "check_number"
     t.datetime "created_at", null: false
     t.string "currency", default: "usd", null: false
+    t.string "memo"
     t.integer "organization_id"
     t.bigint "pay_charge_id"
     t.string "payer_type", null: false
@@ -1523,6 +1528,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_163603) do
   add_foreign_key "monthly_reports", "organizations"
   add_foreign_key "notifications", "notifications", column: "parent_notification_id"
   add_foreign_key "notifications", "notifications", column: "root_notification_id"
+  add_foreign_key "notifications", "users", column: "sender_id"
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"

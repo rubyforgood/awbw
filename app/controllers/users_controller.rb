@@ -103,7 +103,11 @@ class UsersController < ApplicationController
     @user.updated_by = current_user
 
     if @user.save
-      redirect_to @user, notice: "User was successfully created."
+      if params[:event_registration_id].present?
+        redirect_to edit_event_registration_path(params[:event_registration_id]), notice: "User was successfully created."
+      else
+        redirect_to @user, notice: "User was successfully created."
+      end
     else
       set_form_variables
       render :new, status: :unprocessable_content

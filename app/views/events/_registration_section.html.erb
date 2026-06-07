@@ -46,11 +46,11 @@
 
     <% if registered %>
       <% registration = event.active_registration_for(current_user&.person) %>
-      <%= link_to "View Registration", registration_ticket_path(registration.slug),
+      <%= link_to "View ticket", registration_ticket_path(registration.slug),
                   class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-view-registration-btn",
                   style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(22, 101, 52); border: 3px solid rgb(22, 101, 52);" %>
     <% elsif slug_registered %>
-      <%= link_to "View Registration", registration_ticket_path(slug_registration.slug),
+      <%= link_to "View ticket", registration_ticket_path(slug_registration.slug),
                   class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-view-registration-btn",
                   style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(22, 101, 52); border: 3px solid rgb(22, 101, 52);" %>
     <% end %>

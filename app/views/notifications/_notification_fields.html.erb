@@ -1,0 +1,41 @@
+<%# New, unsaved manual notification log — sender, channel, and subject on the
+    first row, body beneath. Fields use SimpleForm styling. Amber until the
+    registration form is saved; a blank sender means the system ("AWBW Portal").
+    Persisted notifications render read-only in the registration's notifications
+    box, not through this partial. ---- %>
+<% sender_users = User.where(super_user: true).includes(:person).to_a %>
+<% sender_users |= [ current_user ] if current_user %>
+<% sender_options = sender_users.sort_by { |u| u.full_name.to_s.downcase }.map { |u| [ u.full_name, u.id ] } %>
+<% channel_default = Notification::MANUAL_CHANNELS.include?(f.object.channel) ? f.object.channel : "email" %>
+<% record = local_assigns[:event_registration] %>
+<div class="nested-fields rounded-md border border-amber-200 bg-amber-50 p-3">
+  <%# Record this communication against the event registration (the "Record"
+      column in the notifications index). %>
+  <% if record %>
+    <%= f.hidden_field :noticeable_type, value: record.class.name %>
+    <%= f.hidden_field :noticeable_id, value: record.id %>
+  <% end %>
+  <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-6">
+    <%= f.input :sender_id,
+                collection: sender_options,
+                include_blank: "AWBW Portal",
+                selected: f.object.sender_id || current_user&.id,
+                label: "From",
+                wrapper_html: { class: "sm:col-span-2" } %>
+    <%= f.input :channel,
+                collection: Notification::MANUAL_CHANNELS.map { |c| [ c.titleize, c ] },
+                include_blank: false,
+                selected: channel_default,
+                label: "Channel",
+                wrapper_html: { class: "sm:col-span-1" } %>
+    <%= f.input :email_subject, label: "Subject", placeholder: "Topic or subject line",
+                input_html: { rows: 1 }, wrapper_html: { class: "sm:col-span-3" } %>
+  </div>
+
+  <%= f.input :email_body_text, as: :text, label: "Body", input_html: { rows: 3, placeholder: "What happened? (e.g. left voicemail, sent reminder)" } %>
+
+  <div class="text-right">
+    <%= link_to_remove_association "Remove", f,
+          class: "text-sm text-gray-400 underline hover:text-red-600" %>
+  </div>
+</div>

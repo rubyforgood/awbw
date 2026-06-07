@@ -7,6 +7,30 @@ RSpec.describe "Allocations", type: :request do
 
   before { sign_in admin }
 
+  describe "GET /allocations" do
+    it "renders the searchable list of all allocations" do
+      get allocations_path
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("All allocations")
+    end
+
+    it "renders the focused view scoped to a single registration" do
+      get allocations_path(allocatable_sgid: reg.to_sgid.to_s)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Allocations")
+      expect(response.body).to include("Add cash payment")
+      expect(response.body).to include(reg.registrant.full_name)
+    end
+
+    it "renders the results turbo frame" do
+      get allocations_path, headers: { "Turbo-Frame" => "allocation_results" }
+
+      expect(response).to have_http_status(:success)
+    end
+  end
+
   describe "POST /allocations" do
     context "with a Scholarship source" do
       let(:scholarship) { create(:scholarship) }

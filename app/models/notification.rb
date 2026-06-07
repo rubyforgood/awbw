@@ -1,4 +1,5 @@
 class Notification < ApplicationRecord
+  belongs_to :sender, class_name: "User", optional: true
   belongs_to :noticeable, polymorphic: true, optional: true
   belongs_to :parent_notification, class_name: "Notification", optional: true
   belongs_to :root_notification, class_name: "Notification", optional: true
@@ -31,7 +32,18 @@ class Notification < ApplicationRecord
     report_submitted_fyi
     workshop_log_submitted
     workshop_log_submitted_fyi
+
+    manual_log
   ].freeze
+
+  # Channels for a manually logged communication. "autoemail" is the default
+  # (an email sent through the system); "email" records a message sent by hand,
+  # and phone/text/video are logged after the fact.
+  CHANNELS = %w[autoemail email phone text video].freeze
+
+  # Channels an admin can pick when logging a communication by hand. "autoemail"
+  # is excluded — it is reserved for email this platform sends automatically.
+  MANUAL_CHANNELS = (CHANNELS - %w[autoemail]).freeze
 
   # Devise-originated kinds that require security tokens and cannot be resent
   # through the notification system. Admins should use Devise's own resend
@@ -85,6 +97,16 @@ class Notification < ApplicationRecord
   validates :recipient_role, presence: true, inclusion: { in: RECIPIENT_ROLES }
   validates :recipient_email, presence: true
   validates :notification_type, presence: true
+  validates :channel, inclusion: { in: CHANNELS }, allow_nil: true
+
+  # A manually logged communication (created inline, e.g. from the registration
+  # edit page) records a contact that already happened — fill in the sensible
+  # defaults so it validates without going through the delivery pipeline.
+  before_validation :apply_manual_log_defaults, on: :create, if: -> { kind.blank? }
+
+  def manual_log?
+    kind == "manual_log"
+  end
 
   # Scopes
   scope :email, ->(email) { where("notifications.recipient_email LIKE ?", "%#{email}%") }
@@ -178,5 +200,14 @@ class Notification < ApplicationRecord
       # Find this notification's position (1-indexed)
       all_resends.index(id) + 1
     end
+  end
+
+  private
+
+  def apply_manual_log_defaults
+    self.kind = "manual_log"
+    self.recipient_role ||= "person"
+    self.notification_type ||= 0
+    self.delivered_at ||= Time.current
   end
 end

@@ -3,8 +3,14 @@ import { application } from "./application"
 import AffiliationDatesController from "./affiliation_dates_controller"
 application.register("affiliation-dates", AffiliationDatesController)
 
+import AllocationRefController from "./allocation_ref_controller"
+application.register("allocation-ref", AllocationRefController)
+
 import AnchorHighlightController from "./anchor_highlight_controller"
 application.register("anchor-highlight", AnchorHighlightController)
+
+import AttendanceStatusController from "./attendance_status_controller"
+application.register("attendance-status", AttendanceStatusController)
 
 import AssetPickerController from "./asset_picker_controller"
 application.register("asset-picker", AssetPickerController)
@@ -89,6 +95,15 @@ application.register("reveal-section", RevealSectionController)
 
 import RhinoSourceController from "./rhino_source_controller"
 application.register("rhino-source", RhinoSourceController)
+
+import ScholarshipPreviewController from "./scholarship_preview_controller"
+application.register("scholarship-preview", ScholarshipPreviewController)
+
+import ScholarshipRequestedController from "./scholarship_requested_controller"
+application.register("scholarship-requested", ScholarshipRequestedController)
+
+import CeCreditRequestedController from "./ce_credit_requested_controller"
+application.register("ce-credit-requested", CeCreditRequestedController)
 
 import SearchBoxController from "./search_box_controller"
 application.register("search-box", SearchBoxController)

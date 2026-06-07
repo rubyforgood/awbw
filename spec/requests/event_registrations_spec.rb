@@ -211,8 +211,94 @@ RSpec.describe "EventRegistrations", type: :request do
         patch event_registration_path(existing_registration),
               params: { event_registration: { event_id: new_event.id } }
 
-        expect(response).to redirect_to(registration_ticket_path(existing_registration.slug))
+        # No explicit return_to: admins land back on the management roster, not
+        # the public registration show.
+        expect(response).to redirect_to(manage_event_path(new_event))
         expect(existing_registration.reload.event_id).to eq(new_event.id)
+      end
+
+      it "updates the CE credit requested flag" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { ce_credit_requested: "1" } }
+
+        expect(existing_registration.reload.ce_credit_requested).to be(true)
+      end
+    end
+
+    describe "PATCH /event_registrations/:id scholarship handling" do
+      def link_scholarship(registration, amount_cents:, tasks_completed: false)
+        scholarship = Scholarship.new(recipient: registration.registrant, amount_cents: amount_cents, tasks_completed: tasks_completed)
+        scholarship.build_allocation(allocatable: registration, amount: 0)
+        scholarship.save!
+        scholarship
+      end
+
+      def unrequest(registration)
+        patch event_registration_path(registration),
+              params: { event_registration: { scholarship_requested: "0" } }
+      end
+
+      it "never creates a scholarship from the requested checkbox" do
+        expect {
+          patch event_registration_path(existing_registration),
+                params: { event_registration: { scholarship_requested: "1" } }
+        }.not_to change(Scholarship, :count)
+
+        expect(existing_registration.reload.scholarship_requested).to be(true)
+      end
+
+      it "removes an empty stub scholarship when unrequested on save" do
+        existing_registration.update!(scholarship_requested: true)
+        link_scholarship(existing_registration, amount_cents: 0)
+
+        expect { unrequest(existing_registration) }
+          .to change { existing_registration.scholarships.count }.by(-1)
+
+        expect(existing_registration.reload.scholarship_requested).to be(false)
+      end
+
+      it "keeps a funded scholarship when unrequested" do
+        existing_registration.update!(scholarship_requested: true)
+        link_scholarship(existing_registration, amount_cents: 5000)
+
+        expect { unrequest(existing_registration) }
+          .not_to change { existing_registration.scholarships.count }
+      end
+
+      it "keeps a scholarship with completed tasks when unrequested" do
+        existing_registration.update!(scholarship_requested: true)
+        link_scholarship(existing_registration, amount_cents: 0, tasks_completed: true)
+
+        expect { unrequest(existing_registration) }
+          .not_to change { existing_registration.scholarships.count }
+      end
+    end
+
+    describe "PATCH /event_registrations/:id logging a notification" do
+      it "creates a manual notification log from nested attributes" do
+        expect {
+          patch event_registration_path(existing_registration), params: {
+            event_registration: {
+              notifications_attributes: { "0" => { channel: "phone", email_subject: "Left a voicemail" } }
+            }
+          }
+        }.to change { existing_registration.notifications.count }.by(1)
+
+        notification = existing_registration.notifications.order(:created_at).last
+        expect(notification.channel).to eq("phone")
+        expect(notification.kind).to eq("manual_log")
+        expect(notification.email_subject).to eq("Left a voicemail")
+        expect(notification.recipient_email).to eq(existing_registration.registrant.preferred_email)
+      end
+
+      it "ignores a blank notification with no note" do
+        expect {
+          patch event_registration_path(existing_registration), params: {
+            event_registration: {
+              notifications_attributes: { "0" => { channel: "email", email_subject: "" } }
+            }
+          }
+        }.not_to change(Notification, :count)
       end
     end
 

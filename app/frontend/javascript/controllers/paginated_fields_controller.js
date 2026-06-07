@@ -7,6 +7,7 @@ export default class extends Controller {
   connect() {
     this.currentPage = 1;
     this.render();
+    this.ready = true;
   }
 
   get visibleItems() {
@@ -79,12 +80,17 @@ export default class extends Controller {
     `;
   }
 
-  // Re-render when items are added/removed (cocoon)
+  // Re-render when items are added/removed (cocoon). On a user-triggered add
+  // (after the initial render), jump to the page holding the new item — which is
+  // appended last — so it's visible instead of being hidden on a later page.
   itemTargetConnected() {
+    if (!this.ready) return;
+    this.currentPage = this.totalPages;
     this.render();
   }
 
   itemTargetDisconnected() {
+    if (!this.ready) return;
     this.render();
   }
 }
