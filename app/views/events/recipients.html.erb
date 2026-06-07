@@ -39,7 +39,7 @@
 
       <div class="space-y-6">
       <% @dashboard.scholarship_applicants.each do |person| %>
-        <% scholarship = @dashboard.scholarship_by_recipient[person.id] %>
+        <% participant_slug = @dashboard.registration_slug_by_registrant[person.id] %>
         <% answers = (answers_by_applicant[person.id] || []).reject { |a| a.form_field&.field_identifier == "scholarship_eligibility" } %>
         <% header = header_answers[person.id] || {} %>
         <% service_area_answer = header["primary_service_area"] %>
@@ -53,7 +53,7 @@
              (event_date.blank? || ((a.start_date.nil? || a.start_date <= event_date) && (a.end_date.nil? || a.end_date >= event_date)))
            } %>
 
-        <div id="<%= dom_id(scholarship) if scholarship %>"
+        <div id="<%= "participant-#{participant_slug}" if participant_slug %>"
              class="scroll-mt-24 bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm overflow-hidden break-inside-avoid"
              data-controller="expandable-card"
              data-action="expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse">

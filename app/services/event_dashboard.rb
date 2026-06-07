@@ -97,10 +97,17 @@ class EventDashboard
   end
 
   # The scholarship record per recipient, keyed by Person id — lets the roster
-  # link a registrant to their entry on the recipients page (anchored by the
-  # scholarship's dom id). First scholarship wins if a person has several.
+  # decide whether to flag a registrant as a scholarship recipient. First
+  # scholarship wins if a person has several.
   def scholarship_by_recipient
     @scholarship_by_recipient ||= scholarships.group_by(&:recipient_id).transform_values(&:first)
+  end
+
+  # Active registration slug per registrant (Person id) — a stable, non-db
+  # participant identifier used to anchor a registrant's entry on the recipients
+  # page and to link to it from the roster. One active registration per event.
+  def registration_slug_by_registrant
+    @registration_slug_by_registrant ||= active_registrations.pluck(:registrant_id, :slug).to_h
   end
 
   # Scholarships whose tasks are done, so their dollars are allocated to the
@@ -272,6 +279,29 @@ class EventDashboard
     end
   end
 
+  # Program status (:new / :ongoing / :reinstated) per represented organization,
+  # keyed by organization id — the same classification as program_status_counts.
+  def program_status_by_organization
+    @program_status_by_organization ||= organizations.to_h { |organization| [ organization.id, program_status_for(organization) ] }
+  end
+
+  # Distinct program statuses for each registrant's organization(s), keyed by
+  # Person id — for the registrant roster's program-status column.
+  def program_statuses_by_registrant
+    @program_statuses_by_registrant ||= organization_ids_by_registrant.transform_values do |organization_ids|
+      organization_ids.filter_map { |organization_id| program_status_by_organization[organization_id] }.uniq
+    end
+  end
+
+  # Organization ids per registrant (Person id) — the inverse of
+  # organization_registrant_ids_by_org.
+  def organization_ids_by_registrant
+    @organization_ids_by_registrant ||= organization_registrant_ids_by_org
+      .each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(organization_id, person_ids), map|
+        person_ids.each { |person_id| map[person_id] << organization_id }
+      end
+  end
+
   # Distinct registrant ids per organization, across the registration-time
   # snapshot and registrants' currently-active affiliations.
   def organization_registrant_ids_by_org
@@ -353,15 +383,16 @@ class EventDashboard
       .pluck(:sectorable_id)
   end
 
-  # The sectors total (sectors.size) splits into sectors registrants named as a
-  # primary service area vs. those that only appear as additional sectors. These
-  # partition the total — each distinct sector is counted once, primary winning.
+  # Distinct sectors registrants named as their primary service area, and distinct
+  # sectors that appear as an additional (non-primary) tag. These OVERLAP — a
+  # sector can be primary for one registrant and additional for another, so the
+  # two counts can each be up to the sectors total and may sum to more than it.
   def primary_sector_count
     primary_sector_ids.size
   end
 
   def additional_sector_count
-    (registrant_sector_ids - primary_sector_ids).size
+    additional_sector_ids.size
   end
 
   # Primary age group(s) served, read from registrants' answers to the
@@ -761,10 +792,27 @@ class EventDashboard
   end
 
   # Distinct sector ids registrants named as their primary service area, limited
-  # to sectors actually represented so the primary/additional split partitions
-  # the sectors total.
+  # to sectors actually represented among registrants.
   def primary_sector_ids
     @primary_sector_ids ||= primary_service_area_rows.map(&:last).uniq & registrant_sector_ids
+  end
+
+  # Distinct sectors a registrant has as a tag without having named that sector as
+  # their own primary service area. Overlaps primary_sector_ids when a sector is
+  # primary for one registrant and additional for another.
+  def additional_sector_ids
+    @additional_sector_ids ||= begin
+      primary_pairs = primary_service_area_rows.to_set
+      registrant_sector_pairs.reject { |pair| primary_pairs.include?(pair) }.map(&:last).uniq
+    end
+  end
+
+  # [ person_id, sector_id ] pairs for every sector tag on the registrants.
+  def registrant_sector_pairs
+    @registrant_sector_pairs ||= SectorableItem
+      .where(sectorable_type: "Person", sectorable_id: registrant_ids)
+      .distinct
+      .pluck(:sectorable_id, :sector_id)
   end
 
   # [ person_id, sector_id ] pairs from registrants' primary_service_area answers.

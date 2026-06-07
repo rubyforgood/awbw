@@ -663,6 +663,15 @@ RSpec.describe EventDashboard do
     it "buckets each active registrant's program by its facilitator status" do
       expect(dashboard.program_status_counts).to eq(new: 1, ongoing: 1, reinstated: 1)
     end
+
+    it "maps each registrant to their organization's program status" do
+      statuses = dashboard.program_statuses_by_registrant
+
+      expect(statuses[new_facilitator.id]).to eq([ :new ])
+      expect(statuses[ongoing_facilitator.id]).to eq([ :ongoing ])
+      expect(statuses[reinstated_facilitator.id]).to eq([ :reinstated ])
+      expect(statuses).not_to have_key(cancelled_facilitator.id)
+    end
   end
 
   context "program-status breakdown for non-facilitator affiliations" do

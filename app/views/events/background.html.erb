@@ -95,6 +95,11 @@
   </div>
 
   <%# ---- Registrant roster (full width) ---- %>
+  <% program_status_styles = {
+       new: "bg-green-100 text-green-700 border-green-200",
+       ongoing: "bg-blue-100 text-blue-700 border-blue-200",
+       reinstated: "bg-amber-100 text-amber-700 border-amber-200"
+     } %>
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mt-6">
     <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
       <h2 class="text-sm font-semibold text-gray-700">Registrants</h2>
@@ -108,9 +113,10 @@
               <% columns = [
                    { index: 0, align: "text-left", parts: [ { label: "First", key: "first" }, { label: "Last", key: "last" } ] },
                    { label: "Organization", index: 1, align: "text-left" },
-                   { label: "Location", index: 2, align: "text-left" },
-                   { label: "Scholarship", index: 3, align: "text-center" },
-                   { label: "CE", index: 4, align: "text-center" }
+                   { label: "Status", index: 2, align: "text-left" },
+                   { label: "Location", index: 3, align: "text-left" },
+                   { label: "Scholarship", index: 4, align: "text-center" },
+                   { label: "CE", index: 5, align: "text-center" }
                  ] %>
               <% columns.each do |col| %>
                 <th class="px-4 py-2 <%= col[:align] %> text-xs font-semibold text-gray-700" aria-sort="none">
@@ -151,6 +157,18 @@
                 <td class="px-4 py-1.5 text-sm text-gray-600 break-words" data-sort-value="<%= org_text.downcase %>">
                   <%= org_text.presence || "—" %>
                 </td>
+                <% statuses = @dashboard.program_statuses_by_registrant[person.id] || [] %>
+                <td class="px-4 py-1.5 text-sm" data-sort-value="<%= statuses.join(", ") %>">
+                  <% if statuses.any? %>
+                    <span class="flex flex-wrap gap-1">
+                      <% statuses.each do |status| %>
+                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= program_status_styles[status] %>"><%= status.to_s.titleize %></span>
+                      <% end %>
+                    </span>
+                  <% else %>
+                    <span class="text-gray-300">—</span>
+                  <% end %>
+                </td>
                 <td class="px-4 py-1.5 text-sm" data-sort-value="<%= location.to_s.downcase %>">
                   <% if location.present? %>
                     <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= DomainTheme.bg_class_for(:addresses, intensity: 100) %> <%= DomainTheme.text_class_for(:addresses, intensity: 700) %> <%= DomainTheme.border_class_for(:addresses, intensity: 200) %>">
@@ -160,9 +178,10 @@
                     <span class="text-gray-300">—</span>
                   <% end %>
                 </td>
+                <% participant_slug = @dashboard.registration_slug_by_registrant[person.id] %>
                 <td class="px-4 py-1.5 text-sm text-center" data-sort-value="<%= scholarship ? 1 : 0 %>">
                   <% if scholarship %>
-                    <%= link_to recipients_event_path(@event, anchor: dom_id(scholarship)),
+                    <%= link_to recipients_event_path(@event, anchor: ("participant-#{participant_slug}" if participant_slug)),
                                 class: "#{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:#{DomainTheme.text_class_for(:scholarships)}",
                                 title: "Scholarship recipient — view application",
                                 onclick: "event.stopPropagation()" do %>

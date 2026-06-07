@@ -23,10 +23,21 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
       <% @staff.each do |person| %>
         <% person = person.decorate %>
-        <% org = person.affiliations.select { |a| !a.inactive? }.map(&:organization).compact.first %>
+        <% active_affiliation = person.affiliations.find { |a| !a.inactive? } %>
+        <% org = active_affiliation&.organization %>
+        <% role = active_affiliation&.title.presence %>
         <% has_bio = person.profile_show_bio? && person.bio.present? %>
+        <% sectors = person.profile_show_sectors? ? person.sectors.sort_by(&:name) : [] %>
+        <%# Facilitator tenure → one experience badge, computed from already-loaded
+            affiliations (avoids the decorator's query-heavy badges call). Thresholds
+            match PersonDecorator#compute_badges. %>
+        <% facilitator_since = person.profile_show_member_since? ? person.affiliations.select(&:facilitator?).filter_map(&:start_date).min : nil %>
+        <% experience = if facilitator_since
+             years = Date.current.year - facilitator_since.year
+             years >= 10 ? [ :legacy_facilitator, "Legacy facilitator" ] : (years >= 3 ? [ :seasoned_facilitator, "Seasoned facilitator" ] : [ :new_facilitator, "New facilitator" ])
+           end %>
 
-        <div class="group h-72 [perspective:1000px] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded-xl"
+        <div class="group h-96 [perspective:1000px] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded-xl"
              data-controller="flip-card"
              data-action="click->flip-card#toggle keydown.enter->flip-card#toggle keydown.space:prevent->flip-card#toggle"
              tabindex="0" role="button" aria-pressed="false"
@@ -35,12 +46,12 @@
                data-flip-card-target="inner">
 
             <%# Front %>
-            <div class="absolute inset-0 [backface-visibility:hidden] flex flex-col items-center justify-center text-center bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+            <div class="absolute inset-0 [backface-visibility:hidden] flex flex-col items-center text-center bg-white border border-gray-200 rounded-xl shadow-sm p-4 overflow-hidden">
               <% if person.avatar&.attached? %>
                 <%= image_tag person.avatar.variant(:thumbnail),
-                              class: "w-24 h-24 rounded-full object-cover border-2 border-gray-200 shadow mb-3" %>
+                              class: "w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow mb-2 mt-1" %>
               <% else %>
-                <span class="w-24 h-24 rounded-full flex items-center justify-center bg-sky-200 text-sky-700 font-bold text-3xl border-2 border-sky-300 shadow mb-3">
+                <span class="w-20 h-20 rounded-full flex items-center justify-center bg-sky-200 text-sky-700 font-bold text-2xl border-2 border-sky-300 shadow mb-2 mt-1">
                   <%= person.name.to_s.first.to_s.upcase %>
                 </span>
               <% end %>
@@ -48,18 +59,36 @@
               <p class="font-semibold text-gray-900 leading-tight"><%= person.name %></p>
 
               <% if person.pronouns_display.present? %>
-                <p class="text-xs text-gray-400 mt-0.5"><%= person.pronouns_display %></p>
+                <p class="text-xs text-gray-400"><%= person.pronouns_display %></p>
+              <% end %>
+
+              <% if role.present? %>
+                <p class="text-xs font-medium text-gray-700 mt-1"><%= role %></p>
               <% end %>
 
               <% if org.present? %>
-                <p class="text-xs text-gray-500 mt-1"><%= org.name %></p>
+                <p class="text-xs text-gray-500"><%= org.name %></p>
               <% end %>
 
-              <% if person.profile_show_member_since? %>
-                <% facilitator_since = person.affiliations.select(&:facilitator?).filter_map(&:start_date).min %>
-                <% if facilitator_since.present? %>
-                  <p class="text-xs text-gray-500 mt-1">Facilitator since <%= facilitator_since.year %></p>
-                <% end %>
+              <% if facilitator_since.present? %>
+                <p class="text-xs text-gray-500 mt-0.5">Facilitator since <%= facilitator_since.year %></p>
+              <% end %>
+
+              <% if experience.present? %>
+                <span class="mt-1.5 px-2 py-0.5 border rounded-full text-xs font-medium <%= DomainTheme.bg_class_for(experience.first, intensity: 100) %> <%= DomainTheme.text_class_for(experience.first) %> <%= DomainTheme.border_class_for(experience.first) %>">
+                  <%= experience.last %>
+                </span>
+              <% end %>
+
+              <% if sectors.any? %>
+                <div class="mt-1.5 flex flex-wrap justify-center gap-1">
+                  <% sectors.first(3).each do |sector| %>
+                    <span class="px-2 py-0.5 rounded-md text-xs font-medium <%= DomainTheme.bg_class_for(:sectors, intensity: 100) %> <%= DomainTheme.text_class_for(:sectors, intensity: 700) %>"><%= sector.name %></span>
+                  <% end %>
+                  <% if sectors.size > 3 %>
+                    <span class="px-2 py-0.5 rounded-md text-xs font-medium text-gray-400">+<%= sectors.size - 3 %></span>
+                  <% end %>
+                </div>
               <% end %>
 
               <span class="mt-auto pt-2 text-xs text-gray-400 print:hidden">

@@ -612,6 +612,14 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to match(/\d+ new · \d+ ongoing · \d+ reinstated/)
       end
 
+      it "shows a program-status column in the registrant roster" do
+        get background_event_path(event)
+
+        # "Background Org" is the registrant's first-facilitator program → New.
+        expect(response.body).to include("Status")
+        expect(response.body).to include("New")
+      end
+
       it "renders the states breakdown as a US choropleth map fed by per-state counts" do
         create(:address, addressable: person, state: "CA", inactive: false)
 
@@ -677,7 +685,7 @@ RSpec.describe "Events", type: :request do
         get background_event_path(event)
 
         expect(response.body).to include("fa-graduation-cap")
-        expect(response.body).to include("#{recipients_event_path(event)}#scholarship_#{scholarship.id}")
+        expect(response.body).to include("#{recipients_event_path(event)}#participant-#{registration.slug}")
       end
 
       it "does not show a recipients link for registrants without a scholarship" do

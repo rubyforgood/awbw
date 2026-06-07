@@ -17,8 +17,17 @@ class EventPolicy < ApplicationPolicy
     end
   end
 
+  # Who can see the public "Meet the staff" roster. Mirrors event visibility for
+  # now, but kept as its own rule (rather than delegating to show?) so we can
+  # tighten it later — e.g. registrants only — without affecting event show access.
   def staff?
-    show?
+    return true if admin?
+
+    if record.ended?
+      authenticated? && record.published? && record.actively_registered?(user.person)
+    else
+      record.publicly_visible? || (authenticated? && record.published?)
+    end
   end
 
   def register?

@@ -83,7 +83,7 @@ class EventsController < ApplicationController
     @event = @event.decorate
     @staff = @event.event_registrations
       .active
-      .includes(registrant: [ { avatar_attachment: :blob }, { affiliations: :organization } ])
+      .includes(registrant: [ :sectors, { avatar_attachment: :blob }, { affiliations: :organization } ])
       .joins(:registrant)
       .order(Arel.sql("people.first_name, people.last_name"))
       .map(&:registrant)
