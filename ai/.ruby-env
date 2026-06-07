@@ -1,3 +1,12 @@
+# Under Conductor, the workspace's assigned port arrives in the terminal as
+# CONDUCTOR_PORT. Expose it under the generic WORKSPACE_PORT name so ai/* scripts
+# and the Rails app (database.yml, session_store, default_host) select the
+# per-workspace database, session, port, and host. Mirrors bin/conductor-{setup,server},
+# which set this for their own entry points but not for interactive ai/* runs.
+if [ -n "${CONDUCTOR_PORT:-}" ]; then
+  export WORKSPACE_PORT="${WORKSPACE_PORT:-$CONDUCTOR_PORT}"
+fi
+
 # Ensure the correct Ruby version is available via mise or rbenv
 if command -v mise &> /dev/null; then
   eval "$(mise activate bash)"
