@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Run database migrations.
+set -euo pipefail
+source "$(dirname "$0")/.ruby-env"
+bundle exec rails db:migrate "$@"

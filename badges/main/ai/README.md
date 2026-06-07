@@ -11,7 +11,8 @@ Quick-reference scripts for common development tasks. Designed for AI agents and
 | `ai/server` | Start all dev services (web + vite) |
 | `ai/console` | Rails console |
 | `ai/routes -g pattern` | Search Rails routes |
-| `ai/db-migrate` | Run database migrations |
+| `ai/migrate` | Run database migrations |
+| `ai/seed` | Load the full dev sample dataset (`db:seed:dev`) into the workspace DB |
 | `ai/security` | Security scan: Brakeman + bundler-audit (mirrors CI) |
 
 All scripts pass through extra arguments, so `ai/test --fail-fast` works as expected.

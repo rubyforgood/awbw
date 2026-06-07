@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Load the full dev sample dataset into the workspace database.
+# Sourcing .ruby-env sets WORKSPACE_PORT so seeds land in the per-workspace DB
+# (awbw_development_$PORT) the app actually serves — not the unsuffixed default.
+set -euo pipefail
+source "$(dirname "$0")/.ruby-env"
+bundle exec rails db:seed:dev "$@"
