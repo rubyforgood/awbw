@@ -1,18 +1,27 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
 
-      <!-- Page Header -->
-      <div class="flex items-center justify-between mb-4">
-        <h1 class="text-2xl font-semibold text-gray-900">Activities</h1>
-
-        <div class="text-sm text-gray-500">
-          <%= @events.count %> activities
+      <div class="flex flex-wrap items-center gap-y-2 mb-2">
+        <% if allowed_to?(:index?, with: Admin::HomePolicy) %>
+          <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
+            <i class="fas fa-arrow-left"></i>
+            <span>Admin</span>
+          <% end %>
+        <% end %>
+        <div class="ml-auto">
+          <%= render "admin/shared/activities_tabs" %>
         </div>
       </div>
 
-      <%= render "admin/shared/activities_tabs" %>
+      <!-- Page Header -->
+      <div class="flex items-baseline gap-3 mb-6 leading-none">
+        <h1 class="text-2xl font-semibold text-gray-900 leading-none">Activities</h1>
+        <span class="text-sm text-gray-500 leading-none"><%= @events.count %> total</span>
+      </div>
 
-      <%= render "admin/shared/active_filters_subheader" %>
+      <div class="mb-6 text-sm min-h-10">
+        <%= render "admin/shared/active_filters_subheader" %>
+      </div>
 
       <!-- Filters -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
