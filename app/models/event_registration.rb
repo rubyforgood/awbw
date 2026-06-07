@@ -12,6 +12,7 @@ class EventRegistration < ApplicationRecord
     through: :allocations, source: :source, source_type: "Scholarship"
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :notifications, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   before_create :generate_slug
   after_create :snapshot_registrant_organizations

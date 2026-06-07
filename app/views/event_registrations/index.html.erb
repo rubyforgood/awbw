@@ -64,6 +64,7 @@
                         <td class="px-4 py-2 text-sm text-gray-800 min-w-[50ch]">
                           <%= event_profile_button(event_registration.event,
                                 truncate_at: 50,
+                                path: dashboard_event_path(event_registration.event),
                                 subtitle: event_registration.event.decorate.times(display_day: true, display_date: true, inline: true)) %>
                         </td>
                       <% end %>
@@ -72,13 +73,14 @@
                       </td>
 
                       <!-- Actions -->
-                      <td class="px-4 py-2 text-center align-top">
-                        <div class="flex items-center justify-center gap-2">
-                          <%= link_to "View", event_registration_path(event_registration),
-                                      class: "btn btn-utility-outline" %>
-                          <%= link_to "Edit", edit_event_registration_path(event_registration, return_to: "index"),
-                                      class: "btn btn-utility-outline" %>
-                        </div>
+                      <td class="px-4 py-2 align-top">
+                        <%= link_to edit_event_registration_path(event_registration, return_to: "index"),
+                                    class: "group relative flex items-center gap-2 w-full px-4 py-2 border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 100, hover: true)} rounded-lg transition-colors duration-200 font-medium shadow-sm leading-none overflow-hidden" do %>
+                          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 200)} #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} shadow-sm">
+                            <i class="fa-solid fa-user-pen"></i>
+                          </span>
+                          <span class="truncate font-semibold <%= DomainTheme.text_class_for(:event_registrations) %>">Edit registration</span>
+                        <% end %>
                       </td>
                     </tr>
                   <% end %>

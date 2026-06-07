@@ -5,7 +5,7 @@ import { Controller } from "@hotwired/stimulus"
 // "organizations at registration" chip list.
 
 export default class extends Controller {
-  static targets = ["chips", "select", "addForm", "addButton", "empty"]
+  static targets = ["chips", "select", "addForm", "addButton", "empty", "template"]
   static outlets = ["remote-select"]
 
   // Legacy button-based add (kept for any view still rendering add buttons).
@@ -52,26 +52,11 @@ export default class extends Controller {
       return
     }
 
-    const label = document.createElement("label")
-    label.className = "inline-flex items-center gap-1 px-4 py-1 rounded-full text-xs border cursor-pointer transition-colors bg-red-50 border-red-200 text-red-400 line-through has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-200 has-[:checked]:text-emerald-800 has-[:checked]:no-underline"
-
-    const input = document.createElement("input")
-    input.type = "checkbox"
-    input.name = "event_registration[organization_ids][]"
-    input.value = orgId
-    input.checked = true
-    input.className = "sr-only"
-
-    const nameSpan = document.createElement("span")
-    nameSpan.textContent = orgName
-
-    const xSpan = document.createElement("span")
-    xSpan.className = "text-xs opacity-50"
-    xSpan.innerHTML = "&times;"
-
-    label.appendChild(input)
-    label.appendChild(nameSpan)
-    label.appendChild(xSpan)
+    // Clone the pending-chip template (amber until saved). Keeping the markup in
+    // the view means Tailwind reliably compiles its variants.
+    const label = this.templateTarget.content.firstElementChild.cloneNode(true)
+    label.querySelector("input").value = orgId
+    label.querySelector("[data-org-toggle-name]").textContent = orgName
 
     this.chipsTarget.appendChild(label)
 

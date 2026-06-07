@@ -77,6 +77,10 @@ class EventRegistrationsController < ApplicationController
     @event_registration.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @event_registration.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
+    # Inline-logged notifications are addressed to the registrant.
+    recipient_email = @event_registration.registrant&.preferred_email.presence || "n/a"
+    @event_registration.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
+
     if @event_registration.save
       cleanup_unrequested_scholarship
       respond_to do |format|
@@ -85,7 +89,15 @@ class EventRegistrationsController < ApplicationController
           case params[:return_to]
           when "manage" then redirect_to manage_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
           when "index" then redirect_to event_registrations_path, notice: "Registration was successfully updated.", status: :see_other
-          else redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
+          when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
+          else
+            # No explicit origin: keep admins in the management context (the
+            # roster) rather than dropping them on the public registration show.
+            if allowed_to?(:manage?, with: EventRegistrationPolicy)
+              redirect_to manage_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
+            else
+              redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
+            end
           end
         }
       end
@@ -208,8 +220,10 @@ class EventRegistrationsController < ApplicationController
     params.require(:event_registration).permit(
       :event_id, :registrant_id, :status,
       :scholarship_requested,
+      :ce_credit_requested,
       organization_ids: [],
-      comments_attributes: [ :id, :body, :_destroy ]
+      comments_attributes: [ :id, :body, :_destroy ],
+      notifications_attributes: [ :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id ]
     )
   end
 

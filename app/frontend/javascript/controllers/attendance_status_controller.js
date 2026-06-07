@@ -1,33 +1,31 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Connects to data-controller="attendance-status"
-// Mirrors the chosen status into the visible pill (label, color, icon) as the
-// dropdown changes — styled like the roster badge, but saved with the form
-// rather than autosubmitted.
+// Swaps the colored icon inside the status select as the dropdown changes. The
+// select looks like an ordinary form field (not the roster's autosaving chip),
+// so an "Unsaved" hint is shown until the form is saved.
 export default class extends Controller {
-  static targets = ["select", "label", "icon", "pill", "dirty"]
-  static values = { styles: Object, icons: Object, initial: String }
+  static targets = ["select", "icon", "dirty"]
+  static values = { colors: Object, icons: Object, initial: String }
 
   update() {
     const status = this.selectTarget.value
-    const option = this.selectTarget.selectedOptions[0]
-    if (option && this.hasLabelTarget) this.labelTarget.textContent = option.textContent
-
-    if (this.hasPillTarget) {
-      const allStyles = Object.values(this.stylesValue).flatMap((c) => c.split(" "))
-      this.pillTarget.classList.remove(...allStyles)
-      if (this.stylesValue[status]) this.pillTarget.classList.add(...this.stylesValue[status].split(" "))
-    }
 
     if (this.hasIconTarget) {
-      this.iconTarget.classList.remove(...Object.values(this.iconsValue))
-      if (this.iconsValue[status]) this.iconTarget.classList.add(this.iconsValue[status])
+      const allColors = Object.values(this.colorsValue).flatMap((c) => c.split(" "))
+      const allIcons = Object.values(this.iconsValue).flatMap((c) => c.split(" "))
+      this.iconTarget.classList.remove(...allColors, ...allIcons)
+      if (this.iconsValue[status]) this.iconTarget.classList.add(...this.iconsValue[status].split(" "))
+      if (this.colorsValue[status]) this.iconTarget.classList.add(...this.colorsValue[status].split(" "))
     }
 
     // The status only persists on form save, so flag it as unsaved while it
-    // differs from the value the page loaded with.
+    // differs from the value the page loaded with. Toggle both display classes
+    // so "hidden" and "inline-flex" are never set at once (they'd fight in CSS).
     if (this.hasDirtyTarget) {
-      this.dirtyTarget.classList.toggle("hidden", status === this.initialValue)
+      const clean = status === this.initialValue
+      this.dirtyTarget.classList.toggle("hidden", clean)
+      this.dirtyTarget.classList.toggle("inline-flex", !clean)
     }
   }
 }

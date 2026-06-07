@@ -5,55 +5,62 @@ RSpec.describe "Event registration edit page", type: :system do
   let(:event) { create(:event, :published, title: "Test Event") }
   let!(:registration) { create(:event_registration, event: event, registrant: admin.person) }
 
-  describe "user account box" do
-    it "shows the registrant's account status and links to the user and filtered notifications" do
+  describe "user account square" do
+    it "links to the registrant's user account" do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "User account") do
-        expect(page).to have_text("Active")
-        expect(page).to have_link("View account", href: user_path(admin))
-        expect(page).to have_link("View notifications",
-          href: notifications_path(email: registration.registrant.preferred_email))
-      end
+      expect(page).to have_link("User account", href: user_path(admin))
     end
 
-    it "shows an empty state and no account link when the registrant has no user" do
+    it "offers to create a user when the registrant has none" do
       registration_without_user = create(:event_registration, event: event, registrant: create(:person, user: nil))
 
       sign_in(admin)
       visit edit_event_registration_path(registration_without_user)
 
-      within("section", text: "User account") do
-        expect(page).to have_text("No user account")
-        expect(page).to have_link("View notifications")
-        expect(page).not_to have_link("View account")
-      end
+      expect(page).to have_link("Create user",
+        href: new_user_path(person_id: registration_without_user.registrant_id, event_registration_id: registration_without_user.id))
     end
   end
 
   describe "payment & allocation history" do
-    it "shows an empty state when there are no allocations" do
+    it "shows the cost/allocated/due totals with nothing allocated" do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Allocations") do
-        expect(page).to have_link("$10.99 due")
-        expect(page).to have_text("No payments or allocations recorded yet")
+      within("section", text: "Registration allocations") do
+        expect(page).to have_text(/registration cost/i)
+        expect(page).to have_text(/amount allocated/i)
+        expect(page).to have_text(/amount due/i)
+        expect(page).to have_text("$10.99")
+        expect(page).to have_text("$0.00")
       end
     end
 
-    it "lists each allocation with its source, amount, and a total" do
+    it "sums allocations into the amount allocated total (no line items)" do
       payment = create(:payment, amount_cents: 1000, amount_cents_remaining: 1000)
       create(:allocation, source: payment, allocatable: registration, amount: 1000)
 
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Allocations") do
-        expect(page).to have_text("Cash")
+      within("section", text: "Registration allocations") do
+        expect(page).to have_text(/amount allocated/i)
         expect(page).to have_text("$10.00")
-        expect(page).to have_text("Total paid")
+        expect(page).to have_no_text("Source")
+      end
+    end
+
+    it "shows a paid-up state when the cost is fully allocated" do
+      payment = create(:payment, amount_cents: 1099, amount_cents_remaining: 1099)
+      create(:allocation, source: payment, allocatable: registration, amount: 1099)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Registration allocations") do
+        expect(page).to have_text("Paid up")
       end
     end
   end
@@ -65,7 +72,7 @@ RSpec.describe "Event registration edit page", type: :system do
 
       within("section", text: "Scholarship") do
         expect(page).to have_link("Add scholarship")
-        check "Requested"
+        check "Requested", allow_label_click: true
         expect(page).to have_link("Add scholarship")
       end
 
@@ -78,11 +85,65 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Registration status") do
-        expect(page).to have_no_text("Unsaved")
-        select "No show", from: "event_registration[status]"
-        expect(page).to have_text("Unsaved")
+      badge = "[data-attendance-status-target='dirty']"
+      expect(page).to have_no_css(badge, visible: true)
+
+      find("select[name='event_registration[status]']")
+        .find(:option, "No show").select_option
+
+      expect(page).to have_css(badge, visible: true, text: "Unsaved")
+    end
+  end
+
+  describe "notifications box" do
+    it "lists notifications sent to the registrant" do
+      create(:notification,
+             recipient_email: registration.registrant.preferred_email,
+             email_subject: "Event registration confirmed")
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Registration communications") do
+        expect(page).to have_text("Event registration confirmed")
+        expect(page).to have_no_link("Event registration confirmed")
+        expect(page).to have_link("View all")
       end
+    end
+
+    it "logs a notification inline, saved with the form" do
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Registration communications") do
+        click_on "Add notification"
+        fill_in "Subject", with: "Called about parking"
+      end
+
+      # Confirm the inline field registered its value before submitting, then wait
+      # for the save round-trip to finish before checking the database.
+      expect(page).to have_field("Subject", with: "Called about parking")
+      click_on "Save changes"
+      expect(page).to have_text("successfully updated")
+
+      notification = registration.notifications.find_by(email_subject: "Called about parking")
+      expect(notification).to be_present
+      expect(notification.channel).to eq("email")
+    end
+  end
+
+  describe "comments box" do
+    it "keeps a newly added comment visible even past the first page" do
+      create_list(:comment, 5, commentable: registration)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("#comments-section") do
+        click_on "Add comment"
+      end
+
+      expect(page).to have_field("Add a comment...")
     end
   end
 
