@@ -24,8 +24,8 @@ RSpec.describe "events/index", type: :view do
       expect(rendered).to include("Closed Event")
     end
 
-    it "renders edit links when allowed" do
-      expect(rendered).to have_link("Edit", href: edit_event_path(event_open))
+    it "renders dashboard links when allowed" do
+      expect(rendered).to have_link("Dashboard", href: dashboard_event_path(event_open))
     end
 
     it "renders New Event link" do
@@ -51,8 +51,8 @@ RSpec.describe "events/index", type: :view do
       render
     end
 
-    it "does not render edit link" do
-      expect(rendered).not_to have_link("Edit")
+    it "does not render dashboard link" do
+      expect(rendered).not_to have_link("Dashboard")
     end
 
     it "does not render New Event link" do

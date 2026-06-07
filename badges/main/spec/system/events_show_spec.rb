@@ -107,18 +107,20 @@ RSpec.describe "Event show page", type: :system do
   # --------------------------------------------------
 
   describe "admin buttons" do
-    it "shows Edit for admin" do
+    it "shows admin controls for admin" do
       sign_in(admin)
       visit event_path(event)
 
-      expect(page).to have_link("Edit", href: edit_event_path(event))
+      expect(page).to have_link("Dashboard", href: dashboard_event_path(event))
+      expect(page).to have_link("Registrants", href: manage_event_path(event))
     end
 
-    it "hides Edit for regular users" do
+    it "hides admin controls for regular users" do
       sign_in(user)
       visit event_path(event)
 
-      expect(page).not_to have_link("Edit")
+      expect(page).not_to have_link("Dashboard")
+      expect(page).not_to have_link("Registrants")
     end
   end
 
