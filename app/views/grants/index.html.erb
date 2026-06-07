@@ -1,0 +1,48 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="grants-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:grants) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="w-full">
+    <div class="flex items-start justify-between mb-6">
+      <div class="pr-6">
+        <h2 class="text-2xl font-semibold mb-2">
+          <%= Grant.model_name.human.pluralize %>
+          (<%= @grants.total_entries %>)
+        </h2>
+        <p class="text-gray-600">Funds donated by organizations and people, from which scholarships are awarded.</p>
+      </div>
+
+      <div class="text-right text-end">
+        <% if allowed_to?(:new?, Grant) %>
+          <%= link_to "New #{Grant.model_name.human.downcase}",
+                      new_grant_path,
+                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <% end %>
+      </div>
+    </div>
+
+    <% if @grants.any? %>
+      <div class="overflow-x-auto bg-white rounded-lg shadow-md p-2">
+        <table class="w-full border-collapse">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Donor</th>
+              <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700">Amount</th>
+              <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700">Allocated</th>
+              <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700">Remaining</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Deadline</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <%= render partial: "grant", collection: @grants, as: :grant %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination flex justify-center mt-12"><%= tailwind_paginate @grants %></div>
+    <% else %>
+      <p class="text-gray-500 text-center py-6">No grants found.</p>
+    <% end %>
+  </div>
+</div>

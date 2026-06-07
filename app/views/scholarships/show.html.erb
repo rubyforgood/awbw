@@ -18,6 +18,12 @@
       <dt class="text-sm font-medium text-gray-500">Tasks Completed</dt>
       <dd class="mt-1 text-sm text-gray-900"><%= @scholarship.tasks_completed? ? "Yes" : "No" %></dd>
     </div>
+    <% if @scholarship.grant.present? %>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Grant</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= link_to @scholarship.grant.name, grant_path(@scholarship.grant), class: "text-blue-700 hover:underline" %></dd>
+      </div>
+    <% end %>
     <% if @allocatable&.respond_to?(:event) %>
       <div>
         <dt class="text-sm font-medium text-gray-500">Event</dt>

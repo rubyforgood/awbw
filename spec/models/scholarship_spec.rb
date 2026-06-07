@@ -3,6 +3,7 @@ require "rails_helper"
 RSpec.describe Scholarship, type: :model do
   describe "associations" do
     it { is_expected.to belong_to(:recipient).class_name("Person") }
+    it { is_expected.to belong_to(:grant).optional }
     it { is_expected.to have_one(:allocation).dependent(:destroy) }
   end
 
@@ -26,6 +27,30 @@ RSpec.describe Scholarship, type: :model do
         scholarship.build_allocation(allocatable: registration, amount: 0)
         expect(scholarship).not_to be_valid
         expect(scholarship.errors[:recipient]).to include("must be the same person as the event registration's registrant")
+      end
+    end
+
+    describe "within_grant_budget" do
+      let(:grant) { create(:grant, amount_cents: 100_000) }
+
+      it "is valid when the amount stays within the grant's funds" do
+        expect(build(:scholarship, grant:, amount_cents: 60_000)).to be_valid
+      end
+
+      it "is invalid when the amount exceeds the grant's funds" do
+        scholarship = build(:scholarship, grant:, amount_cents: 150_000)
+        expect(scholarship).not_to be_valid
+        expect(scholarship.errors[:amount_cents]).to include("would exceed the grant's available funds")
+      end
+
+      it "accounts for other scholarships already drawn from the grant" do
+        create(:scholarship, grant:, amount_cents: 70_000)
+        scholarship = build(:scholarship, grant:, amount_cents: 40_000)
+        expect(scholarship).not_to be_valid
+      end
+
+      it "is not constrained when no grant is set" do
+        expect(build(:scholarship, grant: nil, amount_cents: 9_999_999)).to be_valid
       end
     end
   end

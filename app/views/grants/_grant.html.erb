@@ -1,0 +1,21 @@
+<% grant = grant.decorate %>
+<tr class="hover:bg-gray-50 transition-colors duration-150">
+  <td class="px-4 py-2 text-sm text-gray-900">
+    <%= link_to grant.name, grant_path(grant), class: "font-medium text-blue-700 hover:underline" %>
+  </td>
+  <td class="px-4 py-2 text-sm text-gray-800"><%= grant_donor_badge(grant) %></td>
+  <td class="px-4 py-2 text-sm text-gray-800 text-right"><%= grant.amount %></td>
+  <td class="px-4 py-2 text-sm text-gray-800 text-right"><%= grant.allocated %></td>
+  <td class="px-4 py-2 text-sm text-right <%= grant.fully_allocated? ? "text-red-600 font-medium" : "text-green-700" %>">
+    <%= grant.remaining %>
+  </td>
+  <td class="px-4 py-2 text-sm text-gray-800"><%= grant.application_deadline %></td>
+  <td class="px-4 py-2 text-sm text-center">
+    <div class="flex gap-2 justify-center">
+      <%= link_to "View", grant_path(grant), class: "btn btn-secondary-outline" %>
+      <% if allowed_to?(:edit?, grant.object) %>
+        <%= link_to "Edit", edit_grant_path(grant), class: "btn btn-secondary-outline" %>
+      <% end %>
+    </div>
+  </td>
+</tr>

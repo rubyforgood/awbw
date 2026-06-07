@@ -1,0 +1,89 @@
+<%= simple_form_for(@grant) do |f| %>
+  <%= f.error_notification %>
+  <%= render "shared/errors", resource: @grant if @grant.errors.any? %>
+
+  <div class="space-y-6">
+    <div>
+      <%= f.input :name,
+                  label: "Grant name",
+                  input_html: { class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+    </div>
+
+    <div>
+      <%= f.label :donor_sgid, "Donor", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag "grant[donor_sgid]",
+                     grouped_options_for_select(@donor_options, @grant.donor_sgid),
+                     include_blank: "Select an organization or person",
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
+      <p class="mt-1 text-xs text-gray-500">The organization or person donating the funds.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <%= f.label :amount_dollars, "Donation amount", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">$</span>
+          <%= f.number_field :amount_dollars, step: 0.01, value: @grant.amount_dollars,
+                             class: "pl-7 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
+        </div>
+        <p class="mt-1 text-xs text-gray-500">Total scholarship amounts awarded from this grant cannot exceed this.</p>
+      </div>
+      <div>
+        <%= f.input :funds_received_on,
+                    label: "Funds received on",
+                    as: :string,
+                    input_html: {
+                      type: "date",
+                      value: @grant.funds_received_on&.strftime("%Y-%m-%d"),
+                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm"
+                    } %>
+      </div>
+    </div>
+
+    <div>
+      <%= f.input :application_deadline,
+                  as: :string,
+                  input_html: {
+                    type: "date",
+                    value: @grant.application_deadline&.strftime("%Y-%m-%d"),
+                    class: "w-full sm:w-1/2 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm"
+                  } %>
+    </div>
+
+    <div>
+      <%= f.input :description,
+                  as: :text,
+                  input_html: { rows: 4, class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+    </div>
+
+    <div>
+      <%= f.input :eligibility_criteria,
+                  label: "Eligibility criteria",
+                  hint: "One criterion per line.",
+                  as: :text,
+                  input_html: { rows: 5, class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+    </div>
+
+    <div>
+      <%= f.input :tasks,
+                  label: "Tasks to complete",
+                  hint: "One task per line.",
+                  as: :text,
+                  input_html: { rows: 5, class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
+    </div>
+  </div>
+
+  <div class="action-buttons mt-8 flex justify-center gap-3">
+    <% if allowed_to?(:destroy?, f.object) %>
+      <% if f.object.scholarships.exists? %>
+        <span class="btn btn-danger-outline opacity-50 cursor-not-allowed"
+              title="Remove its scholarships before deleting this grant">Delete</span>
+      <% else %>
+        <%= link_to "Delete", @grant, class: "btn btn-danger-outline",
+                    data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this grant?" } %>
+      <% end %>
+    <% end %>
+    <%= link_to "Cancel", grants_path, class: "btn btn-secondary-outline" %>
+    <%= f.button :submit, class: "btn btn-primary" %>
+  </div>
+<% end %>

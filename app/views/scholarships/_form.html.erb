@@ -1,3 +1,5 @@
+<% grant = @grant || f.object.grant %>
+<% grant_funded = @allocatable.blank? && grant.present? %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          data-controller="scholarship-preview"
          data-scholarship-preview-event-cost-value="<%= @allocatable.respond_to?(:event) ? @allocatable.event.cost_cents.to_i : 0 %>"
@@ -35,7 +37,31 @@
       </dl>
     <% end %>
 
+    <% if grant_funded %>
+      <% donor_icon = grant.donor.is_a?(Person) ? "fa-user #{DomainTheme.text_class_for(:people)}" : "fa-building #{DomainTheme.text_class_for(:organizations)}" %>
+      <div>
+        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Funder</dt>
+        <dd class="mt-1 text-sm text-gray-900 flex items-center gap-2">
+          <i class="fa-solid <%= donor_icon %>" aria-hidden="true"></i>
+          <%= link_to grant.funder_name, grant_path(grant), class: "text-blue-700 hover:underline" %>
+        </dd>
+      </div>
+      <%= f.hidden_field :grant_id, value: grant.id %>
+    <% end %>
+
     <div class="flex flex-wrap items-start gap-x-10 gap-y-6">
+      <% if grant_funded %>
+        <div>
+          <%= f.label :recipient_id, "Recipient", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.collection_select :recipient_id,
+                (f.object.recipient.present? ? [ f.object.recipient ] : []),
+                :id, :full_name,
+                { include_blank: "Search for a person…" },
+                { required: true, class: "w-64 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm",
+                  data: { controller: "remote-select", remote_select_model_value: "person" } } %>
+        </div>
+      <% end %>
+
       <div>
         <%= f.label :amount_dollars, "Scholarship amount", class: "block text-sm font-medium text-gray-700 mb-1" %>
         <div class="relative w-48">
@@ -54,14 +80,30 @@
         </label>
       </div>
     </div>
+
+    <% unless grant_funded %>
+      <div>
+        <%= f.label :grant_id, "Funded by grant", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.collection_select :grant_id, @grants || Grant.by_deadline, :id, :name,
+                                { include_blank: "None" },
+                                class: "w-72 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
+        <p class="mt-1 text-xs text-gray-500">Optional. Scholarship totals cannot exceed the grant's donation amount.</p>
+      </div>
+    <% end %>
   </div>
 </section>
 
 <%# ---- Footer actions ---- %>
-<% cancel_path = @allocatable.respond_to?(:event) ? manage_event_path(@allocatable.event) : scholarships_path %>
+<% cancel_path = if grant_funded
+     params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)
+   elsif @allocatable.respond_to?(:event)
+     manage_event_path(@allocatable.event)
+   else
+     root_path
+   end %>
 <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
   <% if f.object.persisted? %>
-    <%= link_to scholarship_path(f.object),
+    <%= link_to scholarship_path(f.object, return_to: params[:return_to].presence),
                 class: "btn btn-danger-outline",
                 data: { turbo_method: :delete, turbo_confirm: "Remove this scholarship?" } do %>
       <i class="fa-solid fa-trash-can"></i>

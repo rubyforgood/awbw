@@ -1,9 +1,11 @@
 class Scholarship < ApplicationRecord
   belongs_to :recipient, class_name: "Person"
+  belongs_to :grant, optional: true
   has_one :allocation, as: :source, dependent: :destroy
 
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :recipient_must_match_allocation_registrant
+  validate :within_grant_budget, if: :grant
 
   after_update :sync_allocation_amount, if: -> { saved_change_to_tasks_completed? || saved_change_to_amount_cents? }
 
@@ -18,6 +20,15 @@ class Scholarship < ApplicationRecord
   end
 
   private
+
+  def within_grant_budget
+    return unless amount_cents
+
+    others_total = grant.scholarships.where.not(id: id).sum(:amount_cents)
+    if others_total + amount_cents > grant.amount_cents
+      errors.add(:amount_cents, "would exceed the grant's available funds")
+    end
+  end
 
   def recipient_must_match_allocation_registrant
     return unless allocation&.allocatable.respond_to?(:registrant)
