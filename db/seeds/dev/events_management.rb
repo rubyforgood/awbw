@@ -7,7 +7,7 @@ puts "Creating standalone registration forms…"
 unless Form.standalone.exists?(name: "Registration")
   FormBuilderService.new(
     name: "Registration",
-    sections: %i[person_identifier],
+    sections: %i[person_identifier professional_info],
     role: "registration"
   ).call
 end
@@ -24,6 +24,13 @@ puts "Creating Events with shared forms…"
 admin_user = User.find_by(email: "umberto.user@example.com")
 registration_form = Form.standalone.find_by!(role: "registration")
 scholarship_form = Form.standalone.find_by!(role: "scholarship")
+
+# Ensure the professional section (Primary Age Group(s) Served, Primary Service
+# Area, etc.) exists even on a registration form seeded before it was added — the
+# event Background charts aggregate answers to those questions.
+if registration_form.form_fields.where(field_identifier: "primary_age_group").none?
+  FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :professional_info ])
+end
 
 # Each entry: [title, form_type, cost_cents, scholarship?, visibility, span_days]
 # form_type: :long, :short, or :none. span_days (optional) makes a multi-day event.
@@ -239,6 +246,63 @@ EventRegistration.where(slug: nil).find_each do |reg|
   reg.update!(slug: SecureRandom.urlsafe_base64(16))
 end
 
+# Make sure every registrant on the data-rich demo events belongs to an
+# organization, so the background page's Organizations count (and its
+# new/ongoing/reinstated breakdown) reflects the whole cohort. Only registrants
+# with no active affiliation get one — to an existing org, cycled for variety.
+puts "Backfilling registrant affiliations for the demo events…"
+backfill_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
+if backfill_orgs.any?
+  [ "AWBW Facilitator Training", "Facilitator Training: Trauma-Informed Art Practices",
+    "Mindful Art for Survivors Workshop" ].each do |title|
+    event = Event.find_by(title: title)
+    next unless event
+    event.event_registrations.active.includes(:registrant).each_with_index do |registration, i|
+      person = registration.registrant
+      next if person.affiliations.active.any?
+      person.affiliations.create!(organization: backfill_orgs[i % backfill_orgs.length],
+                                  title: "Facilitator", start_date: (event.start_date || Time.current).to_date - 2.years)
+    end
+  end
+end
+
+puts "Tagging registrants with life experiences and workshop settings…"
+# The background page charts registrants' StoryPopulation (life experiences) and
+# WorkshopEnvironment (settings) tags — the same tags public registration writes
+# from the "Client life experiences" and "Workshop environments" checkboxes (see
+# PublicRegistration#assign_tags). The seed form submissions above only fill text
+# fields, so without this the data-rich trainings' background charts are empty.
+# Tag each active registrant with a deterministic spread so re-seeding is idempotent.
+life_experience_categories = Category.joins(:category_type)
+  .where(category_types: { name: "StoryPopulation" })
+  .order(:name).to_a
+setting_categories = Category.joins(:category_type)
+  .where(category_types: { name: "WorkshopEnvironment" })
+  .order(:name).to_a
+
+# Pick offsets i and i+offset from a category list, wrapping around; returns [] for
+# an empty list so the seed survives running before the base category seeds.
+pick_categories = ->(categories, i, offset) do
+  return [] if categories.empty?
+  [ categories[i % categories.size], categories[(i + offset) % categories.size] ]
+end
+
+[ facilitator_training, trauma_training ].compact.each do |evt|
+  evt.event_registrations.active.includes(:registrant).each_with_index do |registration, i|
+    person = registration.registrant
+    next unless person
+
+    # Each registrant gets two life experiences and two settings, offset by their
+    # position so the charts show a realistic spread across categories.
+    tags = (pick_categories.call(life_experience_categories, i, 2) +
+            pick_categories.call(setting_categories, i, 3)).compact.uniq
+
+    tags.each do |category|
+      CategorizableItem.find_or_create_by!(category: category, categorizable: person)
+    end
+  end
+end
+
 puts "Creating Registration Form Submissions…"
 # Create form_submission records linking registrants to their event's registration form.
 # This simulates people who filled out the registration form.
@@ -342,5 +406,209 @@ form_submissions.each do |data|
       submitted_answer: sample_text.to_s,
       question_name_when_answered: field.name
     )
+  end
+end
+
+puts "Recording professional answers (age group / service area) on registration submissions…"
+# The Background page charts the registrants' "Primary Age Group(s) Served" and
+# "Primary Service Area(s)" registration answers. Public registration stores
+# these checkbox answers as ", "-joined category / sector ids (see
+# PublicRegistration#save_form_answers + assign_tags); seed them the same way so
+# the charts have data. Age group is read from the form answers; service area is
+# read from SectorableItem tags, so write both. Idempotent: skips a field already
+# answered on a submission, and only enriches people who have a submission (so the
+# "registered but didn't fill the form" scenarios stay answer-free).
+age_range_categories = Category.age_ranges.published.order(:position, :name).to_a
+service_area_sectors = Sector.published.order(:name).to_a
+
+record_professional_answers = ->(submission, i) do
+  person = submission.person
+  form = submission.form
+
+  age_field = form.form_fields.find_by(field_identifier: "primary_age_group")
+  ages = pick_categories.call(age_range_categories, i, 2)
+  if age_field && ages.present? && submission.form_answers.where(form_field: age_field).none?
+    submission.form_answers.create!(form_field: age_field,
+                                    submitted_answer: ages.map(&:id).join(", "),
+                                    question_name_when_answered: age_field.name)
+  end
+
+  service_field = form.form_fields.find_by(field_identifier: "primary_service_area")
+  sectors = service_area_sectors.empty? ? [] : [ service_area_sectors[i % service_area_sectors.size], service_area_sectors[(i + 4) % service_area_sectors.size] ].uniq
+  if service_field && sectors.present? && submission.form_answers.where(form_field: service_field).none?
+    submission.form_answers.create!(form_field: service_field,
+                                    submitted_answer: sectors.map(&:id).join(", "),
+                                    question_name_when_answered: service_field.name)
+  end
+  # Service area chart reads SectorableItem tags, mirroring assign_tags.
+  sectors.each { |sector| SectorableItem.find_or_create_by!(sector: sector, sectorable: person) }
+end
+
+# Give the flagship cohort registration submissions so its Background charts have
+# volume (named scenarios above are unchanged; the cohort are generic fill-ins).
+if facilitator_training && (reg_form = facilitator_training.registration_form)
+  facilitator_training.event_registrations.active.includes(:registrant).each do |registration|
+    person = registration.registrant
+    next unless person&.email.to_s.start_with?("facilitator.cohort.")
+    FormSubmission.find_or_create_by!(person: person, form: reg_form)
+  end
+end
+
+# Enrich every registration submission on the registerable dev events.
+[ facilitator_training, trauma_training, wellness_day, youth_day, mindful_art, virtual_session, roundtable, family_day ].compact.each do |evt|
+  reg_form = evt.registration_form
+  next unless reg_form
+
+  evt.event_registrations.active.includes(:registrant).each_with_index do |registration, i|
+    person = registration.registrant
+    next unless person
+    submission = FormSubmission.find_by(person: person, form: reg_form)
+    next unless submission
+
+    record_professional_answers.call(submission, i)
+  end
+end
+
+puts "Ensuring registrants have address data (state + country) for the Background maps…"
+# The Background page's States (US choropleth) and Countries (world choropleth)
+# read Address records on each registrant. The registration form captures
+# city/state/zip as free-text answers but never creates an Address; the people
+# seed gives everyone a US address but leaves country blank — so the Countries map
+# renders empty. For each event registrant: create an address if they have none
+# (preferring their registration answers), and backfill country on the one they do
+# have. A deterministic slice is made international so the world map has variety.
+# Idempotent: re-running lands on the same per-registrant values.
+us_states = %w[CA NY TX FL WA IL MA OR CO GA AZ MI MN NC PA]
+# city, state/region, country — every 7th registrant gets one so the world map fills.
+international = [ [ "Toronto", "ON", "Canada" ], [ "London", "England", "United Kingdom" ],
+                 [ "Sydney", "NSW", "Australia" ], [ "Berlin", "Berlin", "Germany" ] ]
+
+# Pull a registration answer by field identifier (blank/missing → nil).
+answer_text = ->(submission, identifier) do
+  next nil unless submission
+  field = submission.form.form_fields.find_by(field_identifier: identifier)
+  field && submission.form_answers.find_by(form_field: field)&.submitted_answer.presence
+end
+
+seen_registrants = {}
+[ facilitator_training, trauma_training, wellness_day, youth_day, mindful_art, virtual_session, roundtable, family_day ].compact.each do |evt|
+  reg_form = evt.registration_form
+
+  evt.event_registrations.active.includes(registrant: :addresses).order(:registrant_id).each_with_index do |registration, i|
+    person = registration.registrant
+    next unless person
+    next if seen_registrants[person.id]
+    seen_registrants[person.id] = true
+
+    submission = reg_form && FormSubmission.find_by(person: person, form: reg_form)
+    overseas = international[(i / 7) % international.size] if (i % 7) == 6
+    address = person.addresses.reject(&:inactive?).first
+
+    if address
+      # Backfill country so the Countries map fills; for the international slice,
+      # move the location overseas so the world map shows non-US countries.
+      if overseas
+        address.update!(city: overseas[0], state: overseas[1], country: overseas[2])
+      elsif address.country.blank?
+        address.update!(country: "United States")
+      end
+    else
+      city, state, country = overseas || [
+        answer_text.call(submission, "city").presence || Faker::Address.city,
+        answer_text.call(submission, "state_province").presence || us_states[i % us_states.size],
+        "United States"
+      ]
+      Address.create!(
+        addressable: person,
+        street_address: answer_text.call(submission, "street_address").presence || Faker::Address.street_address,
+        city: city,
+        state: state,
+        zip_code: answer_text.call(submission, "zip_postal_code").presence || Faker::Address.zip_code,
+        country: country,
+        locality: country == "United States" ? "Unknown" : "Outside USA",
+        primary: true,
+        inactive: false
+      )
+    end
+  end
+end
+
+puts "Ensuring the flagship training has at least 3 international registrants…"
+# The Background page's Countries world map and the roster's Location column only
+# show non-US data when some registrants live abroad. The address pass above only
+# sends an occasional registrant overseas, which can leave the flagship demo short.
+# Guarantee a minimum for this event: count its active registrants already abroad
+# and, if short, move the needed number of domestic ones overseas (deterministic).
+# Idempotent — re-running finds the quota already met.
+if facilitator_training
+  minimum_international = 3
+  abroad = ->(person) do
+    address = person.addresses.reject(&:inactive?).first
+    address && address.country.present? && address.country != "United States"
+  end
+
+  active_registrants = facilitator_training.event_registrations.active
+    .includes(registrant: :addresses).order(:registrant_id).filter_map(&:registrant)
+  shortfall = minimum_international - active_registrants.count { |person| abroad.call(person) }
+
+  if shortfall.positive?
+    active_registrants.reject { |person| abroad.call(person) }.first(shortfall).each_with_index do |person, idx|
+      city, region, country = international[idx % international.size]
+      address = person.addresses.reject(&:inactive?).first
+      if address
+        address.update!(city: city, state: region, country: country)
+      else
+        Address.create!(addressable: person, street_address: Faker::Address.street_address,
+                        city: city, state: region, zip_code: Faker::Address.zip_code,
+                        country: country, locality: "Outside USA", primary: true, inactive: false)
+      end
+    end
+  end
+end
+
+puts "Adding shout-out bios to scholarship recipients' organizations…"
+# The recipients page "Shout out scholarship programs" section pairs each
+# scholarship recipient with their affiliated organization and that org's bio
+# (description). Seed orgs ship without a description, so the section renders
+# empty. Back-fill a realistic, hard-coded bio onto each scholarship recipient's
+# program — only when blank, so any real data is preserved. update_columns skips
+# validations/callbacks, which is fine for seed back-fill.
+shoutout_bios = [
+  "Provides trauma-informed art workshops and wraparound support to survivors of domestic violence and their children.",
+  "Offers emergency shelter, counseling, and economic-empowerment programs that help families rebuild after abuse.",
+  "Runs community-based healing circles and advocacy services for survivors across historically underserved neighborhoods.",
+  "Delivers culturally responsive crisis intervention, legal advocacy, and long-term recovery programming.",
+  "Supports survivors through safe housing, peer support, and creative-expression programming for all ages.",
+  "Champions prevention education and survivor-led programming to break cycles of violence in the community."
+]
+
+recipient_orgs = [ facilitator_training, trauma_training ].compact
+  .flat_map { |evt| EventDashboard.new(evt).scholarship_applicants }
+  .uniq
+  .filter_map { |person| person.affiliations.reject(&:inactive?).filter_map(&:organization).first }
+  .uniq(&:id)
+
+recipient_orgs.each_with_index do |org, i|
+  next if org.description.present?
+  org.update_columns(description: shoutout_bios[i % shoutout_bios.size])
+end
+
+puts "Recording school districts on registrant addresses…"
+# The Background page breaks registrants out by school district (Address#district).
+# The address pass above leaves district blank, so assign a deterministic spread
+# to a subset of the data-rich trainings' US registrants. Idempotent: skips an
+# address that already has a district, and only US addresses get one (K-12
+# districts are domestic).
+school_district_names = [ "Los Angeles Unified", "Garden Grove Unified", "Compton Unified",
+                          "Riverside Unified", "Long Beach Unified" ]
+[ facilitator_training, trauma_training ].compact.each do |evt|
+  evt.event_registrations.active.includes(registrant: :addresses).order(:registrant_id).each_with_index do |registration, i|
+    next unless i.even? # roughly half the registrants are tied to a district
+    person = registration.registrant
+    address = person&.addresses&.reject(&:inactive?)&.first
+    next unless address && address.district.blank?
+    next unless address.country.blank? || address.country == "United States"
+
+    address.update!(district: school_district_names[(i / 2) % school_district_names.size])
   end
 end

@@ -29,6 +29,40 @@ RSpec.describe Organization do
     # expect(build(:organization)).to be_valid
   end
 
+  describe '#facilitator_status' do
+    let(:organization) { create(:organization) }
+    let(:current) do
+      create(:affiliation, organization: organization, title: "Facilitator", start_date: Date.new(2026, 1, 1))
+    end
+
+    it 'is :new when it is the only facilitator affiliation' do
+      expect(organization.facilitator_status(current)).to eq(:new)
+    end
+
+    it 'is :new when every other facilitator affiliation started on or after it' do
+      create(:affiliation, organization: organization, title: "Facilitator", start_date: Date.new(2026, 6, 1))
+      expect(organization.facilitator_status(current)).to eq(:new)
+    end
+
+    it 'is :ongoing when an earlier facilitator affiliation was still active when it started' do
+      create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2024, 1, 1), end_date: nil)
+      expect(organization.facilitator_status(current)).to eq(:ongoing)
+    end
+
+    it 'is :reinstated when all earlier facilitator affiliations ended before it started' do
+      create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2022, 1, 1), end_date: Date.new(2023, 1, 1))
+      expect(organization.facilitator_status(current)).to eq(:reinstated)
+    end
+
+    it 'ignores non-facilitator affiliations when classifying' do
+      create(:affiliation, organization: organization, title: "Volunteer",
+             start_date: Date.new(2020, 1, 1), end_date: nil)
+      expect(organization.facilitator_status(current)).to eq(:new)
+    end
+  end
+
   describe '.address' do
     let!(:status) { create(:organization_status, name: "Active") }
 

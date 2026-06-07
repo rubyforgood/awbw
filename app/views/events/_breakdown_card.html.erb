@@ -1,0 +1,72 @@
+<%# Breakdown card: a chart plus an always-visible legend table showing each
+    category's count and percentage (so values read on mobile without hovering).
+    Locals:
+      title:         heading text
+      data:          array of [ label, count ], in the order to chart + list
+      chart:         :pie, :bar, or nil (list only)
+      palette:       array of hex colors; slice i and legend swatch i share palette[i]
+      empty_message: optional text shown in place of the chart/table when data is
+                     empty. Pass it to keep the card visible (with a no-data box)
+                     even when there's nothing to chart; omit to let the caller
+                     hide the card entirely.
+      row_paths:     optional hash of { label => path }. When a row's label has a
+                     path, the whole row links to it (the filtered registrant list). %>
+<% chart = local_assigns.fetch(:chart, nil) %>
+<% empty_message = local_assigns.fetch(:empty_message, nil) %>
+<%# map_color: optional base hex for the choropleth ramp (e.g. the addresses color). %>
+<% map_color = local_assigns.fetch(:map_color, nil) %>
+<% row_paths = local_assigns.fetch(:row_paths, {}) %>
+<% total = data.sum { |_, count| count } %>
+<div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-sm font-semibold text-gray-700"><%= title %></h2>
+    <span class="text-xs text-gray-500"><%= data.size %></span>
+  </div>
+
+  <% if data.empty? %>
+    <p class="text-sm text-gray-400 italic text-center py-8"><%= empty_message || "No data yet." %></p>
+  <% else %>
+    <% if chart == :pie %>
+      <%= pie_chart data, colors: palette, legend: false, height: "220px" %>
+    <% elsif chart == :bar %>
+      <%= bar_chart data, colors: [ palette.first ], height: "#{[ data.size * 28, 200 ].max}px",
+                    library: { indexAxis: "y", plugins: { legend: { display: false } } } %>
+    <% elsif chart == :map %>
+      <%# US choropleth: each state filled by its count (see us_map_chart_controller.js). %>
+      <div data-controller="us-map-chart" data-us-map-chart-counts-value="<%= data.to_h.to_json %>"
+           <%= "data-us-map-chart-color-value=#{map_color}".html_safe if map_color %> class="h-56">
+        <canvas data-us-map-chart-target="canvas"></canvas>
+      </div>
+    <% elsif chart == :world_map %>
+      <%# World choropleth: each country filled by its count (see world_map_chart_controller.js). %>
+      <div data-controller="world-map-chart" data-world-map-chart-counts-value="<%= data.to_h.to_json %>"
+           <%= "data-world-map-chart-color-value=#{map_color}".html_safe if map_color %> class="h-56">
+        <canvas data-world-map-chart-target="canvas"></canvas>
+      </div>
+    <% end %>
+
+    <table class="w-full mt-3 text-sm">
+      <tbody>
+        <% data.each_with_index do |(label, count), i| %>
+          <% path = row_paths[label] %>
+          <tr class="border-t border-gray-100 <%= "hover:bg-gray-50 cursor-pointer transition-colors" if path %>"
+              <% if path %>onclick="window.location='<%= path %>'"<% end %>>
+            <td class="py-1 text-gray-700">
+              <% if chart == :pie %>
+                <span class="inline-block w-3 h-3 rounded-sm mr-2 align-middle" style="background-color: <%= palette[i % palette.size] %>"></span>
+              <% end %>
+              <% if path %>
+                <%= link_to label, path, class: "hover:underline" %>
+              <% else %>
+                <%= label %>
+              <% end %>
+            </td>
+            <td class="py-1 text-right text-gray-500 tabular-nums whitespace-nowrap">
+              <%= count %><span class="text-gray-400"> · <%= total.zero? ? 0 : (count * 100.0 / total).round(1) %>%</span>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>
