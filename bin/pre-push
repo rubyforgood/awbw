@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 
-eval "$(command /opt/homebrew/bin/mise activate zsh)"
+# Put mise's tools (Ruby, gems) on PATH. Resolve mise from PATH first so this
+# works off macOS/Homebrew too, falling back to the Homebrew location. Shims
+# mode emits a single POSIX `export PATH=...`, activating regardless of shell.
+mise_bin="$(command -v mise || true)"
+if [ -z "$mise_bin" ] && [ -x /opt/homebrew/bin/mise ]; then
+  mise_bin=/opt/homebrew/bin/mise
+fi
+[ -n "$mise_bin" ] && eval "$("$mise_bin" activate bash --shims)"
 
-# Run rubocop on all Ruby files
+# Run rubocop on all Ruby files. Use the binstub (not `bundle exec`) so it
+# resolves the gem reliably — matches ai/security.
 echo "Running rubocop..."
-bundle exec rubocop || exit 1
+bin/rubocop || exit 1
 
 # Run brakeman security scan
 echo "Running brakeman security scan..."
-bundle exec brakeman --no-pager -q || exit 1
+bin/brakeman --no-pager -q || exit 1

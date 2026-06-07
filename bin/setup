@@ -71,10 +71,15 @@ FileUtils.chdir APP_ROOT do
   system! "RAILS_ENV=test npx vite build --mode test"
 
   puts "\n== Installing git hooks =="
-  system! 'cp bin/pre-commit .git/hooks/pre-commit'
-  system! 'chmod +x .git/hooks/pre-commit'
-  system! 'cp bin/pre-push .git/hooks/pre-push'
-  system! 'chmod +x .git/hooks/pre-push'
+  # Resolve the hooks dir via git so this works in worktrees too, where .git is
+  # a gitdir-pointer file and hooks live in the shared common dir.
+  hooks_dir = `git rev-parse --git-path hooks`.strip
+  FileUtils.mkdir_p(hooks_dir)
+  %w[pre-commit pre-push].each do |hook|
+    dest = File.join(hooks_dir, hook)
+    FileUtils.cp("bin/#{hook}", dest)
+    FileUtils.chmod(0o755, dest)
+  end
   puts "\n== Cleaning logs and tempfiles =="
   system! "bin/rails log:clear tmp:clear"
 
