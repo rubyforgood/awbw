@@ -18,6 +18,13 @@ RSpec.describe Comment, type: :model do
       comment = build(:comment, commentable: user, body: nil)
       expect(comment).not_to be_valid
     end
+
+    it 'allows an existing comment to be saved without a body (body is only required on new records)' do
+      user = create(:user)
+      comment = create(:comment, commentable: user, body: "Test comment")
+      comment.body = nil
+      expect(comment).to be_valid
+    end
   end
 
   describe 'polymorphic association' do

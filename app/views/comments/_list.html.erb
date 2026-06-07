@@ -7,6 +7,9 @@
             <%= comment.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
           </span>
           <div class="text-sm text-gray-900">
+            <% if comment.topic.present? %>
+              <div class="font-bold uppercase tracking-wide"><%= comment.topic %></div>
+            <% end %>
             <%= simple_format(comment.body) %>
           </div>
         </div>
