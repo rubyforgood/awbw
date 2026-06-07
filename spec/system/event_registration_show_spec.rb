@@ -22,7 +22,7 @@ RSpec.describe "Event registration show page", type: :system do
       sign_in(user)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_link("Back to Event", href: event_path(event, reg: registration.slug))
+      expect(page).to have_link("Back to event", href: event_path(event, reg: registration.slug))
     end
   end
 
@@ -111,7 +111,7 @@ RSpec.describe "Event registration show page", type: :system do
     it "allows guests to view the ticket via slug" do
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_text("Event Registration")
+      expect(page).to have_text("Event registration")
       expect(page).to have_text(registration.registrant.full_name)
     end
   end

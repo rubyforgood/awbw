@@ -2,30 +2,35 @@
 
 <% reg = @form_submission.person.event_registrations.find_by(event: @event) %>
 <% back_path = reg&.slug.present? ? registration_ticket_path(reg.slug) : event_path(@event) %>
-<div class="flex flex-wrap items-center gap-2 mb-4">
-  <%= link_to "← Back to Registration", back_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+<div class="max-w-2xl mx-auto px-4 pt-4">
+  <div class="flex flex-wrap items-center gap-2">
+    <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to registration
+    <% end %>
+  </div>
 </div>
 
-<div class="max-w-2xl mx-auto py-8 px-4">
+<div class="max-w-2xl mx-auto pb-12 pt-6 px-4">
 
   <%# ---- FORM RESPONSES CARD ---- %>
-  <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
 
     <%# Card Header %>
-    <div class="bg-blue-900 text-white px-6 py-4">
-      <div class="flex items-center gap-8">
+    <div class="relative bg-gradient-to-r from-blue-900 to-blue-800 text-white px-6 sm:px-8 py-5">
+      <div class="flex items-center gap-5">
         <div class="shrink-0">
-          <%= image_tag("logo.png", alt: "Organization logo", class: "h-8 w-auto") %>
+          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
         </div>
         <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide">Registration Details</h1>
+          <h1 class="text-xl font-semibold tracking-wide leading-tight">Registration details</h1>
           <p class="text-sm text-blue-200"><%= @event.title %></p>
         </div>
       </div>
+      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
 
     <%# Card Body %>
-    <div class="px-6 py-6 space-y-1">
+    <div class="px-6 sm:px-8 py-7 space-y-1">
       <%
         row_groups = [
           { keys: %w[first_name last_name], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },

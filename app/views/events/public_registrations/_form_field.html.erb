@@ -2,10 +2,11 @@
 <% return if field.group_header? %>
 
 <% error = @field_errors&.dig(field.id) %>
-<% error_border = error ? "border-red-500" : "border-gray-300" %>
+<% error_border = error ? "border-red-400 focus:border-red-500 focus:ring-red-500/30" : "border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-blue-500/30" %>
+<% input_classes = "w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition focus:outline-none focus:ring-2 #{error_border}" %>
 
 <div class="mb-5">
-  <label class="block text-sm font-medium text-gray-700 mb-1" for="public_registration_form_fields_<%= field.id %>">
+  <label class="block text-sm font-semibold text-gray-700 mb-1.5" for="public_registration_form_fields_<%= field.id %>">
     <%= label || field.name %>
     <% if field.required %>
       <span class="text-red-500">*</span>
@@ -13,7 +14,7 @@
   </label>
 
   <% if field.hint_text.present? %>
-    <p class="text-xs text-gray-500 mb-1"><%= field.hint_text %></p>
+    <p class="text-xs text-gray-500 mb-1.5"><%= field.hint_text %></p>
   <% end %>
 
   <% field_name = "public_registration[form_fields][#{field.id}]" %>
@@ -24,7 +25,7 @@
     <% if field.field_identifier&.end_with?("_state") %>
       <select name="<%= field_name %>"
               id="<%= field_id %>"
-              class="w-full rounded-md border <%= error_border %> px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              class="<%= input_classes %>"
               <%= "required" if field.required %>>
         <option value="">Select a state</option>
         <% us_states.each do |name, abbr| %>
@@ -47,7 +48,7 @@
              name="<%= field_name %>"
              id="<%= field_id %>"
              value="<%= value %>"
-             class="w-full rounded-md border <%= error_border %> px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+             class="<%= input_classes %>"
              <%= "required" if field.required %>
              <%= raw(extra_attrs.join(" ")) %>>
     <% end %>
@@ -56,13 +57,13 @@
     <textarea name="<%= field_name %>"
               id="<%= field_id %>"
               rows="4"
-              class="w-full rounded-md border <%= error_border %> px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              class="<%= input_classes %>"
               <%= "required" if field.required %>><%= value %></textarea>
 
   <% when "multiple_choice_radio" %>
-    <div class="flex flex-wrap gap-4 mt-1">
+    <div class="flex flex-wrap gap-2.5 mt-1">
       <% field.form_field_answer_options.includes(:answer_option).each do |ffao| %>
-        <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+        <label class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <input type="radio"
                  name="<%= field_name %>"
                  value="<%= ffao.answer_option.name %>"
@@ -82,9 +83,9 @@
       <%# Professional fields: render dynamic sector/category options %>
       <% if field.field_identifier == "primary_service_area" %>
         <% options = Sector.published.order(:name) %>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-1">
           <% options.each do |sector| %>
-            <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <label class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
               <input type="checkbox"
                      name="<%= checkbox_name %>"
                      value="<%= sector.id %>"
@@ -103,9 +104,9 @@
         }[field.field_identifier] %>
         <% ct = CategoryType.find_by(name: category_type_name) %>
         <% options = ct&.categories&.published&.order(:position, :name) || [] %>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-1">
           <% options.each do |category| %>
-            <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <label class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
               <input type="checkbox"
                      name="<%= checkbox_name %>"
                      value="<%= category.id %>"
@@ -118,9 +119,9 @@
       <% end %>
     <% else %>
       <%# Standard answer options %>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-1">
         <% field.form_field_answer_options.includes(:answer_option).each do |ffao| %>
-          <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <label class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
             <input type="checkbox"
                    name="<%= checkbox_name %>"
                    value="<%= ffao.answer_option.name %>"
@@ -135,6 +136,8 @@
   <% end %>
 
   <% if error %>
-    <p class="text-xs text-red-600 mt-1"><%= field.name %> <%= error %></p>
+    <p class="flex items-center gap-1.5 text-xs text-red-600 mt-1.5">
+      <i class="fa-solid fa-circle-exclamation"></i><%= field.name %> <%= error %>
+    </p>
   <% end %>
 </div>
