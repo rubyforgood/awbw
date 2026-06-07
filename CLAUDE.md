@@ -243,7 +243,8 @@ See `ai/` directory for executable scripts:
 | `ai/server` | Start dev services (web + vite) |
 | `ai/console` | Rails console |
 | `ai/routes -g pattern` | Search Rails routes |
-| `ai/db-migrate` | Run database migrations |
+| `ai/migrate` | Run database migrations |
+| `ai/seed` | Load the full dev sample dataset (`db:seed:dev`) into the workspace DB |
 | `ai/security` | Security scan: Brakeman + bundler-audit (mirrors CI) |
 
 > **"ai <name>" means the `ai/` script of that name** (e.g. "ai test" → `ai/test`, "ai security" → `ai/security`) — shell scripts in `ai/`, not slash-command skills. If a referenced `ai/<name>` script doesn't exist, ask what's intended rather than substituting a similarly named skill. (`ai/recap` is special — it triggers the agent **Session recap** behavior above, not a real script's output; never confuse it with the `/audit` design skill or the `ai/security` scan.)
