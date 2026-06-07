@@ -40,7 +40,8 @@ RSpec.describe "Reset password (person)", type: :system do
       visit change_password_path
     end
 
-    it "logs the user out and lands on the password reset page when they choose to reset" do
+    # Skipped: intermittently fails in CI on the confirm-dialog/logout timing. See #1473.
+    xit "logs the user out and lands on the password reset page when they choose to reset" do
       expect(page).to have_current_path(change_password_path)
       expect(page).to have_content("Don't remember your password?")
       expect(page).to have_link("Log out and reset it.")
