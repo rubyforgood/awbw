@@ -71,6 +71,11 @@ export default class extends Controller {
         padding: 0 !important;
         line-height: 1.5rem !important;
       }
+      /* Opaque white field so colored card backgrounds don't show through */
+      .remote-select-container .ts-wrapper,
+      .remote-select-container .ts-control {
+        background-color: #fff !important;
+      }
     `;
     document.head.appendChild(style);
   }

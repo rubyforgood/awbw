@@ -3,6 +3,9 @@ import { application } from "./application"
 import AffiliationDatesController from "./affiliation_dates_controller"
 application.register("affiliation-dates", AffiliationDatesController)
 
+import AllocationRefController from "./allocation_ref_controller"
+application.register("allocation-ref", AllocationRefController)
+
 import AnchorHighlightController from "./anchor_highlight_controller"
 application.register("anchor-highlight", AnchorHighlightController)
 
@@ -95,6 +98,12 @@ application.register("rhino-source", RhinoSourceController)
 
 import ScholarshipPreviewController from "./scholarship_preview_controller"
 application.register("scholarship-preview", ScholarshipPreviewController)
+
+import ScholarshipRequestedController from "./scholarship_requested_controller"
+application.register("scholarship-requested", ScholarshipRequestedController)
+
+import CeCreditRequestedController from "./ce_credit_requested_controller"
+application.register("ce-credit-requested", CeCreditRequestedController)
 
 import SearchBoxController from "./search_box_controller"
 application.register("search-box", SearchBoxController)

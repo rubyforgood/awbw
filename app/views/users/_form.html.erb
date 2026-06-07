@@ -3,6 +3,7 @@
   <%= render "shared/errors", resource: @user if @user.errors.any? %>
   <%= render "duplicate_users_warning" %>
   <%= f.hidden_field :person_id, value: @person&.id || f.object.person_id || params[:person_id] %>
+  <%= hidden_field_tag :event_registration_id, params[:event_registration_id] if params[:event_registration_id].present? %>
 
   <!-- Account Details -->
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">

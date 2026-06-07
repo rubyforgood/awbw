@@ -35,13 +35,13 @@ module EventHelper
     [ top_html, bottom_html ]
   end
 
-  def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {})
+  def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil)
     bg = DomainTheme.bg_class_for(:events, intensity: 100)
     hover_bg = DomainTheme.bg_class_for(:events, intensity: 100, hover: true)
     text = DomainTheme.text_class_for(:events)
     border = DomainTheme.border_class_for(:events)
 
-    link_to event_path(event),
+    link_to path || event_path(event),
             data: data,
             style: "min-height: 3.5rem;",
             class: "group relative flex items-center gap-2
