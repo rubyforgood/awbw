@@ -24,6 +24,7 @@
     "@tiptap/extension-youtube": "^3.13.0",
     "@tiptap/suggestion": "^3.15.3",
     "chart.js": "^4.5.1",
+    "chartjs-chart-geo": "^4.3.6",
     "chartkick": "^5.0.1",
     "from": "^0.1.7",
     "rhino-editor": "^0.18.0",
@@ -33,6 +34,8 @@
     "tippy.js": "^6.3.7",
     "tom-select": "^2.4.6",
     "trix": "^2.1.15",
-    "vite-plugin-rails": "^0.5.0"
+    "us-atlas": "^3.0.1",
+    "vite-plugin-rails": "^0.5.0",
+    "world-atlas": "^2.0.2"
   }
 }
