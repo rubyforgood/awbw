@@ -28,7 +28,7 @@
     "from": "^0.1.7",
     "rhino-editor": "^0.18.0",
     "sortablejs": "^1.15.6",
-    "swiper": "^12.0.3",
+    "swiper": "^12.2.0",
     "tailwindcss": "^4.1.13",
     "tippy.js": "^6.3.7",
     "tom-select": "^2.4.6",
