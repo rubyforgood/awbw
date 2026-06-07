@@ -78,6 +78,7 @@ class EventRegistrationsController < ApplicationController
     @event_registration.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
     if @event_registration.save
+      cleanup_unrequested_scholarship
       respond_to do |format|
         format.turbo_stream
         format.html {
@@ -185,7 +186,21 @@ class EventRegistrationsController < ApplicationController
   private
 
   def set_event_registration
-    @event_registration = EventRegistration.includes({ registrant: { affiliations: :organization } }, { event: [ :location, :event_forms ] }, :organizations, comments: [ :created_by, :updated_by ]).find(params[:id])
+    @event_registration = EventRegistration.includes({ registrant: [ :user, { affiliations: :organization } ] }, { event: [ :location, :event_forms ] }, :organizations, comments: [ :created_by, :updated_by ]).find(params[:id])
+  end
+
+  # When an admin unchecks "Requested" and saves, tidy up an associated
+  # scholarship that was never actually awarded — i.e. an empty stub with no
+  # amount and incomplete tasks. A funded or completed scholarship is left alone.
+  def cleanup_unrequested_scholarship
+    return unless allowed_to?(:manage?, with: EventRegistrationPolicy)
+    return unless @event_registration.saved_change_to_scholarship_requested?
+    return if @event_registration.scholarship_requested?
+
+    scholarship = @event_registration.scholarships.first
+    return unless scholarship && scholarship.amount_cents.to_i.zero? && !scholarship.tasks_completed?
+
+    scholarship.destroy
   end
 
   # Strong parameters

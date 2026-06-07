@@ -1,0 +1,81 @@
+<%# ---- User account — the registrant's login account status, with shortcuts
+    into their full user record and the notifications sent for this
+    registration. ---- %>
+<% account = event_registration.registrant.user %>
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:users, intensity: 100) %> <%= DomainTheme.text_class_for(:users, intensity: 600) %>">
+      <i class="fa-solid fa-user-shield"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700">User account</h2>
+    <div class="ml-auto flex items-center gap-3">
+      <%= link_to notifications_path(email: event_registration.registrant.preferred_email),
+                  class: "inline-flex items-center gap-1.5 text-xs font-medium #{DomainTheme.text_class_for(:users, intensity: 600)} hover:underline",
+                  data: { turbo_frame: "_top" } do %>
+        <i class="fa-solid fa-bell text-[0.7rem]"></i>
+        View notifications
+      <% end %>
+      <% if account && allowed_to?(:show?, account) %>
+        <%= link_to "View account", user_path(account),
+                    class: "text-xs font-medium #{DomainTheme.text_class_for(:users, intensity: 600)} hover:underline",
+                    data: { turbo_frame: "_top" } %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="p-4">
+    <% if account %>
+      <div class="flex flex-wrap items-center gap-2">
+        <% if account.locked_at.present? %>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-0.5 text-xs font-medium text-red-700">
+            <i class="fa-solid fa-lock"></i>
+            Locked
+          </span>
+        <% elsif account.inactive? %>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-0.5 text-xs font-medium text-gray-500">
+            <i class="fa-solid fa-ban"></i>
+            Inactive
+          </span>
+        <% elsif account.confirmed_at.blank? %>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-0.5 text-xs font-medium text-amber-700">
+            <i class="fa-solid fa-clock"></i>
+            <%= account.welcome_instructions_sent_at.present? ? "Invited — not confirmed" : "Unconfirmed" %>
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-0.5 text-xs font-medium text-green-700">
+            <i class="fa-solid fa-circle-check"></i>
+            Active
+          </span>
+        <% end %>
+
+        <% if account.super_user? %>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-0.5 text-xs font-medium text-blue-700">
+            <i class="fa-solid fa-user-shield"></i>
+            Admin
+          </span>
+        <% end %>
+
+        <% if account.unconfirmed_email.present? %>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-0.5 text-xs font-medium text-amber-700" title="Pending change to <%= account.unconfirmed_email %>">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Email change pending
+          </span>
+        <% end %>
+      </div>
+
+      <p class="mt-2 text-xs text-gray-500">
+        <%= account.email %>
+        <% if account.last_sign_in_at.present? %>
+          &middot; last signed in <%= time_ago_in_words(account.last_sign_in_at) %> ago
+        <% elsif account.confirmed_at.present? %>
+          &middot; never signed in
+        <% end %>
+      </p>
+    <% else %>
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-0.5 text-xs font-medium text-gray-500">
+        <i class="fa-solid fa-user-slash"></i>
+        No user account
+      </span>
+    <% end %>
+  </div>
+</section>

@@ -275,6 +275,7 @@ end
 - `remote_select` — AJAX-powered select dropdown
 - `reveal_section` — Expand a collapsible section and scroll to it when loaded via matching URL hash
 - `rhino_source` — Rich text editor integration
+- `scholarship_preview` — Live-preview the scholarship's allocated amount as the edit form changes
 - `searchable_checkbox` — TomSelect checkbox-style multi-select
 - `searchable_select` — Tom Select autocomplete
 - `share_url` — URL sharing/copying

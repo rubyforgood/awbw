@@ -1,12 +1,32 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-2xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="mb-6">
+
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(:scholarships) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <%# Top bar: back link + secondary links, matching the registration edit page %>
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
     <% if @allocatable.respond_to?(:event) %>
-      <%= link_to "← Manage registrants", manage_event_path(@allocatable.event), class: "text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block" %>
+      <%= link_to manage_event_path(@allocatable.event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
+      <% end %>
+    <% else %>
+      <span></span>
     <% end %>
-    <h1 class="text-2xl font-semibold text-gray-900">New Scholarship</h1>
+    <div class="flex items-center gap-3">
+      <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    </div>
+  </div>
+
+  <%# Title block: event context above, action below %>
+  <div class="text-center mb-8">
+    <% if @allocatable.respond_to?(:event) %>
+      <%= link_to @allocatable.event.title, event_path(@allocatable.event),
+                  class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
+    <% end %>
+    <h1 class="mt-1 flex items-center justify-center gap-3 text-3xl sm:text-4xl font-extrabold text-black">
+      <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"></i>
+      New scholarship
+    </h1>
     <% if @scholarship.recipient.present? %>
-      <p class="text-gray-600 mt-1"><%= @scholarship.recipient.full_name %> — <%= @allocatable.event.title %></p>
+      <p class="mt-2 text-sm text-gray-500"><%= @scholarship.recipient.full_name %></p>
     <% end %>
   </div>
 

@@ -6,6 +6,9 @@ application.register("affiliation-dates", AffiliationDatesController)
 import AnchorHighlightController from "./anchor_highlight_controller"
 application.register("anchor-highlight", AnchorHighlightController)
 
+import AttendanceStatusController from "./attendance_status_controller"
+application.register("attendance-status", AttendanceStatusController)
+
 import AssetPickerController from "./asset_picker_controller"
 application.register("asset-picker", AssetPickerController)
 
@@ -89,6 +92,9 @@ application.register("reveal-section", RevealSectionController)
 
 import RhinoSourceController from "./rhino_source_controller"
 application.register("rhino-source", RhinoSourceController)
+
+import ScholarshipPreviewController from "./scholarship_preview_controller"
+application.register("scholarship-preview", ScholarshipPreviewController)
 
 import SearchBoxController from "./search_box_controller"
 application.register("search-box", SearchBoxController)

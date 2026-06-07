@@ -1,0 +1,31 @@
+require "rails_helper"
+
+RSpec.describe "Scholarships", type: :request do
+  let(:admin)        { create(:user, :with_person, super_user: true) }
+  let(:event)        { create(:event, cost_cents: 10000) }
+  let(:registration) { create(:event_registration, event: event) }
+  let(:scholarship)  { create(:scholarship, recipient: registration.registrant, amount_cents: 5000, tasks_completed: true) }
+  let!(:allocation)  { create(:allocation, source: scholarship, allocatable: registration, amount: 5000) }
+
+  before { sign_in admin }
+
+  describe "GET /scholarships/:id/edit" do
+    it "renders the cost summary with event cost, still owed, and scholarship allocated" do
+      get edit_scholarship_path(scholarship)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Event cost")
+      expect(response.body).to include("Still owed")
+      expect(response.body).to include("Scholarship allocated")
+    end
+
+    it "shows this scholarship's allocated amount and wires the live-preview controller" do
+      get edit_scholarship_path(scholarship)
+
+      expect(response.body).to include("scholarship-preview")
+      expect(response.body).to include("scholarship-preview-target=\"allocated\"")
+      # Event cost $100.00 with $50.00 allocated leaves $50.00 owed.
+      expect(response.body).to include("$50.00")
+    end
+  end
+end

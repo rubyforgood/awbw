@@ -1,195 +1,273 @@
 <%= simple_form_for(event_registration, data: { turbo: false }) do |f| %>
   <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
-  <%= render 'shared/errors', resource: event_registration if event_registration.errors.any? %>
+  <%= render "shared/errors", resource: event_registration if event_registration.errors.any? %>
 
-  <div class="p-3" data-controller="org-toggle">
-    <div class="flex flex-col md:flex-row md:space-x-4">
-      <div class="flex-1 mb-4 md:mb-0">
-        <% if f.object.persisted? %>
-          <%= link_to event_path(f.object.event), class: "block text-sm font-medium text-blue-700 hover:text-blue-900 underline mb-1" do %>
-            Event
-          <% end %>
-          <p class="text-gray-900 font-medium py-2"><%= f.object.event.title %></p>
-        <% elsif f.object.event_id.present? %>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Event</label>
-          <p class="text-gray-900 font-medium py-2"><%= f.object.event.title %></p>
-          <p class="text-sm text-gray-500 -mt-1"><%= f.object.event.decorate.times(display_day: true, display_date: true) %></p>
-          <%= f.hidden_field :event_id %>
-        <% else %>
-          <%= f.input :event_id,
-                      collection: @events,
-                      label_method: :time_title, value_method: :id,
-                      include_blank: true,
-                      selected: f.object.event_id %>
-        <% end %>
-      </div>
-
-      <div class="flex-1 mb-4 md:mb-0">
-        <% if f.object.persisted? %>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Registrant</label>
-          <div class="py-2">
-            <%= person_profile_button(f.object.registrant, subtitle: f.object.registrant.preferred_email) %>
-            <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
-            <% connected_org_ids = f.object.organizations.map(&:id) %>
-
-            <% if active_orgs.any? %>
-              <p class="text-xs text-gray-500 mt-1">
-                <% active_orgs.each_with_index do |org, i| %>
-                  <%= org.name %>
-
-                  <% unless connected_org_ids.include?(org.id) %>
-                    <button
-                      type="button"
-                      class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 ml-0.5 cursor-pointer"
-                      title="Add to registration"
-                      data-action="click->org-toggle#add"
-                      data-org-id="<%= org.id %>"
-                      data-org-name="<%= org.name %>"
-                    >
-                      +
-                    </button>
-                  <% end %>
-
-                  <%= ", " unless i == active_orgs.size - 1 %>
-                <% end %>
-              </p>
-            <% end %>
-          </div>
-        <% else %>
-          <%= f.input :registrant_id,
-            collection: f.object.registrant.present? ? [[
-              f.object.registrant.preferred_email.present? ? "#{f.object.registrant.full_name} (#{f.object.registrant.preferred_email})" : f.object.registrant.full_name,
-              f.object.registrant.id
-            ]] : [],
-            include_blank: true,
-            required: true,
-            input_html: {
-              data: {
-                controller: "remote-select",
-                remote_select_model_value: "person",
-                remote_select_exclude_value: @exclude_registrant_ids
-              }.compact
-            },
-            label: "Registrant" %>
-        <% end %>
-      </div>
-    </div>
-
+  <div data-controller="org-toggle" data-org-toggle-remote-select-outlet="#org-search" class="space-y-6">
     <% if f.object.persisted? %>
-      <div class="flex flex-col md:flex-row md:space-x-4 mt-4">
-        <div class="flex-1 mb-4 md:mb-0"><%= f.input :status,
-                      collection: EventRegistration::ATTENDANCE_STATUSES.map { |s| [s.humanize, s] },
-                      include_blank: false,
-                      selected: f.object.status %></div>
-
-        <div class="flex-1 mb-4 md:mb-0" data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
-          <label class="block text-xs font-medium text-gray-400 mb-1">Organizations represented by this registration</label>
-
-          <div class="flex flex-wrap gap-1.5" data-org-toggle-target="chips">
-            <% f.object.organizations.sort_by(&:name).each do |org| %>
-              <label class="inline-flex items-center gap-1 px-4 py-1 rounded-full text-xs border cursor-pointer transition-colors bg-red-50 border-red-200 text-red-400 line-through has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-200 has-[:checked]:text-emerald-800 has-[:checked]:no-underline">
-                <input
-                  type="checkbox"
-                  name="event_registration[organization_ids][]"
-                  value="<%= org.id %>"
-                  checked
-                  class="sr-only"
-                >
-
-                <span><%= org.name %></span>
-                <span class="text-xs opacity-50">&times;</span>
-              </label>
-            <% end %>
-          </div>
-
-          <p class="text-xs text-gray-400 mt-1">Click to toggle. Crossed-out organizations will be removed on save.</p>
+      <%# ---- Registrant identity banner — who this registration is for, when they
+          registered, and links to any form submissions. The hero of the page. ---- %>
+      <% event_form_ids = f.object.event.form_ids %>
+      <% submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: f.object.registrant_id).order(Arel.sql("forms.name")).pluck(Arel.sql("forms.name"), :created_at) : [] %>
+      <% form_show_params = f.object.slug.present? ? { reg: f.object.slug } : { person_id: f.object.registrant_id } %>
+      <div class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+        <div class="min-w-0 flex-1">
+          <%= person_profile_button(f.object.registrant, subtitle: f.object.registrant.preferred_email) %>
         </div>
-      </div>
-      <div class="flex flex-col md:flex-row md:space-x-4 mt-4">
-        <div class="flex-1 mb-4 md:mb-0">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Payment status</label>
 
-          <% if f.object.event.cost_cents.to_i > 0 %>
-            <p class="py-2 text-sm <%= f.object.paid_in_full? ? 'text-green-700' : 'text-amber-700 font-medium' %>"><%= f.object.paid_in_full? ? "Paid in full" : "Not paid in full" %></p>
-            <% unless f.object.paid_in_full? %>
-              <% paid_cents = f.object.allocations_sum %>
-              <% due_cents = f.object.event.cost_cents - paid_cents %>
-              <% if paid_cents > 0 %>
-                <p class="text-xs text-gray-500">$<%= "%.2f" % (paid_cents / 100.0) %> paid &middot; $<%= "%.2f" % (due_cents / 100.0) %> due</p>
-              <% end %>
+        <div class="shrink-0 sm:w-56">
+          <p class="flex items-center gap-1.5 text-xs text-gray-400">
+            <i class="fa-solid fa-clipboard-check <%= DomainTheme.text_class_for(:event_registrations, intensity: 400) %>"></i>
+            Registered on <%= f.object.created_at.strftime("%b %-d, %Y") %>
+          </p>
+
+          <% submissions.each_with_index do |(form_name, ts), i| %>
+            <%= link_to event_public_registration_path(f.object.event, **form_show_params),
+                        class: "mt-1.5 flex items-center gap-1.5 text-xs font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
+                        target: "_blank",
+                        title: "#{form_name} — submitted #{ts.strftime('%b %-d, %Y')}",
+                        data: { turbo_frame: "_top" } do %>
+              <i class="fa-solid fa-file-lines"></i>
+              View submission<%= " ##{i + 1}" if submissions.size > 1 %>
             <% end %>
-          <% else %>
-            <p class="py-2 text-sm text-gray-500">Free event</p>
           <% end %>
         </div>
+      </div>
 
-        <div class="flex-1 mb-4 md:mb-0">
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <div class="font-semibold text-sm text-gray-700 mb-2">Scholarship</div>
-            <%= f.input :scholarship_requested, as: :boolean, label: "Requested" %>
+      <%# ---- Registration status — single-row box: title on the left, the pill
+          dropdown on the right. The pill matches the roster badge but is saved
+          with the form (no autosubmit), so an "Unsaved" badge appears while the
+          chosen status differs from what's stored. ---- %>
+      <% status_styles = {
+           "registered"            => "bg-blue-50 text-blue-700 border-blue-200",
+           "attended"              => "bg-green-50 text-green-700 border-green-200",
+           "incomplete_attendance" => "bg-amber-50 text-amber-700 border-amber-200",
+           "cancelled"             => "bg-gray-50 text-gray-500 border-gray-200",
+           "no_show"               => "bg-red-50 text-red-700 border-red-200"
+         } %>
+      <% status_icons = {
+           "registered"            => "fa-clipboard-list",
+           "attended"              => "fa-circle-check",
+           "incomplete_attendance" => "fa-clock",
+           "cancelled"             => "fa-ban",
+           "no_show"               => "fa-circle-xmark"
+         } %>
+      <% current_style = status_styles[f.object.status] || "bg-gray-50 text-gray-500 border-gray-200" %>
+      <% current_icon = status_icons[f.object.status] || "fa-question" %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex items-center gap-3 px-4 py-3"
+             data-controller="attendance-status"
+             data-attendance-status-styles-value="<%= status_styles.to_json %>"
+             data-attendance-status-icons-value="<%= status_icons.to_json %>"
+             data-attendance-status-initial-value="<%= f.object.status %>">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:event_registrations, intensity: 100) %> <%= DomainTheme.text_class_for(:event_registrations, intensity: 600) %>">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">Registration status</h2>
 
-            <% if (s = f.object.scholarships.first) %>
-              <div class="mt-2 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-medium">$<%= "%.2f" % (s.amount_cents.to_f / 100) %></span>
+          <span data-attendance-status-target="dirty"
+                class="hidden inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[0.65rem] font-medium text-amber-700"
+                title="Save the form to apply this change">
+            <i class="fa-solid fa-pen text-[0.55rem]"></i>
+            Unsaved
+          </span>
 
-                  <%= link_to "Manage", edit_scholarship_path(s),
-                              class: "text-sm text-blue-600 hover:text-blue-800 underline",
-                              data: { turbo_frame: "_top" } %>
-                </div>
+          <div data-attendance-status-target="pill" class="relative ml-auto inline-flex items-center gap-1.5 rounded-full text-sm font-medium border px-5 py-1 <%= current_style %>">
+            <i data-attendance-status-target="icon" class="fas <%= current_icon %>"></i>
+            <%= f.select :status,
+                  EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
+                  { selected: f.object.status },
+                  class: "absolute inset-0 w-full opacity-0 cursor-pointer",
+                  data: { "attendance-status-target": "select", action: "attendance-status#update" },
+                  "aria-label": "Registration status" %>
+            <span data-attendance-status-target="label"><%= f.object.attendance_status_label %></span>
+            <i class="fas fa-chevron-down text-[0.6rem]"></i>
+          </div>
+        </div>
+      </section>
 
-                <% if s.tasks_completed? %>
-                  <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-3 py-0.5 bg-green-50 text-green-700 border-green-200">
-                    <i class="fas fa-graduation-cap text-xs"></i>
-                    Tasks Completed
-                  </span>
+      <%# ---- Organizations represented + user account, side by side ---- %>
+      <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
+      <% connected_org_ids = f.object.organizations.map(&:id) %>
+      <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
+      <div class="grid grid-cols-1 items-start gap-6 sm:grid-cols-2">
+        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>">
+              <i class="fa-solid fa-building"></i>
+            </span>
+            <h2 class="text-sm font-semibold text-gray-700">Organizations represented</h2>
+            <button
+              type="button"
+              data-org-toggle-target="addButton"
+              data-action="org-toggle#showAddForm"
+              class="ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline cursor-pointer">
+              <i class="fa-solid fa-plus text-[0.6rem]"></i>
+              Add organization
+            </button>
+          </div>
+
+          <div class="space-y-4 p-4">
+            <div data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
+              <div class="flex flex-wrap gap-1.5" data-org-toggle-target="chips">
+                <% f.object.organizations.sort_by(&:name).each do |org| %>
+                  <label class="inline-flex items-center gap-1 px-4 py-1 rounded-full text-xs border cursor-pointer transition-colors bg-red-50 border-red-200 text-red-400 line-through has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-200 has-[:checked]:text-emerald-800 has-[:checked]:no-underline">
+                    <input
+                      type="checkbox"
+                      name="event_registration[organization_ids][]"
+                      value="<%= org.id %>"
+                      checked
+                      class="sr-only"
+                    >
+
+                    <span><%= org.name %></span>
+                    <span class="text-xs opacity-50">&times;</span>
+                  </label>
                 <% end %>
               </div>
-            <% else %>
-              <%= link_to "Create", new_scholarship_path(allocatable_sgid: f.object.to_sgid.to_s),
-                          class: "text-sm text-blue-600 hover:text-blue-800 underline",
-                          data: { turbo_frame: "_top" } %>
+
+              <p class="mt-2 text-xs text-gray-400">Click a tag to toggle. Crossed-out tags will be removed on save.</p>
+            </div>
+
+            <% if f.object.organizations.none? %>
+              <p data-org-toggle-target="empty" class="text-sm text-gray-400">No organizations linked to this registration.</p>
             <% end %>
+
+            <div data-org-toggle-target="addForm" class="hidden <%= "border-t border-gray-100 pt-4" if f.object.organizations.any? %>">
+              <label class="mb-1.5 block text-xs font-medium text-gray-400" for="org-search">Search for an organization to add</label>
+              <select
+                id="org-search"
+                data-controller="remote-select"
+                data-remote-select-model-value="organization"
+                data-remote-select-exclude-value="<%= connected_org_ids.join(",") %>"
+                data-action="change->org-toggle#addFromRemote"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-emerald-400 focus:ring-emerald-400">
+                <option value=""></option>
+                <% addable_orgs.each do |org| %>
+                  <option value="<%= org.id %>"><%= org.name %></option>
+                <% end %>
+              </select>
+              <p class="mt-1.5 text-xs text-gray-400">Added organizations are saved when you save the form.</p>
+            </div>
           </div>
-        </div>
+        </section>
+
+        <%= render "account_status", event_registration: f.object %>
       </div>
-    <% end %>
 
-    <% if f.object.persisted? %>
-      <!-- Comments -->
-      <div class="form-group space-y-4" id="comments-section">
-        <div class="font-semibold text-gray-700 mb-2">Comments</div>
+      <%# ---- Scholarship and continuing education, side by side. Attendance status
+          lives in the page header as a live badge, matching the manage roster.
+          No items-start so both cards stretch to equal height. ---- %>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
 
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm" data-controller="paginated-fields comment-edit-toggle" data-paginated-fields-per-page-value="5">
+        <%# ---- CE status — placeholder scaffold for future continuing-education tracking (no-op for now) ---- %>
+        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+              <i class="fa-solid fa-certificate"></i>
+            </span>
+            <h2 class="text-sm font-semibold text-gray-700">Continuing Education</h2>
+          </div>
+
+          <div class="p-4">
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-0.5 text-xs font-medium text-gray-400">
+              <i class="fa-solid fa-hourglass-start"></i>
+              Not tracked yet
+            </span>
+            <p class="mt-2 text-xs text-gray-400">Continuing-education tracking is coming soon.</p>
+          </div>
+        </section>
+      </div>
+
+      <%= render "payment_history", event_registration: f.object %>
+
+      <%# ---- Comments ---- %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="comment-edit-toggle">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:quotes, intensity: 100) %> <%= DomainTheme.text_class_for(:quotes, intensity: 600) %>">
+            <i class="fa-solid fa-comments"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">Comments</h2>
+          <button
+            type="button"
+            class="ml-auto text-xs font-medium text-gray-400 hover:text-blue-600 cursor-pointer"
+            data-action="click->comment-edit-toggle#toggle"
+          >
+            <span data-comment-edit-toggle-target="editLabel">Edit comments</span>
+            <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done editing</span>
+          </button>
+        </div>
+
+        <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
           <%= f.simple_fields_for :comments do |cf| %>
             <%= render "comments/comment_fields", f: cf %>
           <% end %>
 
           <div data-paginated-fields-target="nav"></div>
 
-          <button
-            type="button"
-            class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
-            style="float:right"
-            data-action="click->comment-edit-toggle#toggle"
-          >
-            <span data-comment-edit-toggle-target="editLabel">Edit Comments</span>
-            <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done Editing</span>
-          </button>
-
-          <%= link_to_add_association "➕ Add Comment",
+          <%= link_to_add_association "➕ Add comment",
                                       f,
                                       :comments,
                                       partial: "comments/comment_fields",
                                       class: "btn btn-secondary-outline" %>
         </div>
-      </div>
+      </section>
+    <% else %>
+      <%# ---- New registration: pick the event and registrant ---- %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:event_registrations, intensity: 100) %> <%= DomainTheme.text_class_for(:event_registrations, intensity: 600) %>">
+            <i class="fa-solid fa-user-plus"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">Registration details</h2>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
+          <div>
+            <% if f.object.event_id.present? %>
+              <label class="mb-1 block text-sm font-medium text-gray-700">Event</label>
+              <p class="py-2 font-medium text-gray-900"><%= f.object.event.title %></p>
+              <p class="-mt-1 text-sm text-gray-500"><%= f.object.event.decorate.times(display_day: true, display_date: true) %></p>
+              <%= f.hidden_field :event_id %>
+            <% else %>
+              <%= f.input :event_id,
+                          collection: @events,
+                          label_method: :time_title, value_method: :id,
+                          include_blank: true,
+                          selected: f.object.event_id %>
+            <% end %>
+          </div>
+
+          <div>
+            <%= f.input :registrant_id,
+                        collection: f.object.registrant.present? ? [ [
+                          f.object.registrant.preferred_email.present? ? "#{f.object.registrant.full_name} (#{f.object.registrant.preferred_email})" : f.object.registrant.full_name,
+                          f.object.registrant.id
+                        ] ] : [],
+                        include_blank: true,
+                        required: true,
+                        input_html: {
+                          data: {
+                            controller: "remote-select",
+                            remote_select_model_value: "person",
+                            remote_select_exclude_value: @exclude_registrant_ids
+                          }.compact
+                        },
+                        label: "Registrant" %>
+          </div>
+        </div>
+      </section>
     <% end %>
 
-    <div class="action-buttons mt-8 flex justify-center gap-3">
+    <%# ---- Footer actions ---- %>
+    <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
       <% if allowed_to?(:destroy?, f.object) %>
-        <%= link_to "Delete", event_registration_path(@event_registration, return_to: params[:return_to].presence), class: "btn btn-danger-outline",
-                    data: { turbo: true, turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
+        <%= link_to event_registration_path(@event_registration, return_to: params[:return_to].presence),
+                    class: "btn btn-danger-outline",
+                    data: { turbo: true, turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } do %>
+          <i class="fa-solid fa-trash-can"></i>
+          Delete
+        <% end %>
       <% end %>
 
       <% cancel_path = case params[:return_to]
@@ -198,8 +276,10 @@
                        else allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
                        end %>
 
-      <%= link_to "Cancel", cancel_path, class: "btn btn-secondary-outline" %>
-      <%= f.button :submit, class: "btn btn-primary" %>
+      <div class="ml-auto flex items-center gap-3">
+        <%= link_to "Cancel", cancel_path, class: "btn btn-secondary-outline" %>
+        <%= f.button :submit, f.object.persisted? ? "Save changes" : "Create registration", class: "btn btn-primary" %>
+      </div>
     </div>
   </div>
 <% end %>

@@ -1,7 +1,9 @@
-<!-- Filters -->
+<%# Filters — field, label, and button styling modeled on the manage registrants search. %>
 <% default_btn = "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-800 shadow-sm" %>
 <% selected_btn = "text-white bg-blue-600 border-blue-600 hover:bg-blue-700 hover:text-white shadow-md ring-2 ring-blue-300" %>
-<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+<% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+<% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
+<div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
   <%= form_tag allocations_path, method: :get, class: "space-y-4",
     data: {
       controller: "collection",
@@ -11,33 +13,33 @@
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
+      <div class="space-y-4">
         <div>
-          <label for="source_type" class="text-sm font-medium text-gray-500 mb-1 block">Source Type</label>
+          <label for="source_type" class="<%= label_class %>">Source type</label>
           <%= select_tag "source_type[]",
           options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Stripe" => "ExternalProcessorPayment", "Discount" => "Discount" }, Array(params[:source_type]).first),
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+          class: field_class %>
         </div>
         <div>
-          <label for="has_reverted" class="text-sm font-medium text-gray-500 mb-1 block">Reverted</label>
+          <label for="has_reverted" class="<%= label_class %>">Reverted</label>
           <%= select_tag "has_reverted",
           options_for_select({ "All" => "all", "Yes" => "yes", "No" => "no" }, params[:has_reverted] || "all"),
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+          class: field_class %>
         </div>
       </div>
       <div>
-        <label for="payer_type" class="text-sm font-medium text-gray-500 mb-1 block">Payer Type</label>
+        <label for="payer_type" class="<%= label_class %>">Payer type</label>
         <%= select_tag "payer_type",
         options_for_select(["Person", "Organization"], params[:payer_type]),
         include_blank: "All",
-        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+        class: field_class %>
       </div>
       <div>
-        <label for="person_id" class="text-sm font-medium text-gray-500 mb-1 block">Person</label>
+        <label for="person_id" class="<%= label_class %>">Person</label>
         <%= select_tag "person_id",
         options_for_select(Person.where(id: params[:person_id]).map { |p| [p.full_name, p.id] }),
         include_blank: true,
-        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+        class: field_class,
         data: {
           controller: "remote-select",
           remote_select_model_value: "person"
@@ -45,11 +47,11 @@
         prompt: "Search for a person" %>
       </div>
       <div>
-        <label for="organization_id" class="text-sm font-medium text-gray-500 mb-1 block">Organization</label>
+        <label for="organization_id" class="<%= label_class %>">Organization</label>
         <%= select_tag "organization_id",
         options_for_select(Organization.where(id: params[:organization_id]).map { |o| [o.name, o.id] }),
         include_blank: true,
-        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+        class: field_class,
         data: {
           controller: "remote-select",
           remote_select_model_value: "organization"
@@ -58,20 +60,20 @@
       </div>
       <%= tag.div data: { controller: "search-type-select", type_picker: "" } do %>
         <div>
-          <label for="allocatable_type" class="text-sm font-medium text-gray-500 mb-1 block">Allocated To Type</label>
+          <label for="allocatable_type" class="<%= label_class %>">Allocated to type</label>
           <%= select_tag "allocatable_type",
           options_for_select(["EventRegistration"], params[:allocatable_type]),
           include_blank: true,
-          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+          class: field_class,
           data: { action: "search-type-select#toggle" } %>
         </div>
         <template data-search-type-select-target="template" data-type="EventRegistration">
           <div>
-            <label for="allocatable_id" class="text-sm font-medium text-gray-500 mb-1 block">Allocated To</label>
+            <label for="allocatable_id" class="<%= label_class %>">Allocated to</label>
             <%= select_tag "allocatable_id",
             options_for_select(EventRegistration.where(id: params[:allocatable_id]).map { |r| ["#{r.registrant.full_name} - #{r.event.title}", r.id] }),
             include_blank: true,
-            class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+            class: field_class,
             data: {
               controller: "remote-select",
               remote_select_model_value: "event_registration"
@@ -81,12 +83,15 @@
         </template>
         <div data-search-type-select-target="pickerContainer">
           <div>
-            <label class="text-sm font-medium text-gray-500 mb-1 block italic">Select Allocated To Type</label>
+            <label class="<%= label_class %> italic">Select allocated to type</label>
             <div class="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 cursor-not-allowed min-h-[2.2rem]"></div>
           </div>
         </div>
       <% end %>
     </div>
-    <div class="md:col-span-3 flex gap-2 justify-end"><%= submit_tag "Search", class: "btn btn-primary" %><%= link_to "Clear filters", allocations_path, class: "btn btn-secondary", data: { action: "collection#clearAndSubmit" } %></div>
+    <div class="md:col-span-3 flex gap-2 justify-end">
+      <%= submit_tag "Search", class: "btn btn-primary" %>
+      <%= link_to "Clear filters", allocations_path, class: "btn btn-utility-outline", data: { action: "collection#clearAndSubmit" } %>
+    </div>
   <% end %>
 </div>

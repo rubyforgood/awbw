@@ -88,6 +88,13 @@ export default class extends Controller {
     container.appendChild(icon);
   }
 
+  // Deselect the current value so the control is ready for the next pick.
+  // Used by controllers (e.g. org-toggle) that consume a selection and want
+  // to reuse the same search box to add another.
+  clear() {
+    if (this.select) this.select.clear();
+  }
+
   disconnect() {
     if (this.select) this.select.destroy();
   }

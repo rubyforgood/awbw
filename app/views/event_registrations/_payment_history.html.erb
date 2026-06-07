@@ -1,0 +1,89 @@
+<%# ---- Payment & allocation history — every allocation applied to this
+    registration (payments, scholarships, discounts, reversals), newest first.
+    Read-only log; manage/revert from the linked allocations index. ---- %>
+<% allocations = event_registration.allocations.includes(:source).order(created_at: :desc) %>
+<% cost_cents = event_registration.event.cost_cents.to_i %>
+<% paid_cents = event_registration.allocations_sum %>
+<% due_cents = cost_cents - paid_cents %>
+<% due_badge = capture do %>
+  <% if cost_cents > 0 %>
+    <% is_paid = event_registration.paid_in_full? %>
+    <%= link_to allocations_path(allocatable_sgid: event_registration.to_sgid.to_s),
+                class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 #{is_paid ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"} hover:opacity-80",
+                title: (!is_paid && paid_cents > 0 ? "$%.2f paid" % (paid_cents / 100.0) : nil),
+                data: { turbo_frame: "_top" } do %>
+      <i class="fas <%= is_paid ? "fa-circle-check" : "fa-circle-exclamation" %>"></i>
+      <span><%= is_paid ? "Paid" : "$%.2f due" % (due_cents / 100.0) %></span>
+    <% end %>
+  <% else %>
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-5 py-0.5 text-xs font-medium text-gray-500">
+      <i class="fa-solid fa-gift"></i>
+      Free event
+    </span>
+  <% end %>
+<% end %>
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:payments, intensity: 100) %> <%= DomainTheme.text_class_for(:payments, intensity: 600) %>">
+      <i class="fa-solid fa-dollar-sign"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700">Allocations</h2>
+    <%= link_to "Manage", allocations_path(allocatable_sgid: event_registration.to_sgid.to_s),
+                class: "ml-auto text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                data: { turbo_frame: "_top" } %>
+  </div>
+
+  <div class="p-4">
+    <% if allocations.any? %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 text-left text-xs font-medium uppercase tracking-wide text-gray-400">
+              <th class="px-3 py-2">Source</th>
+              <th class="px-3 py-2 text-right">Amount</th>
+              <th class="px-3 py-2 text-right">Date</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% allocations.each do |allocation| %>
+              <% reverted = allocation.reverted? %>
+              <% reversal = allocation.amount.to_i < 0 %>
+              <% label = case allocation.source
+                         when Payment then allocation.source.type.to_s.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe")
+                         else allocation.source_type.underscore.humanize
+                         end %>
+              <tr class="<%= "opacity-50" if reverted %>">
+                <td class="px-3 py-2 text-gray-900">
+                  <span class="inline-flex items-center gap-1.5">
+                    <%= label %>
+                    <% if reverted %>
+                      <span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[0.65rem] font-medium text-gray-500">Reverted</span>
+                    <% elsif reversal %>
+                      <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[0.65rem] font-medium text-red-600">Reversal</span>
+                    <% end %>
+                  </span>
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums <%= reversal ? "text-red-600" : "text-gray-900" %>">
+                  <%= "-" if reversal %>$<%= "%.2f" % (allocation.amount.to_d.abs / 100) %>
+                </td>
+                <td class="px-3 py-2 text-right text-gray-500 whitespace-nowrap"><%= allocation.created_at.strftime("%b %-d, %Y") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+          <tfoot>
+            <tr class="border-t border-gray-200 font-semibold text-gray-900">
+              <td class="px-3 py-2">Total paid</td>
+              <td class="px-3 py-2 text-right tabular-nums">$<%= "%.2f" % (allocations.sum(&:amount).to_d / 100) %></td>
+              <td class="px-3 py-2 text-right"><%= due_badge %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    <% else %>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="text-sm text-gray-400">No payments or allocations recorded yet.</p>
+        <%= due_badge %>
+      </div>
+    <% end %>
+  </div>
+</section>

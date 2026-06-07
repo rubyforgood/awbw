@@ -50,7 +50,9 @@
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 
                   <div class="flex items-center gap-1">
-                    <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
+                    <div class="w-64 min-w-0">
+                      <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
+                    </div>
 
                     <% if event_form_ids.any? && (submissions = form_submissions[person.id]) %>
                       <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
@@ -155,7 +157,7 @@
                 </td>
 
                 <td class="px-4 py-2 text-sm text-nowrap"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
-                <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "manage"), class: "text-blue-600 hover:text-blue-800 underline", data: { turbo_frame: "_top" } %></td>
+                <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "manage"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
               </tr>
             <% end %>
           </tbody>

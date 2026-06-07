@@ -216,6 +216,55 @@ RSpec.describe "EventRegistrations", type: :request do
       end
     end
 
+    describe "PATCH /event_registrations/:id scholarship handling" do
+      def link_scholarship(registration, amount_cents:, tasks_completed: false)
+        scholarship = Scholarship.new(recipient: registration.registrant, amount_cents: amount_cents, tasks_completed: tasks_completed)
+        scholarship.build_allocation(allocatable: registration, amount: 0)
+        scholarship.save!
+        scholarship
+      end
+
+      def unrequest(registration)
+        patch event_registration_path(registration),
+              params: { event_registration: { scholarship_requested: "0" } }
+      end
+
+      it "never creates a scholarship from the requested checkbox" do
+        expect {
+          patch event_registration_path(existing_registration),
+                params: { event_registration: { scholarship_requested: "1" } }
+        }.not_to change(Scholarship, :count)
+
+        expect(existing_registration.reload.scholarship_requested).to be(true)
+      end
+
+      it "removes an empty stub scholarship when unrequested on save" do
+        existing_registration.update!(scholarship_requested: true)
+        link_scholarship(existing_registration, amount_cents: 0)
+
+        expect { unrequest(existing_registration) }
+          .to change { existing_registration.scholarships.count }.by(-1)
+
+        expect(existing_registration.reload.scholarship_requested).to be(false)
+      end
+
+      it "keeps a funded scholarship when unrequested" do
+        existing_registration.update!(scholarship_requested: true)
+        link_scholarship(existing_registration, amount_cents: 5000)
+
+        expect { unrequest(existing_registration) }
+          .not_to change { existing_registration.scholarships.count }
+      end
+
+      it "keeps a scholarship with completed tasks when unrequested" do
+        existing_registration.update!(scholarship_requested: true)
+        link_scholarship(existing_registration, amount_cents: 0, tasks_completed: true)
+
+        expect { unrequest(existing_registration) }
+          .not_to change { existing_registration.scholarships.count }
+      end
+    end
+
     describe "DELETE /event_registrations/:id" do
       it "can delete registration" do
         expect {
