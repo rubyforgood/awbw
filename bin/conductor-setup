@@ -99,14 +99,17 @@ if [ -d "$CONDUCTOR_ROOT_PATH/.bundle" ]; then
   ln -sf "$CONDUCTOR_ROOT_PATH/.bundle" .bundle
 fi
 
-# Install deps before bin/setup so they're available when Rails env loads
+# Install gems before bin/setup so they're available when it loads the Rails
+# env (bin/setup requires config/environment before it runs bundle itself).
+# npm packages aren't needed to boot Rails, so leave `npm ci` to bin/setup
+# instead of running it twice.
 echo ""
 echo "== Installing dependencies =="
 bundle check > /dev/null 2>&1 || bundle install
-npm ci
 
-# Run full setup (database drop, create, migrate, seed)
-bin/setup --skip-server
+# Run full setup (database drop, create, migrate, seed). Conductor workspaces
+# are always dev, so load the full dev sample dataset via --seed-dev.
+bin/setup --skip-server --seed-dev
 
 PORT=${WORKSPACE_PORT:-${PORT:-3000}}
 echo ""
