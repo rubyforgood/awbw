@@ -44,7 +44,7 @@ RSpec.describe EventDashboard do
       # Money: reg1 fully covered (payment + scholarship), reg2 partly paid.
       create(:allocation, source: create(:payment, amount_cents: 6_000, amount_cents_remaining: 6_000),
                           allocatable: reg1, amount: 6_000)
-      scholarship = create(:scholarship, recipient: person1, amount_cents: 4_000)
+      scholarship = create(:scholarship, recipient: person1, amount_cents: 4_000, tasks_completed: true)
       create(:allocation, source: scholarship, allocatable: reg1, amount: 4_000)
 
       create(:allocation, source: create(:payment, amount_cents: 3_000, amount_cents_remaining: 3_000),
@@ -71,6 +71,10 @@ RSpec.describe EventDashboard do
       expect(dashboard.inactive_registration_count).to eq(1)
     end
 
+    it "returns the registrant ids behind the inactive registrations" do
+      expect(dashboard.inactive_registrant_ids).to contain_exactly(cancelled_person.id)
+    end
+
     it "returns only active registrants as Person records" do
       expect(dashboard.registrants).to contain_exactly(person1, person2)
     end
@@ -92,10 +96,10 @@ RSpec.describe EventDashboard do
         expect(dashboard.registration_subtotal_cents).to eq(16_000)
       end
 
-      it "reports grand total as registration subtotal plus scholarships plus cont ed" do
+      it "reports grand total as registration subtotal plus completed scholarships plus cont ed" do
         expect(dashboard.grand_total_cents).to eq(20_000)
         expect(dashboard.grand_total_cents).to eq(
-          dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents + dashboard.cont_ed_total_cents
+          dashboard.registration_subtotal_cents + dashboard.allocated_scholarship_cents + dashboard.cont_ed_total_cents
         )
       end
 
@@ -144,6 +148,12 @@ RSpec.describe EventDashboard do
         expect(map[org_a.id].to_a).to contain_exactly(person1.id)
         expect(map[org_b.id].to_a).to contain_exactly(person1.id)
         expect(map[org_c.id].to_a).to contain_exactly(person2.id)
+      end
+
+      it "maps each registrant id to its organization names (for tooltips)" do
+        map = dashboard.organization_names_by_registrant
+        expect(map[person1.id]).to contain_exactly("Alpha Org", "Beta Org")
+        expect(map[person2.id]).to contain_exactly("Gamma Org")
       end
     end
 
@@ -214,16 +224,61 @@ RSpec.describe EventDashboard do
     end
 
     it "splits scholarship dollars into completed and outstanding" do
-      expect(dashboard.completed_scholarship_cents).to eq(10_000)
+      expect(dashboard.allocated_scholarship_cents).to eq(10_000)
       expect(dashboard.outstanding_scholarship_cents).to eq(10_000)
     end
 
     it "lists completed scholarship recipients" do
-      expect(dashboard.completed_scholarship_registrants).to contain_exactly(completed_person)
+      expect(dashboard.allocated_scholarship_registrants).to contain_exactly(completed_person)
     end
 
     it "lists outstanding scholarship recipients" do
       expect(dashboard.outstanding_scholarship_registrants).to contain_exactly(pending_person)
+    end
+
+    describe "per-person amounts" do
+      it "maps each registrant to their registration paid amount, reconciling with received" do
+        amounts = dashboard.registration_paid_by_registrant
+        expect(amounts[paid_person.id]).to eq(10_000)
+        expect(amounts[unpaid_person.id]).to eq(2_000)
+        expect(amounts.values.sum).to eq(dashboard.received_cents)
+      end
+
+      it "maps each registrant to their registration due amount, reconciling with outstanding" do
+        amounts = dashboard.registration_due_by_registrant
+        expect(amounts[unpaid_person.id]).to eq(8_000)
+        expect(amounts[pending_person.id]).to eq(10_000)
+        expect(amounts.values.sum).to eq(dashboard.outstanding_cents)
+      end
+
+      it "maps each recipient to their allocated scholarship amount" do
+        amounts = dashboard.allocated_scholarship_by_recipient
+        expect(amounts[completed_person.id]).to eq(10_000)
+        expect(amounts.values.sum).to eq(dashboard.allocated_scholarship_cents)
+      end
+
+      it "maps each recipient to their outstanding scholarship amount" do
+        amounts = dashboard.outstanding_scholarship_by_recipient
+        expect(amounts[pending_person.id]).to eq(10_000)
+        expect(amounts.values.sum).to eq(dashboard.outstanding_scholarship_cents)
+      end
+    end
+
+    it "reports collected as payments received plus cont ed paid, excluding scholarships" do
+      expect(dashboard.collected_cents).to eq(12_000)
+    end
+
+    it "reports due as outstanding registration plus cont ed fees" do
+      expect(dashboard.due_cents).to eq(18_000)
+    end
+
+    it "splits monies made into collected and due" do
+      expect(dashboard.collected_cents + dashboard.due_cents).to eq(dashboard.monies_made_cents)
+    end
+
+    it "reports monies made as registration fees plus cont ed fees, excluding scholarships" do
+      expect(dashboard.monies_made_cents).to eq(30_000)
+      expect(dashboard.monies_made_cents).to eq(dashboard.grand_total_cents - dashboard.allocated_scholarship_cents)
     end
   end
 
@@ -248,7 +303,7 @@ RSpec.describe EventDashboard do
 
     it "adds nothing to the grand total" do
       expect(dashboard.grand_total_cents).to eq(
-        dashboard.scholarship_total_cents + dashboard.received_cents + dashboard.outstanding_cents
+        dashboard.allocated_scholarship_cents + dashboard.received_cents + dashboard.outstanding_cents
       )
     end
   end
@@ -270,7 +325,7 @@ RSpec.describe EventDashboard do
     it "still reports the awarded amount on the scholarship card headline" do
       expect(dashboard.scholarship_total_cents).to eq(10_000)
       expect(dashboard.scholarship_total_cents).to eq(
-        dashboard.completed_scholarship_cents + dashboard.outstanding_scholarship_cents
+        dashboard.allocated_scholarship_cents + dashboard.outstanding_scholarship_cents
       )
     end
 

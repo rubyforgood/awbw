@@ -20,6 +20,7 @@ namespace :db do
       bookmarks
       analytics
       payments
+      scholarships
     ]
 
     desc "Generate representative sample data for development"
@@ -103,6 +104,11 @@ namespace :db do
     desc "Seed sample payments, allocations, and refunds (dev only)"
     task payments: :environment do
       load Rails.root.join("db/seeds/dev/payments.rb")
+    end
+
+    desc "Seed sample scholarships and their allocations (dev only)"
+    task scholarships: :environment do
+      load Rails.root.join("db/seeds/dev/scholarships.rb")
     end
   end
 end
