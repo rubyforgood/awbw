@@ -7,11 +7,13 @@
     <span class="text-xs text-red-500">No event</span>
   <% elsif Current.user.nil? %>
     <span class="text-xs text-gray-500">Login to register</span>
-  <% elsif event.actively_registered?(Current.user.person) %>
-    <%= link_to "De-register",
-                event_registrant_registration_path(event_id: event),
-                data: { turbo_method: :delete, turbo_confirm: "Are you sure?"},
-                class: "btn btn-secondary-outline text-sm" %>
+  <% elsif (registration = event.active_registration_for(Current.user.person)) %>
+    <% if registration.deletable? %>
+      <%= link_to "De-register",
+                  event_registrant_registration_path(event_id: event),
+                  data: { turbo_method: :delete, turbo_confirm: "Are you sure?"},
+                  class: "btn btn-secondary-outline text-sm" %>
+    <% end %>
     <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Registered</span>
   <% elsif event.ended? %>
     <span class="text-sm text-gray-500 italic">Event ended</span>

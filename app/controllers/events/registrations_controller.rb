@@ -145,6 +145,15 @@ module Events
 
       authorize! @event_registration
 
+      unless @event_registration.deletable?
+        alert = "You can't de-register because there are payments or attendance on record. Cancel your registration instead."
+        respond_to do |format|
+          format.turbo_stream { flash.now[:alert] = alert }
+          format.html { redirect_to @event, alert: alert }
+        end
+        return
+      end
+
       if @event_registration.destroy
         success = "You are no longer registered."
         respond_to do |format|

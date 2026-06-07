@@ -739,6 +739,24 @@ RSpec.describe "Events::Registrations", type: :request do
       end
     end
 
+    context "when the registration has payments on record" do
+      let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+      before do
+        payment = create(:payment, person: user.person, amount_cents: 1000, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: registration, amount: 1000)
+      end
+
+      it "refuses to destroy and returns an alert" do
+        expect {
+          delete event_registrant_registration_path(event_id: event.id),
+            headers: turbo_headers
+        }.not_to change(EventRegistration, :count)
+
+        expect(flash.now[:alert]).to include("Cancel your registration instead")
+      end
+    end
+
     context "when destroy fails" do
       let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
