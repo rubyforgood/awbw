@@ -20,6 +20,8 @@ RSpec.describe "events/edit", type: :view do
     assign(:categories_grouped, [])
     allow(view).to receive(:current_user).and_return(build_stubbed(:user, :admin))
     allow(view).to receive(:allowed_to?).with(:manage?, event).and_return(true)
+    allow(view).to receive(:allowed_to?).with(:dashboard?, event).and_return(true)
+    allow(view).to receive(:allowed_to?).with(:edit?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:index?, Event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:destroy?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:google_analytics?, event).and_return(true)
@@ -41,7 +43,9 @@ RSpec.describe "events/edit", type: :view do
   it "renders action links" do
     render
 
-    expect(rendered).to have_link("View", href: event_path(event))
+    expect(rendered).to have_link("View event", href: event_path(event))
+    expect(rendered).to have_link("Dashboard", href: dashboard_event_path(event))
+    expect(rendered).to have_link("Registrants", href: manage_event_path(event))
   end
 
   it "renders submit button" do

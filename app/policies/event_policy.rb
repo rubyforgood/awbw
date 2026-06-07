@@ -33,6 +33,10 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def dashboard?
+    admin? || owner?
+  end
+
   def preview_reminder?
     manage?
   end
