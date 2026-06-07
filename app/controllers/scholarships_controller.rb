@@ -61,6 +61,7 @@ class ScholarshipsController < ApplicationController
       redirect_to scholarship_save_path, notice: "Scholarship created."
     else
       @grants = Grant.selectable_for(@scholarship)
+      flash.now[:alert] = @scholarship.errors.full_messages.to_sentence
       render :new, status: :unprocessable_content
     end
   end
@@ -87,6 +88,7 @@ class ScholarshipsController < ApplicationController
       redirect_to scholarship_save_path, notice: "Scholarship updated."
     else
       @grants = Grant.selectable_for(@scholarship)
+      flash.now[:alert] = @scholarship.errors.full_messages.to_sentence
       render :edit, status: :unprocessable_content
     end
   end

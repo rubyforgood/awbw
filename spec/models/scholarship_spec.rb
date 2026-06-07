@@ -53,6 +53,53 @@ RSpec.describe Scholarship, type: :model do
         expect(build(:scholarship, grant: nil, amount_cents: 9_999_999)).to be_valid
       end
     end
+
+    describe "amount_within_event_registration_due" do
+      let(:event) { create(:event, cost_cents: 5000) }
+      let(:person) { create(:person) }
+      let(:registration) { create(:event_registration, event:, registrant: person) }
+
+      it "is valid when the amount is less than the event registration due" do
+        scholarship = build(:scholarship, recipient: person, amount_cents: 4000)
+        scholarship.build_allocation(allocatable: registration, amount: 0)
+        expect(scholarship).to be_valid
+      end
+
+      it "is valid when the amount equals the event registration due" do
+        scholarship = build(:scholarship, recipient: person, amount_cents: 5000)
+        scholarship.build_allocation(allocatable: registration, amount: 0)
+        expect(scholarship).to be_valid
+      end
+
+      it "is invalid when the amount exceeds the event registration due" do
+        scholarship = build(:scholarship, recipient: person, amount_cents: 6000)
+        scholarship.build_allocation(allocatable: registration, amount: 0)
+        expect(scholarship).not_to be_valid
+        expect(scholarship.errors[:amount_dollars])
+          .to include("cannot exceed the event registration amount due ($50)")
+      end
+
+      it "accounts for other allocations when computing the amount due" do
+        registration.allocations.create!(
+          source: create(:payment, amount_cents: 2000, amount_cents_remaining: 2000), amount: 2000
+        )
+        scholarship = build(:scholarship, recipient: person, amount_cents: 3500)
+        scholarship.build_allocation(allocatable: registration, amount: 0)
+        expect(scholarship).not_to be_valid
+        expect(scholarship.errors[:amount_dollars])
+          .to include("cannot exceed the event registration amount due ($30)")
+      end
+
+      it "excludes the scholarship's own existing allocation from the due" do
+        scholarship = build(:scholarship, recipient: person, amount_cents: 5000)
+        scholarship.build_allocation(allocatable: registration, amount: 0)
+        scholarship.save!
+        scholarship.allocation.update_column(:amount, 5000)
+
+        scholarship.amount_cents = 4500
+        expect(scholarship).to be_valid
+      end
+    end
   end
 
   describe "marking the event registration's scholarship_requested flag" do

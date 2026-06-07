@@ -425,3 +425,56 @@ RSpec.describe "Scholarships (grant + event dual context)", type: :request do
     end
   end
 end
+
+RSpec.describe "Scholarships against an event registration", type: :request do
+  let(:admin)        { create(:user, :with_person, super_user: true) }
+  let(:event)        { create(:event, cost_cents: 5000) }
+  let(:person)       { create(:person) }
+  let(:registration) { create(:event_registration, event:, registrant: person) }
+
+  before { sign_in admin }
+
+  describe "POST /scholarships" do
+    context "when the amount exceeds the event registration due" do
+      it "does not create the scholarship and shows flash and field errors" do
+        expect {
+          post scholarships_path(allocatable_sgid: registration.to_sgid.to_s),
+               params: { scholarship: { amount_dollars: "60" } }
+        }.not_to change(Scholarship, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("cannot exceed the event registration amount due ($50)")
+      end
+    end
+
+    context "when the amount is within the event registration due" do
+      it "creates the scholarship" do
+        expect {
+          post scholarships_path(allocatable_sgid: registration.to_sgid.to_s),
+               params: { scholarship: { amount_dollars: "40" } }
+        }.to change(Scholarship, :count).by(1)
+
+        expect(response).to redirect_to(registrants_event_path(event))
+      end
+    end
+  end
+
+  describe "PATCH /scholarships/:id" do
+    let(:scholarship) do
+      s = build(:scholarship, recipient: person, amount_cents: 4000)
+      s.build_allocation(allocatable: registration, amount: 4000)
+      s.save!
+      s
+    end
+
+    context "when the updated amount exceeds the event registration due" do
+      it "does not update the scholarship and shows flash and field errors" do
+        patch scholarship_path(scholarship), params: { scholarship: { amount_dollars: "60" } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("cannot exceed the event registration amount due ($50)")
+        expect(scholarship.reload.amount_cents).to eq(4000)
+      end
+    end
+  end
+end

@@ -39,6 +39,9 @@
               <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">$</span>
               <%= f.number_field :amount_dollars, step: 0.01, min: 0, autocomplete: "off", class: "w-full rounded-lg border border-gray-300 bg-white pl-7 pr-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", data: { "scholarship-preview-target": "amount", action: "input->scholarship-preview#update", lpignore: "true", "1p-ignore": "true", bwignore: "true", "form-type": "other" } %>
             </div>
+            <% if f.object.errors[:amount_dollars].any? %>
+              <p class="mt-1 text-sm text-red-600"><%= f.object.errors[:amount_dollars].to_sentence %></p>
+            <% end %>
           </div>
           <div data-scholarship-preview-target="owed" class="rounded-lg border px-4 py-3 <%= paid ? "border-gray-300 bg-gray-50" : "border-amber-300 bg-amber-50" %>">
             <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Still owed</dt>

@@ -11,6 +11,7 @@ class Scholarship < ApplicationRecord
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :recipient_must_match_allocation_registrant
   validate :within_grant_budget, if: :grant
+  validate :amount_within_event_registration_due
 
   after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? }
   after_create_commit :flag_event_registration_scholarship_requested
@@ -42,6 +43,18 @@ class Scholarship < ApplicationRecord
     if recipient != allocation.allocatable.registrant
       errors.add(:recipient, "must be the same person as the event registration's registrant")
     end
+  end
+
+  def amount_within_event_registration_due
+    registration = allocation&.allocatable
+    return unless registration.is_a?(EventRegistration)
+    return if amount_cents.to_i <= 0
+
+    other_allocations_sum = registration.allocations.where.not(id: allocation.id).sum(:amount)
+    due_cents = registration.event.cost_cents.to_i - other_allocations_sum
+    return if amount_cents <= due_cents
+
+    errors.add(:amount_dollars, "cannot exceed the event registration amount due (#{MoneyFormatter.dollars_from_cents(due_cents)})")
   end
 
   def sync_allocation_amount
