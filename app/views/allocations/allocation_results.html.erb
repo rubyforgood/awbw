@@ -4,10 +4,15 @@
       <% total = @allocations.respond_to?(:total_entries) ? @allocations.total_entries : @allocations.size %>
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <p class="text-sm text-gray-500"><%= total %> allocation<%= "s" if total != 1 %></p>
+        <% if @allocations_total_cents %>
+          <p class="text-sm text-gray-500">
+            Total <span class="font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (@allocations_total_cents.to_i / 100.0) %></span>
+          </p>
+        <% end %>
       </div>
 
       <div class="overflow-x-auto animate-fade">
-        <table class="w-full border-collapse border border-gray-200">
+        <table class="w-full border-collapse border border-gray-200" data-controller="allocation-ref">
           <thead class="bg-gray-100">
             <tr>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">ID</th>
@@ -33,7 +38,7 @@
                   "hover:bg-gray-50"
                 end %>
 
-              <tr class="<%= row_class %> transition-colors duration-150">
+              <tr class="<%= row_class %> transition-colors duration-150" data-allocation-ref-target="row" data-allocation-id="<%= allocation.id %>">
                 <td class="px-4 py-2 text-sm text-gray-500"><%= allocation.id %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= allocation.source.class.name.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= if allocation.source.respond_to?(:payer)
@@ -52,35 +57,48 @@
 
                 <% unless @allocatable %>
                   <td class="px-4 py-2 text-sm text-gray-800">
-                    <% if allocation.allocatable_type == "EventRegistration" && allocation.allocatable.present? %>
-                      <%= truncate("#{allocation.allocatable.registrant.full_name} - #{allocation.allocatable.event.title}", length: 40) %>
-                    <% else %>
-                      <%= allocation.allocatable_type.underscore.titleize %>
-                    <% end %>
+                    <%= render "allocations/allocatable_link", allocation: allocation %>
                   </td>
                 <% end %>
 
                 <td class="px-4 py-2 text-sm font-medium text-gray-900 tabular-nums">$<%= "%.2f" % allocation.amount_dollars %></td>
 
                 <td class="px-4 py-2 text-sm text-gray-500">
-                  <% if allocation.amount.to_i < 0 %>
-                    <%= Allocation.find_by(reverted_id: allocation.id)&.id || "-" %>
+                  <% ref_id = allocation.amount.to_i < 0 ? Allocation.find_by(reverted_id: allocation.id)&.id : allocation.reverted_id %>
+                  <% if ref_id %>
+                    <button type="button"
+                            data-action="allocation-ref#highlight"
+                            data-allocation-ref-id-param="<%= ref_id %>"
+                            class="text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                            title="Highlight allocation #<%= ref_id %>">
+                      <%= ref_id %>
+                    </button>
                   <% else %>
-                    <%= allocation.reverted_id ? allocation.reverted_id : "-" %>
+                    -
                   <% end %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 text-nowrap"><%= allocation.created_at.strftime("%B %d, %Y") %></td>
 
                 <td class="px-4 py-2 text-right text-sm font-medium">
+                  <% link_class = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer" %>
                   <% if allocation.source.respond_to?(:payer) %>
-                    <%= link_to "View", payment_path(allocation.source), data: { turbo_frame: "_top" }, class: "text-blue-600 hover:text-blue-800 underline" %>
+                    <%= link_to payment_path(allocation.source), data: { turbo_frame: "_top" }, class: link_class do %>
+                      <i class="fa-solid fa-receipt text-[0.7rem] text-gray-400"></i>
+                      View payment
+                    <% end %>
                   <% elsif allocation.source.is_a?(Discount) %>
-                    <%= button_to "Remove", discount_path(allocation.source), method: :delete,
-                          class: "cursor-pointer text-danger hover:text-danger-dark",
-                          data: { turbo_confirm: "Remove this discount?", turbo_frame: "_top" } %>
+                    <%= button_to discount_path(allocation.source), method: :delete,
+                          class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer",
+                          data: { turbo_confirm: "Remove this discount?", turbo_frame: "_top" } do %>
+                      <i class="fa-solid fa-trash-can text-[0.7rem]"></i>
+                      Remove
+                    <% end %>
                   <% else %>
-                    <%= link_to "View", edit_scholarship_path(allocation.source), data: { turbo_frame: "_top" }, class: "text-blue-600 hover:text-blue-800 underline" %>
+                    <%= link_to edit_scholarship_path(allocation.source), data: { turbo_frame: "_top" }, class: link_class do %>
+                      <i class="fa-solid fa-graduation-cap text-[0.7rem] text-gray-400"></i>
+                      View scholarship
+                    <% end %>
                   <% end %>
                 </td>
               </tr>

@@ -17,7 +17,7 @@
         <div>
           <label for="source_type" class="<%= label_class %>">Source type</label>
           <%= select_tag "source_type[]",
-          options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Stripe" => "ExternalProcessorPayment", "Discount" => "Discount" }, Array(params[:source_type]).first),
+          options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Credit Card" => "CreditCardPayment", "Stripe" => "ExternalProcessorPayment", "Discount" => "Discount" }, Array(params[:source_type]).first),
           class: field_class %>
         </div>
         <div>

@@ -5,11 +5,18 @@ class AllocationsController < ApplicationController
     authorize!
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
-      @allocations = @allocatable.allocations.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+      base = @allocatable.allocations
     else
-      @allocations = Allocation.search_by_params(params).includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
-      render :allocation_results if turbo_frame_request?
+      base = Allocation.search_by_params(params)
     end
+
+    # Net total across the whole (unpaginated) filtered set, so the header shows
+    # the true sum even when results span multiple pages. Summed on the base
+    # scope (no :source includes — polymorphic associations can't be eager-loaded
+    # for an aggregate).
+    @allocations_total_cents = base.sum(:amount)
+    @allocations = base.includes(:source).order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+    render :allocation_results if turbo_frame_request? && @allocatable.blank?
   end
 
   def new
