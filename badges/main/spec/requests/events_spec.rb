@@ -280,6 +280,20 @@ RSpec.describe "Events", type: :request do
 
     before { sign_in admin }
 
+    context "with unknown filter params" do
+      it "does not crash on an invalid payment_status" do
+        get manage_event_path(event, payment_status: "bogus")
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "does not crash on an invalid scholarship status" do
+        get manage_event_path(event, scholarship: "bogus")
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     context "confirmed column toggle" do
       it "renders the slide toggle for confirmed column" do
         get manage_event_path(event)
