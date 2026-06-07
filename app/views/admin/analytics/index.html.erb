@@ -1,34 +1,49 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-semibold text-gray-900">Activities</h1>
-
-        <%= form_with url: admin_activities_counts_path, method: :get, local: true, class: "flex items-center gap-4" do |f| %>
-          <%= render "admin/shared/audience_dropdown" %>
-
-          <div class="flex items-center gap-2">
-            <%= f.label :time_period, "Time period:", class: "text-sm font-medium text-gray-700" %>
-            <%= f.select :time_period,
-                         options_for_select([
-                           ['All time', 'all_time'],
-                           ['Past day', 'past_day'],
-                           ['Past week', 'past_week'],
-                           ['Past month', 'past_month'],
-                           ['Past year', 'past_year']
-                         ], params[:time_period] || 'past_month'),
-                         {},
-                         class: "px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-gray-700",
-                         onchange: "this.form.submit()" %>
-          </div>
-        <% end %>
-      </div>
-
+  <div class="flex flex-wrap items-center gap-y-2 mb-2">
+    <% if allowed_to?(:index?, with: Admin::HomePolicy) %>
+      <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
+        <i class="fas fa-arrow-left"></i>
+        <span>Admin</span>
+      <% end %>
+    <% end %>
+    <div class="ml-auto">
       <%= render "admin/shared/activities_tabs" %>
+    </div>
+  </div>
 
-      <%= render "admin/shared/active_filters_subheader" %>
+  <div class="flex items-baseline gap-3 mb-6 leading-none">
+    <h1 class="text-2xl font-semibold text-gray-900 leading-none">Counts</h1>
+  </div>
+
+  <div class="flex flex-wrap items-start justify-between gap-3 mb-6 text-sm min-h-10">
+    <%= render "admin/shared/active_filters_subheader" %>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Filters</h3>
+      <%= form_with url: admin_activities_counts_path, method: :get, local: true, class: "flex items-center gap-4" do |f| %>
+        <%= render "admin/shared/audience_dropdown" %>
+
+        <div class="flex items-center gap-2">
+          <%= f.label :time_period, "Time period:", class: "text-sm font-medium text-gray-700" %>
+          <%= f.select :time_period,
+                       options_for_select([
+                         ['All time', 'all_time'],
+                         ['Past day', 'past_day'],
+                         ['Past week', 'past_week'],
+                         ['Past month', 'past_month'],
+                         ['Past year', 'past_year']
+                       ], params[:time_period] || 'past_month'),
+                       {},
+                       class: "px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-gray-700",
+                       onchange: "this.form.submit()" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
 
       <!-- Summary -->
-      <section class="mt-6">
+      <section>
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">
             View counts
