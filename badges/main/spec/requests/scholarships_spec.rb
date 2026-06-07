@@ -70,3 +70,72 @@ RSpec.describe "Scholarships", type: :request do
     end
   end
 end
+
+RSpec.describe "/scholarships (grant-funded flow)", type: :request do
+  let(:admin) { create(:user, :admin) }
+  let(:donor) { create(:organization, name: "Helping Hands") }
+  let(:grant) { create(:grant, donor:, amount_cents: 100_000) }
+  let(:recipient) { create(:person, first_name: "Bob", last_name: "Barker") }
+
+  before { sign_in admin }
+
+  describe "GET /scholarships/new?grant_id=" do
+    it "renders the grant-funded form showing the funder" do
+      get new_scholarship_path(grant_id: grant.id, return_to: "grant_show")
+      expect(response).to be_successful
+      expect(response.body).to include("Funder")
+      expect(response.body).to include("Helping Hands")
+    end
+  end
+
+  describe "POST /scholarships?grant_id=" do
+    let(:valid_params) do
+      { scholarship: { recipient_id: recipient.id, amount_dollars: "250" } }
+    end
+
+    it "creates a grant-funded scholarship and returns to the grant show page" do
+      expect {
+        post scholarships_path(grant_id: grant.id, return_to: "grant_show"), params: valid_params
+      }.to change(Scholarship, :count).by(1)
+
+      scholarship = Scholarship.last
+      expect(scholarship.grant).to eq(grant)
+      expect(scholarship.recipient).to eq(recipient)
+      expect(scholarship.amount_cents).to eq(25_000)
+      expect(response).to redirect_to(grant_path(grant))
+    end
+
+    it "returns to the grant edit page when launched from there" do
+      post scholarships_path(grant_id: grant.id, return_to: "grant_edit"), params: valid_params
+      expect(response).to redirect_to(edit_grant_path(grant))
+    end
+
+    it "rejects an amount that exceeds the grant's available funds" do
+      expect {
+        post scholarships_path(grant_id: grant.id, return_to: "grant_show"),
+             params: { scholarship: { recipient_id: recipient.id, amount_dollars: "1500" } }
+      }.not_to change(Scholarship, :count)
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "PATCH /scholarships/:id with grant return context" do
+    let(:scholarship) { create(:scholarship, grant:, recipient:, amount_cents: 10_000) }
+
+    it "updates and returns to the grant show page" do
+      patch scholarship_path(scholarship, return_to: "grant_show"),
+            params: { scholarship: { amount_dollars: "300" } }
+      expect(scholarship.reload.amount_cents).to eq(30_000)
+      expect(response).to redirect_to(grant_path(grant))
+    end
+  end
+
+  describe "grant pages list associated scholarships" do
+    it "shows the scholarship on the grant show page" do
+      create(:scholarship, grant:, recipient:, amount_cents: 10_000)
+      get grant_path(grant)
+      expect(response.body).to include("Bob Barker")
+      expect(response.body).to include("Add scholarship")
+    end
+  end
+end

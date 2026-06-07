@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_07_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_120100) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -593,6 +593,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_210000) do
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
   end
 
+  create_table "grants", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", default: 0, null: false
+    t.date "application_deadline"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.text "description"
+    t.bigint "donor_id", null: false
+    t.string "donor_type", null: false
+    t.text "eligibility_criteria"
+    t.date "funds_received_on"
+    t.string "name", null: false
+    t.text "tasks"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["created_by_id"], name: "index_grants_on_created_by_id"
+    t.index ["donor_type", "donor_id"], name: "index_grants_on_donor"
+    t.index ["updated_by_id"], name: "index_grants_on_updated_by_id"
+  end
+
   create_table "images", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.string "file_content_type"
@@ -1016,9 +1035,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_210000) do
   create_table "scholarships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents", default: 0, null: false
     t.datetime "created_at", null: false
+    t.bigint "grant_id"
     t.bigint "recipient_id", null: false
     t.boolean "tasks_completed", default: false, null: false
     t.datetime "updated_at", null: false
+    t.index ["grant_id"], name: "index_scholarships_on_grant_id"
     t.index ["recipient_id"], name: "index_scholarships_on_recipient_id"
   end
 
@@ -1552,6 +1573,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_210000) do
   add_foreign_key "resources", "users", column: "created_by_id"
   add_foreign_key "resources", "windows_types"
   add_foreign_key "resources", "workshops"
+  add_foreign_key "scholarships", "grants"
   add_foreign_key "scholarships", "people", column: "recipient_id"
   add_foreign_key "sectorable_items", "sectors"
   add_foreign_key "stories", "organizations"
