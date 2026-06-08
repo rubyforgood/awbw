@@ -48,6 +48,24 @@
       <dt class="text-sm font-medium text-gray-500">Created</dt>
       <dd class="mt-1 text-sm text-gray-900"><%= @payment.created_at.strftime("%B %d, %Y at %I:%M %p") %></dd>
     </div>
+    <% if @payment.metadata.present? %>
+      <div class="sm:col-span-2">
+        <div data-controller="dropdown" class="relative">
+          <button type="button"
+                  data-action="dropdown#toggle"
+                  data-dropdown-payload-param='[{"payment-metadata-<%= @payment.id %>":"hidden"}]'
+                  class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 cursor-pointer">
+            Metadata
+            <i class="fa-solid fa-chevron-down w-3 h-3 text-gray-400"></i>
+          </button>
+          <div id="payment-metadata-<%= @payment.id %>"
+               data-dropdown-target="content"
+               class="hidden mt-2 bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-xs text-gray-800 whitespace-pre-wrap break-words max-w-full">
+            <%= JSON.pretty_generate(@payment.metadata) %>
+          </div>
+        </div>
+      </div>
+    <% end %>
   </dl>
   <% if @allocations.any? %>
     <div class="mt-8">

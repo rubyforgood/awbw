@@ -34,7 +34,8 @@ module PayChargeExtensions
       amount_cents: amount,
       amount_cents_remaining: amount,
       currency: currency,
-      pay_charge_id: id
+      pay_charge_id: id,
+      metadata: metadata
     )
 
     remaining_needed = registration.remaining_cost
@@ -62,7 +63,8 @@ module PayChargeExtensions
       amount_cents: amount,
       amount_cents_remaining: amount,
       currency: currency,
-      pay_charge_id: id
+      pay_charge_id: id,
+      metadata: metadata
     )
   end
 
@@ -75,7 +77,8 @@ module PayChargeExtensions
       amount_cents: amount,
       amount_cents_remaining: amount,
       currency: currency,
-      pay_charge_id: id
+      pay_charge_id: id,
+      metadata: metadata
     )
   end
 
