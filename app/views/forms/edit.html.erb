@@ -34,7 +34,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Form role</label>
         <%= f.select :role,
-              [["General", ""], ["Registration", "registration"], ["Scholarship", "scholarship"]],
+              [["General", ""], ["Registration", "registration"], ["Scholarship", "scholarship"], ["Group Payment", "group_payment"]],
               { selected: @form.role || "" },
               class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
       </div>
