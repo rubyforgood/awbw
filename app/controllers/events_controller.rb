@@ -315,7 +315,7 @@ class EventsController < ApplicationController
     @event.build_primary_asset if @event.primary_asset.blank?
     @event.gallery_assets.build
     @locations = Location.order(:city, :state)
-    @registration_forms = Form.standalone.where(role: [ nil, "", "registration" ]).order(:name)
+    @registration_forms = Form.standalone.where(role: "registration").order(:name)
     @categories_grouped =
       Category
         .includes(:category_type)
