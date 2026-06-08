@@ -3,7 +3,7 @@
   <tr>
     <th class="px-4 py-3 text-left font-medium text-gray-600">Sent</th>
     <!--        <th class="px-4 py-3 text-left font-medium text-gray-600">Kind</th>-->
-    <th class="px-4 py-3 text-left font-medium text-gray-600">Recipient</th>
+    <th class="px-4 py-3 text-left font-medium text-gray-600">People</th>
     <th class="px-4 py-3 text-left font-medium text-gray-600">Subject</th>
     <th class="px-4 py-3 text-left font-medium text-gray-600">Record</th>
     <th class="px-4 py-3 text-center font-medium text-gray-600">Responded</th>
@@ -30,9 +30,10 @@
       <%#= notification.kind.to_s.humanize %>
       <!--          </td>-->
 
-      <!-- Recipient -->
+      <!-- People -->
       <td class="px-4 py-3 text-gray-700">
-        <%= notification.recipient_email %>
+        <div><span class="text-xs uppercase text-gray-500">To:</span> <%= notification.recipient_email %></div>
+        <div class="text-[10px] text-gray-400"><span class="uppercase">From:</span> <%= notification.sender&.full_name.presence || "AWBW portal" %></div>
       </td>
 
       <!-- Subject -->
