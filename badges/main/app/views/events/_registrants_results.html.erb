@@ -1,10 +1,22 @@
 <%= turbo_frame_tag :registrants_results do %>
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-controller="column-toggle">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-      <p class="text-sm text-gray-500"><%= @event_registrations.size %> registrant<%= "s" if @event_registrations.size != 1 %></p>
+      <% current_filter = params[:attendance_status].present? ? nil : (params[:status_filter].presence || "active") %>
+      <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Attendance filter">
+        <%= link_to registrants_event_path(@event, status_filter: "active", keyword: params[:keyword].presence),
+              data: { turbo_frame: "_top" },
+              class: "px-3 py-1 rounded-md transition-colors #{current_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+          Active <span class="text-gray-400">(<%= @active_count %>)</span>
+        <% end %>
+        <%= link_to registrants_event_path(@event, status_filter: "inactive", keyword: params[:keyword].presence),
+              data: { turbo_frame: "_top" },
+              class: "px-3 py-1 rounded-md transition-colors #{current_filter == "inactive" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}" do %>
+          Inactive <span class="text-gray-400">(<%= @inactive_count %>)</span>
+        <% end %>
+      </nav>
 
       <label class="inline-flex items-center gap-2 cursor-pointer select-none">
-        <span class="text-sm text-gray-500">Confirmed</span>
+        <span class="text-sm text-gray-500">User confirmation</span>
 
         <input
           type="checkbox"
@@ -28,15 +40,15 @@
           <thead class="bg-gray-100">
             <tr>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization(s)</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Scholarship</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-full">Organization</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Scholarship</th>
 
               <% if @event.cost_cents.to_i > 0 %>
-                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment status</th>
+                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Payment</th>
               <% end %>
 
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col>Confirmed</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Attendance status</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Attendance</th>
               <th class="px-4 py-2"></th>
             </tr>
           </thead>
@@ -50,7 +62,7 @@
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 
                   <div class="flex items-center gap-1">
-                    <div class="w-64 min-w-0">
+                    <div class="w-52 min-w-0">
                       <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
                     </div>
 
@@ -84,7 +96,12 @@
                   <% if registration.organizations.any? %>
                     <ul class="space-y-0.5">
                       <% registration.organizations.each do |org| %>
-                        <li title="<%= org.name %>"><%= truncate(org.name, length: 10) %></li>
+                        <li>
+                          <%= link_to truncate(org.name, length: 40), organization_path(org),
+                                      title: org.name,
+                                      class: "text-gray-800 hover:text-gray-900 hover:underline",
+                                      data: { turbo_frame: "_top" } %>
+                        </li>
                       <% end %>
                     </ul>
                   <% else %>
@@ -96,7 +113,7 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-sm">
+                <td class="px-4 py-2 text-sm text-center">
                   <% if (s = registration.scholarships.first) %>
                     <% if s.tasks_completed? %>
                       <%= link_to edit_scholarship_path(s),
@@ -133,12 +150,12 @@
                 </td>
 
                 <% if @event.cost_cents.to_i > 0 %>
-                  <td class="px-4 py-2 text-sm">
+                  <td class="px-4 py-2 text-sm text-center">
                     <% paid_cents = registration.allocations_sum %>
                     <% due_cents = @event.cost_cents - paid_cents %>
                     <% is_paid = registration.paid_in_full? %>
 
-                    <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s), class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 #{is_paid ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'} hover:opacity-80", title: (!is_paid && paid_cents > 0 ? "$%.2f paid" % (paid_cents / 100.0) : nil), data: { turbo_frame: "_top" } do %>
+                    <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s), class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-5 py-0.5 #{is_paid ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'} hover:opacity-80", title: (!is_paid && paid_cents > 0 ? "$%.2f paid" % (paid_cents / 100.0) : nil), data: { turbo_frame: "_top" } do %>
                       <i class="fas <%= is_paid ? 'fa-circle-check' : 'fa-circle-exclamation' %>"></i>
                       <span><%= is_paid ? 'Paid' : "$%.2f due" % (due_cents / 100.0) %></span>
                     <% end %>
@@ -156,7 +173,7 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-nowrap"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
+                <td class="px-4 py-2 text-sm text-nowrap text-center"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
                 <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
               </tr>
             <% end %>

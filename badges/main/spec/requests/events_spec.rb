@@ -294,6 +294,59 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "active/inactive filtering" do
+      let(:active_person) { create(:person, first_name: "Activa", last_name: "Attendee") }
+      let(:inactive_person) { create(:person, first_name: "Inactiva", last_name: "Cancelled") }
+      let!(:active_registration) { create(:event_registration, event: event, registrant: active_person, status: "attended") }
+      let!(:inactive_registration) { create(:event_registration, event: event, registrant: inactive_person, status: "cancelled") }
+
+      it "shows active and inactive counts" do
+        get registrants_event_path(event)
+
+        # registration (default "registered") + active_registration are active
+        expect(response.body).to include("Active <span class=\"text-gray-400\">(2)</span>")
+        expect(response.body).to include("Inactive <span class=\"text-gray-400\">(1)</span>")
+      end
+
+      it "defaults to the active filter, hiding inactive registrants" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Activa")
+        expect(response.body).not_to include("Inactiva")
+      end
+
+      it "shows only inactive registrants when filtered to inactive" do
+        get registrants_event_path(event, params: { status_filter: "inactive" })
+
+        expect(response.body).to include("Inactiva")
+        expect(response.body).not_to include("Activa")
+      end
+
+      it "honors an explicit attendance_status over the active/inactive filter" do
+        get registrants_event_path(event, params: { attendance_status: "cancelled" })
+
+        expect(response.body).to include("Inactiva")
+        expect(response.body).not_to include("Activa")
+      end
+
+      it "shows the active registrant count in the page heading" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Registrants (2)")
+      end
+    end
+
+    context "event heading" do
+      it "shows the event title and date range after the heading" do
+        event.update!(start_date: Time.zone.local(2026, 6, 2, 9), end_date: Time.zone.local(2026, 6, 2, 17))
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(event.title)
+        expect(response.body).to include(event.decorate.date_range)
+      end
+    end
+
     context "confirmed column toggle" do
       it "renders the slide toggle for confirmed column" do
         get registrants_event_path(event)

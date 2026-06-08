@@ -54,13 +54,24 @@ class EventsController < ApplicationController
       .includes(:comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
-    scope = scope.attendance_status(params[:attendance_status]) if params[:attendance_status].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
     scope = scope.scholarship_status(params[:scholarship]) if params[:scholarship].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
     scope = scope.registrant_state(params[:state]) if params[:state].present?
     scope = scope.registrant_county(params[:county]) if params[:county].present?
     scope = scope.registrant_sector(params[:sector]) if params[:sector].present?
+
+    @active_count = scope.active.count
+    @inactive_count = scope.inactive.count
+
+    if params[:attendance_status].present?
+      scope = scope.attendance_status(params[:attendance_status])
+    else
+      @status_filter = params[:status_filter].presence || "active"
+      scope = scope.inactive if @status_filter == "inactive"
+      scope = scope.active if @status_filter == "active"
+    end
+
     @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
     @dashboard = EventDashboard.new(@event)
 
