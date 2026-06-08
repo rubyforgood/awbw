@@ -1,38 +1,38 @@
 module Events
-  class GroupPaymentsController < ApplicationController
+  class BulkPaymentsController < ApplicationController
     skip_before_action :authenticate_user!, only: [ :new, :create, :show ]
     before_action :set_event
     before_action :set_form, only: [ :new, :create ]
 
     rescue_from ActionController::InvalidAuthenticityToken do
       flash[:alert] = "Your session has expired. Please try submitting the form again."
-      redirect_to new_event_group_payment_path(@event)
+      redirect_to new_event_bulk_payment_path(@event)
     end
 
     def new
-      authorize! :group_payment, to: :new?
+      authorize! :bulk_payment, to: :new?
 
       @form_fields = visible_form_fields
       @event = @event.decorate
 
-      @attendee_field = @form.form_fields.find_by(field_identifier: "group_payment_attendees")
+      @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
     end
 
     def create
-      authorize! :group_payment, to: :create?
+      authorize! :bulk_payment, to: :create?
 
-      @form_params = params.dig(:group_payment, :form_fields)&.to_unsafe_h || {}
+      @form_params = params.dig(:bulk_payment, :form_fields)&.to_unsafe_h || {}
 
       @field_errors = validate_required_fields
       if @field_errors.any?
         @form_fields = visible_form_fields
         @event = @event.decorate
-        @attendee_field = @form.form_fields.find_by(field_identifier: "group_payment_attendees")
+        @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
         render :new, status: :unprocessable_content
         return
       end
 
-      result = EventRegistrationServices::GroupPayment.call(
+      result = EventRegistrationServices::BulkPayment.call(
         event: @event,
         form: @form,
         form_params: @form_params,
@@ -44,20 +44,20 @@ module Events
           checkout_session = create_stripe_checkout_session(result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
         else
-          redirect_to event_group_payment_path(@event, submission_id: result.form_submission.id),
-                      notice: "Your group payment information has been submitted."
+          redirect_to event_bulk_payment_path(@event, submission_id: result.form_submission.id),
+                      notice: "Your bulk payment information has been submitted."
         end
       else
         @form_fields = visible_form_fields
         @event = @event.decorate
-        @attendee_field = @form.form_fields.find_by(field_identifier: "group_payment_attendees")
+        @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
         flash.now[:alert] = result.errors.join(", ")
         render :new, status: :unprocessable_content
       end
     end
 
     def show
-      authorize! :group_payment, to: :show?
+      authorize! :bulk_payment, to: :show?
 
       @submission = FormSubmission.find(params[:submission_id])
       @form = @submission.form
@@ -66,7 +66,7 @@ module Events
       @event = @event.decorate
 
       attendee_answer = @responses.values.find { |a|
-        a.form_field&.field_identifier == "group_payment_attendees"
+        a.form_field&.field_identifier == "bulk_payment_attendees"
       }
       @attendees = parse_attendees(attendee_answer&.submitted_answer)
     end
@@ -89,9 +89,9 @@ module Events
     end
 
     def set_form
-      @form = @event.group_payment_form
+      @form = @event.bulk_payment_form
       unless @form
-        redirect_to event_path(@event), alert: "Group payment form is not available for this event."
+        redirect_to event_path(@event), alert: "Bulk payment form is not available for this event."
       end
     end
 
@@ -101,7 +101,7 @@ module Events
 
       visible_fields.find_each do |field|
         next if field.group_header?
-        next if field.field_identifier == "group_payment_attendees"
+        next if field.field_identifier == "bulk_payment_attendees"
 
         value = @form_params[field.id.to_s]
 
@@ -148,13 +148,13 @@ module Events
         line_items: [ {
           price_data: {
             currency: "usd",
-            product_data: { name: "Group Payment (#{qty} attendees): #{@event.title}" },
+            product_data: { name: "Bulk Payment (#{qty} attendees): #{@event.title}" },
             unit_amount: unit_amount
           },
           quantity: qty
         } ],
-        success_url: event_group_payment_url(@event, submission_id: submission.id, checkout: "success"),
-        cancel_url: event_group_payment_url(@event, submission_id: submission.id, checkout: "cancelled")
+        success_url: event_bulk_payment_url(@event, submission_id: submission.id, checkout: "success"),
+        cancel_url: event_bulk_payment_url(@event, submission_id: submission.id, checkout: "cancelled")
       )
     end
 

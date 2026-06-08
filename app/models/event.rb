@@ -69,8 +69,8 @@ class Event < ApplicationRecord
     forms.find_by(event_forms: { role: "scholarship" })
   end
 
-  def group_payment_form
-    forms.find_by(event_forms: { role: "group_payment" })
+  def bulk_payment_form
+    forms.find_by(event_forms: { role: "bulk_payment" })
   end
 
   def active_registration_for(person)

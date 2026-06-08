@@ -144,10 +144,10 @@
     </div>
   <% end %>
 
-  <% if @event.group_payment_form %>
+  <% if @event.bulk_payment_form %>
     <div class="mt-4">
-      <%= link_to "Group Payment",
-                  new_event_group_payment_path(@event),
+      <%= link_to "Bulk Payment",
+                  new_event_bulk_payment_path(@event),
                   class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white",
                   style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(22, 101, 52); border: 3px solid rgb(22, 101, 52);" %>
     </div>

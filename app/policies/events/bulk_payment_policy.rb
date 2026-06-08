@@ -1,4 +1,4 @@
-class Events::GroupPaymentPolicy < ApplicationPolicy
+class Events::BulkPaymentPolicy < ApplicationPolicy
   def new?
     true
   end

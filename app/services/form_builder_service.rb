@@ -9,7 +9,7 @@ class FormBuilderService
     payment: { label: "Payment", method: :build_payment_fields },
     consent: { label: "Consent", method: :build_consent_fields },
     post_event_feedback: { label: "Post-event feedback", method: :build_post_event_feedback_fields },
-    group_payment: { label: "Group payment", method: :build_group_payment_fields }
+    bulk_payment: { label: "Bulk payment", method: :build_bulk_payment_fields }
   }.freeze
 
   def initialize(name:, sections:, role: nil)
@@ -49,7 +49,7 @@ class FormBuilderService
     payment: %w[payment_method],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
-    group_payment: %w[payer_first_name payer_last_name payer_email organization_name number_of_attendees payment_method group_payment_attendees]
+    bulk_payment: %w[payer_first_name payer_last_name payer_email organization_name number_of_attendees payment_method bulk_payment_attendees]
   }.freeze
 
   # Header questions created by each section's builder method
@@ -63,7 +63,7 @@ class FormBuilderService
     payment: [ "Payment Information" ],
     consent: [ "Consent" ],
     post_event_feedback: [ "Post-Event Feedback" ],
-    group_payment: [ "Payer Information", "Payment Information", "Attendees" ]
+    bulk_payment: [ "Payer Information", "Payment Information", "Attendees" ]
   }.freeze
 
   # Update sections on an existing form: add new sections, remove unchecked ones
@@ -111,7 +111,7 @@ class FormBuilderService
     "scholarship" => :always_ask,
     "consent" => :answers_on_file,
     "post_event_feedback" => :answers_on_file,
-    "group_payment" => :always_ask
+    "bulk_payment" => :always_ask
   }.freeze
 
   # Sections where answers carry across all events (ask once ever)
@@ -341,33 +341,33 @@ class FormBuilderService
     position
   end
 
-  def build_group_payment_fields(form, position)
-    position = add_header(form, position, "Payer Information", group: "group_payment", visibility: :logged_out_only)
+  def build_bulk_payment_fields(form, position)
+    position = add_header(form, position, "Payer Information", group: "bulk_payment", visibility: :logged_out_only)
 
     position = add_field(form, position, "Payer First Name", :free_form_input_one_line,
-                         key: "payer_first_name", group: "group_payment", required: true,
+                         key: "payer_first_name", group: "bulk_payment", required: true,
                          visibility: :logged_out_only)
     position = add_field(form, position, "Payer Last Name", :free_form_input_one_line,
-                         key: "payer_last_name", group: "group_payment", required: true,
+                         key: "payer_last_name", group: "bulk_payment", required: true,
                          visibility: :logged_out_only)
     position = add_field(form, position, "Payer Email", :free_form_input_one_line,
-                         key: "payer_email", group: "group_payment", required: true,
+                         key: "payer_email", group: "bulk_payment", required: true,
                          visibility: :logged_out_only)
     position = add_field(form, position, "Organization Name", :free_form_input_one_line,
-                         key: "organization_name", group: "group_payment", required: false,
+                         key: "organization_name", group: "bulk_payment", required: false,
                          visibility: :logged_out_only)
 
-    position = add_header(form, position, "Payment Information", group: "group_payment")
+    position = add_header(form, position, "Payment Information", group: "bulk_payment")
     position = add_field(form, position, "Payment Method", :multiple_choice_radio,
-                         key: "payment_method", group: "group_payment", required: true,
+                         key: "payment_method", group: "bulk_payment", required: true,
                          options: [ "Credit Card", "Check", "Purchase Order", "Other" ])
 
-    position = add_header(form, position, "Attendees", group: "group_payment")
+    position = add_header(form, position, "Attendees", group: "bulk_payment")
     position = add_field(form, position, "Number of Attendees", :free_form_input_one_line,
-                         key: "number_of_attendees", group: "group_payment", required: true,
+                         key: "number_of_attendees", group: "bulk_payment", required: true,
                          datatype: :number_integer)
     position = add_field(form, position, "Attendees", :no_user_input,
-                         key: "group_payment_attendees", group: "group_payment", required: false)
+                         key: "bulk_payment_attendees", group: "bulk_payment", required: false)
     position
   end
 end
