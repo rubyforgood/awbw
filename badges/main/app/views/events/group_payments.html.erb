@@ -27,9 +27,10 @@
           <div class="text-sm text-gray-900 w-28 shrink-0"><%= payment_method.presence || "—" %></div>
           <div class="w-24 shrink-0">
             <% if submission.payments.any? %>
-              <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+              <%= link_to payment_path(submission.payments.first),
+                          class: "inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 hover:bg-green-200" do %>
                 <i class="fa-solid fa-circle-check text-green-500"></i> Paid
-              </span>
+              <% end %>
             <% else %>
               <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
                 <i class="fa-solid fa-clock text-amber-500"></i> Pending
