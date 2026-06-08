@@ -130,7 +130,7 @@ module EventRegistrationServices
         state: new_state,
         zip_code: field_value("mailing_zip"),
         locality: "Unknown",
-        address_type: field_value("mailing_address_type")&.downcase || "mailing",
+        address_type: field_value("mailing_address_type")&.downcase || "unknown",
         primary: true
       )
     end
