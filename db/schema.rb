@@ -1,0 +1,1633 @@
+# This file is auto-generated from the current state of the database. Instead
+# of editing this file, please use the migrations feature of Active Record to
+# incrementally modify your database, and then regenerate this schema definition.
+#
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
+#
+# It's strongly recommended that you check this file into your version control system.
+
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_205816) do
+  create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "action_text_rich_text_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "mentionable_id", null: false
+    t.string "mentionable_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["action_text_rich_text_id", "mentionable_type", "mentionable_id"], name: "index_at_mentions_on_rich_text_and_mentionable", unique: true
+    t.index ["action_text_rich_text_id"], name: "index_action_text_mentions_on_action_text_rich_text_id"
+    t.index ["mentionable_type", "mentionable_id"], name: "index_action_text_mentions_on_mentionable"
+  end
+
+  create_table "action_text_rich_texts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "body", size: :long
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.text "plain_text_body"
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["record_type", "record_id", "name"], name: "index_action_text_rich_texts_uniqueness", unique: true
+  end
+
+  create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "aws_key"
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", precision: nil, null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "addresses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "address_type"
+    t.bigint "addressable_id"
+    t.string "addressable_type"
+    t.string "city", null: false
+    t.string "country"
+    t.string "county"
+    t.datetime "created_at", null: false
+    t.string "district"
+    t.boolean "inactive", default: false, null: false
+    t.integer "la_city_council_district"
+    t.integer "la_service_planning_area"
+    t.integer "la_supervisorial_district"
+    t.string "locality"
+    t.string "phone"
+    t.boolean "primary", default: false, null: false
+    t.string "state", null: false
+    t.string "street_address", null: false
+    t.datetime "updated_at", null: false
+    t.string "zip_code", null: false
+    t.index ["addressable_type", "addressable_id"], name: "index_addresses_on_addressable"
+  end
+
+  create_table "admins", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil
+    t.datetime "current_sign_in_at", precision: nil
+    t.string "current_sign_in_ip"
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.string "first_name", default: "", null: false
+    t.string "last_name", default: "", null: false
+    t.datetime "last_sign_in_at", precision: nil
+    t.string "last_sign_in_ip"
+    t.datetime "remember_created_at", precision: nil
+    t.datetime "reset_password_sent_at", precision: nil
+    t.string "reset_password_token"
+    t.integer "sign_in_count", default: 0, null: false
+    t.datetime "updated_at", precision: nil
+    t.index ["email"], name: "index_admins_on_email", unique: true
+    t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
+  end
+
+  create_table "affiliations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.date "end_date"
+    t.string "filemaker_code"
+    t.boolean "inactive", default: false, null: false
+    t.integer "organization_agency_id"
+    t.integer "organization_id", null: false
+    t.bigint "person_id", null: false
+    t.integer "position"
+    t.boolean "primary_contact", default: false, null: false
+    t.date "start_date"
+    t.string "title"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_id"
+    t.index ["organization_agency_id"], name: "index_affiliations_on_organization_agency_id"
+    t.index ["organization_id"], name: "index_affiliations_on_organization_id"
+    t.index ["person_id"], name: "index_affiliations_on_person_id"
+    t.index ["user_id"], name: "index_affiliations_on_user_id"
+  end
+
+  create_table "age_ranges", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "name"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "windows_type_id"
+    t.index ["windows_type_id"], name: "index_age_ranges_on_windows_type_id"
+  end
+
+  create_table "ahoy_events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "name"
+    t.json "properties"
+    t.bigint "resource_id"
+    t.string "resource_type"
+    t.datetime "time"
+    t.bigint "user_id"
+    t.bigint "visit_id"
+    t.index ["name", "time"], name: "index_ahoy_events_on_name_and_time"
+    t.index ["resource_id"], name: "index_ahoy_events_on_resource_id"
+    t.index ["resource_type", "resource_id", "time"], name: "index_ahoy_events_on_resource_type_and_resource_id_and_time"
+    t.index ["user_id"], name: "index_ahoy_events_on_user_id"
+    t.index ["visit_id"], name: "index_ahoy_events_on_visit_id"
+  end
+
+  create_table "ahoy_visits", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "app_version"
+    t.string "browser"
+    t.string "city"
+    t.string "country"
+    t.string "device_type"
+    t.string "ip"
+    t.text "landing_page"
+    t.float "latitude"
+    t.float "longitude"
+    t.string "os"
+    t.string "os_version"
+    t.string "platform"
+    t.text "referrer"
+    t.string "referring_domain"
+    t.string "region"
+    t.datetime "started_at"
+    t.text "user_agent"
+    t.bigint "user_id"
+    t.string "utm_campaign"
+    t.string "utm_content"
+    t.string "utm_medium"
+    t.string "utm_source"
+    t.string "utm_term"
+    t.string "visit_token"
+    t.string "visitor_token"
+    t.index ["user_id"], name: "index_ahoy_visits_on_user_id"
+    t.index ["visit_token"], name: "index_ahoy_visits_on_visit_token", unique: true
+    t.index ["visitor_token", "started_at"], name: "index_ahoy_visits_on_visitor_token_and_started_at"
+  end
+
+  create_table "allocations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "allocatable_id", null: false
+    t.string "allocatable_type", null: false
+    t.integer "amount", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "reverted_id"
+    t.bigint "source_id", null: false
+    t.string "source_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["allocatable_type", "allocatable_id"], name: "index_allocations_on_allocatable"
+    t.index ["allocatable_type", "allocatable_id"], name: "index_allocations_on_allocatable_type_and_allocatable_id"
+    t.index ["reverted_id"], name: "fk_rails_4e7a74eb48"
+    t.index ["source_type", "source_id"], name: "index_allocations_on_source"
+    t.index ["source_type", "source_id"], name: "index_allocations_on_source_type_and_source_id"
+  end
+
+  create_table "answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "name"
+    t.integer "position"
+    t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "assets", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "owner_id"
+    t.string "owner_type"
+    t.integer "report_id"
+    t.string "title"
+    t.string "type", default: "PrimaryAsset", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_id"], name: "index_assets_on_owner_id"
+    t.index ["owner_type"], name: "index_assets_on_owner_type"
+    t.index ["type"], name: "index_assets_on_type"
+  end
+
+  create_table "attachments", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "file_content_type"
+    t.string "file_file_name"
+    t.integer "file_file_size"
+    t.datetime "file_updated_at", precision: nil
+    t.integer "owner_id"
+    t.string "owner_type"
+    t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "banners", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "content", size: :medium
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "created_by_id"
+    t.boolean "published", default: false, null: false
+    t.boolean "show"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "updated_by_id"
+    t.index ["created_by_id"], name: "index_banners_on_created_by_id"
+    t.index ["published"], name: "index_banners_on_published"
+    t.index ["updated_by_id"], name: "index_banners_on_updated_by_id"
+  end
+
+  create_table "blazer_audits", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.timestamp "created_at", null: false
+    t.string "data_source"
+    t.bigint "query_id"
+    t.text "statement"
+    t.integer "user_id"
+    t.index ["query_id"], name: "index_blazer_audits_on_query_id"
+    t.index ["user_id"], name: "index_blazer_audits_on_user_id"
+  end
+
+  create_table "blazer_checks", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "check_type"
+    t.datetime "created_at", null: false
+    t.integer "creator_id"
+    t.text "emails"
+    t.datetime "last_run_at"
+    t.text "message"
+    t.bigint "query_id"
+    t.string "schedule"
+    t.text "slack_channels"
+    t.string "state"
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_checks_on_creator_id"
+    t.index ["query_id"], name: "index_blazer_checks_on_query_id"
+  end
+
+  create_table "blazer_dashboard_queries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "dashboard_id"
+    t.integer "position"
+    t.bigint "query_id"
+    t.datetime "updated_at", null: false
+    t.index ["dashboard_id"], name: "index_blazer_dashboard_queries_on_dashboard_id"
+    t.index ["query_id"], name: "index_blazer_dashboard_queries_on_query_id"
+  end
+
+  create_table "blazer_dashboards", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "creator_id"
+    t.string "name"
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_dashboards_on_creator_id"
+  end
+
+  create_table "blazer_queries", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "creator_id"
+    t.string "data_source"
+    t.text "description"
+    t.string "name"
+    t.text "statement"
+    t.string "status"
+    t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_blazer_queries_on_creator_id"
+  end
+
+  create_table "bookmark_annotations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "annotation", size: :long
+    t.integer "bookmark_id"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["bookmark_id"], name: "index_bookmark_annotations_on_bookmark_id"
+  end
+
+  create_table "bookmarks", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "bookmarkable_id"
+    t.string "bookmarkable_type"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_id"
+    t.index ["bookmarkable_type", "bookmarkable_id"], name: "index_bookmarks_on_bookmarkable"
+    t.index ["user_id"], name: "index_bookmarks_on_user_id"
+  end
+
+  create_table "categories", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "category_type_id"
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "legacy_id"
+    t.string "name"
+    t.integer "position", null: false
+    t.boolean "published", default: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["category_type_id", "position"], name: "index_categories_on_category_type_id_and_position", unique: true
+    t.index ["category_type_id"], name: "index_categories_on_category_type_id"
+  end
+
+  create_table "categorizable_items", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "categorizable_id"
+    t.string "categorizable_type"
+    t.integer "category_id"
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "legacy_id"
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["categorizable_type", "categorizable_id"], name: "idx_on_categorizable_type_categorizable_id_ccce65d80c"
+    t.index ["category_id", "categorizable_type", "categorizable_id"], name: "index_categorizable_items_uniqueness", unique: true
+    t.index ["category_id"], name: "index_categorizable_items_on_category_id"
+  end
+
+  create_table "category_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "display_text"
+    t.string "legacy_id"
+    t.string "name"
+    t.boolean "profile_specific", default: false, null: false
+    t.boolean "published", default: false
+    t.boolean "story_specific", default: false
+    t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "ckeditor_assets", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "actual_url"
+    t.integer "assetable_id"
+    t.string "assetable_type", limit: 30
+    t.datetime "created_at", precision: nil, null: false
+    t.string "data_content_type"
+    t.string "data_file_name", null: false
+    t.integer "data_file_size"
+    t.integer "height"
+    t.string "type", limit: 30
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "width"
+    t.index ["assetable_type", "assetable_id"], name: "idx_ckeditor_assetable"
+    t.index ["assetable_type", "type", "assetable_id"], name: "idx_ckeditor_assetable_type"
+  end
+
+  create_table "comments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "commentable_id", null: false
+    t.string "commentable_type", null: false
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.string "topic"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["commentable_type", "commentable_id", "created_at"], name: "idx_on_commentable_type_commentable_id_created_at_89c6e27600"
+    t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
+    t.index ["created_by_id"], name: "index_comments_on_created_by_id"
+    t.index ["updated_by_id"], name: "index_comments_on_updated_by_id"
+  end
+
+  create_table "community_news", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "author_id", null: false
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.integer "created_by_id", null: false
+    t.boolean "featured"
+    t.integer "organization_id"
+    t.boolean "publicly_featured", default: false, null: false
+    t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published"
+    t.string "reference_url"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id", null: false
+    t.integer "windows_type_id"
+    t.string "youtube_url"
+    t.index ["author_id"], name: "index_community_news_on_author_id"
+    t.index ["body"], name: "index_community_news_on_body", type: :fulltext
+    t.index ["created_by_id"], name: "index_community_news_on_created_by_id"
+    t.index ["organization_id"], name: "index_community_news_on_organization_id"
+    t.index ["updated_by_id"], name: "index_community_news_on_updated_by_id"
+    t.index ["windows_type_id"], name: "index_community_news_on_windows_type_id"
+  end
+
+  create_table "contact_methods", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "address_id"
+    t.string "contact_type"
+    t.bigint "contactable_id", null: false
+    t.string "contactable_type", null: false
+    t.datetime "created_at", null: false
+    t.boolean "inactive", default: false, null: false
+    t.string "kind", null: false
+    t.boolean "primary", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.string "value", null: false
+    t.index ["address_id"], name: "index_contact_methods_on_address_id"
+    t.index ["contactable_type", "contactable_id"], name: "index_contact_methods_on_contactable"
+  end
+
+  create_table "discounts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_forms", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.integer "form_id", null: false
+    t.string "role", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "form_id", "role"], name: "index_event_forms_on_event_id_and_form_id_and_role", unique: true
+    t.index ["event_id"], name: "index_event_forms_on_event_id"
+    t.index ["form_id"], name: "index_event_forms_on_form_id"
+  end
+
+  create_table "event_registration_organizations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_registration_id", null: false
+    t.integer "organization_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_registration_id", "organization_id"], name: "idx_event_reg_orgs_on_registration_and_org", unique: true
+    t.index ["event_registration_id"], name: "idx_on_event_registration_id_806bdcd019"
+    t.index ["organization_id"], name: "index_event_registration_organizations_on_organization_id"
+  end
+
+  create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.boolean "ce_credit_requested", default: false, null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id"
+    t.bigint "registrant_id", null: false
+    t.boolean "scholarship_requested", default: false, null: false
+    t.string "slug"
+    t.string "status", default: "registered", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_event_registrations_on_event_id"
+    t.index ["registrant_id", "event_id"], name: "index_event_registrations_on_registrant_id_and_event_id", unique: true
+    t.index ["registrant_id"], name: "index_event_registrations_on_registrant_id"
+    t.index ["slug"], name: "index_event_registrations_on_slug", unique: true
+  end
+
+  create_table "events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.boolean "autoshow_cost", default: true, null: false
+    t.boolean "autoshow_date", default: true, null: false
+    t.boolean "autoshow_location", default: true, null: false
+    t.boolean "autoshow_pre_date_text", default: true, null: false
+    t.boolean "autoshow_registration", default: true, null: false
+    t.boolean "autoshow_registration_close", default: true, null: false
+    t.boolean "autoshow_time", default: true, null: false
+    t.boolean "autoshow_title", default: true, null: false
+    t.boolean "autoshow_videoconference_label", default: true, null: false
+    t.boolean "autoshow_videoconference_link", default: true, null: false
+    t.boolean "bulk_payment_enabled", default: false, null: false
+    t.integer "cost_cents"
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.text "description"
+    t.datetime "end_date", precision: nil
+    t.boolean "featured", default: false, null: false
+    t.text "ga4_snippet"
+    t.text "gtm_body_snippet"
+    t.text "gtm_head_snippet"
+    t.boolean "inactive", default: true, null: false
+    t.integer "location_id"
+    t.string "pre_date_text"
+    t.string "pre_title"
+    t.boolean "public_registration_enabled", default: false, null: false
+    t.boolean "publicly_featured", default: false, null: false
+    t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
+    t.datetime "registration_close_date", precision: nil
+    t.datetime "start_date", precision: nil
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.string "videoconference_label", default: "Virtual event"
+    t.string "videoconference_url"
+    t.index ["created_by_id"], name: "index_events_on_created_by_id"
+    t.index ["location_id"], name: "index_events_on_location_id"
+    t.index ["published"], name: "index_events_on_published"
+  end
+
+  create_table "faqs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "answer", size: :long
+    t.datetime "created_at", precision: nil, null: false
+    t.boolean "inactive"
+    t.integer "position", null: false
+    t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
+    t.string "question"
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["published"], name: "index_faqs_on_published"
+  end
+
+  create_table "footers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "adult_program"
+    t.string "children_program"
+    t.datetime "created_at", precision: nil, null: false
+    t.string "general_questions"
+    t.string "phone"
+    t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "form_answers", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "form_field_id"
+    t.bigint "form_submission_id", null: false
+    t.string "question_name_when_answered"
+    t.text "submitted_answer"
+    t.datetime "updated_at", null: false
+    t.index ["form_field_id"], name: "index_form_answers_on_form_field_id"
+    t.index ["form_submission_id"], name: "index_form_answers_on_form_submission_id"
+  end
+
+  create_table "form_builders", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.text "description", size: :long
+    t.string "name"
+    t.integer "owner_type"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "windows_type_id"
+    t.index ["windows_type_id"], name: "index_form_builders_on_windows_type_id"
+  end
+
+  create_table "form_field_answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "answer_option_id"
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "form_field_id"
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["answer_option_id"], name: "index_form_field_answer_options_on_answer_option_id"
+    t.index ["form_field_id"], name: "index_form_field_answer_options_on_form_field_id"
+  end
+
+  create_table "form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "answer_type"
+    t.datetime "created_at", precision: nil, null: false
+    t.string "field_identifier"
+    t.integer "form_id"
+    t.text "hint_text"
+    t.integer "input_type"
+    t.string "name"
+    t.boolean "one_time", default: false, null: false
+    t.integer "parent_id"
+    t.integer "position"
+    t.boolean "required", default: true
+    t.string "section"
+    t.integer "status", default: 1
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "visibility", default: 0, null: false
+    t.index ["field_identifier"], name: "index_form_fields_on_field_identifier"
+    t.index ["form_id"], name: "index_form_fields_on_form_id"
+    t.index ["section"], name: "index_form_fields_on_section"
+  end
+
+  create_table "form_submissions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "form_id", null: false
+    t.bigint "person_id", null: false
+    t.string "role"
+    t.datetime "updated_at", null: false
+    t.index ["form_id"], name: "index_form_submissions_on_form_id"
+    t.index ["person_id"], name: "index_form_submissions_on_person_id"
+  end
+
+  create_table "forms", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "form_builder_id"
+    t.boolean "hide_answered_form_questions", default: false, null: false
+    t.boolean "hide_answered_person_questions", default: false, null: false
+    t.string "name"
+    t.integer "owner_id"
+    t.string "owner_type"
+    t.string "role"
+    t.json "sections"
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
+  end
+
+  create_table "grants", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", default: 0, null: false
+    t.date "application_deadline"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.text "description"
+    t.bigint "donor_id", null: false
+    t.string "donor_type", null: false
+    t.text "eligibility_criteria"
+    t.date "funds_received_on"
+    t.string "name", null: false
+    t.text "tasks"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["created_by_id"], name: "index_grants_on_created_by_id"
+    t.index ["donor_type", "donor_id"], name: "index_grants_on_donor"
+    t.index ["updated_by_id"], name: "index_grants_on_updated_by_id"
+  end
+
+  create_table "images", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "file_content_type"
+    t.string "file_file_name"
+    t.integer "file_file_size"
+    t.datetime "file_updated_at", precision: nil
+    t.integer "owner_id"
+    t.string "owner_type"
+    t.integer "report_id"
+    t.string "type", default: "Images::GalleryImage", null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["owner_id"], name: "index_images_on_owner_id"
+    t.index ["type"], name: "index_images_on_type"
+  end
+
+  create_table "locations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "city"
+    t.string "country"
+    t.datetime "created_at", precision: nil, null: false
+    t.string "state"
+    t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "media_files", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "file_content_type"
+    t.string "file_file_name"
+    t.integer "file_file_size"
+    t.datetime "file_updated_at", precision: nil
+    t.integer "report_id"
+    t.integer "workshop_log_id"
+  end
+
+  create_table "monthly_reports", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "best_call_time"
+    t.boolean "call_requested"
+    t.text "comments", size: :long
+    t.datetime "created_at", precision: nil, null: false
+    t.text "goals", size: :long
+    t.text "goals_reached", size: :long
+    t.boolean "mail_evaluations"
+    t.string "month"
+    t.text "most_challenging", size: :long
+    t.text "most_effective", size: :long
+    t.string "name"
+    t.string "num_new_participants"
+    t.string "num_ongoing_participants"
+    t.integer "organization_id"
+    t.integer "organization_user_id"
+    t.string "phone"
+    t.string "position"
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["organization_id"], name: "index_monthly_reports_on_organization_id"
+    t.index ["organization_user_id"], name: "index_monthly_reports_on_organization_user_id"
+  end
+
+  create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "channel", default: "autoemail", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "delivered_at"
+    t.text "email_body_html", size: :medium
+    t.text "email_body_text", size: :medium
+    t.text "email_subject", size: :medium
+    t.datetime "error_at"
+    t.string "error_class"
+    t.text "error_message"
+    t.string "kind", null: false
+    t.integer "noticeable_id"
+    t.string "noticeable_type"
+    t.integer "notification_type"
+    t.integer "parent_notification_id"
+    t.string "recipient_email", null: false
+    t.string "recipient_role", null: false
+    t.boolean "responded", default: false, null: false
+    t.integer "root_notification_id"
+    t.integer "sender_id"
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["kind"], name: "index_notifications_on_kind"
+    t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
+    t.index ["parent_notification_id"], name: "index_notifications_on_parent_notification_id"
+    t.index ["root_notification_id"], name: "index_notifications_on_root_notification_id"
+    t.index ["sender_id"], name: "index_notifications_on_sender_id"
+  end
+
+  create_table "organization_obligations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "name"
+    t.boolean "published", default: false, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["published"], name: "index_organization_obligations_on_published"
+  end
+
+  create_table "organization_statuses", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "name"
+    t.boolean "published", default: false, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["published"], name: "index_organization_statuses_on_published"
+  end
+
+  create_table "organizations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "agency_type"
+    t.string "agency_type_other"
+    t.datetime "created_at", precision: nil, null: false
+    t.text "description", size: :long
+    t.string "email"
+    t.date "end_date"
+    t.string "filemaker_code"
+    t.string "internal_id"
+    t.boolean "legacy", default: false
+    t.integer "legacy_id"
+    t.integer "location_id"
+    t.string "mission_vision_values"
+    t.string "name"
+    t.text "notes", size: :long
+    t.integer "organization_status_id"
+    t.boolean "profile_show_description", default: true, null: false
+    t.boolean "profile_show_email", default: true, null: false
+    t.boolean "profile_show_events_registered", default: true, null: false
+    t.boolean "profile_show_phone", default: true, null: false
+    t.boolean "profile_show_sectors", default: true, null: false
+    t.boolean "profile_show_stories", default: true, null: false
+    t.boolean "profile_show_website", default: true, null: false
+    t.boolean "profile_show_workshop_logs", default: true, null: false
+    t.boolean "profile_show_workshops", default: true, null: false
+    t.date "start_date"
+    t.datetime "updated_at", precision: nil, null: false
+    t.string "website_url"
+    t.integer "windows_type_id"
+    t.index ["location_id"], name: "index_organizations_on_location_id"
+    t.index ["organization_status_id"], name: "index_organizations_on_organization_status_id"
+    t.index ["windows_type_id"], name: "index_organizations_on_windows_type_id"
+  end
+
+  create_table "pay_charges", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount", null: false
+    t.integer "amount_refunded"
+    t.integer "application_fee_amount"
+    t.datetime "created_at", null: false
+    t.string "currency"
+    t.bigint "customer_id", null: false
+    t.json "data"
+    t.json "metadata"
+    t.json "object"
+    t.string "processor_id", null: false
+    t.string "stripe_account"
+    t.bigint "subscription_id"
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["customer_id", "processor_id"], name: "index_pay_charges_on_customer_id_and_processor_id", unique: true
+    t.index ["subscription_id"], name: "index_pay_charges_on_subscription_id"
+  end
+
+  create_table "pay_customers", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data"
+    t.boolean "default"
+    t.datetime "deleted_at", precision: nil
+    t.json "object"
+    t.bigint "owner_id"
+    t.string "owner_type"
+    t.string "processor", null: false
+    t.string "processor_id"
+    t.string "stripe_account"
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id", "deleted_at"], name: "pay_customer_owner_index", unique: true
+    t.index ["processor", "processor_id"], name: "index_pay_customers_on_processor_and_processor_id", unique: true
+  end
+
+  create_table "pay_merchants", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data"
+    t.boolean "default"
+    t.bigint "owner_id"
+    t.string "owner_type"
+    t.string "processor", null: false
+    t.string "processor_id"
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id", "processor"], name: "index_pay_merchants_on_owner_type_and_owner_id_and_processor"
+  end
+
+  create_table "pay_payment_methods", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.json "data"
+    t.boolean "default"
+    t.string "payment_method_type"
+    t.string "processor_id", null: false
+    t.string "stripe_account"
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["customer_id", "processor_id"], name: "index_pay_payment_methods_on_customer_id_and_processor_id", unique: true
+  end
+
+  create_table "pay_subscriptions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.decimal "application_fee_percent", precision: 8, scale: 2
+    t.datetime "created_at", null: false
+    t.datetime "current_period_end", precision: nil
+    t.datetime "current_period_start", precision: nil
+    t.bigint "customer_id", null: false
+    t.json "data"
+    t.datetime "ends_at", precision: nil
+    t.json "metadata"
+    t.boolean "metered"
+    t.string "name", null: false
+    t.json "object"
+    t.string "pause_behavior"
+    t.datetime "pause_resumes_at", precision: nil
+    t.datetime "pause_starts_at", precision: nil
+    t.string "payment_method_id"
+    t.string "processor_id", null: false
+    t.string "processor_plan", null: false
+    t.integer "quantity", default: 1, null: false
+    t.string "status", null: false
+    t.string "stripe_account"
+    t.datetime "trial_ends_at", precision: nil
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["customer_id", "processor_id"], name: "index_pay_subscriptions_on_customer_id_and_processor_id", unique: true
+    t.index ["metered"], name: "index_pay_subscriptions_on_metered"
+    t.index ["pause_starts_at"], name: "index_pay_subscriptions_on_pause_starts_at"
+  end
+
+  create_table "pay_webhooks", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "event"
+    t.string "event_type"
+    t.string "processor"
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "payments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.integer "amount_cents_remaining", null: false
+    t.string "check_number"
+    t.datetime "created_at", null: false
+    t.string "currency", default: "usd", null: false
+    t.bigint "form_submission_id"
+    t.string "memo"
+    t.json "metadata"
+    t.integer "organization_id"
+    t.bigint "pay_charge_id"
+    t.string "payer_type", null: false
+    t.bigint "person_id"
+    t.string "type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["form_submission_id"], name: "index_payments_on_form_submission_id"
+    t.index ["organization_id"], name: "index_payments_on_organization_id"
+    t.index ["person_id"], name: "index_payments_on_person_id"
+  end
+
+  create_table "people", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "best_time_to_call"
+    t.text "bio"
+    t.boolean "blog_contributor", default: false, null: false
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.date "date_of_birth"
+    t.string "display_name_preference"
+    t.string "email"
+    t.string "email_2"
+    t.string "email_2_type"
+    t.string "email_type"
+    t.string "facebook_url"
+    t.string "first_name", null: false
+    t.string "instagram_url"
+    t.string "last_name", null: false
+    t.string "legal_first_name"
+    t.string "linked_in_url"
+    t.date "member_since"
+    t.text "notes"
+    t.boolean "profile_is_searchable", default: true, null: false
+    t.boolean "profile_show_affiliations", default: true, null: false
+    t.boolean "profile_show_bio", default: true, null: false
+    t.boolean "profile_show_email", default: true, null: false
+    t.boolean "profile_show_events_registered", default: true, null: false
+    t.boolean "profile_show_member_since", default: true, null: false
+    t.boolean "profile_show_phone", default: true, null: false
+    t.boolean "profile_show_pronouns", default: true, null: false
+    t.boolean "profile_show_sectors", default: true, null: false
+    t.boolean "profile_show_social_media", default: true, null: false
+    t.boolean "profile_show_stories", default: true, null: false
+    t.boolean "profile_show_story_ideas", default: true, null: false
+    t.boolean "profile_show_workshop_ideas", default: true, null: false
+    t.boolean "profile_show_workshop_logs", default: true, null: false
+    t.boolean "profile_show_workshop_variation_ideas", default: true, null: false
+    t.boolean "profile_show_workshop_variations", default: true, null: false
+    t.boolean "profile_show_workshops", default: true, null: false
+    t.string "pronouns"
+    t.string "twitter_url"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.string "youtube_url"
+    t.index ["created_by_id"], name: "index_people_on_created_by_id"
+    t.index ["updated_by_id"], name: "index_people_on_updated_by_id"
+  end
+
+  create_table "permissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "legacy_id"
+    t.string "security_cat"
+    t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "quotable_item_quotes", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "legacy_id"
+    t.integer "quotable_id"
+    t.string "quotable_type"
+    t.integer "quote_id"
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["quote_id"], name: "index_quotable_item_quotes_on_quote_id"
+  end
+
+  create_table "quotes", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "age"
+    t.datetime "created_at", precision: nil, null: false
+    t.string "gender", limit: 1
+    t.boolean "inactive", default: true
+    t.boolean "legacy", default: false
+    t.integer "legacy_id"
+    t.boolean "published", default: false, null: false
+    t.text "quote", size: :long
+    t.string "speaker_name"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "workshop_id"
+    t.index ["published"], name: "index_quotes_on_published"
+    t.index ["workshop_id"], name: "index_quotes_on_workshop_id"
+  end
+
+  create_table "refunds", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "method", null: false
+    t.bigint "recipient_id", null: false
+    t.string "recipient_type", null: false
+    t.bigint "refundable_id", null: false
+    t.string "refundable_type", null: false
+    t.string "stripe_refund_id"
+    t.datetime "updated_at", null: false
+    t.index ["recipient_type", "recipient_id"], name: "index_refunds_on_recipient"
+    t.index ["refundable_type", "refundable_id"], name: "index_refunds_on_refundable"
+    t.index ["stripe_refund_id"], name: "index_refunds_on_stripe_refund_id"
+  end
+
+  create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "answer", size: :long
+    t.integer "answer_option_id"
+    t.datetime "created_at", precision: nil
+    t.integer "form_field_id"
+    t.integer "report_id"
+    t.datetime "updated_at", precision: nil
+    t.integer "workshop_log_id"
+    t.index ["answer_option_id"], name: "index_report_form_field_answers_on_answer_option_id"
+    t.index ["form_field_id"], name: "index_report_form_field_answers_on_form_field_id"
+    t.index ["report_id"], name: "index_report_form_field_answers_on_report_id"
+    t.index ["workshop_log_id"], name: "index_report_form_field_answers_on_workshop_log_id"
+  end
+
+  create_table "reports", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "adults_first_time", default: 0
+    t.integer "adults_ongoing", default: 0
+    t.integer "children_first_time", default: 0
+    t.integer "children_ongoing", default: 0
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "created_by_id"
+    t.date "date"
+    t.string "external_workshop_title"
+    t.string "form_file_content_type"
+    t.string "form_file_file_name"
+    t.integer "form_file_file_size"
+    t.datetime "form_file_updated_at", precision: nil
+    t.boolean "has_attachment", default: false
+    t.integer "organization_id"
+    t.string "other_description"
+    t.integer "owner_id"
+    t.string "owner_type"
+    t.integer "rating", default: 0
+    t.integer "teens_first_time", default: 0
+    t.integer "teens_ongoing", default: 0
+    t.string "type"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "windows_type_id"
+    t.integer "workshop_id"
+    t.string "workshop_name"
+    t.index ["created_by_id"], name: "index_reports_on_created_by_id"
+    t.index ["organization_id"], name: "index_reports_on_organization_id"
+    t.index ["type", "date"], name: "index_reports_on_type_and_date"
+    t.index ["type", "organization_id"], name: "index_reports_on_type_and_organization_id"
+    t.index ["windows_type_id"], name: "index_reports_on_windows_type_id"
+    t.index ["workshop_id"], name: "index_reports_on_workshop_id"
+  end
+
+  create_table "resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "agency"
+    t.string "author"
+    t.text "body", size: :long
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "created_by_id"
+    t.boolean "featured", default: false
+    t.boolean "female", default: false
+    t.string "filemaker_code"
+    t.boolean "inactive", default: true
+    t.string "kind"
+    t.boolean "legacy"
+    t.integer "legacy_id"
+    t.boolean "male", default: false
+    t.integer "position"
+    t.boolean "publicly_featured", default: false, null: false
+    t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
+    t.string "title"
+    t.datetime "updated_at", precision: nil, null: false
+    t.string "url"
+    t.integer "windows_type_id"
+    t.integer "workshop_id"
+    t.index ["created_by_id"], name: "index_resources_on_created_by_id"
+    t.index ["published"], name: "index_resources_on_published"
+    t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
+    t.index ["workshop_id"], name: "index_resources_on_workshop_id"
+  end
+
+  create_table "scholarships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "amount_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "grant_id"
+    t.bigint "recipient_id", null: false
+    t.boolean "tasks_completed", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["grant_id"], name: "index_scholarships_on_grant_id"
+    t.index ["recipient_id"], name: "index_scholarships_on_recipient_id"
+  end
+
+  create_table "sectorable_items", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.boolean "is_leader", default: false, null: false
+    t.integer "sector_id"
+    t.integer "sectorable_id"
+    t.string "sectorable_type"
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["sector_id", "sectorable_type", "sectorable_id"], name: "index_sectorable_items_uniqueness", unique: true
+    t.index ["sector_id"], name: "index_sectorable_items_on_sector_id"
+    t.index ["sectorable_type", "sectorable_id"], name: "index_sectorable_items_on_sectorable_type_and_sectorable_id"
+  end
+
+  create_table "sectors", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.string "name"
+    t.boolean "published", default: false
+    t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "stories", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "author_credit_preference"
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.integer "created_by_id", null: false
+    t.string "external_workshop_title"
+    t.boolean "featured", default: false, null: false
+    t.integer "organization_id"
+    t.boolean "permission_given"
+    t.boolean "publicly_featured", default: false, null: false
+    t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
+    t.bigint "spotlighted_facilitator_id"
+    t.bigint "story_idea_id"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id", null: false
+    t.string "website_url"
+    t.integer "windows_type_id", null: false
+    t.integer "workshop_id"
+    t.string "youtube_url"
+    t.index ["created_by_id"], name: "index_stories_on_created_by_id"
+    t.index ["organization_id"], name: "index_stories_on_organization_id"
+    t.index ["published"], name: "index_stories_on_published"
+    t.index ["spotlighted_facilitator_id"], name: "index_stories_on_spotlighted_facilitator_id"
+    t.index ["story_idea_id"], name: "index_stories_on_story_idea_id"
+    t.index ["updated_by_id"], name: "index_stories_on_updated_by_id"
+    t.index ["windows_type_id"], name: "index_stories_on_windows_type_id"
+    t.index ["workshop_id"], name: "index_stories_on_workshop_id"
+  end
+
+  create_table "story_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "author_credit_preference"
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.integer "created_by_id", null: false
+    t.string "external_workshop_title"
+    t.integer "organization_id", null: false
+    t.boolean "permission_given"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id", null: false
+    t.integer "windows_type_id", null: false
+    t.integer "workshop_id"
+    t.string "youtube_url"
+    t.index ["created_by_id"], name: "index_story_ideas_on_created_by_id"
+    t.index ["organization_id"], name: "index_story_ideas_on_organization_id"
+    t.index ["updated_by_id"], name: "index_story_ideas_on_updated_by_id"
+    t.index ["windows_type_id"], name: "index_story_ideas_on_windows_type_id"
+    t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
+  end
+
+  create_table "user_form_form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "form_field_id"
+    t.text "text", size: :long
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_form_id"
+    t.index ["form_field_id"], name: "index_user_form_form_fields_on_form_field_id"
+    t.index ["user_form_id"], name: "index_user_form_form_fields_on_user_form_id"
+  end
+
+  create_table "user_forms", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "form_id"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_id"
+    t.index ["form_id"], name: "index_user_forms_on_form_id"
+    t.index ["user_id"], name: "index_user_forms_on_user_id"
+  end
+
+  create_table "user_permissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "permission_id"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "user_id"
+    t.index ["permission_id"], name: "index_user_permissions_on_permission_id"
+    t.index ["user_id"], name: "index_user_permissions_on_user_id"
+  end
+
+  create_table "users", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "address"
+    t.string "address2"
+    t.integer "agency_id"
+    t.string "avatar_content_type"
+    t.string "avatar_file_name"
+    t.integer "avatar_file_size"
+    t.datetime "avatar_updated_at", precision: nil
+    t.string "best_time_to_call"
+    t.date "birthday"
+    t.string "city"
+    t.string "city2"
+    t.text "comment", size: :long
+    t.datetime "confirmation_sent_at"
+    t.string "confirmation_token"
+    t.datetime "confirmed_at"
+    t.datetime "created_at", precision: nil
+    t.integer "created_by_id"
+    t.datetime "current_sign_in_at", precision: nil
+    t.string "current_sign_in_ip"
+    t.string "email", default: "", null: false
+    t.string "email_type"
+    t.string "encrypted_password", default: "", null: false
+    t.integer "failed_attempts", default: 0, null: false
+    t.string "first_name", default: ""
+    t.boolean "inactive", default: false
+    t.string "last_name", default: ""
+    t.datetime "last_sign_in_at", precision: nil
+    t.string "last_sign_in_ip"
+    t.boolean "legacy", default: false
+    t.integer "legacy_id"
+    t.datetime "locked_at"
+    t.text "notes", size: :long
+    t.bigint "person_id"
+    t.string "phone"
+    t.string "phone2"
+    t.string "phone3"
+    t.integer "primary_address"
+    t.datetime "remember_created_at", precision: nil
+    t.datetime "reset_password_sent_at", precision: nil
+    t.string "reset_password_token"
+    t.integer "sign_in_count", default: 0, null: false
+    t.string "state"
+    t.string "state2"
+    t.string "subscribecode"
+    t.boolean "super_user", default: false
+    t.string "time_zone", default: "Pacific Time (US & Canada)"
+    t.string "unconfirmed_email"
+    t.string "unlock_token"
+    t.datetime "updated_at", precision: nil
+    t.integer "updated_by_id"
+    t.datetime "welcome_instructions_created_at"
+    t.datetime "welcome_instructions_sent_at"
+    t.string "welcome_instructions_token"
+    t.string "zip"
+    t.string "zip2"
+    t.index ["agency_id"], name: "index_users_on_agency_id"
+    t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
+    t.index ["created_by_id"], name: "index_users_on_created_by_id"
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["person_id"], name: "index_users_on_person_id"
+    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
+    t.index ["updated_by_id"], name: "index_users_on_updated_by_id"
+    t.index ["welcome_instructions_token"], name: "index_users_on_welcome_instructions_token", unique: true
+  end
+
+  create_table "video_recordings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.boolean "featured", default: false, null: false
+    t.boolean "is_instructional", default: true, null: false
+    t.boolean "is_podcast", default: false, null: false
+    t.integer "position", default: 10, null: false
+    t.boolean "publicly_featured", default: false, null: false
+    t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.string "youtube_url"
+    t.index ["featured"], name: "index_video_recordings_on_featured"
+    t.index ["is_instructional"], name: "index_video_recordings_on_is_instructional"
+    t.index ["is_podcast"], name: "index_video_recordings_on_is_podcast"
+    t.index ["published"], name: "index_video_recordings_on_published"
+    t.index ["title"], name: "index_video_recordings_on_title"
+  end
+
+  create_table "windows_types", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "legacy_id"
+    t.string "name"
+    t.string "short_name"
+    t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "workshop_age_ranges", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "age_range_id"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "workshop_id"
+    t.index ["age_range_id"], name: "index_workshop_age_ranges_on_age_range_id"
+    t.index ["workshop_id"], name: "index_workshop_age_ranges_on_workshop_id"
+  end
+
+  create_table "workshop_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "age_range"
+    t.text "age_range_spanish"
+    t.string "author_credit_preference"
+    t.text "closing"
+    t.text "closing_spanish"
+    t.datetime "created_at", null: false
+    t.integer "created_by_id", null: false
+    t.text "creation"
+    t.text "creation_spanish"
+    t.text "demonstration"
+    t.text "demonstration_spanish"
+    t.text "description"
+    t.text "description_spanish"
+    t.text "instructions"
+    t.text "instructions_spanish"
+    t.text "introduction"
+    t.text "introduction_spanish"
+    t.text "materials"
+    t.text "materials_spanish"
+    t.text "misc_instructions_spanish"
+    t.text "notes"
+    t.text "notes_spanish"
+    t.text "objective"
+    t.text "objective_spanish"
+    t.text "opening_circle"
+    t.text "opening_circle_spanish"
+    t.text "optional_materials"
+    t.text "optional_materials_spanish"
+    t.text "setup"
+    t.text "setup_spanish"
+    t.text "staff_notes"
+    t.integer "time_closing"
+    t.integer "time_creation"
+    t.integer "time_demonstration"
+    t.integer "time_hours"
+    t.integer "time_intro"
+    t.integer "time_minutes"
+    t.integer "time_opening"
+    t.integer "time_opening_circle"
+    t.integer "time_warm_up"
+    t.text "timeframe"
+    t.text "timeframe_spanish"
+    t.text "tips"
+    t.text "tips_spanish"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id", null: false
+    t.text "visualization"
+    t.text "visualization_spanish"
+    t.text "warm_up"
+    t.text "warm_up_spanish"
+    t.integer "windows_type_id", null: false
+    t.index ["created_by_id"], name: "index_workshop_ideas_on_created_by_id"
+    t.index ["updated_by_id"], name: "index_workshop_ideas_on_updated_by_id"
+    t.index ["windows_type_id"], name: "index_workshop_ideas_on_windows_type_id"
+  end
+
+  create_table "workshop_logs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "adults_first_time", default: 0
+    t.integer "adults_ongoing", default: 0
+    t.integer "children_first_time", default: 0
+    t.integer "children_ongoing", default: 0
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "created_by_id"
+    t.string "external_workshop_title"
+    t.integer "organization_id"
+    t.integer "rating", default: 0
+    t.integer "teens_first_time", default: 0
+    t.integer "teens_ongoing", default: 0
+    t.integer "total_adults", default: 0
+    t.integer "total_children", default: 0
+    t.integer "total_teens", default: 0
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "windows_type_id"
+    t.date "workshop_held_on"
+    t.integer "workshop_id"
+    t.index ["created_by_id"], name: "index_workshop_logs_on_created_by_id"
+    t.index ["organization_id", "workshop_held_on"], name: "index_workshop_logs_on_org_and_workshop_held_on"
+    t.index ["organization_id"], name: "index_workshop_logs_on_organization_id"
+    t.index ["windows_type_id"], name: "index_workshop_logs_on_windows_type_id"
+    t.index ["workshop_held_on"], name: "index_workshop_logs_on_workshop_held_on"
+    t.index ["workshop_id"], name: "index_workshop_logs_on_workshop_id"
+  end
+
+  create_table "workshop_resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "resource_id"
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "workshop_id"
+    t.index ["resource_id"], name: "index_workshop_resources_on_resource_id"
+    t.index ["workshop_id"], name: "index_workshop_resources_on_workshop_id"
+  end
+
+  create_table "workshop_series_memberships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "position", default: 1, null: false
+    t.string "series_description"
+    t.string "series_description_spanish"
+    t.string "theme_name"
+    t.datetime "updated_at", null: false
+    t.integer "workshop_child_id", null: false
+    t.integer "workshop_parent_id", null: false
+    t.index ["workshop_child_id"], name: "fk_rails_c3357d1053"
+    t.index ["workshop_parent_id", "workshop_child_id"], name: "index_workshop_series_memberships_on_parent_and_child", unique: true
+  end
+
+  create_table "workshop_variation_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "author_credit_preference"
+    t.text "body", size: :long
+    t.datetime "created_at", null: false
+    t.integer "created_by_id", null: false
+    t.string "name", null: false
+    t.integer "organization_id", null: false
+    t.boolean "permission_given"
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id", null: false
+    t.integer "windows_type_id", null: false
+    t.integer "workshop_id", null: false
+    t.string "youtube_url"
+    t.index ["body"], name: "index_workshop_variation_ideas_on_body", type: :fulltext
+    t.index ["created_by_id"], name: "index_workshop_variation_ideas_on_created_by_id"
+    t.index ["name"], name: "index_workshop_variation_ideas_on_name"
+    t.index ["organization_id"], name: "index_workshop_variation_ideas_on_organization_id"
+    t.index ["updated_by_id"], name: "index_workshop_variation_ideas_on_updated_by_id"
+    t.index ["windows_type_id"], name: "index_workshop_variation_ideas_on_windows_type_id"
+    t.index ["workshop_id"], name: "index_workshop_variation_ideas_on_workshop_id"
+  end
+
+  create_table "workshop_variations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "author_credit_preference"
+    t.text "body", size: :long
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "created_by_id"
+    t.boolean "inactive", default: true
+    t.boolean "legacy", default: false
+    t.string "name"
+    t.integer "organization_id"
+    t.integer "position"
+    t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "variation_id"
+    t.integer "windows_type_id"
+    t.integer "workshop_id"
+    t.bigint "workshop_variation_idea_id"
+    t.string "youtube_url"
+    t.index ["created_by_id"], name: "index_workshop_variations_on_created_by_id"
+    t.index ["organization_id"], name: "index_workshop_variations_on_organization_id"
+    t.index ["published"], name: "index_workshop_variations_on_published"
+    t.index ["windows_type_id"], name: "index_workshop_variations_on_windows_type_id"
+    t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
+    t.index ["workshop_variation_idea_id"], name: "index_workshop_variations_on_workshop_variation_idea_id"
+  end
+
+  create_table "workshops", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "age_range", size: :long
+    t.text "age_range_spanish", size: :long
+    t.string "author_credit_preference"
+    t.string "author_location"
+    t.text "closing", size: :long
+    t.text "closing_spanish", size: :long
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "created_by_id"
+    t.text "creation", size: :long
+    t.text "creation_spanish", size: :long
+    t.text "demonstration", size: :long
+    t.text "demonstration_spanish", size: :long
+    t.text "description", size: :long
+    t.text "description_spanish", size: :long
+    t.text "extra_field", size: :medium
+    t.text "extra_field_spanish", size: :medium
+    t.boolean "featured", default: false
+    t.string "filemaker_code"
+    t.string "full_name"
+    t.string "header_content_type"
+    t.string "header_file_name"
+    t.integer "header_file_size"
+    t.datetime "header_updated_at", precision: nil
+    t.boolean "inactive", default: true
+    t.text "instructions", size: :long
+    t.text "instructions_spanish", size: :long
+    t.text "introduction", size: :long
+    t.text "introduction_spanish", size: :long
+    t.integer "led_count", default: 0
+    t.boolean "legacy", default: false
+    t.integer "legacy_id"
+    t.text "materials", size: :long
+    t.text "materials_spanish", size: :long
+    t.string "misc1"
+    t.text "misc1_spanish", size: :long
+    t.string "misc2"
+    t.text "misc2_spanish", size: :long
+    t.text "misc_instructions", size: :long
+    t.text "misc_instructions_spanish", size: :long
+    t.integer "month"
+    t.text "notes", size: :long
+    t.text "notes_spanish", size: :long
+    t.text "objective", size: :long
+    t.text "objective_spanish", size: :long
+    t.text "opening_circle", size: :long
+    t.text "opening_circle_spanish", size: :long
+    t.text "optional_materials", size: :long
+    t.text "optional_materials_spanish", size: :long
+    t.string "photo_caption"
+    t.text "project", size: :long
+    t.text "project_spanish", size: :long
+    t.string "pub_issue"
+    t.boolean "publicly_featured", default: false, null: false
+    t.boolean "publicly_visible", default: false, null: false
+    t.boolean "published", default: false, null: false
+    t.boolean "searchable", default: false
+    t.text "setup", size: :long
+    t.text "setup_spanish", size: :long
+    t.string "thumbnail_content_type"
+    t.string "thumbnail_file_name"
+    t.integer "thumbnail_file_size"
+    t.datetime "thumbnail_updated_at", precision: nil
+    t.integer "time_closing"
+    t.integer "time_creation"
+    t.integer "time_demonstration"
+    t.integer "time_intro"
+    t.integer "time_opening"
+    t.integer "time_opening_circle"
+    t.integer "time_warm_up"
+    t.text "timeframe", size: :long
+    t.text "timeframe_spanish", size: :long
+    t.text "timestamps", size: :long
+    t.text "tips", size: :long
+    t.text "tips_spanish", size: :long
+    t.string "title"
+    t.datetime "updated_at", precision: nil, null: false
+    t.text "visualization", size: :long
+    t.text "visualization_spanish", size: :long
+    t.text "warm_up", size: :long
+    t.text "warm_up_spanish", size: :long
+    t.integer "windows_type_id"
+    t.bigint "workshop_idea_id"
+    t.integer "year"
+    t.index ["created_at"], name: "index_workshops_on_created_at"
+    t.index ["created_by_id"], name: "index_workshops_on_created_by_id"
+    t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
+    t.index ["led_count"], name: "index_workshops_on_led_count"
+    t.index ["published"], name: "index_workshops_on_published"
+    t.index ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
+    t.index ["title"], name: "index_workshops_on_title", type: :fulltext
+    t.index ["title"], name: "workshop_fullsearch_title", type: :fulltext
+    t.index ["windows_type_id"], name: "index_workshops_on_windows_type_id"
+    t.index ["workshop_idea_id"], name: "index_workshops_on_workshop_idea_id"
+    t.index ["year", "month"], name: "index_workshops_on_year_and_month"
+  end
+
+  add_foreign_key "action_text_mentions", "action_text_rich_texts"
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "affiliations", "organizations"
+  add_foreign_key "affiliations", "organizations", column: "organization_agency_id"
+  add_foreign_key "affiliations", "people"
+  add_foreign_key "affiliations", "users"
+  add_foreign_key "age_ranges", "windows_types"
+  add_foreign_key "allocations", "allocations", column: "reverted_id"
+  add_foreign_key "banners", "users", column: "created_by_id"
+  add_foreign_key "banners", "users", column: "updated_by_id"
+  add_foreign_key "blazer_audits", "blazer_queries", column: "query_id"
+  add_foreign_key "blazer_audits", "users"
+  add_foreign_key "blazer_checks", "blazer_queries", column: "query_id"
+  add_foreign_key "blazer_checks", "users", column: "creator_id"
+  add_foreign_key "blazer_dashboard_queries", "blazer_dashboards", column: "dashboard_id"
+  add_foreign_key "blazer_dashboard_queries", "blazer_queries", column: "query_id"
+  add_foreign_key "blazer_dashboards", "users", column: "creator_id"
+  add_foreign_key "blazer_queries", "users", column: "creator_id"
+  add_foreign_key "bookmark_annotations", "bookmarks"
+  add_foreign_key "bookmarks", "users"
+  add_foreign_key "categories", "category_types"
+  add_foreign_key "comments", "users", column: "created_by_id"
+  add_foreign_key "comments", "users", column: "updated_by_id"
+  add_foreign_key "community_news", "organizations"
+  add_foreign_key "community_news", "users", column: "author_id"
+  add_foreign_key "community_news", "users", column: "created_by_id"
+  add_foreign_key "community_news", "users", column: "updated_by_id"
+  add_foreign_key "community_news", "windows_types"
+  add_foreign_key "contact_methods", "addresses"
+  add_foreign_key "event_forms", "events"
+  add_foreign_key "event_forms", "forms"
+  add_foreign_key "event_registration_organizations", "event_registrations"
+  add_foreign_key "event_registration_organizations", "organizations"
+  add_foreign_key "event_registrations", "events"
+  add_foreign_key "event_registrations", "people", column: "registrant_id"
+  add_foreign_key "events", "locations"
+  add_foreign_key "events", "users", column: "created_by_id"
+  add_foreign_key "form_answers", "form_fields"
+  add_foreign_key "form_answers", "form_submissions"
+  add_foreign_key "form_builders", "windows_types"
+  add_foreign_key "form_field_answer_options", "answer_options"
+  add_foreign_key "form_field_answer_options", "form_fields"
+  add_foreign_key "form_fields", "forms"
+  add_foreign_key "form_submissions", "forms"
+  add_foreign_key "form_submissions", "people"
+  add_foreign_key "forms", "form_builders"
+  add_foreign_key "monthly_reports", "affiliations", column: "organization_user_id"
+  add_foreign_key "monthly_reports", "organizations"
+  add_foreign_key "notifications", "notifications", column: "parent_notification_id"
+  add_foreign_key "notifications", "notifications", column: "root_notification_id"
+  add_foreign_key "notifications", "users", column: "sender_id"
+  add_foreign_key "organizations", "locations"
+  add_foreign_key "organizations", "organization_statuses"
+  add_foreign_key "organizations", "windows_types"
+  add_foreign_key "pay_charges", "pay_customers", column: "customer_id"
+  add_foreign_key "pay_charges", "pay_subscriptions", column: "subscription_id"
+  add_foreign_key "pay_payment_methods", "pay_customers", column: "customer_id"
+  add_foreign_key "pay_subscriptions", "pay_customers", column: "customer_id"
+  add_foreign_key "payments", "form_submissions"
+  add_foreign_key "payments", "organizations"
+  add_foreign_key "payments", "people"
+  add_foreign_key "people", "users", column: "created_by_id"
+  add_foreign_key "people", "users", column: "updated_by_id"
+  add_foreign_key "quotable_item_quotes", "quotes"
+  add_foreign_key "quotes", "workshops"
+  add_foreign_key "report_form_field_answers", "answer_options"
+  add_foreign_key "report_form_field_answers", "form_fields"
+  add_foreign_key "report_form_field_answers", "reports"
+  add_foreign_key "report_form_field_answers", "workshop_logs"
+  add_foreign_key "reports", "organizations"
+  add_foreign_key "reports", "users", column: "created_by_id"
+  add_foreign_key "reports", "windows_types"
+  add_foreign_key "resources", "users", column: "created_by_id"
+  add_foreign_key "resources", "windows_types"
+  add_foreign_key "resources", "workshops"
+  add_foreign_key "scholarships", "grants"
+  add_foreign_key "scholarships", "people", column: "recipient_id"
+  add_foreign_key "sectorable_items", "sectors"
+  add_foreign_key "stories", "organizations"
+  add_foreign_key "stories", "people", column: "spotlighted_facilitator_id"
+  add_foreign_key "stories", "story_ideas"
+  add_foreign_key "stories", "users", column: "created_by_id"
+  add_foreign_key "stories", "users", column: "updated_by_id"
+  add_foreign_key "stories", "windows_types"
+  add_foreign_key "stories", "workshops"
+  add_foreign_key "story_ideas", "organizations"
+  add_foreign_key "story_ideas", "users", column: "created_by_id"
+  add_foreign_key "story_ideas", "users", column: "updated_by_id"
+  add_foreign_key "story_ideas", "windows_types"
+  add_foreign_key "story_ideas", "workshops"
+  add_foreign_key "user_form_form_fields", "form_fields"
+  add_foreign_key "user_form_form_fields", "user_forms"
+  add_foreign_key "user_forms", "forms"
+  add_foreign_key "user_forms", "users"
+  add_foreign_key "user_permissions", "permissions"
+  add_foreign_key "user_permissions", "users"
+  add_foreign_key "users", "organizations", column: "agency_id"
+  add_foreign_key "users", "people"
+  add_foreign_key "users", "users", column: "created_by_id"
+  add_foreign_key "users", "users", column: "updated_by_id"
+  add_foreign_key "workshop_age_ranges", "age_ranges"
+  add_foreign_key "workshop_age_ranges", "workshops"
+  add_foreign_key "workshop_ideas", "users", column: "created_by_id"
+  add_foreign_key "workshop_ideas", "users", column: "updated_by_id"
+  add_foreign_key "workshop_ideas", "windows_types"
+  add_foreign_key "workshop_logs", "organizations"
+  add_foreign_key "workshop_logs", "users", column: "created_by_id"
+  add_foreign_key "workshop_logs", "windows_types"
+  add_foreign_key "workshop_logs", "workshops"
+  add_foreign_key "workshop_resources", "resources"
+  add_foreign_key "workshop_resources", "workshops"
+  add_foreign_key "workshop_series_memberships", "workshops", column: "workshop_child_id"
+  add_foreign_key "workshop_series_memberships", "workshops", column: "workshop_parent_id"
+  add_foreign_key "workshop_variation_ideas", "organizations"
+  add_foreign_key "workshop_variation_ideas", "users", column: "created_by_id"
+  add_foreign_key "workshop_variation_ideas", "users", column: "updated_by_id"
+  add_foreign_key "workshop_variation_ideas", "windows_types"
+  add_foreign_key "workshop_variation_ideas", "workshops"
+  add_foreign_key "workshop_variations", "organizations"
+  add_foreign_key "workshop_variations", "users", column: "created_by_id"
+  add_foreign_key "workshop_variations", "windows_types"
+  add_foreign_key "workshop_variations", "workshop_variation_ideas"
+  add_foreign_key "workshop_variations", "workshops"
+  add_foreign_key "workshops", "users", column: "created_by_id"
+  add_foreign_key "workshops", "windows_types"
+  add_foreign_key "workshops", "workshop_ideas"
+end
