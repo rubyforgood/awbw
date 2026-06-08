@@ -14,7 +14,7 @@ export default class extends Controller {
     const index = this.countValue++
     const fragment = this.templateTarget.content.cloneNode(true)
 
-    fragment.querySelectorAll("[data-group-payment-attendees-target=\"row\"]").forEach(row => {
+    fragment.querySelectorAll("[data-bulk-payment-attendees-target=\"row\"]").forEach(row => {
       row.dataset.index = index
     })
 
@@ -31,7 +31,7 @@ export default class extends Controller {
   }
 
   removeRow(event) {
-    const row = event.target.closest("[data-group-payment-attendees-target=\"row\"]")
+    const row = event.target.closest("[data-bulk-payment-attendees-target=\"row\"]")
     if (row) {
       row.remove()
       this.serialize()
@@ -40,7 +40,7 @@ export default class extends Controller {
 
   serialize() {
     const attendees = []
-    this.rowsTarget.querySelectorAll("[data-group-payment-attendees-target=\"row\"]").forEach(row => {
+    this.rowsTarget.querySelectorAll("[data-bulk-payment-attendees-target=\"row\"]").forEach(row => {
       const first_name = row.querySelector("[data-attendee-field=\"first_name\"]")?.value || ""
       const last_name = row.querySelector("[data-attendee-field=\"last_name\"]")?.value || ""
       const email = row.querySelector("[data-attendee-field=\"email\"]")?.value || ""

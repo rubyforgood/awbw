@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff recipients group_payments preview_reminder send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff recipients bulk_payments preview_reminder send_reminder copy_registration_form ]
 
   def index
     authorize!
@@ -106,12 +106,12 @@ class EventsController < ApplicationController
     @dashboard = EventDashboard.new(@event)
   end
 
-  def group_payments
+  def bulk_payments
     authorize! @event
 
     @event = @event.decorate
     @submissions = FormSubmission.joins(form: :event_forms)
-                                 .where(event_forms: { event_id: @event.id, role: "group_payment" })
+                                 .where(event_forms: { event_id: @event.id, role: "bulk_payment" })
                                  .includes(:person, form_answers: :form_field)
                                  .order(created_at: :desc)
   end
@@ -300,13 +300,13 @@ class EventsController < ApplicationController
       event.event_forms.scholarship.destroy_all
     end
 
-    if params.dig(:event, :group_payment_enabled) == "1"
-      form = Form.standalone.find_by(role: "group_payment")
-      if form && !event.event_forms.group_payment.exists?
-        event.event_forms.create!(form: form, role: "group_payment")
+    if params.dig(:event, :bulk_payment_enabled) == "1"
+      form = Form.standalone.find_by(role: "bulk_payment")
+      if form && !event.event_forms.bulk_payment.exists?
+        event.event_forms.create!(form: form, role: "bulk_payment")
       end
     else
-      event.event_forms.group_payment.destroy_all
+      event.event_forms.bulk_payment.destroy_all
     end
   end
 

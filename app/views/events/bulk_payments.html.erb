@@ -1,10 +1,10 @@
-<% content_for(:page_title, "Group Payments — #{@event.title}") %>
+<% content_for(:page_title, "Bulk Payments — #{@event.title}") %>
 
-<%= render "subnav", event: @event, current: :group_payments %>
+<%= render "subnav", event: @event, current: :bulk_payments %>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div class="sm:flex sm:items-center sm:justify-between mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">Group Payments</h1>
+    <h1 class="text-2xl font-bold text-gray-900">Bulk Payments</h1>
     <p class="text-sm text-gray-500 mt-1 sm:mt-0"><%= @submissions.size %> submission<%= "s" unless @submissions.size == 1 %></p>
   </div>
 
@@ -41,7 +41,7 @@
             <%= submission.created_at.strftime("%b %-d, %Y") %>
           </div>
           <div class="shrink-0">
-            <%= link_to event_group_payment_path(@event, submission_id: submission.id),
+            <%= link_to event_bulk_payment_path(@event, submission_id: submission.id),
                         class: "text-sm text-blue-600 hover:text-blue-800 font-medium",
                         target: "_blank", rel: "noopener noreferrer" do %>
               View <i class="fa-solid fa-arrow-right text-xs ml-0.5"></i>
@@ -53,7 +53,7 @@
   <% else %>
     <div class="text-center py-16 bg-white border border-gray-200 rounded-lg">
       <i class="fa-regular fa-receipt text-4xl text-gray-300 mb-3"></i>
-      <p class="text-gray-500">No group payment submissions yet.</p>
+      <p class="text-gray-500">No bulk payment submissions yet.</p>
     </div>
   <% end %>
 </div>

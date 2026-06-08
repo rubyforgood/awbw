@@ -1,5 +1,5 @@
 module EventRegistrationServices
-  class GroupPayment
+  class BulkPayment
     Result = Struct.new(:success?, :form_submission, :errors, keyword_init: true)
 
     def self.call(event:, form:, form_params:, person: nil)
@@ -53,7 +53,7 @@ module EventRegistrationServices
     end
 
     def create_form_submission(person)
-      submission = FormSubmission.create!(person: person, form: @form, role: "group_payment")
+      submission = FormSubmission.create!(person: person, form: @form, role: "bulk_payment")
       save_form_answers(submission)
       submission
     end

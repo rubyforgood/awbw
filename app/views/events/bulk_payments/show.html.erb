@@ -18,7 +18,7 @@
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
         </div>
         <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight">Group Payment Details</h1>
+          <h1 class="text-xl font-semibold tracking-wide leading-tight">Bulk Payment Details</h1>
           <p class="text-sm text-blue-200"><%= @event.title %></p>
         </div>
       </div>
@@ -34,11 +34,11 @@
       <% elsif params[:checkout] == "cancelled" %>
         <div class="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3 mb-6">
           <i class="fa-solid fa-circle-exclamation mt-0.5 text-amber-500"></i>
-          <span>Payment was cancelled. Your group payment information has been saved but payment is still pending.</span>
+          <span>Payment was cancelled. Your bulk payment information has been saved but payment is still pending.</span>
         </div>
       <% end %>
       <% @form_fields.each do |field| %>
-        <% next if field.field_identifier == "group_payment_attendees" %>
+        <% next if field.field_identifier == "bulk_payment_attendees" %>
         <% next if field.group_header? && field.name == "Attendees" %>
         <% response = @responses[field.id] %>
 
