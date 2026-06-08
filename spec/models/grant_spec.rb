@@ -55,6 +55,20 @@ RSpec.describe Grant, type: :model do
     end
   end
 
+  describe "#name_with_funder" do
+    it "appends the funder name in parens" do
+      organization = build(:organization, name: "Acme Foundation")
+      grant = build(:grant, name: "Spring Fund", donor: organization)
+      expect(grant.name_with_funder).to eq("Spring Fund (Acme Foundation)")
+    end
+
+    it "falls back to the bare name when there is no funder" do
+      grant = build(:grant, name: "Spring Fund")
+      allow(grant).to receive(:funder_name).and_return(nil)
+      expect(grant.name_with_funder).to eq("Spring Fund")
+    end
+  end
+
   describe "budget helpers" do
     let(:grant) { create(:grant, amount_cents: 100_000) }
 
@@ -64,10 +78,64 @@ RSpec.describe Grant, type: :model do
       expect(grant.scholarships_total_cents).to eq(50_000)
     end
 
+    it "sums the preloaded association without an extra query" do
+      create(:scholarship, grant:, amount_cents: 30_000)
+      create(:scholarship, grant:, amount_cents: 20_000)
+      preloaded = Grant.includes(:scholarships).find(grant.id)
+
+      queries = []
+      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+        queries << payload[:sql] unless payload[:name] == "SCHEMA"
+      end
+      total = preloaded.scholarships_total_cents
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+
+      expect(total).to eq(50_000)
+      expect(queries).to be_empty
+    end
+
     it "reports remaining funds" do
       create(:scholarship, grant:, amount_cents: 40_000)
       expect(grant.remaining_cents).to eq(60_000)
       expect(grant.remaining_dollars).to eq(600)
+    end
+  end
+
+  describe ".with_funds_remaining" do
+    it "includes grants with unallocated funds and excludes fully-allocated ones" do
+      has_funds = create(:grant, amount_cents: 100_000)
+      create(:scholarship, grant: has_funds, amount_cents: 40_000)
+      untouched = create(:grant, amount_cents: 50_000)
+      exhausted = create(:grant, amount_cents: 30_000)
+      create(:scholarship, grant: exhausted, amount_cents: 30_000)
+
+      expect(Grant.with_funds_remaining).to contain_exactly(has_funds, untouched)
+    end
+  end
+
+  describe ".selectable_for" do
+    it "lists grants with funds remaining" do
+      with_funds = create(:grant, amount_cents: 100_000)
+      exhausted = create(:grant, amount_cents: 30_000)
+      create(:scholarship, grant: exhausted, amount_cents: 30_000)
+
+      expect(Grant.selectable_for(Scholarship.new)).to include(with_funds)
+      expect(Grant.selectable_for(Scholarship.new)).not_to include(exhausted)
+    end
+
+    it "keeps the scholarship's connected grant even when it is fully allocated" do
+      grant = create(:grant, amount_cents: 30_000)
+      scholarship = create(:scholarship, grant:, amount_cents: 30_000)
+
+      expect(grant.remaining_cents).to eq(0)
+      expect(Grant.selectable_for(scholarship)).to include(grant)
+    end
+
+    it "does not duplicate the connected grant when it still has funds" do
+      grant = create(:grant, amount_cents: 100_000)
+      scholarship = create(:scholarship, grant:, amount_cents: 10_000)
+
+      expect(Grant.selectable_for(scholarship).count(grant)).to eq(1)
     end
   end
 end
