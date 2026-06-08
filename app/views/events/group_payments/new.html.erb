@@ -42,7 +42,9 @@
         </div>
       <% end %>
 
-      <%= form_with url: event_group_payment_path(@event), method: :post, data: {turbo: false}, class: "space-y-2" do |f| %>
+      <%= form_with url: event_group_payment_path(@event), method: :post,
+                     data: { controller: "group-payment-attendees", action: "submit->group-payment-attendees#serialize", turbo: false },
+                     class: "space-y-2" do |f| %>
 
         <div class="hidden" aria-hidden="true">
           <input type="text" name="group_payment[website_url]" tabindex="-1" autocomplete="off">
@@ -142,8 +144,7 @@
         <% end %>
 
         <% if @attendee_field %>
-          <div data-controller="group-payment-attendees"
-               data-action="submit->group-payment-attendees#serialize">
+          <div>
 
             <template data-group-payment-attendees-target="template">
               <div class="flex items-start gap-3 mb-3" data-group-payment-attendees-target="row">

@@ -9,59 +9,45 @@
   </div>
 
   <% if @submissions.any? %>
-    <div class="overflow-hidden border border-gray-200 rounded-lg shadow-sm">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Payer</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Attendees</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Payment method</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Submitted</th>
-            <th class="px-4 py-3"></th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <% @submissions.each do |submission| %>
-            <%
-              answers_by_id = submission.form_answers.index_by(&:form_field_id)
-              answers_by_identifier = submission.form_answers.select { |a| a.form_field&.field_identifier.present? }
-                                                      .index_by { |a| a.form_field.field_identifier }
-              num_attendees = answers_by_identifier["number_of_attendees"]&.submitted_answer
-              payment_method = answers_by_identifier["payment_method"]&.submitted_answer
-            %>
-            <tr class="hover:bg-gray-50">
-              <td class="px-4 py-3">
-                <div class="text-sm font-medium text-gray-900"><%= submission.person.name %></div>
-                <div class="text-sm text-gray-500"><%= submission.person.email %></div>
-              </td>
-              <td class="px-4 py-3 text-sm text-gray-900"><%= num_attendees.presence || "—" %></td>
-              <td class="px-4 py-3 text-sm text-gray-900"><%= payment_method.presence || "—" %></td>
-              <td class="px-4 py-3">
-                <% if submission.payments.any? %>
-                  <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                    <i class="fa-solid fa-circle-check text-green-500"></i> Paid
-                  </span>
-                <% else %>
-                  <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-                    <i class="fa-solid fa-clock text-amber-500"></i> Pending
-                  </span>
-                <% end %>
-              </td>
-              <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                <%= submission.created_at.strftime("%b %-d, %Y") %>
-              </td>
-              <td class="px-4 py-3 text-right whitespace-nowrap">
-                <%= link_to event_group_payment_path(@event, submission_id: submission.id),
-                            class: "text-sm text-blue-600 hover:text-blue-800 font-medium",
-                            target: "_blank", rel: "noopener noreferrer" do %>
-                  View <i class="fa-solid fa-arrow-right text-xs ml-0.5"></i>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+    <div class="space-y-3">
+      <% @submissions.each do |submission| %>
+        <%
+          answers_by_id = submission.form_answers.index_by(&:form_field_id)
+          answers_by_identifier = submission.form_answers.select { |a| a.form_field&.field_identifier.present? }
+                                                  .index_by { |a| a.form_field.field_identifier }
+          num_attendees = answers_by_identifier["number_of_attendees"]&.submitted_answer
+          payment_method = answers_by_identifier["payment_method"]&.submitted_answer
+        %>
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-gray-900 truncate"><%= submission.person.name %></div>
+            <div class="text-sm text-gray-500 truncate"><%= submission.person.email %></div>
+          </div>
+          <div class="text-sm text-gray-900 w-16 text-center shrink-0"><%= num_attendees.presence || "—" %></div>
+          <div class="text-sm text-gray-900 w-28 shrink-0"><%= payment_method.presence || "—" %></div>
+          <div class="w-24 shrink-0">
+            <% if submission.payments.any? %>
+              <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                <i class="fa-solid fa-circle-check text-green-500"></i> Paid
+              </span>
+            <% else %>
+              <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                <i class="fa-solid fa-clock text-amber-500"></i> Pending
+              </span>
+            <% end %>
+          </div>
+          <div class="text-sm text-gray-500 whitespace-nowrap w-24 shrink-0">
+            <%= submission.created_at.strftime("%b %-d, %Y") %>
+          </div>
+          <div class="shrink-0">
+            <%= link_to event_group_payment_path(@event, submission_id: submission.id),
+                        class: "text-sm text-blue-600 hover:text-blue-800 font-medium",
+                        target: "_blank", rel: "noopener noreferrer" do %>
+              View <i class="fa-solid fa-arrow-right text-xs ml-0.5"></i>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     </div>
   <% else %>
     <div class="text-center py-16 bg-white border border-gray-200 rounded-lg">
