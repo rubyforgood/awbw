@@ -2,13 +2,15 @@
 <% grant = @grant.decorate %>
 
 <div class="max-w-4xl mx-auto <%= DomainTheme.bg_class_for(:grants) %> border border-gray-200 rounded-xl shadow p-6 space-y-6">
-  <div class="flex items-start justify-between">
-    <div>
-      <h1 class="text-2xl font-semibold text-gray-900"><%= grant.name %></h1>
-      <p class="text-gray-600 mt-1"><%= grant_donor_badge(grant) %></p>
-    </div>
-    <div class="flex items-center gap-2">
-      <%= link_to "Grants", grants_path, class: "btn btn-secondary-outline" %>
+  <div>
+    <%= link_to grants_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-3" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Grants
+    <% end %>
+    <div class="flex items-start justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900"><%= grant.name %></h1>
+        <p class="text-gray-600 mt-1"><%= grant_donor_badge(grant) %></p>
+      </div>
       <% if allowed_to?(:edit?, @grant) %>
         <%= link_to "Edit", edit_grant_path(@grant), class: "btn btn-primary-outline" %>
       <% end %>

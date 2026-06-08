@@ -36,6 +36,13 @@ RSpec.describe "/grants", type: :request do
         get grants_url
         expect(response).to be_successful
       end
+
+      it "shows a back link to the scholarship when opened from one" do
+        scholarship = create(:scholarship)
+        get grants_url(from_scholarship: scholarship.id)
+        expect(response.body).to include(edit_scholarship_path(scholarship))
+        expect(response.body).to include("Scholarship")
+      end
     end
 
     describe "GET /show" do
