@@ -227,7 +227,7 @@ class OrganizationsController < ApplicationController
         :end_date,
         :_destroy
       ],
-      comments_attributes: [ :id, :body, :_destroy ],
+      comments_attributes: [ :id, :topic, :body, :_destroy ],
       addresses_attributes: [
         :id,
         :address_type,

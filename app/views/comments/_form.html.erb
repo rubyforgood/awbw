@@ -1,9 +1,18 @@
 <%= simple_form_for @comment || commentable.comments.build, url: polymorphic_path([commentable, :comments]), html: { class: "mb-4" } do |f| %>
-  <%= f.input :body,
-              label: false,
-              as: :text,
-              placeholder: "Add a comment...",
-              input_html: { rows: 2, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" } %>
+  <div class="flex items-start gap-x-2 mb-4">
+    <div class="w-1/3 shrink-0">
+      <%= f.input_field :topic,
+                        placeholder: "Topic",
+                        class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+      <p class="text-gray-500 text-xs mt-1">Reason you're making a note</p>
+    </div>
+    <%= f.input_field :body,
+                      as: :text,
+                      rows: 2,
+                      required: true,
+                      placeholder: "Type your comment",
+                      class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+  </div>
 
   <%= f.submit "Add Comment", class: "btn btn-secondary-outline" %>
 <% end %>

@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (50) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (51) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -263,6 +263,7 @@ end
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
 - `comment_edit_toggle` — Inline comment editing mode
+- `comment_required` — Require a comment body once a topic or body is filled in
 - `confirm_email` — Email confirmation UI
 - `dirty_form` — Unsaved changes detection
 - `dismiss` — Dismissable elements

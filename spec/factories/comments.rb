@@ -1,5 +1,6 @@
 FactoryBot.define do
   factory :comment do
+    topic { "Test topic" }
     body { "This is a test comment" }
 
     # Polymorphic association: belongs_to :commentable
