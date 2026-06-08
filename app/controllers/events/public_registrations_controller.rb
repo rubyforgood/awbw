@@ -101,7 +101,7 @@ module Events
         return
       end
 
-      @form_fields = @form.form_fields.reorder(position: :asc)
+      @form_fields = visible_form_fields
       @responses = @form_submission.form_answers.index_by(&:form_field_id)
       @event = @event.decorate
     end
@@ -260,6 +260,16 @@ module Events
               end
             end
           end
+        end
+      end
+
+      if @event.cost_cents.to_i <= 0
+        payment_field_ids = @form.form_fields.where(field_identifier: "payment_method").ids
+        if payment_field_ids.any?
+          scope = scope.where.not(id: payment_field_ids)
+
+          header = @form.form_fields.find_by(answer_type: :group_header, name: "Payment Information")
+          scope = scope.where.not(id: header.id) if header
         end
       end
 

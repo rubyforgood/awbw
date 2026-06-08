@@ -7,7 +7,7 @@ puts "Creating standalone registration forms…"
 unless Form.standalone.exists?(name: "Registration")
   FormBuilderService.new(
     name: "Registration",
-    sections: %i[person_identifier professional_info],
+    sections: %i[person_identifier professional_info payment],
     role: "registration"
   ).call
 end
