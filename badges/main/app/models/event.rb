@@ -49,6 +49,7 @@ class Event < ApplicationRecord
   scope :featured, -> { registerable.where(published: true, featured: true) } # overrides Publishable
   scope :publicly_featured, -> { where(published: true, publicly_visible: true, publicly_featured: true) } # overrides Featureable
   scope :registerable, -> { where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current) }
+  scope :using_form, ->(form_id) { joins(:event_forms).where(event_forms: { form_id: form_id }).distinct }
 
   def self.search_by_params(params)
     stories = is_a?(ActiveRecord::Relation) ? self : all
@@ -56,6 +57,7 @@ class Event < ApplicationRecord
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
+    stories = stories.using_form(params[:form_id]) if params[:form_id].present?
     stories
   end
 

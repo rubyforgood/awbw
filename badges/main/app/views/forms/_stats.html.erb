@@ -1,0 +1,23 @@
+<%# Quick stats shown below a form's title on the edit/edit-sections pages:
+    how many events use this form (links to the filtered events index) and how
+    many submissions it has. There is no submissions index yet, so that badge is
+    not yet a link. %>
+<div class="flex flex-wrap items-center gap-2 mb-6">
+  <% events_count = form.events.size %>
+  <% if events_count.positive? %>
+    <%= link_to events_path(form_id: form.id), class: "inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 hover:bg-blue-100" do %>
+      <i class="fa-solid fa-calendar-day text-blue-500"></i>
+      <%= pluralize(events_count, "event") %> connected
+    <% end %>
+  <% else %>
+    <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-500">
+      <i class="fa-solid fa-calendar-day text-gray-400"></i>
+      No events connected
+    </span>
+  <% end %>
+
+  <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600">
+    <i class="fa-solid fa-inbox text-gray-400"></i>
+    <%= pluralize(form.form_submissions.size, "submission") %>
+  </span>
+</div>
