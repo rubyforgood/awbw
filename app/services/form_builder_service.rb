@@ -196,7 +196,7 @@ class FormBuilderService
                          key: "mailing_street", group: "person_contact_info", required: true)
     position = add_field(form, position, "Address Type", :multiple_choice_radio,
                          key: "mailing_address_type", group: "person_contact_info", required: true,
-                         options: %w[Home Work])
+                         options: %w[Work Personal])
     position = add_field(form, position, "City", :free_form_input_one_line,
                          key: "mailing_city", group: "person_contact_info", required: true)
     position = add_field(form, position, "State / Province", :free_form_input_one_line,
@@ -207,8 +207,8 @@ class FormBuilderService
     position = add_field(form, position, "Phone", :free_form_input_one_line,
                          key: "phone", group: "person_contact_info", required: true)
     position = add_field(form, position, "Phone Type", :multiple_choice_radio,
-                         key: "phone_type", group: "person_contact_info", required: true,
-                         options: %w[Mobile Home Work])
+                        key: "phone_type", group: "person_contact_info", required: true,
+                        options: %w[Work Personal])
 
     position = add_header(form, position, "Agency / Organization Information", group: "person_contact_info")
     position = add_field(form, position, "Agency / Organization Name", :free_form_input_one_line,
@@ -311,7 +311,7 @@ class FormBuilderService
 
     position = add_field(form, position, "Payment Method", :multiple_choice_radio,
                          key: "payment_method", group: "payment", required: true,
-                         options: [ "Credit Card", "Check", "Purchase Order", "Other" ])
+                         options: [ "Credit Card Now", "Credit Card Later", "Check", "Other" ])
     position
   end
 
@@ -360,7 +360,7 @@ class FormBuilderService
     position = add_header(form, position, "Payment Information", group: "group_payment")
     position = add_field(form, position, "Payment Method", :multiple_choice_radio,
                          key: "payment_method", group: "group_payment", required: true,
-                         options: [ "Credit Card", "Check", "Purchase Order", "Other" ])
+                         options: [ "Credit Card Now", "Credit Card Later", "Check", "Other" ])
 
     position = add_header(form, position, "Attendees", group: "group_payment")
     position = add_field(form, position, "Number of Attendees", :free_form_input_one_line,
