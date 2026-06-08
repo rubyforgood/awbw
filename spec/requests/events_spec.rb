@@ -328,6 +328,23 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Inactiva")
         expect(response.body).not_to include("Activa")
       end
+
+      it "shows the active registrant count in the page heading" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Registrants (2)")
+      end
+    end
+
+    context "event heading" do
+      it "shows the event title and date range after the heading" do
+        event.update!(start_date: Time.zone.local(2026, 6, 2, 9), end_date: Time.zone.local(2026, 6, 2, 17))
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(event.title)
+        expect(response.body).to include(event.decorate.date_range)
+      end
     end
 
     context "confirmed column toggle" do
