@@ -352,7 +352,7 @@
       <% end %>
 
       <% cancel_path = case params[:return_to]
-                       when "manage" then manage_event_path(event_registration.event)
+                       when "registrants" then registrants_event_path(event_registration.event)
                        when "index" then event_registrations_path
                        else allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
                        end %>

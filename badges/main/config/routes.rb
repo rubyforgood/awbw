@@ -121,7 +121,7 @@ Rails.application.routes.draw do
     member do
       get :dashboard
       get :background
-      get :manage
+      get :registrants
       get :staff
       get :recipients
       get :preview_reminder

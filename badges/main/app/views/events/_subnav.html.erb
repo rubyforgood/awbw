@@ -4,8 +4,8 @@
 <nav class="flex flex-wrap items-center gap-1" aria-label="Event views">
   <% tabs = [
        { key: :dashboard, label: "Dashboard", path: dashboard_event_path(event), visible: allowed_to?(:dashboard?, event) },
+       { key: :registrants, label: "Registrants", path: registrants_event_path(event), visible: allowed_to?(:registrants?, event) },
        { key: :background, label: "Background", path: background_event_path(event), visible: allowed_to?(:background?, event) },
-       { key: :registrants, label: "Registrants", path: manage_event_path(event), visible: allowed_to?(:manage?, event) },
        { key: :scholarships, label: "Scholarships", path: recipients_event_path(event), visible: allowed_to?(:recipients?, event) },
        { key: :staff, label: "Staff", path: staff_event_path(event), visible: allowed_to?(:staff?, event) },
        { key: :edit, label: "Edit event", path: edit_event_path(event), visible: allowed_to?(:edit?, event) },

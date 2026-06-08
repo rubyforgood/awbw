@@ -46,6 +46,13 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  # Who can view/manage an event's registrants. Mirrors manage? for now, but kept
+  # as its own rule so registrant access can be tightened later without affecting
+  # other manage? actions.
+  def registrants?
+    manage?
+  end
+
   def dashboard?
     admin? || owner?
   end

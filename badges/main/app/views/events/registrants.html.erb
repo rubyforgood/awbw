@@ -1,0 +1,33 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+  <%# Top bar: eyelash + sub-nav, matching the other event pages %>
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+    <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <%= render "events/subnav", event: @event, current: :registrants %>
+  </div>
+
+  <%# Title row: heading + registrant action controls %>
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">
+        Registrants
+      </h1>
+      <p class="text-gray-600 mt-1">
+        <%= @event.title %>
+      </p>
+    </div>
+    <div class="flex flex-wrap items-center gap-1">
+      <% if allowed_to?(:edit?, @event) %>
+        <%= render "form_actions_menu" %>
+      <% end %>
+      <%= render "bulk_actions_menu" %>
+      <% if allowed_to?(:new?, EventRegistration) %>
+        <%= link_to "Add registrant", new_event_registration_path(event_id: @event.id, return_to: "registrants"), class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%= render "registrants_search" %>
+
+  <%= render "registrants_results" %>
+</div>
