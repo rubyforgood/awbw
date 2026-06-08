@@ -27,6 +27,16 @@
       <hr class="border-gray-300 mb-6">
     </div>
 
+    <% if params[:form_id].present? && (filtered_form = Form.find_by(id: params[:form_id])) %>
+      <div class="flex items-center justify-between gap-3 mb-6 rounded-lg bg-blue-50 border border-blue-200 px-4 py-2.5 text-sm text-blue-800">
+        <span class="inline-flex items-center gap-2">
+          <i class="fa-solid fa-filter text-blue-500"></i>
+          Showing events using form: <span class="font-semibold"><%= filtered_form.display_name %></span>
+        </span>
+        <%= link_to "Clear filter", events_path, class: "inline-flex items-center gap-1.5 font-medium text-blue-700 hover:text-blue-900" %>
+      </div>
+    <% end %>
+
     <% if @events.any? %>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <% @events.each do |event| %>
