@@ -12,15 +12,15 @@
   <div id="<%= dropdown_id %>"
        data-dropdown-target="content"
        class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
-    <% if @event.event_forms.registration.exists? || @event.scholarship_form || @event.group_payment_form %>
+    <% if @event.event_forms.registration.exists? || @event.scholarship_form || @event.bulk_payment_form %>
       <% if @event.event_forms.registration.exists? %>
         <%= link_to "Public registration", new_event_public_registration_path(@event), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
       <% end %>
       <% if @event.scholarship_form %>
         <%= link_to "Scholarship version", new_event_public_registration_path(@event, scholarship_requested: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
       <% end %>
-      <% if @event.group_payment_form %>
-        <%= link_to "Group payment", new_event_group_payment_path(@event), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+      <% if @event.bulk_payment_form %>
+        <%= link_to "Bulk payment", new_event_bulk_payment_path(@event), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
       <% end %>
       <div class="my-1 border-t border-gray-100"></div>
       <%= link_to "Change form settings", edit_event_path(@event, anchor: "registration_form_section"), class: item_class %>

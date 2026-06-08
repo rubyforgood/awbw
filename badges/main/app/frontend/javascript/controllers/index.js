@@ -177,6 +177,6 @@ application.register("world-map-chart", WorldMapChartController)
 import CurrencyInputController from "./currency_input_controller"
 application.register("currency-input", CurrencyInputController)
 
-import GroupPaymentAttendeesController from "./group_payment_attendees_controller"
-application.register("group-payment-attendees", GroupPaymentAttendeesController)
+import BulkPaymentAttendeesController from "./bulk_payment_attendees_controller"
+application.register("bulk-payment-attendees", BulkPaymentAttendeesController)
 

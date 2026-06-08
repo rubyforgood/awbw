@@ -65,7 +65,7 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
-  def group_payments?
+  def bulk_payments?
     manage?
   end
 
