@@ -39,6 +39,7 @@
       <% end %>
       <% @form_fields.each do |field| %>
         <% next if field.field_identifier == "group_payment_attendees" %>
+        <% next if field.group_header? && field.name == "Attendees" %>
         <% response = @responses[field.id] %>
 
         <% if field.group_header? %>
