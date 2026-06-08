@@ -8,7 +8,8 @@ class FormBuilderService
     scholarship: { label: "Scholarship", method: :build_scholarship_fields },
     payment: { label: "Payment", method: :build_payment_fields },
     consent: { label: "Consent", method: :build_consent_fields },
-    post_event_feedback: { label: "Post-event feedback", method: :build_post_event_feedback_fields }
+    post_event_feedback: { label: "Post-event feedback", method: :build_post_event_feedback_fields },
+    group_payment: { label: "Group payment", method: :build_group_payment_fields }
   }.freeze
 
   def initialize(name:, sections:, role: nil)
@@ -47,7 +48,8 @@ class FormBuilderService
     scholarship: %w[scholarship_eligibility impact_description implementation_plan additional_comments],
     payment: %w[payment_method],
     consent: %w[communication_consent],
-    post_event_feedback: %w[event_rating most_valuable improvement_suggestions]
+    post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
+    group_payment: %w[payer_first_name payer_last_name payer_email organization_name number_of_attendees group_payment_attendees]
   }.freeze
 
   # Header questions created by each section's builder method
@@ -60,7 +62,8 @@ class FormBuilderService
     scholarship: [ "Scholarship Application" ],
     payment: [ "Payment Information" ],
     consent: [ "Consent" ],
-    post_event_feedback: [ "Post-Event Feedback" ]
+    post_event_feedback: [ "Post-Event Feedback" ],
+    group_payment: [ "Payer Information", "Attendees" ]
   }.freeze
 
   # Update sections on an existing form: add new sections, remove unchecked ones
@@ -107,7 +110,8 @@ class FormBuilderService
     "payment" => :always_ask,
     "scholarship" => :always_ask,
     "consent" => :answers_on_file,
-    "post_event_feedback" => :answers_on_file
+    "post_event_feedback" => :answers_on_file,
+    "group_payment" => :always_ask
   }.freeze
 
   # Sections where answers carry across all events (ask once ever)
@@ -334,6 +338,28 @@ class FormBuilderService
                          key: "most_valuable", group: "post_event_feedback", required: false)
     position = add_field(form, position, "Any suggestions for improvement?", :free_form_input_paragraph,
                          key: "improvement_suggestions", group: "post_event_feedback", required: false)
+    position
+  end
+
+  def build_group_payment_fields(form, position)
+    position = add_header(form, position, "Payer Information", group: "group_payment")
+
+    position = add_field(form, position, "Payer First Name", :free_form_input_one_line,
+                         key: "payer_first_name", group: "group_payment", required: true)
+    position = add_field(form, position, "Payer Last Name", :free_form_input_one_line,
+                         key: "payer_last_name", group: "group_payment", required: true)
+    position = add_field(form, position, "Payer Email", :free_form_input_one_line,
+                         key: "payer_email", group: "group_payment", required: true)
+    position = add_field(form, position, "Organization Name", :free_form_input_one_line,
+                         key: "organization_name", group: "group_payment", required: false)
+    position = add_field(form, position, "Number of Attendees", :free_form_input_one_line,
+                         key: "number_of_attendees", group: "group_payment", required: true,
+                         datatype: :number_integer)
+
+    position = add_header(form, position, "Attendees", group: "group_payment")
+    position = add_field(form, position, "Attendees", :free_form_input_paragraph,
+                         key: "group_payment_attendees", group: "group_payment", required: false,
+                         hint: "Add each person you are paying for.")
     position
   end
 end

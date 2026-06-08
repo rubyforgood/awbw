@@ -131,6 +131,7 @@ Rails.application.routes.draw do
     end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
+    resource :group_payment, only: [ :new, :create, :show ], module: :events
   end
   resources :people do
     collection do

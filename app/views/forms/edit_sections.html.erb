@@ -14,7 +14,9 @@
       <div class="space-y-2">
         <% FormBuilderService::SECTIONS.each do |key, section| %>
           <% next if key == :scholarship && @form.role != "scholarship" %>
-          <% next if key != :scholarship && @form.role == "scholarship" %>
+          <% next if key == :group_payment && @form.role != "group_payment" %>
+          <% next if key != :scholarship && key != :group_payment && @form.role == "scholarship" %>
+          <% next if key != :group_payment && key != :scholarship && @form.role == "group_payment" %>
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" name="sections[]" value="<%= key %>"
                    class="rounded border-gray-300 text-blue-600"

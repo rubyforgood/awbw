@@ -20,10 +20,19 @@ unless Form.standalone.find_by(role: "scholarship")
   ).call
 end
 
+unless Form.standalone.find_by(role: "group_payment")
+  FormBuilderService.new(
+    name: "Group Payment",
+    sections: %i[group_payment],
+    role: "group_payment"
+  ).call
+end
+
 puts "Creating Events with shared forms…"
 admin_user = User.find_by(email: "umberto.user@example.com")
 registration_form = Form.standalone.find_by!(role: "registration")
 scholarship_form = Form.standalone.find_by!(role: "scholarship")
+group_payment_form = Form.standalone.find_by!(role: "group_payment")
 
 # Ensure the professional section (Primary Age Group(s) Served, Primary Service
 # Area, etc.) exists even on a registration form seeded before it was added — the
@@ -98,6 +107,12 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
   if scholarship
     EventForm.find_or_create_by!(event: event, role: "scholarship") do |ef|
       ef.form = scholarship_form
+    end
+  end
+
+  if cost_cents.to_i > 0
+    EventForm.find_or_create_by!(event: event, role: "group_payment") do |ef|
+      ef.form = group_payment_form
     end
   end
 end
