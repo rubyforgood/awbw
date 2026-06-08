@@ -15,7 +15,7 @@ module PayChargeExtensions
     if (event_registration_id = metadata["event_registration_id"])
       create_event_registration_payment(event_registration_id)
     elsif (form_submission_id = metadata["form_submission_id"])
-      create_group_payment(form_submission_id)
+      create_bulk_payment(form_submission_id)
     elsif (person_id = metadata["person_id"])
       create_donation_payment(person_id)
     end
@@ -49,10 +49,10 @@ module PayChargeExtensions
     )
   end
 
-  def create_group_payment(form_submission_id)
+  def create_bulk_payment(form_submission_id)
     submission = FormSubmission.find_by(id: form_submission_id)
     return unless submission
-    return unless submission.role == "group_payment"
+    return unless submission.role == "bulk_payment"
 
     person = submission.person
     return unless person

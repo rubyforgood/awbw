@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_08_184843) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_205816) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -470,6 +470,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_184843) do
     t.boolean "autoshow_title", default: true, null: false
     t.boolean "autoshow_videoconference_label", default: true, null: false
     t.boolean "autoshow_videoconference_link", default: true, null: false
+    t.boolean "bulk_payment_enabled", default: false, null: false
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
@@ -477,7 +478,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_184843) do
     t.datetime "end_date", precision: nil
     t.boolean "featured", default: false, null: false
     t.text "ga4_snippet"
-    t.boolean "group_payment_enabled", default: false, null: false
     t.text "gtm_body_snippet"
     t.text "gtm_head_snippet"
     t.boolean "inactive", default: true, null: false
