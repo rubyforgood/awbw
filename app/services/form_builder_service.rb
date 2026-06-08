@@ -117,7 +117,7 @@ class FormBuilderService
   # Sections where answers carry across all events (ask once ever)
   ONE_TIME_SECTIONS = %w[professional background].freeze
 
-  def add_header(form, position, title, group:)
+  def add_header(form, position, title, group:, visibility: nil)
     position += 1
     form.form_fields.create!(
       name: title,
@@ -127,13 +127,13 @@ class FormBuilderService
       required: false,
       field_identifier: nil,
       section: group,
-      visibility: SECTION_VISIBILITY.fetch(group, :always_ask),
+      visibility: visibility || SECTION_VISIBILITY.fetch(group, :always_ask),
       one_time: ONE_TIME_SECTIONS.include?(group)
     )
     position
   end
 
-  def add_field(form, position, field_name, answer_type, key:, group:, required: true, hint: nil, options: nil, datatype: nil)
+  def add_field(form, position, field_name, answer_type, key:, group:, required: true, hint: nil, options: nil, datatype: nil, visibility: nil)
     position += 1
     field = form.form_fields.create!(
       name: field_name,
@@ -145,7 +145,7 @@ class FormBuilderService
       hint_text: hint,
       field_identifier: key,
       section: group,
-      visibility: SECTION_VISIBILITY.fetch(group, :always_ask),
+      visibility: visibility || SECTION_VISIBILITY.fetch(group, :always_ask),
       one_time: ONE_TIME_SECTIONS.include?(group)
     )
 
@@ -342,19 +342,20 @@ class FormBuilderService
   end
 
   def build_group_payment_fields(form, position)
-    position = add_header(form, position, "Payer Information", group: "group_payment")
+    position = add_header(form, position, "Payer Information", group: "group_payment", visibility: :logged_out_only)
 
     position = add_field(form, position, "Payer First Name", :free_form_input_one_line,
-                         key: "payer_first_name", group: "group_payment", required: true)
+                         key: "payer_first_name", group: "group_payment", required: true,
+                         visibility: :logged_out_only)
     position = add_field(form, position, "Payer Last Name", :free_form_input_one_line,
-                         key: "payer_last_name", group: "group_payment", required: true)
+                         key: "payer_last_name", group: "group_payment", required: true,
+                         visibility: :logged_out_only)
     position = add_field(form, position, "Payer Email", :free_form_input_one_line,
-                         key: "payer_email", group: "group_payment", required: true)
+                         key: "payer_email", group: "group_payment", required: true,
+                         visibility: :logged_out_only)
     position = add_field(form, position, "Organization Name", :free_form_input_one_line,
-                         key: "organization_name", group: "group_payment", required: false)
-    position = add_field(form, position, "Number of Attendees", :free_form_input_one_line,
-                         key: "number_of_attendees", group: "group_payment", required: true,
-                         datatype: :number_integer)
+                         key: "organization_name", group: "group_payment", required: false,
+                         visibility: :logged_out_only)
 
     position = add_header(form, position, "Payment Information", group: "group_payment")
     position = add_field(form, position, "Payment Method", :multiple_choice_radio,
@@ -362,6 +363,9 @@ class FormBuilderService
                          options: [ "Credit Card", "Check", "Purchase Order", "Other" ])
 
     position = add_header(form, position, "Attendees", group: "group_payment")
+    position = add_field(form, position, "Number of Attendees", :free_form_input_one_line,
+                         key: "number_of_attendees", group: "group_payment", required: true,
+                         datatype: :number_integer)
     position = add_field(form, position, "Attendees", :no_user_input,
                          key: "group_payment_attendees", group: "group_payment", required: false)
     position

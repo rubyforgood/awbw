@@ -12,7 +12,7 @@ module Events
     def new
       authorize! :group_payment, to: :new?
 
-      @form_fields = @form.form_fields.reorder(position: :asc)
+      @form_fields = visible_form_fields
       @event = @event.decorate
 
       @attendee_field = @form.form_fields.find_by(field_identifier: "group_payment_attendees")
@@ -25,7 +25,7 @@ module Events
 
       @field_errors = validate_required_fields
       if @field_errors.any?
-        @form_fields = @form.form_fields.reorder(position: :asc)
+        @form_fields = visible_form_fields
         @event = @event.decorate
         @attendee_field = @form.form_fields.find_by(field_identifier: "group_payment_attendees")
         render :new, status: :unprocessable_content
@@ -48,7 +48,7 @@ module Events
                       notice: "Your group payment information has been submitted."
         end
       else
-        @form_fields = @form.form_fields.reorder(position: :asc)
+        @form_fields = visible_form_fields
         @event = @event.decorate
         @attendee_field = @form.form_fields.find_by(field_identifier: "group_payment_attendees")
         flash.now[:alert] = result.errors.join(", ")
@@ -73,6 +73,17 @@ module Events
 
     private
 
+    def visible_form_fields
+      scope = @form.form_fields.reorder(position: :asc)
+
+      if current_user
+        logged_out_only_ids = scope.where(visibility: :logged_out_only).ids
+        scope = scope.where.not(id: logged_out_only_ids) if logged_out_only_ids.any?
+      end
+
+      scope
+    end
+
     def set_event
       @event = Event.find(params[:event_id])
     end
@@ -86,7 +97,7 @@ module Events
 
     def validate_required_fields
       errors = {}
-      visible_fields = @form.form_fields.reorder(position: :asc)
+      visible_fields = visible_form_fields
 
       visible_fields.find_each do |field|
         next if field.group_header?
