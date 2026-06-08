@@ -1,10 +1,10 @@
 module Events
   class PublicFormsController < ApplicationController
-    VARIANTS = %w[ registration scholarship bulk_payment ].freeze
     HEADINGS = {
       "registration" => "Registration",
       "scholarship" => "Scholarship application",
-      "bulk_payment" => "Bulk payment"
+      "bulk_payment" => "Bulk payment",
+      "ce_credit" => "Continuing education credit"
     }.freeze
 
     skip_before_action :authenticate_user!, only: [ :new, :create, :show ]
@@ -160,13 +160,13 @@ module Events
       @event.registration_form
     end
 
-    def form_variant
-      VARIANTS.include?(params[:form_variant]) ? params[:form_variant] : "registration"
+    def form_role
+      EventForm::ROLES.include?(params[:form_role]) ? params[:form_role] : "registration"
     end
-    helper_method :form_variant
+    helper_method :form_role
 
     def scholarship_mode?
-      if form_variant == "scholarship"
+      if form_role == "scholarship"
         params[:scholarship_requested] != "false"
       else
         params[:scholarship_requested] == "true"
@@ -174,15 +174,15 @@ module Events
     end
 
     def public_form_new_path
-      send("new_event_#{form_variant}_form_path", @event)
+      send("new_event_#{form_role}_form_path", @event)
     end
 
     def public_form_submit_path
-      send("event_#{form_variant}_form_path", @event)
+      send("event_#{form_role}_form_path", @event)
     end
 
     def public_form_heading
-      HEADINGS.fetch(form_variant)
+      HEADINGS.fetch(form_role)
     end
     helper_method :public_form_new_path, :public_form_submit_path, :public_form_heading
 

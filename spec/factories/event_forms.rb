@@ -11,5 +11,13 @@ FactoryBot.define do
     trait :scholarship do
       role { "scholarship" }
     end
+
+    trait :bulk_payment do
+      role { "bulk_payment" }
+    end
+
+    trait :ce_credit do
+      role { "ce_credit" }
+    end
   end
 end

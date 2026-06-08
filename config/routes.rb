@@ -136,15 +136,12 @@ Rails.application.routes.draw do
     end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
     resource :bulk_payment, only: [ :new, :create, :show ], module: :events
-    resource :registration_form, only: [ :new, :create, :show ],
-             controller: "public_forms", module: :events,
-             defaults: { form_variant: "registration" }
-    resource :scholarship_form, only: [ :new, :create ],
-             controller: "public_forms", module: :events,
-             defaults: { form_variant: "scholarship" }
-    resource :bulk_payment_form, only: [ :new, :create ],
-             controller: "public_forms", module: :events,
-             defaults: { form_variant: "bulk_payment" }
+    EventForm::ROLES.each do |form_role|
+      actions = form_role == "registration" ? %i[ new create show ] : %i[ new create ]
+      resource :"#{form_role}_form", only: actions,
+               controller: "public_forms", module: :events,
+               defaults: { form_role: form_role }
+    end
   end
   resources :people do
     collection do

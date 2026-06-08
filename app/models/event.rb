@@ -67,8 +67,8 @@ class Event < ApplicationRecord
     stories
   end
 
-  def registration_form
-    forms.find_by(event_forms: { role: "registration" })
+  def form_for_role(role)
+    forms.find_by(event_forms: { role: role.to_s })
   end
 
   # Whether a signed-in user should register in one click rather than being
@@ -79,12 +79,8 @@ class Event < ApplicationRecord
     signed_in_one_click_enabled? || registration_form.nil?
   end
 
-  def scholarship_form
-    forms.find_by(event_forms: { role: "scholarship" })
-  end
-
-  def bulk_payment_form
-    forms.find_by(event_forms: { role: "bulk_payment" })
+  EventForm::ROLES.each do |role_name|
+    define_method("#{role_name}_form") { form_for_role(role_name) }
   end
 
   def active_registration_for(person)

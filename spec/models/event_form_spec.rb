@@ -35,6 +35,8 @@ RSpec.describe EventForm, type: :model do
   describe "scopes" do
     let!(:registration) { create(:event_form, role: "registration") }
     let!(:scholarship) { create(:event_form, role: "scholarship") }
+    let!(:bulk_payment) { create(:event_form, role: "bulk_payment") }
+    let!(:ce_credit) { create(:event_form, role: "ce_credit") }
 
     it ".registration returns only registration records" do
       expect(EventForm.registration).to contain_exactly(registration)
@@ -42,6 +44,14 @@ RSpec.describe EventForm, type: :model do
 
     it ".scholarship returns only scholarship records" do
       expect(EventForm.scholarship).to contain_exactly(scholarship)
+    end
+
+    it ".bulk_payment returns only bulk_payment records" do
+      expect(EventForm.bulk_payment).to contain_exactly(bulk_payment)
+    end
+
+    it ".ce_credit returns only ce_credit records" do
+      expect(EventForm.ce_credit).to contain_exactly(ce_credit)
     end
   end
 end
