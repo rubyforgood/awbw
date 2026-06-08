@@ -124,6 +124,7 @@ Rails.application.routes.draw do
       get :registrants
       get :staff
       get :recipients
+      get :group_payments
       get :preview_reminder
       patch :preview
       post :copy_registration_form

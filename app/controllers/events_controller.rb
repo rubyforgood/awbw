@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff recipients preview_reminder send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff recipients group_payments preview_reminder send_reminder copy_registration_form ]
 
   def index
     authorize!
@@ -93,6 +93,16 @@ class EventsController < ApplicationController
     authorize! @event, to: :recipients?
     @event = @event.decorate
     @dashboard = EventDashboard.new(@event)
+  end
+
+  def group_payments
+    authorize! @event
+
+    @event = @event.decorate
+    @submissions = FormSubmission.joins(form: :event_forms)
+                                 .where(event_forms: { event_id: @event.id, role: "group_payment" })
+                                 .includes(:person, form_answers: :form_field)
+                                 .order(created_at: :desc)
   end
 
   def preview_reminder

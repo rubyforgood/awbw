@@ -65,6 +65,10 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
+  def group_payments?
+    manage?
+  end
+
   def preview_reminder?
     manage?
   end
