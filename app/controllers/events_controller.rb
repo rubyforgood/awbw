@@ -48,7 +48,7 @@ class EventsController < ApplicationController
   end
 
   def registrants
-    authorize! @event, to: :manage?
+    authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
       .includes(:comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob } ])
