@@ -29,8 +29,9 @@
              event: (@allocatable.event if @allocatable.respond_to?(:event)),
              person: @scholarship.recipient %>
 
-  <% form_url = @grant ? scholarships_path(grant_id: @grant.id, return_to: params[:return_to]) : scholarships_path(allocatable_sgid: @allocatable.to_sgid.to_s) %>
-  <%= form_with model: @scholarship, url: form_url, class: "space-y-6" do |f| %>
+  <% form_url = @grant ? scholarships_path(grant_id: @grant.id, return_to: params[:return_to]) : scholarships_path(allocatable_sgid: @allocatable.to_sgid.to_s, return_to: params[:return_to]) %>
+  <%# turbo: false matches the other cocoon/nested-attributes admin forms — see edit.html.erb. %>
+  <%= simple_form_for @scholarship, url: form_url, html: { class: "space-y-6" }, data: { turbo: false, controller: "submit-once", "submit-once-submitting-text-value": "Saving…" } do |f| %>
     <%= render "form", f: f %>
   <% end %>
 </div>
