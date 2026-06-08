@@ -49,7 +49,7 @@ class FormBuilderService
     payment: %w[payment_method],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
-    group_payment: %w[payer_first_name payer_last_name payer_email organization_name number_of_attendees group_payment_attendees]
+    group_payment: %w[payer_first_name payer_last_name payer_email organization_name number_of_attendees payment_method group_payment_attendees]
   }.freeze
 
   # Header questions created by each section's builder method
@@ -63,7 +63,7 @@ class FormBuilderService
     payment: [ "Payment Information" ],
     consent: [ "Consent" ],
     post_event_feedback: [ "Post-Event Feedback" ],
-    group_payment: [ "Payer Information", "Attendees" ]
+    group_payment: [ "Payer Information", "Payment Information", "Attendees" ]
   }.freeze
 
   # Update sections on an existing form: add new sections, remove unchecked ones
@@ -356,10 +356,14 @@ class FormBuilderService
                          key: "number_of_attendees", group: "group_payment", required: true,
                          datatype: :number_integer)
 
+    position = add_header(form, position, "Payment Information", group: "group_payment")
+    position = add_field(form, position, "Payment Method", :multiple_choice_radio,
+                         key: "payment_method", group: "group_payment", required: true,
+                         options: [ "Credit Card", "Check", "Purchase Order", "Other" ])
+
     position = add_header(form, position, "Attendees", group: "group_payment")
-    position = add_field(form, position, "Attendees", :free_form_input_paragraph,
-                         key: "group_payment_attendees", group: "group_payment", required: false,
-                         hint: "Add each person you are paying for.")
+    position = add_field(form, position, "Attendees", :no_user_input,
+                         key: "group_payment_attendees", group: "group_payment", required: false)
     position
   end
 end

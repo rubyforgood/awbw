@@ -40,8 +40,13 @@ module Events
       )
 
       if result.success?
-        redirect_to event_group_payment_path(@event, submission_id: result.form_submission.id),
-                    notice: "Your group payment information has been submitted."
+        if @event.cost_cents.to_i > 0 && credit_card_payment?(@form_params)
+          checkout_session = create_stripe_checkout_session(result.form_submission)
+          redirect_to checkout_session.url, allow_other_host: true, status: :see_other
+        else
+          redirect_to event_group_payment_path(@event, submission_id: result.form_submission.id),
+                      notice: "Your group payment information has been submitted."
+        end
       else
         @form_fields = @form.form_fields.reorder(position: :asc)
         @event = @event.decorate
@@ -104,6 +109,42 @@ module Events
       end
 
       errors
+    end
+
+    def credit_card_payment?(form_params)
+      payment_method_field = @form.form_fields.find_by(field_identifier: "payment_method")
+      return false unless payment_method_field
+
+      form_params[payment_method_field.id.to_s] == "Credit Card"
+    end
+
+    def create_stripe_checkout_session(submission)
+      person = submission.person
+      unit_amount = @event.cost_cents
+
+      attendees_field = @form.form_fields.find_by(field_identifier: "number_of_attendees")
+      qty = attendees_field ? @form_params[attendees_field.id.to_s].to_i : 1
+      qty = 1 if qty < 1
+
+      metadata = { form_submission_id: submission.id }
+
+      person.set_payment_processor :stripe
+
+      person.payment_processor.checkout(
+        mode: "payment",
+        metadata: metadata,
+        payment_intent_data: { metadata: metadata },
+        line_items: [ {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Group Payment (#{qty} attendees): #{@event.title}" },
+            unit_amount: unit_amount
+          },
+          quantity: qty
+        } ],
+        success_url: event_group_payment_url(@event, submission_id: submission.id, checkout: "success"),
+        cancel_url: event_group_payment_url(@event, submission_id: submission.id, checkout: "cancelled")
+      )
     end
 
     def parse_attendees(json)

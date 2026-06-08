@@ -42,7 +42,7 @@
         </div>
       <% end %>
 
-      <%= form_with url: event_group_payment_path(@event), method: :post, local: true, class: "space-y-2" do |f| %>
+      <%= form_with url: event_group_payment_path(@event), method: :post, data: {turbo: false}, class: "space-y-2" do |f| %>
 
         <div class="hidden" aria-hidden="true">
           <input type="text" name="group_payment[website_url]" tabindex="-1" autocomplete="off">
@@ -107,17 +107,41 @@
             <% if two_col %>
               </div>
             <% end %>
+          <% elsif field.field_identifier == "payment_method" %>
+            <%
+              submitted_value = @form_params&.dig(field.id.to_s)
+              error = @field_errors&.dig(field.id)
+              error_border = error ? "border-red-400 focus:border-red-500 focus:ring-red-500/30" : "border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-blue-500/30"
+              field_id = "group_payment_form_fields_#{field.id}"
+            %>
+            <div class="mb-5">
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                <%= field.name %>
+                <% if field.required %><span class="text-red-500">*</span><% end %>
+              </label>
+              <div class="flex flex-wrap gap-2.5 mt-1">
+                <% field.form_field_answer_options.includes(:answer_option).each do |ffao| %>
+                  <label class="inline-flex items-center gap-2 rounded-lg border <%= error ? 'border-red-400' : 'border-gray-300' %> px-4 py-2.5 cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 transition">
+                    <input type="radio"
+                           name="group_payment[form_fields][<%= field.id %>]"
+                           value="<%= ffao.answer_option.name %>"
+                           class="text-blue-600 focus:ring-blue-500"
+                           <%= "checked" if submitted_value == ffao.answer_option.name || (submitted_value.blank? && ffao.answer_option.name == "Credit Card") %>
+                           <%= "required" if field.required %>>
+                    <%= ffao.answer_option.name %>
+                  </label>
+                <% end %>
+              </div>
+              <% if error %>
+                <p class="flex items-center gap-1.5 text-xs text-red-600 mt-1.5">
+                  <i class="fa-solid fa-circle-exclamation"></i>Payment method is required
+                </p>
+              <% end %>
+            </div>
           <% end %>
         <% end %>
 
         <% if @attendee_field %>
-          <div class="pt-7 pb-4">
-            <h3 class="flex items-center gap-2.5 text-lg font-bold text-blue-900">
-              <span class="h-5 w-1 rounded-full bg-accent"></span>Attendees
-            </h3>
-            <p class="text-sm text-gray-500 mt-1">Add each person you are paying for.</p>
-          </div>
-
           <div data-controller="group-payment-attendees"
                data-action="submit->group-payment-attendees#serialize">
 
