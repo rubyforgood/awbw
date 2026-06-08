@@ -157,7 +157,7 @@ class ScholarshipsController < ApplicationController
   def scholarship_params
     params.require(:scholarship).permit(
       :amount_dollars, :amount_cents, :tasks_completed, :grant_id, :recipient_id,
-      comments_attributes: [ :id, :body, :_destroy ],
+      comments_attributes: [ :id, :topic, :body, :_destroy ],
       notifications_attributes: [ :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id ]
     )
   end

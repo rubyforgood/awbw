@@ -110,14 +110,15 @@ RSpec.describe "Scholarships", type: :request do
       expect(response.body).to include("Add comment")
     end
 
-    it "saves a new comment authored by the current user" do
+    it "saves a new comment with its topic, authored by the current user" do
       expect {
         patch scholarship_path(scholarship),
-              params: { scholarship: { comments_attributes: { "0" => { body: "Followed up by email" } } } }
+              params: { scholarship: { comments_attributes: { "0" => { topic: "Follow-up", body: "Followed up by email" } } } }
       }.to change { scholarship.comments.count }.by(1)
 
       comment = scholarship.comments.order(:created_at).last
       expect(comment.body).to eq("Followed up by email")
+      expect(comment.topic).to eq("Follow-up")
       expect(comment.created_by).to eq(admin)
     end
 
