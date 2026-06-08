@@ -20,9 +20,15 @@
         <%= link_to "Scholarship version", new_event_public_registration_path(@event, scholarship_requested: true, as_visitor: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
       <% end %>
       <div class="my-1 border-t border-gray-100"></div>
-      <%= link_to "Change base form", edit_event_path(@event, anchor: "registration_form_section"), class: item_class %>
+      <%= link_to "Change form settings", edit_event_path(@event, anchor: "registration_form_section"), class: item_class %>
     <% else %>
       <%= link_to "Enable forms", edit_event_path(@event, anchor: "registration_form_section"), class: item_class %>
     <% end %>
+    <div class="my-1 border-t border-gray-100"></div>
+    <%# Bulk payment is a placeholder until that feature is built. %>
+    <span class="flex items-center justify-between gap-2 px-4 py-2 text-sm text-gray-400 cursor-not-allowed" title="Bulk payment link — coming soon">
+      <span>Bulk payment link</span>
+      <span class="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-500">Soon</span>
+    </span>
   </div>
 </div>
