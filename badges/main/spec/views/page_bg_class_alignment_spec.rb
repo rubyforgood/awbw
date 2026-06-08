@@ -184,6 +184,10 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/public_registrations/show.html.erb" => "public",
     "app/views/events/registrations/show.html.erb"        => "public",
 
+    # ─── group payment views ───
+    "app/views/events/group_payments/new.html.erb"        => "public",
+    "app/views/events/group_payments/show.html.erb"       => "public",
+
     # ─── admin-only confirm/interstitial ───
     "app/views/event_registrations/confirm.html.erb"     => "admin-only bg-blue-100",
     "app/views/event_registrations/link_organization.html.erb" => "admin-only bg-blue-100",

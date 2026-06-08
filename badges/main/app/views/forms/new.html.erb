@@ -16,6 +16,7 @@
         <option value="">General</option>
         <option value="registration" <%= "selected" if params[:role] == "registration" %>>Registration</option>
         <option value="scholarship" <%= "selected" if params[:role] == "scholarship" %>>Scholarship</option>
+        <option value="group_payment" <%= "selected" if params[:role] == "group_payment" %>>Group Payment</option>
       </select>
     </div>
 
@@ -23,7 +24,7 @@
       <legend class="text-sm font-medium text-gray-700 mb-3">Select sections to include:</legend>
       <div class="space-y-2">
         <% FormBuilderService::SECTIONS.each do |key, section| %>
-          <% section_role = key == :scholarship ? "scholarship" : "other" %>
+          <% section_role = key == :scholarship ? "scholarship" : key == :group_payment ? "group_payment" : "other" %>
           <label class="flex items-center gap-2 cursor-pointer" data-section-role="<%= section_role %>">
             <input type="checkbox" name="sections[]" value="<%= key %>"
                    class="rounded border-gray-300 text-blue-600"

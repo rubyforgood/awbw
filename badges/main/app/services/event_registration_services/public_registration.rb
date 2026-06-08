@@ -1,6 +1,6 @@
 module EventRegistrationServices
   class PublicRegistration
-    Result = Struct.new(:success?, :event_registration, :errors, keyword_init: true)
+    Result = Struct.new(:success?, :event_registration, :form_submission, :errors, keyword_init: true)
 
     def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil)
       new(event:, form:, form_params:, scholarship_requested:, person:).call
@@ -35,16 +35,16 @@ module EventRegistrationServices
             existing.update!(status: "registered")
             send_notifications(existing)
           end
-          update_form_submission(person)
-          return Result.new(success?: true, event_registration: existing, errors: [])
+          submission = update_form_submission(person)
+          return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
         event_registration = create_event_registration(person)
-        create_form_submission(person)
+        submission = create_form_submission(person)
 
         send_notifications(event_registration)
 
-        Result.new(success?: true, event_registration: event_registration, errors: [])
+        Result.new(success?: true, event_registration: event_registration, form_submission: submission, errors: [])
       end
     rescue ActiveRecord::RecordInvalid => e
       Result.new(success?: false, event_registration: nil, errors: [ e.message ])

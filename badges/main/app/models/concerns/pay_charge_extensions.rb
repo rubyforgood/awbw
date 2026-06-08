@@ -14,6 +14,8 @@ module PayChargeExtensions
 
     if (event_registration_id = metadata["event_registration_id"])
       create_event_registration_payment(event_registration_id)
+    elsif (form_submission_id = metadata["form_submission_id"])
+      create_group_payment(form_submission_id)
     elsif (person_id = metadata["person_id"])
       create_donation_payment(person_id)
     end
@@ -28,10 +30,12 @@ module PayChargeExtensions
 
     payment = ExternalProcessorPayment.create!(
       person: person,
+      form_submission: FormSubmission.find_by(id: metadata["form_submission_id"]),
       amount_cents: amount,
       amount_cents_remaining: amount,
       currency: currency,
-      pay_charge_id: id
+      pay_charge_id: id,
+      metadata: metadata
     )
 
     remaining_needed = registration.remaining_cost
@@ -45,6 +49,25 @@ module PayChargeExtensions
     )
   end
 
+  def create_group_payment(form_submission_id)
+    submission = FormSubmission.find_by(id: form_submission_id)
+    return unless submission
+    return unless submission.role == "group_payment"
+
+    person = submission.person
+    return unless person
+
+    payment = ExternalProcessorPayment.create!(
+      person: person,
+      form_submission: submission,
+      amount_cents: amount,
+      amount_cents_remaining: amount,
+      currency: currency,
+      pay_charge_id: id,
+      metadata: metadata
+    )
+  end
+
   def create_donation_payment(person_id)
     person = Person.find_by(id: person_id.to_i)
     return unless person
@@ -54,7 +77,8 @@ module PayChargeExtensions
       amount_cents: amount,
       amount_cents_remaining: amount,
       currency: currency,
-      pay_charge_id: id
+      pay_charge_id: id,
+      metadata: metadata
     )
   end
 

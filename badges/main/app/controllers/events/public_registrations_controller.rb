@@ -61,7 +61,7 @@ module Events
         registration = result.event_registration
 
         if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 && credit_card_payment?(registration_params)
-          checkout_session = create_stripe_checkout_session(registration)
+          checkout_session = create_stripe_checkout_session(registration, result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
         else
           redirect_to registration_ticket_path(registration.slug),
@@ -101,7 +101,7 @@ module Events
         return
       end
 
-      @form_fields = @form.form_fields.reorder(position: :asc)
+      @form_fields = visible_form_fields
       @responses = @form_submission.form_answers.index_by(&:form_field_id)
       @event = @event.decorate
     end
@@ -115,11 +115,12 @@ module Events
       form_params[payment_method_field.id.to_s] == "Credit Card"
     end
 
-    def create_stripe_checkout_session(registration)
+    def create_stripe_checkout_session(registration, submission = nil)
       person = registration.registrant
       amount = @event.cost_cents
 
       metadata = { event_registration_id: registration.id }
+      metadata[:form_submission_id] = submission.id if submission
 
       person.set_payment_processor :stripe
 
@@ -188,7 +189,7 @@ module Events
     def visible_form_fields
       scope = @form.form_fields
 
-      person = current_user&.person if params[:as_visitor] != "true"
+      person = current_user&.person
       if person
         # Always hide logged_out_only fields for logged-in users with known data
         known_identifiers = person_known_identifiers(person)
@@ -259,6 +260,16 @@ module Events
               end
             end
           end
+        end
+      end
+
+      if @event.cost_cents.to_i <= 0
+        payment_field_ids = @form.form_fields.where(field_identifier: "payment_method").ids
+        if payment_field_ids.any?
+          scope = scope.where.not(id: payment_field_ids)
+
+          header = @form.form_fields.find_by(answer_type: :group_header, name: "Payment Information")
+          scope = scope.where.not(id: header.id) if header
         end
       end
 

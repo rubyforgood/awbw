@@ -5,6 +5,7 @@ class Payment < ApplicationRecord
   has_many :refunds, as: :refundable
   belongs_to :person, optional: true
   belongs_to :organization, optional: true
+  belongs_to :form_submission, optional: true
 
   validates :amount_cents, numericality: { greater_than: 0 }
   validates :currency, presence: true
