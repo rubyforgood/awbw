@@ -1,5 +1,5 @@
-<%= form_with url: manage_event_path(@event), method: :get,
-  data: { controller: "collection", turbo_frame: "manage_results" },
+<%= form_with url: registrants_event_path(@event), method: :get,
+  data: { controller: "collection", turbo_frame: "registrants_results" },
   autocomplete: "off",
   class: "flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mb-6" do %>
 
@@ -81,7 +81,7 @@
   <% end %>
 
   <div class="w-full md:w-auto flex justify-end">
-    <%= link_to "Clear filters", manage_event_path(@event),
+    <%= link_to "Clear filters", registrants_event_path(@event),
                 class: "btn btn-utility-outline",
                 data: { action: "collection#clearAndSubmit" } %>
   </div>

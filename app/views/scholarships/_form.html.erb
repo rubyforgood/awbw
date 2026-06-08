@@ -97,7 +97,7 @@
 <% cancel_path = if grant_funded
      params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)
    elsif @allocatable.respond_to?(:event)
-     manage_event_path(@allocatable.event)
+     registrants_event_path(@allocatable.event)
    else
      root_path
    end %>

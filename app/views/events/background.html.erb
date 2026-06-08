@@ -47,9 +47,9 @@
   <% ce_registrants = @dashboard.registrants.select { |person| (person.id % 3).zero? } %>
   <% leading_metrics = [
        { label: "Organizations", value: @dashboard.organization_count, icon: "fa-building", theme: :organizations,
-         path: manage_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")), sub: program_breakdown },
+         path: registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")), sub: program_breakdown },
        { label: "Sectors", value: @dashboard.sectors.size, icon: "fa-hand-holding-heart", theme: :sectors,
-         path: manage_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")),
+         path: registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")),
          sub: @dashboard.sectors.any? ? "#{@dashboard.primary_sector_count} primary · #{@dashboard.additional_sector_count} additional" : nil }
      ] %>
   <div class="flex flex-wrap items-stretch divide-y sm:divide-y-0 sm:divide-x divide-gray-100 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
@@ -59,14 +59,14 @@
         <i class="fa-solid fa-users"></i>
       </span>
       <span class="min-w-0">
-        <%= link_to manage_event_path(@event), class: "block hover:underline leading-tight" do %>
+        <%= link_to registrants_event_path(@event), class: "block hover:underline leading-tight" do %>
           <span class="text-xl font-bold text-gray-900 tabular-nums"><%= @dashboard.registrant_count %></span>
           <span class="text-xs text-gray-500">Registrants</span>
         <% end %>
         <span class="block text-xs text-gray-400 mt-0.5">
           <%= link_to recipients_event_path(@event), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.scholarship_recipient_count, "scholarship") %><% end %>
           <span class="text-gray-300" aria-hidden="true">·</span>
-          <%= link_to manage_event_path(@event, registrant_ids: ce_registrants.map(&:id).join("-")), class: "hover:underline whitespace-nowrap" do %><%= ce_registrants.size %> CE<% end %>
+          <%= link_to registrants_event_path(@event, registrant_ids: ce_registrants.map(&:id).join("-")), class: "hover:underline whitespace-nowrap" do %><%= ce_registrants.size %> CE<% end %>
         </span>
       </span>
     </div>
@@ -86,9 +86,9 @@
           <span class="text-xs <%= DomainTheme.text_class_for(:addresses, intensity: 600) %>">Locations</span>
         </span>
         <span class="block text-xs text-gray-400 mt-0.5">
-          <%= link_to manage_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.states.size, "state") %><% end %>
+          <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.states.size, "state") %><% end %>
           <span class="text-gray-300" aria-hidden="true">·</span>
-          <%= link_to manage_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-")), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.countries.size, "country") %><% end %>
+          <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-")), class: "hover:underline whitespace-nowrap" do %><%= pluralize(@dashboard.countries.size, "country") %><% end %>
         </span>
       </span>
     </div>
@@ -208,14 +208,14 @@
   <%# Per-row drill-ins: each breakdown row links to the registrant list filtered
       to the people behind it (sectors/states use their named filters, the rest use
       the matching registrant_ids set). %>
-  <% sector_paths = @dashboard.sectors.to_h { |s| [ s.name, manage_event_path(@event, sector: s.id) ] } %>
-  <% age_group_paths = @dashboard.age_groups.to_h { |c| [ c.name, manage_event_path(@event, registrant_ids: @dashboard.age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
-  <% state_paths = @dashboard.states.index_with { |state| manage_event_path(@event, state: state) } %>
-  <% country_paths = @dashboard.country_registrant_ids_by_country.transform_values { |ids| manage_event_path(@event, registrant_ids: ids.join("-")) } %>
-  <% school_district_paths = @dashboard.school_district_registrant_ids_by_district.transform_values { |ids| manage_event_path(@event, registrant_ids: ids.join("-")) } %>
-  <% life_experience_paths = @dashboard.life_experiences.to_h { |c| [ c.name, manage_event_path(@event, registrant_ids: @dashboard.life_experience_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
-  <% settings_paths = @dashboard.settings.to_h { |c| [ c.name, manage_event_path(@event, registrant_ids: @dashboard.settings_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
-  <% org_paths = @dashboard.organizations.to_h { |o| [ o.name, manage_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-")) ] } %>
+  <% sector_paths = @dashboard.sectors.to_h { |s| [ s.name, registrants_event_path(@event, sector: s.id) ] } %>
+  <% age_group_paths = @dashboard.age_groups.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
+  <% state_paths = @dashboard.states.index_with { |state| registrants_event_path(@event, state: state) } %>
+  <% country_paths = @dashboard.country_registrant_ids_by_country.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
+  <% school_district_paths = @dashboard.school_district_registrant_ids_by_district.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
+  <% life_experience_paths = @dashboard.life_experiences.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.life_experience_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
+  <% settings_paths = @dashboard.settings.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.settings_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
+  <% org_paths = @dashboard.organizations.to_h { |o| [ o.name, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-")) ] } %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
     <% if sector_data.any? %>
       <%= render "breakdown_card", title: "Primary service area", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>

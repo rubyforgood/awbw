@@ -5,7 +5,7 @@
     <%= link_to "← Back to event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <div class="ml-auto flex flex-wrap gap-2">
       <% if allowed_to?(:manage?, @event) %>
-        <%= link_to "Manage registrants", manage_event_path(@event), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+        <%= link_to "Registrants", registrants_event_path(@event), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
       <% end %>
       <button onclick="window.print();" class="text-sm text-gray-500 hover:text-gray-700 px-2 py-1 cursor-pointer">
         <i class="fa-solid fa-print"></i> Print

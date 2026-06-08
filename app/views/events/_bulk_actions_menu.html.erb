@@ -13,7 +13,7 @@
        data-dropdown-target="content"
        class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
     <%= link_to "Send reminder emails", preview_reminder_event_path(@event), class: item_class %>
-    <%= link_to manage_event_path(@event, format: :csv), class: item_class, data: { turbo_frame: "_top" } do %>
+    <%= link_to registrants_event_path(@event, format: :csv), class: item_class, data: { turbo_frame: "_top" } do %>
       Download CSV <i class="fa-solid fa-download text-gray-400 ml-1"></i>
     <% end %>
   </div>

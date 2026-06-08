@@ -78,7 +78,7 @@ class ScholarshipsController < ApplicationController
 
     event = @allocatable.try(:event)
     destination = if event
-      manage_event_path(event)
+      registrants_event_path(event)
     elsif grant
       params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)
     else

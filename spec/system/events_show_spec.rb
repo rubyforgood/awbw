@@ -112,7 +112,7 @@ RSpec.describe "Event show page", type: :system do
       visit event_path(event)
 
       expect(page).to have_link("Dashboard", href: dashboard_event_path(event))
-      expect(page).to have_link("Registrants", href: manage_event_path(event))
+      expect(page).to have_link("Registrants", href: registrants_event_path(event))
     end
 
     it "hides admin controls for regular users" do
