@@ -278,6 +278,15 @@ class EventsController < ApplicationController
     else
       event.event_forms.scholarship.destroy_all
     end
+
+    if params.dig(:event, :group_payment_enabled) == "1"
+      form = Form.standalone.find_by(role: "group_payment")
+      if form && !event.event_forms.group_payment.exists?
+        event.event_forms.create!(form: form, role: "group_payment")
+      end
+    else
+      event.event_forms.group_payment.destroy_all
+    end
   end
 
   def set_form_variables

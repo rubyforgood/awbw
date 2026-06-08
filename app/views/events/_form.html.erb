@@ -392,6 +392,12 @@
               <span class="text-sm font-medium text-gray-700">Enable scholarship application</span>
             </label>
           </div>
+          <div class="pb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <%= check_box_tag "event[group_payment_enabled]", "1", @event.group_payment_form.present? %>
+              <span class="text-sm font-medium text-gray-700">Enable group payment</span>
+            </label>
+          </div>
         </div>
       </div>
     <% end %>
