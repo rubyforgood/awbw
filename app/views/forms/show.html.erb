@@ -84,10 +84,10 @@
                 <% if conditional %>
                   <div class="border-l-4 <%= visibility_marker_styles[field.visibility] %> pl-3">
                     <span class="inline-block mb-1.5 text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
-                    <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
+                    <%= render "events/public_forms/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
                   </div>
                 <% else %>
-                  <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
+                  <%= render "events/public_forms/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
                 <% end %>
               </div>
             <% end %>

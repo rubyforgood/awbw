@@ -1,16 +1,23 @@
 module Events
-  class PublicRegistrationsController < ApplicationController
+  class PublicFormsController < ApplicationController
+    VARIANTS = %w[ registration scholarship bulk_payment ].freeze
+    HEADINGS = {
+      "registration" => "Registration",
+      "scholarship" => "Scholarship application",
+      "bulk_payment" => "Bulk payment"
+    }.freeze
+
     skip_before_action :authenticate_user!, only: [ :new, :create, :show ]
     before_action :set_event
     before_action :ensure_registerable, only: [ :new, :create ]
 
     rescue_from ActionController::InvalidAuthenticityToken do
       flash[:alert] = "Your session has expired. Please try submitting the form again."
-      redirect_to new_event_public_registration_path(@event)
+      redirect_to public_form_new_path
     end
 
     def new
-      authorize! :public_registration, to: :new?
+      authorize! :public_form, to: :new?
 
       @form = registration_form
       unless @form
@@ -25,10 +32,10 @@ module Events
     end
 
     def create
-      authorize! :public_registration, to: :create?
+      authorize! :public_form, to: :create?
 
       if params[:public_registration][:website_url].present?
-        redirect_to new_event_public_registration_path(@event)
+        redirect_to public_form_new_path
         return
       end
 
@@ -80,7 +87,7 @@ module Events
     end
 
     def show
-      authorize! :public_registration, to: :show?
+      authorize! :public_form, to: :show?
 
       if params[:reg].present?
         registration = EventRegistration.find_by!(slug: params[:reg], event_id: @event.id)
@@ -153,9 +160,31 @@ module Events
       @event.registration_form
     end
 
-    def scholarship_mode?
-      params[:scholarship_requested] == "true"
+    def form_variant
+      VARIANTS.include?(params[:form_variant]) ? params[:form_variant] : "registration"
     end
+    helper_method :form_variant
+
+    def scholarship_mode?
+      if form_variant == "scholarship"
+        params[:scholarship_requested] != "false"
+      else
+        params[:scholarship_requested] == "true"
+      end
+    end
+
+    def public_form_new_path
+      send("new_event_#{form_variant}_form_path", @event)
+    end
+
+    def public_form_submit_path
+      send("event_#{form_variant}_form_path", @event)
+    end
+
+    def public_form_heading
+      HEADINGS.fetch(form_variant)
+    end
+    helper_method :public_form_new_path, :public_form_submit_path, :public_form_heading
 
     def split_form_params(all_params)
       reg_field_ids = @form.form_fields.pluck(:id).map(&:to_s)

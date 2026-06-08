@@ -175,7 +175,7 @@ RSpec.describe "Events::Registrations", type: :request do
     end
   end
 
-  describe "GET /events/:event_id/public_registration (show)" do
+  describe "GET /events/:event_id/registration_form (show)" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     before do
@@ -189,12 +189,12 @@ RSpec.describe "Events::Registrations", type: :request do
     end
 
     it "allows access with a valid slug" do
-      get event_public_registration_path(event, reg: registration.slug)
+      get event_registration_form_path(event, reg: registration.slug)
       expect(response).to have_http_status(:success)
     end
 
     it "returns 404 with an invalid slug" do
-      get event_public_registration_path(event, reg: "bogus-slug")
+      get event_registration_form_path(event, reg: "bogus-slug")
       expect(response).to have_http_status(:not_found)
     end
 
@@ -202,7 +202,7 @@ RSpec.describe "Events::Registrations", type: :request do
       other_event = create(:event)
       other_registration = create(:event_registration, event: other_event, registrant: user.person)
 
-      get event_public_registration_path(event, reg: other_registration.slug)
+      get event_registration_form_path(event, reg: other_registration.slug)
       expect(response).to have_http_status(:not_found)
     end
 
@@ -210,7 +210,7 @@ RSpec.describe "Events::Registrations", type: :request do
       before { sign_out user }
 
       it "allows access with a valid slug" do
-        get event_public_registration_path(event, reg: registration.slug)
+        get event_registration_form_path(event, reg: registration.slug)
         expect(response).to have_http_status(:success)
       end
     end

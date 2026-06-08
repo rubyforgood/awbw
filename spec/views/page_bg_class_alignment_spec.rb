@@ -185,8 +185,8 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshops/edit.html.erb"                => "admin-only bg-blue-100",
 
     # ─── public registration / slug-based views ───
-    "app/views/events/public_registrations/new.html.erb"  => "public",
-    "app/views/events/public_registrations/show.html.erb" => "public",
+    "app/views/events/public_forms/new.html.erb"  => "public",
+    "app/views/events/public_forms/show.html.erb" => "public",
     "app/views/events/registrations/show.html.erb"        => "public",
 
     # ─── bulk payment views ───

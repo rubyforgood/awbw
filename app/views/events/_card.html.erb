@@ -76,13 +76,13 @@
                       class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
         <% else %>
           <%= link_to "Register",
-                      new_event_public_registration_path(event),
+                      new_event_registration_form_path(event),
                       data: { turbo_frame: "_top" },
                       class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
         <% end %>
       <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
         <%= link_to "Register",
-                    new_event_public_registration_path(event),
+                    new_event_registration_form_path(event),
                     data: { turbo_frame: "_top" },
                     class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
       <% end %>

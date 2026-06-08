@@ -60,7 +60,7 @@
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
         </div>
         <div class="min-w-0">
-          <h2 class="text-xl font-semibold tracking-wide leading-tight">Registration</h2>
+          <h2 class="text-xl font-semibold tracking-wide leading-tight"><%= public_form_heading %></h2>
           <p class="text-sm text-blue-200">Reserve your spot.</p>
         </div>
       </div>
@@ -78,7 +78,7 @@
         </div>
       <% end %>
 
-      <%= form_with url: event_public_registration_path(@event), method: :post, local: true, class: "space-y-2", data: { turbo: !@event.cost_cents.to_i.positive? } do |f| %>
+      <%= form_with url: public_form_submit_path, method: :post, local: true, class: "space-y-2", data: { turbo: !@event.cost_cents.to_i.positive? } do |f| %>
 
         <% if @scholarship %>
           <input type="hidden" name="scholarship_requested" value="true">
@@ -118,7 +118,7 @@
                 <% submitted_value = @scholarship ? "Other" : FormBuilderService::PAYMENT_METHOD_PAY_NOW %>
               <% end %>
               <div class="<%= field.grid_span_class %>">
-                <%= render "events/public_registrations/form_field", field: field, value: submitted_value, label: email_label_overrides[field.field_identifier] %>
+                <%= render "events/public_forms/form_field", field: field, value: submitted_value, label: email_label_overrides[field.field_identifier] %>
               </div>
             <% end %>
           <% end %>
@@ -135,7 +135,7 @@
                 <% next if field.group_header? %>
                 <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
                 <div class="<%= field.grid_span_class %>">
-                  <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
+                  <%= render "events/public_forms/form_field", field: field, value: submitted_value %>
                 </div>
               <% end %>
             </div>

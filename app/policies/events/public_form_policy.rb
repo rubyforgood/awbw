@@ -1,4 +1,4 @@
-class Events::PublicRegistrationPolicy < ApplicationPolicy
+class Events::PublicFormPolicy < ApplicationPolicy
   def new?
     true
   end

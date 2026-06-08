@@ -135,8 +135,16 @@ Rails.application.routes.draw do
       post :send_reminder
     end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
-    resource :public_registration, only: [ :new, :create, :show ], module: :events
     resource :bulk_payment, only: [ :new, :create, :show ], module: :events
+    resource :registration_form, only: [ :new, :create, :show ],
+             controller: "public_forms", module: :events,
+             defaults: { form_variant: "registration" }
+    resource :scholarship_form, only: [ :new, :create ],
+             controller: "public_forms", module: :events,
+             defaults: { form_variant: "scholarship" }
+    resource :bulk_payment_form, only: [ :new, :create ],
+             controller: "public_forms", module: :events,
+             defaults: { form_variant: "bulk_payment" }
   end
   resources :people do
     collection do

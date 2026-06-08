@@ -380,7 +380,7 @@
                    data-anchor-highlight-target-param="public_registration_setting">Change</a>
               </div>
               <% if @event.event_forms.registration.exists? %>
-                <%= link_to new_event_public_registration_path(@event),
+                <%= link_to new_event_registration_form_path(@event),
                             class: "inline-flex items-center gap-1 text-sm text-blue-700 hover:text-blue-900 underline mt-2",
                             target: "_blank" do %>
                   <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> View public registration page
@@ -406,7 +406,7 @@
                 </label>
                 <p class="text-xs text-gray-500 mt-1">Add a scholarship form so registrants can request financial assistance.</p>
                 <% if @event.scholarship_form.present? %>
-                  <%= link_to new_event_public_registration_path(@event, scholarship_requested: true),
+                  <%= link_to new_event_registration_form_path(@event, scholarship_requested: true),
                               class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
                               target: "_blank" do %>
                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview scholarship form

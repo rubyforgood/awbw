@@ -1188,7 +1188,7 @@ RSpec.describe "Events", type: :request do
   describe "GET /show register button for signed-in users" do
     let(:registerable_event) { create(:event, :published) }
     let(:one_click_action) { "/events/#{registerable_event.id}/registrations" }
-    let(:form_path) { new_event_public_registration_path(registerable_event) }
+    let(:form_path) { new_event_registration_form_path(registerable_event) }
 
     before { sign_in user }
 
