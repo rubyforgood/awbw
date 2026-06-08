@@ -56,6 +56,15 @@
         <% end %>
       <% end %>
 
+      <% if @submission.person.present? %>
+        <div class="py-2">
+          <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Submitted by</dt>
+          <dd class="mt-1 text-sm text-gray-900">
+            <%= @submission.person.name %> &lt;<%= @submission.person.email %>&gt;
+          </dd>
+        </div>
+      <% end %>
+
       <% if @attendees.any? %>
         <div class="pt-6 pb-2 border-b border-gray-200 mb-4">
           <h3 class="text-lg font-semibold text-gray-800">Attendees</h3>
