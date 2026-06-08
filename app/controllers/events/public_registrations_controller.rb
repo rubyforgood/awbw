@@ -61,7 +61,7 @@ module Events
         registration = result.event_registration
 
         if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 && credit_card_payment?(registration_params)
-          checkout_session = create_stripe_checkout_session(registration)
+          checkout_session = create_stripe_checkout_session(registration, result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
         else
           redirect_to registration_ticket_path(registration.slug),
@@ -115,11 +115,12 @@ module Events
       form_params[payment_method_field.id.to_s] == "Credit Card"
     end
 
-    def create_stripe_checkout_session(registration)
+    def create_stripe_checkout_session(registration, submission = nil)
       person = registration.registrant
       amount = @event.cost_cents
 
       metadata = { event_registration_id: registration.id }
+      metadata[:form_submission_id] = submission.id if submission
 
       person.set_payment_processor :stripe
 

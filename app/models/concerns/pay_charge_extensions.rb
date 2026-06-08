@@ -30,6 +30,7 @@ module PayChargeExtensions
 
     payment = ExternalProcessorPayment.create!(
       person: person,
+      form_submission: FormSubmission.find_by(id: metadata["form_submission_id"]),
       amount_cents: amount,
       amount_cents_remaining: amount,
       currency: currency,
