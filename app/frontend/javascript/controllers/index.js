@@ -66,6 +66,12 @@ application.register("file-preview", FilePreviewController)
 import FormFieldsSortableController from "./form_fields_sortable_controller"
 application.register("form-fields-sortable", FormFieldsSortableController)
 
+import GrantDetailsController from "./grant_details_controller"
+application.register("grant-details", GrantDetailsController)
+
+import GrantSelectController from "./grant_select_controller"
+application.register("grant-select", GrantSelectController)
+
 import InactiveToggleController from "./inactive_toggle_controller"
 application.register("inactive-toggle", InactiveToggleController)
 
@@ -125,6 +131,9 @@ application.register("share-url", ShareUrlController)
 
 import SortableController from "./sortable_controller"
 application.register("sortable", SortableController)
+
+import SubmitOnceController from "./submit_once_controller"
+application.register("submit-once", SubmitOnceController)
 
 import TagLinkLoadingController from "./tag_link_loading_controller"
 application.register("tag-link-loading", TagLinkLoadingController)
