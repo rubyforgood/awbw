@@ -51,7 +51,10 @@ RSpec.describe "Scholarships", type: :request do
       # Event title links to the event, with the training date alongside.
       expect(response.body).to include(event.title)
       expect(response.body).to include(event_path(event))
-      expect(response.body).to include(event.start_date.in_time_zone(Time.zone).strftime("%b %-d"))
+      # The header renders event times in the viewer's zone (Pacific by default),
+      # so assert the date in that same zone rather than the test's UTC default.
+      display_zone = "Pacific Time (US & Canada)"
+      expect(response.body).to include(event.start_date.in_time_zone(display_zone).strftime("%b %-d"))
 
       # Recipient name links to their profile.
       expect(response.body).to include(person_path(registration.registrant))
