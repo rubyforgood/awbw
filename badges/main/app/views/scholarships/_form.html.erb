@@ -1,9 +1,15 @@
 <% grant = @grant || f.object.grant %>
+<%# grant_funded drives the form's data shape (funder + recipient picker vs the
+    optional grant dropdown); grant_nav drives where Cancel/back go, following the
+    page the user came from via return_to. %>
 <% grant_funded = @allocatable.blank? && grant.present? %>
+<% grant_nav = grant.present? && params[:return_to].in?(%w[ grant_show grant_edit ]) %>
+<%= render "shared/errors", resource: f.object if f.object.errors.any? %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          data-controller="scholarship-preview"
          data-scholarship-preview-event-cost-value="<%= @allocatable.respond_to?(:event) ? @allocatable.event.cost_cents.to_i : 0 %>"
-         data-scholarship-preview-other-allocated-value="<%= @allocatable.respond_to?(:event) ? (@allocatable.allocations_sum.to_i - f.object.allocation&.amount.to_i) : 0 %>">
+         data-scholarship-preview-other-allocated-value="<%= @allocatable.respond_to?(:event) ? (@allocatable.allocations_sum.to_i - f.object.allocation&.amount.to_i) : 0 %>"
+         data-scholarship-preview-completed-initial-value="<%= f.object.tasks_completed? %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
       <i class="fa-solid fa-graduation-cap"></i>
@@ -14,29 +20,123 @@
   <div class="space-y-6 p-4">
     <% if @allocatable.respond_to?(:event) %>
       <% owed_cents = [ @allocatable.event.cost_cents.to_i - @allocatable.allocations_sum.to_i, 0 ].max %>
-      <% allocated_cents = f.object.allocation&.amount.to_i %>
-      <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Event cost</dt>
-          <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (@allocatable.event.cost_cents.to_f / 100) %></dd>
+      <% completed = f.object.tasks_completed? %>
+      <% allocated_cents = completed ? f.object.amount_cents.to_i : 0 %>
+      <% paid = owed_cents <= 0 %>
+      <div class="space-y-4">
+        <%# Three equal-height stat cards (grid stretches them to match) so every
+            label lines up in the same top row: Event cost (grey), Scholarship
+            amount (the input, tinted by allocation state), Still owed (amber). %>
+        <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Event cost</dt>
+            <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@allocatable.event.cost_cents) %></dd>
+          </div>
+          <%# The amount cell reads neutral grey until "Tasks completed" is on; amber
+              while that toggle is changed but unsaved (allocation pending); fuchsia
+              once saved. scholarship_preview_controller keeps it in sync. %>
+          <div data-scholarship-preview-target="amountBox" class="rounded-lg border px-4 py-3 <%= completed ? "border-fuchsia-300 bg-fuchsia-50" : "border-gray-100 bg-gray-50" %>">
+            <%= f.label :amount_dollars, "Scholarship amount", class: "block text-xs font-medium uppercase tracking-wide text-gray-400" %>
+            <div class="relative mt-1">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">$</span>
+              <%= f.number_field :amount_dollars, step: 0.01, min: 0, autocomplete: "off", class: "w-full rounded-lg border border-gray-300 bg-white pl-7 pr-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", data: { "scholarship-preview-target": "amount", action: "input->scholarship-preview#update", lpignore: "true", "1p-ignore": "true", bwignore: "true", "form-type": "other" } %>
+            </div>
+          </div>
+          <div data-scholarship-preview-target="owed" class="rounded-lg border px-4 py-3 <%= paid ? "border-gray-300 bg-gray-50" : "border-amber-300 bg-amber-50" %>">
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Still owed</dt>
+            <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= paid ? "text-gray-500" : "text-amber-700" %>">
+              <% if paid %>
+                <i class="fa-solid fa-thumbs-up"></i>
+                Paid up
+              <% else %>
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <%= dollars_from_cents(owed_cents) %>
+              <% end %>
+            </dd>
+          </div>
+        </dl>
+
+        <%# Allocation strip: the "Tasks completed" toggle drives the allocation and
+            the resulting chip sits alongside it. Full-width below the stats, tinted
+            by state (grey off, amber while unsaved, fuchsia once allocated) — the
+            control and the status it produces stay together. %>
+        <div data-scholarship-preview-target="allocationStrip" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 <%= completed ? "border-fuchsia-300 bg-fuchsia-50" : "border-gray-100 bg-gray-50" %>">
+          <label class="flex items-center gap-2.5 cursor-pointer">
+            <span class="text-xs font-medium text-gray-600">Tasks completed</span>
+            <%= f.check_box :tasks_completed, class: "sr-only peer", data: { "scholarship-preview-target": "completed", action: "change->scholarship-preview#update" } %>
+            <span data-scholarship-preview-target="completedTrack" class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+          </label>
+          <div data-scholarship-preview-target="allocatedHint">
+            <% if completed %>
+              <span class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-100 px-2 py-0.5 text-[0.65rem] font-medium text-fuchsia-700">
+                <i class="fa-solid fa-circle-check text-[0.55rem]"></i>
+                $<%= "%.2f" % (allocated_cents.to_f / 100) %> allocated to registration
+              </span>
+            <% else %>
+              <span class="text-xs text-gray-500">$0 allocated to registration</span>
+            <% end %>
+          </div>
         </div>
-        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Scholarship allocated</dt>
-          <dd data-scholarship-preview-target="allocated" class="mt-1 text-sm font-semibold <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> tabular-nums">$<%= "%.2f" % (allocated_cents.to_f / 100) %></dd>
-        </div>
-        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Still owed</dt>
-          <dd data-scholarship-preview-target="owed" class="mt-1">
-            <% paid = owed_cents <= 0 %>
-            <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-medium <%= paid ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700" %>">
-              <i class="fas <%= paid ? "fa-circle-check" : "fa-circle-exclamation" %>"></i>
-              <%= paid ? "Paid" : "$#{"%.2f" % (owed_cents.to_f / 100)} due" %>
-            </span>
-          </dd>
-        </div>
-      </dl>
+      </div>
     <% end %>
 
+    <%# With a registration, the amount + tasks-completed toggle live in the stat grid
+        above. Without one (grant-funded or standalone) they live here instead. %>
+    <% unless @allocatable.respond_to?(:event) %>
+      <div class="flex flex-wrap items-start gap-x-10 gap-y-6">
+        <% if grant_funded %>
+          <div>
+            <%= f.label :recipient_id, "Recipient", class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= f.collection_select :recipient_id,
+                  (f.object.recipient.present? ? [ f.object.recipient ] : []),
+                  :id, :full_name,
+                  { include_blank: "Search for a person…" },
+                  { required: true, class: "w-64 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm",
+                    data: { controller: "remote-select", remote_select_model_value: "person" } } %>
+          </div>
+        <% end %>
+
+        <div>
+          <%= f.label :amount_dollars, "Scholarship amount", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <div class="relative w-48">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">$</span>
+            <%= f.number_field :amount_dollars, step: 0.01, min: 0, autocomplete: "off", class: "w-full rounded-lg border border-gray-300 pl-7 pr-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", data: { "scholarship-preview-target": "amount", action: "input->scholarship-preview#update", lpignore: "true", "1p-ignore": "true", bwignore: "true", "form-type": "other" } %>
+          </div>
+        </div>
+
+        <div>
+          <%= f.label :tasks_completed, "Tasks completed", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <label class="flex h-[2.625rem] items-center gap-2.5 cursor-pointer">
+            <%= f.check_box :tasks_completed, class: "sr-only peer", data: { "scholarship-preview-target": "completed", action: "change->scholarship-preview#update" } %>
+            <span data-scholarship-preview-target="completedTrack" class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+            <span class="text-sm text-gray-400 peer-checked:hidden">Not yet</span>
+            <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Completed</span>
+          </label>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<%# ---- Grant — funding source for this scholarship. When the scholarship is
+    grant-funded (no allocatable) the grant is fixed and shown read-only;
+    otherwise an optional dropdown links it to a grant. A connected grant's
+    eligibility criteria and tasks are shown side by side for reference. ---- %>
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:grants, intensity: 100) %> <%= DomainTheme.text_class_for(:grants, intensity: 600) %>">
+      <i class="fa-solid fa-hand-holding-dollar"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700">Grant</h2>
+    <%# from_scholarship lets the grants index show a "← Scholarship" back link
+        returning here (omitted for an unsaved scholarship, which has no id yet). %>
+    <%= link_to grants_path(from_scholarship: f.object.id), class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline", target: "_blank", rel: "noopener" do %>
+      View all
+      <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+    <% end %>
+  </div>
+
+  <div class="space-y-6 p-4">
     <% if grant_funded %>
       <% donor_icon = grant.donor.is_a?(Person) ? "fa-user #{DomainTheme.text_class_for(:people)}" : "fa-building #{DomainTheme.text_class_for(:organizations)}" %>
       <div>
@@ -47,67 +147,121 @@
         </dd>
       </div>
       <%= f.hidden_field :grant_id, value: grant.id %>
+    <% else %>
+      <%# Each option carries its grant's compact remaining/total funds; the
+          grant_select_controller renders them as a styled badge (bold remaining,
+          muted total), with the full summary as the pill's title. %>
+      <% selectable_grants = @grants || Grant.selectable_for(f.object) %>
+      <% grant_options = selectable_grants.map do |g|
+           gd = g.decorate
+           [ g.name_with_funder, g.id, { "data-remaining" => gd.remaining_compact, "data-total" => gd.amount_compact, "data-summary" => gd.funds_remaining_summary } ]
+         end %>
+      <div>
+        <%= f.label :grant_id, class: "block text-sm font-medium text-gray-700 mb-1" do %>
+          Funded by grant
+          <span class="font-normal text-gray-400">(select to see eligibility criteria and tasks)</span>
+        <% end %>
+        <div data-controller="grant-select">
+          <%= f.select :grant_id,
+                       options_for_select(grant_options, f.object.grant_id),
+                       { include_blank: "None" },
+                       { class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm",
+                         data: { grant_select_target: "select" } } %>
+        </div>
+        <p class="mt-1 text-xs text-gray-500">Optional. Only grants with funds remaining are listed. Awards cannot exceed the grant's amount.</p>
+      </div>
     <% end %>
 
-    <div class="flex flex-wrap items-start gap-x-10 gap-y-6">
-      <% if grant_funded %>
-        <div>
-          <%= f.label :recipient_id, "Recipient", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <%= f.collection_select :recipient_id,
-                (f.object.recipient.present? ? [ f.object.recipient ] : []),
-                :id, :full_name,
-                { include_blank: "Search for a person…" },
-                { required: true, class: "w-64 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm",
-                  data: { controller: "remote-select", remote_select_model_value: "person" } } %>
+    <% if grant_funded %>
+      <% if grant.present? %>
+        <div class="border-t border-gray-100 pt-6">
+          <%= render "grant_criteria_tasks", grant: grant %>
         </div>
       <% end %>
-
-      <div>
-        <%= f.label :amount_dollars, "Scholarship amount", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <div class="relative w-48">
-          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">$</span>
-          <%= f.number_field :amount_dollars, step: 0.01, class: "w-full rounded-lg border border-gray-300 pl-7 pr-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", data: { "scholarship-preview-target": "amount", action: "input->scholarship-preview#update" } %>
-        </div>
-      </div>
-
-      <div>
-        <%= f.label :tasks_completed, "Tasks completed", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <label class="flex h-[2.625rem] items-center gap-2.5 cursor-pointer">
-          <%= f.check_box :tasks_completed, class: "sr-only peer", data: { "scholarship-preview-target": "completed", action: "change->scholarship-preview#update" } %>
-          <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-green-600 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-green-300"></span>
-          <span class="text-sm text-gray-400 peer-checked:hidden">Not yet</span>
-          <span class="hidden text-sm font-medium text-green-700 peer-checked:inline">Completed</span>
-        </label>
-      </div>
-    </div>
-
-    <% unless grant_funded %>
-      <div>
-        <%= f.label :grant_id, "Funded by grant", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.collection_select :grant_id, @grants || Grant.by_deadline, :id, :name,
-                                { include_blank: "None" },
-                                class: "w-72 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
-        <p class="mt-1 text-xs text-gray-500">Optional. Scholarship totals cannot exceed the grant's donation amount.</p>
+    <% else %>
+      <%# Criteria + tasks for the picked grant. Every selectable grant's block is
+          rendered hidden; grant_details_controller reveals the one matching the
+          picker (grant-select:change) so the panel updates without a round-trip. %>
+      <div class="border-t border-gray-100 pt-6"
+           data-controller="grant-details"
+           data-action="grant-select:change@window->grant-details#update">
+        <% selectable_grants.each do |g| %>
+          <div data-grant-details-target="detail" data-grant-id="<%= g.id %>" class="<%= "hidden" unless g.id == grant&.id %>">
+            <%= render "grant_criteria_tasks", grant: g %>
+          </div>
+        <% end %>
       </div>
     <% end %>
   </div>
 </section>
 
+<% if f.object.persisted? %>
+  <%# ---- Communications + comments — same boxes as the registration edit page,
+      shown once the scholarship exists so there's a record to attach them to. ---- %>
+  <% if allowed_to?(:index?, with: NotificationPolicy) %>
+    <%= render "notifications", f: f %>
+  <% end %>
+
+  <%# ---- Comments ---- %>
+  <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="comment-edit-toggle">
+    <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:quotes, intensity: 100) %> <%= DomainTheme.text_class_for(:quotes, intensity: 600) %>">
+        <i class="fa-solid fa-comments"></i>
+      </span>
+      <h2 class="text-sm font-semibold text-gray-700">Scholarship comments</h2>
+    </div>
+
+    <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
+      <div id="comment-list" class="space-y-4">
+        <%= f.simple_fields_for :comments do |cf| %>
+          <%= render "comments/comment_fields", f: cf %>
+        <% end %>
+      </div>
+
+      <div data-paginated-fields-target="nav"></div>
+
+      <div class="flex items-center justify-between gap-2">
+        <%= link_to_add_association f, :comments,
+              partial: "comments/comment_fields",
+              data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
+              class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
+          <i class="fa-solid fa-plus text-[0.6rem]"></i>
+          Add comment
+        <% end %>
+
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+          data-action="click->comment-edit-toggle#toggle"
+        >
+          <i class="fa-solid fa-pen text-[0.6rem]"></i>
+          <span data-comment-edit-toggle-target="editLabel">Edit comments</span>
+          <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done editing</span>
+        </button>
+      </div>
+    </div>
+  </section>
+<% end %>
+
 <%# ---- Footer actions ---- %>
-<% cancel_path = if grant_funded
+<% cancel_path = if grant_nav
      params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)
    elsif @allocatable.respond_to?(:event)
      registrants_event_path(@allocatable.event)
+   elsif grant.present?
+     grant_path(grant)
    else
      root_path
    end %>
 <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
   <% if f.object.persisted? %>
+    <%# turbo: true re-enables Turbo for this link since the surrounding form sets
+        turbo: false — turbo_method: :delete needs Turbo to issue the DELETE. %>
     <%= link_to scholarship_path(f.object, return_to: params[:return_to].presence),
                 class: "btn btn-danger-outline",
-                data: { turbo_method: :delete, turbo_confirm: "Remove this scholarship?" } do %>
+                data: { turbo: true, turbo_method: :delete, turbo_confirm: "Remove this scholarship?" } do %>
       <i class="fa-solid fa-trash-can"></i>
-      Remove
+      Delete
     <% end %>
   <% end %>
 

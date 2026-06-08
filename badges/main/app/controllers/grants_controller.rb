@@ -5,7 +5,7 @@ class GrantsController < ApplicationController
   def index
     authorize!
     @grants = authorized_scope(Grant.all)
-                .includes(:donor)
+                .includes(:donor, scholarships: { allocation: :allocatable })
                 .by_deadline
                 .page(params[:page])
     track_index_intent(Grant, @grants, params)

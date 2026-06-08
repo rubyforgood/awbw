@@ -19,7 +19,7 @@ class ScholarshipsController < ApplicationController
 
     @scholarship = Scholarship.new(recipient: @allocatable.registrant)
     @scholarship.build_allocation(allocatable: @allocatable, amount: 0)
-    @grants = Grant.by_deadline
+    @grants = Grant.selectable_for(@scholarship)
     authorize! @scholarship
   end
 
@@ -44,16 +44,16 @@ class ScholarshipsController < ApplicationController
     authorize! @scholarship
 
     if @scholarship.save
-      redirect_to edit_scholarship_path(@scholarship), notice: "Scholarship created."
+      redirect_to scholarship_save_path, notice: "Scholarship created."
     else
-      @grants = Grant.by_deadline
+      @grants = Grant.selectable_for(@scholarship)
       render :new, status: :unprocessable_content
     end
   end
 
   def edit
     @allocatable = @scholarship.allocation&.allocatable
-    @grants = Grant.by_deadline
+    @grants = Grant.selectable_for(@scholarship)
     authorize! @scholarship
     load_scholarship_submission
   end
@@ -62,10 +62,17 @@ class ScholarshipsController < ApplicationController
     @allocatable = @scholarship.allocation&.allocatable
     authorize! @scholarship
 
-    if @scholarship.update(scholarship_params)
+    @scholarship.assign_attributes(scholarship_params)
+    attribute_comment_authorship
+
+    # Inline-logged notifications are addressed to the scholarship recipient.
+    recipient_email = @scholarship.recipient&.preferred_email.presence || "n/a"
+    @scholarship.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
+
+    if @scholarship.save
       redirect_to scholarship_save_path, notice: "Scholarship updated."
     else
-      @grants = Grant.by_deadline
+      @grants = Grant.selectable_for(@scholarship)
       render :edit, status: :unprocessable_content
     end
   end
@@ -76,15 +83,7 @@ class ScholarshipsController < ApplicationController
     grant = @scholarship.grant
     @scholarship.destroy!
 
-    event = @allocatable.try(:event)
-    destination = if event
-      registrants_event_path(event)
-    elsif grant
-      params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)
-    else
-      root_path
-    end
-    redirect_to destination, notice: "Scholarship removed."
+    redirect_to scholarship_return_path(grant), notice: "Scholarship removed."
   end
 
   private
@@ -97,16 +96,38 @@ class ScholarshipsController < ApplicationController
     @grant = Grant.find(params[:grant_id]) if params[:grant_id].present?
   end
 
-  # After saving a grant-funded scholarship, return to the grant the user came
-  # from (its show or edit page, respectively).
-  def grant_return_path
-    params[:return_to] == "grant_edit" ? edit_grant_path(@scholarship.grant) : grant_path(@scholarship.grant)
+  # A scholarship can be both event-funded and grant-funded. The return_to param
+  # records which page the user came from so navigation follows that context
+  # rather than always preferring the event.
+  def grant_context?(grant = @scholarship&.grant)
+    grant.present? && params[:return_to].in?(%w[ grant_show grant_edit ])
   end
 
+  # Return to the grant the user came from (its show or edit page, respectively).
+  def grant_return_path(grant = @scholarship.grant)
+    params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)
+  end
+
+  # After saving, return to wherever the user came from: the grant, the event
+  # registration (the card's View link carries return_to=registration), or — by
+  # default — stay on the scholarship's own edit page.
   def scholarship_save_path
-    return grant_return_path if @scholarship.grant && params[:return_to].in?(%w[ grant_show grant_edit ])
+    return grant_return_path if grant_context?
+    return edit_event_registration_path(@allocatable) if params[:return_to] == "registration" && @allocatable.respond_to?(:event)
 
     edit_scholarship_path(@scholarship)
+  end
+
+  # After destroying, leave the scholarship entirely: back to the grant when that
+  # is the context, otherwise the event registrants page, otherwise normal fallback.
+  def scholarship_return_path(grant)
+    return grant_return_path(grant) if grant_context?(grant)
+
+    event = @allocatable.try(:event)
+    return registrants_event_path(event) if event
+    return grant_path(grant) if grant
+
+    root_path
   end
 
   # Pull the recipient's scholarship-section answers from the event's
@@ -134,6 +155,22 @@ class ScholarshipsController < ApplicationController
   end
 
   def scholarship_params
-    params.require(:scholarship).permit(:amount_dollars, :amount_cents, :tasks_completed, :grant_id, :recipient_id)
+    params.require(:scholarship).permit(
+      :amount_dollars, :amount_cents, :tasks_completed, :grant_id, :recipient_id,
+      comments_attributes: [ :id, :topic, :body, :_destroy ],
+      notifications_attributes: [ :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id ]
+    )
+  end
+
+  # Stamp authorship on comments edited through the scholarship form: author + editor
+  # on new ones, editor on existing ones whose body changed.
+  def attribute_comment_authorship
+    @scholarship.comments.select(&:new_record?).each do |c|
+      c.created_by = current_user
+      c.updated_by = current_user
+    end
+    @scholarship.comments.select { |c| c.persisted? && c.body_changed? }.each do |c|
+      c.updated_by = current_user
+    end
   end
 end

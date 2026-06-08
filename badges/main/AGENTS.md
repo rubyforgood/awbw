@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (51) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (59) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -269,6 +269,8 @@ end
 - `dismiss` — Dismissable elements
 - `dropdown` — Dropdown menus with keyboard/click-outside handling
 - `file_preview` — File upload preview
+- `grant_details` — Swaps a grant's eligibility criteria + tasks when the grant picker changes
+- `grant_select` — Tom Select grant picker showing each grant's remaining-of-total funds
 - `inactive_toggle` — Gray out expired affiliations
 - `optimistic_bookmark` — Instant bookmark UI feedback
 - `org_toggle` — Organization toggle UI
@@ -284,6 +286,7 @@ end
 - `searchable_select` — Tom Select autocomplete
 - `share_url` — URL sharing/copying
 - `sortable` — Drag-drop sorting (SortableJS)
+- `submit_once` — Disables a form's submit button after submit to block duplicate submissions; re-enables on Back/bfcache/Turbo restore
 - `tabs` — Tab panel navigation
 - `tag_link_loading` — Loading state for tag links
 - `tags_combination_highlight` — Highlight tags matching selected filters

@@ -27,25 +27,29 @@
     </label>
 
     <% if scholarship %>
-      <div class="flex items-center gap-2 border-t border-gray-100 pt-3">
-        <span class="text-sm font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (scholarship.amount_cents.to_f / 100) %></span>
+      <div class="space-y-2 border-t border-gray-100 pt-3">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (scholarship.amount_cents.to_f / 100) %></span>
+          <%= link_to edit_scholarship_path(scholarship, return_to: "registration"),
+                      class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                      target: "_blank", rel: "noopener" do %>
+            View
+            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+          <% end %>
+        </div>
 
         <% if scholarship.tasks_completed? %>
-          <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">
-            <i class="fa-solid fa-circle-check"></i>
-            Tasks completed
-          </span>
-        <% end %>
-        <%= link_to edit_scholarship_path(scholarship),
-                    class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
-                    target: "_blank", rel: "noopener" do %>
-          View
-          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-2.5 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
+              <i class="fa-solid fa-circle-check"></i>
+              Tasks completed
+            </span>
+          </div>
         <% end %>
       </div>
     <% else %>
       <div class="border-t border-gray-100 pt-3">
-        <%= link_to new_scholarship_path(allocatable_sgid: event_registration.to_sgid.to_s),
+        <%= link_to new_scholarship_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
                     class: "inline-flex items-center gap-1.5 text-sm font-medium #{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:underline",
                     target: "_blank", rel: "noopener" do %>
           <i class="fa-solid fa-plus text-[0.7rem]"></i>

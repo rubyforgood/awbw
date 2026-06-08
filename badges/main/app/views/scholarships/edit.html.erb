@@ -1,18 +1,22 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% grant = @scholarship.grant %>
-<% grant_funded = @allocatable.blank? && grant.present? %>
-<% theme = grant_funded ? :grants : :scholarships %>
+<% grant_nav = grant.present? && params[:return_to].in?(%w[ grant_show grant_edit ]) %>
+<% theme = (grant_nav || (@allocatable.blank? && grant.present?)) ? :grants : :scholarships %>
 
 <div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(theme) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back link + secondary links, matching the registration edit page %>
   <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
-    <% if grant_funded %>
+    <% if grant_nav %>
       <%= link_to (params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)), class: "text-sm text-gray-500 hover:text-gray-700" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Grant
       <% end %>
     <% elsif @allocatable.respond_to?(:event) %>
       <%= link_to edit_event_registration_path(@allocatable), class: "text-sm text-gray-500 hover:text-gray-700" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Registration
+      <% end %>
+    <% elsif grant.present? %>
+      <%= link_to grant_path(grant), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Grant
       <% end %>
     <% else %>
       <%= link_to scholarships_path, class: "text-sm text-gray-500 hover:text-gray-700" do %>
@@ -32,7 +36,10 @@
              event: (@allocatable.event if @allocatable.respond_to?(:event)),
              person: @scholarship.recipient %>
 
-  <%= form_with model: @scholarship, url: scholarship_path(@scholarship, return_to: params[:return_to].presence), class: "space-y-6" do |f| %>
+  <%# turbo: false matches the other cocoon/nested-attributes admin forms (registration,
+      workshops). A plain full-page submit avoids the Turbo + nested-fields double/stale
+      resubmission that surfaced as a save committing yet the request returning 422. %>
+  <%= simple_form_for @scholarship, url: scholarship_path(@scholarship, return_to: params[:return_to].presence), html: { class: "space-y-6" }, data: { turbo: false, controller: "submit-once", "submit-once-submitting-text-value": "Saving…" } do |f| %>
     <%= render "form", f: f %>
   <% end %>
 
