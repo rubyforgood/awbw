@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_08_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_130000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -369,6 +369,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_120100) do
     t.string "commentable_type", null: false
     t.datetime "created_at", null: false
     t.integer "created_by_id"
+    t.string "topic"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.index ["commentable_type", "commentable_id", "created_at"], name: "idx_on_commentable_type_commentable_id_created_at_89c6e27600"

@@ -143,7 +143,7 @@ RSpec.describe "Event registration edit page", type: :system do
         click_on "Add comment"
       end
 
-      expect(page).to have_field("Add a comment...")
+      expect(page).to have_field("Type your comment")
     end
   end
 
