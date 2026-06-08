@@ -1,21 +1,34 @@
 <% grant = grant.decorate %>
-<tr class="hover:bg-gray-50 transition-colors duration-150">
-  <td class="px-4 py-2 text-sm text-gray-900">
-    <%= link_to grant.name, grant_path(grant), class: "font-medium text-blue-700 hover:underline" %>
+<%# Cell order matches the sortable column indexes in index.html.erb. Money/date
+    cells expose a numeric/ISO data-sort-value so table-sort orders them by value
+    rather than their formatted text. %>
+<tr class="group hover:bg-green-50/60 transition-colors duration-150">
+  <td class="px-4 py-3.5 align-middle" data-sort-value="<%= grant.object.name.to_s.downcase %>">
+    <%= link_to grant.name, grant_path(grant), class: "inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition-colors hover:border-gray-400 hover:bg-gray-50" %>
   </td>
-  <td class="px-4 py-2 text-sm text-gray-800"><%= grant_donor_badge(grant) %></td>
-  <td class="px-4 py-2 text-sm text-gray-800 text-right"><%= grant.amount %></td>
-  <td class="px-4 py-2 text-sm text-gray-800 text-right"><%= grant.allocated %></td>
-  <td class="px-4 py-2 text-sm text-right <%= grant.fully_allocated? ? "text-red-600 font-medium" : "text-green-700" %>">
-    <%= grant.remaining %>
-  </td>
-  <td class="px-4 py-2 text-sm text-gray-800"><%= grant.application_deadline %></td>
-  <td class="px-4 py-2 text-sm text-center">
-    <div class="flex gap-2 justify-center">
-      <%= link_to "View", grant_path(grant), class: "btn btn-secondary-outline" %>
-      <% if allowed_to?(:edit?, grant.object) %>
-        <%= link_to "Edit", edit_grant_path(grant), class: "btn btn-secondary-outline" %>
-      <% end %>
+  <td class="px-4 py-3.5 align-middle text-sm text-gray-700" data-sort-value="<%= grant.object.funder_name.to_s.downcase %>"><%= grant_donor_badge(grant) %></td>
+  <td class="px-4 py-3.5 align-middle text-sm font-medium text-gray-900 text-right tabular-nums" data-sort-value="<%= grant.object.amount_cents.to_i %>"><%= grant.amount %></td>
+  <td class="px-4 py-3.5 align-middle text-sm text-gray-700" data-sort-value="<%= grant.object.remaining_cents.to_i %>">
+    <%# Bar tracks funds left: green shrinks as the grant is awarded, fully grey
+        once nothing remains (fully allocated is expected, so no alarming red). %>
+    <div class="flex flex-col gap-1 min-w-[7rem]">
+      <span class="tabular-nums font-medium <%= grant.fully_allocated? ? "text-gray-500" : "text-gray-900" %>"><%= grant.remaining %></span>
+      <div class="h-1.5 w-full rounded-full bg-gray-100" role="presentation">
+        <div class="h-full rounded-full bg-green-500" style="width: <%= grant.remaining_percentage %>%"></div>
+      </div>
     </div>
   </td>
+  <td class="px-4 py-3.5 align-middle text-sm font-medium text-gray-900 text-right tabular-nums" data-sort-value="<%= grant.object.scholarships_total_cents.to_i %>"><%= grant.allocated %></td>
+  <%# Awarded scholarships as completed/total; links to the grant's scholarship
+      list on its show page. Sorts by total count. %>
+  <td class="px-4 py-3.5 align-middle text-sm text-center" data-sort-value="<%= grant.scholarships_count %>">
+    <% if grant.scholarships_count.positive? %>
+      <%= link_to grant.scholarships_link, class: "font-medium text-gray-900 tabular-nums hover:underline", title: "#{grant.completed_scholarships_count} of #{grant.scholarships_count} with tasks completed" do %>
+        <%= grant.completed_scholarships_count %>/<%= grant.scholarships_count %>
+      <% end %>
+    <% else %>
+      <span class="text-gray-400">0</span>
+    <% end %>
+  </td>
+  <td class="px-4 py-3.5 align-middle text-sm text-gray-700 whitespace-nowrap" data-sort-value="<%= grant.object.application_deadline&.iso8601 %>"><%= grant.application_deadline %></td>
 </tr>

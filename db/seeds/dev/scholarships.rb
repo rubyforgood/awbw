@@ -275,4 +275,91 @@ end
        "outstanding #{dashboard.outstanding_scholarship_cents / 100.0}"
 end
 
+# --- Grants & grant-funded scholarships ------------------------------------
+# Grants cap the total scholarship dollars drawn from a single funding source.
+# Seed five so the grant pages show the full range the UI must handle:
+#   * a mix of donor types — three organization funders and two individual
+#     (Person) funders, since donor is polymorphic;
+#   * distinct donation totals, eligibility criteria, and tasks per grant;
+#   * both funding states — some fully issued (remaining $0, scholarships sum to
+#     the donation) and some with room left (only part of the donation drawn).
+# Grant-funded scholarships are standalone awards (recipient + grant, no event
+# allocation), mirroring the grant CRUD flow. Idempotent: skips a grant that
+# already exists and only funds a grant that has no scholarships yet.
+puts "Seeding Grants and grant-funded scholarships…"
+
+# Reuse existing dev people as recipients, cycling so each award goes to a
+# distinct person where the pool allows.
+grant_recipient_pool = Person.order(:id).to_a
+recipient_cursor = 0
+next_recipient = -> do
+  person = grant_recipient_pool[recipient_cursor % grant_recipient_pool.length]
+  recipient_cursor += 1
+  person
+end
+
+# [ name, donor_type, donor name, amount_cents, [ scholarship amount_cents… ], eligibility, tasks ]
+# Three organization donors and two individual (Person) donors, each with a
+# distinct donation total, eligibility criteria, and tasks (newline-separated) so
+# the grant pages show varied funders and requirements. Award sets that sum to the
+# donation are fully issued; the rest leave a remaining balance.
+grant_plans = [
+  [ "Healing Arts Scholarship Fund", "Organization", "Joyful Heart Foundation", 500_000, [ 250_000, 150_000, 100_000 ],
+    "Lead expressive-arts groups for trauma survivors\nServe a community-based partner organization",
+    "Submit a portfolio of past workshops\nComplete the trauma-informed facilitation training\nFile a post-program impact report" ],
+  [ "Community Resilience Grant", "Organization", "Angel Step Inn", 1_000_000, [ 250_000, 150_000 ],
+    "Serve youth or families affected by community violence\nOperate in an underserved neighborhood",
+    "Outline a six-week workshop plan\nPartner with a local school or shelter\nShare participant feedback after the series" ],
+  [ "Trauma-Informed Practice Grant", "Organization", "Good Shepherd Shelter", 800_000, [ 300_000 ],
+    "Be a licensed clinician or peer-support specialist\nIntegrate art into ongoing therapeutic work",
+    "Describe your current caseload\nComplete the required continuing-education hours" ],
+  [ "Survivor Empowerment Grant", "Person", "Maria Johnson", 300_000, [ 200_000, 100_000 ],
+    "Work directly with domestic-violence survivors\nHold a current advocate or counselor role",
+    "Provide two professional references\nAttend the grantee orientation call" ],
+  [ "Creative Recovery Fund", "Person", "Lisa Williams", 650_000, [ 200_000, 150_000 ],
+    "Facilitate art groups for adults in substance-use recovery\nHold at least a year of group facilitation experience",
+    "Submit a one-page program proposal\nComplete a background check\nPresent outcomes at the year-end grantee showcase" ]
+]
+
+# Resolve a grant's donor by type: organizations by name, individuals by their
+# first/last name (so a Person can fund a grant, mirroring the polymorphic donor).
+resolve_donor = ->(donor_type, donor_name) do
+  if donor_type == "Person"
+    first, last = donor_name.split(" ", 2)
+    Person.find_by(first_name: first, last_name: last)
+  else
+    Organization.find_by(name: donor_name)
+  end
+end
+
+grant_plans.each_with_index do |(name, donor_type, donor_name, amount_cents, awards, eligibility, tasks), i|
+  donor = resolve_donor.(donor_type, donor_name)
+  next unless donor && grant_recipient_pool.any?
+
+  grant = Grant.find_or_create_by!(name: name) do |g|
+    g.donor = donor
+    g.amount_cents = amount_cents
+    g.application_deadline = Date.current + (15 + i * 20)
+    g.funds_received_on = Date.current - (30 + i * 10)
+    g.eligibility_criteria = eligibility
+    g.tasks = tasks
+  end
+
+  # Re-sync funder + descriptive fields so grants seeded by an earlier run pick up
+  # the now-distinct donor, donation total, criteria, and tasks.
+  if grant.donor != donor || grant.amount_cents != amount_cents ||
+     grant.eligibility_criteria != eligibility || grant.tasks != tasks
+    grant.update!(donor: donor, amount_cents: amount_cents, eligibility_criteria: eligibility, tasks: tasks)
+  end
+
+  next if grant.scholarships.exists?
+
+  awards.each_with_index do |award_cents, j|
+    Scholarship.create!(recipient: next_recipient.(), grant: grant,
+                        amount_cents: award_cents, tasks_completed: j.even?)
+  end
+
+  puts "  #{grant.name}: #{grant.scholarships.count} scholarships, remaining #{grant.remaining_dollars}"
+end
+
 puts "  Scholarship seeds complete!"

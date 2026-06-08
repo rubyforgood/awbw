@@ -13,6 +13,27 @@ class Grant < ApplicationRecord
 
   scope :by_deadline, -> { order(Arel.sql("application_deadline IS NULL, application_deadline ASC")) }
 
+  # Grants that still have unallocated funds (donation amount exceeds the sum of
+  # scholarships drawn against them).
+  scope :with_funds_remaining, -> {
+    left_joins(:scholarships)
+      .group(:id)
+      .having("grants.amount_cents - COALESCE(SUM(scholarships.amount_cents), 0) > 0")
+  }
+
+  # Grants offered in a scholarship's "Funded by grant" picker: every grant with
+  # funds left, plus the one this scholarship is already drawn from — that grant
+  # stays selectable even when fully allocated, since this scholarship is what
+  # exhausted it and deselecting it should remain possible.
+  def self.selectable_for(scholarship)
+    # Eager-load the polymorphic donor: the picker renders name_with_funder (→
+    # funder_name → donor) for every grant, which is an N+1 without this.
+    grants = with_funds_remaining.includes(:donor).by_deadline.to_a
+    connected = scholarship&.grant
+    grants << connected if connected && grants.exclude?(connected)
+    grants
+  end
+
   # Money is stored in cents; expose a dollar-based accessor for forms and display.
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents
@@ -37,7 +58,19 @@ class Grant < ApplicationRecord
     donor&.try(:full_name) || donor&.try(:name) || donor&.to_s
   end
 
+  # Display label for dropdowns: the grant name with its funder in parens
+  # (e.g. "Spring 2026 Fund (Acme Foundation)") so awarders can tell apart
+  # grants that share a name.
+  def name_with_funder
+    funder_name.present? ? "#{name} (#{funder_name})" : name
+  end
+
+  # Total scholarship draws against this grant. Sums the already-loaded
+  # association in memory when present (the index eager-loads :scholarships) to
+  # avoid a per-row SQL SUM; otherwise issues a single aggregate query.
   def scholarships_total_cents
+    return scholarships.sum { |s| s.amount_cents.to_i } if scholarships.loaded?
+
     scholarships.sum(:amount_cents)
   end
 

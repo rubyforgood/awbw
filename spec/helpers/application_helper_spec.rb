@@ -1,6 +1,21 @@
 require "rails_helper"
 
 RSpec.describe ApplicationHelper, type: :helper do
+  describe "#dollars_from_cents" do
+    it "drops the cents for whole-dollar amounts and adds thousands separators" do
+      expect(helper.dollars_from_cents(150_000)).to eq("$1,500")
+      expect(helper.dollars_from_cents(5_000)).to eq("$50")
+      expect(helper.dollars_from_cents(1_234_500)).to eq("$12,345")
+      expect(helper.dollars_from_cents(0)).to eq("$0")
+    end
+
+    it "keeps the cents for fractional amounts" do
+      expect(helper.dollars_from_cents(75_050)).to eq("$750.50")
+      expect(helper.dollars_from_cents(1_099)).to eq("$10.99")
+      expect(helper.dollars_from_cents(1_234_556)).to eq("$12,345.56")
+    end
+  end
+
   describe "#staging_environment?" do
     context "when RAILS_ENV is staging" do
       before do
