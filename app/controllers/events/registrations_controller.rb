@@ -191,9 +191,9 @@ module Events
 
       checkout_session = person.payment_processor.checkout(
         mode: "payment",
-        metadata: { event_registration_id: registration.id },
+        metadata: { event_registration_id: registration.id, event_id: @event.id },
         payment_intent_data: {
-          metadata: { event_registration_id: registration.id }
+          metadata: { event_registration_id: registration.id, event_id: @event.id }
         },
         line_items: [ {
           price_data: {
