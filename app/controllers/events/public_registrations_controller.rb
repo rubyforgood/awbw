@@ -123,7 +123,7 @@ module Events
       person = registration.registrant
       amount = @event.cost_cents
 
-      metadata = { event_registration_id: registration.id }
+      metadata = { event_registration_id: registration.id, event_id: @event.id }
       metadata[:form_submission_id] = submission.id if submission
 
       person.set_payment_processor :stripe

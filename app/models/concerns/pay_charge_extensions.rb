@@ -51,11 +51,21 @@ module PayChargeExtensions
 
   def create_bulk_payment(form_submission_id)
     submission = FormSubmission.find_by(id: form_submission_id)
-    return unless submission
-    return unless submission.role == "bulk_payment"
+    return unless submission&.role == "bulk_payment"
 
     person = submission.person
     return unless person
+
+    payment_metadata = metadata.dup
+    attendee_answer = submission.form_answers
+      .joins(:form_field)
+      .where(form_fields: { field_identifier: "bulk_payment_attendees" })
+      .first
+    if attendee_answer&.submitted_answer.present?
+      parsed = JSON.parse(attendee_answer.submitted_answer) rescue []
+      payment_metadata[:attendees] = parsed
+      payment_metadata[:attendee_count] = parsed.length
+    end
 
     payment = ExternalProcessorPayment.create!(
       person: person,
@@ -64,7 +74,7 @@ module PayChargeExtensions
       amount_cents_remaining: amount,
       currency: currency,
       pay_charge_id: id,
-      metadata: metadata
+      metadata: payment_metadata
     )
   end
 
