@@ -143,6 +143,12 @@ module Events
 
       metadata = { form_submission_id: submission.id }
 
+      attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
+      if attendees_field
+        attendees_json = @form_params[attendees_field.id.to_s]
+        metadata[:attendees] = attendees_json if attendees_json.present?
+      end
+
       person.set_payment_processor :stripe
 
       person.payment_processor.checkout(
