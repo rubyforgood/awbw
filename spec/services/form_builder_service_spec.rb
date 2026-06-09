@@ -203,5 +203,25 @@ RSpec.describe FormBuilderService do
       new_fields = form.form_fields.where(section: "consent")
       expect(new_fields.minimum(:position)).to be > max_before
     end
+
+    it "inserts a newly added section in page order rather than at the end" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier payment]).call
+
+      described_class.update_sections!(form, %i[person_identifier person_contact_info payment])
+
+      form.reload
+      ordered_sections = form.form_fields.reorder(:position).pluck(:section).uniq
+      expect(ordered_sections.index("person_contact_info")).to be < ordered_sections.index("payment")
+    end
+
+    it "leaves positions sequential after inserting a section in the middle" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier payment]).call
+
+      described_class.update_sections!(form, %i[person_identifier person_contact_info payment])
+
+      form.reload
+      positions = form.form_fields.reorder(:position).pluck(:position)
+      expect(positions).to eq((1..positions.size).to_a)
+    end
   end
 end

@@ -132,6 +132,9 @@ application.register("searchable-select", SearchableSelectController)
 import SectionFilterController from "./section_filter_controller"
 application.register("section-filter", SectionFilterController)
 
+import FormSectionToggleController from "./form_section_toggle_controller"
+application.register("form-section-toggle", FormSectionToggleController)
+
 import ShareUrlController from "./share_url_controller"
 application.register("share-url", ShareUrlController)
 
