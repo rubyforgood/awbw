@@ -22,18 +22,18 @@
           <% next if key != :bulk_payment && key != :scholarship && @form.role == "bulk_payment" %>
           <% position += 1 %>
           <% included = current_sections.include?(key.to_s) %>
-          <li data-controller="section-toggle"
-              data-section-toggle-included-value="<%= included %>">
+          <li data-controller="form-section-toggle"
+              data-form-section-toggle-included-value="<%= included %>">
             <label class="flex items-center gap-2 cursor-pointer">
               <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= position %>.</span>
               <input type="checkbox" name="sections[]" value="<%= key %>"
                      class="rounded border-gray-300 text-blue-600"
-                     data-section-toggle-target="checkbox"
-                     data-action="section-toggle#update"
+                     data-form-section-toggle-target="checkbox"
+                     data-action="form-section-toggle#update"
                      <%= "checked" if included %>>
               <span class="text-sm text-gray-800"><%= section[:label] %></span>
             </label>
-            <p class="hidden mt-1 ml-12 text-xs" data-section-toggle-target="message"></p>
+            <p class="hidden mt-1 ml-12 text-xs" data-form-section-toggle-target="message"></p>
           </li>
         <% end %>
       </ol>
