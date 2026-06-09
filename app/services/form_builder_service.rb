@@ -66,6 +66,22 @@ class FormBuilderService
     bulk_payment: [ "Payer Information", "Payment Information", "Attendees" ]
   }.freeze
 
+  # Maps each section to the `section` column value(s) its builder assigns to
+  # fields, so fields can be grouped back to their section when reordering.
+  # Several builders use a `group:` string that differs from the section key.
+  SECTION_GROUPS = {
+    person_identifier: %w[person_identifier],
+    person_contact_info: %w[person_contact_info],
+    person_background: %w[background],
+    professional_info: %w[professional],
+    marketing: %w[marketing],
+    scholarship: %w[scholarship],
+    payment: %w[payment],
+    consent: %w[consent],
+    post_event_feedback: %w[post_event_feedback],
+    bulk_payment: %w[bulk_payment group_payment]
+  }.freeze
+
   # Update sections on an existing form: add new sections, remove unchecked ones
   def self.update_sections!(form, new_sections)
     new_sections = new_sections.map(&:to_sym)
@@ -85,7 +101,8 @@ class FormBuilderService
       end
     end
 
-    # Add fields for new sections at the end
+    # Build fields for newly checked sections (created at the end for now), then
+    # renumber everything so sections follow the edit-sections page order.
     if added.any?
       max_position = form.form_fields.maximum(:position) || 0
       builder = new(name: form.name, sections: added)
@@ -93,10 +110,29 @@ class FormBuilderService
         section = SECTIONS.fetch(key)
         max_position = builder.send(section[:method], form, max_position)
       end
+      reorder_to_page_order!(form, new_sections)
     end
 
     form.update!(sections: new_sections.map(&:to_s))
     form
+  end
+
+  # Renumber a form's fields so sections appear in the canonical page order
+  # (the order of SECTIONS / the edit-sections checkboxes), preserving each
+  # field's existing order within its own section.
+  def self.reorder_to_page_order!(form, section_order)
+    section_for_group = SECTION_GROUPS.flat_map { |key, groups| groups.map { |group| [ group, key ] } }.to_h
+    rank = SECTIONS.keys.select { |key| section_order.include?(key) }.each_with_index.to_h
+
+    ordered = form.form_fields.reorder(:position).to_a.each_with_index.sort_by do |field, index|
+      section_key = section_for_group[field.section]
+      [ rank.fetch(section_key, rank.size), index ]
+    end
+
+    ordered.each_with_index do |(field, _index), position|
+      new_position = position + 1
+      field.update_column(:position, new_position) unless field.position == new_position
+    end
   end
 
   private
