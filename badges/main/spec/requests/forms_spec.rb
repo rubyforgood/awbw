@@ -228,6 +228,20 @@ RSpec.describe "Forms", type: :request do
       patch update_sections_form_path(form), params: { sections: [] }
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "leaves the form untouched when the section set is unchanged" do
+      form = FormBuilderService.new(name: "Unchanged", sections: %i[person_identifier consent]).call
+      original_ids = form.form_fields.pluck(:id).sort
+      expect(FormBuilderService).not_to receive(:update_sections!)
+
+      patch update_sections_form_path(form), params: {
+        sections: %w[consent person_identifier]
+      }
+
+      form.reload
+      expect(form.form_fields.pluck(:id).sort).to eq(original_ids)
+      expect(response).to redirect_to(edit_form_path(form))
+    end
   end
 
   describe "PUT /forms/:id/reorder_fields" do

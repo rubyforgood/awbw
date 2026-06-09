@@ -76,6 +76,12 @@ class FormsController < ApplicationController
       return
     end
 
+    current_sections = (@form.sections || []).map(&:to_sym)
+    if sections.to_set == current_sections.to_set
+      redirect_to edit_form_path(@form), notice: "No section changes."
+      return
+    end
+
     FormBuilderService.update_sections!(@form, sections)
     redirect_to edit_form_path(@form), notice: "Sections updated."
   end
