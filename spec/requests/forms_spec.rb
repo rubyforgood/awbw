@@ -107,17 +107,18 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("too long")
     end
 
-    it "saves the per-field width and minimum word count" do
+    it "saves the per-field width, minimum word count, and maximum character count" do
       form = create(:form, :standalone)
       patch form_path(form), params: {
         form: { form_fields_attributes: { "0" => {
-          name: "Essay", answer_type: "free_form_input_paragraph", width: "half", min_words: "25"
+          name: "Essay", answer_type: "free_form_input_paragraph", width: "half", min_words: "25", max_characters: "500"
         } } }
       }
       expect(response).to redirect_to(edit_form_path(form))
       field = form.form_fields.find_by(name: "Essay")
       expect(field.width).to eq("half")
       expect(field.min_words).to eq(25)
+      expect(field.max_characters).to eq(500)
     end
   end
 

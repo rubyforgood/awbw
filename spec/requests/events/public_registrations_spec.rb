@@ -34,11 +34,50 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
   end
 
+  describe "POST create with a maximum character count" do
+    let!(:bio_field) do
+      create(:form_field, form: form, answer_type: :free_form_input_one_line,
+             name: "Nickname", required: false, max_characters: 10)
+    end
+
+    def post_bio(answer)
+      post event_public_registration_path(event),
+           params: { public_registration: { form_fields: {
+             essay_field.id.to_s => "this answer has plenty of words",
+             bio_field.id.to_s => answer
+           } } }
+    end
+
+    it "rejects an answer that is too long" do
+      expect {
+        post_bio("a" * 11)
+      }.not_to change(EventRegistration, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("must be 10 characters or fewer")
+    end
+
+    it "does not flag an answer within the maximum" do
+      post_bio("short")
+
+      expect(response.body).not_to include("must be 10 characters or fewer")
+    end
+  end
+
   describe "GET new" do
     it "shows the minimum word hint below the field" do
       get new_event_public_registration_path(event)
 
       expect(response.body).to include("Minimum of 5 words.")
+    end
+
+    it "shows the maximum character hint below the field" do
+      create(:form_field, form: form, answer_type: :free_form_input_paragraph,
+             name: "Bio", required: false, max_characters: 250)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Maximum of 250 characters.")
     end
   end
 end

@@ -127,6 +127,65 @@ RSpec.describe FormField do
     end
   end
 
+  describe "#max_characters_error" do
+    let(:form) { create(:form) }
+
+    it "returns nil when no maximum is configured" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, max_characters: nil)
+      expect(field.max_characters_error("a" * 500)).to be_nil
+    end
+
+    it "returns nil when the value is within the maximum" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, max_characters: 10)
+      expect(field.max_characters_error("short")).to be_nil
+    end
+
+    it "returns nil when the value is exactly at the maximum" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, max_characters: 5)
+      expect(field.max_characters_error("12345")).to be_nil
+    end
+
+    it "returns an error when the value exceeds the maximum" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, max_characters: 5)
+      expect(field.max_characters_error("123456")).to eq("must be 5 characters or fewer")
+    end
+
+    it "pluralizes correctly for a maximum of one" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_one_line, max_characters: 1)
+      expect(field.max_characters_error("ab")).to eq("must be 1 character or fewer")
+    end
+
+    it "leaves blank values to the required check" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, max_characters: 5)
+      expect(field.max_characters_error("")).to be_nil
+      expect(field.max_characters_error(nil)).to be_nil
+    end
+
+    it "does not apply to non-text answer types" do
+      field = build(:form_field, form: form, answer_type: :multiple_choice_radio, max_characters: 1)
+      expect(field.max_characters_error("Yes")).to be_nil
+    end
+  end
+
+  describe "max_characters validation" do
+    let(:form) { create(:form) }
+
+    it "rejects a zero maximum" do
+      field = build(:form_field, form: form, max_characters: 0)
+      expect(field).not_to be_valid
+    end
+
+    it "rejects a negative maximum" do
+      field = build(:form_field, form: form, max_characters: -1)
+      expect(field).not_to be_valid
+    end
+
+    it "allows a nil maximum" do
+      field = build(:form_field, form: form, max_characters: nil)
+      expect(field).to be_valid
+    end
+  end
+
   describe "#multiple_choice?" do
     let(:form) { create(:form) }
 

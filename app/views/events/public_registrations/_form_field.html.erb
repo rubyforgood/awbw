@@ -43,6 +43,7 @@
                      end
         extra_attrs = []
         extra_attrs << 'min="1" step="1" pattern="[0-9]*" inputmode="numeric"' if field.number_integer?
+        extra_attrs << %(maxlength="#{field.max_characters}") if field.max_characters.to_i.positive?
       %>
       <input type="<%= html_type %>"
              name="<%= field_name %>"
@@ -58,6 +59,7 @@
               id="<%= field_id %>"
               rows="4"
               class="<%= input_classes %>"
+              <%= "maxlength=\"#{field.max_characters}\"".html_safe if field.max_characters.to_i.positive? %>
               <%= "required" if field.required %>><%= value %></textarea>
 
   <% when "multiple_choice_radio" %>
@@ -137,6 +139,10 @@
 
   <% if field.free_form_text? && field.min_words.to_i.positive? %>
     <p class="text-left text-xs text-gray-500 mt-1.5">Minimum of <%= field.min_words %> <%= "word".pluralize(field.min_words) %>.</p>
+  <% end %>
+
+  <% if field.free_form_text? && field.max_characters.to_i.positive? %>
+    <p class="text-left text-xs text-gray-500 mt-1.5">Maximum of <%= field.max_characters %> <%= "character".pluralize(field.max_characters) %>.</p>
   <% end %>
 
   <% if error %>

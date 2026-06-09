@@ -17,6 +17,7 @@ class FormField < ApplicationRecord
   # database ValueTooLong exception (the column is text, this is the UX cap).
   validates :name, length: { maximum: 1000 }
   validates :min_words, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :max_characters, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
   # Enum
   enum :status, [ :inactive, :active ]
@@ -100,6 +101,17 @@ class FormField < ApplicationRecord
     return if word_count(value) >= min_words
 
     "must be at least #{min_words} #{"word".pluralize(min_words)}"
+  end
+
+  # Returns a validation error string when a submitted value exceeds the
+  # configured maximum character count, or nil when it passes / does not apply.
+  def max_characters_error(value)
+    return unless free_form_text?
+    return unless max_characters.to_i.positive?
+    return if value.blank?
+    return if value.to_s.length <= max_characters
+
+    "must be #{max_characters} #{"character".pluralize(max_characters)} or fewer"
   end
 
   def html_input_type

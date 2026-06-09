@@ -332,6 +332,8 @@ module Events
           errors[field.id] = "must be a valid email address"
         elsif (word_error = field.min_words_error(value))
           errors[field.id] = word_error
+        elsif (char_error = field.max_characters_error(value))
+          errors[field.id] = char_error
         end
       end
 

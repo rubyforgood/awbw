@@ -87,6 +87,9 @@
         <%= f.number_field :min_words, min: 0, placeholder: "Min words",
               class: "w-24 shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
               title: "Minimum number of words required (free-form text fields only)" %>
+        <%= f.number_field :max_characters, min: 1, placeholder: "Max chars",
+              class: "w-24 shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+              title: "Maximum number of characters allowed (free-form text fields only)" %>
         <%= link_to_remove_association "Remove", f,
               class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0 ml-auto" %>
       </div>
