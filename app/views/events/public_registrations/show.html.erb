@@ -34,62 +34,26 @@
     </div>
 
     <%# Card Body %>
-    <div class="px-6 sm:px-8 py-7 space-y-1">
-      <%
-        row_groups = [
-          { keys: %w[first_name last_name], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          { keys: %w[nickname pronouns], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          { keys: %w[primary_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "primary_email" => "md:col-span-2" } },
-          { keys: %w[secondary_email secondary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "secondary_email" => "md:col-span-2" } },
-          { keys: %w[mailing_street mailing_address_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          { keys: %w[mailing_city mailing_state mailing_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
-          { keys: %w[phone phone_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          { keys: %w[agency_name agency_position], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          { keys: %w[agency_city agency_state agency_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
-          { keys: %w[payment_method], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-        ]
+    <div class="px-6 sm:px-8 py-7">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+        <% @form_fields.each do |field| %>
+          <% next if field.field_identifier == "confirm_email" %>
 
-        identifier_to_group = {}
-        row_groups.each { |g| g[:keys].each { |k| identifier_to_group[k] = g } }
-
-        fields_by_identifier = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
-        rendered_ids = {}
-      %>
-
-      <% @form_fields.each do |field| %>
-        <% next if field.field_identifier == "confirm_email" %>
-        <% next if field.field_identifier.present? && rendered_ids[field.field_identifier] %>
-
-        <% if field.group_header? %>
-          <div class="pt-6 pb-2 border-b border-gray-200 mb-4">
-            <h3 class="text-lg font-semibold text-gray-800"><%= field.name %></h3>
-          </div>
-        <% elsif (group = field.field_identifier.present? && identifier_to_group[field.field_identifier]) %>
-          <div class="<%= group[:grid] %>">
-            <% group[:keys].each do |key| %>
-              <% row_field = fields_by_identifier[key] %>
-              <% next unless row_field %>
-              <% rendered_ids[key] = true %>
-              <% response = @responses[row_field.id] %>
-              <% span = group.dig(:spans, key) %>
-              <div class="<%= span %> py-2">
-                <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide"><%= row_field.name %></dt>
-                <dd class="mt-1 text-sm text-gray-900">
-                  <%= display_response_text(row_field, response) %>
-                </dd>
-              </div>
-            <% end %>
-          </div>
-        <% else %>
-          <% response = @responses[field.id] %>
-          <div class="py-2">
-            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide"><%= field.name %></dt>
-            <dd class="mt-1 text-sm text-gray-900">
-              <%= display_response_text(field, response) %>
-            </dd>
-          </div>
+          <% if field.group_header? %>
+            <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
+              <h3 class="rich-label text-lg font-semibold text-gray-800"><%= form_label_html(field.name) %></h3>
+            </div>
+          <% else %>
+            <% response = @responses[field.id] %>
+            <div class="<%= field.grid_span_class %> py-2">
+              <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(field.name) %></dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <%= display_response_text(field, response) %>
+              </dd>
+            </div>
+          <% end %>
         <% end %>
-      <% end %>
+      </div>
 
       <div class="pt-4 border-t border-gray-200 mt-4">
         <p class="text-xs text-gray-500">

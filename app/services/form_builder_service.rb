@@ -133,7 +133,7 @@ class FormBuilderService
     position
   end
 
-  def add_field(form, position, field_name, answer_type, key:, group:, required: true, hint: nil, options: nil, datatype: nil, visibility: nil)
+  def add_field(form, position, field_name, answer_type, key:, group:, required: true, hint: nil, options: nil, datatype: nil, visibility: nil, width: :full)
     position += 1
     field = form.form_fields.create!(
       name: field_name,
@@ -146,7 +146,8 @@ class FormBuilderService
       field_identifier: key,
       section: group,
       visibility: visibility || SECTION_VISIBILITY.fetch(group, :always_ask),
-      one_time: ONE_TIME_SECTIONS.include?(group)
+      one_time: ONE_TIME_SECTIONS.include?(group),
+      width: width
     )
 
     if options.present?
@@ -165,13 +166,13 @@ class FormBuilderService
 
   def build_person_identifier_fields(form, position)
     position = add_field(form, position, "First Name", :free_form_input_one_line,
-                         key: "first_name", group: "person_identifier", required: true)
+                         key: "first_name", group: "person_identifier", required: true, width: :half)
     position = add_field(form, position, "Last Name", :free_form_input_one_line,
-                         key: "last_name", group: "person_identifier", required: true)
+                         key: "last_name", group: "person_identifier", required: true, width: :half)
     position = add_field(form, position, "Email", :free_form_input_one_line,
-                         key: "primary_email", group: "person_identifier", required: true)
+                         key: "primary_email", group: "person_identifier", required: true, width: :half)
     position = add_field(form, position, "Confirm Email", :free_form_input_one_line,
-                         key: "confirm_email", group: "person_identifier", required: true)
+                         key: "confirm_email", group: "person_identifier", required: true, width: :half)
     position
   end
 
@@ -182,53 +183,52 @@ class FormBuilderService
                          key: "primary_email_type", group: "person_contact_info", required: true,
                          options: %w[Personal Work])
     position = add_field(form, position, "Preferred Nickname", :free_form_input_one_line,
-                         key: "nickname", group: "person_contact_info", required: false)
+                         key: "nickname", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Pronouns", :free_form_input_one_line,
-                         key: "pronouns", group: "person_contact_info", required: false)
+                         key: "pronouns", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Secondary Email", :free_form_input_one_line,
-                         key: "secondary_email", group: "person_contact_info", required: false)
+                         key: "secondary_email", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Secondary Email Type", :multiple_choice_radio,
                          key: "secondary_email_type", group: "person_contact_info", required: false,
-                         options: %w[Personal Work])
+                         width: :half, options: %w[Personal Work])
 
     position = add_header(form, position, "Mailing Address", group: "person_contact_info")
     position = add_field(form, position, "Street Address", :free_form_input_one_line,
-                         key: "mailing_street", group: "person_contact_info", required: true)
+                         key: "mailing_street", group: "person_contact_info", required: true, width: :half)
     position = add_field(form, position, "Address Type", :multiple_choice_radio,
                          key: "mailing_address_type", group: "person_contact_info", required: true,
-                         options: %w[Work Personal])
+                         width: :half, options: %w[Work Personal])
     position = add_field(form, position, "City", :free_form_input_one_line,
-                         key: "mailing_city", group: "person_contact_info", required: true)
+                         key: "mailing_city", group: "person_contact_info", required: true, width: :third)
     position = add_field(form, position, "State / Province", :free_form_input_one_line,
-                         key: "mailing_state", group: "person_contact_info", required: true)
+                         key: "mailing_state", group: "person_contact_info", required: true, width: :third)
     position = add_field(form, position, "Zip / Postal Code", :free_form_input_one_line,
-                         key: "mailing_zip", group: "person_contact_info", required: true)
+                         key: "mailing_zip", group: "person_contact_info", required: true, width: :third)
 
     position = add_field(form, position, "Phone", :free_form_input_one_line,
-                         key: "phone", group: "person_contact_info", required: true)
+                         key: "phone", group: "person_contact_info", required: true, width: :half)
     position = add_field(form, position, "Phone Type", :multiple_choice_radio,
                         key: "phone_type", group: "person_contact_info", required: true,
-                        options: %w[Work Personal])
+                        width: :half, options: %w[Work Personal])
 
     position = add_header(form, position, "Agency / Organization Information", group: "person_contact_info")
     position = add_field(form, position, "Agency / Organization Name", :free_form_input_one_line,
-                         key: "agency_name", group: "person_contact_info", required: false)
+                         key: "agency_name", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Position / Title", :free_form_input_one_line,
-                         key: "agency_position", group: "person_contact_info", required: false)
+                         key: "agency_position", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Agency Street Address", :free_form_input_one_line,
                          key: "agency_street", group: "person_contact_info", required: false)
     position = add_field(form, position, "Agency City", :free_form_input_one_line,
-                         key: "agency_city", group: "person_contact_info", required: false)
+                         key: "agency_city", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Agency State / Province", :free_form_input_one_line,
-                         key: "agency_state", group: "person_contact_info", required: false)
+                         key: "agency_state", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Agency Zip / Postal Code", :free_form_input_one_line,
-                         key: "agency_zip", group: "person_contact_info", required: false)
+                         key: "agency_zip", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Agency Type", :multiple_choice_radio,
                          key: "agency_type", group: "person_contact_info", required: false,
                          options: [
-                           "Domestic Violence", "Homeless Shelter", "Hospital",
-                           "Mental Health", "School", "After-School Program",
-                           "Community Center", "Other"
+                           "501c3/nonprofit", "For-profit", "Government agency",
+                           "Other (please specify below)"
                          ])
     position = add_field(form, position, "Agency Website", :free_form_input_one_line,
                          key: "agency_website", group: "person_contact_info", required: false)
@@ -346,10 +346,10 @@ class FormBuilderService
 
     position = add_field(form, position, "Payer First Name", :free_form_input_one_line,
                          key: "payer_first_name", group: "bulk_payment", required: true,
-                         visibility: :logged_out_only)
+                         width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Payer Last Name", :free_form_input_one_line,
                          key: "payer_last_name", group: "bulk_payment", required: true,
-                         visibility: :logged_out_only)
+                         width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Payer Email", :free_form_input_one_line,
                          key: "payer_email", group: "bulk_payment", required: true,
                          visibility: :logged_out_only)

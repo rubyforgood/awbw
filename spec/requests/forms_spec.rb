@@ -87,6 +87,39 @@ RSpec.describe "Forms", type: :request do
       expect(form.hide_answered_person_questions).to be true
       expect(form.hide_answered_form_questions).to be true
     end
+
+    it "saves a long, multi-sentence question name" do
+      form = create(:form, :standalone)
+      long_name = "AWBW workshops are used in a variety of ways. " * 8
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { name: long_name, answer_type: "free_form_input_paragraph" } } }
+      }
+      expect(response).to redirect_to(edit_form_path(form))
+      expect(form.form_fields.where(name: long_name)).to exist
+    end
+
+    it "renders a validation error instead of 500 when a name is too long" do
+      form = create(:form, :standalone)
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { name: "x" * 1001, answer_type: "free_form_input_one_line" } } }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("too long")
+    end
+
+    it "saves the per-field width, minimum word count, and maximum character count" do
+      form = create(:form, :standalone)
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => {
+          name: "Essay", answer_type: "free_form_input_paragraph", width: "half", min_words: "25", max_characters: "500"
+        } } }
+      }
+      expect(response).to redirect_to(edit_form_path(form))
+      field = form.form_fields.find_by(name: "Essay")
+      expect(field.width).to eq("half")
+      expect(field.min_words).to eq(25)
+      expect(field.max_characters).to eq(500)
+    end
   end
 
   describe "DELETE /forms/:id" do
