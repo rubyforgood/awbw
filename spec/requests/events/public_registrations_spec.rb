@@ -115,5 +115,35 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       expect(response.body).to include("Maximum of 250 characters.")
     end
+
+    it "renders header and field-label HTML unescaped" do
+      create(:form_field, form: form, answer_type: :group_header,
+             name: %(Visit <a href="https://awbw.org">our site</a>))
+      create(:form_field, form: form, answer_type: :free_form_input_one_line,
+             name: "<h2>About you</h2>", required: false)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include(%(<a href="https://awbw.org">our site</a>))
+      expect(response.body).to include("<h2>About you</h2>")
+      expect(response.body).to include("rich-label")
+    end
+  end
+
+  describe "GET show" do
+    let(:person) { create(:person) }
+
+    before { create(:form_submission, person: person, form: form) }
+
+    it "renders header and field-label HTML unescaped on the response page" do
+      create(:form_field, form: form, answer_type: :group_header, name: "<strong>Your details</strong>")
+      create(:form_field, form: form, answer_type: :free_form_input_one_line, name: "<em>Name</em>", required: false)
+
+      get event_public_registration_path(event, person_id: person.id)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("<strong>Your details</strong>")
+      expect(response.body).to include("<em>Name</em>")
+    end
   end
 end

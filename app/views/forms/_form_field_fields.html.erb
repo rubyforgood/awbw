@@ -41,12 +41,12 @@
       </div>
     </div>
   <% else %>
-    <div class="flex-1" data-controller="field-options">
+    <%= f.select :visibility, visibility_options,
+          {},
+          class: "self-start mt-1 text-xs rounded-full border px-2 py-0.5 shrink-0 cursor-pointer",
+          data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "chip-select#update" } %>
+    <div class="flex-1 min-w-0" data-controller="field-options">
       <div class="flex flex-wrap items-center gap-2">
-        <%= f.select :visibility, visibility_options,
-              {},
-              class: "text-xs rounded-full border px-2 py-0.5 shrink-0 cursor-pointer",
-              data: { controller: "chip-select", chip_select_styles_value: visibility_styles, action: "chip-select#update" } %>
         <%= f.text_area :name, required: true, rows: 1, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
         <%
           type_order = %w[free_form_input_one_line free_form_input_paragraph multiple_choice_radio multiple_choice_checkbox no_user_input group_header]
