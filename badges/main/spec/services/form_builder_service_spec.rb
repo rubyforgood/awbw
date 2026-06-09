@@ -30,6 +30,25 @@ RSpec.describe FormBuilderService do
         keys = form.form_fields.pluck(:field_identifier).compact
         expect(keys).to include("first_name", "last_name", "primary_email", "confirm_email")
       end
+
+      it "defaults paired name fields to half width" do
+        field = form.form_fields.find_by(field_identifier: "first_name")
+        expect(field.width).to eq("half")
+      end
+    end
+
+    context "default field widths" do
+      let(:form) { described_class.new(name: "Test", sections: %i[person_contact_info]).call }
+
+      it "lays city/state/zip out as thirds" do
+        widths = form.form_fields.where(field_identifier: %w[mailing_city mailing_state mailing_zip]).pluck(:width)
+        expect(widths).to all(eq("third"))
+      end
+
+      it "leaves unlisted fields at full width" do
+        field = form.form_fields.find_by(field_identifier: "agency_website")
+        expect(field.width).to eq("full")
+      end
     end
 
     context "person_contact_info section" do
@@ -38,6 +57,13 @@ RSpec.describe FormBuilderService do
       it "creates contact info fields" do
         keys = form.form_fields.pluck(:field_identifier).compact
         expect(keys).to include("nickname", "pronouns", "phone", "mailing_city", "agency_name")
+      end
+
+      it "offers the agency type as the four organization classifications" do
+        field = form.form_fields.find_by(field_identifier: "agency_type")
+        expect(field.answer_options.pluck(:name)).to contain_exactly(
+          "501c3/nonprofit", "For-profit", "Government agency", "Other (please specify below)"
+        )
       end
     end
 

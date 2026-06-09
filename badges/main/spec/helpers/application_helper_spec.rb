@@ -116,4 +116,46 @@ RSpec.describe ApplicationHelper, type: :helper do
       end
     end
   end
+
+  describe "#form_label_html" do
+    it "preserves allowed formatting and link tags" do
+      input = %(Visit <a href="https://example.com">our site</a><br>line two <strong>bold</strong>)
+      expect(helper.form_label_html(input)).to eq(input)
+    end
+
+    it "keeps heading tags" do
+      expect(helper.form_label_html("<h2>Section</h2>")).to eq("<h2>Section</h2>")
+    end
+
+    it "keeps font size and color via inline style" do
+      input = %(<span style="font-size:24px;color:#ff0000">big red</span>)
+      result = helper.form_label_html(input)
+      expect(result).to include("font-size:24px")
+      expect(result).to include("color:#ff0000")
+    end
+
+    it "keeps font size and color via the font tag" do
+      input = %(<font size="5" color="blue">styled</font>)
+      expect(helper.form_label_html(input)).to eq(input)
+    end
+
+    it "scrubs dangerous css from the style attribute while keeping safe properties" do
+      result = helper.form_label_html(%(<span style="color:red;background:url(javascript:alert(1))">x</span>))
+      expect(result).to include("color:red")
+      expect(result).not_to include("javascript")
+    end
+
+    it "strips disallowed tags but keeps their text" do
+      expect(helper.form_label_html("<script>alert(1)</script>Hello")).to eq("alert(1)Hello")
+    end
+
+    it "removes dangerous link schemes" do
+      result = helper.form_label_html(%(<a href="javascript:alert(1)">x</a>))
+      expect(result).not_to include("javascript:")
+    end
+
+    it "returns an html_safe string" do
+      expect(helper.form_label_html("<br>")).to be_html_safe
+    end
+  end
 end

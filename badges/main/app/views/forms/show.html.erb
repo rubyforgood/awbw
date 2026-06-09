@@ -73,34 +73,7 @@
       </div>
 
       <%
-        fields_by_id_check = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
-        email_row = if fields_by_id_check["confirm_email"] && fields_by_id_check["primary_email_type"]
-          { keys: %w[primary_email confirm_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" }
-        elsif fields_by_id_check["confirm_email"]
-          { keys: %w[primary_email confirm_email], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" }
-        else
-          { keys: %w[primary_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "primary_email" => "md:col-span-2" } }
-        end
-
-        row_groups = [
-          { keys: %w[first_name last_name], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          { keys: %w[nickname pronouns], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          email_row,
-          { keys: %w[secondary_email secondary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "secondary_email" => "md:col-span-2" } },
-          { keys: %w[mailing_street mailing_address_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          { keys: %w[mailing_city mailing_state mailing_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
-          { keys: %w[phone phone_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          { keys: %w[agency_name agency_position], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          { keys: %w[agency_city agency_state agency_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
-          { keys: %w[payment_method], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" }
-        ]
-
-        identifier_to_group = {}
-        row_groups.each { |g| g[:keys].each { |k| identifier_to_group[k] = g } }
-
         fields_by_identifier = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
-        rendered_ids = {}
-
         has_secondary_email = fields_by_identifier["secondary_email"].present?
         email_label_overrides = if has_secondary_email
           { "primary_email" => "Primary Email", "confirm_email" => "Confirm Primary Email", "primary_email_type" => "Primary Email Type" }
@@ -110,34 +83,19 @@
       %>
 
       <fieldset disabled>
-        <% @form_fields.each do |field| %>
-          <% next if field.field_identifier.present? && rendered_ids[field.field_identifier] %>
-
-          <% if field.group_header? %>
-            <div class="pt-6 pb-2 border-b border-gray-200 mb-4">
-              <h3 class="text-lg font-semibold text-gray-800"><%= field.name %></h3>
-            </div>
-          <% elsif (group = field.field_identifier.present? && identifier_to_group[field.field_identifier]) %>
-            <div class="<%= group[:grid] %>">
-              <% group[:keys].each do |key| %>
-                <% row_field = fields_by_identifier[key] %>
-                <% next unless row_field %>
-                <% rendered_ids[key] = true %>
-                <% span = group.dig(:spans, key) %>
-                <% label_override = email_label_overrides[key] %>
-                <% if span %>
-                  <div class="<%= span %>">
-                    <%= render "events/public_registrations/form_field", field: row_field, value: nil, label: label_override %>
-                  </div>
-                <% else %>
-                  <%= render "events/public_registrations/form_field", field: row_field, value: nil, label: label_override %>
-                <% end %>
-              <% end %>
-            </div>
-          <% else %>
-            <%= render "events/public_registrations/form_field", field: field, value: nil %>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+          <% @form_fields.each do |field| %>
+            <% if field.group_header? %>
+              <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
+                <h3 class="rich-label text-lg font-semibold text-gray-800"><%= form_label_html(field.name) %></h3>
+              </div>
+            <% else %>
+              <div class="<%= field.grid_span_class %>">
+                <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
+              </div>
+            <% end %>
           <% end %>
-        <% end %>
+        </div>
       </fieldset>
     </div>
   </div>

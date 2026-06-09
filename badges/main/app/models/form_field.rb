@@ -8,8 +8,16 @@ class FormField < ApplicationRecord
   # has_many through
   has_many :answer_options, through: :form_field_answer_options
 
+  # Answer types that collect free-form text, where a minimum word count applies
+  FREE_FORM_TEXT_TYPES = %w[free_form_input_one_line free_form_input_paragraph].freeze
+
   # Validations
   validates_presence_of :name
+  # Keeps an over-long name as a friendly validation error instead of a
+  # database ValueTooLong exception (the column is text, this is the UX cap).
+  validates :name, length: { maximum: 1000 }
+  validates :min_words, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :max_characters, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
   # Enum
   enum :status, [ :inactive, :active ]
@@ -31,6 +39,27 @@ class FormField < ApplicationRecord
     :date
   ]
 
+  # Prefixed because :third/:first/etc. collide with Active Record finder methods
+  enum :width, [ :full, :half, :third, :quarter ], prefix: true
+
+  # Human-friendly labels for answer types (radio is "single choice" because only one option can be picked)
+  ANSWER_TYPE_LABELS = {
+    "group_header" => "Section header",
+    "free_form_input_one_line" => "One line",
+    "free_form_input_paragraph" => "Paragraph",
+    "multiple_choice_radio" => "Single choice radio",
+    "multiple_choice_checkbox" => "Multiple choice checkbox",
+    "no_user_input" => "Informational-only"
+  }.freeze
+
+  # Tailwind column spans within the 12-column form layout grid
+  WIDTH_GRID_SPANS = {
+    "full" => "md:col-span-12",
+    "half" => "md:col-span-6",
+    "third" => "md:col-span-4",
+    "quarter" => "md:col-span-3"
+  }.freeze
+
   # Nested attributes
   accepts_nested_attributes_for :form_field_answer_options
 
@@ -44,6 +73,45 @@ class FormField < ApplicationRecord
 
   def html_id
     self.name.tr(" /#,')(.", "_").downcase
+  end
+
+  def grid_span_class
+    WIDTH_GRID_SPANS.fetch(width, "md:col-span-12")
+  end
+
+  def answer_type_label
+    ANSWER_TYPE_LABELS.fetch(answer_type, answer_type&.titleize)
+  end
+
+  def free_form_text?
+    FREE_FORM_TEXT_TYPES.include?(answer_type)
+  end
+
+  def word_count(value)
+    value.to_s.scan(/\S+/).size
+  end
+
+  # Returns a validation error string when a submitted value falls short of the
+  # configured minimum word count, or nil when it passes / does not apply.
+  # Blank values are left to the presence (required) check.
+  def min_words_error(value)
+    return unless free_form_text?
+    return unless min_words.to_i.positive?
+    return if value.blank?
+    return if word_count(value) >= min_words
+
+    "must be at least #{min_words} #{"word".pluralize(min_words)}"
+  end
+
+  # Returns a validation error string when a submitted value exceeds the
+  # configured maximum character count, or nil when it passes / does not apply.
+  def max_characters_error(value)
+    return unless free_form_text?
+    return unless max_characters.to_i.positive?
+    return if value.blank?
+    return if value.to_s.length <= max_characters
+
+    "must be #{max_characters} #{"character".pluralize(max_characters)} or fewer"
   end
 
   def html_input_type
