@@ -43,5 +43,13 @@ RSpec.describe "Events::BulkPayments", type: :request do
 
       expect(response.body).to include("Minimum of 5 words.")
     end
+
+    it "renders the field at its configured width" do
+      org_field.update!(width: :half)
+
+      get new_event_bulk_payment_path(event)
+
+      expect(response.body).to include("md:col-span-6")
+    end
   end
 end

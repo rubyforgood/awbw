@@ -119,11 +119,13 @@
             <h3 class="flex items-center gap-2.5 text-lg font-bold text-blue-900 mb-5">
               <i class="fa-solid fa-hand-holding-heart text-accent"></i>Scholarship application
             </h3>
-            <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
               <% @scholarship_form.form_fields.reorder(position: :asc).each do |field| %>
                 <% next if field.group_header? %>
                 <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
-                <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
+                <div class="<%= field.grid_span_class %>">
+                  <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
+                </div>
               <% end %>
             </div>
           </div>

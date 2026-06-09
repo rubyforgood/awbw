@@ -64,6 +64,42 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
   end
 
+  describe "POST create enforces the same settings on the scholarship form" do
+    let(:scholarship_form) { create(:form, role: "scholarship") }
+    let!(:scholarship_essay) do
+      create(:form_field, form: scholarship_form, answer_type: :free_form_input_paragraph,
+             name: "Describe your need", required: true, min_words: 8)
+    end
+
+    before { EventForm.create!(event: event, form: scholarship_form, role: "scholarship") }
+
+    def post_with_scholarship(scholarship_answer)
+      post event_public_registration_path(event),
+           params: {
+             scholarship_requested: "true",
+             public_registration: { form_fields: {
+               essay_field.id.to_s => "this answer has plenty of words",
+               scholarship_essay.id.to_s => scholarship_answer
+             } }
+           }
+    end
+
+    it "rejects a scholarship answer with too few words" do
+      expect {
+        post_with_scholarship("too short here")
+      }.not_to change(EventRegistration, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("must be at least 8 words")
+    end
+
+    it "does not flag a scholarship answer that meets the minimum" do
+      post_with_scholarship("this scholarship answer clearly has more than eight words total")
+
+      expect(response.body).not_to include("must be at least 8 words")
+    end
+  end
+
   describe "GET new" do
     it "shows the minimum word hint below the field" do
       get new_event_public_registration_path(event)

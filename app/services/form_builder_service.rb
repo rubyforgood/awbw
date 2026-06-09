@@ -346,10 +346,10 @@ class FormBuilderService
 
     position = add_field(form, position, "Payer First Name", :free_form_input_one_line,
                          key: "payer_first_name", group: "bulk_payment", required: true,
-                         visibility: :logged_out_only)
+                         width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Payer Last Name", :free_form_input_one_line,
                          key: "payer_last_name", group: "bulk_payment", required: true,
-                         visibility: :logged_out_only)
+                         width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Payer Email", :free_form_input_one_line,
                          key: "payer_email", group: "bulk_payment", required: true,
                          visibility: :logged_out_only)

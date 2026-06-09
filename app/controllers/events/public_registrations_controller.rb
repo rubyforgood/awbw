@@ -40,6 +40,10 @@ module Events
       registration_params, scholarship_params = split_form_params(all_params)
 
       @field_errors = validate_required_fields(registration_params)
+      if @scholarship_form
+        scholarship_fields = @scholarship_form.form_fields.where.not(answer_type: :group_header).to_a
+        @field_errors = @field_errors.merge(collect_field_errors(scholarship_fields, scholarship_params))
+      end
       if @field_errors.any?
         @form_fields = visible_form_fields
         @event = @event.decorate
@@ -310,11 +314,30 @@ module Events
     end
 
     def validate_required_fields(form_params)
-      errors = {}
-      fields = visible_form_fields
-      fields_by_identifier = fields.select { |f| f.field_identifier.present? }.index_by(&:field_identifier)
+      fields = visible_form_fields.to_a
+      errors = collect_field_errors(fields, form_params)
 
-      fields.find_each do |field|
+      fields_by_identifier = fields.select { |f| f.field_identifier.present? }.index_by(&:field_identifier)
+      confirm_field = fields_by_identifier["confirm_email"]
+      email_field = fields_by_identifier["primary_email"]
+      if confirm_field && email_field && errors[confirm_field.id].nil?
+        confirm_value = form_params[confirm_field.id.to_s].to_s.strip
+        email_value = form_params[email_field.id.to_s].to_s.strip
+        if confirm_value.present? && confirm_value != email_value
+          errors[confirm_field.id] = "must match email"
+        end
+      end
+
+      errors
+    end
+
+    # Per-field validation shared by every form role (registration, scholarship):
+    # presence, number/email format, and the per-field min-words / max-characters
+    # settings. Keyed by field id so results from multiple forms can be merged.
+    def collect_field_errors(fields, form_params)
+      errors = {}
+
+      fields.each do |field|
         next if field.group_header?
 
         value = form_params[field.id.to_s]
@@ -334,16 +357,6 @@ module Events
           errors[field.id] = word_error
         elsif (char_error = field.max_characters_error(value))
           errors[field.id] = char_error
-        end
-      end
-
-      confirm_field = fields_by_identifier["confirm_email"]
-      email_field = fields_by_identifier["primary_email"]
-      if confirm_field && email_field && errors[confirm_field.id].nil?
-        confirm_value = form_params[confirm_field.id.to_s].to_s.strip
-        email_value = form_params[email_field.id.to_s].to_s.strip
-        if confirm_value.present? && confirm_value != email_value
-          errors[confirm_field.id] = "must match email"
         end
       end
 
