@@ -42,6 +42,14 @@ class FormField < ApplicationRecord
   # Prefixed because :third/:first/etc. collide with Active Record finder methods
   enum :width, [ :full, :half, :third, :quarter ], prefix: true
 
+  # Human-friendly labels for visibility, mirroring the form editor's options
+  VISIBILITY_LABELS = {
+    "always_ask" => "Always ask",
+    "scholarship_only" => "Scholarship only",
+    "logged_out_only" => "Logged out only",
+    "answers_on_file" => "Answers on file"
+  }.freeze
+
   # Human-friendly labels for answer types (radio is "single choice" because only one option can be picked)
   ANSWER_TYPE_LABELS = {
     "group_header" => "Section header",
@@ -81,6 +89,16 @@ class FormField < ApplicationRecord
 
   def answer_type_label
     ANSWER_TYPE_LABELS.fetch(answer_type, answer_type&.titleize)
+  end
+
+  def visibility_label
+    VISIBILITY_LABELS.fetch(visibility, visibility&.humanize)
+  end
+
+  # True when the field is only asked under certain conditions, i.e. anything
+  # other than "always ask". The forms preview highlights these.
+  def conditional_visibility?
+    !always_ask?
   end
 
   def free_form_text?
