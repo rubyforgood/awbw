@@ -131,7 +131,7 @@
                                name="bulk_payment[form_fields][<%= field.id %>]"
                                value="<%= ffao.answer_option.name %>"
                                class="text-blue-600 focus:ring-blue-500"
-                               <%= "checked" if submitted_value == ffao.answer_option.name || (submitted_value.blank? && ffao.answer_option.name == "Credit Card") %>
+                               <%= "checked" if submitted_value == ffao.answer_option.name || (submitted_value.blank? && ffao.answer_option.name == "Credit Card Now") %>
                                <%= "required" if field.required %>>
                         <%= ffao.answer_option.name %>
                       </label>
