@@ -5,9 +5,9 @@
 <% error_border = error ? "border-red-400 focus:border-red-500 focus:ring-red-500/30" : "border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-blue-500/30" %>
 <% input_classes = "w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition focus:outline-none focus:ring-2 #{error_border}" %>
 
-<div class="mb-5">
-  <label class="block text-sm font-semibold text-gray-700 mb-1.5" for="public_registration_form_fields_<%= field.id %>">
-    <%= label || field.name %>
+<div class="mb-7">
+  <label class="rich-label block text-sm font-semibold text-gray-700 mb-1.5" for="public_registration_form_fields_<%= field.id %>">
+    <%= form_label_html(label || field.name) %>
     <% if field.required %>
       <span class="text-red-500">*</span>
     <% end %>
@@ -135,9 +135,13 @@
 
   <% end %>
 
+  <% if field.free_form_text? && field.min_words.to_i.positive? %>
+    <p class="text-left text-xs text-gray-500 mt-1.5">Minimum of <%= field.min_words %> <%= "word".pluralize(field.min_words) %>.</p>
+  <% end %>
+
   <% if error %>
     <p class="flex items-center gap-1.5 text-xs text-red-600 mt-1.5">
-      <i class="fa-solid fa-circle-exclamation"></i><%= field.name %> <%= error %>
+      <i class="fa-solid fa-circle-exclamation"></i><%= strip_tags(field.name) %> <%= error %>
     </p>
   <% end %>
 </div>

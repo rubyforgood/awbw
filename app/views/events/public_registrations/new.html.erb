@@ -83,36 +83,9 @@
           <input type="text" name="public_registration[website_url]" tabindex="-1" autocomplete="off">
         </div>
 
-        <%# Row groupings: related fields share a grid row on md+ screens %>
+        <%# Per-field widths flow into a 12-column grid; full-width fields and headers take a whole row %>
         <%
-          fields_by_id_check = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
-          email_row = if fields_by_id_check["confirm_email"] && fields_by_id_check["primary_email_type"]
-            { keys: %w[primary_email confirm_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" }
-          elsif fields_by_id_check["confirm_email"]
-            { keys: %w[primary_email confirm_email], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" }
-          else
-            { keys: %w[primary_email primary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "primary_email" => "md:col-span-2" } }
-          end
-
-          row_groups = [
-            { keys: %w[first_name last_name], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-            { keys: %w[nickname pronouns], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-            email_row,
-            { keys: %w[secondary_email secondary_email_type], grid: "grid grid-cols-1 md:grid-cols-3 gap-4", spans: { "secondary_email" => "md:col-span-2" } },
-            { keys: %w[mailing_street mailing_address_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-            { keys: %w[mailing_city mailing_state mailing_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
-            { keys: %w[phone phone_type], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-            { keys: %w[agency_name agency_position], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-            { keys: %w[agency_city agency_state agency_zip], grid: "grid grid-cols-1 md:grid-cols-3 gap-4" },
-            { keys: %w[payment_method], grid: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-          ]
-
-          identifier_to_group = {}
-          row_groups.each { |g| g[:keys].each { |k| identifier_to_group[k] = g } }
-
           fields_by_identifier = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
-          rendered_ids = {}
-
           has_secondary_email = fields_by_identifier["secondary_email"].present?
           email_label_overrides = if has_secondary_email
             { "primary_email" => "Primary Email", "confirm_email" => "Confirm Primary Email", "primary_email_type" => "Primary Email Type" }
@@ -121,41 +94,25 @@
           end
         %>
 
-        <% @form_fields.each do |field| %>
-          <% next if field.field_identifier.present? && rendered_ids[field.field_identifier] %>
-
-          <% if field.group_header? %>
-            <div class="pt-7 pb-4">
-              <h3 class="flex items-center gap-2.5 text-lg font-bold text-blue-900">
-                <span class="h-5 w-1 rounded-full bg-accent"></span><%= field.name %>
-              </h3>
-            </div>
-          <% elsif (group = field.field_identifier.present? && identifier_to_group[field.field_identifier]) %>
-            <div class="<%= group[:grid] %>">
-              <% group[:keys].each do |key| %>
-                <% row_field = fields_by_identifier[key] %>
-                <% next unless row_field %>
-                <% rendered_ids[key] = true %>
-                <% span = group.dig(:spans, key) %>
-                <% submitted_value = params.dig(:public_registration, :form_fields, row_field.id.to_s) %>
-                <% if submitted_value.blank? && row_field.field_identifier == "payment_method" %>
-                  <% submitted_value = @scholarship ? "Other" : "Credit Card" %>
-                <% end %>
-                <% label_override = email_label_overrides[key] %>
-                <% if span %>
-                  <div class="<%= span %>">
-                    <%= render "events/public_registrations/form_field", field: row_field, value: submitted_value, label: label_override %>
-                  </div>
-                <% else %>
-                  <%= render "events/public_registrations/form_field", field: row_field, value: submitted_value, label: label_override %>
-                <% end %>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+          <% @form_fields.each do |field| %>
+            <% if field.group_header? %>
+              <div class="md:col-span-12 pt-7 pb-4">
+                <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-blue-900">
+                  <span class="h-5 w-1 rounded-full bg-accent"></span><%= form_label_html(field.name) %>
+                </h3>
+              </div>
+            <% else %>
+              <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
+              <% if submitted_value.blank? && field.field_identifier == "payment_method" %>
+                <% submitted_value = @scholarship ? "Other" : "Credit Card" %>
               <% end %>
-            </div>
-          <% else %>
-            <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
-            <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
+              <div class="<%= field.grid_span_class %>">
+                <%= render "events/public_registrations/form_field", field: field, value: submitted_value, label: email_label_overrides[field.field_identifier] %>
+              </div>
+            <% end %>
           <% end %>
-        <% end %>
+        </div>
 
         <% if @scholarship_form && @scholarship_form.form_fields.any? %>
           <div class="mt-8 rounded-xl border border-blue-100 bg-blue-50/50 px-5 py-6">

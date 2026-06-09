@@ -117,13 +117,13 @@
     {
       "warning_type": "Mass Assignment",
       "warning_code": 105,
-      "fingerprint": "ba14f5d8dca1d3100eac5857e323dd0fa62631bec9ad13f7cfa0f8dbdf46fa16",
+      "fingerprint": "2ff57a7df86fdf510c6b5ad01e9eaf77e654a29fb5bbc945c4389593ddb6bda5",
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "app/controllers/forms_controller.rb",
       "line": 121,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
-      "code": "params.require(:form).permit(:name, :role, :hide_answered_person_questions, :hide_answered_form_questions, :form_fields_attributes => ([:id, :name, :answer_type, :required, :hint_text, :field_identifier, :section, :position, :visibility, :one_time, :_destroy]))",
+      "code": "params.require(:form).permit(:name, :role, :hide_answered_person_questions, :hide_answered_form_questions, :form_fields_attributes => ([:id, :name, :answer_type, :required, :hint_text, :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :_destroy]))",
       "render_path": null,
       "location": {
         "type": "method",

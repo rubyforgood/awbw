@@ -60,8 +60,14 @@ application.register("expandable-cards", ExpandableCardsController)
 import DropdownController from "./dropdown_controller"
 application.register("dropdown", DropdownController)
 
+import ExpandAllController from "./expand_all_controller"
+application.register("expand-all", ExpandAllController)
+
 import FilePreviewController from "./file_preview_controller"
 application.register("file-preview", FilePreviewController)
+
+import FieldOptionsController from "./field_options_controller"
+application.register("field-options", FieldOptionsController)
 
 import FormFieldsSortableController from "./form_fields_sortable_controller"
 application.register("form-fields-sortable", FormFieldsSortableController)

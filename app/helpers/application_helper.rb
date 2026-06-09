@@ -1,4 +1,19 @@
 module ApplicationHelper
+  # Tags an admin may use in a form field name / group header that should
+  # render (rather than escape) on the public form. Block + inline formatting,
+  # links, line breaks, and font sizing/coloring (via <font> or inline style).
+  # Anything outside this allowlist is stripped by `sanitize`.
+  FORM_LABEL_TAGS = %w[br a p span strong b em i u h1 h2 h3 h4 h5 h6 ul ol li font].freeze
+  FORM_LABEL_ATTRIBUTES = %w[href target rel style size color face].freeze
+
+  # Render a form field name / header with a safe subset of HTML allowed.
+  # Uses Rails' SafeListSanitizer, which strips dangerous URL schemes
+  # (e.g. javascript:) from href and CSS-scrubs the style attribute (dropping
+  # unsafe properties/values), so admin-authored markup can't inject XSS.
+  def form_label_html(text)
+    sanitize(text.to_s, tags: FORM_LABEL_TAGS, attributes: FORM_LABEL_ATTRIBUTES)
+  end
+
   INDEX_BUTTON_ICONS = {
     community_news:      "fa-newspaper",
     stories:             "fa-book-open",

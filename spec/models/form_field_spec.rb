@@ -21,6 +21,12 @@ RSpec.describe FormField do
       build(:form_field, form: create(:form))
     end
     it { should validate_presence_of(:name) }
+    it { should validate_length_of(:name).is_at_most(1000) }
+
+    it "accepts a long, multi-sentence question name" do
+      field = build(:form_field, form: create(:form), name: "A. " * 100)
+      expect(field).to be_valid
+    end
   end
 
   describe 'enums' do
@@ -33,6 +39,92 @@ RSpec.describe FormField do
 
   describe "enums" do
     it { should define_enum_for(:visibility).with_values([ :always_ask, :scholarship_only, :logged_out_only, :answers_on_file ]) }
+    it { should define_enum_for(:width).with_values([ :full, :half, :third, :quarter ]).with_prefix(true) }
+  end
+
+  describe "#grid_span_class" do
+    let(:form) { create(:form) }
+
+    it "spans the full grid for full-width fields" do
+      field = build(:form_field, form: form, width: :full)
+      expect(field.grid_span_class).to eq("md:col-span-12")
+    end
+
+    it "spans half the grid for half-width fields" do
+      field = build(:form_field, form: form, width: :half)
+      expect(field.grid_span_class).to eq("md:col-span-6")
+    end
+
+    it "spans a third of the grid for third-width fields" do
+      field = build(:form_field, form: form, width: :third)
+      expect(field.grid_span_class).to eq("md:col-span-4")
+    end
+
+    it "spans a quarter of the grid for quarter-width fields" do
+      field = build(:form_field, form: form, width: :quarter)
+      expect(field.grid_span_class).to eq("md:col-span-3")
+    end
+
+    it "falls back to full width when width is blank" do
+      field = build(:form_field, form: form)
+      field.width = nil
+      expect(field.grid_span_class).to eq("md:col-span-12")
+    end
+  end
+
+  describe "#min_words_error" do
+    let(:form) { create(:form) }
+
+    it "returns nil when no minimum is configured" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: nil)
+      expect(field.min_words_error("just two")).to be_nil
+    end
+
+    it "returns nil when the value meets the minimum" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 3)
+      expect(field.min_words_error("one two three")).to be_nil
+    end
+
+    it "ignores surrounding and repeated whitespace when counting" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 3)
+      expect(field.min_words_error("  one\ntwo   three  ")).to be_nil
+    end
+
+    it "returns an error when the value has too few words" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 5)
+      expect(field.min_words_error("only three words")).to eq("must be at least 5 words")
+    end
+
+    it "pluralizes the word count for a minimum of one" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 1)
+      expect(field.min_words_error("")).to be_nil
+      expect(field.min_words_error("   ")).to be_nil
+    end
+
+    it "leaves blank values to the required check" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 5)
+      expect(field.min_words_error("")).to be_nil
+      expect(field.min_words_error(nil)).to be_nil
+    end
+
+    it "does not apply to non-text answer types" do
+      field = build(:form_field, form: form, answer_type: :multiple_choice_radio, min_words: 5)
+      expect(field.min_words_error("Yes")).to be_nil
+    end
+  end
+
+  describe "min_words validation" do
+    let(:form) { create(:form) }
+
+    it "rejects a negative minimum" do
+      field = build(:form_field, form: form, min_words: -1)
+      expect(field).not_to be_valid
+    end
+
+    it "allows a nil minimum" do
+      field = build(:form_field, form: form, min_words: nil)
+      expect(field).to be_valid
+    end
   end
 
   describe "#multiple_choice?" do
@@ -109,6 +201,25 @@ RSpec.describe FormField do
     it "returns :radio_button for radio fields" do
       field = build(:form_field, form: form, answer_type: :multiple_choice_radio)
       expect(field.form_helper_type).to eq(:radio_button)
+    end
+  end
+
+  describe "#answer_type_label" do
+    let(:form) { create(:form) }
+
+    it "calls radio fields single choice" do
+      field = build(:form_field, form: form, answer_type: :multiple_choice_radio)
+      expect(field.answer_type_label).to eq("Single choice radio")
+    end
+
+    it "calls checkbox fields multiple choice" do
+      field = build(:form_field, form: form, answer_type: :multiple_choice_checkbox)
+      expect(field.answer_type_label).to eq("Multiple choice checkbox")
+    end
+
+    it "falls back to a humanized label for unmapped types" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_one_line)
+      expect(field.answer_type_label).to eq("One line")
     end
   end
 end
