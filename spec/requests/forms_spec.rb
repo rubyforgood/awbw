@@ -66,6 +66,47 @@ RSpec.describe "Forms", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("First Name")
     end
+
+    it "renders the collapsible per-field options controls" do
+      form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
+      get edit_form_path(form)
+
+      expect(response.body).to include('data-controller="field-options"')
+      expect(response.body).to include("field-options#toggle")
+      expect(response.body).to include("Only ask once")
+      expect(response.body).to include("Min words")
+    end
+
+    it "renders the expand/collapse all toggle" do
+      form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
+      get edit_form_path(form)
+
+      expect(response.body).to include('data-controller="expand-all"')
+      expect(response.body).to include("Expand all")
+    end
+
+    it "edits field and header names in textareas" do
+      form = FormBuilderService.new(name: "Test", sections: %i[person_contact_info]).call
+      get edit_form_path(form)
+
+      expect(response.body).to include("<textarea")
+    end
+  end
+
+  describe "GET /forms/:id (preview)" do
+    before { sign_in admin }
+
+    it "renders header and field-label HTML unescaped" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, answer_type: :group_header, name: "<strong>Section</strong>")
+      create(:form_field, form: form, answer_type: :free_form_input_one_line, name: "<em>Your name</em>", required: false)
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("<strong>Section</strong>")
+      expect(response.body).to include("<em>Your name</em>")
+    end
   end
 
   describe "PATCH /forms/:id" do
