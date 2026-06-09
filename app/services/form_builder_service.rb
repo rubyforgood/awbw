@@ -79,7 +79,7 @@ class FormBuilderService
     payment: %w[payment],
     consent: %w[consent],
     post_event_feedback: %w[post_event_feedback],
-    bulk_payment: %w[bulk_payment group_payment]
+    bulk_payment: %w[bulk_payment]
   }.freeze
 
   # Update sections on an existing form: add new sections, remove unchecked ones
@@ -395,7 +395,7 @@ class FormBuilderService
 
     position = add_header(form, position, "Payment Information", group: "bulk_payment")
     position = add_field(form, position, "Payment Method", :multiple_choice_radio,
-                         key: "payment_method", group: "group_payment", required: true,
+                         key: "payment_method", group: "bulk_payment", required: true,
                          options: [ "Credit Card Now", "Credit Card Later", "Check", "Other" ])
 
     position = add_header(form, position, "Attendees", group: "bulk_payment")
