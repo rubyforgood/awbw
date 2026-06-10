@@ -59,6 +59,14 @@ jobs:
           node-version: 22
       - run: npm ci
 
+      # Precompile assets once up front. Vite's autoBuild would otherwise have
+      # each parallel_tests process build into the shared public/vite-test dir
+      # at first request, and those concurrent builds corrupt each other.
+      - name: Build test assets
+        run: bin/vite build --mode test
+        env:
+          RAILS_ENV: test
+
       - name: Setup databases
         run: |
           bundle exec rake parallel:create parallel:load_schema
@@ -79,6 +87,9 @@ jobs:
         run: bundle exec parallel_rspec spec/
         env:
           RAILS_ENV: test
+          # Assets are prebuilt above; never let a test process rebuild them
+          # (concurrent rebuilds race on the shared output dir).
+          VITE_RUBY_AUTO_BUILD: "false"
           # AWS credentials
           AWS_REGION: ${{ vars.AWS_REGION }}
           AWS_S3_BUCKET: ${{ vars.AWS_S3_BUCKET }}
