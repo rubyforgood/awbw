@@ -40,8 +40,9 @@
     </fieldset>
 
     <div class="flex gap-3">
-      <%= f.submit "Update Sections", class: "btn btn-primary cursor-pointer" %>
-      <%= link_to "Cancel", edit_form_path(@form), class: "btn btn-secondary-outline" %>
+      <%= f.submit "Save changes", class: "btn btn-primary cursor-pointer" %>
+      <%= link_to "Edit questions", edit_form_path(@form), class: "btn btn-secondary" %>
+      <%= link_to "Cancel", form_path(@form), class: "btn btn-secondary-outline" %>
     </div>
   <% end %>
 </div>
