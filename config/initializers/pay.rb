@@ -1,6 +1,5 @@
 Rails.application.config.to_prepare do
   Pay::Charge.include PayChargeExtensions
-  Pay.send_emails = false
 
   ActiveSupport.on_load(:pay) do
     Pay::Webhooks.delegator.subscribe(
