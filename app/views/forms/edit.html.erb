@@ -1,6 +1,10 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="py-8 px-4">
   <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+    <% dashboard_event = @form.events.one? ? @form.events.first : nil %>
+    <% if dashboard_event %>
+      <%= link_to "Dashboard", dashboard_event_path(dashboard_event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% end %>
     <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <%= link_to "View form", form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <%= link_to "Edit sections", edit_sections_form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
@@ -114,10 +118,10 @@
          data-expand-all-field-options-outlet="[data-controller~='field-options']">
       <div class="px-6 py-3 bg-indigo-50 border-b border-indigo-200 flex items-center justify-between">
         <h2 class="flex items-center gap-2.5 text-sm font-semibold text-indigo-900 uppercase tracking-wide">
-          <i class="fa-solid fa-list-ul text-indigo-500"></i>Fields
+          <i class="fa-solid fa-list-ul text-indigo-500"></i>Questions
         </h2>
         <div class="flex items-center gap-3">
-          <span class="text-sm text-gray-500"><%= @form_fields.size %> fields</span>
+          <span class="text-sm text-gray-500"><%= pluralize(@form_fields.size, "question") %></span>
           <button type="button"
                   class="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
                   data-action="expand-all#toggleAll"
