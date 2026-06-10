@@ -41,7 +41,9 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *base
-  database: awbw_test<%= "_#{workspace_port}" if workspace_port %>
+  # TEST_ENV_NUMBER is set by parallel_tests to give each parallel process its
+  # own database (blank for the first process, "2", "3", ... for the rest).
+  database: awbw_test<%= "_#{workspace_port}" if workspace_port %><%= ENV['TEST_ENV_NUMBER'] %>
 
 staging:
   primary: &primary_staging

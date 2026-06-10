@@ -517,6 +517,8 @@ GEM
     orm_adapter (0.5.0)
     ostruct (0.6.3)
     parallel (1.27.0)
+    parallel_tests (5.7.0)
+      parallel
     parser (3.3.10.1)
       ast (~> 2.4.1)
       racc
@@ -803,6 +805,7 @@ DEPENDENCIES
   opentelemetry-instrumentation-all
   opentelemetry-sdk
   ostruct
+  parallel_tests
   pay (~> 11.4)
   positioning (~> 0.4.7)
   premailer-rails
@@ -1019,6 +1022,7 @@ CHECKSUMS
   orm_adapter (0.5.0) sha256=aa5d0be5d540cbb46d3a93e88061f4ece6a25f6e97d6a47122beb84fe595e9b9
   ostruct (0.6.3) sha256=95a2ed4a4bd1d190784e666b47b2d3f078e4a9efda2fccf18f84ddc6538ed912
   parallel (1.27.0) sha256=4ac151e1806b755fb4e2dc2332cbf0e54f2e24ba821ff2d3dcf86bf6dc4ae130
+  parallel_tests (5.7.0) sha256=3f1762c46ca2c223b8af8ef877217f9d76974e191bfa934f2580b58bcf1d005c
   parser (3.3.10.1) sha256=06f6a725d2cd91e5e7f2b7c32ba143631e1f7c8ae2fb918fc4cebec187e6a688
   pay (11.4.3) sha256=f3d50b1a900ab0a7bfe9ba9fda631b2f5faf0c95236dd3d2afa9effc9bfb15e8
   polyglot (0.3.5) sha256=59d66ef5e3c166431c39cb8b7c1d02af419051352f27912f6a43981b3def16af
