@@ -33,7 +33,7 @@ class StripeChargeSucceededProcessor
   def resolve_person(stripe_charge, pay_charge)
     person_from_pay_charge(pay_charge) ||
       person_from_email(stripe_charge) ||
-      anonymous_payer
+      external_payer
   end
 
   def person_from_pay_charge(pay_charge)
@@ -57,7 +57,7 @@ class StripeChargeSucceededProcessor
     nil
   end
 
-  def anonymous_payer
+  def external_payer
     Person.find_or_create_by!(first_name: "External", last_name: "Payer")
   end
 end
