@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_09_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_09_180000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -457,6 +457,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170000) do
     t.index ["registrant_id", "event_id"], name: "index_event_registrations_on_registrant_id_and_event_id", unique: true
     t.index ["registrant_id"], name: "index_event_registrations_on_registrant_id"
     t.index ["slug"], name: "index_event_registrations_on_slug", unique: true
+  end
+
+  create_table "event_staffs", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.boolean "expected_to_attend", default: false, null: false
+    t.bigint "person_id", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "person_id"], name: "index_event_staffs_on_event_id_and_person_id", unique: true
+    t.index ["event_id"], name: "index_event_staffs_on_event_id"
+    t.index ["person_id"], name: "index_event_staffs_on_person_id"
   end
 
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1542,6 +1554,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170000) do
   add_foreign_key "event_registration_organizations", "organizations"
   add_foreign_key "event_registrations", "events"
   add_foreign_key "event_registrations", "people", column: "registrant_id"
+  add_foreign_key "event_staffs", "events"
+  add_foreign_key "event_staffs", "people"
   add_foreign_key "events", "locations"
   add_foreign_key "events", "users", column: "created_by_id"
   add_foreign_key "form_answers", "form_fields"

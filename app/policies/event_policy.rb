@@ -61,6 +61,14 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def edit_staff?
+    manage?
+  end
+
+  def update_staff?
+    manage?
+  end
+
   def recipients?
     manage?
   end

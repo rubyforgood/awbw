@@ -4,6 +4,9 @@
   <div class="flex flex-wrap items-center gap-2 mb-6 print:hidden">
     <%= link_to "← Back to event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <div class="ml-auto flex flex-wrap gap-2">
+      <% if allowed_to?(:edit_staff?, @event) %>
+        <%= link_to "Edit staff", edit_staff_event_path(@event), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+      <% end %>
       <% if allowed_to?(:manage?, @event) %>
         <%= link_to "Registrants", registrants_event_path(@event), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
       <% end %>
@@ -16,16 +19,15 @@
   <div class="text-center mb-10">
     <p class="text-sm font-semibold uppercase tracking-wide <%= DomainTheme.text_class_for(:events) %>">Meet the staff</p>
     <h1 class="text-3xl font-bold text-gray-900 mt-1"><%= @event.title %></h1>
-    <p class="text-gray-500 mt-2"><%= pluralize(@staff.size, "staff member") %></p>
+    <p class="text-gray-500 mt-2"><%= pluralize(@event_staffs.size, "staff member") %></p>
   </div>
 
-  <% if @staff.any? %>
+  <% if @event_staffs.any? %>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-      <% @staff.each do |person| %>
-        <% person = person.decorate %>
+      <% @event_staffs.each do |event_staff| %>
+        <% person = event_staff.person.decorate %>
         <% active_affiliation = person.affiliations.find { |a| !a.inactive? } %>
         <% org = active_affiliation&.organization %>
-        <% role = active_affiliation&.title.presence %>
         <% has_bio = person.profile_show_bio? && person.bio.present? %>
         <% sectors = person.profile_show_sectors? ? person.sectors.sort_by(&:name) : [] %>
         <%# Facilitator tenure → one experience badge, computed from already-loaded
@@ -62,8 +64,8 @@
                 <p class="text-xs text-gray-400"><%= person.pronouns_display %></p>
               <% end %>
 
-              <% if role.present? %>
-                <p class="text-xs font-medium text-gray-700 mt-1"><%= role %></p>
+              <% if event_staff.title.present? %>
+                <p class="text-sm font-bold text-gray-900 mt-1"><%= event_staff.title %></p>
               <% end %>
 
               <% if org.present? %>
@@ -89,6 +91,12 @@
                     <span class="px-2 py-0.5 rounded-md text-xs font-medium text-gray-400">+<%= sectors.size - 3 %></span>
                   <% end %>
                 </div>
+              <% end %>
+
+              <% if event_staff.expected_to_attend? %>
+                <span class="mt-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                  <i class="fa-solid fa-circle-check"></i> Attending
+                </span>
               <% end %>
 
               <span class="mt-auto pt-2 text-xs text-gray-400 print:hidden">

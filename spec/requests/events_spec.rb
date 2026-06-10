@@ -762,25 +762,34 @@ RSpec.describe "Events", type: :request do
     let(:public_event) { create(:event, :published, :publicly_visible) }
     let(:staff_member) { create(:person, first_name: "Ada", last_name: "Lovelace") }
 
-    it "renders the staff for a publicly visible event without authentication" do
-      create(:event_registration, event: public_event, registrant: staff_member, status: "registered")
+    it "renders the curated staff roster for a publicly visible event without authentication" do
+      create(:event_staff, event: public_event, person: staff_member, title: "Lead facilitator")
 
       get staff_event_path(public_event)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Meet the staff")
       expect(response.body).to include("Ada Lovelace")
+      expect(response.body).to include("Lead facilitator")
     end
 
-    it "excludes registrants with an inactive status" do
-      cancelled = create(:person, first_name: "Grace", last_name: "Hopper")
-      create(:event_registration, event: public_event, registrant: staff_member, status: "registered")
-      create(:event_registration, event: public_event, registrant: cancelled, status: "cancelled")
+    it "shows only people on the staff roster, not event registrants" do
+      registrant_only = create(:person, first_name: "Grace", last_name: "Hopper")
+      create(:event_staff, event: public_event, person: staff_member)
+      create(:event_registration, event: public_event, registrant: registrant_only, status: "registered")
 
       get staff_event_path(public_event)
 
       expect(response.body).to include("Ada Lovelace")
       expect(response.body).not_to include("Grace Hopper")
+    end
+
+    it "flags a staff member who is expected to attend" do
+      create(:event_staff, event: public_event, person: staff_member, expected_to_attend: true)
+
+      get staff_event_path(public_event)
+
+      expect(response.body).to include("Attending")
     end
 
     context "when the event has ended" do
@@ -948,6 +957,98 @@ RSpec.describe "Events", type: :request do
         expect(owned_event.ga4_snippet).to be_nil
         expect(owned_event.gtm_head_snippet).to be_nil
         expect(owned_event.gtm_body_snippet).to be_nil
+      end
+    end
+  end
+
+  describe "event staff" do
+    let(:published_event) { create(:event, :published) }
+    let(:staffer) { create(:person, first_name: "Dana", last_name: "Reed") }
+
+    describe "GET /staff" do
+      it "shows connected staff with their title in bold" do
+        create(:event_staff, event: published_event, person: staffer, title: "Lead facilitator")
+        sign_in admin
+        get staff_event_path(published_event)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Dana Reed")
+        expect(response.body).to include("Lead facilitator")
+      end
+
+      it "links admins to the edit staff page" do
+        sign_in admin
+        get staff_event_path(published_event)
+        expect(response.body).to include(edit_staff_event_path(published_event))
+      end
+    end
+
+    describe "GET /staff/edit" do
+      it "renders for an admin" do
+        sign_in admin
+        get edit_staff_event_path(published_event)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "redirects a non-admin" do
+        sign_in user
+        get edit_staff_event_path(published_event)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "PATCH /staff" do
+      it "adds a staff member to the event" do
+        sign_in admin
+        expect {
+          patch staff_event_path(published_event), params: {
+            event: {
+              event_staffs_attributes: {
+                "0" => { person_id: staffer.id, title: "Staff", expected_to_attend: "1" }
+              }
+            }
+          }
+        }.to change(EventStaff, :count).by(1)
+        staff = published_event.event_staffs.last
+        expect(staff.person).to eq(staffer)
+        expect(staff.title).to eq("Staff")
+        expect(staff.expected_to_attend).to be(true)
+        expect(response).to redirect_to(staff_event_path(published_event))
+      end
+
+      it "removes a staff member when _destroy is set" do
+        event_staff = create(:event_staff, event: published_event, person: staffer)
+        sign_in admin
+        expect {
+          patch staff_event_path(published_event), params: {
+            event: {
+              event_staffs_attributes: {
+                "0" => { id: event_staff.id, _destroy: "1" }
+              }
+            }
+          }
+        }.to change(EventStaff, :count).by(-1)
+      end
+
+      it "forbids a non-admin" do
+        sign_in user
+        patch staff_event_path(published_event), params: {
+          event: { event_staffs_attributes: { "0" => { person_id: staffer.id, title: "Staff" } } }
+        }
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "GET /index?staffed_by_me" do
+      it "returns only events the current user's person staffs" do
+        admin_with_person = create(:user, :admin, :with_person)
+        staffed = create(:event, :published, title: "Staffed event")
+        create(:event, :published, title: "Other event")
+        create(:event_staff, event: staffed, person: admin_with_person.person)
+
+        sign_in admin_with_person
+        get events_path(staffed_by_me: true)
+        expect(response.body).to include("Staffed event")
+        expect(response.body).not_to include("Other event")
       end
     end
   end

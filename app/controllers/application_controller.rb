@@ -66,6 +66,7 @@ class ApplicationController < ActionController::Base
                                                   .active
                                                   .includes(:organization)
                                                   .load
+    @current_user_staffs_events = current_user.person.event_staffs.exists?
   end
 
   def set_current_user

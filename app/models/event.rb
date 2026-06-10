@@ -9,6 +9,7 @@ class Event < ApplicationRecord
   belongs_to :location, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :event_registrations, dependent: :destroy
+  has_many :event_staffs, dependent: :destroy
   has_many :event_forms, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
@@ -22,8 +23,12 @@ class Event < ApplicationRecord
   # has_many through
   has_many :forms, through: :event_forms
   has_many :registrants, through: :event_registrations, class_name: "Person"
+  has_many :staff_members, through: :event_staffs, source: :person
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
+
+  accepts_nested_attributes_for :event_staffs, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["person_id"].blank? }
 
   # Callbacks
   after_commit :build_public_registration_form, if: :public_registration_just_enabled?
@@ -50,6 +55,7 @@ class Event < ApplicationRecord
   scope :publicly_featured, -> { where(published: true, publicly_visible: true, publicly_featured: true) } # overrides Featureable
   scope :registerable, -> { where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current) }
   scope :using_form, ->(form_id) { joins(:event_forms).where(event_forms: { form_id: form_id }).distinct }
+  scope :staffed_by, ->(person) { joins(:event_staffs).where(event_staffs: { person_id: person }).distinct }
 
   def self.search_by_params(params)
     stories = is_a?(ActiveRecord::Relation) ? self : all

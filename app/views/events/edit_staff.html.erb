@@ -1,0 +1,40 @@
+<% content_for(:page_bg_class, "public") %>
+
+<div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6 sm:p-8">
+  <div class="flex flex-wrap items-center gap-2 mb-6">
+    <%= link_to "← Back to staff", staff_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+  </div>
+
+  <div class="mb-8">
+    <p class="text-sm font-semibold uppercase tracking-wide <%= DomainTheme.text_class_for(:events) %>">Manage staff</p>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1"><%= @event.title %></h1>
+    <p class="text-gray-500 mt-1 text-sm">Connect people to this event and set their role. Use the toggle to mark who is expected to attend.</p>
+  </div>
+
+  <%= simple_form_for @event, url: staff_event_path(@event), method: :patch, html: { id: "event-staff-form" } do |f| %>
+    <% if @event.errors.any? %>
+      <%= render "shared/errors", resource: @event %>
+    <% end %>
+
+    <div class="bg-gray-50 border border-gray-200 rounded-md p-4 sm:p-6 mb-6">
+      <div id="event-staffs">
+        <%= f.fields_for :event_staffs do |staff_form| %>
+          <%= render "event_staff_fields", f: staff_form %>
+        <% end %>
+      </div>
+
+      <div class="mt-2">
+        <%= link_to_add_association "➕ Add staff",
+                                    f,
+                                    :event_staffs,
+                                    data: { association_insertion_node: "#event-staffs", association_insertion_method: "append" },
+                                    class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+
+    <div class="flex justify-center gap-3">
+      <%= link_to "Cancel", staff_event_path(@event), class: "btn btn-secondary-outline" %>
+      <%= f.button :submit, "Save staff", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>
