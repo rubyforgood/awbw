@@ -18,7 +18,7 @@
      <% if field.section.present? %>data-section="<%= field.section %>"<% end %>
      <% if field.group_header? %>data-group-header<% end %>>
   <% if field.group_header? %>
-    <div class="cursor-grab rounded bg-indigo-50 text-indigo-500 hover:bg-indigo-100 hover:text-indigo-700 px-1.5 py-1"
+    <div class="cursor-grab rounded bg-purple-50 text-purple-500 hover:bg-purple-100 hover:text-purple-700 px-1.5 py-1"
          data-sortable-handle
          title="Drag to move this entire section">
       <i class="fa-solid fa-up-down-left-right"></i>
@@ -69,7 +69,7 @@
               {},
               class: "flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
         <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0">
-          <%= f.check_box :required, class: "rounded border-gray-300 text-blue-600" %>
+          <%= f.check_box :required, class: "rounded border-gray-300 text-purple-600" %>
           Required
         </label>
         <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0 ml-auto" title="Ask only the first time — hide if the person already answered it on any form, not just this event">
@@ -127,7 +127,7 @@
               <%= render "form_field_answer_option_fields", f: opt %>
             <% end %>
             <%= link_to_add_association "+ Add option", f, :form_field_answer_options,
-                  class: "text-sm text-blue-600 hover:text-blue-800 font-medium" %>
+                  class: "text-sm text-purple-600 hover:text-purple-800 font-medium" %>
           </div>
         <% end %>
       </div>

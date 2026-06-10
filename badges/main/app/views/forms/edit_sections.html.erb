@@ -10,15 +10,15 @@
   </div>
 
   <%# Colored hero banner so the page reads at a glance instead of all-white %>
-  <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 bg-blue-900">
-    <div class="relative bg-gradient-to-r from-blue-900 to-blue-800 text-white px-6 sm:px-8 py-6">
+  <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 bg-purple-900">
+    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-4">
           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
             <i class="fa-solid fa-layer-group text-xl"></i>
           </div>
           <div>
-            <p class="text-xs font-medium uppercase tracking-[0.2em] text-blue-200">Edit sections</p>
+            <p class="text-xs font-medium uppercase tracking-[0.2em] text-purple-200">Edit sections</p>
             <h1 class="text-2xl font-bold tracking-tight leading-tight"><%= @form.display_name %></h1>
           </div>
         </div>
@@ -27,8 +27,8 @@
         <div class="flex flex-wrap items-center gap-2">
           <% events_count = @form.events.size %>
           <% if events_count.positive? %>
-            <%= link_to events_path(form_id: @form.id), class: "inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-blue-900 shadow-sm hover:bg-blue-50" do %>
-              <i class="fa-solid fa-calendar-day text-blue-600"></i>
+            <%= link_to events_path(form_id: @form.id), class: "inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-purple-900 shadow-sm hover:bg-purple-50" do %>
+              <i class="fa-solid fa-calendar-day text-purple-600"></i>
               <%= pluralize(events_count, "event") %> connected
             <% end %>
           <% else %>
@@ -37,8 +37,8 @@
               No events connected
             </span>
           <% end %>
-          <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-blue-900 shadow-sm">
-            <i class="fa-solid fa-inbox text-blue-600"></i>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-purple-900 shadow-sm">
+            <i class="fa-solid fa-inbox text-purple-600"></i>
             <%= pluralize(@form.form_submissions.size, "submission") %>
           </span>
         </div>
@@ -49,9 +49,9 @@
     <div class="px-4 sm:px-6 py-6">
   <%= form_with url: update_sections_form_path(@form, event_id: @dashboard_event&.id), method: :patch, class: "space-y-6" do |f| %>
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-      <div class="flex items-center gap-2.5 px-6 py-3 bg-blue-100 border-b border-blue-300">
-        <i class="fa-solid fa-list-check text-blue-700"></i>
-        <h2 class="text-sm font-semibold text-blue-900 uppercase tracking-wide">Sections to include</h2>
+      <div class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-purple-300">
+        <i class="fa-solid fa-list-check text-purple-700"></i>
+        <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Sections to include</h2>
       </div>
       <div class="p-6">
         <p class="text-xs text-gray-500 mb-3">Numbered in the order these sections appear on this form. Custom sections you added are marked and edited on the <%= link_to "edit questions", edit_form_path(@form, event_id: @dashboard_event&.id), class: "underline hover:text-gray-700" %> page. Unless you change these selections, saving here does not change your form.</p>
@@ -64,7 +64,7 @@
                   <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= index + 1 %>.</span>
                   <%= hidden_field_tag "custom_sections[]", section[:header].id %>
                   <%= check_box_tag "kept_custom_sections[]", section[:header].id, true,
-                        class: "rounded border-gray-300 text-blue-600",
+                        class: "rounded border-gray-300 text-purple-600",
                         data: { form_section_toggle_target: "checkbox", action: "form-section-toggle#update" } %>
                   <span class="text-sm font-semibold text-gray-800"><%= section[:label] %></span>
                   <span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">Custom</span>
@@ -77,7 +77,7 @@
                 <label class="flex items-center gap-2 cursor-pointer">
                   <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= index + 1 %>.</span>
                   <input type="checkbox" name="sections[]" value="<%= section[:key] %>"
-                         class="rounded border-gray-300 text-blue-600"
+                         class="rounded border-gray-300 text-purple-600"
                          data-form-section-toggle-target="checkbox"
                          data-action="form-section-toggle#update"
                          <%= "checked" if section[:included] %>>

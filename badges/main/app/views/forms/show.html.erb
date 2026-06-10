@@ -11,7 +11,7 @@
   </div>
 
   <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-    <div class="bg-blue-900 text-white px-6 py-4">
+    <div class="bg-purple-900 text-white px-6 py-4">
       <div class="flex items-center gap-8">
         <div class="shrink-0">
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-8 w-auto") %>
@@ -41,12 +41,12 @@
         # Mirror the editor's visibility chip colors so the same field reads
         # the same in both places.
         visibility_badge_styles = {
-          "scholarship_only" => "bg-blue-100 text-blue-700 border-blue-200",
+          "scholarship_only" => "bg-purple-100 text-purple-700 border-purple-200",
           "logged_out_only" => "bg-emerald-100 text-emerald-700 border-emerald-200",
           "answers_on_file" => "bg-amber-100 text-amber-700 border-amber-200"
         }
         visibility_marker_styles = {
-          "scholarship_only" => "border-blue-300",
+          "scholarship_only" => "border-purple-300",
           "logged_out_only" => "border-emerald-300",
           "answers_on_file" => "border-amber-300"
         }
@@ -69,6 +69,7 @@
             <% if field.group_header? %>
               <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
                 <div class="flex flex-wrap items-center gap-2">
+                  <span class="<%= form_section_bar_class %>"></span>
                   <h3 class="rich-label text-lg font-semibold text-gray-800"><%= form_label_html(field.name) %></h3>
                   <% if conditional %>
                     <span class="text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
