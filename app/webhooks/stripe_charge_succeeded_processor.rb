@@ -28,6 +28,6 @@ class StripeChargeSucceededProcessor
   private
 
   def anonymous_payer
-    Person.find_or_create_by!(first_name: "Anonymous", last_name: "External Payer")
+    Person.find_or_create_by!(first_name: "External", last_name: "Payer")
   end
 end
