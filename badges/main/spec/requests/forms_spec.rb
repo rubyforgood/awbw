@@ -96,6 +96,16 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("Expand all")
     end
 
+    it "renders the form header section with a textarea for HTML" do
+      form = create(:form, :standalone, header: "<strong>Welcome</strong>")
+      get edit_form_path(form)
+
+      expect(response.body).to include("Form header")
+      expect(response.body).to include('name="form[header]"')
+      # The raw HTML is escaped inside the textarea so admins edit the markup.
+      expect(response.body).to include("&lt;strong&gt;Welcome&lt;/strong&gt;")
+    end
+
     it "edits field and header names in textareas" do
       form = FormBuilderService.new(name: "Test", sections: %i[person_contact_info]).call
       get edit_form_path(form)
@@ -118,6 +128,16 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("<strong>Section</strong>")
       expect(response.body).to include("<em>Your name</em>")
     end
+
+    it "renders the form header HTML under the title" do
+      form = create(:form, :standalone, header: %(<strong>Welcome</strong> — <a href="https://awbw.org">learn more</a>))
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("<strong>Welcome</strong>")
+      expect(response.body).to include(%(<a href="https://awbw.org">learn more</a>))
+    end
   end
 
   describe "PATCH /forms/:id" do
@@ -127,6 +147,13 @@ RSpec.describe "Forms", type: :request do
       form = create(:form, :standalone, name: "Old Name")
       patch form_path(form), params: { form: { name: "New Name" } }
       expect(form.reload.name).to eq("New Name")
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "updates the form header HTML" do
+      form = create(:form, :standalone)
+      patch form_path(form), params: { form: { header: "<strong>Read carefully</strong>" } }
+      expect(form.reload.header).to eq("<strong>Read carefully</strong>")
       expect(response).to redirect_to(edit_form_path(form))
     end
 

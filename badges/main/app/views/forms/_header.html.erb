@@ -1,0 +1,7 @@
+<%# Optional admin-authored HTML intro, shown directly under a form's title on
+    the internal preview and the public registration pages. Locals: form. %>
+<% if form.header.present? %>
+  <div class="rich-label mb-6 text-sm text-gray-700 leading-relaxed space-y-2">
+    <%= form_label_html(form.header) %>
+  </div>
+<% end %>

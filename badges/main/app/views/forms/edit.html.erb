@@ -1,16 +1,49 @@
-<div class="max-w-4xl mx-auto py-8 px-4">
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="py-8 px-4">
   <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
     <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <%= link_to "View form", form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <%= link_to "Edit sections", edit_sections_form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-    <% if allowed_to?(:destroy?, @form) && @form.event_forms.none? %>
-      <%= link_to "Delete", form_path(@form), class: "text-sm text-red-600 hover:text-red-800 px-2 py-1",
-                  data: { turbo_method: :delete, turbo_confirm: "Delete \"#{@form.display_name}\"?" } %>
-    <% end %>
   </div>
-  <h1 class="text-2xl font-semibold mb-2">Edit questions: <%= @form.display_name %></h1>
-  <%= render "stats", form: @form %>
 
+  <%# Colored hero banner so the page reads at a glance instead of all-white %>
+  <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 bg-blue-900">
+    <div class="relative bg-gradient-to-r from-blue-900 to-blue-800 text-white px-6 sm:px-8 py-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
+            <i class="fa-solid fa-list-check text-xl"></i>
+          </div>
+          <div>
+            <p class="text-xs font-medium uppercase tracking-[0.2em] text-blue-200">Edit questions</p>
+            <h1 class="text-2xl font-bold tracking-tight leading-tight"><%= @form.display_name %></h1>
+          </div>
+        </div>
+
+        <%# Quick stats pulled up into the header so the page reads at a glance %>
+        <div class="flex flex-wrap items-center gap-2">
+          <% events_count = @form.events.size %>
+          <% if events_count.positive? %>
+            <%= link_to events_path(form_id: @form.id), class: "inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-blue-900 shadow-sm hover:bg-blue-50" do %>
+              <i class="fa-solid fa-calendar-day text-blue-600"></i>
+              <%= pluralize(events_count, "event") %> connected
+            <% end %>
+          <% else %>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 shadow-sm">
+              <i class="fa-solid fa-calendar-day text-gray-400"></i>
+              No events connected
+            </span>
+          <% end %>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-blue-900 shadow-sm">
+            <i class="fa-solid fa-inbox text-blue-600"></i>
+            <%= pluralize(@form.form_submissions.size, "submission") %>
+          </span>
+        </div>
+      </div>
+      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+    </div>
+
+    <div class="px-4 sm:px-6 py-6">
   <%= form_with model: @form, class: "space-y-6" do |f| %>
     <% if @form.errors.any? %>
       <div class="rounded-lg bg-red-50 border border-red-200 p-4">
@@ -25,39 +58,64 @@
       </div>
     <% end %>
 
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-4">
-      <div class="flex flex-col sm:flex-row gap-4">
-        <div class="flex-1">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Form name</label>
-          <%= f.text_field :name, class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div class="flex items-center gap-2.5 px-6 py-3 bg-blue-100 border-b border-blue-300">
+        <i class="fa-solid fa-gear text-blue-700"></i>
+        <h2 class="text-sm font-semibold text-blue-900 uppercase tracking-wide">Form settings</h2>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Form name</label>
+            <%= f.text_field :name, class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-2xl font-bold" %>
+          </div>
+
+          <div class="sm:w-56">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Form role</label>
+            <%= f.select :role,
+                  [["General", ""], ["Registration", "registration"], ["Scholarship", "scholarship"], ["Bulk Payment", "bulk_payment"]],
+                  { selected: @form.role || "" },
+                  class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
+          </div>
         </div>
 
-        <div class="sm:w-56">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Form role</label>
-          <%= f.select :role,
-                [["General", ""], ["Registration", "registration"], ["Scholarship", "scholarship"], ["Bulk Payment", "bulk_payment"]],
-                { selected: @form.role || "" },
-                class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
+        <div class="flex flex-wrap gap-x-6 gap-y-2">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <%= f.check_box :hide_answered_person_questions, class: "rounded border-gray-300 text-blue-600" %>
+            <span class="text-sm text-gray-800">Hide any answered person & organization questions</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <%= f.check_box :hide_answered_form_questions, class: "rounded border-gray-300 text-blue-600" %>
+            <span class="text-sm text-gray-800">Hide any questions the user already answered</span>
+          </label>
         </div>
       </div>
+    </div>
 
-      <div class="flex flex-wrap gap-x-6 gap-y-2">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <%= f.check_box :hide_answered_person_questions, class: "rounded border-gray-300 text-blue-600" %>
-          <span class="text-sm text-gray-800">Hide any answered person & organization questions</span>
-        </label>
-        <label class="flex items-center gap-2 cursor-pointer">
-          <%= f.check_box :hide_answered_form_questions, class: "rounded border-gray-300 text-blue-600" %>
-          <span class="text-sm text-gray-800">Hide any questions the user already answered</span>
-        </label>
+    <%# Optional HTML intro rendered under the title on the form's public pages %>
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div class="flex items-center gap-2.5 px-6 py-3 bg-blue-100 border-b border-blue-300">
+        <i class="fa-solid fa-heading text-blue-700"></i>
+        <h2 class="text-sm font-semibold text-blue-900 uppercase tracking-wide">Form header</h2>
+      </div>
+      <div class="p-6 space-y-2">
+        <label class="block text-sm font-medium text-gray-700">Intro shown under the form title</label>
+        <p class="text-xs text-gray-500">
+          Optional. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Appears at the top of the form on the preview and public pages.
+        </p>
+        <%= f.text_area :header, rows: 4,
+              placeholder: "e.g. <strong>Welcome!</strong> Please complete all fields below.",
+              class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono" %>
       </div>
     </div>
 
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
          data-controller="expand-all"
          data-expand-all-field-options-outlet="[data-controller~='field-options']">
-      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 class="text-lg font-semibold">Fields</h2>
+      <div class="px-6 py-3 bg-indigo-50 border-b border-indigo-200 flex items-center justify-between">
+        <h2 class="flex items-center gap-2.5 text-sm font-semibold text-indigo-900 uppercase tracking-wide">
+          <i class="fa-solid fa-list-ul text-indigo-500"></i>Fields
+        </h2>
         <div class="flex items-center gap-3">
           <span class="text-sm text-gray-500"><%= @form_fields.size %> fields</span>
           <button type="button"
@@ -128,9 +186,17 @@
       </div>
     </div>
 
-    <div class="flex gap-3">
-      <%= f.submit "Save Changes", class: "btn btn-primary cursor-pointer" %>
-      <%= link_to "Cancel", forms_path, class: "btn btn-secondary-outline" %>
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+      <div class="flex items-center gap-3">
+        <%= f.submit "Save Changes", class: "btn btn-primary cursor-pointer" %>
+        <%= link_to "Cancel", forms_path, class: "btn btn-secondary-outline" %>
+        <% if allowed_to?(:destroy?, @form) && @form.event_forms.none? %>
+          <%= link_to "Delete", form_path(@form), class: "btn btn-danger-outline ml-auto",
+                      data: { turbo_method: :delete, turbo_confirm: "Delete \"#{@form.display_name}\"?" } %>
+        <% end %>
+      </div>
     </div>
   <% end %>
+    </div>
+  </div>
 </div>
