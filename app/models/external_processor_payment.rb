@@ -4,6 +4,10 @@ class ExternalProcessorPayment < Payment
 
   validate :pay_charge_presence, unless: :skip_pay_charge_validation
 
+  scope :with_metadata_key, ->(key, value) {
+    where("JSON_EXTRACT(metadata, ?) = ?", "$.#{key}", value.as_json)
+  }
+
   private
 
   def pay_charge_presence
