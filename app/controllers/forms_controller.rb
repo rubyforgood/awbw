@@ -1,5 +1,6 @@
 class FormsController < ApplicationController
   before_action :set_form, only: %i[show edit update destroy reorder_field reorder_fields edit_sections update_sections]
+  before_action :set_dashboard_event, only: %i[edit edit_sections update update_sections]
 
   def index
     authorize!
@@ -46,7 +47,7 @@ class FormsController < ApplicationController
     authorize! @form
 
     if @form.update(form_params)
-      redirect_to edit_form_path(@form), notice: "Form updated."
+      redirect_to edit_form_path(@form, event_id: params[:event_id]), notice: "Form updated."
     else
       @form_fields = @form.form_fields.reorder(position: :asc)
       render :edit, status: :unprocessable_content
@@ -84,12 +85,12 @@ class FormsController < ApplicationController
     removed_custom_ids = removed_custom_section_ids
     current_sections = (@form.sections || []).map(&:to_sym)
     if sections.to_set == current_sections.to_set && removed_custom_ids.empty?
-      redirect_to edit_form_path(@form), notice: "No section changes."
+      redirect_to edit_form_path(@form, event_id: params[:event_id]), notice: "No section changes."
       return
     end
 
     FormBuilderService.update_sections!(@form, sections, remove_custom_section_ids: removed_custom_ids)
-    redirect_to edit_form_path(@form), notice: "Sections updated."
+    redirect_to edit_form_path(@form, event_id: params[:event_id]), notice: "Sections updated."
   end
 
   def reorder_field
@@ -120,6 +121,16 @@ class FormsController < ApplicationController
 
   def set_form
     @form = Form.find(params[:id])
+  end
+
+  # Forms are shared across events, so the "go back to the dashboard" target
+  # can't be derived from the form alone — it comes from the event the admin
+  # navigated from (passed as event_id). Scope the lookup to this form's events
+  # so the link only ever points at a genuinely connected event. Fall back to
+  # the sole connected event when there's exactly one.
+  def set_dashboard_event
+    @dashboard_event = @form.events.find_by(id: params[:event_id]) if params[:event_id].present?
+    @dashboard_event ||= @form.events.one? ? @form.events.first : nil
   end
 
   def form_params

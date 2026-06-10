@@ -57,6 +57,41 @@ RSpec.describe "Forms", type: :request do
     end
   end
 
+  describe "dashboard link on the form editor" do
+    before { sign_in admin }
+
+    let(:form) { create(:form, :standalone) }
+    let(:event) { create(:event) }
+
+    # Forms are shared across events, so the editor links back to the dashboard
+    # of the event the admin came from, passed as event_id.
+    context "when an event_id for a connected event is given" do
+      before { create(:event_form, form: form, event: event) }
+
+      it "links the dashboard button to that event on the questions editor" do
+        get edit_form_path(form, event_id: event.id)
+        expect(response.body).to include(dashboard_event_path(event))
+      end
+
+      it "links the dashboard button to that event on the sections editor" do
+        get edit_sections_form_path(form, event_id: event.id)
+        expect(response.body).to include(dashboard_event_path(event))
+      end
+    end
+
+    it "ignores an event_id that is not connected to the form" do
+      get edit_form_path(form, event_id: event.id)
+      expect(response.body).not_to include(dashboard_event_path(event))
+    end
+
+    it "shows no dashboard link when the form spans multiple events and none is given" do
+      create(:event_form, form: form, event: event)
+      create(:event_form, form: form, event: create(:event))
+      get edit_form_path(form)
+      expect(response.body).not_to include("Dashboard")
+    end
+  end
+
   describe "GET /forms/:id/edit" do
     before { sign_in admin }
 
