@@ -116,7 +116,7 @@ module Events
       payment_method_field = @form.form_fields.find_by(field_identifier: "payment_method")
       return false unless payment_method_field
 
-      form_params[payment_method_field.id.to_s] == "Credit Card Now"
+      form_params[payment_method_field.id.to_s] == FormBuilderService::PAYMENT_METHOD_PAY_NOW
     end
 
     def create_stripe_checkout_session(registration, submission = nil)

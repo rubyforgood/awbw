@@ -105,8 +105,8 @@
           <% @form_fields.each do |field| %>
             <% if field.group_header? %>
               <div class="md:col-span-12 pt-7 pb-4">
-                <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-blue-900">
-                  <span class="h-5 w-1 rounded-full bg-accent"></span><%= form_label_html(field.name) %>
+                <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-purple-900">
+                  <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
                 </h3>
               </div>
             <% else %>
@@ -123,7 +123,7 @@
 
         <% if @scholarship_form && @scholarship_form.form_fields.any? %>
           <div class="mt-8 rounded-xl border border-blue-100 bg-blue-50/50 px-5 py-6">
-            <h3 class="flex items-center gap-2.5 text-lg font-bold text-blue-900 mb-5">
+            <h3 class="flex items-center gap-2.5 text-lg font-bold text-purple-900 mb-5">
               <i class="fa-solid fa-hand-holding-heart text-accent"></i>Scholarship application
             </h3>
             <%= render "forms/header", form: @scholarship_form, event: @event %>

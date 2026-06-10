@@ -1,4 +1,10 @@
 class FormBuilderService
+  # Payment method options. The "pay now" option triggers an immediate Stripe
+  # charge, so controllers match against PAYMENT_METHOD_PAY_NOW rather than
+  # repeating its label. Keep this the single source of truth for the label.
+  PAYMENT_METHOD_PAY_NOW = "Credit card (now)".freeze
+  PAYMENT_METHOD_OPTIONS = [ PAYMENT_METHOD_PAY_NOW, "Credit card (later)", "Check", "Other" ].freeze
+
   SECTIONS = {
     person_identifier: { label: "Person identifier", method: :build_person_identifier_fields },
     person_contact_info: { label: "Person contact info", method: :build_person_contact_info_fields },
@@ -431,9 +437,9 @@ class FormBuilderService
   def build_payment_fields(form, position)
     position = add_header(form, position, "Payment Information", group: "payment")
 
-    position = add_field(form, position, "Payment Method", :multiple_choice_radio,
+    position = add_field(form, position, "Payment method", :multiple_choice_radio,
                          key: "payment_method", group: "payment", required: true,
-                         options: [ "Credit Card Now", "Credit Card Later", "Check", "Other" ])
+                         options: PAYMENT_METHOD_OPTIONS)
     position
   end
 
@@ -483,12 +489,12 @@ class FormBuilderService
                          visibility: :logged_out_only)
 
     position = add_header(form, position, "Payment Information", group: "bulk_payment")
-    position = add_field(form, position, "Payment Method", :multiple_choice_radio,
+    position = add_field(form, position, "Payment method", :multiple_choice_radio,
                          key: "payment_method", group: "bulk_payment", required: true,
-                         options: [ "Credit Card Now", "Credit Card Later", "Check", "Other" ])
+                         options: PAYMENT_METHOD_OPTIONS)
 
     position = add_header(form, position, "Attendees", group: "bulk_payment")
-    position = add_field(form, position, "Number of Attendees", :free_form_input_one_line,
+    position = add_field(form, position, "Number of attendees", :free_form_input_one_line,
                          key: "number_of_attendees", group: "bulk_payment", required: true,
                          datatype: :number_integer, width: :half)
     position = add_field(form, position, "Attendees", :no_user_input,

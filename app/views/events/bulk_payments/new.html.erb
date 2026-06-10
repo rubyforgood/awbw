@@ -70,7 +70,7 @@
             <% if field.group_header? %>
               <div class="md:col-span-12 pt-7 pb-4">
                 <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-purple-900">
-                  <span class="h-5 w-1 rounded-full bg-[linear-gradient(to_bottom,#ec4899,#f97316,#22c55e,#3b82f6,#8b5cf6)]"></span><%= form_label_html(field.name) %>
+                  <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
                 </h3>
               </div>
             <% elsif payer_fields.include?(field.field_identifier) %>
@@ -140,7 +140,7 @@
                                name="bulk_payment[form_fields][<%= field.id %>]"
                                value="<%= ffao.answer_option.name %>"
                                class="text-blue-600 focus:ring-blue-500"
-                               <%= "checked" if submitted_value == ffao.answer_option.name || (submitted_value.blank? && ffao.answer_option.name == "Credit Card Now") %>
+                               <%= "checked" if submitted_value == ffao.answer_option.name || (submitted_value.blank? && ffao.answer_option.name == FormBuilderService::PAYMENT_METHOD_PAY_NOW) %>
                                <%= "required" if field.required %>>
                         <%= ffao.answer_option.name %>
                       </label>

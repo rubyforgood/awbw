@@ -114,6 +114,11 @@ module ApplicationHelper
     "#{local.strftime("%B %-d, %Y %-l:%M %P")} #{local.strftime("%Z")}"
   end
 
+  # Rainbow gradient accent bar shown beside form section headers.
+  def form_section_bar_class
+    "h-5 w-1 rounded-full bg-[linear-gradient(to_bottom,#ec4899,#f97316,#22c55e,#3b82f6,#8b5cf6)]"
+  end
+
   INDEX_BUTTON_ICONS = {
     community_news:      "fa-newspaper",
     stories:             "fa-book-open",

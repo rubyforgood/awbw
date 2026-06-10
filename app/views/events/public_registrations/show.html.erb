@@ -43,7 +43,9 @@
 
           <% if field.group_header? %>
             <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
-              <h3 class="rich-label text-lg font-semibold text-gray-800"><%= form_label_html(field.name) %></h3>
+              <h3 class="rich-label flex items-center gap-2.5 text-lg font-semibold text-gray-800">
+                <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
+              </h3>
             </div>
           <% else %>
             <% response = @responses[field.id] %>

@@ -44,7 +44,9 @@
 
         <% if field.group_header? %>
           <div class="pt-6 pb-2 border-b border-gray-200 mb-4">
-            <h3 class="text-lg font-semibold text-gray-800"><%= field.name %></h3>
+            <h3 class="flex items-center gap-2.5 text-lg font-semibold text-gray-800">
+              <span class="<%= form_section_bar_class %>"></span><%= field.name %>
+            </h3>
           </div>
         <% else %>
           <div class="py-2">

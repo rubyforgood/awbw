@@ -69,6 +69,7 @@
             <% if field.group_header? %>
               <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
                 <div class="flex flex-wrap items-center gap-2">
+                  <span class="<%= form_section_bar_class %>"></span>
                   <h3 class="rich-label text-lg font-semibold text-gray-800"><%= form_label_html(field.name) %></h3>
                   <% if conditional %>
                     <span class="text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
