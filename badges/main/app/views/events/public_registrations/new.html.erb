@@ -112,7 +112,7 @@
             <% else %>
               <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
               <% if submitted_value.blank? && field.field_identifier == "payment_method" %>
-                <% submitted_value = @scholarship ? "Other" : "Credit Card" %>
+                <% submitted_value = @scholarship ? "Other" : FormBuilderService::PAYMENT_METHOD_PAY_NOW %>
               <% end %>
               <div class="<%= field.grid_span_class %>">
                 <%= render "events/public_registrations/form_field", field: field, value: submitted_value, label: email_label_overrides[field.field_identifier] %>

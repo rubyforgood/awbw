@@ -64,8 +64,12 @@ module PayChargeExtensions
     if attendee_answer&.submitted_answer.present?
       parsed = JSON.parse(attendee_answer.submitted_answer) rescue []
       payment_metadata[:attendees] = parsed
-      payment_metadata[:attendee_count] = parsed.length
     end
+    count_answer = submission.form_answers
+      .joins(:form_field)
+      .where(form_fields: { field_identifier: "number_of_attendees" })
+      .first
+    payment_metadata[:number_of_attendees] = count_answer&.submitted_answer&.to_i
 
     payment = ExternalProcessorPayment.create!(
       person: person,

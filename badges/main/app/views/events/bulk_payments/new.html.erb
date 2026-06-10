@@ -140,7 +140,7 @@
                                name="bulk_payment[form_fields][<%= field.id %>]"
                                value="<%= ffao.answer_option.name %>"
                                class="text-blue-600 focus:ring-blue-500"
-                               <%= "checked" if submitted_value == ffao.answer_option.name || (submitted_value.blank? && ffao.answer_option.name == FormBuilderService::PAYMENT_METHOD_PAY_NOW) %>
+                               <%= "checked" if submitted_value == ffao.answer_option.name || (submitted_value.blank? && ffao.answer_option.name.downcase == FormBuilderService::PAYMENT_METHOD_PAY_NOW.downcase) %>
                                <%= "required" if field.required %>>
                         <%= ffao.answer_option.name %>
                       </label>
