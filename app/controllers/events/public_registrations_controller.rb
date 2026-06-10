@@ -47,6 +47,8 @@ module Events
       if @field_errors.any?
         @form_fields = visible_form_fields
         @event = @event.decorate
+        flash.now[:alert] = @field_errors.values.first(3).join(", ")
+        flash.now[:alert] += " and more..." if @field_errors.size > 3
         render :new, status: :unprocessable_content
         return
       end
