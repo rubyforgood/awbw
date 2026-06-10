@@ -72,6 +72,31 @@ RSpec.describe FormField do
     end
   end
 
+  describe "#visibility_label" do
+    let(:form) { create(:form) }
+
+    it "returns the human-friendly label for each visibility" do
+      expect(build(:form_field, form: form, visibility: :always_ask).visibility_label).to eq("Always ask")
+      expect(build(:form_field, form: form, visibility: :scholarship_only).visibility_label).to eq("Scholarship only")
+      expect(build(:form_field, form: form, visibility: :logged_out_only).visibility_label).to eq("Logged out only")
+      expect(build(:form_field, form: form, visibility: :answers_on_file).visibility_label).to eq("Answers on file")
+    end
+  end
+
+  describe "#conditional_visibility?" do
+    let(:form) { create(:form) }
+
+    it "is false for always-ask fields" do
+      expect(build(:form_field, form: form, visibility: :always_ask).conditional_visibility?).to be false
+    end
+
+    it "is true for any non-always-ask visibility" do
+      expect(build(:form_field, form: form, visibility: :logged_out_only).conditional_visibility?).to be true
+      expect(build(:form_field, form: form, visibility: :answers_on_file).conditional_visibility?).to be true
+      expect(build(:form_field, form: form, visibility: :scholarship_only).conditional_visibility?).to be true
+    end
+  end
+
   describe "#min_words_error" do
     let(:form) { create(:form) }
 

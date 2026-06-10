@@ -8,7 +8,10 @@ class FormsController < ApplicationController
 
   def show
     authorize! @form
-    @form_fields = preview_form_fields
+    # The forms preview shows every field, highlighting any with conditional
+    # visibility. The conditional logic itself only runs on the live
+    # registration and public registration forms.
+    @form_fields = @form.form_fields.reorder(position: :asc)
   end
 
   def new
@@ -106,20 +109,6 @@ class FormsController < ApplicationController
 
   def set_form
     @form = Form.find(params[:id])
-  end
-
-  def preview_form_fields
-    scope = @form.form_fields
-
-    if params[:preview_logged_in].present?
-      scope = scope.where.not(visibility: :logged_out_only)
-    end
-
-    if params[:preview_answered].present?
-      scope = scope.where.not(visibility: :answers_on_file)
-    end
-
-    scope.reorder(position: :asc)
   end
 
   def form_params

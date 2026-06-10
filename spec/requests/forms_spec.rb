@@ -182,6 +182,27 @@ RSpec.describe "Forms", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("First Name")
     end
+
+    it "shows every field including conditional ones, without applying the conditional logic" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, name: "Always Field", visibility: :always_ask)
+      create(:form_field, form: form, name: "Hidden When Logged In", visibility: :logged_out_only)
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Always Field")
+      expect(response.body).to include("Hidden When Logged In")
+    end
+
+    it "highlights fields that are not always asked" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, name: "On File Field", visibility: :answers_on_file)
+
+      get form_path(form)
+
+      expect(response.body).to include("Answers on file")
+    end
   end
 
   describe "GET /forms/:id/edit_sections" do
