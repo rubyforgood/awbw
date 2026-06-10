@@ -18,7 +18,7 @@ ENV["RACK_ENV"]  = "test"
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 require "active_storage_validations/matchers"
 
-if ENV["CI"]
+if ENV["COVERAGE"]
   require "simplecov"
   require "simplecov_json_formatter"
   SimpleCov.formatter =
@@ -39,6 +39,18 @@ if ENV["CI"]
     add_filter %w[/spec/ /vendor/ /config/ /bin/]
     track_files "{app,lib}/**/*.rb"
     minimum_coverage 20  # tune as you like
+  end
+end
+
+# Under parallel_tests in CI, a single shared --out file would be clobbered by
+# each process. Give every process its own results file, keyed on the
+# TEST_ENV_NUMBER that parallel_tests assigns (blank for the first process).
+if ENV["CI"]
+  require "fileutils"
+  FileUtils.mkdir_p("tmp/rspec_results")
+  RSpec.configure do |config|
+    config.add_formatter "progress"
+    config.add_formatter "json", "tmp/rspec_results/results#{ENV['TEST_ENV_NUMBER']}.json"
   end
 end
 

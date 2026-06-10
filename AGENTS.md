@@ -336,7 +336,16 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 ### Configuration
 
 - **rails_helper.rb**: Loads RSpec Rails, FactoryBot, Shoulda Matchers, ActionPolicy, Devise test helpers, ActiveStorage validation matchers. Transactional fixtures enabled. ActiveJob uses `:test` adapter.
-- **spec_helper.rb**: SimpleCov with branch coverage (minimum 20%), random test ordering, profile of 10 slowest examples.
+- **spec_helper.rb**: Random test ordering, profile of 10 slowest examples. SimpleCov (branch coverage, minimum 20%) runs only when `COVERAGE=true` (set by the coverage-badge workflow on `main`), not on every run. Under `CI=true`, each parallel process writes its own JSON results file to `tmp/rspec_results/` keyed on `TEST_ENV_NUMBER`.
+
+### Running in parallel
+
+The suite runs across multiple processes via [`parallel_tests`](https://github.com/grosser/parallel_tests), each with its own database (`awbw_test`, `awbw_test2`, … — the `TEST_ENV_NUMBER` suffix is appended in `config/database.yml`):
+
+```
+bundle exec rake parallel:create parallel:load_schema   # one-time per schema change
+bundle exec parallel_rspec spec/                        # run the whole suite in parallel
+```
 
 ### Support Files
 
@@ -369,7 +378,7 @@ bundle exec bundle-audit check --update
 ### ci.yml
 
 1. **scan_ruby**: Brakeman security analysis + bundler-audit
-2. **build-and-test**: MySQL 8.0 service, Ruby + Node 22 setup, `npm ci`, schema load, `bundle exec rspec`
+2. **build-and-test**: MySQL 8.0 service, Ruby + Node 22 setup, `npm ci`, `parallel:create parallel:load_schema`, then `parallel_rspec spec/` across 4 processes (`PARALLEL_TEST_PROCESSORS=4`)
 
 ### rubocop.yml
 
