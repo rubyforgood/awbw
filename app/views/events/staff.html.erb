@@ -23,7 +23,7 @@
   </div>
 
   <% if @event_staffs.any? %>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+    <div class="flex flex-wrap justify-center gap-6">
       <% @event_staffs.each do |event_staff| %>
         <% person = event_staff.person.decorate %>
         <% active_affiliation = person.affiliations.find { |a| !a.inactive? } %>
@@ -39,33 +39,45 @@
              years >= 10 ? [ :legacy_facilitator, "Legacy facilitator" ] : (years >= 3 ? [ :seasoned_facilitator, "Seasoned facilitator" ] : [ :new_facilitator, "New facilitator" ])
            end %>
 
-        <div class="group h-96 [perspective:1000px] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded-xl"
+        <div class="group w-48 sm:w-56 h-96 [perspective:1000px] cursor-pointer transition-transform duration-200 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded-xl"
              data-controller="flip-card"
              data-action="click->flip-card#toggle keydown.enter->flip-card#toggle keydown.space:prevent->flip-card#toggle"
              tabindex="0" role="button" aria-pressed="false"
-             aria-label="<%= person.name %> — flip card to read bio">
+             aria-label="<%= person.name %> — flip card for details">
           <div class="relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d]"
                data-flip-card-target="inner">
 
             <%# Front %>
-            <div class="absolute inset-0 [backface-visibility:hidden] flex flex-col items-center text-center bg-white border border-gray-200 rounded-xl shadow-sm p-4 overflow-hidden">
+            <div class="absolute inset-0 [backface-visibility:hidden] flex flex-col items-center text-center bg-white border border-gray-200 rounded-xl shadow-sm transition-shadow group-hover:shadow-md px-4 pt-12 pb-8 overflow-hidden">
+              <% if event_staff.expected_to_attend? %>
+                <span class="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700" title="Expected to attend">
+                  <i class="fa-solid fa-circle-check"></i> Attending
+                </span>
+              <% end %>
+
               <% if person.avatar&.attached? %>
                 <%= image_tag person.avatar.variant(:thumbnail),
-                              class: "w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow mb-2 mt-1" %>
+                              class: "w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow mb-2" %>
               <% else %>
-                <span class="w-20 h-20 rounded-full flex items-center justify-center bg-sky-200 text-sky-700 font-bold text-2xl border-2 border-sky-300 shadow mb-2 mt-1">
+                <span class="w-20 h-20 rounded-full flex items-center justify-center <%= DomainTheme.bg_class_for(:events, intensity: 200) %> <%= DomainTheme.text_class_for(:events, intensity: 700) %> font-bold text-2xl border-2 <%= DomainTheme.border_class_for(:events) %> shadow mb-2">
                   <%= person.name.to_s.first.to_s.upcase %>
                 </span>
               <% end %>
 
-              <p class="font-semibold text-gray-900 leading-tight"><%= person.name %></p>
+              <% privacy_limited = person.display_name_preference.in?(%w[ first_name_last_initial first_name_only last_name_only ]) %>
+              <% if !privacy_limited && person.last_name.present? %>
+                <p class="text-lg font-bold text-gray-900 leading-tight"><%= person.first_name %></p>
+                <p class="text-sm font-medium text-gray-600 leading-tight"><%= person.last_name %></p>
+              <% else %>
+                <p class="text-lg font-bold text-gray-900 leading-tight"><%= person.name %></p>
+              <% end %>
 
               <% if person.pronouns_display.present? %>
-                <p class="text-xs text-gray-400"><%= person.pronouns_display %></p>
+                <p class="text-xs text-gray-400 mt-0.5"><%= person.pronouns_display %></p>
               <% end %>
 
               <% if event_staff.title.present? %>
-                <p class="text-sm font-bold text-gray-900 mt-1"><%= event_staff.title %></p>
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-1.5"><%= event_staff.title %></p>
               <% end %>
 
               <% if org.present? %>
@@ -93,14 +105,8 @@
                 </div>
               <% end %>
 
-              <% if event_staff.expected_to_attend? %>
-                <span class="mt-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                  <i class="fa-solid fa-circle-check"></i> Attending
-                </span>
-              <% end %>
-
-              <span class="mt-auto pt-2 text-xs text-gray-400 print:hidden">
-                <i class="fa-solid fa-rotate"></i> Tap for bio
+              <span class="absolute bottom-3 inset-x-0 text-xs text-gray-400 print:hidden">
+                <i class="fa-solid fa-rotate"></i> Flip for details
               </span>
             </div>
 

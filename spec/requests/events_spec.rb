@@ -769,7 +769,8 @@ RSpec.describe "Events", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Meet the staff")
-      expect(response.body).to include("Ada Lovelace")
+      expect(response.body).to include("Ada")
+      expect(response.body).to include("Lovelace")
       expect(response.body).to include("Lead facilitator")
     end
 
@@ -780,8 +781,8 @@ RSpec.describe "Events", type: :request do
 
       get staff_event_path(public_event)
 
-      expect(response.body).to include("Ada Lovelace")
-      expect(response.body).not_to include("Grace Hopper")
+      expect(response.body).to include("Ada")
+      expect(response.body).not_to include("Grace")
     end
 
     it "flags a staff member who is expected to attend" do
