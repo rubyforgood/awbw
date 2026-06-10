@@ -5,10 +5,10 @@ RSpec.describe "Events::BulkPayments", type: :request do
   let(:event) { create(:event, cost_cents: 0) }
   let(:form) { create(:form) }
   # The bulk payment view only renders a known set of "payer" fields, so the
-  # min-word rule is exercised through organization_name (a free-form text field).
+  # min-word rule is exercised through payer_organization (a free-form text field).
   let!(:org_field) do
     create(:form_field, form: form, answer_type: :free_form_input_one_line,
-           field_identifier: "organization_name", name: "Organization name",
+           field_identifier: "payer_organization", name: "Organization",
            required: true, min_words: 5)
   end
 
@@ -50,6 +50,31 @@ RSpec.describe "Events::BulkPayments", type: :request do
       get new_event_bulk_payment_path(event)
 
       expect(response.body).to include("md:col-span-6")
+    end
+  end
+
+  describe "GET new with the seeded bulk payment form" do
+    let(:seeded_form) do
+      FormBuilderService.new(name: "Bulk Payment", sections: %i[bulk_payment], role: "bulk_payment").call
+    end
+
+    before do
+      # Payer fields are logged_out_only, so test the public (signed-out) view.
+      sign_out admin
+      EventForm.where(event: event).destroy_all
+      EventForm.create!(event: event, form: seeded_form, role: "bulk_payment")
+    end
+
+    it "renders the optional payer phone field" do
+      get new_event_bulk_payment_path(event)
+
+      expect(response.body).to include("Phone")
+    end
+
+    it "labels the attendee fields with the 'Attendee' prefix" do
+      get new_event_bulk_payment_path(event)
+
+      expect(response.body).to include("Attendee first name", "Attendee last name", "Attendee email")
     end
   end
 end

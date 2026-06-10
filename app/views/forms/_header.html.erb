@@ -1,7 +1,10 @@
 <%# Optional admin-authored HTML intro, shown directly under a form's title on
-    the internal preview and the public registration pages. Locals: form. %>
+    the internal preview and the public registration pages. Tokens like
+    {{event_month_year}} are filled from `event` when one is passed (the public
+    registration pages); the standalone preview renders without it.
+    Locals: form. Optional: event. %>
 <% if form.header.present? %>
   <div class="rich-label mb-6 text-sm text-gray-700 leading-relaxed space-y-2">
-    <%= form_label_html(form.header) %>
+    <%= form_header_html(form, event: local_assigns[:event]) %>
   </div>
 <% end %>

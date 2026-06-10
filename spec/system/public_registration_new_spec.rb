@@ -38,4 +38,22 @@ RSpec.describe "Public registration new page", type: :system do
       end
     end
   end
+
+  describe "scholarship form header" do
+    let(:scholarship_form) do
+      create(:form, :standalone, :scholarship, :with_fields,
+             header: "<p>Scholarship intro for {{event_month_year}}.</p>")
+    end
+
+    before do
+      EventForm.create!(event: event, form: scholarship_form, role: "scholarship")
+    end
+
+    it "renders the scholarship form's header above the scholarship questions" do
+      visit new_event_public_registration_path(event, scholarship_requested: true)
+
+      expect(page).to have_text("Scholarship application")
+      expect(page).to have_text("Scholarship intro for #{event.start_date.strftime("%B %Y")}.")
+    end
+  end
 end

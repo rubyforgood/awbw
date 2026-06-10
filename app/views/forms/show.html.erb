@@ -1,6 +1,7 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="max-w-2xl mx-auto py-8 px-4">
   <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+    <%= link_to "Events", events_path(form_id: @form.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <%= link_to "Edit", edit_sections_form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <% if allowed_to?(:destroy?, @form) && @form.event_forms.none? %>
@@ -10,7 +11,7 @@
   </div>
 
   <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-    <div class="bg-blue-900 text-white px-6 py-4">
+    <div class="bg-purple-900 text-white px-6 py-4">
       <div class="flex items-center gap-8">
         <div class="shrink-0">
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-8 w-auto") %>
@@ -20,6 +21,12 @@
     </div>
 
     <div class="px-6 py-6">
+      <% if form_header_uses_tokens?(@form) %>
+        <p class="flex items-start gap-2 mb-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+          <i class="fa-solid fa-circle-info mt-0.5 text-amber-500"></i>
+          <span>This is a preview — header placeholders show example text. On the live registration page they fill from the event (date, time, fee, location, etc.).</span>
+        </p>
+      <% end %>
       <%= render "forms/header", form: @form %>
 
       <%
@@ -34,12 +41,12 @@
         # Mirror the editor's visibility chip colors so the same field reads
         # the same in both places.
         visibility_badge_styles = {
-          "scholarship_only" => "bg-blue-100 text-blue-700 border-blue-200",
+          "scholarship_only" => "bg-purple-100 text-purple-700 border-purple-200",
           "logged_out_only" => "bg-emerald-100 text-emerald-700 border-emerald-200",
           "answers_on_file" => "bg-amber-100 text-amber-700 border-amber-200"
         }
         visibility_marker_styles = {
-          "scholarship_only" => "border-blue-300",
+          "scholarship_only" => "border-purple-300",
           "logged_out_only" => "border-emerald-300",
           "answers_on_file" => "border-amber-300"
         }
@@ -62,6 +69,7 @@
             <% if field.group_header? %>
               <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
                 <div class="flex flex-wrap items-center gap-2">
+                  <span class="<%= form_section_bar_class %>"></span>
                   <h3 class="rich-label text-lg font-semibold text-gray-800"><%= form_label_html(field.name) %></h3>
                   <% if conditional %>
                     <span class="text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>

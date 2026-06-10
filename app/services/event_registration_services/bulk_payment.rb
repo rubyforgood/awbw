@@ -17,6 +17,7 @@ module EventRegistrationServices
     def call
       ActiveRecord::Base.transaction do
         person = find_or_create_person
+        create_phone_contact(person) if field_value("payer_phone").present?
         submission = create_form_submission(person)
         Result.new(success?: true, form_submission: submission, errors: [])
       end
@@ -49,6 +50,28 @@ module EventRegistrationServices
         first_name: first_name,
         last_name: last_name,
         email: email
+      )
+    end
+
+    # Mirrors PublicRegistration#create_phone_contact. The bulk payment form has
+    # no phone-type field, so the payer phone is always stored as personal.
+    def create_phone_contact(person)
+      phone_value = field_value("payer_phone")&.strip
+      return if phone_value.blank?
+
+      existing = person.contact_methods.find_by(kind: :phone, value: phone_value)
+      if existing
+        existing.update!(contact_type: "personal", primary: true, inactive: false)
+        return existing
+      end
+
+      person.contact_methods.where(kind: :phone, primary: true).update_all(primary: false, inactive: true)
+
+      person.contact_methods.create!(
+        kind: :phone,
+        value: phone_value,
+        contact_type: "personal",
+        primary: true
       )
     end
 

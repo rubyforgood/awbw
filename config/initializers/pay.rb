@@ -7,4 +7,6 @@ Rails.application.config.to_prepare do
       StripeChargeSucceededProcessor.new
     )
   end
+
+  Pay.send_emails = false
 end

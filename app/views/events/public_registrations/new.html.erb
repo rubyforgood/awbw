@@ -42,6 +42,11 @@
           <i class="fa-solid fa-location-dot text-blue-500"></i><%= @event.location.name %>
         </span>
       <% end %>
+      <% if @event.videoconference_url.present? && @event.autoshow_videoconference_label && @event.videoconference_label.present? %>
+        <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
+          <i class="fa-solid fa-video text-blue-500"></i><%= @event.videoconference_label %>
+        </span>
+      <% end %>
     </div>
   </div>
 
@@ -49,7 +54,7 @@
   <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
 
     <%# Card Header %>
-    <div class="relative bg-gradient-to-r from-blue-900 to-blue-800 text-white px-6 sm:px-8 py-5">
+    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
       <div class="flex items-center gap-5">
         <div class="shrink-0">
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
@@ -64,7 +69,7 @@
 
     <%# Card Body %>
     <div class="px-6 sm:px-8 py-7">
-      <%= render "forms/header", form: @form %>
+      <%= render "forms/header", form: @form, event: @event %>
 
       <% if flash[:alert] %>
         <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 mb-6">
@@ -100,8 +105,8 @@
           <% @form_fields.each do |field| %>
             <% if field.group_header? %>
               <div class="md:col-span-12 pt-7 pb-4">
-                <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-blue-900">
-                  <span class="h-5 w-1 rounded-full bg-accent"></span><%= form_label_html(field.name) %>
+                <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-purple-900">
+                  <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
                 </h3>
               </div>
             <% else %>
@@ -118,9 +123,10 @@
 
         <% if @scholarship_form && @scholarship_form.form_fields.any? %>
           <div class="mt-8 rounded-xl border border-blue-100 bg-blue-50/50 px-5 py-6">
-            <h3 class="flex items-center gap-2.5 text-lg font-bold text-blue-900 mb-5">
+            <h3 class="flex items-center gap-2.5 text-lg font-bold text-purple-900 mb-5">
               <i class="fa-solid fa-hand-holding-heart text-accent"></i>Scholarship application
             </h3>
+            <%= render "forms/header", form: @scholarship_form, event: @event %>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
               <% @scholarship_form.form_fields.reorder(position: :asc).each do |field| %>
                 <% next if field.group_header? %>

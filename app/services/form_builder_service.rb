@@ -1,4 +1,10 @@
 class FormBuilderService
+  # Payment method options. The "pay now" option triggers an immediate Stripe
+  # charge, so controllers match against PAYMENT_METHOD_PAY_NOW rather than
+  # repeating its label. Keep this the single source of truth for the label.
+  PAYMENT_METHOD_PAY_NOW = "Credit card (now)".freeze
+  PAYMENT_METHOD_OPTIONS = [ PAYMENT_METHOD_PAY_NOW, "Credit card (later)", "Check", "Other" ].freeze
+
   SECTIONS = {
     person_identifier: { label: "Person identifier", method: :build_person_identifier_fields },
     person_contact_info: { label: "Person contact info", method: :build_person_contact_info_fields },
@@ -49,7 +55,7 @@ class FormBuilderService
     payment: %w[payment_method],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
-    bulk_payment: %w[payer_first_name payer_last_name payer_email organization_name number_of_attendees payment_method bulk_payment_attendees]
+    bulk_payment: %w[payer_first_name payer_last_name payer_email payer_phone payer_organization number_of_attendees payment_method bulk_payment_attendees]
   }.freeze
 
   # Header questions created by each section's builder method
@@ -431,9 +437,9 @@ class FormBuilderService
   def build_payment_fields(form, position)
     position = add_header(form, position, "Payment Information", group: "payment")
 
-    position = add_field(form, position, "Payment Method", :multiple_choice_radio,
+    position = add_field(form, position, "Payment method", :multiple_choice_radio,
                          key: "payment_method", group: "payment", required: true,
-                         options: [ "Credit Card Now", "Credit Card Later", "Check", "Other" ])
+                         options: PAYMENT_METHOD_OPTIONS)
     position
   end
 
@@ -466,28 +472,31 @@ class FormBuilderService
   def build_bulk_payment_fields(form, position)
     position = add_header(form, position, "Payer Information", group: "bulk_payment", visibility: :logged_out_only)
 
-    position = add_field(form, position, "Payer First Name", :free_form_input_one_line,
+    position = add_field(form, position, "Payer first name", :free_form_input_one_line,
                          key: "payer_first_name", group: "bulk_payment", required: true,
                          width: :half, visibility: :logged_out_only)
-    position = add_field(form, position, "Payer Last Name", :free_form_input_one_line,
+    position = add_field(form, position, "Payer last name", :free_form_input_one_line,
                          key: "payer_last_name", group: "bulk_payment", required: true,
                          width: :half, visibility: :logged_out_only)
-    position = add_field(form, position, "Payer Email", :free_form_input_one_line,
+    position = add_field(form, position, "Payer email", :free_form_input_one_line,
                          key: "payer_email", group: "bulk_payment", required: true,
-                         visibility: :logged_out_only)
-    position = add_field(form, position, "Organization Name", :free_form_input_one_line,
-                         key: "organization_name", group: "bulk_payment", required: false,
+                         width: :half, visibility: :logged_out_only)
+    position = add_field(form, position, "Phone", :free_form_input_one_line,
+                         key: "payer_phone", group: "bulk_payment", required: false,
+                         width: :half, visibility: :logged_out_only)
+    position = add_field(form, position, "Organization", :free_form_input_one_line,
+                         key: "payer_organization", group: "bulk_payment", required: false,
                          visibility: :logged_out_only)
 
     position = add_header(form, position, "Payment Information", group: "bulk_payment")
-    position = add_field(form, position, "Payment Method", :multiple_choice_radio,
+    position = add_field(form, position, "Payment method", :multiple_choice_radio,
                          key: "payment_method", group: "bulk_payment", required: true,
-                         options: [ "Credit Card Now", "Credit Card Later", "Check", "Other" ])
+                         options: PAYMENT_METHOD_OPTIONS)
 
     position = add_header(form, position, "Attendees", group: "bulk_payment")
-    position = add_field(form, position, "Number of Attendees", :free_form_input_one_line,
+    position = add_field(form, position, "Number of attendees", :free_form_input_one_line,
                          key: "number_of_attendees", group: "bulk_payment", required: true,
-                         datatype: :number_integer)
+                         datatype: :number_integer, width: :half)
     position = add_field(form, position, "Attendees", :no_user_input,
                          key: "bulk_payment_attendees", group: "bulk_payment", required: false)
     position
