@@ -1,3 +1,4 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="max-w-2xl mx-auto py-8 px-4">
   <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
     <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
@@ -21,58 +22,6 @@
 
     <div class="px-6 py-6">
       <%
-        has_logged_out = @form.form_fields.where(visibility: :logged_out_only).exists?
-        has_answers_on_file = @form.form_fields.where(visibility: :answers_on_file).exists?
-        has_conditions = (has_logged_out && @form.hide_answered_person_questions?) || (has_answers_on_file && @form.hide_answered_form_questions?)
-
-        preview_logged_in = params[:preview_logged_in].present?
-        preview_answered = params[:preview_answered].present?
-      %>
-
-      <div class="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-3 space-y-2">
-        <p class="text-xs font-medium text-blue-800">Preview mode</p>
-        <% if has_conditions %>
-          <p class="text-xs text-blue-600 mb-1">Toggle to simulate how the form appears under different conditions:</p>
-          <div class="flex flex-wrap gap-4">
-            <% if has_logged_out && @form.hide_answered_person_questions? %>
-              <%
-                logged_in_params = request.query_parameters.dup
-                if preview_logged_in
-                  logged_in_params.delete("preview_logged_in")
-                else
-                  logged_in_params["preview_logged_in"] = "1"
-                end
-              %>
-              <%= link_to form_path(@form, logged_in_params), class: "flex items-center gap-2 no-underline" do %>
-                <span class="text-xs text-blue-700">User logged in</span>
-                <span class="relative inline-block w-7 h-4 rounded-full <%= preview_logged_in ? 'bg-blue-600' : 'bg-gray-300' %>">
-                  <span class="absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform duration-200 <%= preview_logged_in ? 'translate-x-3' : 'translate-x-0' %>"></span>
-                </span>
-              <% end %>
-            <% end %>
-            <% if has_answers_on_file && @form.hide_answered_form_questions? %>
-              <%
-                answered_params = request.query_parameters.dup
-                if preview_answered
-                  answered_params.delete("preview_answered")
-                else
-                  answered_params["preview_answered"] = "1"
-                end
-              %>
-              <%= link_to form_path(@form, answered_params), class: "flex items-center gap-2 no-underline" do %>
-                <span class="text-xs text-blue-700">Answers on file</span>
-                <span class="relative inline-block w-7 h-4 rounded-full <%= preview_answered ? 'bg-blue-600' : 'bg-gray-300' %>">
-                  <span class="absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform duration-200 <%= preview_answered ? 'translate-x-3' : 'translate-x-0' %>"></span>
-                </span>
-              <% end %>
-            <% end %>
-          </div>
-        <% else %>
-          <p class="text-xs text-blue-600">No conditional visibility configured. All fields always shown.</p>
-        <% end %>
-      </div>
-
-      <%
         fields_by_identifier = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
         has_secondary_email = fields_by_identifier["secondary_email"].present?
         email_label_overrides = if has_secondary_email
@@ -80,18 +29,54 @@
         else
           {}
         end
+
+        # Mirror the editor's visibility chip colors so the same field reads
+        # the same in both places.
+        visibility_badge_styles = {
+          "scholarship_only" => "bg-blue-100 text-blue-700 border-blue-200",
+          "logged_out_only" => "bg-emerald-100 text-emerald-700 border-emerald-200",
+          "answers_on_file" => "bg-amber-100 text-amber-700 border-amber-200"
+        }
+        visibility_marker_styles = {
+          "scholarship_only" => "border-blue-300",
+          "logged_out_only" => "border-emerald-300",
+          "answers_on_file" => "border-amber-300"
+        }
+
+        has_conditional = @form_fields.any?(&:conditional_visibility?)
       %>
+
+      <div class="mb-6 rounded-lg bg-gray-50 border border-gray-200 p-3">
+        <% if has_conditional %>
+          <p class="text-xs text-gray-600">This preview shows every field. Highlighted fields are only asked under certain conditions — the conditional logic runs on the live registration form.</p>
+        <% else %>
+          <p class="text-xs text-gray-600">This preview shows every field. All fields are always asked.</p>
+        <% end %>
+      </div>
 
       <fieldset disabled>
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
           <% @form_fields.each do |field| %>
+            <% conditional = field.conditional_visibility? %>
             <% if field.group_header? %>
               <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
-                <h3 class="rich-label text-lg font-semibold text-gray-800"><%= form_label_html(field.name) %></h3>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="rich-label text-lg font-semibold text-gray-800"><%= form_label_html(field.name) %></h3>
+                  <% if conditional %>
+                    <span class="text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
+                  <% end %>
+                </div>
               </div>
             <% else %>
               <div class="<%= field.grid_span_class %>">
-                <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
+                <% if conditional %>
+                  <div class="border-l-4 <%= visibility_marker_styles[field.visibility] %> pl-3">
+                    <span class="inline-block mb-1.5 text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
+                    <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
+                  </div>
+                <% else %>
+                  <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
+                <% end %>
               </div>
             <% end %>
           <% end %>
