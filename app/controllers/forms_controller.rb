@@ -116,7 +116,8 @@ class FormsController < ApplicationController
       :name, :role, :hide_answered_person_questions, :hide_answered_form_questions,
       form_fields_attributes: [
         :id, :name, :answer_type, :required, :hint_text,
-        :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy
+        :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy,
+        form_field_answer_options_attributes: [ :id, :option_name, :_destroy ]
       ]
     )
   end

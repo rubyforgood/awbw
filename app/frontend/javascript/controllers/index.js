@@ -9,6 +9,9 @@ application.register("allocation-ref", AllocationRefController)
 import AnchorHighlightController from "./anchor_highlight_controller"
 application.register("anchor-highlight", AnchorHighlightController)
 
+import AnswerOptionsController from "./answer_options_controller"
+application.register("answer-options", AnswerOptionsController)
+
 import AttendanceStatusController from "./attendance_status_controller"
 application.register("attendance-status", AttendanceStatusController)
 

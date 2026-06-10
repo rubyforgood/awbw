@@ -77,6 +77,17 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("Min words")
     end
 
+    it "renders the editable answer options for a multiple-choice field" do
+      form = FormBuilderService.new(name: "Test", sections: %i[person_contact_info]).call
+      get edit_form_path(form)
+
+      expect(response.body).to include('data-controller="answer-options"')
+      expect(response.body).to include("answer-options#toggle")
+      # The radio field's seeded options are rendered as editable inputs
+      expect(response.body).to include("[option_name]")
+      expect(response.body).to include("+ Add option")
+    end
+
     it "renders the expand/collapse all toggle" do
       form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
       get edit_form_path(form)
@@ -146,6 +157,70 @@ RSpec.describe "Forms", type: :request do
       }
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("too long")
+    end
+
+    it "renames a multiple-choice field's answer option without renaming the shared option" do
+      form = FormBuilderService.new(name: "Test", sections: %i[marketing]).call
+      field = form.form_fields.find_by(field_identifier: "interested_in_more")
+      join = field.form_field_answer_options.joins(:answer_option).find_by(answer_options: { name: "Yes" })
+
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => {
+          id: field.id, name: field.name, answer_type: field.answer_type,
+          form_field_answer_options_attributes: { "0" => { id: join.id, option_name: "Absolutely" } }
+        } } }
+      }
+
+      expect(response).to redirect_to(edit_form_path(form))
+      expect(join.reload.answer_option.name).to eq("Absolutely")
+      expect(field.reload.answer_options.map(&:name)).to include("Absolutely")
+    end
+
+    it "adds a new answer option to a multiple-choice field" do
+      form = FormBuilderService.new(name: "Test", sections: %i[marketing]).call
+      field = form.form_fields.find_by(field_identifier: "interested_in_more")
+
+      expect {
+        patch form_path(form), params: {
+          form: { form_fields_attributes: { "0" => {
+            id: field.id, name: field.name, answer_type: field.answer_type,
+            form_field_answer_options_attributes: { "0" => { option_name: "Maybe" } }
+          } } }
+        }
+      }.to change { field.reload.form_field_answer_options.count }.by(1)
+
+      expect(field.answer_options.map(&:name)).to include("Maybe")
+    end
+
+    it "ignores a blank new answer option" do
+      form = FormBuilderService.new(name: "Test", sections: %i[marketing]).call
+      field = form.form_fields.find_by(field_identifier: "interested_in_more")
+
+      expect {
+        patch form_path(form), params: {
+          form: { form_fields_attributes: { "0" => {
+            id: field.id, name: field.name, answer_type: field.answer_type,
+            form_field_answer_options_attributes: { "0" => { option_name: "" } }
+          } } }
+        }
+      }.not_to change { field.reload.form_field_answer_options.count }
+    end
+
+    it "removes an answer option from a multiple-choice field" do
+      form = FormBuilderService.new(name: "Test", sections: %i[marketing]).call
+      field = form.form_fields.find_by(field_identifier: "interested_in_more")
+      join = field.form_field_answer_options.joins(:answer_option).find_by(answer_options: { name: "No" })
+
+      expect {
+        patch form_path(form), params: {
+          form: { form_fields_attributes: { "0" => {
+            id: field.id, name: field.name, answer_type: field.answer_type,
+            form_field_answer_options_attributes: { "0" => { id: join.id, option_name: "No", _destroy: "1" } }
+          } } }
+        }
+      }.to change { field.reload.form_field_answer_options.count }.by(-1)
+
+      expect(field.answer_options.map(&:name)).not_to include("No")
     end
 
     it "saves the per-field width, minimum word count, and maximum character count" do
