@@ -14,6 +14,91 @@ module ApplicationHelper
     sanitize(text.to_s, tags: FORM_LABEL_TAGS, attributes: FORM_LABEL_ATTRIBUTES)
   end
 
+  # Tokens an admin can drop into a form header; each is filled from the event the
+  # form is rendered for (see form_header_html). A standalone registration form is
+  # shared across events, so the header can't hard-code event specifics. Each entry:
+  # [label, example] — surfaced as a reference on the form editor. Keep the keys in
+  # sync with the substitutions in form_header_html.
+  FORM_HEADER_TOKENS = {
+    "{{event_title}}" => [ "Event title", "AWBW Facilitator Training" ],
+    "{{event_dates}}" => [ "Event date(s)", "July 23-24, 2026" ],
+    "{{event_times}}" => [ "Event start-end time", "9 am - 4:30 pm PST" ],
+    "{{event_fee}}" => [ "Registration fee", "$1,500" ],
+    "{{event_platform}}" => [ "Virtual platform", "Zoom" ],
+    "{{event_month_year}}" => [ "Event month and year", "July 2026" ],
+    "{{registration_close}}" => [ "Registration close date", "June 20, 2026 9:00 am PST" ]
+  }.freeze
+
+  # Render a form header, filling event-driven tokens (see FORM_HEADER_TOKENS) from
+  # the event the form is being shown for. The public registration pages pass
+  # `event:`; the standalone form preview has none, so tokens fall back to a neutral
+  # phrase. HTML is sanitized via form_label_html.
+  def form_header_html(form, event: nil)
+    text = form.header.to_s
+      .gsub("{{event_title}}", event&.title.presence || "this event")
+      .gsub("{{event_dates}}", event_dates_label(event) || "the event dates")
+      .gsub("{{event_times}}", event_times_label(event) || "the scheduled time")
+      .gsub("{{event_fee}}", event_fee_label(event) || "the registration fee")
+      .gsub("{{event_platform}}", event_platform_label(event) || "online")
+      .gsub("{{event_month_year}}", event&.start_date&.strftime("%B %Y") || "upcoming")
+      .gsub("{{registration_close}}", event_registration_close_label(event) || "soon")
+    form_label_html(text)
+  end
+
+  # Event date or date range as plain text (e.g. "July 23-24, 2026"), mirroring the
+  # event show page's date line, or nil when the event has no start date.
+  def event_dates_label(event)
+    return unless event&.start_date
+    s = event.start_date.in_time_zone(Time.zone)
+    e = (event.end_date || event.start_date).in_time_zone(Time.zone)
+    return s.strftime("%B %-d, %Y") if s.to_date == e.to_date
+    if s.year == e.year && s.month == e.month
+      "#{s.strftime("%B %-d")}-#{e.strftime("%-d")}, #{s.year}"
+    elsif s.year == e.year
+      "#{s.strftime("%B %-d")} - #{e.strftime("%B %-d")}, #{s.year}"
+    else
+      "#{s.strftime("%B %-d, %Y")} - #{e.strftime("%B %-d, %Y")}"
+    end
+  end
+
+  # Event start-end time as plain text (e.g. "9 am - 4:30 pm PST"), mirroring the
+  # event show page's time formatting (minutes hidden when :00), or nil with no start.
+  def event_times_label(event)
+    return unless event&.start_date
+    s = event.start_date.in_time_zone(Time.zone)
+    e = (event.end_date || event.start_date).in_time_zone(Time.zone)
+    format = ->(d) do
+      t = d.strftime("%-l")
+      t += ":#{d.strftime("%M")}" unless d.strftime("%M") == "00"
+      "#{t} #{d.strftime("%P")}"
+    end
+    zone = s.strftime("%Z")
+    return "#{format.call(s)} #{zone}" if s.hour == e.hour && s.min == e.min
+    "#{format.call(s)} - #{format.call(e)} #{zone}"
+  end
+
+  # Registration fee as plain text ("$1,500" or "Free"), or nil when no cost is set.
+  def event_fee_label(event)
+    return unless event && event.cost_cents.present?
+    event.cost_cents.zero? ? "Free" : dollars_from_cents(event.cost_cents)
+  end
+
+  # Virtual platform label (e.g. "Zoom"), only for events with a videoconference
+  # link configured; nil otherwise (in-person or unset).
+  def event_platform_label(event)
+    return unless event&.videoconference_url.present?
+    event.videoconference_label.presence
+  end
+
+  # Registration close date formatted like the event show page (e.g.
+  # "June 20, 2026 9:00 am PST"), or nil when there's no close date.
+  def event_registration_close_label(event)
+    close = event&.registration_close_date
+    return unless close
+    local = close.in_time_zone(Time.zone)
+    "#{local.strftime("%B %-d, %Y %-l:%M %P")} #{local.strftime("%Z")}"
+  end
+
   INDEX_BUTTON_ICONS = {
     community_news:      "fa-newspaper",
     stories:             "fa-book-open",

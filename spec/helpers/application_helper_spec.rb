@@ -158,4 +158,68 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.form_label_html("<br>")).to be_html_safe
     end
   end
+
+  describe "#form_header_html" do
+    it "fills the {{event_month_year}} token from the event's start date" do
+      form = build(:form, header: "Register for our {{event_month_year}} training.")
+      event = build(:event, start_date: Time.zone.local(2026, 7, 23))
+      expect(helper.form_header_html(form, event: event)).to eq("Register for our July 2026 training.")
+    end
+
+    it "falls back to a neutral phrase when no event is given" do
+      form = build(:form, header: "Register for our {{event_month_year}} training.")
+      expect(helper.form_header_html(form)).to eq("Register for our upcoming training.")
+    end
+
+    it "fills the {{registration_close}} token from the event's close date" do
+      form = build(:form, header: "Registration closes {{registration_close}}.")
+      event = build(:event, registration_close_date: Time.zone.local(2026, 6, 20, 9, 0))
+      expect(helper.form_header_html(form, event: event))
+        .to eq("Registration closes #{event.registration_close_date.in_time_zone(Time.zone).strftime("%B %-d, %Y %-l:%M %P %Z")}.")
+    end
+
+    it "falls back when the event has no registration close date" do
+      form = build(:form, header: "Registration closes {{registration_close}}.")
+      event = build(:event, registration_close_date: nil)
+      expect(helper.form_header_html(form, event: event)).to eq("Registration closes soon.")
+    end
+
+    it "fills the {{event_title}} token" do
+      form = build(:form, header: "Welcome to {{event_title}}.")
+      event = build(:event, title: "AWBW Facilitator Training")
+      expect(helper.form_header_html(form, event: event)).to eq("Welcome to AWBW Facilitator Training.")
+    end
+
+    it "fills the {{event_dates}} token, collapsing a same-month multi-day range" do
+      form = build(:form, header: "Dates: {{event_dates}}.")
+      event = build(:event, start_date: Time.zone.local(2026, 7, 23, 9), end_date: Time.zone.local(2026, 7, 24, 16, 30))
+      expect(helper.form_header_html(form, event: event)).to eq("Dates: July 23-24, 2026.")
+    end
+
+    it "fills the {{event_times}} token, hiding :00 minutes and showing the range" do
+      form = build(:form, header: "Time: {{event_times}}.")
+      event = build(:event, start_date: Time.zone.local(2026, 7, 23, 9), end_date: Time.zone.local(2026, 7, 23, 16, 30))
+      zone = event.start_date.in_time_zone(Time.zone).strftime("%Z")
+      expect(helper.form_header_html(form, event: event)).to eq("Time: 9 am - 4:30 pm #{zone}.")
+    end
+
+    it "fills the {{event_fee}} token with a formatted amount, and Free when zero" do
+      form = build(:form, header: "Fee: {{event_fee}}.")
+      expect(helper.form_header_html(form, event: build(:event, cost_cents: 150_000))).to eq("Fee: $1,500.")
+      expect(helper.form_header_html(form, event: build(:event, cost_cents: 0))).to eq("Fee: Free.")
+    end
+
+    it "fills the {{event_platform}} token only when a videoconference link is set" do
+      form = build(:form, header: "Platform: {{event_platform}}.")
+      online = build(:event, videoconference_url: "https://zoom.us/j/1", videoconference_label: "Zoom")
+      in_person = build(:event, videoconference_url: nil)
+      expect(helper.form_header_html(form, event: online)).to eq("Platform: Zoom.")
+      expect(helper.form_header_html(form, event: in_person)).to eq("Platform: online.")
+    end
+
+    it "sanitizes the header markup" do
+      form = build(:form, header: "<strong>Hi</strong><script>alert(1)</script>")
+      expect(helper.form_header_html(form)).to eq("<strong>Hi</strong>alert(1)")
+    end
+  end
 end
