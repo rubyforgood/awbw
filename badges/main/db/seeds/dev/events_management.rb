@@ -34,6 +34,59 @@ registration_form = Form.standalone.find_by!(role: "registration")
 scholarship_form = Form.standalone.find_by!(role: "scholarship")
 bulk_payment_form = Form.standalone.find_by!(role: "bulk_payment")
 
+# Seed an example header (admin-authored HTML intro shown under the form title on
+# the public registration page) onto the base registration form, mirroring the
+# real AWBW Facilitator Training copy. Training dates, time, fee, and platform are
+# intentionally omitted — the public page already renders those from the event
+# (the date/time block, the "Cost:" badge, and the videoconference/platform badge),
+# and the form itself already notes that fields marked * are required. The form is
+# shared across events, so event-specific dates use tokens filled at render time
+# (see form_header_html): {{event_month_year}} from the event's start date and
+# {{registration_close}} from its registration close date, rather than hard-coded
+# values. Only set when blank so admin edits survive a re-seed.
+if registration_form.header.blank?
+  registration_form.update!(header: <<~HTML.strip)
+    <p style="font-size:17px;color:#166534;"><strong>We're so glad you're here.</strong></p>
+    <p>This training certifies you to lead trauma-informed creative art workshops, guiding adults, youth, and children through the AWBW model and the quiet, transformative work of making art together. Attending this training is required to facilitate Windows workshops.</p>
+    <p>Along the way, you'll experience the process hands-on as a maker yourself. Once you're certified, you'll join our Community of Practice with full access to the AWBW curriculum, ongoing training, and support services. Your training fee includes <a href="https://awbw.org/programs/what-awbw-offers-windows-facilitators/" target="_blank" rel="noopener" style="font-weight:600;">these ongoing benefits</a>, and <a href="https://awbw.org/programs/ce-hours-for-facilitator-trainings/" target="_blank" rel="noopener" style="font-weight:600;">Continuing Education (CE) hours</a> are available.</p>
+    <p><strong style="color:#b45309;">Registration closes {{registration_close}}.</strong> Payment is due within three weeks of registering, and we'll send everything you need as the dates approach.</p>
+    <p style="font-size:13px;color:#6b7280;"><em>There are no refunds for Windows Facilitator Trainings, though you're welcome to transfer your spot to a later training or a co-worker with AWBW's approval.</em></p>
+    <p style="background-color:#faf5ff;border:1px solid #e9d5ff;border-radius:12px;padding:16px 18px;color:#6b21a8;"><strong style="font-size:16px;">Ready when you are.</strong> Fill out the form below to claim your spot.<br><span style="color:#7e22ce;">You'll get a confirmation email shortly. If not, email us at <a href="mailto:trainings@awbw.org" style="color:#7e22ce;">trainings@awbw.org</a>.</span></p>
+  HTML
+end
+
+# Seed a scholarship-specific header, shown under the "Scholarship application"
+# heading when this form is appended to an event registration (see
+# events/public_registrations/new). Scoped strictly to scholarship concerns —
+# eligibility and what's asked of recipients — and deliberately does NOT repeat
+# anything already in the registration header above (dates/time/platform, fee, CE
+# hours, refund/transfer policy, confirmation email, registration close), since
+# both headers render on the same page. Styled to match the registration header so
+# the section reads as inviting rather than a wall of requirements. Only set when
+# blank so admin edits survive a re-seed.
+if scholarship_form.header.blank?
+  scholarship_form.update!(header: <<~HTML.strip)
+    <p style="font-size:17px;color:#166534;"><strong>Cost shouldn't stand between you and this work.</strong></p>
+    <p>If the training fee is a barrier, apply for a scholarship right here — there's no separate form, just the questions below.</p>
+    <p><strong>Scholarships are currently available for:</strong></p>
+    <ul>
+      <li>Those located in <strong>Los Angeles County</strong>, California (limit 1 per agency)</li>
+      <li>Those located in <strong>Orange County</strong>, California (limit 1 per agency)</li>
+      <li>Those located in the <strong>Coachella Valley</strong>, California</li>
+      <li>Those within a 30-mile radius of <strong>Victorville</strong>, CA</li>
+      <li>Individuals working in <strong>movement building, community organizing</strong>, and/or <strong>systems change work</strong></li>
+      <li>Individuals serving <strong>fire-impacted communities</strong></li>
+    </ul>
+    <p>If we're able to offer you a scholarship, we'll ask you to give a little back to the community in return:</p>
+    <ul>
+      <li>Respond to 3 short questions after the training</li>
+      <li>Share quarterly highlight stories with images of participant artwork</li>
+    </ul>
+    <p style="font-size:13px;color:#6b7280;"><em>More details come with your notification. Scholarship recipients still attend both full days of the training.</em></p>
+    <p style="background-color:#faf5ff;border:1px solid #e9d5ff;border-radius:12px;padding:16px 18px;color:#6b21a8;"><strong style="font-size:16px;">No need to choose between cost and care.</strong> Answer the questions below to apply — we review every request personally.</p>
+  HTML
+end
+
 # Ensure the professional section (Primary Age Group(s) Served, Primary Service
 # Area, etc.) exists even on a registration form seeded before it was added — the
 # event Background charts aggregate answers to those questions.
@@ -116,6 +169,14 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
     end
   end
 end
+
+# The flagship training runs on Zoom — drive the platform from event settings so
+# it shows as a badge in the public registration header (rather than living in the
+# shared form header). force-set on re-seed, mirroring the date/cost refresh above.
+Event.find_by(title: "AWBW Facilitator Training")&.update!(
+  videoconference_url: "https://awbw-org.zoom.us/j/0000000000",
+  videoconference_label: "Zoom"
+)
 
 puts "Creating Event Registrations…"
 
