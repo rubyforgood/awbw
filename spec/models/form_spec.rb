@@ -67,4 +67,69 @@ RSpec.describe Form do
       end
     end
   end
+
+  describe 'section groups' do
+    let(:form) do
+      create(:form, :standalone, subsections: %w[person_identifier person_contact_info scholarship])
+    end
+
+    describe '#assign_section_groups!' do
+      it 'groups subsections that share a label, preserving subsection order' do
+        form.assign_section_groups!(
+          "person_identifier" => "About you",
+          "person_contact_info" => "About you",
+          "scholarship" => "Funding"
+        )
+
+        expect(form.reload.sections).to eq([
+          { "label" => "About you", "subsections" => %w[person_identifier person_contact_info] },
+          { "label" => "Funding", "subsections" => %w[scholarship] }
+        ])
+      end
+
+      it 'leaves subsections with a blank label ungrouped' do
+        form.assign_section_groups!(
+          "person_identifier" => "About you",
+          "person_contact_info" => "  ",
+          "scholarship" => ""
+        )
+
+        expect(form.reload.sections).to eq([
+          { "label" => "About you", "subsections" => %w[person_identifier] }
+        ])
+      end
+    end
+
+    describe '#section_label_for_subsection' do
+      before do
+        form.assign_section_groups!(
+          "person_identifier" => "About you",
+          "person_contact_info" => "About you"
+        )
+      end
+
+      it 'returns the section label for a grouped subsection' do
+        expect(form.section_label_for_subsection("person_contact_info")).to eq("About you")
+      end
+
+      it 'returns nil for an ungrouped subsection' do
+        expect(form.section_label_for_subsection("scholarship")).to be_nil
+      end
+
+      it 'returns nil for a blank subsection' do
+        expect(form.section_label_for_subsection(nil)).to be_nil
+      end
+    end
+
+    describe '#sections?' do
+      it 'is false when no sections are defined' do
+        expect(form.sections?).to be false
+      end
+
+      it 'is true once subsections are grouped' do
+        form.assign_section_groups!("person_identifier" => "About you")
+        expect(form.sections?).to be true
+      end
+    end
+  end
 end

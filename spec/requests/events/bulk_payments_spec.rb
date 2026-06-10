@@ -134,7 +134,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
 
   describe "GET new with the seeded bulk payment form" do
     let(:seeded_form) do
-      FormBuilderService.new(name: "Bulk Payment", sections: %i[bulk_payment], role: "bulk_payment").call
+      FormBuilderService.new(name: "Bulk Payment", subsections: %i[bulk_payment], role: "bulk_payment").call
     end
 
     before do

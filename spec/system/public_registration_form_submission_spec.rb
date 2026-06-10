@@ -18,10 +18,10 @@ RSpec.describe "Public form submissions", type: :system do
 
   let(:registration_form) { build_registration_form }
   let(:scholarship_form) do
-    FormBuilderService.new(name: "Scholarship Application", sections: %i[scholarship], role: "scholarship").call
+    FormBuilderService.new(name: "Scholarship Application", subsections: %i[scholarship], role: "scholarship").call
   end
   let(:bulk_payment_form) do
-    FormBuilderService.new(name: "Bulk Payment", sections: %i[bulk_payment], role: "bulk_payment").call
+    FormBuilderService.new(name: "Bulk Payment", subsections: %i[bulk_payment], role: "bulk_payment").call
   end
 
   # Published Sectors + AgeRange categories so the dynamic sector / age fields
@@ -291,7 +291,7 @@ RSpec.describe "Public form submissions", type: :system do
       name: "Do you plan to use Continuing Education (CE) hours for this course?",
       answer_type: :single_select_radio, status: :active, position: position += 1, required: false,
       field_identifier: EventRegistrationServices::PublicRegistration::CE_CREDIT_INTEREST_IDENTIFIER,
-      section: "continuing_education", visibility: :always_ask
+      subsection: "continuing_education", visibility: :always_ask
     )
     %w[Yes No].each do |name|
       ce.form_field_answer_options.create!(answer_option: AnswerOption.find_or_create_by!(name: name))
@@ -301,7 +301,7 @@ RSpec.describe "Public form submissions", type: :system do
       name: "Do you need either of the following?",
       answer_type: :multi_select_checkbox, status: :active, position: position += 1, required: false,
       field_identifier: EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_IDENTIFIER,
-      section: "additional_forms", visibility: :always_ask
+      subsection: "additional_forms", visibility: :always_ask
     )
     [ EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_W9,
       EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_INVOICE,

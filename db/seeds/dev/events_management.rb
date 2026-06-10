@@ -16,7 +16,7 @@ unless Form.standalone.exists?(name: "Training Registration Form")
   # magic questions are appended below and slotted into place by reorder.
   FormBuilderService.new(
     name: "Training Registration Form",
-    sections: %i[person_identifier person_contact_info professional_info person_background marketing payment consent],
+    subsections: %i[person_identifier person_contact_info professional_info person_background marketing payment consent],
     role: "registration"
   ).call
 end
@@ -24,7 +24,7 @@ end
 unless Form.standalone.find_by(role: "scholarship")
   FormBuilderService.new(
     name: "Scholarship Application",
-    sections: %i[scholarship],
+    subsections: %i[scholarship],
     role: "scholarship"
   ).call
 end
@@ -32,7 +32,7 @@ end
 unless Form.standalone.find_by(role: "bulk_payment")
   FormBuilderService.new(
     name: "Bulk Payment",
-    sections: %i[bulk_payment],
+    subsections: %i[bulk_payment],
     role: "bulk_payment"
   ).call
 end
@@ -1331,9 +1331,9 @@ if facilitator_training && registration_form
   # "Pending" only exists when the form has the Organization Name field,
   # which lives in the person_contact_info section the dev form otherwise omits.
   unless registration_form.form_fields.exists?(field_identifier: "agency_name")
-    FormBuilderService.update_sections!(
+    FormBuilderService.update_subsections!(
       registration_form,
-      (registration_form.sections || []).map(&:to_sym) | [ :person_contact_info ]
+      (registration_form.subsections || []).map(&:to_sym) | [ :person_contact_info ]
     )
   end
   agency_field = registration_form.form_fields.find_by(field_identifier: "agency_name")

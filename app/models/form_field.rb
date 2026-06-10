@@ -146,7 +146,7 @@ class FormField < ApplicationRecord
   # Human-friendly labels for answer types (radio/dropdown are "single select"
   # because only one option can be picked; checkbox allows several)
   ANSWER_TYPE_LABELS = {
-    "group_header" => "Section header",
+    "group_header" => "Subsection header",
     "free_form_input_one_line" => "One line",
     "free_form_input_paragraph" => "Paragraph",
     "single_select_radio" => "Single select radio",

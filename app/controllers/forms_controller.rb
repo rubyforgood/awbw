@@ -1,6 +1,6 @@
 class FormsController < ApplicationController
-  before_action :set_form, only: %i[show edit update destroy reorder_field reorder_fields edit_sections update_sections]
-  before_action :set_dashboard_event, only: %i[show edit edit_sections update update_sections]
+  before_action :set_form, only: %i[show edit update destroy reorder_field reorder_fields edit_subsections update_subsections edit_sections update_sections]
+  before_action :set_dashboard_event, only: %i[show edit edit_subsections update update_subsections edit_sections update_sections]
 
   def index
     authorize!
@@ -22,20 +22,20 @@ class FormsController < ApplicationController
   def create
     authorize!
 
-    sections = (params[:sections] || []).reject(&:blank?).map(&:to_sym)
-    if sections.empty?
-      flash.now[:alert] = "Please select at least one section."
+    subsections = (params[:subsections] || []).reject(&:blank?).map(&:to_sym)
+    if subsections.empty?
+      flash.now[:alert] = "Please select at least one subsection."
       render :new, status: :unprocessable_content
       return
     end
 
     form = FormBuilderService.new(
       name: params[:name].presence || "New Form",
-      sections: sections,
+      subsections: subsections,
       role: params[:role].presence
     ).call
 
-    redirect_to edit_sections_form_path(form), notice: "Form created with #{form.form_fields.size} fields."
+    redirect_to edit_subsections_form_path(form), notice: "Form created with #{form.form_fields.size} fields."
   end
 
   def edit
@@ -66,30 +66,43 @@ class FormsController < ApplicationController
     redirect_to forms_path, notice: "Form deleted."
   end
 
+  def edit_subsections
+    authorize! @form
+    @editable_subsections = FormBuilderService.editable_subsections(@form)
+  end
+
+  def update_subsections
+    authorize! @form
+
+    subsections = (params[:subsections] || []).reject(&:blank?).map(&:to_sym)
+    if subsections.empty?
+      flash.now[:alert] = "Please select at least one subsection."
+      @editable_subsections = FormBuilderService.editable_subsections(@form)
+      render :edit_subsections, status: :unprocessable_content
+      return
+    end
+
+    removed_custom_ids = removed_custom_subsection_ids
+    current_subsections = FormBuilderService.present_subsection_keys(@form)
+    if subsections.to_set == current_subsections.to_set && removed_custom_ids.empty?
+      redirect_to edit_form_path(@form, event_id: params[:event_id]), notice: "No subsection changes."
+      return
+    end
+
+    FormBuilderService.update_subsections!(@form, subsections, remove_custom_subsection_ids: removed_custom_ids)
+    redirect_to edit_form_path(@form, event_id: params[:event_id]), notice: "Subsections updated."
+  end
+
+  # Sections are the top-level grouping of subsections — a single screen where
+  # several subsections sit under one named heading.
   def edit_sections
     authorize! @form
-    @editable_sections = FormBuilderService.editable_sections(@form)
   end
 
   def update_sections
     authorize! @form
 
-    sections = (params[:sections] || []).reject(&:blank?).map(&:to_sym)
-    if sections.empty?
-      flash.now[:alert] = "Please select at least one section."
-      @editable_sections = FormBuilderService.editable_sections(@form)
-      render :edit_sections, status: :unprocessable_content
-      return
-    end
-
-    removed_custom_ids = removed_custom_section_ids
-    current_sections = FormBuilderService.present_section_keys(@form)
-    if sections.to_set == current_sections.to_set && removed_custom_ids.empty?
-      redirect_to edit_form_path(@form, event_id: params[:event_id]), notice: "No section changes."
-      return
-    end
-
-    FormBuilderService.update_sections!(@form, sections, remove_custom_section_ids: removed_custom_ids)
+    @form.assign_section_groups!(params[:section_labels] || {})
     redirect_to edit_form_path(@form, event_id: params[:event_id]), notice: "Sections updated."
   end
 
@@ -111,11 +124,11 @@ class FormsController < ApplicationController
 
   private
 
-  # Custom section header ids that were present on the page but left unchecked,
-  # i.e. the custom sections the user chose to remove.
-  def removed_custom_section_ids
-    present = Array(params[:custom_sections]).map(&:to_i)
-    kept = Array(params[:kept_custom_sections]).map(&:to_i)
+  # Custom subsection header ids that were present on the page but left unchecked,
+  # i.e. the custom subsections the user chose to remove.
+  def removed_custom_subsection_ids
+    present = Array(params[:custom_subsections]).map(&:to_i)
+    kept = Array(params[:kept_custom_subsections]).map(&:to_i)
     present - kept
   end
 
@@ -138,7 +151,7 @@ class FormsController < ApplicationController
       :name, :role, :header, :hide_answered_person_questions, :hide_answered_form_questions,
       form_fields_attributes: [
         :id, :name, :answer_type, :required, :subtitle, :hint_text,
-        :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy,
+        :field_identifier, :subsection, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy,
         form_field_answer_options_attributes: [ :id, :option_name, :_destroy ]
       ]
     )

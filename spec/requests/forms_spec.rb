@@ -29,14 +29,14 @@ RSpec.describe "Forms", type: :request do
   describe "GET /forms/new" do
     before { sign_in admin }
 
-    it "shows section checkboxes" do
+    it "shows subsection checkboxes" do
       get new_form_path
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Person identifier")
       expect(response.body).to include("Scholarship")
     end
 
-    it "lists each section's fields behind an expandable toggle" do
+    it "lists each subsection's fields behind an expandable toggle" do
       get new_form_path
       expect(response.body).to include("First Name")
       expect(response.body).to include("Confirm Email")
@@ -47,19 +47,19 @@ RSpec.describe "Forms", type: :request do
   describe "POST /forms" do
     before { sign_in admin }
 
-    it "creates a form with selected sections" do
+    it "creates a form with selected subsections" do
       post forms_path, params: {
         name: "Custom Form",
-        sections: %w[person_identifier consent]
+        subsections: %w[person_identifier consent]
       }
       form = Form.last
       expect(form.name).to eq("Custom Form")
-      expect(form.sections).to eq(%w[person_identifier consent])
-      expect(response).to redirect_to(edit_sections_form_path(form))
+      expect(form.subsections).to eq(%w[person_identifier consent])
+      expect(response).to redirect_to(edit_subsections_form_path(form))
     end
 
-    it "rejects when no sections selected" do
-      post forms_path, params: { name: "Empty", sections: [] }
+    it "rejects when no subsections selected" do
+      post forms_path, params: { name: "Empty", subsections: [] }
       expect(response).to have_http_status(:unprocessable_content)
     end
   end
@@ -80,8 +80,8 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include(dashboard_event_path(event))
       end
 
-      it "links the dashboard button to that event on the sections editor" do
-        get edit_sections_form_path(form, event_id: event.id)
+      it "links the dashboard button to that event on the subsections editor" do
+        get edit_subsections_form_path(form, event_id: event.id)
         expect(response.body).to include(dashboard_event_path(event))
       end
 
@@ -122,14 +122,14 @@ RSpec.describe "Forms", type: :request do
     before { sign_in admin }
 
     it "shows form field editor" do
-      form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[person_identifier]).call
       get edit_form_path(form)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("First Name")
     end
 
     it "renders the collapsible per-field options controls" do
-      form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[person_identifier]).call
       get edit_form_path(form)
 
       expect(response.body).to include('data-controller="field-options answer-options"')
@@ -139,7 +139,7 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "renders the editable answer options for a multiple-choice field" do
-      form = FormBuilderService.new(name: "Test", sections: %i[person_contact_info]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[person_contact_info]).call
       get edit_form_path(form)
 
       expect(response.body).to include('data-controller="field-options answer-options"')
@@ -155,7 +155,7 @@ RSpec.describe "Forms", type: :request do
       # dropdown can reveal it client-side — otherwise a field changed to
       # "Single select radio" saves with no options and shows nothing on the
       # public form.
-      form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[person_identifier]).call
       expect(form.form_fields.none?(&:selectable?)).to be(true)
 
       get edit_form_path(form)
@@ -166,7 +166,7 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "shows payment-method options read-only (no editable inputs) without the admin override" do
-      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[payment]).call
       payment_field = form.form_fields.find_by(field_identifier: "payment_method")
       expect(payment_field).to be_present
 
@@ -184,7 +184,7 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "renders payment-method options as editable inputs with ?admin=true" do
-      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[payment]).call
 
       get edit_form_path(form, admin: "true")
 
@@ -208,14 +208,14 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "renders the expand/collapse all toggle" do
-      form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[person_identifier]).call
       get edit_form_path(form)
 
       expect(response.body).to include('data-controller="expand-all"')
       expect(response.body).to include("Expand all")
     end
 
-    it "renders the form header section with a textarea for HTML" do
+    it "renders the form header subsection with a textarea for HTML" do
       form = create(:form, :standalone, header: "<strong>Welcome</strong>")
       get edit_form_path(form)
 
@@ -226,13 +226,13 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "edits field and header names in textareas" do
-      form = FormBuilderService.new(name: "Test", sections: %i[person_contact_info]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[person_contact_info]).call
       get edit_form_path(form)
 
       expect(response.body).to include("<textarea")
     end
 
-    it "renders an editable subtext field for a section header" do
+    it "renders an editable subtext field for a subsection header" do
       form = create(:form, :standalone)
       create(:form_field, form: form, answer_type: :group_header, name: "Contact info")
 
@@ -317,13 +317,13 @@ RSpec.describe "Forms", type: :request do
 
     it "renders header and field-label HTML unescaped" do
       form = create(:form, :standalone)
-      create(:form_field, form: form, answer_type: :group_header, name: "<strong>Section</strong>")
+      create(:form_field, form: form, answer_type: :group_header, name: "<strong>Subsection</strong>")
       create(:form_field, form: form, answer_type: :free_form_input_one_line, name: "<em>Your name</em>", required: false)
 
       get form_path(form)
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("<strong>Section</strong>")
+      expect(response.body).to include("<strong>Subsection</strong>")
       expect(response.body).to include("<em>Your name</em>")
     end
 
@@ -340,7 +340,7 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("The \"Other\" option is hidden on dropdown fields")
     end
 
-    it "renders a section header's subtext under the heading" do
+    it "renders a subsection header's subtext under the heading" do
       form = create(:form, :standalone)
       create(:form_field, form: form, answer_type: :group_header, name: "Contact info", subtitle: "Tell us how to reach you")
 
@@ -423,7 +423,7 @@ RSpec.describe "Forms", type: :request do
       expect(response).to redirect_to(edit_form_path(form))
     end
 
-    it "saves the subtext for a section header" do
+    it "saves the subtext for a subsection header" do
       form = create(:form, :standalone)
       header = create(:form_field, form: form, answer_type: :group_header, name: "Contact info")
       patch form_path(form), params: {
@@ -489,7 +489,7 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "renames a multiple-choice field's answer option without renaming the shared option" do
-      form = FormBuilderService.new(name: "Test", sections: %i[marketing]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[marketing]).call
       field = form.form_fields.find_by(field_identifier: "interested_in_more")
       join = field.form_field_answer_options.joins(:answer_option).find_by(answer_options: { name: "Yes" })
 
@@ -506,7 +506,7 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "adds a new answer option to a multiple-choice field" do
-      form = FormBuilderService.new(name: "Test", sections: %i[marketing]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[marketing]).call
       field = form.form_fields.find_by(field_identifier: "interested_in_more")
 
       expect {
@@ -522,7 +522,7 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "ignores a blank new answer option" do
-      form = FormBuilderService.new(name: "Test", sections: %i[marketing]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[marketing]).call
       field = form.form_fields.find_by(field_identifier: "interested_in_more")
 
       expect {
@@ -536,7 +536,7 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "removes an answer option from a multiple-choice field" do
-      form = FormBuilderService.new(name: "Test", sections: %i[marketing]).call
+      form = FormBuilderService.new(name: "Test", subsections: %i[marketing]).call
       field = form.form_fields.find_by(field_identifier: "interested_in_more")
       join = field.form_field_answer_options.joins(:answer_option).find_by(answer_options: { name: "No" })
 
@@ -581,7 +581,7 @@ RSpec.describe "Forms", type: :request do
     before { sign_in admin }
 
     it "shows form preview" do
-      form = FormBuilderService.new(name: "Preview", sections: %i[person_identifier]).call
+      form = FormBuilderService.new(name: "Preview", subsections: %i[person_identifier]).call
       get form_path(form)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("First Name")
@@ -609,76 +609,76 @@ RSpec.describe "Forms", type: :request do
     end
   end
 
-  describe "GET /forms/:id/edit_sections" do
+  describe "GET /forms/:id/edit_subsections" do
     before { sign_in admin }
 
-    it "shows section checkboxes for existing form" do
-      form = FormBuilderService.new(name: "Editable", sections: %i[person_identifier]).call
-      get edit_sections_form_path(form)
+    it "shows subsection checkboxes for existing form" do
+      form = FormBuilderService.new(name: "Editable", subsections: %i[person_identifier]).call
+      get edit_subsections_form_path(form)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Person identifier")
     end
 
-    it "lists an included section's actual fields behind an expandable toggle" do
-      form = FormBuilderService.new(name: "Editable", sections: %i[person_identifier]).call
-      get edit_sections_form_path(form)
+    it "lists an included subsection's actual fields behind an expandable toggle" do
+      form = FormBuilderService.new(name: "Editable", subsections: %i[person_identifier]).call
+      get edit_subsections_form_path(form)
       expect(response.body).to include("First Name")
-      expect(response.body).to include('data-controller="form-section-toggle expandable-card"')
+      expect(response.body).to include('data-controller="form-subsection-toggle expandable-card"')
     end
 
-    it "shows custom sections with a custom indicator" do
-      form = FormBuilderService.new(name: "Editable", sections: %i[person_identifier]).call
-      form.form_fields.create!(name: "My Special Section", answer_type: :group_header,
+    it "shows custom subsections with a custom indicator" do
+      form = FormBuilderService.new(name: "Editable", subsections: %i[person_identifier]).call
+      form.form_fields.create!(name: "My Special Subsection", answer_type: :group_header,
                                status: :active, position: 100, required: false)
 
-      get edit_sections_form_path(form)
+      get edit_subsections_form_path(form)
 
-      expect(response.body).to include("My Special Section")
-      expect(response.body).to include("Custom sections")
+      expect(response.body).to include("My Special Subsection")
+      expect(response.body).to include("Custom subsections")
     end
   end
 
-  describe "PATCH /forms/:id/update_sections" do
+  describe "PATCH /forms/:id/update_subsections" do
     before { sign_in admin }
 
-    it "adds new sections to existing form" do
-      form = FormBuilderService.new(name: "Growing", sections: %i[person_identifier]).call
+    it "adds new subsections to existing form" do
+      form = FormBuilderService.new(name: "Growing", subsections: %i[person_identifier]).call
       initial_count = form.form_fields.count
 
-      patch update_sections_form_path(form), params: {
-        sections: %w[person_identifier consent]
+      patch update_subsections_form_path(form), params: {
+        subsections: %w[person_identifier consent]
       }
 
       form.reload
-      expect(form.sections).to include("consent")
+      expect(form.subsections).to include("consent")
       expect(form.form_fields.count).to be > initial_count
       expect(response).to redirect_to(edit_form_path(form))
     end
 
-    it "removes sections from existing form" do
-      form = FormBuilderService.new(name: "Shrinking", sections: %i[person_identifier consent]).call
-      patch update_sections_form_path(form), params: {
-        sections: %w[person_identifier]
+    it "removes subsections from existing form" do
+      form = FormBuilderService.new(name: "Shrinking", subsections: %i[person_identifier consent]).call
+      patch update_subsections_form_path(form), params: {
+        subsections: %w[person_identifier]
       }
 
       form.reload
-      expect(form.sections).not_to include("consent")
-      expect(form.form_fields.where(section: "consent")).to be_empty
+      expect(form.subsections).not_to include("consent")
+      expect(form.form_fields.where(subsection: "consent")).to be_empty
     end
 
-    it "rejects empty sections" do
-      form = FormBuilderService.new(name: "Protected", sections: %i[person_identifier]).call
-      patch update_sections_form_path(form), params: { sections: [] }
+    it "rejects empty subsections" do
+      form = FormBuilderService.new(name: "Protected", subsections: %i[person_identifier]).call
+      patch update_subsections_form_path(form), params: { subsections: [] }
       expect(response).to have_http_status(:unprocessable_content)
     end
 
-    it "leaves the form untouched when the section set is unchanged" do
-      form = FormBuilderService.new(name: "Unchanged", sections: %i[person_identifier consent]).call
+    it "leaves the form untouched when the subsection set is unchanged" do
+      form = FormBuilderService.new(name: "Unchanged", subsections: %i[person_identifier consent]).call
       original_ids = form.form_fields.pluck(:id).sort
-      expect(FormBuilderService).not_to receive(:update_sections!)
+      expect(FormBuilderService).not_to receive(:update_subsections!)
 
-      patch update_sections_form_path(form), params: {
-        sections: %w[consent person_identifier]
+      patch update_subsections_form_path(form), params: {
+        subsections: %w[consent person_identifier]
       }
 
       form.reload
@@ -686,33 +686,77 @@ RSpec.describe "Forms", type: :request do
       expect(response).to redirect_to(edit_form_path(form))
     end
 
-    it "removes a custom section the user unchecked" do
-      form = FormBuilderService.new(name: "Custom", sections: %i[person_identifier]).call
-      header = form.form_fields.create!(name: "My Special Section", answer_type: :group_header,
+    it "removes a custom subsection the user unchecked" do
+      form = FormBuilderService.new(name: "Custom", subsections: %i[person_identifier]).call
+      header = form.form_fields.create!(name: "My Special Subsection", answer_type: :group_header,
                                         status: :active, position: 100, required: false)
 
-      patch update_sections_form_path(form), params: {
-        sections: %w[person_identifier],
-        custom_sections: [ header.id ],
-        kept_custom_sections: []
+      patch update_subsections_form_path(form), params: {
+        subsections: %w[person_identifier],
+        custom_subsections: [ header.id ],
+        kept_custom_subsections: []
       }
 
       expect(FormField.where(id: header.id)).to be_empty
       expect(response).to redirect_to(edit_form_path(form))
     end
 
-    it "keeps a custom section that stays checked" do
-      form = FormBuilderService.new(name: "Custom", sections: %i[person_identifier]).call
-      header = form.form_fields.create!(name: "My Special Section", answer_type: :group_header,
+    it "keeps a custom subsection that stays checked" do
+      form = FormBuilderService.new(name: "Custom", subsections: %i[person_identifier]).call
+      header = form.form_fields.create!(name: "My Special Subsection", answer_type: :group_header,
                                         status: :active, position: 100, required: false)
 
-      patch update_sections_form_path(form), params: {
-        sections: %w[person_identifier],
-        custom_sections: [ header.id ],
-        kept_custom_sections: [ header.id ]
+      patch update_subsections_form_path(form), params: {
+        subsections: %w[person_identifier],
+        custom_subsections: [ header.id ],
+        kept_custom_subsections: [ header.id ]
       }
 
       expect(FormField.where(id: header.id)).to exist
+    end
+  end
+
+  describe "GET /forms/:id/edit_sections" do
+    before { sign_in admin }
+
+    it "lists the form's subsections to group" do
+      form = FormBuilderService.new(name: "Groupable", subsections: %i[person_identifier consent]).call
+      get edit_sections_form_path(form)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Person identifier")
+      expect(response.body).to include("Consent")
+    end
+  end
+
+  describe "PATCH /forms/:id/update_sections" do
+    before { sign_in admin }
+
+    it "groups subsections that share a section label" do
+      form = FormBuilderService.new(name: "Grouping", subsections: %i[person_identifier consent]).call
+
+      patch update_sections_form_path(form), params: {
+        section_labels: { person_identifier: "About you", consent: "About you" }
+      }
+
+      form.reload
+      expect(form.sections).to eq([
+        { "label" => "About you", "subsections" => %w[person_identifier consent] }
+      ])
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+  end
+
+  describe "GET /forms/:id (preview) with sections" do
+    before { sign_in admin }
+
+    it "renders a section heading above the grouped subsections" do
+      form = FormBuilderService.new(name: "Sectioned", subsections: %i[person_identifier consent]).call
+      form.assign_section_groups!("person_identifier" => "About you", "consent" => "About you")
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("About you")
     end
   end
 
@@ -720,7 +764,7 @@ RSpec.describe "Forms", type: :request do
     before { sign_in admin }
 
     it "reorders fields" do
-      form = FormBuilderService.new(name: "Reorder", sections: %i[person_identifier]).call
+      form = FormBuilderService.new(name: "Reorder", subsections: %i[person_identifier]).call
       fields = form.form_fields.reorder(position: :asc)
       new_positions = fields.map.with_index { |f, i| { id: f.id, position: fields.size - i } }
 

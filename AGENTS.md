@@ -187,7 +187,7 @@ end
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
-- `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
+- `FormBuilderService` — Builds configurable forms from composable subsections (grouped into sections) with per-field visibility
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
 - `DisplayImagePresenter` — Image display logic

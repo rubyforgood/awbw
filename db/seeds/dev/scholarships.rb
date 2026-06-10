@@ -235,7 +235,7 @@ scholarship_fields = scholarship_form ? scholarship_form.form_fields.where.not(a
 # person's profile (sectors / age-range tags).
 registration_form = Form.standalone.find_by(role: "registration")
 if registration_form && registration_form.form_fields.where(field_identifier: "additional_sectors").none?
-  FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :professional_info ])
+  FormBuilderService.update_subsections!(registration_form, (registration_form.subsections || []).map(&:to_sym) | [ :professional_info ])
 end
 sector_field = registration_form&.form_fields&.find_by(field_identifier: "additional_sectors")
 age_group_field = registration_form&.form_fields&.find_by(field_identifier: "primary_age_group")

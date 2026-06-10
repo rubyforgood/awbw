@@ -1,0 +1,126 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="py-8 px-4">
+  <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+    <% if @dashboard_event %>
+      <%= link_to "Dashboard", dashboard_event_path(@dashboard_event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% end %>
+    <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= link_to "Edit questions", edit_form_path(@form, event_id: @dashboard_event&.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= form_editor_view_links(@form, @dashboard_event) %>
+  </div>
+
+  <%# Colored hero banner so the page reads at a glance instead of all-white %>
+  <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 bg-purple-900">
+    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
+            <i class="fa-solid fa-layer-group text-xl"></i>
+          </div>
+          <div>
+            <p class="text-xs font-medium uppercase tracking-[0.2em] text-purple-200">Edit subsections</p>
+            <h1 class="text-2xl font-bold tracking-tight leading-tight"><%= @form.display_name %></h1>
+          </div>
+        </div>
+
+        <%# Quick stats pulled up into the header so the page reads at a glance %>
+        <div class="flex flex-wrap items-center gap-2">
+          <% events_count = @form.events.size %>
+          <% if events_count.positive? %>
+            <%= link_to events_path(form_id: @form.id), class: "inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-purple-900 shadow-sm hover:bg-purple-50" do %>
+              <i class="fa-solid fa-calendar-day text-purple-600"></i>
+              <%= pluralize(events_count, "event") %> connected
+            <% end %>
+          <% else %>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 shadow-sm">
+              <i class="fa-solid fa-calendar-day text-gray-400"></i>
+              No events connected
+            </span>
+          <% end %>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-purple-900 shadow-sm">
+            <i class="fa-solid fa-inbox text-purple-600"></i>
+            <%= pluralize(@form.form_submissions.size, "submission") %>
+          </span>
+        </div>
+      </div>
+      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+    </div>
+
+    <div class="px-4 sm:px-6 py-6">
+  <%= form_with url: update_subsections_form_path(@form, event_id: @dashboard_event&.id), method: :patch, class: "space-y-6" do |f| %>
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-purple-300">
+        <i class="fa-solid fa-list-check text-purple-700"></i>
+        <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Subsections to include</h2>
+      </div>
+      <div class="p-6">
+        <p class="text-xs text-gray-500 mb-3">Numbered in the order these subsections appear on this form. Custom subsections you added are marked and edited on the <%= link_to "edit questions", edit_form_path(@form, event_id: @dashboard_event&.id), class: "underline hover:text-gray-700" %> page. Unless you change these selections, saving here does not change your form.</p>
+        <ol class="space-y-2">
+          <% @editable_subsections.each_with_index do |subsection, index| %>
+            <% if subsection[:kind] == :custom %>
+              <% names = subsection[:questions].map(&:name) %>
+              <li data-controller="form-subsection-toggle expandable-card" data-expandable-card-expanded-value="false"
+                  data-form-subsection-toggle-included-value="true">
+                <div class="flex items-center gap-2">
+                  <label class="flex flex-1 items-center gap-2 cursor-pointer">
+                    <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= index + 1 %>.</span>
+                    <%= hidden_field_tag "custom_subsections[]", subsection[:header].id %>
+                    <%= check_box_tag "kept_custom_subsections[]", subsection[:header].id, true,
+                          class: "rounded border-gray-300 text-purple-600",
+                          data: { form_subsection_toggle_target: "checkbox", action: "form-subsection-toggle#update" } %>
+                    <span class="text-sm font-semibold text-gray-800"><%= subsection[:label] %></span>
+                    <span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">Custom</span>
+                  </label>
+                  <% if names.any? %>
+                    <%= render "forms/field_list_toggle", count: names.size %>
+                  <% end %>
+                </div>
+                <% if names.any? %>
+                  <%= render "forms/field_list", names: names, indent: "ml-12" %>
+                <% end %>
+                <p class="hidden mt-1 ml-12 text-xs" data-form-subsection-toggle-target="message"></p>
+              </li>
+            <% else %>
+              <%# Included subsections list their real fields; not-yet-added ones fall back to the builder's defaults. %>
+              <% names = subsection[:questions].map(&:name).presence || FormBuilderService.subsection_field_names(subsection[:key]) %>
+              <li data-controller="form-subsection-toggle expandable-card" data-expandable-card-expanded-value="false"
+                  data-form-subsection-toggle-included-value="<%= subsection[:included] %>">
+                <div class="flex items-center gap-2">
+                  <label class="flex flex-1 items-center gap-2 cursor-pointer">
+                    <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= index + 1 %>.</span>
+                    <input type="checkbox" name="subsections[]" value="<%= subsection[:key] %>"
+                           class="rounded border-gray-300 text-purple-600"
+                           data-form-subsection-toggle-target="checkbox"
+                           data-action="form-subsection-toggle#update"
+                           <%= "checked" if subsection[:included] %>>
+                    <span class="text-sm text-gray-800"><%= subsection[:label] %></span>
+                    <% if subsection[:renamed_header].present? %>
+                      <span class="text-xs text-gray-400 italic">titled &ldquo;<%= subsection[:renamed_header] %>&rdquo; on the form</span>
+                    <% end %>
+                  </label>
+                  <% if names.any? %>
+                    <%= render "forms/field_list_toggle", count: names.size %>
+                  <% end %>
+                </div>
+                <% if names.any? %>
+                  <%= render "forms/field_list", names: names, indent: "ml-12" %>
+                <% end %>
+                <p class="hidden mt-1 ml-12 text-xs" data-form-subsection-toggle-target="message"></p>
+              </li>
+            <% end %>
+          <% end %>
+        </ol>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+      <div class="flex items-center gap-3">
+        <%= f.submit "Save changes", class: "btn btn-primary cursor-pointer" %>
+        <%= link_to "Edit questions", edit_form_path(@form, event_id: @dashboard_event&.id), class: "btn btn-secondary" %>
+        <%= link_to "Cancel", form_path(@form), class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+  <% end %>
+    </div>
+  </div>
+</div>

@@ -422,7 +422,7 @@ RSpec.describe "Events::Registrations", type: :request do
     before do
       form = FormBuilderService.new(
         name: "Extended Event Registration",
-        sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
+        subsections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
       ).call
       EventForm.create!(event: event, form: form, role: "registration")
       form = event.registration_form

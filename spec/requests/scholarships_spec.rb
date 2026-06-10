@@ -39,7 +39,7 @@ RSpec.describe "Scholarships", type: :request do
     it "shows the registrant's scholarship form answers with a link to the full submission" do
       form = create(:form, name: "Registration Form")
       create(:event_form, event: event, form: form, role: "registration")
-      field = create(:form_field, form: form, section: "scholarship",
+      field = create(:form_field, form: form, subsection: "scholarship",
                      name: "Why do you need a scholarship?", answer_type: :free_form_input_paragraph)
       submission = create(:form_submission, person: registration.registrant, form: form)
       create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Limited budget")

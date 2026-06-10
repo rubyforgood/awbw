@@ -621,15 +621,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_213947) do
     t.integer "parent_id"
     t.integer "position"
     t.boolean "required", default: true
-    t.string "section"
     t.integer "status", default: 1
+    t.string "subsection"
     t.text "subtitle"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "visibility", default: 0, null: false
     t.integer "width", default: 0, null: false
     t.index ["field_identifier"], name: "index_form_fields_on_field_identifier"
     t.index ["form_id"], name: "index_form_fields_on_form_id"
-    t.index ["section"], name: "index_form_fields_on_section"
+    t.index ["subsection"], name: "index_form_fields_on_subsection"
   end
 
   create_table "form_submissions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -657,6 +657,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_213947) do
     t.string "owner_type"
     t.string "role"
     t.json "sections"
+    t.json "subsections"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["form_builder_id"], name: "index_forms_on_form_builder_id"
   end

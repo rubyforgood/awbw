@@ -76,8 +76,18 @@
 
       <fieldset disabled>
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+          <% current_section_label = nil %>
           <% @form_fields.each do |field| %>
             <% conditional = field.conditional_visibility? %>
+            <% section_label = @form.section_label_for_subsection(field.subsection) %>
+            <% if section_label.present? && section_label != current_section_label %>
+              <div class="md:col-span-12 pt-8 mt-2 mb-2 border-t-2 border-purple-200">
+                <h2 class="rich-label text-xl font-bold text-purple-900"><%= form_label_html(section_label) %></h2>
+              </div>
+              <% current_section_label = section_label %>
+            <% elsif section_label.blank? %>
+              <% current_section_label = nil %>
+            <% end %>
             <% if field.group_header? %>
               <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
                 <div class="flex flex-wrap items-center gap-2">

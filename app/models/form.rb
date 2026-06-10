@@ -17,4 +17,39 @@ class Form < ApplicationRecord
   def display_name
     name.presence || (owner ? "#{owner.try(:name)} Form" : "New Form")
   end
+
+  # The top-level Section grouping of subsections. Each entry looks like
+  #   { "label" => "About you", "subsections" => ["person_identifier", ...] }
+  # An empty/absent value means the form has no Sections and renders flat.
+  def section_groups
+    Array(sections).map { |group| group.to_h.with_indifferent_access }
+  end
+
+  def sections?
+    section_groups.any?
+  end
+
+  # The Section label a given subsection belongs to, or nil when it is not
+  # grouped under any Section.
+  def section_label_for_subsection(subsection_key)
+    return if subsection_key.blank?
+
+    group = section_groups.find { |g| Array(g[:subsections]).include?(subsection_key.to_s) }
+    group && group[:label].presence
+  end
+
+  # Rebuilds the Section grouping from a { subsection_key => label } map,
+  # preserving subsection order and merging subsections that share a label.
+  # Blank labels leave a subsection ungrouped.
+  def assign_section_groups!(labels)
+    grouped = {}
+    Array(subsections).each do |key|
+      label = labels[key.to_s].to_s.strip
+      next if label.blank?
+
+      (grouped[label] ||= []) << key.to_s
+    end
+
+    update!(sections: grouped.map { |label, subs| { "label" => label, "subsections" => subs } })
+  end
 end

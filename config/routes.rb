@@ -122,6 +122,8 @@ Rails.application.routes.draw do
     member do
       patch :reorder_field
       put :reorder_fields
+      get :edit_subsections
+      patch :update_subsections
       get :edit_sections
       patch :update_sections
     end

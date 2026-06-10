@@ -162,8 +162,8 @@ application.register("section-filter", SectionFilterController)
 import PrimarySectorController from "./primary_sector_controller"
 application.register("primary-sector", PrimarySectorController)
 
-import FormSectionToggleController from "./form_section_toggle_controller"
-application.register("form-section-toggle", FormSectionToggleController)
+import FormSubsectionToggleController from "./form_subsection_toggle_controller"
+application.register("form-subsection-toggle", FormSubsectionToggleController)
 
 import ShareUrlController from "./share_url_controller"
 application.register("share-url", ShareUrlController)

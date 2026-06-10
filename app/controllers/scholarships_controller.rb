@@ -194,7 +194,7 @@ class ScholarshipsController < ApplicationController
     answers = @form_submission ? @form_submission.form_answers.index_by(&:form_field_id) : {}
 
     @scholarship_answers = form.form_fields
-      .select { |field| field.section == "scholarship" || field.scholarship_only? }
+      .select { |field| field.subsection == "scholarship" || field.scholarship_only? }
       .reject { |field| field.group_header? || field.no_user_input? }
       .sort_by { |field| field.position.to_i }
       .map { |field| [ field, answers[field.id] ] }

@@ -39,7 +39,7 @@ class EventDashboard
   # Field identifiers for the scholarship-application questions, wherever they
   # are asked (the scholarship section can live on the registration form, the
   # standalone scholarship form, or both).
-  SCHOLARSHIP_ANSWER_IDENTIFIERS = FormBuilderService::SECTION_FIELD_IDENTIFIERS[:scholarship].freeze
+  SCHOLARSHIP_ANSWER_IDENTIFIERS = FormBuilderService::SUBSECTION_FIELD_IDENTIFIERS[:scholarship].freeze
 
   # Professional-info answers shown in each recipient's header. The view falls
   # back to the person's profile (sectors / age-range tags) when these aren't on

@@ -220,16 +220,16 @@ module Events
         end
 
         # Hide logged_out_only headers when all their non-header fields are hidden
-        logged_out_sections = @form.form_fields.where(visibility: :logged_out_only)
+        logged_out_subsections = @form.form_fields.where(visibility: :logged_out_only)
                                   .where.not(answer_type: :group_header)
-                                  .pluck(:section).uniq.compact
-        logged_out_sections.each do |sect|
-          section_field_ids = @form.form_fields.where(section: sect, visibility: :logged_out_only)
+                                  .pluck(:subsection).uniq.compact
+        logged_out_subsections.each do |subsect|
+          subsection_field_ids = @form.form_fields.where(subsection: subsect, visibility: :logged_out_only)
                                   .where.not(answer_type: :group_header).ids
-          if section_field_ids.any? && known_identifiers.any? && (section_field_ids - scope.where(id: section_field_ids).ids).any?
-            remaining = scope.where(id: section_field_ids).ids
+          if subsection_field_ids.any? && known_identifiers.any? && (subsection_field_ids - scope.where(id: subsection_field_ids).ids).any?
+            remaining = scope.where(id: subsection_field_ids).ids
             if remaining.empty?
-              scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :logged_out_only)
+              scope = scope.where.not(subsection: subsect, answer_type: :group_header, visibility: :logged_out_only)
             end
           end
         end
@@ -267,14 +267,14 @@ module Events
           if answered_field_ids.any?
             scope = scope.where.not(id: answered_field_ids)
 
-            # Hide section headers when all their non-header fields are answered
-            answered_sections = @form.form_fields.where(id: answered_field_ids)
-                                    .pluck(:section).uniq.compact
-            answered_sections.each do |sect|
-              section_field_ids = @form.form_fields.where(section: sect, visibility: :answers_on_file)
+            # Hide subsection headers when all their non-header fields are answered
+            answered_subsections = @form.form_fields.where(id: answered_field_ids)
+                                    .pluck(:subsection).uniq.compact
+            answered_subsections.each do |subsect|
+              subsection_field_ids = @form.form_fields.where(subsection: subsect, visibility: :answers_on_file)
                                       .where.not(answer_type: :group_header).ids
-              if section_field_ids.any? && (section_field_ids - answered_field_ids).empty?
-                scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :answers_on_file)
+              if subsection_field_ids.any? && (subsection_field_ids - answered_field_ids).empty?
+                scope = scope.where.not(subsection: subsect, answer_type: :group_header, visibility: :answers_on_file)
               end
             end
           end

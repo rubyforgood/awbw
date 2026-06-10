@@ -52,21 +52,21 @@
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-purple-300">
             <i class="fa-solid fa-list-check text-purple-700"></i>
-            <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Sections to include</h2>
+            <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Subsections to include</h2>
           </div>
           <div class="p-6">
             <div class="space-y-1.5">
-              <% FormBuilderService::SECTIONS.each do |key, section| %>
+              <% FormBuilderService::SUBSECTIONS.each do |key, subsection| %>
                 <% section_role = key == :scholarship ? "scholarship" : key == :bulk_payment ? "bulk_payment" : "other" %>
-                <% field_names = FormBuilderService.section_field_names(key) %>
+                <% field_names = FormBuilderService.subsection_field_names(key) %>
                 <div class="rounded-lg border border-gray-200 px-3 py-2" data-section-role="<%= section_role %>"
                      data-controller="expandable-card" data-expandable-card-expanded-value="false">
                   <div class="flex items-center gap-2">
                     <label class="flex flex-1 items-center gap-2 cursor-pointer">
-                      <input type="checkbox" name="sections[]" value="<%= key %>"
+                      <input type="checkbox" name="subsections[]" value="<%= key %>"
                              class="rounded border-gray-300 text-purple-600"
-                             <%= "checked" if params.dig(:sections)&.include?(key.to_s) %>>
-                      <span class="text-sm font-medium text-gray-800"><%= section[:label] %></span>
+                             <%= "checked" if params.dig(:subsections)&.include?(key.to_s) %>>
+                      <span class="text-sm font-medium text-gray-800"><%= subsection[:label] %></span>
                     </label>
                     <% if field_names.any? %>
                       <%= render "forms/field_list_toggle", count: field_names.size %>

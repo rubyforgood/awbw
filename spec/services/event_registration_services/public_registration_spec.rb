@@ -5,7 +5,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
   let(:form) do
     f = FormBuilderService.new(
       name: "Extended Event Registration",
-      sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
+      subsections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
     ).call
     event.event_forms.create!(form: f, role: "registration")
     f
@@ -205,7 +205,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         position: (form.form_fields.maximum(:position) || 0) + 1,
         required: false,
         field_identifier: described_class::CE_CREDIT_INTEREST_IDENTIFIER,
-        section: "continuing_education",
+        subsection: "continuing_education",
         visibility: :always_ask
       )
       %w[Yes No].each_with_index do |opt, idx|
@@ -288,7 +288,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         position: (form.form_fields.maximum(:position) || 0) + 1,
         required: false,
         field_identifier: described_class::ADDITIONAL_FORMS_IDENTIFIER,
-        section: "additional_forms",
+        subsection: "additional_forms",
         visibility: :always_ask
       )
       [ described_class::ADDITIONAL_FORMS_INVOICE, described_class::ADDITIONAL_FORMS_W9 ].each_with_index do |opt, idx|

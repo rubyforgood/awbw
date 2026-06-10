@@ -1,9 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Shows inline feedback as a section checkbox is toggled on the edit-sections
-// form: a destructive warning when an existing section is unchecked, and an
-// additive note when a new section is checked. Stays silent when the checkbox
-// matches the section's saved state.
+// Shows inline feedback as a subsection checkbox is toggled on the
+// edit-subsections form: a destructive warning when an existing subsection is
+// unchecked, and an additive note when a new subsection is checked. Stays
+// silent when the checkbox matches the subsection's saved state.
 export default class extends Controller {
   static targets = ["checkbox", "message"]
   static values = { included: Boolean }
@@ -17,9 +17,9 @@ export default class extends Controller {
     }
 
     if (checked) {
-      this.show("This section and default questions will be added in order.", false)
+      this.show("This subsection and default questions will be added in order.", false)
     } else {
-      this.show("Unchecking a section permanently removes it and all of its questions.", true)
+      this.show("Unchecking a subsection permanently removes it and all of its questions.", true)
     }
   }
 

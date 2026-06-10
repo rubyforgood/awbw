@@ -4,7 +4,7 @@ RSpec.describe NotificationMailer, type: :mailer do
   describe "#bulk_payment_confirmation_fyi" do
     let(:event) { create(:event) }
     let(:form) do
-      f = FormBuilderService.new(name: "Bulk Payment", sections: %i[bulk_payment], role: "bulk_payment").call
+      f = FormBuilderService.new(name: "Bulk Payment", subsections: %i[bulk_payment], role: "bulk_payment").call
       event.event_forms.create!(form: f, role: "bulk_payment")
       f
     end

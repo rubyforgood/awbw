@@ -5,7 +5,7 @@ class FormBuilderService
   PAYMENT_METHOD_PAY_NOW = "Credit card (now)".freeze
   PAYMENT_METHOD_OPTIONS = [ PAYMENT_METHOD_PAY_NOW, "Credit card (later)", "Check" ].freeze
 
-  SECTIONS = {
+  SUBSECTIONS = {
     person_identifier: { label: "Person identifier", method: :build_person_identifier_fields },
     person_contact_info: { label: "Person contact info", method: :build_person_contact_info_fields },
     person_background: { label: "Person background", method: :build_person_background_fields },
@@ -18,29 +18,29 @@ class FormBuilderService
     bulk_payment: { label: "Bulk payment", method: :build_bulk_payment_fields }
   }.freeze
 
-  def initialize(name:, sections:, role: nil)
+  def initialize(name:, subsections:, role: nil)
     @name = name
-    @sections = sections.map(&:to_sym)
+    @subsections = subsections.map(&:to_sym)
     @role = role
   end
 
   def call
     form = Form.create!(
       name: @name,
-      sections: @sections.map(&:to_s),
+      subsections: @subsections.map(&:to_s),
       role: @role
     )
 
     position = 0
-    @sections.each do |key|
-      section = SECTIONS.fetch(key)
-      position = send(section[:method], form, position)
+    @subsections.each do |key|
+      subsection = SUBSECTIONS.fetch(key)
+      position = send(subsection[:method], form, position)
     end
 
     form
   end
 
-  SECTION_FIELD_IDENTIFIERS = {
+  SUBSECTION_FIELD_IDENTIFIERS = {
     person_identifier: %w[first_name last_name primary_email confirm_email],
     person_contact_info: %w[
       primary_email_type nickname pronouns secondary_email secondary_email_type
@@ -58,8 +58,8 @@ class FormBuilderService
     bulk_payment: %w[payer_first_name payer_last_name payer_email payer_phone payer_organization number_of_attendees payment_method bulk_payment_attendees]
   }.freeze
 
-  # Header questions created by each section's builder method
-  SECTION_HEADERS = {
+  # Header questions created by each subsection's builder method
+  SUBSECTION_HEADERS = {
     person_identifier: [],
     person_contact_info: [ "Contact Information", "Mailing Address", "Organization Information" ],
     person_background: [ "Background Information" ],
@@ -72,11 +72,11 @@ class FormBuilderService
     bulk_payment: [ "Payer Information", "Payment Information", "Attendees" ]
   }.freeze
 
-  # User-facing field labels each section's builder creates (questions only,
+  # User-facing field labels each subsection's builder creates (questions only,
   # excluding group headers), in build order. Mirrors the build_* methods so the
-  # new-form page can list a section's fields before the form exists. A spec
+  # new-form page can list a subsection's fields before the form exists. A spec
   # asserts this stays in sync with what the builders actually create.
-  SECTION_FIELD_NAMES = {
+  SUBSECTION_FIELD_NAMES = {
     person_identifier: [ "First Name", "Last Name", "Email", "Confirm Email" ],
     person_contact_info: [
       "Primary Email Type", "Preferred Nickname", "Pronouns", "Secondary Email", "Secondary Email Type",
@@ -108,16 +108,16 @@ class FormBuilderService
     ]
   }.freeze
 
-  # Field labels a section's builder creates, for previewing a section's
+  # Field labels a subsection's builder creates, for previewing a subsection's
   # contents before the form exists (used on the new-form page).
-  def self.section_field_names(key)
-    SECTION_FIELD_NAMES.fetch(key.to_sym, [])
+  def self.subsection_field_names(key)
+    SUBSECTION_FIELD_NAMES.fetch(key.to_sym, [])
   end
 
-  # Maps each section to the `section` column value(s) its builder assigns to
-  # fields, so fields can be grouped back to their section when reordering.
-  # Several builders use a `group:` string that differs from the section key.
-  SECTION_GROUPS = {
+  # Maps each subsection to the `subsection` column value(s) its builder assigns to
+  # fields, so fields can be grouped back to their subsection when reordering.
+  # Several builders use a `group:` string that differs from the subsection key.
+  SUBSECTION_GROUPS = {
     person_identifier: %w[person_identifier],
     person_contact_info: %w[person_contact_info],
     person_background: %w[background],
@@ -130,11 +130,11 @@ class FormBuilderService
     bulk_payment: %w[bulk_payment]
   }.freeze
 
-  # Built-in section keys that apply to a form with the given role. Scholarship
-  # and bulk-payment forms show only their own section; every other role shows
-  # all sections except those two.
-  def self.applicable_section_keys(role)
-    SECTIONS.keys.select do |key|
+  # Built-in subsection keys that apply to a form with the given role. Scholarship
+  # and bulk-payment forms show only their own subsection; every other role shows
+  # all subsections except those two.
+  def self.applicable_subsection_keys(role)
+    SUBSECTIONS.keys.select do |key|
       case role
       when "scholarship" then key == :scholarship
       when "bulk_payment" then key == :bulk_payment
@@ -143,27 +143,27 @@ class FormBuilderService
     end
   end
 
-  # Built-in section keys that currently have fields on the form. This — not the
-  # stored `sections` column — is the source of truth for which sections are
-  # present, so add/remove stays consistent with the edit-sections checkboxes
+  # Built-in subsection keys that currently have fields on the form. This — not the
+  # stored `subsections` column — is the source of truth for which subsections are
+  # present, so add/remove stays consistent with the edit-subsections checkboxes
   # (which are rendered from the fields) even if the column drifts.
-  def self.present_section_keys(form)
-    group_to_key = SECTION_GROUPS.flat_map { |key, groups| groups.map { |group| [ group, key ] } }.to_h
+  def self.present_subsection_keys(form)
+    group_to_key = SUBSECTION_GROUPS.flat_map { |key, groups| groups.map { |group| [ group, key ] } }.to_h
     # pluck runs a fresh query rather than reading (and caching) the association,
     # so repeated calls within a single update see deletions made between them.
-    form.form_fields.pluck(:section).filter_map { |section| group_to_key[section] }.uniq
+    form.form_fields.pluck(:subsection).filter_map { |subsection| group_to_key[subsection] }.uniq
   end
 
-  # Ordered list of sections for the edit-sections page. Each entry is a hash
-  # with a :kind of :builtin or :custom. Built-in sections carry their :label,
-  # section :key, and :included state; custom (user-added) sections carry the
+  # Ordered list of subsections for the edit-subsections page. Each entry is a hash
+  # with a :kind of :builtin or :custom. Built-in subsections carry their :label,
+  # subsection :key, and :included state; custom (user-added) subsections carry the
   # group_header :label and the :questions that follow it on the form.
   #
-  # Sections present on the form are ordered by their position there, so a
-  # custom section slots into the list wherever it sits on the form. Built-in
-  # sections not currently on the form follow their canonical predecessor.
-  def self.editable_sections(form)
-    group_to_key = SECTION_GROUPS.flat_map { |key, groups| groups.map { |group| [ group, key ] } }.to_h
+  # Subsections present on the form are ordered by their position there, so a
+  # custom subsection slots into the list wherever it sits on the form. Built-in
+  # subsections not currently on the form follow their canonical predecessor.
+  def self.editable_subsections(form)
+    group_to_key = SUBSECTION_GROUPS.flat_map { |key, groups| groups.map { |group| [ group, key ] } }.to_h
 
     positions = {}
     header_names = {}
@@ -174,7 +174,7 @@ class FormBuilderService
     # Rank by iteration order rather than the stored position, which is nullable
     # and can collide, so the sort keys below are always comparable integers.
     form.form_fields.reorder(position: :asc).each_with_index do |field, order|
-      key = group_to_key[field.section]
+      key = group_to_key[field.subsection]
       if key
         current = nil
         positions[key] ||= order
@@ -193,16 +193,16 @@ class FormBuilderService
 
     entries = []
     last_position = 0
-    applicable_section_keys(form.role).each_with_index do |key, rank|
+    applicable_subsection_keys(form.role).each_with_index do |key, rank|
       position = positions[key]
       last_position = position if position
-      default_header = SECTION_HEADERS.fetch(key).first
+      default_header = SUBSECTION_HEADERS.fetch(key).first
       header_name = header_names[key]
       entries << {
         sort: [ position || last_position, position ? 0 : 1, rank ],
         kind: :builtin,
         key: key,
-        label: SECTIONS.fetch(key)[:label],
+        label: SUBSECTIONS.fetch(key)[:label],
         included: !position.nil?,
         questions: questions[key],
         renamed_header: (header_name if header_name.present? && header_name != default_header)
@@ -216,65 +216,65 @@ class FormBuilderService
     entries.sort_by { |entry| entry[:sort] }
   end
 
-  # Update sections on an existing form: add new sections, remove unchecked ones.
-  # remove_custom_section_ids are group_header field ids of custom sections the
+  # Update subsections on an existing form: add new subsections, remove unchecked ones.
+  # remove_custom_subsection_ids are group_header field ids of custom subsections the
   # user unchecked; each such header and the questions under it are deleted.
-  def self.update_sections!(form, new_sections, remove_custom_section_ids: [])
-    new_sections = new_sections.map(&:to_sym)
-    old_sections = present_section_keys(form)
+  def self.update_subsections!(form, new_subsections, remove_custom_subsection_ids: [])
+    new_subsections = new_subsections.map(&:to_sym)
+    old_subsections = present_subsection_keys(form)
 
-    remove_custom_sections!(form, remove_custom_section_ids)
+    remove_custom_subsections!(form, remove_custom_subsection_ids)
 
-    added = new_sections - old_sections
-    removed = old_sections - new_sections
+    added = new_subsections - old_subsections
+    removed = old_subsections - new_subsections
 
-    # Remove every field belonging to a removed section by its section group.
+    # Remove every field belonging to a removed subsection by its subsection group.
     # Keying off the group (not the canonical field_identifier or default header
     # name) deletes renamed headers too, so nothing is left orphaned to resurface
-    # as a duplicate when the section is added back.
+    # as a duplicate when the subsection is added back.
     removed.each do |key|
-      form.form_fields.where(section: SECTION_GROUPS.fetch(key)).destroy_all
+      form.form_fields.where(subsection: SUBSECTION_GROUPS.fetch(key)).destroy_all
     end
 
-    # Build fields for newly checked sections (created at the end for now), then
-    # renumber everything so sections follow the edit-sections page order.
+    # Build fields for newly checked subsections (created at the end for now), then
+    # renumber everything so subsections follow the edit-subsections page order.
     if added.any?
       max_position = form.form_fields.maximum(:position) || 0
-      builder = new(name: form.name, sections: added)
+      builder = new(name: form.name, subsections: added)
       added.each do |key|
-        section = SECTIONS.fetch(key)
-        max_position = builder.send(section[:method], form, max_position)
+        subsection = SUBSECTIONS.fetch(key)
+        max_position = builder.send(subsection[:method], form, max_position)
       end
-      reorder_to_page_order!(form, new_sections)
+      reorder_to_page_order!(form, new_subsections)
     end
 
-    form.update!(sections: new_sections.map(&:to_s))
+    form.update!(subsections: new_subsections.map(&:to_s))
     form
   end
 
-  # Delete the given custom sections — each group_header field plus the questions
+  # Delete the given custom subsections — each group_header field plus the questions
   # that follow it on the form — identified by their header field ids.
-  def self.remove_custom_sections!(form, header_ids)
+  def self.remove_custom_subsections!(form, header_ids)
     header_ids = Array(header_ids).map(&:to_i)
     return if header_ids.empty?
 
-    targets = editable_sections(form).select do |entry|
+    targets = editable_subsections(form).select do |entry|
       entry[:kind] == :custom && header_ids.include?(entry[:header].id)
     end
     field_ids = targets.flat_map { |entry| [ entry[:header].id, *entry[:questions].map(&:id) ] }
     form.form_fields.where(id: field_ids).destroy_all if field_ids.any?
   end
 
-  # Renumber a form's fields so sections appear in the canonical page order
-  # (the order of SECTIONS / the edit-sections checkboxes), preserving each
-  # field's existing order within its own section.
-  def self.reorder_to_page_order!(form, section_order)
-    section_for_group = SECTION_GROUPS.flat_map { |key, groups| groups.map { |group| [ group, key ] } }.to_h
-    rank = SECTIONS.keys.select { |key| section_order.include?(key) }.each_with_index.to_h
+  # Renumber a form's fields so subsections appear in the canonical page order
+  # (the order of SUBSECTIONS / the edit-subsections checkboxes), preserving each
+  # field's existing order within its own subsection.
+  def self.reorder_to_page_order!(form, subsection_order)
+    subsection_for_group = SUBSECTION_GROUPS.flat_map { |key, groups| groups.map { |group| [ group, key ] } }.to_h
+    rank = SUBSECTIONS.keys.select { |key| subsection_order.include?(key) }.each_with_index.to_h
 
     ordered = form.form_fields.reorder(:position).to_a.each_with_index.sort_by do |field, index|
-      section_key = section_for_group[field.section]
-      [ rank.fetch(section_key, rank.size), index ]
+      subsection_key = subsection_for_group[field.subsection]
+      [ rank.fetch(subsection_key, rank.size), index ]
     end
 
     ordered.each_with_index do |(field, _index), position|
@@ -285,7 +285,7 @@ class FormBuilderService
 
   private
 
-  SECTION_VISIBILITY = {
+  SUBSECTION_VISIBILITY = {
     "person_identifier" => :logged_out_only,
     "person_contact_info" => :logged_out_only,
     "background" => :logged_out_only,
@@ -298,8 +298,8 @@ class FormBuilderService
     "bulk_payment" => :always_ask
   }.freeze
 
-  # Sections where answers carry across all events (ask once ever)
-  ONE_TIME_SECTIONS = %w[professional background].freeze
+  # Subsections where answers carry across all events (ask once ever)
+  ONE_TIME_SUBSECTIONS = %w[professional background].freeze
 
   def add_header(form, position, title, group:, visibility: nil)
     position += 1
@@ -310,9 +310,9 @@ class FormBuilderService
       position: position,
       required: false,
       field_identifier: nil,
-      section: group,
-      visibility: visibility || SECTION_VISIBILITY.fetch(group, :always_ask),
-      one_time: ONE_TIME_SECTIONS.include?(group)
+      subsection: group,
+      visibility: visibility || SUBSECTION_VISIBILITY.fetch(group, :always_ask),
+      one_time: ONE_TIME_SUBSECTIONS.include?(group)
     )
     position
   end
@@ -328,9 +328,9 @@ class FormBuilderService
       required: required,
       subtitle: subtitle,
       field_identifier: key,
-      section: group,
-      visibility: visibility || SECTION_VISIBILITY.fetch(group, :always_ask),
-      one_time: ONE_TIME_SECTIONS.include?(group),
+      subsection: group,
+      visibility: visibility || SUBSECTION_VISIBILITY.fetch(group, :always_ask),
+      one_time: ONE_TIME_SUBSECTIONS.include?(group),
       width: width
     )
 
@@ -346,7 +346,7 @@ class FormBuilderService
     position
   end
 
-  # ---- Section builders ----
+  # ---- Subsection builders ----
 
   def build_person_identifier_fields(form, position)
     position = add_field(form, position, "First Name", :free_form_input_one_line,
@@ -471,7 +471,7 @@ class FormBuilderService
   # training form. Multi-select; the trailing "Other" reveals a free-text box.
   TRAINING_MOTIVATION_OPTIONS = [
     "Use art to offer accessible and effective client programming (strength-based, low-barrier, research-informed)",
-    "Deepen understanding of trauma-informed and intersectional practices",
+    "Deepen understanding of trauma-informed and intersubsectional practices",
     "Address staff burnout through art",
     "Support staff wellness through art",
     "Connect with and learn from a community of art facilitators",
