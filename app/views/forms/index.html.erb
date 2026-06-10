@@ -1,7 +1,19 @@
-<div class="max-w-5xl mx-auto py-8 px-4">
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-semibold">Forms</h1>
-    <%= link_to "New Form", new_form_path, class: "btn btn-primary" %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:forms) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="flex items-start justify-between mb-6">
+    <div class="pr-6">
+      <h1 class="text-2xl font-semibold mb-2">Forms</h1>
+      <p class="text-gray-600 max-w-2xl">Reusable forms for event registrations and other submissions</p>
+    </div>
+    <div class="text-right text-end">
+      <% if allowed_to?(:new?, Form) %>
+        <div class="admin-only bg-blue-100">
+          <%= link_to "New form",
+                      new_form_path,
+                      class: "whitespace-nowrap btn btn-secondary-outline" %>
+        </div>
+      <% end %>
+    </div>
   </div>
 
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">

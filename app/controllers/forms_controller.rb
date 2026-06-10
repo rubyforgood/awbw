@@ -124,7 +124,7 @@ class FormsController < ApplicationController
 
   def form_params
     params.require(:form).permit(
-      :name, :role, :hide_answered_person_questions, :hide_answered_form_questions,
+      :name, :role, :header, :hide_answered_person_questions, :hide_answered_form_questions,
       form_fields_attributes: [
         :id, :name, :answer_type, :required, :hint_text,
         :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy,

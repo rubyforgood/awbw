@@ -319,3 +319,6 @@ textarea.comment-truncated:focus {
 .rich-label h4 { font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; }
 .rich-label h5 { font-size: 1rem; line-height: 1.5rem; font-weight: 600; }
 .rich-label h6 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; }
+.rich-label ul { list-style: disc; padding-left: 1.5rem; }
+.rich-label ol { list-style: decimal; padding-left: 1.5rem; }
+.rich-label a { color: #063b8d; text-decoration: underline; }

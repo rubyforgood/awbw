@@ -35,6 +35,8 @@
 
     <%# Card Body %>
     <div class="px-6 sm:px-8 py-7">
+      <%= render "forms/header", form: @form %>
+
       <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
         <% @form_fields.each do |field| %>
           <% next if field.field_identifier == "confirm_email" %>
