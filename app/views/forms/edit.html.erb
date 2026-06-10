@@ -75,7 +75,15 @@
               <div class="flex items-center gap-2">
                 <span class="min-w-0 flex-[3_1_10rem]">Question</span>
                 <span class="flex-[2_1_9rem]">Type</span>
-                <span class="w-36 shrink-0 ml-auto inline-flex items-center gap-1">
+                <span class="flex items-center gap-1 text-sm shrink-0 invisible" aria-hidden="true">
+                  <input type="checkbox" class="rounded border-gray-300" disabled>
+                  Required
+                </span>
+                <span class="flex items-center gap-1 text-sm shrink-0 ml-auto invisible" aria-hidden="true">
+                  <input type="checkbox" class="rounded border-gray-300" disabled>
+                  Only ask once
+                </span>
+                <span class="w-36 shrink-0 inline-flex items-center gap-1">
                   Visibility
                   <i class="fa-solid fa-chevron-down text-gray-400 text-xs transition-transform [[open]_&]:rotate-180"></i>
                 </span>
