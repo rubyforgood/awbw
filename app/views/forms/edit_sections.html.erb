@@ -1,12 +1,11 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="py-8 px-4">
   <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
-    <% dashboard_event = @form.events.one? ? @form.events.first : nil %>
-    <% if dashboard_event %>
-      <%= link_to "Dashboard", dashboard_event_path(dashboard_event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <% if @dashboard_event %>
+      <%= link_to "Dashboard", dashboard_event_path(@dashboard_event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <% end %>
     <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-    <%= link_to "Edit questions", edit_form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= link_to "Edit questions", edit_form_path(@form, event_id: @dashboard_event&.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <%= link_to "View form", form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
   </div>
 
@@ -48,14 +47,14 @@
     </div>
 
     <div class="px-4 sm:px-6 py-6">
-  <%= form_with url: update_sections_form_path(@form), method: :patch, class: "space-y-6" do |f| %>
+  <%= form_with url: update_sections_form_path(@form, event_id: @dashboard_event&.id), method: :patch, class: "space-y-6" do |f| %>
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <div class="flex items-center gap-2.5 px-6 py-3 bg-blue-100 border-b border-blue-300">
         <i class="fa-solid fa-list-check text-blue-700"></i>
         <h2 class="text-sm font-semibold text-blue-900 uppercase tracking-wide">Sections to include</h2>
       </div>
       <div class="p-6">
-        <p class="text-xs text-gray-500 mb-3">Numbered in the order these sections appear on this form. Custom sections you added are marked and edited on the <%= link_to "edit questions", edit_form_path(@form), class: "underline hover:text-gray-700" %> page. Unless you change these selections, saving here does not change your form.</p>
+        <p class="text-xs text-gray-500 mb-3">Numbered in the order these sections appear on this form. Custom sections you added are marked and edited on the <%= link_to "edit questions", edit_form_path(@form, event_id: @dashboard_event&.id), class: "underline hover:text-gray-700" %> page. Unless you change these selections, saving here does not change your form.</p>
         <ol class="space-y-2">
           <% @editable_sections.each_with_index do |section, index| %>
             <% if section[:kind] == :custom %>
@@ -98,7 +97,7 @@
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
       <div class="flex items-center gap-3">
         <%= f.submit "Save changes", class: "btn btn-primary cursor-pointer" %>
-        <%= link_to "Edit questions", edit_form_path(@form), class: "btn btn-secondary" %>
+        <%= link_to "Edit questions", edit_form_path(@form, event_id: @dashboard_event&.id), class: "btn btn-secondary" %>
         <%= link_to "Cancel", form_path(@form), class: "btn btn-secondary-outline" %>
       </div>
     </div>
