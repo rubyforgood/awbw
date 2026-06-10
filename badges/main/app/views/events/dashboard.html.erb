@@ -25,7 +25,8 @@
       on that form plus the "Enable scholarship application" checkbox (which is what
       creates the scholarship event_form). The scholarship link points at the public
       registration page, so it also needs the registration form or it dead-ends there.
-      Links open in a new tab. Bulk payment is a placeholder until that feature is built. %>
+      Bulk payment is gated on the event having a bulk payment form.
+      Links open in a new tab. %>
   <% link_base = "inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm font-medium shadow-sm transition-colors" %>
   <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
     <% if @event.event_forms.registration.exists? %>
@@ -46,11 +47,14 @@
       <% end %>
     <% end %>
 
-    <span class="<%= link_base %> border-gray-200 text-gray-400 cursor-not-allowed" title="Bulk payment link — coming soon">
-      <i class="fa-solid fa-money-check-dollar text-gray-300"></i>
-      Bulk payment link
-      <span class="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-500">Soon</span>
-    </span>
+    <% if @event.bulk_payment_form %>
+      <%= link_to new_event_bulk_payment_path(@event), target: "_blank", rel: "noopener noreferrer",
+            class: "#{link_base} #{DomainTheme.border_class_for(:payments, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:payments, intensity: 300)} hover:bg-gray-50" do %>
+        <i class="fa-solid fa-money-check-dollar <%= DomainTheme.text_class_for(:payments, intensity: 600) %>"></i>
+        Bulk payment form
+        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
+      <% end %>
+    <% end %>
   </div>
 
   <%# Money cards (paid events only) — shown first %>
