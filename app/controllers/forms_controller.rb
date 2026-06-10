@@ -67,6 +67,7 @@ class FormsController < ApplicationController
 
   def edit_sections
     authorize! @form
+    @editable_sections = FormBuilderService.editable_sections(@form)
   end
 
   def update_sections
@@ -75,17 +76,19 @@ class FormsController < ApplicationController
     sections = (params[:sections] || []).reject(&:blank?).map(&:to_sym)
     if sections.empty?
       flash.now[:alert] = "Please select at least one section."
+      @editable_sections = FormBuilderService.editable_sections(@form)
       render :edit_sections, status: :unprocessable_content
       return
     end
 
+    removed_custom_ids = removed_custom_section_ids
     current_sections = (@form.sections || []).map(&:to_sym)
-    if sections.to_set == current_sections.to_set
+    if sections.to_set == current_sections.to_set && removed_custom_ids.empty?
       redirect_to edit_form_path(@form), notice: "No section changes."
       return
     end
 
-    FormBuilderService.update_sections!(@form, sections)
+    FormBuilderService.update_sections!(@form, sections, remove_custom_section_ids: removed_custom_ids)
     redirect_to edit_form_path(@form), notice: "Sections updated."
   end
 
@@ -106,6 +109,14 @@ class FormsController < ApplicationController
   end
 
   private
+
+  # Custom section header ids that were present on the page but left unchecked,
+  # i.e. the custom sections the user chose to remove.
+  def removed_custom_section_ids
+    present = Array(params[:custom_sections]).map(&:to_i)
+    kept = Array(params[:kept_custom_sections]).map(&:to_i)
+    present - kept
+  end
 
   def set_form
     @form = Form.find(params[:id])

@@ -289,6 +289,17 @@ RSpec.describe "Forms", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Person identifier")
     end
+
+    it "shows custom sections with a custom indicator" do
+      form = FormBuilderService.new(name: "Editable", sections: %i[person_identifier]).call
+      form.form_fields.create!(name: "My Special Section", answer_type: :group_header,
+                               status: :active, position: 100, required: false)
+
+      get edit_sections_form_path(form)
+
+      expect(response.body).to include("My Special Section")
+      expect(response.body).to include("Custom sections")
+    end
   end
 
   describe "PATCH /forms/:id/update_sections" do
@@ -337,6 +348,35 @@ RSpec.describe "Forms", type: :request do
       form.reload
       expect(form.form_fields.pluck(:id).sort).to eq(original_ids)
       expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "removes a custom section the user unchecked" do
+      form = FormBuilderService.new(name: "Custom", sections: %i[person_identifier]).call
+      header = form.form_fields.create!(name: "My Special Section", answer_type: :group_header,
+                                        status: :active, position: 100, required: false)
+
+      patch update_sections_form_path(form), params: {
+        sections: %w[person_identifier],
+        custom_sections: [ header.id ],
+        kept_custom_sections: []
+      }
+
+      expect(FormField.where(id: header.id)).to be_empty
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "keeps a custom section that stays checked" do
+      form = FormBuilderService.new(name: "Custom", sections: %i[person_identifier]).call
+      header = form.form_fields.create!(name: "My Special Section", answer_type: :group_header,
+                                        status: :active, position: 100, required: false)
+
+      patch update_sections_form_path(form), params: {
+        sections: %w[person_identifier],
+        custom_sections: [ header.id ],
+        kept_custom_sections: [ header.id ]
+      }
+
+      expect(FormField.where(id: header.id)).to exist
     end
   end
 

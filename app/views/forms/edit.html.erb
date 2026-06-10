@@ -67,23 +67,44 @@
         </div>
       </div>
 
-      <div class="px-6 py-3 border-b border-gray-100">
-        <p class="text-xs font-medium text-gray-500 mb-1.5 text-right">Conditional visibility</p>
-        <div class="flex flex-col items-end gap-1">
-          <div class="flex items-center gap-1.5">
-            <span class="text-xs px-1.5 py-0.5 rounded-full bg-white text-gray-600 border border-gray-300">Always ask</span>
-            <span class="text-xs text-gray-500">Always shown to all users</span>
+      <details class="border-b border-gray-100">
+        <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden hover:bg-gray-50">
+          <div class="flex items-center gap-3 px-6 py-2 text-xs font-medium text-gray-500">
+            <span class="w-3 shrink-0" aria-hidden="true"></span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="min-w-0 flex-[3_1_10rem]">Question</span>
+                <span class="flex-[2_1_9rem]">Type</span>
+                <span class="w-36 shrink-0 ml-auto inline-flex items-center gap-1">
+                  Visibility
+                  <i class="fa-solid fa-chevron-down text-gray-400 text-xs transition-transform [[open]_&]:rotate-180"></i>
+                </span>
+                <span class="w-6 shrink-0" aria-hidden="true"></span>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-xs px-1.5 py-0.5 rounded-full bg-white text-emerald-600 border border-emerald-300">Logged out only</span>
-            <span class="text-xs text-gray-500">Hidden for logged-in users</span>
+        </summary>
+        <dl class="px-6 pb-3 ml-auto max-w-xl space-y-1">
+          <div class="flex items-start gap-2">
+            <dt class="w-32 shrink-0">
+              <span class="text-xs px-1.5 py-0.5 rounded-full bg-white text-gray-600 border border-gray-300">Always ask</span>
+            </dt>
+            <dd class="text-xs text-gray-500">Always shown to all users</dd>
           </div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-xs px-1.5 py-0.5 rounded-full bg-white text-amber-600 border border-amber-300">Answers on file</span>
-            <span class="text-xs text-gray-500">Hidden when answered on this event's forms; if "One-time", hidden when answered on any form</span>
+          <div class="flex items-start gap-2">
+            <dt class="w-32 shrink-0">
+              <span class="text-xs px-1.5 py-0.5 rounded-full bg-white text-emerald-600 border border-emerald-300">Logged out only</span>
+            </dt>
+            <dd class="text-xs text-gray-500">Hidden for logged-in users</dd>
           </div>
-        </div>
-      </div>
+          <div class="flex items-start gap-2">
+            <dt class="w-32 shrink-0">
+              <span class="text-xs px-1.5 py-0.5 rounded-full bg-white text-amber-600 border border-amber-300">Answers on file</span>
+            </dt>
+            <dd class="text-xs text-gray-500">Hidden when answered on this event's forms; if "One-time", hidden when answered on any form</dd>
+          </div>
+        </dl>
+      </details>
 
       <div data-controller="form-fields-sortable" data-form-fields-sortable-url-value="<%= reorder_fields_form_path(@form) %>">
         <%= f.fields_for :form_fields, @form_fields do |ff| %>
