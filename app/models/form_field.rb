@@ -69,7 +69,8 @@ class FormField < ApplicationRecord
   }.freeze
 
   # Nested attributes
-  accepts_nested_attributes_for :form_field_answer_options
+  accepts_nested_attributes_for :form_field_answer_options, allow_destroy: true,
+    reject_if: ->(attrs) { attrs[:option_name].blank? }
 
   default_scope { order(position: :desc) }
   scope :published, -> { where(status: "active") }

@@ -7,41 +7,52 @@
   <h1 class="text-2xl font-semibold mb-2">Edit Sections: <%= @form.display_name %></h1>
   <%= render "stats", form: @form %>
 
-  <% current_sections = (@form.sections || []).map(&:to_s) %>
-
   <%= form_with url: update_sections_form_path(@form), method: :patch, class: "space-y-6" do |f| %>
     <fieldset>
       <legend class="text-sm font-medium text-gray-700 mb-1">Select sections to include:</legend>
-      <p class="text-xs text-gray-500 mb-3">Numbered in the order these sections appear on default forms. Unless you make changes to these section selections, saving here does not change your form.</p>
+      <p class="text-xs text-gray-500 mb-3">Numbered in the order these sections appear on this form. Custom sections you added are marked and edited on the <%= link_to "edit fields", edit_form_path(@form), class: "underline hover:text-gray-700" %> page. Unless you change these selections, saving here does not change your form.</p>
       <ol class="space-y-2">
-        <% position = 0 %>
-        <% FormBuilderService::SECTIONS.each do |key, section| %>
-          <% next if key == :scholarship && @form.role != "scholarship" %>
-          <% next if key == :bulk_payment && @form.role != "bulk_payment" %>
-          <% next if key != :scholarship && key != :bulk_payment && @form.role == "scholarship" %>
-          <% next if key != :bulk_payment && key != :scholarship && @form.role == "bulk_payment" %>
-          <% position += 1 %>
-          <% included = current_sections.include?(key.to_s) %>
-          <li data-controller="form-section-toggle"
-              data-form-section-toggle-included-value="<%= included %>">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= position %>.</span>
-              <input type="checkbox" name="sections[]" value="<%= key %>"
-                     class="rounded border-gray-300 text-blue-600"
-                     data-form-section-toggle-target="checkbox"
-                     data-action="form-section-toggle#update"
-                     <%= "checked" if included %>>
-              <span class="text-sm text-gray-800"><%= section[:label] %></span>
-            </label>
-            <p class="hidden mt-1 ml-12 text-xs" data-form-section-toggle-target="message"></p>
-          </li>
+        <% @editable_sections.each_with_index do |section, index| %>
+          <% if section[:kind] == :custom %>
+            <li data-controller="form-section-toggle"
+                data-form-section-toggle-included-value="true">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= index + 1 %>.</span>
+                <%= hidden_field_tag "custom_sections[]", section[:header].id %>
+                <%= check_box_tag "kept_custom_sections[]", section[:header].id, true,
+                      class: "rounded border-gray-300 text-blue-600",
+                      data: { form_section_toggle_target: "checkbox", action: "form-section-toggle#update" } %>
+                <span class="text-sm font-semibold text-gray-800"><%= section[:label] %></span>
+                <span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">Custom</span>
+              </label>
+              <p class="hidden mt-1 ml-12 text-xs" data-form-section-toggle-target="message"></p>
+            </li>
+          <% else %>
+            <li data-controller="form-section-toggle"
+                data-form-section-toggle-included-value="<%= section[:included] %>">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= index + 1 %>.</span>
+                <input type="checkbox" name="sections[]" value="<%= section[:key] %>"
+                       class="rounded border-gray-300 text-blue-600"
+                       data-form-section-toggle-target="checkbox"
+                       data-action="form-section-toggle#update"
+                       <%= "checked" if section[:included] %>>
+                <span class="text-sm text-gray-800"><%= section[:label] %></span>
+                <% if section[:renamed_header].present? %>
+                  <span class="text-xs text-gray-400 italic">titled &ldquo;<%= section[:renamed_header] %>&rdquo; on the form</span>
+                <% end %>
+              </label>
+              <p class="hidden mt-1 ml-12 text-xs" data-form-section-toggle-target="message"></p>
+            </li>
+          <% end %>
         <% end %>
       </ol>
     </fieldset>
 
     <div class="flex gap-3">
-      <%= f.submit "Update Sections", class: "btn btn-primary cursor-pointer" %>
-      <%= link_to "Cancel", edit_form_path(@form), class: "btn btn-secondary-outline" %>
+      <%= f.submit "Save changes", class: "btn btn-primary cursor-pointer" %>
+      <%= link_to "Edit questions", edit_form_path(@form), class: "btn btn-secondary" %>
+      <%= link_to "Cancel", form_path(@form), class: "btn btn-secondary-outline" %>
     </div>
   <% end %>
 </div>

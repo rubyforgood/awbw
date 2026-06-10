@@ -223,5 +223,105 @@ RSpec.describe FormBuilderService do
       positions = form.form_fields.reorder(:position).pluck(:position)
       expect(positions).to eq((1..positions.size).to_a)
     end
+
+    it "removes a custom section and its questions by header id" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier]).call
+      header = form.form_fields.create!(name: "Custom", answer_type: :group_header,
+                                        status: :active, position: 100, required: false)
+      question = form.form_fields.create!(name: "Q1", answer_type: :free_form_input_one_line,
+                                          status: :active, position: 101, required: false)
+      next_section = form.form_fields.create!(name: "Background Information", answer_type: :group_header,
+                                              status: :active, position: 102, section: "background", required: false)
+
+      described_class.update_sections!(form, %i[person_identifier], remove_custom_section_ids: [ header.id ])
+
+      expect(FormField.where(id: [ header.id, question.id ])).to be_empty
+      expect(FormField.where(id: next_section.id)).to exist
+    end
+
+    it "leaves custom sections untouched when none are unchecked" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier]).call
+      header = form.form_fields.create!(name: "Custom", answer_type: :group_header,
+                                        status: :active, position: 100, required: false)
+
+      described_class.update_sections!(form, %i[person_identifier])
+
+      expect(FormField.where(id: header.id)).to exist
+    end
+  end
+
+  describe ".editable_sections" do
+    let(:form) { described_class.new(name: "Test", sections: %i[person_identifier consent]).call }
+
+    def add_field(name, answer_type, position, section: nil)
+      form.form_fields.create!(name: name, answer_type: answer_type, status: :active,
+                               position: position, required: false, section: section)
+    end
+
+    it "marks built-in sections on the form as included and others as not" do
+      entries = described_class.editable_sections(form)
+      included = entries.select { |e| e[:kind] == :builtin && e[:included] }.map { |e| e[:key] }
+      excluded = entries.select { |e| e[:kind] == :builtin && !e[:included] }.map { |e| e[:key] }
+
+      expect(included).to include(:person_identifier, :consent)
+      expect(excluded).to include(:marketing, :payment)
+    end
+
+    it "includes a custom section with the questions that follow it" do
+      add_field("My Custom Section", :group_header, 100)
+      first = add_field("Favorite color", :free_form_input_one_line, 101)
+      second = add_field("Why?", :free_form_input_paragraph, 102)
+
+      custom = described_class.editable_sections(form).find { |e| e[:kind] == :custom }
+
+      expect(custom[:label]).to eq("My Custom Section")
+      expect(custom[:questions]).to eq([ first, second ])
+    end
+
+    it "stops a custom section's questions at the next header" do
+      add_field("My Custom Section", :group_header, 100)
+      question = add_field("Favorite color", :free_form_input_one_line, 101)
+      add_field("Background Information", :group_header, 102, section: "background")
+
+      custom = described_class.editable_sections(form).find { |e| e[:kind] == :custom }
+
+      expect(custom[:questions]).to eq([ question ])
+    end
+
+    it "orders a custom section by where it sits on the form" do
+      # person_identifier (pos 1-4), consent header + field, then the custom
+      # section is dropped between them by giving it an in-between position.
+      consent_position = form.form_fields.find_by(section: "consent", answer_type: :group_header).position
+      add_field("My Custom Section", :group_header, consent_position - 1)
+
+      kinds = described_class.editable_sections(form)
+        .select { |e| (e[:kind] == :builtin && e[:included]) || e[:kind] == :custom }
+        .map { |e| e[:kind] == :custom ? :custom : e[:key] }
+
+      expect(kinds).to eq([ :person_identifier, :custom, :consent ])
+    end
+
+    it "has no custom entries when the form has none" do
+      expect(described_class.editable_sections(form).map { |e| e[:kind] }).to all(eq(:builtin))
+    end
+
+    it "surfaces a renamed built-in section header" do
+      form.form_fields.find_by(section: "consent", answer_type: :group_header).update!(name: "Agreement")
+
+      consent = described_class.editable_sections(form).find { |e| e[:key] == :consent }
+      expect(consent[:renamed_header]).to eq("Agreement")
+    end
+
+    it "does not flag a built-in section header left at its default name" do
+      consent = described_class.editable_sections(form).find { |e| e[:key] == :consent }
+      expect(consent[:renamed_header]).to be_nil
+    end
+
+    it "tolerates fields with a nil position without raising" do
+      form.form_fields.create!(name: "My Custom Section", answer_type: :group_header,
+                               status: :active, position: nil, required: false)
+
+      expect { described_class.editable_sections(form) }.not_to raise_error
+    end
   end
 end
