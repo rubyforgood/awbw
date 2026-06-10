@@ -5,7 +5,14 @@
     <div class="flex gap-2">
       <% if @payment.amount_cents_remaining > 0 %>
         <%= link_to "Allocate", new_allocation_path(source_sgid: @payment.to_sgid.to_s), class: "btn btn-primary" %>
-        <%= link_to "Refund", new_refund_path(payment_sgid: @payment.to_sgid.to_s), class: "btn btn-warning" %>
+        <% if @payment.is_a?(ExternalProcessorPayment) && @payment.pay_charge_id.blank? %>
+          <span class="text-sm text-gray-400 italic flex items-center gap-1">
+            <i class="fa-solid fa-info-circle"></i>
+            Must be refunded via the Stripe Dashboard
+          </span>
+        <% else %>
+          <%= link_to "Refund", new_refund_path(payment_sgid: @payment.to_sgid.to_s), class: "btn btn-warning" %>
+        <% end %>
       <% end %>
     </div>
   </div>
