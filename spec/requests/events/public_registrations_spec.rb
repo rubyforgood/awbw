@@ -128,6 +128,14 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("<h2>About you</h2>")
       expect(response.body).to include("rich-label")
     end
+
+    it "renders the form header HTML under the title" do
+      form.update!(header: "<strong>Please complete all fields below.</strong>")
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("<strong>Please complete all fields below.</strong>")
+    end
   end
 
   describe "GET show" do
