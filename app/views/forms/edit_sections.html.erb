@@ -25,16 +25,6 @@
                 <span class="text-sm font-semibold text-gray-800"><%= section[:label] %></span>
                 <span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">Custom</span>
               </label>
-              <% if section[:questions].any? %>
-                <ul class="mt-1 ml-12 space-y-0.5">
-                  <% section[:questions].each do |question| %>
-                    <li class="text-sm text-gray-600 flex items-start gap-2">
-                      <span class="text-gray-300">&bull;</span>
-                      <span><%= question.name %></span>
-                    </li>
-                  <% end %>
-                </ul>
-              <% end %>
               <p class="hidden mt-1 ml-12 text-xs" data-form-section-toggle-target="message"></p>
             </li>
           <% else %>
