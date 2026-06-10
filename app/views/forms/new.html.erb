@@ -27,7 +27,7 @@
           <% section_role = key == :scholarship ? "scholarship" : key == :bulk_payment ? "bulk_payment" : "other" %>
           <label class="flex items-center gap-2 cursor-pointer" data-section-role="<%= section_role %>">
             <input type="checkbox" name="sections[]" value="<%= key %>"
-                   class="rounded border-gray-300 text-blue-600"
+                   class="rounded border-gray-300 text-purple-600"
                    <%= "checked" if params.dig(:sections)&.include?(key.to_s) %>>
             <span class="text-sm text-gray-800"><%= section[:label] %></span>
           </label>
