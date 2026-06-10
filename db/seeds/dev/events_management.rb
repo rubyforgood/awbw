@@ -55,6 +55,38 @@ if registration_form.header.blank?
   HTML
 end
 
+# Seed a scholarship-specific header, shown under the "Scholarship application"
+# heading when this form is appended to an event registration (see
+# events/public_registrations/new). Scoped strictly to scholarship concerns —
+# eligibility and what's asked of recipients — and deliberately does NOT repeat
+# anything already in the registration header above (dates/time/platform, fee, CE
+# hours, refund/transfer policy, confirmation email, registration close), since
+# both headers render on the same page. Styled to match the registration header so
+# the section reads as inviting rather than a wall of requirements. Only set when
+# blank so admin edits survive a re-seed.
+if scholarship_form.header.blank?
+  scholarship_form.update!(header: <<~HTML.strip)
+    <p style="font-size:17px;color:#166534;"><strong>Cost shouldn't stand between you and this work.</strong></p>
+    <p>If the training fee is a barrier, apply for a scholarship right here — there's no separate form, just the questions below.</p>
+    <p><strong>Scholarships are currently available for:</strong></p>
+    <ul>
+      <li>Those located in <strong>Los Angeles County</strong>, California (limit 1 per agency)</li>
+      <li>Those located in <strong>Orange County</strong>, California (limit 1 per agency)</li>
+      <li>Those located in the <strong>Coachella Valley</strong>, California</li>
+      <li>Those within a 30-mile radius of <strong>Victorville</strong>, CA</li>
+      <li>Individuals working in <strong>movement building, community organizing</strong>, and/or <strong>systems change work</strong></li>
+      <li>Individuals serving <strong>fire-impacted communities</strong></li>
+    </ul>
+    <p>If we're able to offer you a scholarship, we'll ask you to give a little back to the community in return:</p>
+    <ul>
+      <li>Respond to 3 short questions after the training</li>
+      <li>Share quarterly highlight stories with images of participant artwork</li>
+    </ul>
+    <p style="font-size:13px;color:#6b7280;"><em>More details come with your notification. Scholarship recipients still attend both full days of the training.</em></p>
+    <p style="background-color:#faf5ff;border:1px solid #e9d5ff;border-radius:12px;padding:16px 18px;color:#6b21a8;"><strong style="font-size:16px;">No need to choose between cost and care.</strong> Answer the questions below to apply — we review every request personally.</p>
+  HTML
+end
+
 # Ensure the professional section (Primary Age Group(s) Served, Primary Service
 # Area, etc.) exists even on a registration form seeded before it was added — the
 # event Background charts aggregate answers to those questions.
