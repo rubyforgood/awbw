@@ -82,10 +82,83 @@ class FormBuilderService
     bulk_payment: %w[bulk_payment]
   }.freeze
 
-  # Update sections on an existing form: add new sections, remove unchecked ones
-  def self.update_sections!(form, new_sections)
+  # Built-in section keys that apply to a form with the given role. Scholarship
+  # and bulk-payment forms show only their own section; every other role shows
+  # all sections except those two.
+  def self.applicable_section_keys(role)
+    SECTIONS.keys.select do |key|
+      case role
+      when "scholarship" then key == :scholarship
+      when "bulk_payment" then key == :bulk_payment
+      else key != :scholarship && key != :bulk_payment
+      end
+    end
+  end
+
+  # Ordered list of sections for the edit-sections page. Each entry is a hash
+  # with a :kind of :builtin or :custom. Built-in sections carry their :label,
+  # section :key, and :included state; custom (user-added) sections carry the
+  # group_header :label and the :questions that follow it on the form.
+  #
+  # Sections present on the form are ordered by their position there, so a
+  # custom section slots into the list wherever it sits on the form. Built-in
+  # sections not currently on the form follow their canonical predecessor.
+  def self.editable_sections(form)
+    group_to_key = SECTION_GROUPS.flat_map { |key, groups| groups.map { |group| [ group, key ] } }.to_h
+
+    positions = {}
+    header_names = {}
+    customs = []
+    current = nil
+
+    # Rank by iteration order rather than the stored position, which is nullable
+    # and can collide, so the sort keys below are always comparable integers.
+    form.form_fields.reorder(position: :asc).each_with_index do |field, order|
+      key = group_to_key[field.section]
+      if key
+        current = nil
+        positions[key] ||= order
+        header_names[key] ||= field.name if field.group_header?
+      elsif field.group_header?
+        current = { kind: :custom, header: field, questions: [] }
+        customs << [ order, current ]
+      elsif current
+        current[:questions] << field
+      end
+    end
+
+    entries = []
+    last_position = 0
+    applicable_section_keys(form.role).each_with_index do |key, rank|
+      position = positions[key]
+      last_position = position if position
+      default_header = SECTION_HEADERS.fetch(key).first
+      header_name = header_names[key]
+      entries << {
+        sort: [ position || last_position, position ? 0 : 1, rank ],
+        kind: :builtin,
+        key: key,
+        label: SECTIONS.fetch(key)[:label],
+        included: !position.nil?,
+        renamed_header: (header_name if header_name.present? && header_name != default_header)
+      }
+    end
+
+    customs.each do |position, custom|
+      entries << custom.merge(sort: [ position, 0, 0 ], label: custom[:header].name)
+    end
+
+    entries.sort_by { |entry| entry[:sort] }
+  end
+
+  # Update sections on an existing form: add new sections, remove unchecked ones.
+  # remove_custom_section_ids are group_header field ids of custom sections the
+  # user unchecked; each such header and the questions under it are deleted.
+  def self.update_sections!(form, new_sections, remove_custom_section_ids: [])
     new_sections = new_sections.map(&:to_sym)
     old_sections = (form.sections || []).map(&:to_sym)
+
+    remove_custom_sections!(form, remove_custom_section_ids)
 
     added = new_sections - old_sections
     removed = old_sections - new_sections
@@ -115,6 +188,19 @@ class FormBuilderService
 
     form.update!(sections: new_sections.map(&:to_s))
     form
+  end
+
+  # Delete the given custom sections — each group_header field plus the questions
+  # that follow it on the form — identified by their header field ids.
+  def self.remove_custom_sections!(form, header_ids)
+    header_ids = Array(header_ids).map(&:to_i)
+    return if header_ids.empty?
+
+    targets = editable_sections(form).select do |entry|
+      entry[:kind] == :custom && header_ids.include?(entry[:header].id)
+    end
+    field_ids = targets.flat_map { |entry| [ entry[:header].id, *entry[:questions].map(&:id) ] }
+    form.form_fields.where(id: field_ids).destroy_all if field_ids.any?
   end
 
   # Renumber a form's fields so sections appear in the canonical page order
