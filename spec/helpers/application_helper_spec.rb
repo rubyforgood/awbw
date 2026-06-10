@@ -217,9 +217,31 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.form_header_html(form, event: in_person)).to eq("Platform: online.")
     end
 
+    it "fills the {{event_location}} token from the event's location" do
+      form = build(:form, header: "Location: {{event_location}}.")
+      event = build(:event, location: build(:location, city: "Los Angeles", state: "CA"))
+      expect(helper.form_header_html(form, event: event)).to eq("Location: Los Angeles, CA.")
+    end
+
+    it "falls back when the event has no location" do
+      form = build(:form, header: "Location: {{event_location}}.")
+      expect(helper.form_header_html(form, event: build(:event, location: nil))).to eq("Location: the event location.")
+    end
+
     it "sanitizes the header markup" do
       form = build(:form, header: "<strong>Hi</strong><script>alert(1)</script>")
       expect(helper.form_header_html(form)).to eq("<strong>Hi</strong>alert(1)")
+    end
+  end
+
+  describe "#form_header_uses_tokens?" do
+    it "is true when the header contains a known placeholder" do
+      expect(helper.form_header_uses_tokens?(build(:form, header: "Closes {{registration_close}}."))).to be true
+    end
+
+    it "is false for plain headers or none" do
+      expect(helper.form_header_uses_tokens?(build(:form, header: "Welcome!"))).to be false
+      expect(helper.form_header_uses_tokens?(build(:form, header: nil))).to be false
     end
   end
 end

@@ -25,6 +25,7 @@ module ApplicationHelper
     "{{event_times}}" => [ "Event start-end time", "9 am - 4:30 pm PST" ],
     "{{event_fee}}" => [ "Registration fee", "$1,500" ],
     "{{event_platform}}" => [ "Virtual platform", "Zoom" ],
+    "{{event_location}}" => [ "In-person location", "Los Angeles, CA" ],
     "{{event_month_year}}" => [ "Event month and year", "July 2026" ],
     "{{registration_close}}" => [ "Registration close date", "June 20, 2026 9:00 am PST" ]
   }.freeze
@@ -40,9 +41,17 @@ module ApplicationHelper
       .gsub("{{event_times}}", event_times_label(event) || "the scheduled time")
       .gsub("{{event_fee}}", event_fee_label(event) || "the registration fee")
       .gsub("{{event_platform}}", event_platform_label(event) || "online")
+      .gsub("{{event_location}}", event_location_label(event) || "the event location")
       .gsub("{{event_month_year}}", event&.start_date&.strftime("%B %Y") || "upcoming")
       .gsub("{{registration_close}}", event_registration_close_label(event) || "soon")
     form_label_html(text)
+  end
+
+  # True when the header contains any {{token}} placeholder, so previews (which
+  # have no event in scope) can flag that the live values come from the event.
+  def form_header_uses_tokens?(form)
+    header = form&.header.to_s
+    FORM_HEADER_TOKENS.keys.any? { |token| header.include?(token) }
   end
 
   # Event date or date range as plain text (e.g. "July 23-24, 2026"), mirroring the
@@ -88,6 +97,12 @@ module ApplicationHelper
   def event_platform_label(event)
     return unless event&.videoconference_url.present?
     event.videoconference_label.presence
+  end
+
+  # In-person location name (e.g. "Los Angeles, CA"), or nil when the event has no
+  # physical location set.
+  def event_location_label(event)
+    event&.location&.name.presence
   end
 
   # Registration close date formatted like the event show page (e.g.
