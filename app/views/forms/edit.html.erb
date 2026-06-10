@@ -10,7 +10,7 @@
   </div>
 
   <%# Colored hero banner so the page reads at a glance instead of all-white %>
-  <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 bg-blue-900">
+  <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 bg-purple-900">
     <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-4">
@@ -18,7 +18,7 @@
             <i class="fa-solid fa-list-check text-xl"></i>
           </div>
           <div>
-            <p class="text-xs font-medium uppercase tracking-[0.2em] text-blue-200">Edit questions</p>
+            <p class="text-xs font-medium uppercase tracking-[0.2em] text-purple-200">Edit questions</p>
             <h1 class="text-2xl font-bold tracking-tight leading-tight"><%= @form.display_name %></h1>
           </div>
         </div>
@@ -27,8 +27,8 @@
         <div class="flex flex-wrap items-center gap-2">
           <% events_count = @form.events.size %>
           <% if events_count.positive? %>
-            <%= link_to events_path(form_id: @form.id), class: "inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-blue-900 shadow-sm hover:bg-blue-50" do %>
-              <i class="fa-solid fa-calendar-day text-blue-600"></i>
+            <%= link_to events_path(form_id: @form.id), class: "inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-purple-900 shadow-sm hover:bg-purple-50" do %>
+              <i class="fa-solid fa-calendar-day text-purple-600"></i>
               <%= pluralize(events_count, "event") %> connected
             <% end %>
           <% else %>
@@ -37,8 +37,8 @@
               No events connected
             </span>
           <% end %>
-          <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-blue-900 shadow-sm">
-            <i class="fa-solid fa-inbox text-blue-600"></i>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-medium text-purple-900 shadow-sm">
+            <i class="fa-solid fa-inbox text-purple-600"></i>
             <%= pluralize(@form.form_submissions.size, "submission") %>
           </span>
         </div>
@@ -62,9 +62,9 @@
     <% end %>
 
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-      <div class="flex items-center gap-2.5 px-6 py-3 bg-blue-100 border-b border-blue-300">
-        <i class="fa-solid fa-gear text-blue-700"></i>
-        <h2 class="text-sm font-semibold text-blue-900 uppercase tracking-wide">Form settings</h2>
+      <div class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-purple-300">
+        <i class="fa-solid fa-gear text-purple-700"></i>
+        <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Form settings</h2>
       </div>
       <div class="p-6 space-y-4">
         <div class="flex flex-col sm:flex-row gap-4">
@@ -84,11 +84,11 @@
 
         <div class="flex flex-wrap gap-x-6 gap-y-2">
           <label class="flex items-center gap-2 cursor-pointer">
-            <%= f.check_box :hide_answered_person_questions, class: "rounded border-gray-300 text-blue-600" %>
+            <%= f.check_box :hide_answered_person_questions, class: "rounded border-gray-300 text-purple-600" %>
             <span class="text-sm text-gray-800">Hide any answered person & organization questions</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer">
-            <%= f.check_box :hide_answered_form_questions, class: "rounded border-gray-300 text-blue-600" %>
+            <%= f.check_box :hide_answered_form_questions, class: "rounded border-gray-300 text-purple-600" %>
             <span class="text-sm text-gray-800">Hide any questions the user already answered</span>
           </label>
         </div>
@@ -97,9 +97,9 @@
 
     <%# Optional HTML intro rendered under the title on the form's public pages %>
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-      <div class="flex items-center gap-2.5 px-6 py-3 bg-blue-100 border-b border-blue-300">
-        <i class="fa-solid fa-heading text-blue-700"></i>
-        <h2 class="text-sm font-semibold text-blue-900 uppercase tracking-wide">Form header</h2>
+      <div class="flex items-center gap-2.5 px-6 py-3 bg-purple-100 border-b border-purple-300">
+        <i class="fa-solid fa-heading text-purple-700"></i>
+        <h2 class="text-sm font-semibold text-purple-900 uppercase tracking-wide">Form header</h2>
       </div>
       <div class="p-6 flex flex-col lg:flex-row gap-4">
         <div class="flex-1 flex flex-col space-y-2">
@@ -117,7 +117,7 @@
           <dl class="space-y-3">
             <% ApplicationHelper::FORM_HEADER_TOKENS.each do |token, (label, example)| %>
               <div>
-                <dt><code class="rounded bg-blue-100 text-blue-900 px-1.5 py-0.5 font-mono"><%= token %></code></dt>
+                <dt><code class="rounded bg-purple-100 text-purple-900 px-1.5 py-0.5 font-mono"><%= token %></code></dt>
                 <dd class="mt-1 text-gray-600"><%= label %> — e.g. <span class="text-gray-800"><%= example %></span></dd>
               </div>
             <% end %>
@@ -129,14 +129,14 @@
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
          data-controller="expand-all"
          data-expand-all-field-options-outlet="[data-controller~='field-options']">
-      <div class="px-6 py-3 bg-indigo-50 border-b border-indigo-200 flex items-center justify-between">
-        <h2 class="flex items-center gap-2.5 text-sm font-semibold text-indigo-900 uppercase tracking-wide">
-          <i class="fa-solid fa-list-ul text-indigo-500"></i>Questions
+      <div class="px-6 py-3 bg-purple-50 border-b border-purple-200 flex items-center justify-between">
+        <h2 class="flex items-center gap-2.5 text-sm font-semibold text-purple-900 uppercase tracking-wide">
+          <i class="fa-solid fa-list-ul text-purple-500"></i>Questions
         </h2>
         <div class="flex items-center gap-3">
           <span class="text-sm text-gray-500"><%= pluralize(@form_fields.size, "question") %></span>
           <button type="button"
-                  class="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
+                  class="text-sm text-purple-600 hover:text-purple-800 font-medium cursor-pointer"
                   data-action="expand-all#toggleAll"
                   data-expand-all-target="btn">Expand all</button>
         </div>
@@ -199,7 +199,7 @@
         <%= link_to_add_association "+ Add field", f, :form_fields,
               data: { association_insertion_node: "[data-controller='form-fields-sortable']",
                       association_insertion_method: "append" },
-              class: "text-sm text-blue-600 hover:text-blue-800 font-medium" %>
+              class: "text-sm text-purple-600 hover:text-purple-800 font-medium" %>
       </div>
     </div>
 
