@@ -47,7 +47,7 @@ module Events
     def pay
       authorize! @event_registration, to: :show_public?
 
-      unless @event_registration.event.cost_cents.to_i > 0 && !@event_registration.paid_in_full?
+      unless @event_registration.amount_due_cents > 0
         redirect_to registration_ticket_path(@event_registration.slug), alert: "No payment is due."
         return
       end
@@ -180,12 +180,12 @@ module Events
     end
 
     def requires_payment?(registration)
-      @event.cost_cents.to_i > 0 && !registration.paid_in_full?
+      @event.cost_cents.to_i > 0 && registration.amount_due_cents > 0
     end
 
     def redirect_to_stripe_checkout(registration)
       person = registration.registrant
-      amount = registration.remaining_cost
+      amount = registration.amount_due_cents
 
       person.set_payment_processor :stripe
 

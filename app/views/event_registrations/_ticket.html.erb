@@ -73,15 +73,14 @@
         <%= render "events/videoconference_link", event: event_registration.event.decorate, joinable: event_registration.joinable? %>
       </div>
       <% if event_registration.event.cost_cents.to_i > 0 %>
-        <% if event_registration.paid? %>
+        <% if event_registration.amount_due_cents <= 0 %>
           <div class="text-center mt-2">
             <span class="inline-flex items-center gap-1 rounded-full text-sm font-medium border px-3 py-1 bg-green-50 text-green-700 border-green-200">
               Paid
             </span>
           </div>
         <% else %>
-          <% paid_cents = event_registration.allocations_sum %>
-          <% due_cents = event_registration.event.cost_cents - paid_cents %>
+          <% due_cents = event_registration.amount_due_cents %>
           <div class="text-center mt-2">
             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
               $<%= "%.2f" % (due_cents / 100.0) %> payment is due
