@@ -196,6 +196,13 @@ class EventRegistration < ApplicationRecord
     [ event.cost_cents - allocations_sum, 0 ].max
   end
 
+  def amount_due_cents
+    scholarship_awarded = scholarships.sum(:amount_cents)
+    scholarship_allocated = allocations.where(source_type: "Scholarship").sum(:amount)
+    uncredited_scholarship = [ scholarship_awarded - scholarship_allocated, 0 ].max
+    [ event.cost_cents.to_i - allocations_sum - uncredited_scholarship, 0 ].max
+  end
+
   def paid_in_full?
     return true if event.cost_cents.to_i <= 0
     allocations_sum >= event.cost_cents.to_i
