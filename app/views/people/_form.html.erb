@@ -282,7 +282,7 @@
   <div class="flex flex-col md:flex-row gap-6 items-start">
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm md:flex-1">
       <div class="flex flex-col md:flex-row gap-6 items-start">
-        <div class="w-full md:w-48">
+        <div class="w-full md:w-56">
           <%= f.input :date_of_birth,
                       label: "Birthday",
                       as: :date,
@@ -308,7 +308,7 @@
                         include_blank: false,
                         hint: "Event times and other dates will be shown in this timezone.",
                         input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full max-w-md" } %>
+                        wrapper_html: { class: "w-full md:w-72" } %>
           <% end %>
         <% end %>
       </div>
