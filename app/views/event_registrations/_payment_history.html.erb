@@ -6,14 +6,14 @@
 <% due_cents = cost_cents - paid_cents %>
 <%# Free event with nothing allocated — nothing to manage, so hide the section. %>
 <% return if cost_cents <= 0 && event_registration.allocations.empty? %>
-<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<section class="relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 hover:shadow-md">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:payments, intensity: 100) %> <%= DomainTheme.text_class_for(:payments, intensity: 600) %>">
       <i class="fa-solid fa-dollar-sign"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700">Registration allocations</h2>
     <%= link_to allocations_path(allocatable_sgid: event_registration.to_sgid.to_s),
-                class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline after:absolute after:inset-0 after:content-['']",
                 target: "_blank", rel: "noopener" do %>
       View all
       <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
@@ -40,7 +40,7 @@
               $<%= "%.2f" % (due_cents / 100.0) %>
             <% else %>
               <i class="fa-solid fa-thumbs-up"></i>
-              Paid up
+              Nothing
             <% end %>
           </dd>
         </div>

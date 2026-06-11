@@ -52,7 +52,7 @@ RSpec.describe "Event registration edit page", type: :system do
       end
     end
 
-    it "shows a paid-up state when the cost is fully allocated" do
+    it "shows a fully-allocated state when the cost is fully allocated" do
       payment = create(:payment, amount_cents: 1099, amount_cents_remaining: 1099)
       create(:allocation, source: payment, allocatable: registration, amount: 1099)
 
@@ -60,7 +60,7 @@ RSpec.describe "Event registration edit page", type: :system do
       visit edit_event_registration_path(registration)
 
       within("section", text: "Registration allocations") do
-        expect(page).to have_text("Paid up")
+        expect(page).to have_text("Nothing")
       end
     end
   end
