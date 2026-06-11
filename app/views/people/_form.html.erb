@@ -289,7 +289,7 @@
                       discard_year: true,
                       order: [:month, :day],
                       prompt: { month: "Month", day: "Day" },
-                      hint: "Month and day only — the year isn't stored.",
+                      hint: "Month and day only",
                       wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
                       label_html: { class: "w-full" },
                       hint_html: { class: "w-full" },
@@ -308,7 +308,7 @@
                         include_blank: false,
                         hint: "Event times and other dates will be shown in this timezone.",
                         input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full md:w-72" } %>
+                        wrapper_html: { class: "w-full md:flex-1" } %>
           <% end %>
         <% end %>
       </div>
