@@ -69,8 +69,6 @@
 
     <%# Card Body %>
     <div class="px-6 sm:px-8 py-7">
-      <%= render "forms/header", form: @form, event: @event %>
-
       <% if flash[:alert] %>
         <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 mb-6">
           <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
@@ -101,6 +99,8 @@
             </span>
           </label>
         <% end %>
+
+        <%= render "forms/header", form: @form, event: @event %>
 
         <%# Honeypot %>
         <div class="hidden" aria-hidden="true">
