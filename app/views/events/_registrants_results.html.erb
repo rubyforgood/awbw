@@ -36,29 +36,49 @@
     <% form_submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
-        <table class="w-full border-collapse border border-gray-200">
+        <% payment_col = @event.cost_cents.to_i > 0 %>
+        <% date_index = payment_col ? 5 : 4 %>
+        <% attendance_index = payment_col ? 6 : 5 %>
+        <table class="w-full border-collapse border border-gray-200" data-controller="table-sort">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-full">Organization</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Scholarship</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700" aria-sort="none">
+                <span class="inline-flex items-center gap-1.5">
+                  <%= render "shared/sortable_header", label: "First", index: 0, key: "first" %>
+                  <span class="text-gray-300" aria-hidden="true">/</span>
+                  <%= render "shared/sortable_header", label: "Last", index: 0, key: "last" %>
+                </span>
+              </th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-full" aria-sort="none">
+                <%= render "shared/sortable_header", label: "Organization", index: 1 %>
+              </th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
+                <%= render "shared/sortable_header", label: "Scholarship", index: 2 %>
+              </th>
 
-              <% if @event.cost_cents.to_i > 0 %>
-                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Payment</th>
+              <% if payment_col %>
+                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
+                  <%= render "shared/sortable_header", label: "Payment", index: 3 %>
+                </th>
               <% end %>
 
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col>Confirmed</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Attendance</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
+                <%= render "shared/sortable_header", label: "Date registered", index: date_index %>
+              </th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
+                <%= render "shared/sortable_header", label: "Attendance", index: attendance_index %>
+              </th>
               <th class="px-4 py-2"></th>
             </tr>
           </thead>
 
-          <tbody class="divide-y divide-gray-200">
+          <tbody class="divide-y divide-gray-200" data-table-sort-target="body">
             <% @event_registrations.each do |registration| %>
               <% person = registration.registrant %>
 
               <tr class="hover:bg-gray-50 transition-colors duration-150">
-                <td class="px-4 py-2">
+                <td class="px-4 py-2" data-sort-first="<%= person.first_name.to_s.downcase %>" data-sort-last="<%= person.last_name.to_s.downcase %>">
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 
                   <div class="flex items-center gap-1">
@@ -150,9 +170,9 @@
                 </td>
 
                 <% if @event.cost_cents.to_i > 0 %>
-                  <td class="px-4 py-2 text-sm text-center">
-                    <% paid_cents = registration.allocations_sum %>
-                    <% due_cents = @event.cost_cents - paid_cents %>
+                  <% paid_cents = registration.allocations_sum %>
+                  <% due_cents = @event.cost_cents - paid_cents %>
+                  <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= due_cents %>">
                     <% is_paid = registration.paid_in_full? %>
 
                     <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s), class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-5 py-0.5 #{is_paid ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'} hover:opacity-80", title: (!is_paid && paid_cents > 0 ? "$%.2f paid" % (paid_cents / 100.0) : nil), data: { turbo_frame: "_top" } do %>
@@ -173,7 +193,8 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-nowrap text-center"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
+                <td class="px-4 py-2 text-sm text-nowrap text-center text-gray-600" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
+                <td class="px-4 py-2 text-sm text-nowrap text-center" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
                 <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
               </tr>
             <% end %>
