@@ -279,7 +279,7 @@
               },
               hint: "Maximum 250 characters" %>
 
-  <div class="flex flex-col md:flex-row gap-6 items-end">
+  <div class="flex flex-col md:flex-row gap-6 items-start">
     <div class="w-full md:w-48">
       <%= f.input :date_of_birth,
                   label: "Birthday",
@@ -294,6 +294,14 @@
                     focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                   } %>
     </div>
+
+    <div class="w-full md:w-48">
+      <%= f.input :license_number,
+                  label: "License number",
+                  input_html: { class: "w-full" },
+                  wrapper_html: { class: "w-full" } %>
+    </div>
+
     <% if f.object.user %>
       <%= f.fields_for :user do |user_form| %>
         <%= user_form.input :time_zone,

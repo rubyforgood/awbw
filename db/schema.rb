@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_09_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_10_040000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -898,6 +898,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_180000) do
     t.string "instagram_url"
     t.string "last_name", null: false
     t.string "legal_first_name"
+    t.string "license_number"
     t.string "linked_in_url"
     t.date "member_since"
     t.text "notes"
