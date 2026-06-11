@@ -363,6 +363,8 @@ class PeopleController < ApplicationController
       :street_address, :city, :state, :zip, :country, :mailing_address_type,
       :best_time_to_call,
       :date_of_birth,
+      :license_number,
+      :license_type,
       :bio, :notes,
       :display_name_preference,
       :pronouns,
