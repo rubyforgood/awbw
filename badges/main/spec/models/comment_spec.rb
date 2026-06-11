@@ -67,5 +67,12 @@ RSpec.describe Comment, type: :model do
       expect(user.comments.first).to eq(new_comment)
       expect(user.comments.last).to eq(old_comment)
     end
+
+    it 'returns only flagged comments with the flagged scope' do
+      flagged = create(:comment, :flagged, commentable: user, body: "Flagged comment")
+
+      expect(Comment.flagged).to include(flagged)
+      expect(Comment.flagged).not_to include(old_comment, new_comment)
+    end
   end
 end

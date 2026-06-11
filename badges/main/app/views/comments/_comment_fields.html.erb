@@ -30,10 +30,15 @@
 <% updated_color = show_updated ? label_colors[(updated_user.id || 0) % label_colors.length] : nil %>
 <% current_color = label_colors[(current_user&.id || 0) % label_colors.length] %>
 <% is_age_range_data = f.object.persisted? && f.object.body&.include?("[AGE_RANGE_DATA]") %>
-<div class="nested-fields" data-paginated-fields-target="item">
+<div class="nested-fields flex items-start gap-x-1" data-paginated-fields-target="item">
   <%= f.hidden_field :id if f.object.persisted? %>
+  <label class="cursor-pointer shrink-0 mt-1 leading-none" title="Flag for follow-up">
+    <%= f.check_box :flagged, class: "peer sr-only" %>
+    <i class="fa-regular fa-flag text-gray-500 hover:text-orange-400 peer-checked:text-orange-500 peer-checked:[--fa-style:900]!"></i>
+  </label>
+  <div class="grow">
   <% if f.object.persisted? %>
-    <div class="comment-view flex items-center mb-3 pl-4 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>">
+    <div class="comment-view flex items-center mb-3 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
@@ -50,7 +55,7 @@
         <% if f.object.topic.present? %><span class="font-bold uppercase tracking-wide"><%= f.object.topic %></span> <% end %><%= truncate(f.object.body, length: 135) %>
       </span>
     </div>
-    <div class="comment-edit flex items-start mb-1 pl-4 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" style="display:none">
+    <div class="comment-edit flex items-start mb-1 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" style="display:none">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
@@ -112,4 +117,5 @@
       </div>
     </div>
   <% end %>
+  </div>
 </div>

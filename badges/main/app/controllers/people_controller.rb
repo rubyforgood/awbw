@@ -456,7 +456,7 @@ class PeopleController < ApplicationController
         :end_date,
         :_destroy
       ],
-      comments_attributes: [ :id, :topic, :body, :_destroy ],
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
     )
   end
 end

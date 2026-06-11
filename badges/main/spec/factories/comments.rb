@@ -6,6 +6,10 @@ FactoryBot.define do
     # Polymorphic association: belongs_to :commentable
     association :commentable, factory: :user
 
+    trait :flagged do
+      flagged { true }
+    end
+
     trait :for_person do
       association :commentable, factory: :person
     end

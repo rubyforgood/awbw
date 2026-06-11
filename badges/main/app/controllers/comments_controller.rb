@@ -31,6 +31,18 @@ class CommentsController < ApplicationController
     end
   end
 
+  def update
+    @comment = @commentable.comments.find(params[:id])
+    authorize! @comment
+    @comment.updated_by = current_user
+    @comment.update(comment_params)
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_back fallback_location: root_path }
+    end
+  end
+
   private
 
   def set_commentable
@@ -50,6 +62,6 @@ class CommentsController < ApplicationController
   end
 
   def comment_params
-    params.require(:comment).permit(:topic, :body)
+    params.require(:comment).permit(:topic, :body, :flagged)
   end
 end
