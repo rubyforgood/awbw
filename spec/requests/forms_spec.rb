@@ -48,7 +48,7 @@ RSpec.describe "Forms", type: :request do
       form = Form.last
       expect(form.name).to eq("Custom Form")
       expect(form.sections).to eq(%w[person_identifier consent])
-      expect(response).to redirect_to(edit_form_path(form))
+      expect(response).to redirect_to(edit_sections_form_path(form))
     end
 
     it "rejects when no sections selected" do

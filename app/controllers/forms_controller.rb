@@ -35,7 +35,7 @@ class FormsController < ApplicationController
       role: params[:role].presence
     ).call
 
-    redirect_to edit_form_path(form), notice: "Form created with #{form.form_fields.size} fields."
+    redirect_to edit_sections_form_path(form), notice: "Form created with #{form.form_fields.size} fields."
   end
 
   def edit
