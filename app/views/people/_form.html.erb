@@ -279,10 +279,10 @@
               },
               hint: "Maximum 250 characters" %>
 
-  <div class="flex flex-col md:flex-row gap-6 items-start">
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm md:flex-1">
-      <div class="flex flex-col md:flex-row gap-6 items-start">
-        <div class="w-full md:w-56">
+  <div class="flex flex-col lg:flex-row gap-6 items-start">
+    <div class="w-full rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm lg:flex-1">
+      <div class="flex flex-col sm:flex-row gap-6 items-start">
+        <div class="w-full sm:w-56">
           <%= f.input :date_of_birth,
                       label: "Birthday",
                       as: :date,
@@ -308,22 +308,22 @@
                         include_blank: false,
                         hint: "Event times and other dates will be shown in this timezone.",
                         input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full md:flex-1" } %>
+                        wrapper_html: { class: "w-full sm:flex-1" } %>
           <% end %>
         <% end %>
       </div>
     </div>
 
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <div class="flex flex-col md:flex-row gap-6 items-start">
-        <div class="w-full md:w-36">
+    <div class="w-full rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+      <div class="flex flex-col sm:flex-row gap-6 items-start">
+        <div class="w-full sm:w-36">
           <%= f.input :license_number,
                       label: "License number",
                       input_html: { class: "w-full" },
                       wrapper_html: { class: "w-full" } %>
         </div>
 
-        <div class="w-full md:w-36">
+        <div class="w-full sm:w-36">
           <%= f.input :license_type,
                       label: "License type",
                       input_html: { class: "w-full" },
