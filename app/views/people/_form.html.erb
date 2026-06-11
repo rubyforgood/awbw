@@ -280,7 +280,7 @@
               hint: "Maximum 250 characters" %>
 
   <div class="flex flex-col md:flex-row gap-6 items-start">
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm md:flex-1">
       <div class="flex flex-col md:flex-row gap-6 items-start">
         <div class="w-full md:w-48">
           <%= f.input :date_of_birth,
@@ -316,14 +316,14 @@
 
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
       <div class="flex flex-col md:flex-row gap-6 items-start">
-        <div class="w-full md:w-48">
+        <div class="w-full md:w-36">
           <%= f.input :license_number,
                       label: "License number",
                       input_html: { class: "w-full" },
                       wrapper_html: { class: "w-full" } %>
         </div>
 
-        <div class="w-full md:w-48">
+        <div class="w-full md:w-36">
           <%= f.input :license_type,
                       label: "License type",
                       input_html: { class: "w-full" },
