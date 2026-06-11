@@ -364,6 +364,7 @@ class PeopleController < ApplicationController
       :best_time_to_call,
       :date_of_birth,
       :license_number,
+      :license_type,
       :bio, :notes,
       :display_name_preference,
       :pronouns,

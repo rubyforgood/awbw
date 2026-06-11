@@ -280,42 +280,57 @@
               hint: "Maximum 250 characters" %>
 
   <div class="flex flex-col md:flex-row gap-6 items-start">
-    <div class="w-full md:w-48">
-      <%= f.input :date_of_birth,
-                  label: "Birthday",
-                  as: :date,
-                  discard_year: true,
-                  order: [:month, :day],
-                  prompt: { month: "Month", day: "Day" },
-                  hint: "Month and day only — the year isn't stored.",
-                  wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
-                  label_html: { class: "w-full" },
-                  hint_html: { class: "w-full" },
-                  input_html: {
-                    class: "flex-1 rounded-md border-gray-300 shadow-sm
-                    focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                  } %>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+      <div class="flex flex-col md:flex-row gap-6 items-start">
+        <div class="w-full md:w-48">
+          <%= f.input :date_of_birth,
+                      label: "Birthday",
+                      as: :date,
+                      discard_year: true,
+                      order: [:month, :day],
+                      prompt: { month: "Month", day: "Day" },
+                      hint: "Month and day only — the year isn't stored.",
+                      wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
+                      label_html: { class: "w-full" },
+                      hint_html: { class: "w-full" },
+                      input_html: {
+                        class: "flex-1 rounded-md border-gray-300 shadow-sm
+                        focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      } %>
+        </div>
+
+        <% if f.object.user %>
+          <%= f.fields_for :user do |user_form| %>
+            <%= user_form.input :time_zone,
+                        as: :select,
+                        collection: us_time_zone_fundamentals,
+                        selected: user_form.object.time_zone.presence || "Pacific Time (US & Canada)",
+                        include_blank: false,
+                        hint: "Event times and other dates will be shown in this timezone.",
+                        input_html: { class: "w-full" },
+                        wrapper_html: { class: "w-full max-w-md" } %>
+          <% end %>
+        <% end %>
+      </div>
     </div>
 
-    <div class="w-full md:w-48">
-      <%= f.input :license_number,
-                  label: "License number",
-                  input_html: { class: "w-full" },
-                  wrapper_html: { class: "w-full" } %>
-    </div>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+      <div class="flex flex-col md:flex-row gap-6 items-start">
+        <div class="w-full md:w-48">
+          <%= f.input :license_number,
+                      label: "License number",
+                      input_html: { class: "w-full" },
+                      wrapper_html: { class: "w-full" } %>
+        </div>
 
-    <% if f.object.user %>
-      <%= f.fields_for :user do |user_form| %>
-        <%= user_form.input :time_zone,
-                    as: :select,
-                    collection: us_time_zone_fundamentals,
-                    selected: user_form.object.time_zone.presence || "Pacific Time (US & Canada)",
-                    include_blank: false,
-                    hint: "Event times and other dates will be shown in this timezone.",
-                    input_html: { class: "w-full" },
-                    wrapper_html: { class: "w-full max-w-md" } %>
-      <% end %>
-    <% end %>
+        <div class="w-full md:w-48">
+          <%= f.input :license_type,
+                      label: "License type",
+                      input_html: { class: "w-full" },
+                      wrapper_html: { class: "w-full" } %>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="profile-preferences-section">
