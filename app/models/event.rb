@@ -71,6 +71,14 @@ class Event < ApplicationRecord
     forms.find_by(event_forms: { role: "registration" })
   end
 
+  # Whether a signed-in user should register in one click rather than being
+  # routed to the registration form. True when no registration form is linked,
+  # or when an admin has explicitly opted members out of the form. A linked form
+  # (even one without fields yet) routes signed-in users to the form.
+  def one_click_for_signed_in?
+    signed_in_one_click_enabled? || registration_form.nil?
+  end
+
   def scholarship_form
     forms.find_by(event_forms: { role: "scholarship" })
   end

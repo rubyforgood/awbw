@@ -112,6 +112,28 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /edit registration form section" do
+    let(:event) { create(:event) }
+
+    before { sign_in admin }
+
+    it "shows preview links for enabled add-ons" do
+      create(:event_form, event: event, form: create(:form, name: "Scholarship"), role: "scholarship")
+      create(:event_form, event: event, form: create(:form, name: "Bulk"), role: "bulk_payment")
+      get edit_event_path(event)
+      expect(response.body).to include("Preview scholarship form")
+      expect(response.body).to include("scholarship_requested=true")
+      expect(response.body).to include("Preview bulk payment page")
+      expect(response.body).to include("/events/#{event.id}/bulk_payment/new")
+    end
+
+    it "omits preview links when add-ons are disabled" do
+      get edit_event_path(event)
+      expect(response.body).not_to include("Preview scholarship form")
+      expect(response.body).not_to include("Preview bulk payment page")
+    end
+  end
+
   describe "POST /create" do
     context "as admin" do
       before { sign_in admin }
@@ -1051,6 +1073,36 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Staffed event")
         expect(response.body).not_to include("Other event")
       end
+    end
+  end
+
+  describe "GET /show register button for signed-in users" do
+    let(:registerable_event) { create(:event, :published) }
+    let(:one_click_action) { "/events/#{registerable_event.id}/registrations" }
+    let(:form_path) { new_event_public_registration_path(registerable_event) }
+
+    before { sign_in user }
+
+    it "renders a one-click register button when no registration form is linked" do
+      get event_url(registerable_event)
+      expect(response.body).to include(one_click_action)
+      expect(response.body).not_to include(form_path)
+    end
+
+    it "routes to the registration form when one is linked" do
+      form = create(:form, name: "Registration")
+      create(:event_form, event: registerable_event, form: form, role: "registration")
+      get event_url(registerable_event)
+      expect(response.body).to include(form_path)
+    end
+
+    it "renders a one-click button when a form is linked but signed_in_one_click is enabled" do
+      form = create(:form, name: "Registration")
+      create(:event_form, event: registerable_event, form: form, role: "registration")
+      registerable_event.update!(signed_in_one_click_enabled: true)
+      get event_url(registerable_event)
+      expect(response.body).to include(one_click_action)
+      expect(response.body).not_to include(form_path)
     end
   end
 end
