@@ -1,5 +1,5 @@
 class CommentPolicy < ApplicationPolicy
-  alias_rule :index?, :create?, to: :manage?
+  alias_rule :index?, :create?, :update?, to: :manage?
 
   def manage?
     admin?

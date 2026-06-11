@@ -14,5 +14,12 @@
                       class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
   </div>
 
-  <%= f.submit "Add Comment", class: "btn btn-secondary-outline" %>
+  <div class="flex items-center gap-x-3">
+    <%= f.submit "Add Comment", class: "btn btn-secondary-outline" %>
+    <label class="inline-flex items-center cursor-pointer select-none" title="Flag this note for follow-up">
+      <%= f.check_box :flagged, class: "peer sr-only" %>
+      <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]!"></i>
+      <span class="ml-1.5 text-sm text-gray-500 peer-checked:text-orange-600">Flag</span>
+    </label>
+  </div>
 <% end %>
