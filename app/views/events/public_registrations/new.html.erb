@@ -78,12 +78,29 @@
         </div>
       <% end %>
 
-      <%= form_with url: event_public_registration_path(@event), method: :post, local: true, class: "space-y-2", data: { turbo: !@event.cost_cents.to_i.positive? } do |f| %>
+      <% form_data = { turbo: !@event.cost_cents.to_i.positive? } %>
+      <% form_data[:controller] = "on-behalf" if allowed_to?(:dashboard?, @event) %>
+      <%= form_with url: event_public_registration_path(@event), method: :post, local: true, class: "space-y-2", data: form_data do |f| %>
 
         <% if @scholarship %>
           <input type="hidden" name="scholarship_requested" value="true">
         <% end %>
 
+        <%# Admin-only: register on someone's behalf without emailing them a
+            confirmation. The submitter is still found/created from the form. %>
+        <% if allowed_to?(:dashboard?, @event) %>
+          <label class="admin-only flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 mb-4 cursor-pointer">
+            <%= check_box_tag :on_behalf, "1", on_behalf?, class: "mt-0.5", data: { on_behalf_target: "toggle", action: "on-behalf#reveal" } %>
+            <span>
+              <span class="block text-sm font-semibold text-blue-900">Registering on someone's behalf</span>
+              <span class="block text-xs text-blue-700">They won't receive a confirmation email — FYI will still be sent.</span>
+            </span>
+            <span class="ml-auto inline-flex items-center gap-1 rounded-full bg-blue-200 px-2 py-0.5 text-[0.65rem] font-semibold text-blue-800">
+              <i class="fa-solid fa-user-shield text-[0.6rem]"></i>
+              Admin only
+            </span>
+          </label>
+        <% end %>
 
         <%# Honeypot %>
         <div class="hidden" aria-hidden="true">
@@ -103,23 +120,25 @@
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
           <% @form_fields.each do |field| %>
+            <% behalf_only = @behalf_only_field_ids.include?(field.id) %>
+            <% behalf_data = { on_behalf_target: "field" } if behalf_only %>
             <% if field.group_header? %>
-              <div class="md:col-span-12 pt-7 pb-4">
+              <%= tag.div class: class_names("md:col-span-12 pt-7 pb-4", "hidden" => behalf_only && !on_behalf?), data: behalf_data do %>
                 <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-purple-900">
                   <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
                 </h3>
                 <% if field.hint_text.present? %>
                   <p class="mt-1.5 text-sm text-gray-500"><%= field.hint_text %></p>
                 <% end %>
-              </div>
+              <% end %>
             <% else %>
               <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
               <% if submitted_value.blank? && field.field_identifier == "payment_method" %>
                 <% submitted_value = @scholarship ? "Other" : FormBuilderService::PAYMENT_METHOD_PAY_NOW %>
               <% end %>
-              <div class="<%= field.grid_span_class %>">
+              <%= tag.div class: class_names(field.grid_span_class, "hidden" => behalf_only && !on_behalf?), data: behalf_data do %>
                 <%= render "events/public_registrations/form_field", field: field, value: submitted_value, label: email_label_overrides[field.field_identifier] %>
-              </div>
+              <% end %>
             <% end %>
           <% end %>
         </div>

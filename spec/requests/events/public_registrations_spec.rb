@@ -179,6 +179,56 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       expect(response.body).to include("Community mental health, outpatient, etc")
     end
+
+    it "hides the on-behalf toggle from guests" do
+      get new_event_public_registration_path(event)
+
+      expect(response.body).not_to include("Registering on someone's behalf")
+    end
+
+    it "shows the on-behalf toggle to admins, pre-checked when requested" do
+      sign_in create(:user, :with_person, super_user: true)
+
+      get new_event_public_registration_path(event, on_behalf: true)
+
+      expect(response.body).to include("Registering on someone's behalf")
+      expect(response.body).to match(/name="on_behalf"[^>]*checked/)
+    end
+
+    context "with an identity field that is hidden for a logged-in user" do
+      let(:admin) { create(:user, :with_person, super_user: true) }
+      let!(:first_name_field) do
+        create(:form_field, form: form, field_identifier: "first_name",
+               visibility: :logged_out_only, required: true, name: "First name")
+      end
+
+      before { admin.person.update!(first_name: "Adminna") }
+
+      def first_name_wrapper
+        doc = Nokogiri::HTML(response.body)
+        input = doc.at_css("[name='public_registration[form_fields][#{first_name_field.id}]']")
+        input&.ancestors("[data-on-behalf-target='field']")&.first
+      end
+
+      it "renders the hidden field in the DOM but collapsed behind the toggle" do
+        sign_in admin
+        get new_event_public_registration_path(event)
+
+        expect(response.body).to include('data-controller="on-behalf"')
+        wrapper = first_name_wrapper
+        expect(wrapper).to be_present
+        expect(wrapper["class"]).to include("hidden")
+      end
+
+      it "reveals the field when the form is opened in on-behalf mode" do
+        sign_in admin
+        get new_event_public_registration_path(event, on_behalf: true)
+
+        wrapper = first_name_wrapper
+        expect(wrapper).to be_present
+        expect(wrapper["class"]).not_to include("hidden")
+      end
+    end
   end
 
   describe "GET show" do
@@ -195,6 +245,42 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("<strong>Your details</strong>")
       expect(response.body).to include("<em>Name</em>")
+    end
+  end
+
+  describe "POST create on behalf of someone" do
+    let(:admin) { create(:user, :with_person, super_user: true) }
+    let(:registration) { create(:event_registration, event: event) }
+    let(:result) do
+      EventRegistrationServices::PublicRegistration::Result.new(
+        success?: true, event_registration: registration, form_submission: nil, errors: []
+      )
+    end
+
+    def post_on_behalf
+      post event_public_registration_path(event),
+           params: { on_behalf: "1", public_registration: { form_fields: {
+             essay_field.id.to_s => "this answer has plenty of words"
+           } } }
+    end
+
+    it "tells the service to skip the registrant confirmation when an admin opts in" do
+      sign_in admin
+      expect(EventRegistrationServices::PublicRegistration).to receive(:call)
+        .with(hash_including(send_confirmation: false, person: nil)).and_return(result)
+
+      post_on_behalf
+
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+
+    it "ignores the flag for a guest so the confirmation still sends" do
+      expect(EventRegistrationServices::PublicRegistration).to receive(:call)
+        .with(hash_including(send_confirmation: true)).and_return(result)
+
+      post_on_behalf
+
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
     end
   end
 end

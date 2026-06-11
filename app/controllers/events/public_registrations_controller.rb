@@ -18,7 +18,7 @@ module Events
         return
       end
 
-      @form_fields = visible_form_fields
+      set_field_variables
       @scholarship = scholarship_mode?
       @scholarship_form = @event.scholarship_form if @scholarship
       @event = @event.decorate
@@ -45,7 +45,7 @@ module Events
         @field_errors = @field_errors.merge(FormAnswerValidator.call(scholarship_fields, scholarship_params))
       end
       if @field_errors.any?
-        @form_fields = visible_form_fields
+        set_field_variables
         @event = @event.decorate
         render :new, status: :unprocessable_content
         return
@@ -58,7 +58,10 @@ module Events
         form: @form,
         form_params: registration_params,
         scholarship_requested: @scholarship,
-        person: current_user&.person
+        # On-behalf mode finds/creates the registrant from the form rather than
+        # tying the registration to the admin filling it out.
+        person: registration_person,
+        send_confirmation: !on_behalf?
       )
 
       if result.success?
@@ -72,7 +75,7 @@ module Events
                       notice: "You have been successfully registered!"
         end
       else
-        @form_fields = visible_form_fields
+        set_field_variables
         @event = @event.decorate
         flash.now[:alert] = result.errors.join(", ")
         render :new, status: :unprocessable_content
@@ -111,6 +114,36 @@ module Events
     end
 
     private
+
+    # An admin (or event owner) registering someone else: only honored for users
+    # who can manage the event, so a guest can't suppress their own confirmation.
+    def on_behalf?
+      return false unless ActiveModel::Type::Boolean.new.cast(params[:on_behalf])
+      allowed_to?(:dashboard?, @event)
+    end
+    helper_method :on_behalf?
+
+    # The person the form is being filled out for. In on-behalf mode there's no
+    # logged-in registrant, so we treat it as a fresh (logged-out) submission.
+    def registration_person
+      on_behalf? ? nil : current_user&.person
+    end
+
+    # Builds @form_fields for the registration form. Admins always get the full
+    # logged-out form so they can register a not-logged-in person; the fields
+    # that are normally hidden for the logged-in admin are flagged as
+    # "behalf-only" and revealed client-side when "on behalf" is checked.
+    def set_field_variables
+      unless allowed_to?(:dashboard?, @event)
+        @form_fields = visible_form_fields
+        @behalf_only_field_ids = []
+        return
+      end
+
+      logged_in_ids = visible_form_fields(person: current_user&.person).ids
+      @form_fields = visible_form_fields(person: nil)
+      @behalf_only_field_ids = @form_fields.ids - logged_in_ids
+    end
 
     def credit_card_payment?(form_params)
       payment_method_field = @form.form_fields.find_by(field_identifier: "payment_method")
@@ -190,10 +223,9 @@ module Events
       end
     end
 
-    def visible_form_fields
+    def visible_form_fields(person: registration_person)
       scope = @form.form_fields
 
-      person = current_user&.person
       if person
         # Always hide logged_out_only fields for logged-in users with known data
         known_identifiers = person_known_identifiers(person)

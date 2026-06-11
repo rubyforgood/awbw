@@ -22,6 +22,9 @@
       <% end %>
       <%= render "bulk_actions_menu" %>
       <% if allowed_to?(:new?, EventRegistration) %>
+        <% if @event.event_forms.registration.exists? %>
+          <%= link_to "Register on behalf", new_event_public_registration_path(@event, on_behalf: true), class: "admin-only bg-blue-100 btn btn-secondary-outline", title: "Fill out the registration form for someone without emailing them a confirmation" %>
+        <% end %>
         <%= link_to "Add registrant", new_event_registration_path(event_id: @event.id, return_to: "registrants"), class: "admin-only bg-blue-100 btn btn-primary-outline" %>
       <% end %>
     </div>

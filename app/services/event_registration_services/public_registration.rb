@@ -2,16 +2,17 @@ module EventRegistrationServices
   class PublicRegistration
     Result = Struct.new(:success?, :event_registration, :form_submission, :errors, keyword_init: true)
 
-    def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil)
-      new(event:, form:, form_params:, scholarship_requested:, person:).call
+    def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil, send_confirmation: true)
+      new(event:, form:, form_params:, scholarship_requested:, person:, send_confirmation:).call
     end
 
-    def initialize(event:, form:, form_params:, scholarship_requested: false, person: nil)
+    def initialize(event:, form:, form_params:, scholarship_requested: false, person: nil, send_confirmation: true)
       @event = event
       @form = form
       @form_params = form_params
       @scholarship_requested = scholarship_requested
       @person = person
+      @send_confirmation = send_confirmation
       @errors = []
     end
 
@@ -282,15 +283,17 @@ module EventRegistrationServices
     end
 
     def send_notifications(event_registration)
-      registrant_email = event_registration.registrant.preferred_email
-
-      NotificationServices::CreateNotification.call(
-        noticeable: event_registration,
-        kind: :event_registration_confirmation,
-        recipient_role: :person,
-        recipient_email: registrant_email,
-        notification_type: 0
-      )
+      # When an admin registers on someone's behalf we skip the registrant-facing
+      # confirmation (they didn't ask to be emailed) but still notify staff.
+      if @send_confirmation
+        NotificationServices::CreateNotification.call(
+          noticeable: event_registration,
+          kind: :event_registration_confirmation,
+          recipient_role: :person,
+          recipient_email: event_registration.registrant.preferred_email,
+          notification_type: 0
+        )
+      end
 
       NotificationServices::CreateNotification.call(
         noticeable: event_registration,

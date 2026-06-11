@@ -104,4 +104,30 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       )
     end
   end
+
+  describe "send_confirmation option" do
+    let(:params) { base_form_params(first_name: "Mara", last_name: "New", email: "mara@example.com") }
+
+    it "sends both the registrant confirmation and the admin FYI by default" do
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: :event_registration_confirmation, recipient_role: :person)
+      )
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: :event_registration_confirmation_fyi, recipient_role: :admin)
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+    end
+
+    it "skips the registrant confirmation but still sends the admin FYI when send_confirmation is false" do
+      expect(NotificationServices::CreateNotification).not_to receive(:call).with(
+        hash_including(kind: :event_registration_confirmation, recipient_role: :person)
+      )
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: :event_registration_confirmation_fyi, recipient_role: :admin)
+      )
+
+      described_class.call(event: event, form: form, form_params: params, send_confirmation: false)
+    end
+  end
 end
