@@ -85,7 +85,7 @@ RSpec.describe StripeChargeRefundedProcessor do
       succeeded = double("refund", id: "re_1", status: "succeeded", amount: 10_00)
       pending_refund = double("refund", id: "re_2", status: "pending", amount: 5_00)
       allow(retrieved_charge).to receive(:refunds)
-        .and_return(double("refunds", data: [succeeded, pending_refund]))
+        .and_return(double("refunds", data: [ succeeded, pending_refund ]))
 
       expect { processor.call(event) }.to change(Refund, :count).by(1)
     end
