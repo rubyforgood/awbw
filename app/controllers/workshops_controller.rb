@@ -292,7 +292,7 @@ class WorkshopsController < ApplicationController
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ],
-      comments_attributes: [ :id, :topic, :body, :_destroy ]
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ]
     )
   end
 end

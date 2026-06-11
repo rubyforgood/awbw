@@ -59,6 +59,25 @@ RSpec.describe "POST /people", type: :request do
     end
   end
 
+  describe "flagging a comment via nested attributes on update" do
+    it "persists the flagged state from the person form" do
+      person = create(:person)
+      comment = create(:comment, commentable: person, body: "Called the family.")
+
+      patch person_path(person), params: {
+        person: {
+          first_name: person.first_name,
+          category_ids: [ "" ],
+          comments_attributes: {
+            "0" => { id: comment.id, body: comment.body, flagged: "1" }
+          }
+        }
+      }
+
+      expect(comment.reload).to be_flagged
+    end
+  end
+
   describe "user_attributes are applied on create" do
     it "updates the user's time_zone from the person form" do
       user = create(:user, time_zone: "Hawaii")

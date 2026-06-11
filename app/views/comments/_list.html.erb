@@ -2,7 +2,7 @@
   <div class="space-y-3">
     <% if comments.any? %>
       <% comments.each do |comment| %>
-        <div class="grid grid-cols-[auto_1fr] gap-x-3 items-start">
+        <div class="grid grid-cols-[auto_1fr_auto] gap-x-3 items-start">
           <span class="text-xs text-gray-400 mt-1 whitespace-nowrap">
             <%= comment.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
           </span>
@@ -12,6 +12,9 @@
             <% end %>
             <%= simple_format(comment.body) %>
           </div>
+          <span class="mt-0.5">
+            <%= render "comments/flag_toggle", commentable: commentable, comment: comment %>
+          </span>
         </div>
       <% end %>
 
