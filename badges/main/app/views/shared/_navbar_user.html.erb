@@ -65,6 +65,14 @@
       <% end %>
     <% end %>
 
+    <% if @current_user_staffs_events %>
+      <%= link_to events_path(staffed_by_me: true),
+                  class: "admin-only bg-blue-100 flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 space-x-2" do %>
+        <i class="fas fa-calendar-check"></i>
+        <span>My events</span>
+      <% end %>
+    <% end %>
+
     <% if allowed_to?(:personal?, Bookmark) %>
       <%= link_to personal_bookmarks_path,
                   class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 space-x-2" do %>
