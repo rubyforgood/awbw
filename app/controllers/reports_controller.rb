@@ -199,7 +199,7 @@ class ReportsController < ApplicationController
   def build_report_form_fields
     return unless @form_builder.form_fields
 
-    @form_builder.form_fields.where(status: 1).each do |field|
+    @form_builder.form_fields.where(status: 1).order(:position).each do |field|
       if field.multiple_choice?
         field.answer_options.each do |option|
           @report.report_form_field_answers.new(
