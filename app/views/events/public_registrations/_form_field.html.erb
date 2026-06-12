@@ -94,9 +94,11 @@
         options carry an optional description, shown as subtext under the label. %>
     <% checkbox_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-1">
+    <%# Multi-column (not grid) so a sorted option list reads straight down each
+        column then onto the next, rather than zig-zagging across rows. %>
+    <div class="columns-1 sm:columns-2 gap-2.5 mt-1">
       <% checkbox_options.each do |option_label, option_value, option_description| %>
-        <label class="flex flex-col gap-1 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
+        <label class="flex flex-col gap-1 mb-2.5 break-inside-avoid rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <span class="flex items-center gap-2">
             <input type="checkbox"
                    name="<%= checkbox_name %>"
