@@ -21,17 +21,17 @@
         <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
       <% elsif event.registerable? %>
         <% if user_signed_in? %>
-          <% if event.object.registration_form&.form_fields&.any? %>
-            <%= link_to button_text,
-                        new_event_public_registration_path(event),
-                        class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
-                        style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
-          <% else %>
+          <% if event.object.one_click_for_signed_in? %>
             <%= button_to button_text,
                           event_registrant_registration_path(event_id: event),
                           data: { turbo: !event.object.cost_cents.to_i.positive? },
                           class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
                           style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
+          <% else %>
+            <%= link_to button_text,
+                        new_event_public_registration_path(event),
+                        class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
+                        style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
           <% end %>
         <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
           <%= link_to button_text,
