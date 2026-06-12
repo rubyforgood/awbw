@@ -33,7 +33,7 @@ RSpec.describe FormField do
     it { should define_enum_for(:status).with_values([ :inactive, :active ]) }
     it { should define_enum_for(:answer_type).with_values([ :free_form_input_one_line, :free_form_input_paragraph,
                                                            :multiple_choice_radio, :no_user_input, :multiple_choice_checkbox,
-                                                           :group_header ]) }
+                                                           :group_header, :multiple_choice_dropdown ]) }
     it { should define_enum_for(:input_type).with_values([ :text_alphanumeric, :number_integer, :number_decimal, :date ]) }
   end
 

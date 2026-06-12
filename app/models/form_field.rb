@@ -29,7 +29,8 @@ class FormField < ApplicationRecord
     :multiple_choice_radio,
     :no_user_input,
     :multiple_choice_checkbox,
-    :group_header
+    :group_header,
+    :multiple_choice_dropdown
   ]
 
   enum :input_type, [
@@ -56,6 +57,7 @@ class FormField < ApplicationRecord
     "free_form_input_one_line" => "One line",
     "free_form_input_paragraph" => "Paragraph",
     "multiple_choice_radio" => "Single choice radio",
+    "multiple_choice_dropdown" => "Single choice dropdown",
     "multiple_choice_checkbox" => "Multiple choice checkbox",
     "no_user_input" => "Informational-only"
   }.freeze

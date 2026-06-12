@@ -65,7 +65,7 @@
       <div class="flex flex-wrap items-center gap-2">
         <%= f.text_area :name, required: true, rows: 1, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
         <%
-          type_order = %w[free_form_input_one_line free_form_input_paragraph multiple_choice_radio multiple_choice_checkbox no_user_input group_header]
+          type_order = %w[free_form_input_one_line free_form_input_paragraph multiple_choice_radio multiple_choice_dropdown multiple_choice_checkbox no_user_input group_header]
           type_options = type_order.map { |t| [ FormField::ANSWER_TYPE_LABELS[t] || t.titleize, t ] }
         %>
         <%= f.select :answer_type, type_options,

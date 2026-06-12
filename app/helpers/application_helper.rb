@@ -149,7 +149,7 @@ module ApplicationHelper
   # of which single/multiple choice type it was set to.
   def dynamic_form_field_options(field)
     case field.field_identifier
-    when "primary_service_area"
+    when "primary_service_area", "primary_service_area_single"
       Sector.published.order(:name).map { |sector| [ sector.name, sector.id.to_s ] }
     when *DYNAMIC_FIELD_CATEGORY_TYPES.keys
       type = CategoryType.find_by(name: DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
@@ -161,7 +161,7 @@ module ApplicationHelper
   # editor badge: a sentence-case label and a link to the filtered admin list
   # that manages those options. Returns nil for fields with stored options.
   def form_field_option_source(field)
-    if field.field_identifier == "primary_service_area"
+    if field.field_identifier.in?(%w[primary_service_area primary_service_area_single])
       { label: "Sectors", path: sectors_path }
     elsif (type_name = DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
       type = CategoryType.find_by(name: type_name)

@@ -49,7 +49,7 @@ class FormBuilderService
       agency_state agency_zip agency_type agency_website
     ],
     person_background: %w[racial_ethnic_identity],
-    professional_info: %w[primary_service_area workshop_environments client_life_experiences primary_age_group],
+    professional_info: %w[primary_service_area_single primary_service_area workshop_environments client_life_experiences primary_age_group],
     marketing: %w[referral_source training_motivation interested_in_more],
     scholarship: %w[scholarship_eligibility impact_description implementation_plan additional_comments],
     payment: %w[payment_method],
@@ -375,9 +375,12 @@ class FormBuilderService
   def build_professional_info_fields(form, position)
     position = add_header(form, position, "Professional Information", group: "professional")
 
-    position = add_field(form, position, "Primary Service Area(s)", :multiple_choice_checkbox,
+    position = add_field(form, position, "Primary service area", :multiple_choice_dropdown,
+                         key: "primary_service_area_single", group: "professional", required: false,
+                         hint: "Select the sector you primarily serve.")
+    position = add_field(form, position, "Additional service areas", :multiple_choice_checkbox,
                          key: "primary_service_area", group: "professional", required: false,
-                         hint: "Select all that apply. These represent the sectors you primarily serve.")
+                         hint: "Select all that apply. These represent the other sectors you serve.")
     position = add_field(form, position, "Workshop Settings", :multiple_choice_checkbox,
                          key: "workshop_environments", group: "professional", required: false,
                          hint: "Select all settings where you facilitate or plan to facilitate workshops.",

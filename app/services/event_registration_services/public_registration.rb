@@ -211,7 +211,8 @@ module EventRegistrationServices
     end
 
     def assign_tags(person, organization)
-      sector_ids = collect_ids_from_checkboxes("primary_service_area")
+      sector_ids = collect_ids_from_checkboxes("primary_service_area_single") +
+                   collect_ids_from_checkboxes("primary_service_area")
       category_ids = collect_ids_from_checkboxes("workshop_environments") +
                      collect_ids_from_checkboxes("client_life_experiences") +
                      collect_ids_from_checkboxes("primary_age_group")
