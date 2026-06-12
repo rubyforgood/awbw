@@ -29,6 +29,8 @@ module PayChargeExtensions
     return unless person
 
     payment = ExternalProcessorPayment.create!(
+      stripe_charge_id: processor_id,
+      external_origin: false,
       person: person,
       form_submission: FormSubmission.find_by(id: metadata["form_submission_id"]),
       amount_cents: amount,
@@ -72,6 +74,8 @@ module PayChargeExtensions
     payment_metadata[:number_of_attendees] = count_answer&.submitted_answer&.to_i
 
     payment = ExternalProcessorPayment.create!(
+      stripe_charge_id: processor_id,
+      external_origin: false,
       person: person,
       form_submission: submission,
       amount_cents: amount,
@@ -87,6 +91,8 @@ module PayChargeExtensions
     return unless person
 
     ExternalProcessorPayment.create!(
+      stripe_charge_id: processor_id,
+      external_origin: false,
       person: person,
       amount_cents: amount,
       amount_cents_remaining: amount,
@@ -100,7 +106,7 @@ module PayChargeExtensions
     refunds_data = object["refunds"]["data"] || []
     return if refunds_data.empty?
 
-    external_payment = ExternalProcessorPayment.find_by(pay_charge_id: id)
+    external_payment = ExternalProcessorPayment.find_by(stripe_charge_id: processor_id)
     return unless external_payment
 
     refunds_data.each do |stripe_refund|

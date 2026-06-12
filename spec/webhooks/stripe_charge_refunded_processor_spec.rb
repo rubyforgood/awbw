@@ -6,12 +6,12 @@ RSpec.describe StripeChargeRefundedProcessor do
   let(:person) { create(:person) }
   let(:external_payment) do
     ExternalProcessorPayment.create!(
+      stripe_charge_id: "ch_test_123",
       person: person,
       amount_cents: 30_00,
       amount_cents_remaining: 30_00,
       currency: "usd",
-      skip_pay_charge_validation: true,
-      metadata: { stripe_charge_id: "ch_test_123" }
+      skip_pay_charge_validation: true
     )
   end
 
@@ -33,7 +33,7 @@ RSpec.describe StripeChargeRefundedProcessor do
     end
 
     it "does nothing when no ExternalProcessorPayment matches" do
-      external_payment.update!(metadata: { stripe_charge_id: "ch_other" })
+      external_payment.update!(stripe_charge_id: "ch_other")
 
       expect { processor.call(event) }.not_to change(Refund, :count)
     end

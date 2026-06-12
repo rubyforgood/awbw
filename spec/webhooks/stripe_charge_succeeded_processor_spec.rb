@@ -31,34 +31,16 @@ RSpec.describe StripeChargeSucceededProcessor do
       expect { processor.call(event) }.not_to change(ExternalProcessorPayment, :count)
     end
 
-    it "does nothing when charge has app metadata keys" do
-      allow(stripe_charge).to receive(:metadata).and_return({ "event_registration_id" => 1 })
+    it "does nothing when an EPP already exists with the same stripe_charge_id" do
+      stripe_charge_id = "ch_app_originated"
+      allow(stripe_charge).to receive(:id).and_return(stripe_charge_id)
 
-      expect { processor.call(event) }.not_to change(ExternalProcessorPayment, :count)
-    end
-
-    it "does nothing when a Pay::Charge exists and an EPP is already linked" do
       ExternalProcessorPayment.create!(
+        stripe_charge_id: stripe_charge_id,
         person: person,
         pay_charge: pay_charge,
         amount_cents: 30_00,
         currency: "usd"
-      )
-
-      expect { processor.call(event) }.not_to change(ExternalProcessorPayment, :count)
-    end
-
-    it "does nothing when an EPP already exists with the same stripe_charge_id" do
-      # Use a different stripe_charge_id so we don't match the pay_charge
-      other_id = "ch_unrelated"
-      allow(stripe_charge).to receive(:id).and_return(other_id)
-
-      ExternalProcessorPayment.create!(
-        person: person,
-        amount_cents: 30_00,
-        currency: "usd",
-        skip_pay_charge_validation: true,
-        metadata: { stripe_charge_id: other_id }
       )
 
       expect { processor.call(event) }.not_to change(ExternalProcessorPayment, :count)
@@ -138,10 +120,10 @@ RSpec.describe StripeChargeSucceededProcessor do
       expect(ExternalProcessorPayment.last.amount_cents_remaining).to eq(30_00)
     end
 
-    it "stores stripe charge data in metadata" do
+    it "stores stripe charge data in metadata and sets stripe_charge_id column" do
       processor.call(event)
       epp = ExternalProcessorPayment.last
-      expect(epp.metadata["stripe_charge_id"]).to eq(stripe_charge_id)
+      expect(epp.stripe_charge_id).to eq(stripe_charge_id)
       expect(epp.metadata["stripe_charge"]).to be_a(Hash)
     end
   end

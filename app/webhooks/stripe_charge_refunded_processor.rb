@@ -3,9 +3,7 @@ class StripeChargeRefundedProcessor
     stripe_charge = event.data.object
     return unless stripe_charge.amount_refunded > 0
 
-    external_payment = ExternalProcessorPayment
-      .with_metadata_key("stripe_charge_id", stripe_charge.id)
-      .first
+    external_payment = Payment.find_by(stripe_charge_id: stripe_charge.id)
     return unless external_payment
 
     charge = Stripe::Charge.retrieve(

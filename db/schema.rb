@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_09_170001) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -855,6 +855,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170001) do
     t.string "check_number"
     t.datetime "created_at", null: false
     t.string "currency", default: "usd", null: false
+    t.boolean "external_origin", default: true, null: false
     t.bigint "form_submission_id"
     t.string "memo"
     t.json "metadata"
@@ -862,11 +863,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170001) do
     t.bigint "pay_charge_id"
     t.string "payer_type", null: false
     t.bigint "person_id"
+    t.string "stripe_charge_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.index ["form_submission_id"], name: "index_payments_on_form_submission_id"
     t.index ["organization_id"], name: "index_payments_on_organization_id"
     t.index ["person_id"], name: "index_payments_on_person_id"
+    t.index ["stripe_charge_id"], name: "index_payments_on_stripe_charge_id", unique: true
   end
 
   create_table "people", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

@@ -46,26 +46,4 @@ RSpec.describe ExternalProcessorPayment do
       expect(payment).to be_valid
     end
   end
-
-  describe ".with_metadata_key" do
-    it "returns records matching the given JSON metadata key/value" do
-      matching = ExternalProcessorPayment.create!(
-        person: person,
-        pay_charge: pay_charge,
-        amount_cents: 1000,
-        currency: "usd",
-        metadata: { stripe_charge_id: "ch_match" }
-      )
-      ExternalProcessorPayment.create!(
-        person: person,
-        pay_charge: pay_charge,
-        amount_cents: 1000,
-        currency: "usd",
-        metadata: { stripe_charge_id: "ch_other" }
-      )
-
-      results = described_class.with_metadata_key("stripe_charge_id", "ch_match")
-      expect(results).to contain_exactly(matching)
-    end
-  end
 end

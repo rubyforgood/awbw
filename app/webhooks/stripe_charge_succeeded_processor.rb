@@ -1,28 +1,22 @@
 class StripeChargeSucceededProcessor
-  APP_METADATA_KEYS = %w[event_registration_id form_submission_id person_id].freeze
-
   def call(event)
     stripe_charge = event.data.object
     return unless stripe_charge.paid
 
-    metadata = stripe_charge.metadata || {}
-
-    return if (metadata.keys & APP_METADATA_KEYS).any?
+    return if Payment.exists?(stripe_charge_id: stripe_charge.id)
 
     pay_charge = Pay::Charge.find_by(processor_id: stripe_charge.id)
-    return if pay_charge && ExternalProcessorPayment.exists?(pay_charge_id: pay_charge.id)
-    return if ExternalProcessorPayment.with_metadata_key("stripe_charge_id", stripe_charge.id).exists?
 
     person = resolve_person(stripe_charge, pay_charge)
 
     payment = ExternalProcessorPayment.new(
+      stripe_charge_id: stripe_charge.id,
       person: person,
       pay_charge: pay_charge,
       amount_cents: stripe_charge.amount,
       amount_cents_remaining: stripe_charge.amount,
       currency: stripe_charge.currency,
       metadata: {
-        stripe_charge_id: stripe_charge.id,
         stripe_charge: stripe_charge.to_hash
       }
     )
