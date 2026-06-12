@@ -106,7 +106,7 @@ RSpec.describe "Forms", type: :request do
       form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
       get edit_form_path(form)
 
-      expect(response.body).to include('data-controller="field-options"')
+      expect(response.body).to include('data-controller="field-options answer-options"')
       expect(response.body).to include("field-options#toggle")
       expect(response.body).to include("Only ask once")
       expect(response.body).to include("Min words")
@@ -116,11 +116,42 @@ RSpec.describe "Forms", type: :request do
       form = FormBuilderService.new(name: "Test", sections: %i[person_contact_info]).call
       get edit_form_path(form)
 
-      expect(response.body).to include('data-controller="answer-options"')
+      expect(response.body).to include('data-controller="field-options answer-options"')
       expect(response.body).to include("answer-options#toggle")
       # The radio field's seeded options are rendered as editable inputs
       expect(response.body).to include("[option_name]")
       expect(response.body).to include("+ Add option")
+    end
+
+    it "renders the answer-options scaffolding on every field so a field switched to a choice type can gain options" do
+      # person_identifier seeds only free-form fields (no multiple-choice).
+      # The answer-options UI must still be present (hidden) so the type
+      # dropdown can reveal it client-side — otherwise a field changed to
+      # "Single choice radio" saves with no options and shows nothing on the
+      # public form.
+      form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
+      expect(form.form_fields.none?(&:multiple_choice?)).to be(true)
+
+      get edit_form_path(form)
+
+      expect(response.body).to include("answer-options#typeChanged")
+      expect(response.body).to include('data-answer-options-target="list"')
+      expect(response.body).to include("+ Add option")
+    end
+
+    it "shows an option-source badge linking to the managed list for dynamic fields" do
+      type = CategoryType.create!(name: "AgeRange", published: true)
+      form = create(:form, :standalone)
+      create(:form_field, form: form, answer_type: :multiple_choice_radio,
+             field_identifier: "primary_age_group", name: "Primary age group", status: :active)
+
+      get edit_form_path(form)
+
+      expect(response.body).to include("Options from")
+      expect(response.body).to include("Age range categories")
+      expect(response.body).to include(categories_path(category_type_id: type.id))
+      # The per-field options editor is not offered for centrally-managed options
+      expect(response.body).not_to match(/primary_age_group.{0,400}\+ Add option/m)
     end
 
     it "renders the expand/collapse all toggle" do
