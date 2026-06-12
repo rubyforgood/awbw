@@ -68,15 +68,20 @@
     <% radio_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
     <div class="flex flex-wrap gap-2.5 mt-1">
-      <% radio_options.each do |option_label, option_value| %>
-        <label class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
+      <% radio_options.each do |option_label, option_value, option_description| %>
+        <label class="inline-flex items-start gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <input type="radio"
                  name="<%= field_name %>"
                  value="<%= option_value %>"
-                 class="text-blue-600 focus:ring-blue-500"
+                 class="mt-0.5 text-blue-600 focus:ring-blue-500"
                  <%= "checked" if value == option_value || (value.blank? && field.field_identifier == "interested_in_more" && option_value == "Yes") %>
                  <%= "required" if field.required %>>
-          <%= option_label %>
+          <span>
+            <%= option_label %>
+            <% if option_description.present? %>
+              <span class="block text-xs font-normal text-gray-500"><%= option_description %></span>
+            <% end %>
+          </span>
         </label>
       <% end %>
     </div>
@@ -85,18 +90,24 @@
     <% checkbox_name = "public_registration[form_fields][#{field.id}][]" %>
     <% selected_values = Array(value) %>
     <%# Dynamic fields (e.g. primary_service_area) source options from Sector/Category
-        data; everything else uses the field's own stored answer options. %>
+        data; everything else uses the field's own stored answer options. Category
+        options carry an optional description, shown as subtext under the label. %>
     <% checkbox_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-1">
-      <% checkbox_options.each do |option_label, option_value| %>
-        <label class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
+      <% checkbox_options.each do |option_label, option_value, option_description| %>
+        <label class="inline-flex items-start gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <input type="checkbox"
                  name="<%= checkbox_name %>"
                  value="<%= option_value %>"
-                 class="rounded text-blue-600 focus:ring-blue-500"
+                 class="mt-0.5 rounded text-blue-600 focus:ring-blue-500"
                  <%= "checked" if selected_values.include?(option_value) %>>
-          <%= option_label %>
+          <span>
+            <%= option_label %>
+            <% if option_description.present? %>
+              <span class="block text-xs font-normal text-gray-500"><%= option_description %></span>
+            <% end %>
+          </span>
         </label>
       <% end %>
     </div>

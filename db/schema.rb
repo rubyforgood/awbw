@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_12_130000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -315,6 +315,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_160000) do
   create_table "categories", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "category_type_id"
     t.datetime "created_at", precision: nil, null: false
+    t.text "description"
     t.integer "legacy_id"
     t.string "name"
     t.integer "position", null: false
