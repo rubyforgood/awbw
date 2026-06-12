@@ -75,6 +75,9 @@
                     <span class="text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
                   <% end %>
                 </div>
+                <% if field.hint_text.present? %>
+                  <p class="mt-1.5 text-sm text-gray-500"><%= field.hint_text %></p>
+                <% end %>
               </div>
             <% else %>
               <div class="<%= field.grid_span_class %>">
