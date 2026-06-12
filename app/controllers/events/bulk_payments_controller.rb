@@ -96,34 +96,9 @@ module Events
     end
 
     def validate_required_fields
-      errors = {}
-      visible_fields = visible_form_fields
-
-      visible_fields.find_each do |field|
-        next if field.group_header?
-        next if field.field_identifier == "bulk_payment_attendees"
-
-        value = @form_params[field.id.to_s]
-
-        if field.required && (value.blank? || (value.is_a?(Array) && value.reject(&:blank?).empty?))
-          errors[field.id] = "can't be blank"
-          next
-        end
-
-        next if value.blank?
-
-        if field.number_integer? && value.to_s !~ /\A\d+\z/
-          errors[field.id] = "must be a whole number"
-        elsif field.field_identifier == "payer_email" && value.to_s !~ /\A[^@\s]+@[^@\s]+\z/
-          errors[field.id] = "must be a valid email address"
-        elsif (word_error = field.min_words_error(value))
-          errors[field.id] = word_error
-        elsif (char_error = field.max_characters_error(value))
-          errors[field.id] = char_error
-        end
-      end
-
-      errors
+      # The nested attendees field is validated separately, so exclude it here.
+      fields = visible_form_fields.reject { |field| field.field_identifier == "bulk_payment_attendees" }
+      FormAnswerValidator.call(fields, @form_params)
     end
 
     def credit_card_payment?(form_params)
