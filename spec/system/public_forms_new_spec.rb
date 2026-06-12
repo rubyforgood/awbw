@@ -95,4 +95,15 @@ RSpec.describe "Public form pages", type: :system do
       expect(page).to have_css("form[action='#{event_bulk_payment_form_path(event)}']")
     end
   end
+
+  describe "ce_credit_form" do
+    it_behaves_like "an event-linked public form", :new_event_ce_credit_form_path
+
+    it "uses the Continuing education credit heading and submits to its own endpoint" do
+      visit new_event_ce_credit_form_path(event)
+
+      expect(page).to have_css("h2", text: "Continuing education credit")
+      expect(page).to have_css("form[action='#{event_ce_credit_form_path(event)}']")
+    end
+  end
 end
