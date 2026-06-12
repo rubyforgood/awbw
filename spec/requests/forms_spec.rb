@@ -178,6 +178,15 @@ RSpec.describe "Forms", type: :request do
 
       expect(response.body).to include("<textarea")
     end
+
+    it "renders an editable subtext field for a section header" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, answer_type: :group_header, name: "Contact info")
+
+      get edit_form_path(form)
+
+      expect(response.body).to include("[hint_text]")
+    end
   end
 
   describe "GET /forms/:id (preview)" do
@@ -193,6 +202,16 @@ RSpec.describe "Forms", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("<strong>Section</strong>")
       expect(response.body).to include("<em>Your name</em>")
+    end
+
+    it "renders a section header's subtext under the heading" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, answer_type: :group_header, name: "Contact info", hint_text: "Tell us how to reach you")
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Tell us how to reach you")
     end
 
     it "renders the form header HTML under the title" do
@@ -220,6 +239,16 @@ RSpec.describe "Forms", type: :request do
       form = create(:form, :standalone)
       patch form_path(form), params: { form: { header: "<strong>Read carefully</strong>" } }
       expect(form.reload.header).to eq("<strong>Read carefully</strong>")
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "saves the subtext for a section header" do
+      form = create(:form, :standalone)
+      header = create(:form_field, form: form, answer_type: :group_header, name: "Contact info")
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { id: header.id, hint_text: "Tell us how to reach you" } } }
+      }
+      expect(header.reload.hint_text).to eq("Tell us how to reach you")
       expect(response).to redirect_to(edit_form_path(form))
     end
 

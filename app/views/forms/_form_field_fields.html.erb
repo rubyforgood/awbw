@@ -52,7 +52,10 @@
         </button>
       </div>
 
-      <div class="hidden mt-2 flex items-center" data-field-options-target="panel">
+      <div class="hidden mt-2 flex flex-col gap-2" data-field-options-target="panel">
+        <%= f.text_area :hint_text, rows: 2,
+              class: "w-full text-sm text-gray-600 rounded border-gray-300 shadow-sm px-2 py-1",
+              placeholder: "Subtitle" %>
         <%= link_to_remove_association "Remove", f,
               class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0 ml-auto" %>
       </div>
@@ -91,26 +94,29 @@
 
       <% option_source = form_field_option_source(field) %>
       <div class="hidden mt-2 flex flex-col gap-3" data-field-options-target="panel">
-        <div class="flex flex-wrap items-center gap-3">
-          <% if option_source %>
-            <%# These options are managed centrally, not per-field — link admins to that list. %>
-            <span class="inline-flex items-center gap-1.5 text-sm text-gray-500">
-              <i class="fa-solid fa-database text-xs text-gray-400"></i>
-              Options from
-              <%= link_to option_source[:label], option_source[:path],
-                    class: "font-medium text-purple-600 hover:text-purple-800 underline",
-                    target: "_blank", rel: "noopener" %>
-            </span>
-          <% else %>
-            <button type="button"
-                    class="<%= "hidden" unless field.multiple_choice? %> flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 cursor-pointer"
-                    data-answer-options-target="section"
-                    data-action="answer-options#toggle">
-              <i class="fa-solid fa-chevron-right text-xs transition-transform" data-answer-options-target="icon"></i>
-              Answer options
-              <span class="text-xs text-gray-400">(<%= field.form_field_answer_options.size %>)</span>
-            </button>
-          <% end %>
+        <div class="flex flex-wrap items-center gap-2">
+          <%# Fixed-width first column so the Subtitle box lines up under the answer-type dropdown above. %>
+          <div class="min-w-0 flex-[3_1_10rem]">
+            <% if option_source %>
+              <%# These options are managed centrally, not per-field — link admins to that list. %>
+              <span class="inline-flex items-center gap-1.5 text-sm text-gray-500">
+                <i class="fa-solid fa-database text-xs text-gray-400"></i>
+                Options from
+                <%= link_to option_source[:label], option_source[:path],
+                      class: "font-medium text-purple-600 hover:text-purple-800 underline",
+                      target: "_blank", rel: "noopener" %>
+              </span>
+            <% else %>
+              <button type="button"
+                      class="<%= "hidden" unless field.multiple_choice? %> flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 cursor-pointer"
+                      data-answer-options-target="section"
+                      data-action="answer-options#toggle">
+                <i class="fa-solid fa-chevron-right text-xs transition-transform" data-answer-options-target="icon"></i>
+                Answer options
+                <span class="text-xs text-gray-400">(<%= field.form_field_answer_options.size %>)</span>
+              </button>
+            <% end %>
+          </div>
           <%
             width_options = [
               [ "Full width", "full" ],
@@ -119,6 +125,9 @@
               [ "Quarter width", "quarter" ]
             ]
           %>
+          <%= f.text_area :hint_text, rows: 1, placeholder: "Subtitle",
+                class: "min-w-0 flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                title: "Optional subtitle shown under the field label" %>
           <%= f.select :width, width_options,
                 {},
                 class: "ml-auto shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",

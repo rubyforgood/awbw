@@ -108,6 +108,9 @@
                 <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-purple-900">
                   <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
                 </h3>
+                <% if field.hint_text.present? %>
+                  <p class="mt-1.5 text-sm text-gray-500"><%= field.hint_text %></p>
+                <% end %>
               </div>
             <% else %>
               <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
