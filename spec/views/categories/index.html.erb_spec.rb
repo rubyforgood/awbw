@@ -32,4 +32,17 @@ RSpec.describe "categories/index", type: :view do
     expect(rendered).to include("Yes") # for first category
     expect(rendered).to include("No")  # for second category
   end
+
+  it "shows a hoverable info icon only for categories that have a description" do
+    assign(:categories, [
+      create(:category, :published, name: "Described", category_type: type_a,
+             description: "Community mental health, outpatient, etc"),
+      create(:category, name: "Plain", category_type: type_b)
+    ])
+
+    render
+
+    expect(rendered).to have_css("i.fa-circle-info[title='Community mental health, outpatient, etc']")
+    expect(rendered).to have_css("i.fa-circle-info", count: 1)
+  end
 end
