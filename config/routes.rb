@@ -48,7 +48,7 @@ Rails.application.routes.draw do
       get :confirm_email_manual
       post :process_email_manual
     end
-    resources :comments, only: [ :index, :create ]
+    resources :comments, only: [ :index, :create, :update ]
   end
 
   get "contact_us", to: "contact_us#index"
@@ -100,7 +100,7 @@ Rails.application.routes.draw do
       get :link_organization
       post :select_organization
     end
-    resources :comments, only: [ :index, :create ]
+    resources :comments, only: [ :index, :create, :update ]
   end
   resources :forms do
     member do
@@ -123,6 +123,8 @@ Rails.application.routes.draw do
       get :background
       get :registrants
       get :staff
+      get "staff/edit", action: :edit_staff, as: :edit_staff
+      patch "staff", action: :update_staff
       get :recipients
       get :bulk_payments
       get :preview_reminder
@@ -142,7 +144,7 @@ Rails.application.routes.draw do
       get :workshop_logs
       get :checkout
     end
-    resources :comments, only: [ :index, :create ]
+    resources :comments, only: [ :index, :create, :update ]
   end
   resources :faqs
   resources :notifications, only: [ :index, :show, :update ] do
@@ -157,7 +159,7 @@ Rails.application.routes.draw do
     member do
       get :populations_served
     end
-    resources :comments, only: [ :index, :create ]
+    resources :comments, only: [ :index, :create, :update ]
     resources :monthly_reports, only: :index
   end
   resources :payments, only: [ :new, :create, :show, :index ] do
@@ -207,7 +209,7 @@ Rails.application.routes.draw do
   resources :workshop_variation_ideas
   resources :workshop_variations
   resources :workshops do
-    resources :comments, only: [ :index, :create ]
+    resources :comments, only: [ :index, :create, :update ]
   end
 
   resources :workshop_mentions, only: [ :index ]

@@ -22,9 +22,11 @@ class Person < ApplicationRecord
            dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
+  has_many :event_staffs, dependent: :destroy
   has_many :scholarships, foreign_key: :recipient_id, dependent: :destroy
   has_many :grants, as: :donor, dependent: :destroy
   has_many :events, through: :event_registrations
+  has_many :staffed_events, through: :event_staffs, source: :event
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
   has_many :form_submissions, dependent: :destroy

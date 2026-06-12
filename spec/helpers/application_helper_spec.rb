@@ -171,11 +171,22 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.form_header_html(form)).to eq("Register for our upcoming training.")
     end
 
-    it "fills the {{registration_close}} token from the event's close date" do
+    it "fills the {{registration_close}} token as 'Month Dayth at time' without the year" do
       form = build(:form, header: "Registration closes {{registration_close}}.")
-      event = build(:event, registration_close_date: Time.zone.local(2026, 6, 20, 9, 0))
+      close = Time.zone.local(2026, 7, 20, 9, 0)
+      event = build(:event, registration_close_date: close)
+      tz = close.strftime("%Z")
       expect(helper.form_header_html(form, event: event))
-        .to eq("Registration closes #{event.registration_close_date.in_time_zone(Time.zone).strftime("%B %-d, %Y %-l:%M %P %Z")}.")
+        .to eq("Registration closes July 20th at 9am #{tz}.")
+    end
+
+    it "includes minutes in the {{registration_close}} token when not on the hour" do
+      form = build(:form, header: "Registration closes {{registration_close}}.")
+      close = Time.zone.local(2026, 7, 20, 14, 30)
+      event = build(:event, registration_close_date: close)
+      tz = close.strftime("%Z")
+      expect(helper.form_header_html(form, event: event))
+        .to eq("Registration closes July 20th at 2:30pm #{tz}.")
     end
 
     it "falls back when the event has no registration close date" do
@@ -242,6 +253,26 @@ RSpec.describe ApplicationHelper, type: :helper do
     it "is false for plain headers or none" do
       expect(helper.form_header_uses_tokens?(build(:form, header: "Welcome!"))).to be false
       expect(helper.form_header_uses_tokens?(build(:form, header: nil))).to be false
+    end
+  end
+
+  describe "#event_registration_close_default" do
+    it "is 9am on the Monday of the start date's week" do
+      event = build(:event, start_date: Time.zone.local(2026, 7, 22, 13, 0)) # Wednesday
+      expect(helper.event_registration_close_default(event)).to eq(Time.zone.local(2026, 7, 20, 9, 0))
+    end
+
+    it "is the prior Monday at 9am when the event starts on a Monday" do
+      event = build(:event, start_date: Time.zone.local(2026, 7, 20, 9, 0)) # Monday
+      expect(helper.event_registration_close_default(event)).to eq(Time.zone.local(2026, 7, 13, 9, 0))
+    end
+
+    it "falls back to two days out at 9am when there is no start date" do
+      event = build(:event, start_date: nil)
+      default = helper.event_registration_close_default(event)
+      expect(default.hour).to eq(9)
+      expect(default.min).to eq(0)
+      expect(default.to_date).to eq(2.days.from_now.to_date)
     end
   end
 end

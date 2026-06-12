@@ -171,6 +171,34 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#one_click_for_signed_in?" do
+    it "is true when no registration form is linked" do
+      event = create(:event)
+      expect(event.one_click_for_signed_in?).to be true
+    end
+
+    it "is false when an empty registration form is linked" do
+      form = create(:form, name: "Empty Registration")
+      event = create(:event)
+      create(:event_form, event: event, form: form, role: "registration")
+      expect(event.one_click_for_signed_in?).to be false
+    end
+
+    it "is false when a registration form with fields is linked" do
+      form = create(:form, :with_fields, name: "Real Registration")
+      event = create(:event)
+      create(:event_form, event: event, form: form, role: "registration")
+      expect(event.one_click_for_signed_in?).to be false
+    end
+
+    it "is true when signed_in_one_click_enabled overrides a populated form" do
+      form = create(:form, :with_fields, name: "Real Registration")
+      event = create(:event, signed_in_one_click_enabled: true)
+      create(:event_form, event: event, form: form, role: "registration")
+      expect(event.one_click_for_signed_in?).to be true
+    end
+  end
+
   describe '.search_by_params' do
     let!(:art_event) { create(:event, title: 'Art Workshop Showcase', description: 'Annual art exhibition') }
     let!(:music_event) { create(:event, title: 'Music Therapy Session', description: 'Healing through music') }

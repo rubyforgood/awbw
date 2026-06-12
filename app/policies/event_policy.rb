@@ -61,6 +61,14 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def edit_staff?
+    manage?
+  end
+
+  def update_staff?
+    manage?
+  end
+
   def recipients?
     manage?
   end
@@ -103,6 +111,7 @@ class EventPolicy < ApplicationPolicy
                   :autoshow_pre_date_text,
                   :autoshow_registration_close,
                   :public_registration_enabled,
+                  :signed_in_one_click_enabled,
                   :pre_title,
                   :pre_date_text,
                   :featured,

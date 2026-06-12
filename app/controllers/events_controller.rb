@@ -2,11 +2,12 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff recipients bulk_payments preview_reminder send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form ]
 
   def index
     authorize!
     base_scope = authorized_scope(Event.all)
+    base_scope = base_scope.staffed_by(current_user.person) if params[:staffed_by_me].present? && current_user&.person
     @events  = base_scope.search_by_params(params).order(start_date: :desc)
   end
 
@@ -92,12 +93,24 @@ class EventsController < ApplicationController
   def staff
     authorize! @event, to: :staff?
     @event = @event.decorate
-    @staff = @event.event_registrations
-      .active
-      .includes(registrant: [ :sectors, { avatar_attachment: :blob }, { affiliations: :organization } ])
-      .joins(:registrant)
-      .order(Arel.sql("people.first_name, people.last_name"))
-      .map(&:registrant)
+    @event_staffs = @event.event_staffs
+      .includes(person: [ :sectors, { avatar_attachment: :blob }, { affiliations: :organization } ])
+      .ordered_by_name
+  end
+
+  def edit_staff
+    authorize! @event, to: :edit_staff?
+    @event.event_staffs.build if @event.event_staffs.empty?
+  end
+
+  def update_staff
+    authorize! @event, to: :update_staff?
+
+    if @event.update(event_staff_params)
+      redirect_to staff_event_path(@event), notice: "Event staff updated."
+    else
+      render :edit_staff, status: :unprocessable_content
+    end
   end
 
   def recipients
@@ -333,5 +346,11 @@ class EventsController < ApplicationController
 
   def event_params
     authorized(params.require(:event))
+  end
+
+  def event_staff_params
+    params.require(:event).permit(
+      event_staffs_attributes: [ :id, :person_id, :title, :expected_to_attend, :_destroy ]
+    )
   end
 end

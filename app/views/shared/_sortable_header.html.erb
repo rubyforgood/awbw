@@ -1,0 +1,20 @@
+<%# Click-to-sort column header button for the table-sort Stimulus controller.
+    Pair with data-controller="table-sort" on the table and
+    data-table-sort-target="body" on the tbody.
+    Locals:
+      label  - header text
+      index  - column position, matching the cell index in the row
+      key    - optional named sort key (reads data-sort-<key> from the cell),
+               letting one cell offer several sub-sorts (e.g. first/last name)
+      class  - optional button styling; defaults to a neutral hover %>
+<% key = local_assigns.fetch(:key, nil) %>
+<% button_class = local_assigns.fetch(:class, "hover:text-gray-900") %>
+<button type="button"
+        class="inline-flex items-center gap-1.5 cursor-pointer select-none <%= button_class %>"
+        data-table-sort-target="header"
+        data-sort-index="<%= index %>"
+        <%= "data-sort-key=#{key}".html_safe if key %>
+        data-action="table-sort#sort">
+  <%= label %>
+  <span data-sort-indicator><i class="fa-solid fa-sort text-gray-400"></i></span>
+</button>

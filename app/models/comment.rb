@@ -9,4 +9,5 @@ class Comment < ApplicationRecord
   validates :body, presence: true, unless: :persisted?
 
   scope :newest_first, -> { order(created_at: :desc) }
+  scope :flagged, -> { where(flagged: true) }
 end

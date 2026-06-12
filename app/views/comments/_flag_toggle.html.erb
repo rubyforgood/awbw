@@ -1,0 +1,8 @@
+<%= button_to polymorphic_path([ commentable, comment ]),
+              method: :patch,
+              params: { comment: { flagged: !comment.flagged } },
+              form: { id: dom_id(comment, :flag) },
+              class: "leading-none",
+              title: comment.flagged? ? "Flagged for follow-up — click to clear" : "Flag for follow-up" do %>
+  <i class="fa-flag <%= comment.flagged? ? "fa-solid text-orange-500" : "fa-regular text-gray-500 hover:text-orange-400" %>"></i>
+<% end %>

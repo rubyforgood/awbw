@@ -123,15 +123,7 @@
                   <span class="inline-flex items-center gap-1.5">
                     <% (col[:parts] || [ { label: col[:label] } ]).each_with_index do |part, i| %>
                       <% if i.positive? %><span class="text-gray-300" aria-hidden="true">/</span><% end %>
-                      <button type="button"
-                              class="inline-flex items-center gap-1 cursor-pointer select-none hover:text-gray-900"
-                              data-table-sort-target="header"
-                              data-sort-index="<%= col[:index] %>"
-                              <%= "data-sort-key=#{part[:key]}".html_safe if part[:key] %>
-                              data-action="table-sort#sort">
-                        <%= part[:label] %>
-                        <span data-sort-indicator><i class="fa-solid fa-sort text-gray-400"></i></span>
-                      </button>
+                      <%= render "shared/sortable_header", label: part[:label], index: col[:index], key: part[:key] %>
                     <% end %>
                   </span>
                 </th>

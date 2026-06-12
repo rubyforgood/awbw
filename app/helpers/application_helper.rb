@@ -27,7 +27,7 @@ module ApplicationHelper
     "{{event_platform}}" => [ "Virtual platform", "Zoom" ],
     "{{event_location}}" => [ "In-person location", "Los Angeles, CA" ],
     "{{event_month_year}}" => [ "Event month and year", "July 2026" ],
-    "{{registration_close}}" => [ "Registration close date", "June 20, 2026 9:00 am PST" ]
+    "{{registration_close}}" => [ "Registration close date", "July 20th at 9am PST" ]
   }.freeze
 
   # Render a form header, filling event-driven tokens (see FORM_HEADER_TOKENS) from
@@ -105,18 +105,68 @@ module ApplicationHelper
     event&.location&.name.presence
   end
 
-  # Registration close date formatted like the event show page (e.g.
-  # "June 20, 2026 9:00 am PST"), or nil when there's no close date.
+  # Registration close date for form-header interpolation, e.g.
+  # "July 20th at 9am PST": ordinal day, no year, compact time (minutes only
+  # when not on the hour). Nil when there's no close date.
   def event_registration_close_label(event)
     close = event&.registration_close_date
     return unless close
     local = close.in_time_zone(Time.zone)
-    "#{local.strftime("%B %-d, %Y %-l:%M %P")} #{local.strftime("%Z")}"
+    time = local.strftime("%-l")
+    time += ":#{local.strftime("%M")}" unless local.strftime("%M") == "00"
+    time += local.strftime("%P")
+    "#{local.strftime("%B")} #{local.day.ordinalize} at #{time} #{local.strftime("%Z")}"
+  end
+
+  # Default registration close datetime suggested on the event form: 9am on the
+  # Monday before the event's start date. New events without a start date yet
+  # fall back to two days out at 9am.
+  def event_registration_close_default(event)
+    start = event&.start_date
+    base = start ? (start.in_time_zone(Time.zone) - 1.day).beginning_of_week(:monday) : 2.days.from_now
+    base.change(hour: 9, min: 0)
   end
 
   # Rainbow gradient accent bar shown beside form section headers.
   def form_section_bar_class
     "h-5 w-1 rounded-full bg-[linear-gradient(to_bottom,#ec4899,#f97316,#22c55e,#3b82f6,#8b5cf6)]"
+  end
+
+  # Category types backing the professional form fields whose options are
+  # sourced dynamically (from Sector/Category data) rather than from the
+  # field's own stored answer options.
+  DYNAMIC_FIELD_CATEGORY_TYPES = {
+    "workshop_environments" => "WorkshopEnvironment",
+    "client_life_experiences" => "StoryPopulation",
+    "primary_age_group" => "AgeRange"
+  }.freeze
+
+  # Returns the selectable options for a form field as [ label, value ] pairs,
+  # or nil when the field has no dynamic source (callers fall back to the
+  # field's own stored answer options). Shared by the public form's radio and
+  # checkbox rendering so a dynamic field renders the same options regardless
+  # of which single/multiple choice type it was set to.
+  def dynamic_form_field_options(field)
+    case field.field_identifier
+    when "primary_service_area"
+      Sector.published.order(:name).map { |sector| [ sector.name, sector.id.to_s ] }
+    when *DYNAMIC_FIELD_CATEGORY_TYPES.keys
+      type = CategoryType.find_by(name: DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
+      (type&.categories&.published&.order(:position, :name) || []).map { |category| [ category.name, category.id.to_s ] }
+    end
+  end
+
+  # Describes where a dynamic-option field's choices come from, for the form
+  # editor badge: a sentence-case label and a link to the filtered admin list
+  # that manages those options. Returns nil for fields with stored options.
+  def form_field_option_source(field)
+    if field.field_identifier == "primary_service_area"
+      { label: "Sectors", path: sectors_path }
+    elsif (type_name = DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
+      type = CategoryType.find_by(name: type_name)
+      return unless type
+      { label: "#{type.name.underscore.humanize} categories", path: categories_path(category_type_id: type.id) }
+    end
   end
 
   INDEX_BUTTON_ICONS = {

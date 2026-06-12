@@ -222,7 +222,7 @@ class EventRegistrationsController < ApplicationController
       :scholarship_requested,
       :ce_credit_requested,
       organization_ids: [],
-      comments_attributes: [ :id, :topic, :body, :_destroy ],
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: [ :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id ]
     )
   end

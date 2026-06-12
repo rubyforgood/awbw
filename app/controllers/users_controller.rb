@@ -422,7 +422,7 @@ class UsersController < ApplicationController
       :phone, :phone2, :phone3, :birthday, :best_time_to_call, :notes, # legacy to remove later
       #####
 
-      comments_attributes: [ :id, :topic, :body, :_destroy ],
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       affiliations_attributes: [ :id, :organization_id, :position, :title, :inactive, :primary_contact, :start_date, :end_date, :_destroy ],
     )
   end

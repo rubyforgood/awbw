@@ -117,11 +117,12 @@
                 "Registration close time",
                 class: "block font-medium mb-1" %>
 
+          <% registration_close_default = @event.registration_close_date || event_registration_close_default(@event) %>
           <%= f.text_field :registration_close_date,
                        type: "datetime-local",
                        class:
                          "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                       value: @event.registration_close_date&.strftime("%Y-%m-%dT%H:%M") %>
+                       value: registration_close_default.strftime("%Y-%m-%dT%H:%M") %>
 
           <% if f.object.errors[:registration_close_date].any? %>
             <p class="text-red-500 text-sm mt-1">
@@ -335,31 +336,6 @@
         <div id="registration_form_section" class="border border-gray-300 p-4 rounded-b-md" data-reveal-section-target="content">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <p class="text-sm mb-2">
-                Public registration:
-                <% if @event.public_registration_enabled? %>
-                  <a href="#public_registration_setting"
-                     class="text-green-700 font-medium hover:underline"
-                     data-controller="anchor-highlight"
-                     data-action="click->anchor-highlight#flash"
-                     data-anchor-highlight-target-param="public_registration_setting">Enabled</a>
-                <% else %>
-                  <a href="#public_registration_setting"
-                     class="text-gray-500 font-medium hover:underline"
-                     data-controller="anchor-highlight"
-                     data-action="click->anchor-highlight#flash"
-                     data-anchor-highlight-target-param="public_registration_setting">Disabled</a>
-                <% end %>
-              </p>
-              <% if @event.event_forms.registration.exists? %>
-                <%= link_to "View public registration page",
-                            new_event_public_registration_path(@event),
-                            class: "text-sm text-blue-700 hover:text-blue-900 underline",
-                            target: "_blank" %>
-              <% end %>
-            </div>
-
-            <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Registration form</label>
               <% current_reg_form = @event.registration_form %>
               <% default_form_id = if current_reg_form
@@ -384,19 +360,74 @@
                 <%= link_to "View / Edit forms", forms_path, class: "text-blue-600 hover:text-blue-800 underline", target: "_blank" %>
               </p>
             </div>
+
+            <div>
+              <span class="block text-sm font-medium text-gray-700 mb-1">Public registration</span>
+              <div class="flex items-center gap-2 text-sm">
+                <% if @event.public_registration_enabled? %>
+                  <span class="inline-flex items-center gap-1 font-medium text-green-700">
+                    <i class="fa-solid fa-circle-check"></i> Enabled
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center gap-1 font-medium text-gray-500">
+                    <i class="fa-solid fa-circle-xmark"></i> Disabled
+                  </span>
+                <% end %>
+                <a href="#public_registration_setting"
+                   class="text-blue-600 hover:text-blue-800 underline"
+                   data-controller="anchor-highlight"
+                   data-action="click->anchor-highlight#flash"
+                   data-anchor-highlight-target-param="public_registration_setting">Change</a>
+              </div>
+              <% if @event.event_forms.registration.exists? %>
+                <%= link_to new_event_public_registration_path(@event),
+                            class: "inline-flex items-center gap-1 text-sm text-blue-700 hover:text-blue-900 underline mt-2",
+                            target: "_blank" do %>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> View public registration page
+                <% end %>
+              <% end %>
+            </div>
           </div>
 
-          <div class="mt-4 pt-4 border-t border-gray-200">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <%= check_box_tag "event[scholarship_enabled]", "1", @event.scholarship_form.present? %>
-              <span class="text-sm font-medium text-gray-700">Enable scholarship application</span>
-            </label>
-          </div>
-          <div class="pb-4">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <%= check_box_tag "event[bulk_payment_enabled]", "1", @event.bulk_payment_form.present? %>
-              <span class="text-sm font-medium text-gray-700">Enable bulk payment</span>
-            </label>
+          <div class="mt-5 pt-4 border-t border-gray-200">
+            <span class="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Registration options</span>
+            <div class="space-y-4">
+              <div>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <%= f.check_box :signed_in_one_click_enabled %>
+                  <span class="text-sm font-medium text-gray-700">Signed-in users register in one click</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1">Skip the registration form for logged-in users. Logged-out visitors still use the form.</p>
+              </div>
+              <div>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <%= check_box_tag "event[scholarship_enabled]", "1", @event.scholarship_form.present? %>
+                  <span class="text-sm font-medium text-gray-700">Enable scholarship application</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1">Add a scholarship form so registrants can request financial assistance.</p>
+                <% if @event.scholarship_form.present? %>
+                  <%= link_to new_event_public_registration_path(@event, scholarship_requested: true),
+                              class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
+                              target: "_blank" do %>
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview scholarship form
+                  <% end %>
+                <% end %>
+              </div>
+              <div class="pb-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <%= check_box_tag "event[bulk_payment_enabled]", "1", @event.bulk_payment_form.present? %>
+                  <span class="text-sm font-medium text-gray-700">Enable bulk payment</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1">Let one person register and pay for a group of attendees at once.</p>
+                <% if @event.bulk_payment_form.present? %>
+                  <%= link_to new_event_bulk_payment_path(@event),
+                              class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
+                              target: "_blank" do %>
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview bulk payment page
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
           </div>
         </div>
       </div>

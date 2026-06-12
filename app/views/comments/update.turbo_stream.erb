@@ -1,0 +1,3 @@
+<%= turbo_stream.replace dom_id(@comment, :flag) do %>
+  <%= render "comments/flag_toggle", commentable: @commentable, comment: @comment %>
+<% end %>

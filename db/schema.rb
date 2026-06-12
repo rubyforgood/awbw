@@ -226,7 +226,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
   end
 
   create_table "banners", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "content", size: :medium
+    t.text "content"
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
     t.boolean "published", default: false, null: false
@@ -295,7 +295,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
   end
 
   create_table "bookmark_annotations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "annotation", size: :long
+    t.text "annotation", size: :medium
     t.integer "bookmark_id"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
@@ -369,6 +369,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.string "commentable_type", null: false
     t.datetime "created_at", null: false
     t.integer "created_by_id"
+    t.boolean "flagged", default: false, null: false
     t.string "topic"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
@@ -459,6 +460,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.index ["slug"], name: "index_event_registrations_on_slug", unique: true
   end
 
+  create_table "event_staffs", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.boolean "expected_to_attend", default: false, null: false
+    t.bigint "person_id", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "person_id"], name: "index_event_staffs_on_event_id_and_person_id", unique: true
+    t.index ["event_id"], name: "index_event_staffs_on_event_id"
+    t.index ["person_id"], name: "index_event_staffs_on_person_id"
+  end
+
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.boolean "autoshow_cost", default: true, null: false
     t.boolean "autoshow_date", default: true, null: false
@@ -488,6 +501,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
     t.datetime "registration_close_date", precision: nil
+    t.boolean "signed_in_one_click_enabled", default: false, null: false
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
@@ -499,7 +513,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
   end
 
   create_table "faqs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "answer", size: :long
+    t.text "answer", size: :medium
     t.datetime "created_at", precision: nil, null: false
     t.boolean "inactive"
     t.integer "position", null: false
@@ -532,7 +546,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
 
   create_table "form_builders", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
-    t.text "description", size: :long
+    t.text "description", size: :medium
     t.string "name"
     t.integer "owner_type"
     t.datetime "updated_at", precision: nil, null: false
@@ -652,14 +666,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
   create_table "monthly_reports", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "best_call_time"
     t.boolean "call_requested"
-    t.text "comments", size: :long
+    t.text "comments", size: :medium
     t.datetime "created_at", precision: nil, null: false
-    t.text "goals", size: :long
-    t.text "goals_reached", size: :long
+    t.text "goals", size: :medium
+    t.text "goals_reached", size: :medium
     t.boolean "mail_evaluations"
     t.string "month"
-    t.text "most_challenging", size: :long
-    t.text "most_effective", size: :long
+    t.text "most_challenging", size: :medium
+    t.text "most_effective", size: :medium
     t.string "name"
     t.string "num_new_participants"
     t.string "num_ongoing_participants"
@@ -676,9 +690,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.string "channel", default: "autoemail", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "delivered_at"
-    t.text "email_body_html", size: :medium
-    t.text "email_body_text", size: :medium
-    t.text "email_subject", size: :medium
+    t.text "email_body_html"
+    t.text "email_body_text"
+    t.text "email_subject"
     t.datetime "error_at"
     t.string "error_class"
     t.text "error_message"
@@ -720,7 +734,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.string "agency_type"
     t.string "agency_type_other"
     t.datetime "created_at", precision: nil, null: false
-    t.text "description", size: :long
+    t.text "description", size: :medium
     t.string "email"
     t.date "end_date"
     t.string "filemaker_code"
@@ -730,7 +744,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.integer "location_id"
     t.string "mission_vision_values"
     t.string "name"
-    t.text "notes", size: :long
+    t.text "notes", size: :medium
     t.integer "organization_status_id"
     t.boolean "profile_show_description", default: true, null: false
     t.boolean "profile_show_email", default: true, null: false
@@ -889,6 +903,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.string "instagram_url"
     t.string "last_name", null: false
     t.string "legal_first_name"
+    t.string "license_number"
+    t.string "license_type"
     t.string "linked_in_url"
     t.date "member_since"
     t.text "notes"
@@ -943,7 +959,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.boolean "legacy", default: false
     t.integer "legacy_id"
     t.boolean "published", default: false, null: false
-    t.text "quote", size: :long
+    t.text "quote", size: :medium
     t.string "speaker_name"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "workshop_id"
@@ -967,7 +983,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
   end
 
   create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "answer", size: :long
+    t.text "answer", size: :medium
     t.integer "answer_option_id"
     t.datetime "created_at", precision: nil
     t.integer "form_field_id"
@@ -1017,7 +1033,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
   create_table "resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "agency"
     t.string "author"
-    t.text "body", size: :long
+    t.text "body", size: :medium
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
     t.boolean "featured", default: false
@@ -1128,7 +1144,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
   create_table "user_form_form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.integer "form_field_id"
-    t.text "text", size: :long
+    t.text "text", size: :medium
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_form_id"
     t.index ["form_field_id"], name: "index_user_form_form_fields_on_form_field_id"
@@ -1165,7 +1181,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.date "birthday"
     t.string "city"
     t.string "city2"
-    t.text "comment", size: :long
+    t.text "comment", size: :medium
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
     t.datetime "confirmed_at"
@@ -1185,7 +1201,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.boolean "legacy", default: false
     t.integer "legacy_id"
     t.datetime "locked_at"
-    t.text "notes", size: :long
+    t.text "notes", size: :medium
     t.bigint "person_id"
     t.string "phone"
     t.string "phone2"
@@ -1388,7 +1404,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
 
   create_table "workshop_variations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "author_credit_preference"
-    t.text "body", size: :long
+    t.text "body", size: :medium
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
     t.boolean "inactive", default: true
@@ -1413,22 +1429,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
   end
 
   create_table "workshops", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "age_range", size: :long
-    t.text "age_range_spanish", size: :long
+    t.text "age_range", size: :medium
+    t.text "age_range_spanish", size: :medium
     t.string "author_credit_preference"
     t.string "author_location"
-    t.text "closing", size: :long
-    t.text "closing_spanish", size: :long
+    t.text "closing", size: :medium
+    t.text "closing_spanish", size: :medium
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
-    t.text "creation", size: :long
-    t.text "creation_spanish", size: :long
-    t.text "demonstration", size: :long
-    t.text "demonstration_spanish", size: :long
-    t.text "description", size: :long
-    t.text "description_spanish", size: :long
-    t.text "extra_field", size: :medium
-    t.text "extra_field_spanish", size: :medium
+    t.text "creation", size: :medium
+    t.text "creation_spanish", size: :medium
+    t.text "demonstration", size: :medium
+    t.text "demonstration_spanish", size: :medium
+    t.text "description", size: :medium
+    t.text "description_spanish", size: :medium
+    t.text "extra_field"
+    t.text "extra_field_spanish"
     t.boolean "featured", default: false
     t.string "filemaker_code"
     t.string "full_name"
@@ -1437,40 +1453,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.integer "header_file_size"
     t.datetime "header_updated_at", precision: nil
     t.boolean "inactive", default: true
-    t.text "instructions", size: :long
-    t.text "instructions_spanish", size: :long
-    t.text "introduction", size: :long
-    t.text "introduction_spanish", size: :long
+    t.text "instructions", size: :medium
+    t.text "instructions_spanish", size: :medium
+    t.text "introduction", size: :medium
+    t.text "introduction_spanish", size: :medium
     t.integer "led_count", default: 0
     t.boolean "legacy", default: false
     t.integer "legacy_id"
-    t.text "materials", size: :long
-    t.text "materials_spanish", size: :long
+    t.text "materials", size: :medium
+    t.text "materials_spanish", size: :medium
     t.string "misc1"
-    t.text "misc1_spanish", size: :long
+    t.text "misc1_spanish", size: :medium
     t.string "misc2"
-    t.text "misc2_spanish", size: :long
-    t.text "misc_instructions", size: :long
-    t.text "misc_instructions_spanish", size: :long
+    t.text "misc2_spanish", size: :medium
+    t.text "misc_instructions", size: :medium
+    t.text "misc_instructions_spanish", size: :medium
     t.integer "month"
-    t.text "notes", size: :long
-    t.text "notes_spanish", size: :long
-    t.text "objective", size: :long
-    t.text "objective_spanish", size: :long
-    t.text "opening_circle", size: :long
-    t.text "opening_circle_spanish", size: :long
-    t.text "optional_materials", size: :long
-    t.text "optional_materials_spanish", size: :long
+    t.text "notes", size: :medium
+    t.text "notes_spanish", size: :medium
+    t.text "objective", size: :medium
+    t.text "objective_spanish", size: :medium
+    t.text "opening_circle", size: :medium
+    t.text "opening_circle_spanish", size: :medium
+    t.text "optional_materials", size: :medium
+    t.text "optional_materials_spanish", size: :medium
     t.string "photo_caption"
-    t.text "project", size: :long
-    t.text "project_spanish", size: :long
+    t.text "project", size: :medium
+    t.text "project_spanish", size: :medium
     t.string "pub_issue"
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
     t.boolean "searchable", default: false
-    t.text "setup", size: :long
-    t.text "setup_spanish", size: :long
+    t.text "setup", size: :medium
+    t.text "setup_spanish", size: :medium
     t.string "thumbnail_content_type"
     t.string "thumbnail_file_name"
     t.integer "thumbnail_file_size"
@@ -1482,17 +1498,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
     t.integer "time_opening"
     t.integer "time_opening_circle"
     t.integer "time_warm_up"
-    t.text "timeframe", size: :long
-    t.text "timeframe_spanish", size: :long
-    t.text "timestamps", size: :long
-    t.text "tips", size: :long
-    t.text "tips_spanish", size: :long
+    t.text "timeframe", size: :medium
+    t.text "timeframe_spanish", size: :medium
+    t.text "timestamps", size: :medium
+    t.text "tips", size: :medium
+    t.text "tips_spanish", size: :medium
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
-    t.text "visualization", size: :long
-    t.text "visualization_spanish", size: :long
-    t.text "warm_up", size: :long
-    t.text "warm_up_spanish", size: :long
+    t.text "visualization", size: :medium
+    t.text "visualization_spanish", size: :medium
+    t.text "warm_up", size: :medium
+    t.text "warm_up_spanish", size: :medium
     t.integer "windows_type_id"
     t.bigint "workshop_idea_id"
     t.integer "year"
@@ -1545,6 +1561,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_170003) do
   add_foreign_key "event_registration_organizations", "organizations"
   add_foreign_key "event_registrations", "events"
   add_foreign_key "event_registrations", "people", column: "registrant_id"
+  add_foreign_key "event_staffs", "events"
+  add_foreign_key "event_staffs", "people"
   add_foreign_key "events", "locations"
   add_foreign_key "events", "users", column: "created_by_id"
   add_foreign_key "form_answers", "form_fields"

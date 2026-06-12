@@ -165,6 +165,37 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Minimum of 5 words.")
     end
 
+    it "renders a dynamic-option field switched to single choice as radio buttons" do
+      # primary_service_area sources its options dynamically from Sector
+      # (it stores no answer options of its own). When such a field is changed
+      # from checkbox to single-choice radio, the public form must still render
+      # the dynamic options — otherwise the question shows up blank.
+      sector_a = create(:sector, :published, name: "Healthcare")
+      sector_b = create(:sector, :published, name: "Education")
+      create(:form_field, form: form, answer_type: :multiple_choice_radio,
+             field_identifier: "primary_service_area", name: "Primary service area",
+             required: false)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body.scan(/type="radio"/).size).to be >= 2
+      expect(response.body).to include(sector_a.name)
+      expect(response.body).to include(sector_b.name)
+      expect(response.body).to include(%(value="#{sector_a.id}"))
+    end
+
+    it "still renders a dynamic-option field as checkboxes" do
+      create(:sector, :published, name: "Healthcare")
+      create(:form_field, form: form, answer_type: :multiple_choice_checkbox,
+             field_identifier: "primary_service_area", name: "Primary service area",
+             required: false)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body.scan(/type="checkbox"/).size).to be >= 1
+      expect(response.body).to include("Healthcare")
+    end
+
     it "shows the maximum character hint below the field" do
       create(:form_field, form: form, answer_type: :free_form_input_paragraph,
              name: "Bio", required: false, max_characters: 250)
