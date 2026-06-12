@@ -295,8 +295,8 @@ story_population_type.update!(display_text: "Who is this story about?", story_sp
   cat.update!(published: true) unless cat.published?
 end
 
-puts "Creating WorkshopEnvironments CategoryType…"
-workshop_settings_type = find_or_create_by_name!(CategoryType, "WorkshopEnvironments") do |ct|
+puts "Creating WorkshopEnvironment CategoryType…"
+workshop_settings_type = find_or_create_by_name!(CategoryType, "WorkshopEnvironment") do |ct|
   ct.display_text = "Workshop Settings"
   ct.story_specific = false
   ct.profile_specific = true
