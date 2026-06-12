@@ -72,6 +72,47 @@ class FormBuilderService
     bulk_payment: [ "Payer Information", "Payment Information", "Attendees" ]
   }.freeze
 
+  # User-facing field labels each section's builder creates (questions only,
+  # excluding group headers), in build order. Mirrors the build_* methods so the
+  # new-form page can list a section's fields before the form exists. A spec
+  # asserts this stays in sync with what the builders actually create.
+  SECTION_FIELD_NAMES = {
+    person_identifier: [ "First Name", "Last Name", "Email", "Confirm Email" ],
+    person_contact_info: [
+      "Primary Email Type", "Preferred Nickname", "Pronouns", "Secondary Email", "Secondary Email Type",
+      "Street Address", "Address Type", "City", "State / Province", "Zip / Postal Code",
+      "Phone", "Phone Type", "Agency / Organization Name", "Position / Title",
+      "Agency Street Address", "Agency City", "Agency State / Province", "Agency Zip / Postal Code",
+      "Agency Type", "Agency Website"
+    ],
+    person_background: [ "Racial / Ethnic Identity" ],
+    professional_info: [ "Primary Service Area(s)", "Workshop Settings", "Client Life Experiences", "Primary Age Group(s) Served" ],
+    marketing: [
+      "How did you hear about this training?",
+      "What motivates you to attend this training?",
+      "Are you interested in learning more about upcoming trainings or resources?"
+    ],
+    scholarship: [
+      "I / my agency cannot afford the full training cost and need a scholarship to attend.",
+      "How will what you gain from this training directly impact the people you serve?",
+      "Please describe one way in which you plan to use art workshops and how you envision it will help.",
+      "Anything else you'd like to share with us?"
+    ],
+    payment: [ "Payment method" ],
+    consent: [ "I agree to receive email communications from A Window Between Worlds." ],
+    post_event_feedback: [ "How would you rate this event?", "What did you find most valuable?", "Any suggestions for improvement?" ],
+    bulk_payment: [
+      "Payer first name", "Payer last name", "Payer email", "Phone", "Organization",
+      "Payment method", "Number of attendees", "Attendees"
+    ]
+  }.freeze
+
+  # Field labels a section's builder creates, for previewing a section's
+  # contents before the form exists (used on the new-form page).
+  def self.section_field_names(key)
+    SECTION_FIELD_NAMES.fetch(key.to_sym, [])
+  end
+
   # Maps each section to the `section` column value(s) its builder assigns to
   # fields, so fields can be grouped back to their section when reordering.
   # Several builders use a `group:` string that differs from the section key.
@@ -125,6 +166,7 @@ class FormBuilderService
 
     positions = {}
     header_names = {}
+    questions = Hash.new { |hash, key| hash[key] = [] }
     customs = []
     current = nil
 
@@ -135,7 +177,11 @@ class FormBuilderService
       if key
         current = nil
         positions[key] ||= order
-        header_names[key] ||= field.name if field.group_header?
+        if field.group_header?
+          header_names[key] ||= field.name
+        else
+          questions[key] << field
+        end
       elsif field.group_header?
         current = { kind: :custom, header: field, questions: [] }
         customs << [ order, current ]
@@ -157,6 +203,7 @@ class FormBuilderService
         key: key,
         label: SECTIONS.fetch(key)[:label],
         included: !position.nil?,
+        questions: questions[key],
         renamed_header: (header_name if header_name.present? && header_name != default_header)
       }
     end

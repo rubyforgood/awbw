@@ -52,7 +52,7 @@
         </button>
       </div>
 
-      <div class="hidden mt-2 flex flex-col gap-2" data-field-options-target="panel">
+      <div class="hidden mt-2 pb-2 flex flex-col gap-2" data-field-options-target="panel">
         <%= f.text_area :hint_text, rows: 2,
               class: "w-full text-sm text-gray-600 rounded border-gray-300 shadow-sm px-2 py-1",
               placeholder: "Subtitle" %>
@@ -93,7 +93,7 @@
       </div>
 
       <% option_source = form_field_option_source(field) %>
-      <div class="hidden mt-2 flex flex-col gap-3" data-field-options-target="panel">
+      <div class="hidden mt-2 pb-2 flex flex-col gap-3" data-field-options-target="panel">
         <div class="flex flex-wrap items-center gap-2">
           <%# Fixed-width first column so the Subtitle box lines up under the answer-type dropdown above. %>
           <div class="min-w-0 flex-[3_1_10rem]">

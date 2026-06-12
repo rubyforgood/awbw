@@ -35,6 +35,13 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("Person identifier")
       expect(response.body).to include("Scholarship")
     end
+
+    it "lists each section's fields behind an expandable toggle" do
+      get new_form_path
+      expect(response.body).to include("First Name")
+      expect(response.body).to include("Confirm Email")
+      expect(response.body).to include('data-controller="expandable-card"')
+    end
   end
 
   describe "POST /forms" do
@@ -487,6 +494,13 @@ RSpec.describe "Forms", type: :request do
       get edit_sections_form_path(form)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Person identifier")
+    end
+
+    it "lists an included section's actual fields behind an expandable toggle" do
+      form = FormBuilderService.new(name: "Editable", sections: %i[person_identifier]).call
+      get edit_sections_form_path(form)
+      expect(response.body).to include("First Name")
+      expect(response.body).to include('data-controller="form-section-toggle expandable-card"')
     end
 
     it "shows custom sections with a custom indicator" do
