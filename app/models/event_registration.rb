@@ -208,6 +208,10 @@ class EventRegistration < ApplicationRecord
     allocations_sum >= event.cost_cents.to_i
   end
 
+  def partially_paid?
+    !paid_in_full? && allocations_sum.to_i.positive?
+  end
+
   def joinable?
     active? && paid?
   end
