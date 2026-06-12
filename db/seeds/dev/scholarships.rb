@@ -19,11 +19,10 @@
 puts "Seeding Scholarships for dev event registrations…"
 
 facilitator_training = Event.find_by(title: "AWBW Facilitator Training")
-trauma_training = Event.find_by(title: "Facilitator Training: Trauma-Informed Art Practices")
-mindful_art = Event.find_by(title: "Mindful Art for Survivors Workshop")
 
-angel_g = Person.find_by(first_name: "Angel", last_name: "Garcia")
-samuel_s = Person.find_by(first_name: "Samuel", last_name: "Smith")
+# Every event that asks the scholarship questions (has a scholarship EventForm).
+# Reused below to surface non-flagship applicants and print the per-event summary.
+scholarship_events = Event.joins(:event_forms).where(event_forms: { role: "scholarship" }).distinct.to_a
 
 # Mirrors ScholarshipsController: build the scholarship with a $0 allocation, then
 # set amount + tasks_completed so sync_allocation_amount funds the allocation only
@@ -38,52 +37,20 @@ award_scholarship = ->(registration, amount_cents:, tasks_completed:) do
   scholarship.update!(amount_cents: amount_cents, tasks_completed: tasks_completed)
 end
 
-award_for_person = ->(event, person, **opts) do
-  return unless event && person
-  award_scholarship.(EventRegistration.find_by(event: event, registrant: person), **opts)
-end
-
-# --- Flagship demo: AWBW Facilitator Training — 10 scholarships across its
-# cohort, each a full or partial share of the registration fee, with roughly half
-# completed (dollars allocated, counting toward the grand total) and half pending
-# (awarded but unallocated). ---
-if facilitator_training
-  cost = facilitator_training.cost_cents
-  # [ share of the registration fee, tasks_completed ]
-  plan = [
-    [ 1.0,  true ], [ 0.75, true ], [ 0.5,  true ], [ 1.0,  true ], [ 0.25, true ],
-    [ 1.0,  false ], [ 0.5,  false ], [ 0.6,  false ], [ 0.4,  false ], [ 0.33, false ]
-  ]
-  active_regs = facilitator_training.event_registrations.active.to_a
-  needed = [ 10 - active_regs.count { |reg| reg.scholarships.exists? }, 0 ].max
-  # Only fund registrations with no allocations yet, so a full or partial award
-  # fits within the event cost. A registrant who already paid has less room left,
-  # and the allocation validation rejects allocating more than the remaining cost.
-  candidates = active_regs.reject { |reg| reg.allocations.exists? }
-  plan.first(needed).each_with_index do |(share, completed), i|
-    registration = candidates[i]
-    next unless registration
-    award_scholarship.(registration, amount_cents: (cost * share).round, tasks_completed: completed)
-  end
-end
-
-# --- A couple more on other paid events for cross-event variety ---
-award_for_person.(mindful_art, samuel_s, amount_cents: 5_000, tasks_completed: true)
-award_for_person.(trauma_training, angel_g, amount_cents: 6_000, tasks_completed: false)
-
 # --- Scholarship application answers ---
 # Give the recipients page (events/recipients) real content to show. Mirrors how
-# the data actually arrives:
-#   * every recipient has a registration submission — none have only a
-#     scholarship submission;
-#   * most answered the scholarship questions while registering (one form, two
-#     parts), so those answers live on the registration submission;
-#   * a few have a separate scholarship submission alongside it.
-# Recipients are flagged scholarship_requested so they appear on that page.
-# Reasonable answers to every scholarship question, inspired by actual recipient
-# responses, are cycled across recipients for variety, along with a matching
-# primary service area, age group, and a non-facilitator agency affiliation
-# (title + organization) so the recipient header renders like the real export.
+# scholarship applications actually arrive, in two shapes:
+#   * combo — the registrant answered the scholarship questions inside their
+#     registration, so the answers live on the registration submission;
+#   * second form — the registrant submitted a separate scholarship form alongside
+#     their registration, so the answers live on that scholarship submission.
+# Every recipient has a registration submission either way (none have only a
+# scholarship submission). Recipients are flagged scholarship_requested so they
+# appear on that page. Reasonable answers to every scholarship question, inspired
+# by actual recipient responses, are cycled across recipients for variety, along
+# with a matching primary service area, age group, and a non-facilitator agency
+# affiliation (title + organization) so the recipient header renders like the real
+# export.
 puts "Seeding Scholarship application answers…"
 
 # Keyed by the scholarship form's field identifiers (see
@@ -238,36 +205,83 @@ attach_scholarship_answers = ->(submission, answers) do
   end
 end
 
+# Fully set up one scholarship recipient: flag the registration, ensure a
+# registration submission carrying the recipient's identity + professional (header)
+# answers and an agency affiliation, then attach the scholarship answers either to
+# that registration submission (combo) or to a separate scholarship-form submission
+# (second_form). Answer sets and affiliations are cycled for variety. Idempotent:
+# every write checks for an existing answer first.
 application_index = 0
-[ facilitator_training, trauma_training, mindful_art ].compact.each do |event|
-  event.event_registrations.active.find_each do |registration|
-    next unless registration.scholarships.exists?
+setup_recipient = ->(registration, second_form:) do
+  person = registration.registrant
+  event = registration.event
+  set = scholarship_answer_sets[application_index % scholarship_answer_sets.length]
+  registration.update!(scholarship_requested: true) unless registration.scholarship_requested?
 
-    person = registration.registrant
-    registration.update!(scholarship_requested: true) unless registration.scholarship_requested?
-    set = scholarship_answer_sets[application_index % scholarship_answer_sets.length]
+  reg_submission = ensure_registration_submission.(person, event)
+  attach_header_answers.(reg_submission, set) if reg_submission
+  ensure_recipient_affiliation.(person, event, set, recipient_orgs[application_index % recipient_orgs.length]) if recipient_orgs.any?
 
-    reg_submission = ensure_registration_submission.(person, event)
+  if second_form && scholarship_form
+    separate = FormSubmission.find_or_create_by!(person: person, form: scholarship_form, role: "scholarship")
+    attach_scholarship_answers.(separate, set)
+  elsif reg_submission
+    attach_scholarship_answers.(reg_submission, set)
+  end
 
-    # Service area + age group are registration answers (the recipients page
-    # reads them there first); the affiliation supplies the org + title.
-    attach_header_answers.(reg_submission, set) if reg_submission
-    ensure_recipient_affiliation.(person, event, set, recipient_orgs[application_index % recipient_orgs.length]) if recipient_orgs.any?
+  application_index += 1
+end
 
-    # Most recipients answered the scholarship questions as part of registering
-    # (one form, two parts); every fourth keeps a separate scholarship submission.
-    if (application_index % 4 == 3) && scholarship_form
-      separate = FormSubmission.find_or_create_by!(person: person, form: scholarship_form, role: "scholarship")
-      attach_scholarship_answers.(separate, set)
-    elsif reg_submission
-      attach_scholarship_answers.(reg_submission, set)
-    end
+# --- Flagship demo: AWBW Facilitator Training — exactly 6 recipients out of the
+# 10-registrant cohort, split the way scholarship applications actually arrive:
+#   * 4 answered the scholarship questions inside their registration (combo), and
+#   * 2 submitted a separate scholarship form alongside their registration.
+# The other 4 registrants stay plain (no scholarship requested). Amy already holds
+# a flagship scholarship from the payments seed, so she counts as one of the six;
+# the rest are filled from cohort registrants that still have room for an award. ---
+if facilitator_training
+  cost = facilitator_training.cost_cents
+  flagship_regs = facilitator_training.event_registrations.active.order(:id).to_a
+  already_awarded = flagship_regs.select { |reg| reg.scholarships.exists? }
+  # Only registrations with no allocations yet have room for a full/partial award —
+  # the allocation validation rejects allocating more than the remaining cost.
+  fillable = flagship_regs.reject { |reg| reg.scholarships.exists? || reg.allocations.exists? }
+  recipients = (already_awarded + fillable).first(6)
 
-    application_index += 1
+  # Fund the newly chosen recipients (Amy already has hers from payments); varied
+  # shares and completion states give the dashboard both allocated and pending awards.
+  award_plan = [ [ 1.0, true ], [ 0.5, true ], [ 0.75, false ], [ 0.5, true ], [ 0.25, false ] ]
+  plan_index = 0
+  recipients.each do |registration|
+    next if registration.scholarships.exists?
+    share, completed = award_plan[plan_index % award_plan.length]
+    award_scholarship.(registration, amount_cents: (cost * share).round, tasks_completed: completed)
+    plan_index += 1
+  end
+
+  # Hold the recipient count at exactly six: clear the flag on anyone left over.
+  (flagship_regs - recipients).each do |registration|
+    registration.update!(scholarship_requested: false) if registration.scholarship_requested?
+  end
+
+  # First four answered within their registration (combo); last two submitted a
+  # separate scholarship form.
+  recipients.each_with_index do |registration, i|
+    setup_recipient.(registration, second_form: i >= 4)
   end
 end
 
-[ facilitator_training, trauma_training, mindful_art ].compact.each do |event|
+# --- Other scholarship-enabled events: surface their existing applicants
+# (registrants who already hold a scholarship or requested one — e.g. Jessica on
+# the trauma training), each answering within their registration submission. ---
+(scholarship_events - [ facilitator_training ].compact).each do |event|
+  event.event_registrations.active.order(:id).each do |registration|
+    next unless registration.scholarships.exists? || registration.scholarship_requested?
+    setup_recipient.(registration, second_form: false)
+  end
+end
+
+scholarship_events.each do |event|
   dashboard = EventDashboard.new(event)
   puts "  #{event.title}: scholarships #{dashboard.scholarship_total_cents / 100.0} " \
        "(#{dashboard.scholarship_recipient_count} recipients), " \
