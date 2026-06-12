@@ -69,15 +69,15 @@
       <span class="admin-only bg-blue-100 p-1 text-sm text-gray-500 italic">Not published</span>
     <% elsif event.registerable? %>
       <% if user_signed_in? %>
-        <% if event.object.registration_form&.form_fields&.any? %>
-          <%= link_to "Register",
-                      new_event_public_registration_path(event),
-                      data: { turbo_frame: "_top" },
-                      class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
-        <% else %>
+        <% if event.object.one_click_for_signed_in? %>
           <%= button_to "Register",
                       event_registrant_registration_path(event_id: event),
                       data: { turbo: !event.object.cost_cents.to_i.positive? },
+                      class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
+        <% else %>
+          <%= link_to "Register",
+                      new_event_public_registration_path(event),
+                      data: { turbo_frame: "_top" },
                       class: "btn px-3 py-2 text-xs uppercase leading-tight font-telefon text-accent border-2 border-accent hover:text-white hover:bg-orange-700" %>
         <% end %>
       <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
