@@ -1,4 +1,4 @@
-<%# locals: (field:, value: nil, label: nil) %>
+<%# locals: (field:, value: nil, label: nil, show_option_source: false) %>
 <% return if field.group_header? %>
 
 <% error = @field_errors&.dig(field.id) %>
@@ -6,12 +6,17 @@
 <% input_classes = "w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition focus:outline-none focus:ring-2 #{error_border}" %>
 
 <div class="mb-7">
-  <label class="rich-label block text-sm font-semibold text-gray-700 mb-1.5" for="public_registration_form_fields_<%= field.id %>">
-    <%= form_label_html(label || field.name) %>
-    <% if field.required %>
-      <span class="text-red-500">*</span>
+  <div class="flex flex-wrap items-center gap-2 mb-1.5">
+    <label class="rich-label text-sm font-semibold text-gray-700" for="public_registration_form_fields_<%= field.id %>">
+      <%= form_label_html(label || field.name) %>
+      <% if field.required %>
+        <span class="text-red-500">*</span>
+      <% end %>
+    </label>
+    <% if show_option_source %>
+      <%= render "forms/option_source_link", field: field %>
     <% end %>
-  </label>
+  </div>
 
   <% if field.hint_text.present? %>
     <p class="text-xs text-gray-500 mb-1.5"><%= field.hint_text %></p>
