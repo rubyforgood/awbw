@@ -123,7 +123,7 @@ module ApplicationHelper
   # sourced dynamically (from Sector/Category data) rather than from the
   # field's own stored answer options.
   DYNAMIC_FIELD_CATEGORY_TYPES = {
-    "workshop_environments" => "WorkshopSettings",
+    "workshop_environments" => "WorkshopEnvironments",
     "client_life_experiences" => "StoryPopulation",
     "primary_age_group" => "AgeRange"
   }.freeze

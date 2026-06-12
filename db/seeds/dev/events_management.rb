@@ -344,7 +344,7 @@ end
 
 puts "Tagging registrants with life experiences and workshop settings…"
 # The background page charts registrants' StoryPopulation (life experiences) and
-# WorkshopSettings (settings) tags — the same tags public registration writes
+# WorkshopEnvironments (settings) tags — the same tags public registration writes
 # from the "Client life experiences" and "Workshop environments" checkboxes (see
 # PublicRegistration#assign_tags). The seed form submissions above only fill text
 # fields, so without this the data-rich trainings' background charts are empty.
@@ -353,7 +353,7 @@ life_experience_categories = Category.joins(:category_type)
   .where(category_types: { name: "StoryPopulation" })
   .order(:name).to_a
 setting_categories = Category.joins(:category_type)
-  .where(category_types: { name: "WorkshopSettings" })
+  .where(category_types: { name: "WorkshopEnvironments" })
   .order(:name).to_a
 
 # Pick offsets i and i+offset from a category list, wrapping around; returns [] for
