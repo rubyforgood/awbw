@@ -118,6 +118,15 @@ module ApplicationHelper
     "#{local.strftime("%B")} #{local.day.ordinalize} at #{time} #{local.strftime("%Z")}"
   end
 
+  # Default registration close datetime suggested on the event form: 9am on the
+  # Monday before the event's start date. New events without a start date yet
+  # fall back to two days out at 9am.
+  def event_registration_close_default(event)
+    start = event&.start_date
+    base = start ? (start.in_time_zone(Time.zone) - 1.day).beginning_of_week(:monday) : 2.days.from_now
+    base.change(hour: 9, min: 0)
+  end
+
   # Rainbow gradient accent bar shown beside form section headers.
   def form_section_bar_class
     "h-5 w-1 rounded-full bg-[linear-gradient(to_bottom,#ec4899,#f97316,#22c55e,#3b82f6,#8b5cf6)]"

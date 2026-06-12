@@ -255,4 +255,24 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.form_header_uses_tokens?(build(:form, header: nil))).to be false
     end
   end
+
+  describe "#event_registration_close_default" do
+    it "is 9am on the Monday of the start date's week" do
+      event = build(:event, start_date: Time.zone.local(2026, 7, 22, 13, 0)) # Wednesday
+      expect(helper.event_registration_close_default(event)).to eq(Time.zone.local(2026, 7, 20, 9, 0))
+    end
+
+    it "is the prior Monday at 9am when the event starts on a Monday" do
+      event = build(:event, start_date: Time.zone.local(2026, 7, 20, 9, 0)) # Monday
+      expect(helper.event_registration_close_default(event)).to eq(Time.zone.local(2026, 7, 13, 9, 0))
+    end
+
+    it "falls back to two days out at 9am when there is no start date" do
+      event = build(:event, start_date: nil)
+      default = helper.event_registration_close_default(event)
+      expect(default.hour).to eq(9)
+      expect(default.min).to eq(0)
+      expect(default.to_date).to eq(2.days.from_now.to_date)
+    end
+  end
 end

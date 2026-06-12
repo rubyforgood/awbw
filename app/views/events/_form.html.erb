@@ -117,7 +117,7 @@
                 "Registration close time",
                 class: "block font-medium mb-1" %>
 
-          <% registration_close_default = @event.registration_close_date || 2.days.from_now.change(hour: 9, min: 0) %>
+          <% registration_close_default = @event.registration_close_date || event_registration_close_default(@event) %>
           <%= f.text_field :registration_close_date,
                        type: "datetime-local",
                        class:
