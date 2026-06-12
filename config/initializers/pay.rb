@@ -10,6 +10,10 @@ Rails.application.config.to_prepare do
       "stripe.charge.refunded",
       StripeChargeRefundedProcessor.new
     )
+    Pay::Webhooks.delegator.subscribe(
+      "stripe.charge.refund.updated",
+      StripeRefundUpdatedProcessor.new
+    )
   end
 
   Pay.send_emails = false
