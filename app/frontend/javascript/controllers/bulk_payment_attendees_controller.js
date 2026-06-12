@@ -44,8 +44,9 @@ export default class extends Controller {
       const first_name = row.querySelector("[data-attendee-field=\"first_name\"]")?.value || ""
       const last_name = row.querySelector("[data-attendee-field=\"last_name\"]")?.value || ""
       const email = row.querySelector("[data-attendee-field=\"email\"]")?.value || ""
-      if (first_name || last_name || email) {
-        attendees.push({ first_name, last_name, email })
+      const amount = row.querySelector("[data-attendee-field=\"amount\"]")?.value || ""
+      if (first_name || last_name || email || amount) {
+        attendees.push({ first_name, last_name, email, amount })
       }
     })
     this.hiddenInputTarget.value = JSON.stringify(attendees)
