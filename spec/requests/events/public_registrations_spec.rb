@@ -171,13 +171,13 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     it "renders a workshop setting option's description under its checkbox" do
       category_type = create(:category_type, name: "WorkshopEnvironment")
       create(:category, :published, category_type: category_type,
-             name: "Clinical setting", description: "Community mental health, outpatient, etc.")
+             name: "Clinical setting", description: "Community mental health, outpatient, etc")
       create(:form_field, form: form, answer_type: :multiple_choice_checkbox,
              field_identifier: "workshop_environments", name: "Workshop Settings", required: false)
 
       get new_event_public_registration_path(event)
 
-      expect(response.body).to include("Community mental health, outpatient, etc.")
+      expect(response.body).to include("Community mental health, outpatient, etc")
     end
   end
 

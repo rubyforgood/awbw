@@ -310,17 +310,17 @@ workshop_settings_type.update!(display_text: "Workshop Settings", story_specific
 # no description. Admins can rename, re-describe, reorder, and publish/unpublish
 # each from the Categories admin once seeded.
 workshop_settings = [
-  [ "Clinical setting", "Community mental health, outpatient, etc." ],
-  [ "Educational setting", "Schools, universities, etc." ],
+  [ "Clinical setting", "Community mental health, outpatient, etc" ],
+  [ "Educational setting", "Schools, universities, etc" ],
   [ "Events and conferences", nil ],
   [ "Faith-based setting", nil ],
   [ "Home visits", nil ],
   [ "Hospitals", nil ],
   [ "Law enforcement/court/legal", nil ],
-  [ "Outreach program", "Drop-in services, support groups, etc." ],
+  [ "Outreach program", "Drop-in services, support groups, etc" ],
   [ "Prisons/jails", nil ],
   [ "Private practice", nil ],
-  [ "Residential program", "Emergency shelters, inpatient, etc." ],
+  [ "Residential program", "Emergency shelters, inpatient, etc" ],
   [ "Virtually", nil ],
   [ "With staff", nil ],
   [ "Other", "Please specify below." ]
