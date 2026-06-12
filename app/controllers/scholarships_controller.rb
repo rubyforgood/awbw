@@ -1,5 +1,5 @@
 class ScholarshipsController < ApplicationController
-  before_action :set_scholarship, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_scholarship, only: [ :show, :edit, :update, :destroy, :toggle_tasks ]
   before_action :set_grant, only: [ :new, :create ]
 
   def show
@@ -86,10 +86,30 @@ class ScholarshipsController < ApplicationController
     redirect_to scholarship_return_path(grant), notice: "Scholarship removed."
   end
 
+  # Flip a recipient's tasks-completed state from the event recipients roster.
+  # The model's after_update allocates the award when complete and de-allocates
+  # it when outstanding, so this single toggle finalizes or unwinds the award.
+  def toggle_tasks
+    authorize! @scholarship, to: :update?
+    @scholarship.update!(tasks_completed: !@scholarship.tasks_completed?)
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_back fallback_location: recipients_fallback_path, notice: "Scholarship updated." }
+    end
+  end
+
   private
 
   def set_scholarship
     @scholarship = Scholarship.find(params[:id])
+  end
+
+  # The recipients roster the tasks toggle is operated from — used as the
+  # fallback when there's no referer to return to.
+  def recipients_fallback_path
+    event = @scholarship.allocation&.allocatable.try(:event)
+    event ? recipients_event_path(event) : root_path
   end
 
   def set_grant
