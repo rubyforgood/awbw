@@ -58,7 +58,7 @@
       </div>
     </div>
   <% else %>
-    <div class="flex-1 min-w-0" data-controller="field-options">
+    <div class="flex-1 min-w-0" data-controller="field-options answer-options">
       <div class="flex flex-wrap items-center gap-2">
         <%= f.text_area :name, required: true, rows: 1, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
         <%
@@ -67,7 +67,8 @@
         %>
         <%= f.select :answer_type, type_options,
               {},
-              class: "flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+              class: "flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+              data: { answer_options_target: "type", action: "answer-options#typeChanged" } %>
         <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0">
           <%= f.check_box :required, class: "rounded border-gray-300 text-purple-600" %>
           Required
@@ -88,11 +89,22 @@
         </button>
       </div>
 
-      <div class="hidden mt-2 flex flex-col gap-3" data-field-options-target="panel"<% if field.multiple_choice? %> data-controller="answer-options"<% end %>>
+      <% option_source = form_field_option_source(field) %>
+      <div class="hidden mt-2 flex flex-col gap-3" data-field-options-target="panel">
         <div class="flex flex-wrap items-center gap-3">
-          <% if field.multiple_choice? %>
+          <% if option_source %>
+            <%# These options are managed centrally, not per-field — link admins to that list. %>
+            <span class="inline-flex items-center gap-1.5 text-sm text-gray-500">
+              <i class="fa-solid fa-database text-xs text-gray-400"></i>
+              Options from
+              <%= link_to option_source[:label], option_source[:path],
+                    class: "font-medium text-purple-600 hover:text-purple-800 underline",
+                    target: "_blank", rel: "noopener" %>
+            </span>
+          <% else %>
             <button type="button"
-                    class="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 cursor-pointer"
+                    class="<%= "hidden" unless field.multiple_choice? %> flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 cursor-pointer"
+                    data-answer-options-target="section"
                     data-action="answer-options#toggle">
               <i class="fa-solid fa-chevron-right text-xs transition-transform" data-answer-options-target="icon"></i>
               Answer options
@@ -121,8 +133,8 @@
                 class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0" %>
         </div>
 
-        <% if field.multiple_choice? %>
-          <div class="hidden space-y-2 pl-1 border-t border-gray-100 pt-3" data-answer-options-target="panel">
+        <% unless option_source %>
+          <div class="hidden space-y-2 pl-1 border-t border-gray-100 pt-3" data-answer-options-target="list">
             <%= f.fields_for :form_field_answer_options do |opt| %>
               <%= render "form_field_answer_option_fields", f: opt %>
             <% end %>
