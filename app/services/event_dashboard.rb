@@ -556,7 +556,7 @@ class EventDashboard
       .transform_values { |rows| rows.map(&:last).uniq }
   end
 
-  # Workshop settings captured at registration: WorkshopEnvironment categories
+  # Workshop settings captured at registration: WorkshopSettings categories
   # tagged onto registrants. Ordered by name.
   def settings
     @settings ||= Category.where(id: registrant_settings_ids).order(:name)
@@ -753,13 +753,13 @@ class EventDashboard
     @registrant_life_experience_ids ||= life_experience_items.distinct.pluck(:category_id)
   end
 
-  # CategorizableItem rows tying registrants to WorkshopEnvironment (workshop
+  # CategorizableItem rows tying registrants to WorkshopSettings (workshop
   # settings) categories — the source for the settings breakdown.
   def settings_items
     CategorizableItem
       .joins(category: :category_type)
       .where(categorizable_type: "Person", categorizable_id: registrant_ids)
-      .where(category_types: { name: "WorkshopEnvironment" })
+      .where(category_types: { name: "WorkshopSettings" })
   end
 
   def registrant_settings_ids

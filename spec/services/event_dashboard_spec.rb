@@ -25,7 +25,7 @@ RSpec.describe EventDashboard do
     let(:experience2) { create(:category, name: "Survivors", category_type: story_population) }
     let(:experience_excluded) { create(:category, name: "Elders", category_type: story_population) }
 
-    let(:workshop_environment) { create(:category_type, name: "WorkshopEnvironment") }
+    let(:workshop_environment) { create(:category_type, name: "WorkshopSettings") }
     let(:setting1) { create(:category, name: "Clinical", category_type: workshop_environment) }
     let(:setting2) { create(:category, name: "Educational", category_type: workshop_environment) }
     let(:setting_excluded) { create(:category, name: "Virtually", category_type: workshop_environment) }
@@ -86,7 +86,7 @@ RSpec.describe EventDashboard do
       create(:categorizable_item, category: experience2, categorizable: person2)
       create(:categorizable_item, category: experience_excluded, categorizable: cancelled_person)
 
-      # Workshop settings (WorkshopEnvironment categories) on registrants; the
+      # Workshop settings (WorkshopSettings categories) on registrants; the
       # excluded one belongs to the cancelled person.
       create(:categorizable_item, category: setting1, categorizable: person1)
       create(:categorizable_item, category: setting1, categorizable: person2)

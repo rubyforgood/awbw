@@ -295,21 +295,36 @@ story_population_type.update!(display_text: "Who is this story about?", story_sp
   cat.update!(published: true) unless cat.published?
 end
 
-puts "Creating WorkshopEnvironment CategoryType…"
-workshop_env_type = find_or_create_by_name!(CategoryType, "WorkshopEnvironment") do |ct|
-  ct.display_text = "Workshop Environments"
+puts "Creating WorkshopSettings CategoryType…"
+workshop_settings_type = find_or_create_by_name!(CategoryType, "WorkshopSettings") do |ct|
+  ct.display_text = "Workshop Settings"
   ct.story_specific = false
   ct.profile_specific = true
   ct.published = true
 end
-workshop_env_type.update!(display_text: "Workshop Environments", story_specific: false, profile_specific: true, published: true)
+workshop_settings_type.update!(display_text: "Workshop Settings", story_specific: false, profile_specific: true, published: true)
 
-%w[Shelter School Hospital Community\ Center After-School\ Program Virtual/Online Private\ Practice Other].each do |name|
+[
+  "Clinical setting (community mental health, outpatient, etc.)",
+  "Educational setting (schools, universities, etc.)",
+  "Events and conferences",
+  "Faith-based setting",
+  "Home visits",
+  "Hospitals",
+  "Law enforcement/court/legal",
+  "Outreach program (drop-in services, support groups, etc.)",
+  "Prisons/jails",
+  "Private practice",
+  "Residential program (emergency shelters, inpatient, etc.)",
+  "Virtually",
+  "With staff",
+  "Other (please specify below)"
+].each do |name|
   cat = Category.where("LOWER(name) = LOWER(?)", name).first
   if cat
-    cat.update!(category_type: workshop_env_type) unless cat.category_type_id == workshop_env_type.id
+    cat.update!(category_type: workshop_settings_type) unless cat.category_type_id == workshop_settings_type.id
   else
-    cat = workshop_env_type.categories.create!(name: name, published: true)
+    cat = workshop_settings_type.categories.create!(name: name, published: true)
   end
   cat.update!(published: true) unless cat.published?
 end
