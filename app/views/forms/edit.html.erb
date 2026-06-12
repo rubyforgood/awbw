@@ -92,7 +92,7 @@
       </div>
     </div>
 
-    <%# Optional HTML intro rendered under the title on the form's public pages %>
+    <%# Optional rich-text intro rendered under the title on the form's public pages %>
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <div class="flex items-center gap-2.5 px-6 py-3 bg-blue-100 border-b border-blue-300">
         <i class="fa-solid fa-heading text-blue-700"></i>
@@ -101,11 +101,9 @@
       <div class="p-6 space-y-2">
         <label class="block text-sm font-medium text-gray-700">Intro shown under the form title</label>
         <p class="text-xs text-gray-500">
-          Optional. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Appears at the top of the form on the preview and public pages.
+          Optional. Appears at the top of the form on the preview and public pages.
         </p>
-        <%= f.text_area :header, rows: 4,
-              placeholder: "e.g. <strong>Welcome!</strong> Please complete all fields below.",
-              class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono" %>
+        <%= rhino_editor(f, :header) %>
       </div>
     </div>
 

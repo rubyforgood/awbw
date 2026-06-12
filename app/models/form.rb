@@ -1,4 +1,8 @@
 class Form < ApplicationRecord
+  # Optional rich-text intro shown under the form title on the preview and
+  # public registration pages.
+  has_rich_text :rhino_header
+
   belongs_to :owner, polymorphic: true, optional: true
   has_many :form_fields, dependent: :destroy, inverse_of: :form
   has_many :event_forms, dependent: :destroy

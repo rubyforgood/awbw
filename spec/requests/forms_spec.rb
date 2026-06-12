@@ -96,14 +96,13 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("Expand all")
     end
 
-    it "renders the form header section with a textarea for HTML" do
-      form = create(:form, :standalone, header: "<strong>Welcome</strong>")
+    it "renders the form header section with a rich-text editor" do
+      form = create(:form, :standalone, rhino_header: "<strong>Welcome</strong>")
       get edit_form_path(form)
 
       expect(response.body).to include("Form header")
-      expect(response.body).to include('name="form[header]"')
-      # The raw HTML is escaped inside the textarea so admins edit the markup.
-      expect(response.body).to include("&lt;strong&gt;Welcome&lt;/strong&gt;")
+      expect(response.body).to include('name="form[rhino_header]"')
+      expect(response.body).to include("custom-rhino-editor")
     end
 
     it "edits field and header names in textareas" do
@@ -129,14 +128,15 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("<em>Your name</em>")
     end
 
-    it "renders the form header HTML under the title" do
-      form = create(:form, :standalone, header: %(<strong>Welcome</strong> — <a href="https://awbw.org">learn more</a>))
+    it "renders the form header rich text under the title" do
+      form = create(:form, :standalone, rhino_header: %(<strong>Welcome</strong> — <a href="https://awbw.org">learn more</a>))
 
       get form_path(form)
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("<strong>Welcome</strong>")
-      expect(response.body).to include(%(<a href="https://awbw.org">learn more</a>))
+      expect(response.body).to include("learn more")
+      expect(response.body).to include("https://awbw.org")
     end
   end
 
@@ -150,10 +150,10 @@ RSpec.describe "Forms", type: :request do
       expect(response).to redirect_to(edit_form_path(form))
     end
 
-    it "updates the form header HTML" do
+    it "updates the form header rich text" do
       form = create(:form, :standalone)
-      patch form_path(form), params: { form: { header: "<strong>Read carefully</strong>" } }
-      expect(form.reload.header).to eq("<strong>Read carefully</strong>")
+      patch form_path(form), params: { form: { rhino_header: "<strong>Read carefully</strong>" } }
+      expect(form.reload.rhino_header.to_plain_text).to eq("Read carefully")
       expect(response).to redirect_to(edit_form_path(form))
     end
 
