@@ -27,7 +27,7 @@ module ApplicationHelper
     "{{event_platform}}" => [ "Virtual platform", "Zoom" ],
     "{{event_location}}" => [ "In-person location", "Los Angeles, CA" ],
     "{{event_month_year}}" => [ "Event month and year", "July 2026" ],
-    "{{registration_close}}" => [ "Registration close date", "June 20, 2026 9:00 am PST" ]
+    "{{registration_close}}" => [ "Registration close date", "July 20th at 9am PST" ]
   }.freeze
 
   # Render a form header, filling event-driven tokens (see FORM_HEADER_TOKENS) from
@@ -105,13 +105,17 @@ module ApplicationHelper
     event&.location&.name.presence
   end
 
-  # Registration close date formatted like the event show page (e.g.
-  # "June 20, 2026 9:00 am PST"), or nil when there's no close date.
+  # Registration close date for form-header interpolation, e.g.
+  # "July 20th at 9am PST": ordinal day, no year, compact time (minutes only
+  # when not on the hour). Nil when there's no close date.
   def event_registration_close_label(event)
     close = event&.registration_close_date
     return unless close
     local = close.in_time_zone(Time.zone)
-    "#{local.strftime("%B %-d, %Y %-l:%M %P")} #{local.strftime("%Z")}"
+    time = local.strftime("%-l")
+    time += ":#{local.strftime("%M")}" unless local.strftime("%M") == "00"
+    time += local.strftime("%P")
+    "#{local.strftime("%B")} #{local.day.ordinalize} at #{time} #{local.strftime("%Z")}"
   end
 
   # Rainbow gradient accent bar shown beside form section headers.

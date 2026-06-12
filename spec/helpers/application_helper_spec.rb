@@ -171,11 +171,22 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.form_header_html(form)).to eq("Register for our upcoming training.")
     end
 
-    it "fills the {{registration_close}} token from the event's close date" do
+    it "fills the {{registration_close}} token as 'Month Dayth at time' without the year" do
       form = build(:form, header: "Registration closes {{registration_close}}.")
-      event = build(:event, registration_close_date: Time.zone.local(2026, 6, 20, 9, 0))
+      close = Time.zone.local(2026, 7, 20, 9, 0)
+      event = build(:event, registration_close_date: close)
+      tz = close.strftime("%Z")
       expect(helper.form_header_html(form, event: event))
-        .to eq("Registration closes #{event.registration_close_date.in_time_zone(Time.zone).strftime("%B %-d, %Y %-l:%M %P %Z")}.")
+        .to eq("Registration closes July 20th at 9am #{tz}.")
+    end
+
+    it "includes minutes in the {{registration_close}} token when not on the hour" do
+      form = build(:form, header: "Registration closes {{registration_close}}.")
+      close = Time.zone.local(2026, 7, 20, 14, 30)
+      event = build(:event, registration_close_date: close)
+      tz = close.strftime("%Z")
+      expect(helper.form_header_html(form, event: event))
+        .to eq("Registration closes July 20th at 2:30pm #{tz}.")
     end
 
     it "falls back when the event has no registration close date" do
