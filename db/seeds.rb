@@ -333,7 +333,12 @@ workshop_settings_type.categories.order(:id).each_with_index do |cat, i|
 end
 
 workshop_settings.each_with_index do |(name, description), index|
-  cat = workshop_settings_type.categories.where("LOWER(name) = LOWER(?)", name).first
+  # Match the clean name, or the earlier "Name (examples)" form that baked the
+  # examples into the label, so a category seeded before descriptions moved into
+  # their own column is renamed in place — preserving its taggings — rather than
+  # duplicated and left orphaned.
+  cat = workshop_settings_type.categories.where("LOWER(name) = LOWER(?)", name).first ||
+        workshop_settings_type.categories.where("LOWER(name) LIKE LOWER(?)", "#{name} (%").first
   cat ||= workshop_settings_type.categories.create!(name: name)
   cat.update!(name: name, published: true, description: description)
   cat.update_columns(position: index + 1)
