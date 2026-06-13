@@ -1,19 +1,19 @@
 <%# Structured "at a glance" event details for the public registration page,
     built from data already on the event — dates, time, platform/location, fee,
     and registration deadline. Date and time intentionally repeat the page hero:
-    here they are plain, labeled text that's easy to read and copy/paste. For a
-    multi-day event the date/time rows gain a small grey "both days" note, and a
-    paid event's Fee row notes the payment deadline. Reuses the same label helpers
-    as the form header tokens so the two stay in sync.
+    here they are plain, labeled text that's easy to read and copy/paste. The
+    Dates and Fee rows can carry an optional admin-authored qualifier (the event's
+    hint_dates / hint_registration_cost, e.g. "must attend both days"), rendered
+    as a small grey parenthetical. Reuses the same label helpers as the form
+    header tokens so the two stay in sync.
     Shown above the form's header intro. Locals: event. %>
 <%
   multi_day = event.multi_day?
-  fee_value = event_fee_label(event)
-  fee_note = (fee_value != "Free" && fee_value.present?) ? "(due within 3 weeks of registration)" : nil
+  parenthetical = ->(text) { text.present? ? "(#{text})" : nil }
   detail_rows = [
-    { label: multi_day ? "Dates" : "Date", value: event_dates_detail_label(event), note: (multi_day ? "(must attend both days)" : nil) },
-    { label: multi_day ? "Times" : "Time", value: event_times_label(event), note: (multi_day ? "(both days)" : nil) },
-    { label: "Fee", value: fee_value, note: fee_note },
+    { label: multi_day ? "Dates" : "Date", value: event_dates_detail_label(event), note: parenthetical.call(event.hint_dates) },
+    { label: multi_day ? "Times" : "Time", value: event_times_label(event) },
+    { label: "Fee", value: event_fee_label(event), note: parenthetical.call(event.hint_registration_cost) },
     { label: "Platform", value: event_platform_label(event) },
     { label: "Location", value: event_location_label(event) },
     { label: "Registration closes", value: event_registration_close_date_label(event), note: "(#{event_registration_close_time_label(event)})" }

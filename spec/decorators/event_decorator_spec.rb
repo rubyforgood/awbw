@@ -12,6 +12,11 @@ RSpec.describe EventDecorator do
       expect(event.videoconference_domain).to eq("Google")
     end
 
+    it "uses the second-to-last label, ignoring other subdomains" do
+      event = build(:event, videoconference_url: "https://abc.meet.com/x").decorate
+      expect(event.videoconference_domain).to eq("Meet")
+    end
+
     it "returns 'video call' for invalid URLs" do
       event = build(:event, videoconference_url: "not a url").decorate
       expect(event.videoconference_domain).to eq("video call")

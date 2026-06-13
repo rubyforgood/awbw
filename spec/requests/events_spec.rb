@@ -46,7 +46,7 @@ RSpec.describe "Events", type: :request do
         get event_url(event_with_fixed_times)
         expect(response).to be_successful
         # 19:00 UTC = 12:00 noon PT (styled format on show page)
-        expect(response.body).to include("Sunday, June 15")
+        expect(response.body).to include("June 15, 2031")
         expect(response.body).to include("12 pm - 1 pm")
       end
 
@@ -57,7 +57,7 @@ RSpec.describe "Events", type: :request do
 
         expect(response).to be_successful
         # 19:00 UTC = 3:00 pm ET (styled format on show page)
-        expect(response.body).to include("Sunday, June 15")
+        expect(response.body).to include("June 15, 2031")
         expect(response.body).to include("3 pm - 4 pm")
       end
     end
@@ -220,6 +220,15 @@ RSpec.describe "Events", type: :request do
         event.update!(autoshow_registration_details: false)
         patch event_path(event), params: { event: { autoshow_registration_details: "1" } }
         expect(event.reload.autoshow_registration_details).to be(true)
+      end
+
+      it "persists the registration detail hints" do
+        patch event_path(event), params: { event: {
+          hint_dates: "must attend both days",
+          hint_registration_cost: "due within 3 weeks of registration"
+        } }
+        expect(event.reload.hint_dates).to eq("must attend both days")
+        expect(event.hint_registration_cost).to eq("due within 3 weeks of registration")
       end
     end
 

@@ -185,7 +185,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Registration closes")
     end
 
-    it "pluralizes labels and adds both-days notes for a multi-day event" do
+    it "pluralizes the date and time labels for a multi-day event" do
       pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
       event.update!(autoshow_registration_details: true,
                     start_date: pacific.local(2026, 7, 23, 9),
@@ -195,11 +195,9 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       expect(response.body).to include("Dates:")
       expect(response.body).to include("Times:")
-      expect(response.body).to include("(must attend both days)")
-      expect(response.body).to include("both days")
     end
 
-    it "uses singular labels and no both-days notes for a single-day event" do
+    it "uses singular date and time labels for a single-day event" do
       pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
       event.update!(autoshow_registration_details: true,
                     start_date: pacific.local(2026, 8, 12, 9),
@@ -211,7 +209,28 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Time:")
       expect(response.body).not_to include("Dates:")
       expect(response.body).not_to include("Times:")
-      expect(response.body).not_to include("(must attend both days)")
+    end
+
+    it "renders the event's date and fee hints as grey parentheticals" do
+      event.update!(autoshow_registration_details: true,
+                    cost_cents: 150000,
+                    hint_dates: "must attend both days",
+                    hint_registration_cost: "due within 3 weeks of registration")
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("(must attend both days)")
+      expect(response.body).to include("(due within 3 weeks of registration)")
+    end
+
+    it "omits the hint parentheticals when the event has none" do
+      event.update!(autoshow_registration_details: true, cost_cents: 150000,
+                    hint_dates: nil, hint_registration_cost: nil)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).not_to include("must attend both days")
+      expect(response.body).not_to include("due within 3 weeks")
     end
 
     it "hides the duplicate hero badges when the details panel is shown" do

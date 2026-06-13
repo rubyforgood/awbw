@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_170000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -494,6 +494,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_160000) do
     t.text "ga4_snippet"
     t.text "gtm_body_snippet"
     t.text "gtm_head_snippet"
+    t.string "hint_dates"
+    t.string "hint_registration_cost"
     t.boolean "inactive", default: true, null: false
     t.integer "location_id"
     t.string "pre_date_text"

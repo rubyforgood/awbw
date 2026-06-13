@@ -20,6 +20,11 @@
 
   <%# ---- EVENT HEADER ---- %>
   <div class="text-center mb-8">
+    <%# Organization logo leads the page so the publisher's identity (and the
+        "art transforming trauma" tagline) establishes trust before the event
+        and the registration ask. The color tagline lockup reads on the white
+        page; the white reversed mark no longer appears in the purple card. %>
+    <%= image_tag("logo-with-tagline.png", alt: "A Window Between Worlds — art transforming trauma", class: "mx-auto mb-6 block h-12 w-auto") %>
     <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
       <p class="text-lg sm:text-xl font-bold uppercase tracking-[0.2em] text-accent mb-3" style="font-family: 'Telefon Bold', sans-serif"><%= @event.pre_title %></p>
     <% end %>
@@ -64,14 +69,8 @@
 
     <%# Card Header %>
     <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
-      <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
-        <div class="shrink-0">
-          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
-        </div>
-        <div class="min-w-0">
-          <h2 class="text-xl font-semibold tracking-wide leading-tight">Registration</h2>
-          <p class="text-sm text-blue-200">Reserve your spot.</p>
-        </div>
+      <div class="min-w-0">
+        <h2 class="text-xl font-semibold tracking-wide leading-tight"><%= @form.display_name %></h2>
       </div>
       <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
