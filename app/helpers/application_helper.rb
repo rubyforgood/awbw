@@ -260,13 +260,26 @@ module ApplicationHelper
     end
   end
 
-  # polymorphic_path for a record, or nil when the record's model has no route
-  # (e.g. FormSubmission, which is referenced as a notification's noticeable but
-  # has no controller/show page). Lets views link only when a route exists.
+  # Best viewable path for a record (e.g. a notification's noticeable), or nil
+  # when its model has no route. FormSubmissions have no polymorphic route, so
+  # they get a tailored destination via form_submission_link_path.
   def routable_path(record)
+    return form_submission_link_path(record) if record.is_a?(FormSubmission)
     polymorphic_path(record)
   rescue NoMethodError
     nil
+  end
+
+  # Where to view a form submission. When the submitter has a public event
+  # registration, send the viewer to their registration details page (the public
+  # "ticket"/details view, keyed by the registration slug). Otherwise — bulk
+  # payments and event-less submissions, which have no registration — fall back
+  # to the form submission show page.
+  def form_submission_link_path(submission)
+    event = submission.event
+    registration = event && submission.person.event_registrations.find_by(event: event)
+    return event_public_registration_path(event, reg: registration.slug) if registration&.slug.present?
+    form_submission_path(submission)
   end
 
   def search_page(params)

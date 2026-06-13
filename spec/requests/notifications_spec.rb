@@ -57,7 +57,7 @@ RSpec.describe "Notifications", type: :request do
       expect(response.body).to include('id="notifications_results"')
     end
 
-    it "renders rows whose noticeable has no route without raising" do
+    it "links a form submission noticeable to its show page" do
       submission = create(:form_submission)
       create(:notification, noticeable: submission, recipient_email: "bulk-payer@example.com")
 
@@ -65,6 +65,7 @@ RSpec.describe "Notifications", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("bulk-payer@example.com")
+      expect(response.body).to include(form_submission_path(submission))
     end
 
     context "responded checkbox rendering" do
