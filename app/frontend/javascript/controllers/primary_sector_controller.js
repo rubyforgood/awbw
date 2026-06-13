@@ -24,14 +24,14 @@ export default class extends Controller {
   // Jump the newly-primary chip to the front, mirroring the primary-first order
   // the server renders on save.
   moveToFront(checkbox) {
-    const chip = checkbox.closest("[data-sector-chips-target='chip']")
+    const chip = checkbox.closest("[data-primary-sector-target='chip']")
     if (chip) this.element.prepend(chip)
   }
 
   // Reflect each chip's primary state: darker fill and stronger border when set.
   style() {
     this.primaryTargets.forEach((checkbox) => {
-      const chip = checkbox.closest("[data-sector-chips-target='chip']")
+      const chip = checkbox.closest("[data-primary-sector-target='chip']")
       if (!chip) return
       const primary = checkbox.checked
       chip.classList.toggle("bg-lime-200", primary)
