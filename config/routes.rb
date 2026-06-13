@@ -89,6 +89,9 @@ Rails.application.routes.draw do
   end
   resources :community_news
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket
+  # Public, slug-based view of a registration's submitted form (the slug identifies
+  # both the registration and its event), parallel to the ticket route above.
+  get "submission/:slug", to: "events/public_forms#show", as: :submission
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
@@ -143,7 +146,6 @@ Rails.application.routes.draw do
   public_form_lane = /registration|scholarship|scholarship_questions|ce_questions|general/
   get  "/events/:event_id/forms/:form_role/new", to: "events/public_forms#new",    as: :new_event_form, constraints: { form_role: public_form_lane }
   post "/events/:event_id/forms/:form_role",     to: "events/public_forms#create", as: :event_form,     constraints: { form_role: public_form_lane }
-  get  "/events/:event_id/forms/:form_role",     to: "events/public_forms#show",   constraints: { form_role: /registration/ }
   resources :people do
     collection do
       get :check_duplicates

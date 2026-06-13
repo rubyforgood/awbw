@@ -87,10 +87,9 @@
                     </div>
 
                     <% if event_form_ids.any? && (submissions = form_submissions[person.id]) %>
-                      <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
                       <% tooltip_parts = submissions.map { |name, ts| "#{name} — Submitted #{ts.strftime('%B %d, %Y at %l:%M %P')}" } %>
                       <% tooltip_parts << "Scholarship requested" if registration.scholarship_requested? %>
-                      <%= link_to event_form_path(@event, "registration", **form_show_params),
+                      <%= link_to submission_path(registration.slug),
                                   class: "text-green-600 hover:text-green-800",
                                   title: tooltip_parts.join("\n"),
                                   target: "_blank",

@@ -1,7 +1,7 @@
 <%# ---- Form submission — the recipient's scholarship-section answers from their
     registration form, with a jump link to the full public submission (where the
     complete application, if any, lives). ---- %>
-<% submission_params = @allocatable.try(:slug).present? ? { reg: @allocatable.slug } : { person_id: @scholarship.recipient_id } %>
+<% submission_slug = @allocatable.try(:slug) %>
 <% answered = @scholarship_answers.to_a.any? { |_field, response| response&.submitted_answer.present? } %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
@@ -9,8 +9,8 @@
       <i class="fa-solid fa-file-lines"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700">Form submission</h2>
-    <% if @form_submission %>
-      <%= link_to event_form_path(@event, "registration", **submission_params),
+    <% if @form_submission && submission_slug.present? %>
+      <%= link_to submission_path(submission_slug),
                   class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
                   target: "_blank", rel: "noopener" do %>
         View full submission

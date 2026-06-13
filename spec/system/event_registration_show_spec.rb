@@ -61,7 +61,7 @@ RSpec.describe "Event registration show page", type: :system do
       visit registration_ticket_path(registration.slug)
 
       expect(page).to have_link("View registration details",
-        href: event_form_path(event, "registration", reg: registration.slug))
+        href: submission_path(registration.slug))
     end
   end
 

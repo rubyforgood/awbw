@@ -135,7 +135,7 @@
           <% registration_form = event_registration.event.registration_form %>
           <% if registration_form && registration_form.form_submissions.exists?(person: event_registration.registrant) %>
             <%= link_to "View registration details",
-                          event_form_path(event_registration.event, "registration", reg: event_registration.slug),
+                          submission_path(event_registration.slug),
                           class: "text-xs text-gray-400 hover:text-blue-600 underline" %>
           <% end %>
           <%= button_to "Resend confirmation email",

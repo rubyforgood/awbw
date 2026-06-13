@@ -13,7 +13,7 @@ module Events
     }.freeze
 
     skip_before_action :authenticate_user!, only: [ :new, :create, :show ]
-    before_action :set_event
+    before_action :set_event, only: [ :new, :create ]
     before_action :ensure_registerable, only: [ :new, :create ]
 
     rescue_from ActionController::InvalidAuthenticityToken do
@@ -96,16 +96,9 @@ module Events
     def show
       authorize! :public_form, to: :show?
 
-      if params[:reg].present?
-        registration = EventRegistration.find_by!(slug: params[:reg], event_id: @event.id)
-        person = registration.registrant
-      elsif params[:person_id].present?
-        person = Person.find(params[:person_id])
-        registration = @event.event_registrations.find_by(registrant: person)
-      else
-        redirect_to event_path(@event), alert: "Registration not found."
-        return
-      end
+      registration = EventRegistration.find_by!(slug: params[:slug])
+      @event = registration.event
+      person = registration.registrant
 
       @form = registration_form
       unless @form

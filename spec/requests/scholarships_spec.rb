@@ -50,7 +50,7 @@ RSpec.describe "Scholarships", type: :request do
       expect(response.body).to include("Why do you need a scholarship?")
       expect(response.body).to include("Limited budget")
       expect(response.body).to include("View full submission")
-      expect(response.body).to include(event_form_path(event, "registration", reg: registration.slug))
+      expect(response.body).to include(submission_path(registration.slug))
     end
 
     it "renders the shared event header: event link, training date, and a profile-linked recipient" do

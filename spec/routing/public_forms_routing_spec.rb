@@ -17,14 +17,14 @@ RSpec.describe Events::PublicFormsController, type: :routing do
     end
   end
 
-  it "routes registration show (only the registration lane has show)" do
-    expect(get: "/events/1/forms/registration").to route_to(
-      "events/public_forms#show", event_id: "1", form_role: "registration"
+  it "routes the slug-based submission view at the top level (not under events)" do
+    expect(get: "/submission/abc123").to route_to(
+      "events/public_forms#show", slug: "abc123"
     )
   end
 
-  it "does not expose show for non-registration lanes" do
-    expect(get: "/events/1/forms/scholarship").not_to be_routable
+  it "no longer exposes the submission view through events routes" do
+    expect(get: "/events/1/forms/registration").not_to be_routable
   end
 
   it "routes bulk_payment under the uniform forms/ path to its own controller" do

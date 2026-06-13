@@ -238,8 +238,9 @@ RSpec.describe "Events::PublicForms", type: :request do
     end
   end
 
-  describe "GET show" do
+  describe "GET show (/submission/:slug)" do
     let(:person) { create(:person) }
+    let!(:registration) { create(:event_registration, event: event, registrant: person) }
 
     before { create(:form_submission, person: person, form: form) }
 
@@ -247,7 +248,7 @@ RSpec.describe "Events::PublicForms", type: :request do
       create(:form_field, form: form, answer_type: :group_header, name: "<strong>Your details</strong>")
       create(:form_field, form: form, answer_type: :free_form_input_one_line, name: "<em>Name</em>", required: false)
 
-      get event_form_path(event, "registration", person_id: person.id)
+      get submission_path(registration.slug)
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("<strong>Your details</strong>")

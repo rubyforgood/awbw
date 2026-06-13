@@ -175,7 +175,7 @@ RSpec.describe "Events::Registrations", type: :request do
     end
   end
 
-  describe "GET /events/:event_id/registration_form (show)" do
+  describe "GET /submission/:slug" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     before do
@@ -184,33 +184,24 @@ RSpec.describe "Events::Registrations", type: :request do
         sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
       ).call
       EventForm.create!(event: event, form: form, role: "registration")
-      form = event.registration_form
-      form.form_submissions.create!(person: user.person)
+      event.registration_form.form_submissions.create!(person: user.person)
     end
 
     it "allows access with a valid slug" do
-      get event_form_path(event, "registration", reg: registration.slug)
+      get submission_path(registration.slug)
       expect(response).to have_http_status(:success)
     end
 
     it "returns 404 with an invalid slug" do
-      get event_form_path(event, "registration", reg: "bogus-slug")
-      expect(response).to have_http_status(:not_found)
-    end
-
-    it "returns 404 with a slug from a different event" do
-      other_event = create(:event)
-      other_registration = create(:event_registration, event: other_event, registrant: user.person)
-
-      get event_form_path(event, "registration", reg: other_registration.slug)
+      get submission_path("bogus-slug")
       expect(response).to have_http_status(:not_found)
     end
 
     context "as a guest" do
       before { sign_out user }
 
-      it "allows access with a valid slug" do
-        get event_form_path(event, "registration", reg: registration.slug)
+      it "allows access with a valid slug (the slug is the access token)" do
+        get submission_path(registration.slug)
         expect(response).to have_http_status(:success)
       end
     end
