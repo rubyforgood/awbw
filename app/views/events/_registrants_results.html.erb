@@ -126,9 +126,9 @@
                     </ul>
                   <% else %>
                     <%= link_to link_organization_event_registration_path(registration, return_to: "registrants"),
-                                class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 bg-amber-50 text-amber-700 border-amber-200 hover:opacity-80",
+                                class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 bg-gray-50 text-gray-500 border-gray-200 hover:opacity-80",
                                 data: { turbo_frame: "_top" } do %>
-                      <span>Pending</span>
+                      <span>None</span>
                     <% end %>
                   <% end %>
                 </td>
