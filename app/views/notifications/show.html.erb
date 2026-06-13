@@ -143,10 +143,13 @@
       <div class="flex items-start gap-4">
         <dt class="w-28 text-gray-500">Noticeable</dt>
         <dd class="text-gray-900">
-          <% if @notification.noticeable.present? %>
+          <% record_path = @notification.noticeable.present? ? routable_path(@notification.noticeable) : nil %>
+          <% if record_path %>
             <%= link_to @notification.noticeable.class.name,
-                        polymorphic_path(@notification.noticeable),
+                        record_path,
                         class: "text-blue-600 hover:underline" %>
+          <% elsif @notification.noticeable.present? %>
+            <%= @notification.noticeable.class.name %>
           <% else %>
             —
           <% end %>
