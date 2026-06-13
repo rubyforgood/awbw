@@ -247,7 +247,7 @@
 <% cancel_path = if grant_nav
      params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)
    elsif @allocatable.respond_to?(:event)
-     registrants_event_path(@allocatable.event)
+     params[:return_to] == "registration" ? edit_event_registration_path(@allocatable) : registrants_event_path(@allocatable.event)
    elsif grant.present?
      grant_path(grant)
    else

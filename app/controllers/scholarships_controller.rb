@@ -129,11 +129,16 @@ class ScholarshipsController < ApplicationController
   end
 
   # After saving, return to wherever the user came from: the grant, the event
-  # registration (the card's View link carries return_to=registration), or — by
+  # registration's edit page (the card's Edit link carries return_to=registration),
+  # the registrants roster (the roster's links carry no return_to), or — by
   # default — stay on the scholarship's own edit page.
   def scholarship_save_path
     return grant_return_path if grant_context?
-    return edit_event_registration_path(@allocatable) if params[:return_to] == "registration" && @allocatable.respond_to?(:event)
+
+    if @allocatable.respond_to?(:event)
+      return edit_event_registration_path(@allocatable) if params[:return_to] == "registration"
+      return registrants_event_path(@allocatable.event)
+    end
 
     edit_scholarship_path(@scholarship)
   end

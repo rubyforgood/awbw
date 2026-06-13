@@ -83,12 +83,21 @@ RSpec.describe "Scholarships", type: :request do
     end
   end
 
-  describe "PATCH /scholarships/:id from the registration View link" do
+  describe "PATCH /scholarships/:id from the registration Edit link" do
     it "returns to the event registration edit page" do
       patch scholarship_path(scholarship, return_to: "registration"),
             params: { scholarship: { amount_dollars: "40" } }
 
       expect(response).to redirect_to(edit_event_registration_path(registration))
+    end
+  end
+
+  describe "PATCH /scholarships/:id from the registrants roster (no return_to)" do
+    it "returns to the registrants roster" do
+      patch scholarship_path(scholarship),
+            params: { scholarship: { amount_dollars: "40" } }
+
+      expect(response).to redirect_to(registrants_event_path(event))
     end
   end
 

@@ -79,7 +79,7 @@ RSpec.describe "Event registration edit page", type: :system do
       expect(registration.scholarships.count).to eq(0)
     end
 
-    it "keeps the View jump link and shows the tasks-completed chip in the scholarship theme color at the bottom" do
+    it "keeps the Edit jump link and shows the tasks-completed chip in the scholarship theme color at the bottom" do
       scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000, tasks_completed: true)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
 
@@ -87,10 +87,23 @@ RSpec.describe "Event registration edit page", type: :system do
       visit edit_event_registration_path(registration)
 
       within("section", text: "Scholarship") do
-        expect(page).to have_link("View", href: edit_scholarship_path(scholarship, return_to: "registration"))
+        expect(page).to have_link("Edit", href: edit_scholarship_path(scholarship, return_to: "registration"))
         # Tasks-completed chip uses the scholarships theme (fuchsia), not green.
         expect(page).to have_css("span.bg-fuchsia-50.text-fuchsia-700", text: "Tasks completed")
         expect(page).to have_no_css("span.bg-green-50.text-green-700", text: "Tasks completed")
+      end
+    end
+
+    it "shows an orange tasks-outstanding chip when the scholarship's tasks are incomplete" do
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000, tasks_completed: false)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Scholarship") do
+        expect(page).to have_css("span.bg-amber-50.text-amber-700", text: "Tasks outstanding")
+        expect(page).to have_no_css("span", text: "Tasks completed")
       end
     end
   end
