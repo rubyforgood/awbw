@@ -350,7 +350,7 @@ class EventsController < ApplicationController
 
   def event_staff_params
     params.require(:event).permit(
-      event_staffs_attributes: [ :id, :person_id, :title, :expected_to_attend, :_destroy ]
+      event_staffs_attributes: [ :id, :person_id, :title, :expected_to_attend, :bio, :_destroy ]
     )
   end
 end

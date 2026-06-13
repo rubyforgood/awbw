@@ -38,6 +38,7 @@ class Event < ApplicationRecord
   validates_inclusion_of :published, in: [ true, false ]
   validates_numericality_of :cost_cents, greater_than_or_equal_to: 0, allow_nil: true
   validate :registration_form_required_when_publicly_registerable, on: :update
+  validate :staff_members_are_unique, on: :update
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
@@ -159,6 +160,16 @@ class Event < ApplicationRecord
     return if event_forms.registration.exists?
 
     errors.add(:public_registration_enabled, "requires a registration form to be selected")
+  end
+
+  # The event_staffs unique index catches duplicates already persisted, but two
+  # new rows for the same person in one submission both pass the per-record
+  # uniqueness check (neither is saved yet) and would hit the index on save.
+  def staff_members_are_unique
+    person_ids = event_staffs.reject(&:marked_for_destruction?).filter_map(&:person_id)
+    return if person_ids.uniq.length == person_ids.length
+
+    errors.add(:base, "A person can only be added to the staff once.")
   end
 
   def public_registration_just_enabled?

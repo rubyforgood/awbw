@@ -8,6 +8,29 @@ RSpec.describe Event, type: :model do
     it { should validate_numericality_of(:cost_cents).is_greater_than_or_equal_to(0).allow_nil }
   end
 
+  describe "staff uniqueness on update" do
+    it "rejects two staff rows for the same person added in one update" do
+      event = create(:event)
+      person = create(:person)
+      event.update(event_staffs_attributes: {
+        "0" => { person_id: person.id, title: "Lead" },
+        "1" => { person_id: person.id, title: "Assistant" }
+      })
+      expect(event).to be_invalid
+      expect(event.errors[:base]).to include("A person can only be added to the staff once.")
+      expect(event.event_staffs.reload).to be_empty
+    end
+
+    it "allows distinct people in one update" do
+      event = create(:event)
+      expect(event.update(event_staffs_attributes: {
+        "0" => { person_id: create(:person).id, title: "Lead" },
+        "1" => { person_id: create(:person).id, title: "Assistant" }
+      })).to be(true)
+      expect(event.event_staffs.reload.count).to eq(2)
+    end
+  end
+
   describe "#ended?" do
     it "returns true when end_date is in the past" do
       event = build(:event, end_date: 1.day.ago)

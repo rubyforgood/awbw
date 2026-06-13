@@ -1179,6 +1179,16 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it "renders the bio control and the person's profile bio for an existing staff member" do
+        staffer.update!(bio: "A seasoned facilitator", profile_show_bio: true)
+        create(:event_staff, event: published_event, person: staffer)
+        sign_in admin
+        get edit_staff_event_path(published_event)
+        expect(response.body).to include("event-staff-bio")
+        expect(response.body).to include("Profile bio")
+        expect(response.body).to include("A seasoned facilitator")
+      end
+
       it "redirects a non-admin" do
         sign_in user
         get edit_staff_event_path(published_event)
@@ -1187,6 +1197,21 @@ RSpec.describe "Events", type: :request do
     end
 
     describe "PATCH /staff" do
+      it "rejects adding the same person to the staff twice in one submission" do
+        sign_in admin
+        expect {
+          patch staff_event_path(published_event), params: {
+            event: {
+              event_staffs_attributes: {
+                "0" => { person_id: staffer.id, title: "Lead facilitator" },
+                "1" => { person_id: staffer.id, title: "Assistant" }
+              }
+            }
+          }
+        }.not_to change(EventStaff, :count)
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+
       it "adds a staff member to the event" do
         sign_in admin
         expect {
@@ -1203,6 +1228,34 @@ RSpec.describe "Events", type: :request do
         expect(staff.title).to eq("Staff")
         expect(staff.expected_to_attend).to be(true)
         expect(response).to redirect_to(staff_event_path(published_event))
+      end
+
+      it "saves an optional event-specific bio that overrides the profile bio" do
+        sign_in admin
+        patch staff_event_path(published_event), params: {
+          event: {
+            event_staffs_attributes: {
+              "0" => { person_id: staffer.id, title: "Staff", bio: "Custom event bio" }
+            }
+          }
+        }
+        expect(published_event.event_staffs.last.bio).to eq("Custom event bio")
+      end
+
+      it "clears the event bio when submitted blank, falling back to the profile bio" do
+        staffer.update!(bio: "Profile bio", profile_show_bio: true)
+        event_staff = create(:event_staff, event: published_event, person: staffer, bio: "Old event bio")
+        sign_in admin
+        patch staff_event_path(published_event), params: {
+          event: {
+            event_staffs_attributes: {
+              "0" => { id: event_staff.id, person_id: staffer.id, bio: "" }
+            }
+          }
+        }
+        expect(event_staff.reload.bio).to be_nil
+        get staff_event_path(published_event)
+        expect(response.body).to include("Profile bio")
       end
 
       it "removes a staff member when _destroy is set" do

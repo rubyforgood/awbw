@@ -27,7 +27,7 @@
         <% person = event_staff.person.decorate %>
         <% active_affiliation = person.affiliations.find { |a| !a.inactive? } %>
         <% org = active_affiliation&.organization %>
-        <% has_bio = person.profile_show_bio? && person.bio.present? %>
+        <% bio = event_staff.public_bio %>
         <% sectors = person.profile_show_sectors? ? person.sectors.sort_by(&:name) : [] %>
         <%# Facilitator tenure → one experience badge, computed from already-loaded
             affiliations (avoids the decorator's query-heavy badges call). Thresholds
@@ -117,8 +117,8 @@
                 <div class="h-full overflow-y-auto text-sm text-gray-700 text-left pr-1"
                      data-flip-card-target="bio"
                      data-action="scroll->flip-card#updateFade">
-                  <% if has_bio %>
-                    <%= sanitize(person.bio, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
+                  <% if bio.present? %>
+                    <%= sanitize(bio, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
                   <% else %>
                     <p class="text-gray-400 italic text-center">No bio available.</p>
                   <% end %>
