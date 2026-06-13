@@ -242,6 +242,21 @@
         </section>
       </div>
 
+      <% if f.object.payment_unresolved? %>
+        <div class="mt-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          Automated payment creation error for Stripe checkout
+        </div>
+      <% elsif f.object.checkout_session_id.present? && f.object.payment_unresolved.nil? %>
+        <div class="mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          <i class="fa-solid fa-clock"></i>
+          Automated payment creation in progress
+          <% if @checkout_payment_status.present? %>
+            - Stripe checkout status:
+            <strong><%= @checkout_payment_status %></strong>
+          <% end %>
+        </div>
+      <% end %>
       <%= render "payment_history", event_registration: f.object %>
 
       <% if allowed_to?(:index?, with: NotificationPolicy) %>

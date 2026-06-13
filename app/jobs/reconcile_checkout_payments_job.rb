@@ -3,7 +3,7 @@ class ReconcileCheckoutPaymentsJob < ApplicationJob
 
   def perform
     EventRegistration
-      .where(payment_unresolved: false)
+      .where(payment_unresolved: nil)
       .where.not(checkout_session_id: nil)
       .where(created_at: ..3.days.ago)
       .find_each do |registration|
