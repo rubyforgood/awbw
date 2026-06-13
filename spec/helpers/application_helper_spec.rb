@@ -293,6 +293,35 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#event_registration_close_date_label" do
+    it "is the month and day, without year, ordinal, or time" do
+      event = build(:event, registration_close_date: Time.zone.local(2026, 8, 7, 8, 45))
+      expect(helper.event_registration_close_date_label(event)).to eq("August 7")
+    end
+
+    it "is nil when there's no close date" do
+      expect(helper.event_registration_close_date_label(build(:event, registration_close_date: nil))).to be_nil
+    end
+  end
+
+  describe "#event_registration_close_time_label" do
+    it "is the zoned time prefixed with 'at', keeping minutes when not on the hour" do
+      close = Time.zone.local(2026, 8, 7, 8, 45)
+      event = build(:event, registration_close_date: close)
+      expect(helper.event_registration_close_time_label(event)).to eq("at 8:45am #{close.strftime("%Z")}")
+    end
+
+    it "hides :00 minutes" do
+      close = Time.zone.local(2026, 7, 20, 9, 0)
+      event = build(:event, registration_close_date: close)
+      expect(helper.event_registration_close_time_label(event)).to eq("at 9am #{close.strftime("%Z")}")
+    end
+
+    it "is nil when there's no close date" do
+      expect(helper.event_registration_close_time_label(build(:event, registration_close_date: nil))).to be_nil
+    end
+  end
+
   describe "#event_registration_close_default" do
     it "is 9am on the Monday of the start date's week" do
       event = build(:event, start_date: Time.zone.local(2026, 7, 22, 13, 0)) # Wednesday

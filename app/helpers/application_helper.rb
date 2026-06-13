@@ -124,15 +124,31 @@ module ApplicationHelper
 
   # Registration close date for form-header interpolation and the details panel,
   # e.g. "July 20 at 9am PST": plain day (no ordinal), no year, compact time
-  # (minutes only when not on the hour). Nil when there's no close date.
+  # (minutes only when not on the hour). Nil when there's no close date. The
+  # date and time parts are split out so the details panel can grey out the time.
   def event_registration_close_label(event)
+    return unless event&.registration_close_date
+    "#{event_registration_close_date_label(event)} #{event_registration_close_time_label(event)}"
+  end
+
+  # Just the day portion of the registration close (e.g. "July 20"), or nil.
+  def event_registration_close_date_label(event)
+    close = event&.registration_close_date
+    return unless close
+    close.in_time_zone(Time.zone).strftime("%B %-d")
+  end
+
+  # Just the time portion of the registration close, prefixed with "at" and
+  # carrying the zone (e.g. "at 9am PST"); minutes hidden on the hour. Nil when
+  # there's no close date.
+  def event_registration_close_time_label(event)
     close = event&.registration_close_date
     return unless close
     local = close.in_time_zone(Time.zone)
     time = local.strftime("%-l")
     time += ":#{local.strftime("%M")}" unless local.strftime("%M") == "00"
     time += local.strftime("%P")
-    "#{local.strftime("%B %-d")} at #{time} #{local.strftime("%Z")}"
+    "at #{time} #{local.strftime("%Z")}"
   end
 
   # Default registration close datetime suggested on the event form: 9am on the
