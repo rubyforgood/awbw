@@ -111,7 +111,9 @@ Rails.application.routes.draw do
     end
   end
   resources :grants
-  resources :scholarships, only: [ :new, :create, :show, :edit, :update, :destroy ]
+  resources :scholarships, only: [ :new, :create, :show, :edit, :update, :destroy ] do
+    member { patch :toggle_tasks }
+  end
   resources :discounts, only: [ :create, :show, :destroy ] do
     collection do
       post :allocation_form

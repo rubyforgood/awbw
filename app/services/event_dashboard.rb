@@ -100,7 +100,7 @@ class EventDashboard
   # decide whether to flag a registrant as a scholarship recipient. First
   # scholarship wins if a person has several.
   def scholarship_by_recipient
-    @scholarship_by_recipient ||= scholarships.group_by(&:recipient_id).transform_values(&:first)
+    @scholarship_by_recipient ||= scholarships.includes(grant: :donor).group_by(&:recipient_id).transform_values(&:first)
   end
 
   # Active registration slug per registrant (Person id) — a stable, non-db

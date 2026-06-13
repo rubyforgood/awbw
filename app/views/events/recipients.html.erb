@@ -27,9 +27,22 @@
   </div>
 
   <% if @dashboard.scholarship_applicants.any? %>
-    <div data-controller="expandable-cards">
-      <%# Expand / collapse all — top right of the cards %>
-      <div class="flex justify-end mb-4 print:hidden">
+    <div data-controller="expandable-cards scholarship-status-toggle">
+      <%# Controls — show/hide scholarship status for all recipients, and expand/collapse all %>
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4 print:hidden">
+        <%# Show / hide each recipient's awarded amount + tasks-completed status %>
+        <button type="button" role="switch" aria-checked="false"
+                data-action="scholarship-status-toggle#toggle"
+                data-scholarship-status-toggle-target="switch"
+                class="group inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800">
+          <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-gray-300 transition-colors"
+                data-scholarship-status-toggle-target="track">
+            <span class="inline-block h-4 w-4 translate-x-0.5 transform rounded-full bg-white shadow transition-transform"
+                  data-scholarship-status-toggle-target="knob"></span>
+          </span>
+          <span data-scholarship-status-toggle-target="label">Show scholarship status</span>
+        </button>
+        <%# Expand / collapse all %>
         <button type="button" data-action="expandable-cards#toggleAll"
                 class="inline-flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> hover:<%= DomainTheme.text_class_for(:scholarships) %>">
           <i class="fa-solid fa-chevron-down transition-transform rotate-180" data-expandable-cards-target="icon"></i>
@@ -127,6 +140,30 @@
               </div>
             </div>
           </div>
+
+          <%# Scholarship status — awarded amount + tasks-completed state. Hidden
+              until toggled on (page-wide) so it doesn't crowd the application;
+              stays visible regardless of the card's expand/collapse state. %>
+          <% scholarship = @dashboard.scholarship_by_recipient[person.id] %>
+          <% if scholarship %>
+            <div class="hidden px-5 py-3 border-b <%= DomainTheme.border_class_for(:scholarships) %> bg-gray-50"
+                 data-scholarship-status-toggle-target="status">
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Scholarship</span>
+                <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+                  <i class="fa-solid fa-sack-dollar text-gray-400"></i>
+                  <%= number_to_currency(scholarship.amount_dollars) %>
+                </span>
+                <% if scholarship.grant&.funder_name.present? %>
+                  <span class="inline-flex items-center gap-1.5 text-sm text-gray-600">
+                    <i class="fa-solid fa-hand-holding-heart text-gray-400"></i>
+                    Funded by <%= scholarship.grant.funder_name %>
+                  </span>
+                <% end %>
+                <%= render "scholarships/tasks_status", scholarship: scholarship %>
+              </div>
+            </div>
+          <% end %>
 
           <%# Scholarship application answers %>
           <div class="px-5 py-4 print:block" data-expandable-card-target="body">

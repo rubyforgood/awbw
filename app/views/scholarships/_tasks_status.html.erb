@@ -1,0 +1,28 @@
+<%# Tasks-completed state for one scholarship, shown on the event recipients
+    roster. For admins it's an inline toggle: clicking flips the state, which
+    allocates the award when complete and de-allocates it when outstanding. For
+    everyone else it's a static badge. Wrapped in a stable id so the toggle can
+    swap just this pill in place over Turbo. %>
+<% completed = scholarship.tasks_completed? %>
+<% pill_classes = class_names(
+     "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
+     "bg-green-50 text-green-700" => completed,
+     "bg-amber-50 text-amber-700" => !completed
+   ) %>
+<span id="<%= dom_id(scholarship, :tasks_status) %>" class="inline-block">
+  <% if allowed_to?(:update?, scholarship) %>
+    <% action_label = completed ? "Mark tasks outstanding" : "Mark tasks complete" %>
+    <%= button_to toggle_tasks_scholarship_path(scholarship), method: :patch,
+                  form_class: "inline-block",
+                  title: action_label, aria: { label: action_label },
+                  class: "#{pill_classes} cursor-pointer transition-colors #{completed ? "hover:bg-green-100" : "hover:bg-amber-100"}" do %>
+      <i class="fa-solid <%= completed ? "fa-circle-check" : "fa-clock" %>"></i>
+      <%= completed ? "Tasks completed" : "Tasks outstanding" %>
+    <% end %>
+  <% else %>
+    <span class="<%= pill_classes %>">
+      <i class="fa-solid <%= completed ? "fa-circle-check" : "fa-clock" %>"></i>
+      <%= completed ? "Tasks completed" : "Tasks outstanding" %>
+    </span>
+  <% end %>
+</span>

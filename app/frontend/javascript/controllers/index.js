@@ -120,6 +120,9 @@ application.register("scholarship-preview", ScholarshipPreviewController)
 import ScholarshipRequestedController from "./scholarship_requested_controller"
 application.register("scholarship-requested", ScholarshipRequestedController)
 
+import ScholarshipStatusToggleController from "./scholarship_status_toggle_controller"
+application.register("scholarship-status-toggle", ScholarshipStatusToggleController)
+
 import CeCreditRequestedController from "./ce_credit_requested_controller"
 application.register("ce-credit-requested", CeCreditRequestedController)
 

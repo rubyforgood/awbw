@@ -1,0 +1,3 @@
+<%= turbo_stream.replace dom_id(@scholarship, :tasks_status) do %>
+  <%= render "scholarships/tasks_status", scholarship: @scholarship %>
+<% end %>

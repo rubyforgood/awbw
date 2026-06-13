@@ -145,6 +145,54 @@ RSpec.describe "Scholarships", type: :request do
       expect(flash[:notice]).to eq("Scholarship removed.")
     end
   end
+
+  describe "PATCH /scholarships/:id/toggle_tasks" do
+    let(:tasks_status_id) { ActionView::RecordIdentifier.dom_id(scholarship, :tasks_status) }
+
+    it "flips a completed scholarship to outstanding and de-allocates the award" do
+      patch toggle_tasks_scholarship_path(scholarship)
+
+      expect(scholarship.reload.tasks_completed?).to be(false)
+      expect(allocation.reload.amount).to eq(0)
+    end
+
+    it "flips an outstanding scholarship to completed and allocates the award" do
+      scholarship.update!(tasks_completed: false)
+
+      patch toggle_tasks_scholarship_path(scholarship)
+
+      expect(scholarship.reload.tasks_completed?).to be(true)
+      expect(allocation.reload.amount).to eq(5000)
+    end
+
+    it "replaces just the status pill in response to a turbo-stream request" do
+      patch toggle_tasks_scholarship_path(scholarship),
+            headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(response.body).to include(%(<turbo-stream action="replace" target="#{tasks_status_id}">))
+      expect(response.body).to include("Tasks outstanding")
+    end
+
+    it "redirects back to the recipients page for a non-Turbo request" do
+      patch toggle_tasks_scholarship_path(scholarship)
+
+      expect(response).to redirect_to(recipients_event_path(event))
+    end
+
+    context "as a non-admin" do
+      let(:member) { create(:user, :with_person) }
+
+      before { sign_in member }
+
+      it "is not authorized and leaves the scholarship unchanged" do
+        patch toggle_tasks_scholarship_path(scholarship)
+
+        expect(response).to redirect_to(root_path)
+        expect(scholarship.reload.tasks_completed?).to be(true)
+      end
+    end
+  end
 end
 
 RSpec.describe "/scholarships (grant-funded flow)", type: :request do
