@@ -43,11 +43,14 @@
 
       <!-- Record -->
       <td class="px-4 py-3 text-gray-700">
-        <% if notification.noticeable.present? %>
+        <% record_path = notification.noticeable.present? ? routable_path(notification.noticeable) : nil %>
+        <% if record_path %>
           <%= link_to notification.noticeable.class.name,
-                      polymorphic_path(notification.noticeable),
+                      record_path,
                       data: { turbo_frame: "_top" },
                       class: "btn btn-secondary-outline" %>
+        <% elsif notification.noticeable.present? %>
+          <span class="text-gray-700"><%= notification.noticeable.class.name %></span>
         <% else %>
           <span class="text-gray-400">—</span>
         <% end %>

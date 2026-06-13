@@ -260,6 +260,15 @@ module ApplicationHelper
     end
   end
 
+  # polymorphic_path for a record, or nil when the record's model has no route
+  # (e.g. FormSubmission, which is referenced as a notification's noticeable but
+  # has no controller/show page). Lets views link only when a route exists.
+  def routable_path(record)
+    polymorphic_path(record)
+  rescue NoMethodError
+    nil
+  end
+
   def search_page(params)
     params[:search] ? params[:search][:page] : 1
   end
