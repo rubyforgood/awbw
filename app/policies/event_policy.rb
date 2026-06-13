@@ -7,6 +7,12 @@ class EventPolicy < ApplicationPolicy
     true
   end
 
+  # Powers the admin "favorite event" autocomplete on user accounts. Admin-only
+  # so the endpoint never exposes unpublished/private events to other users.
+  def search?
+    admin?
+  end
+
   def show?
     return true if admin?
 

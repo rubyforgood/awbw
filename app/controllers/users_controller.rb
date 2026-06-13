@@ -414,7 +414,7 @@ class UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(
-      :email, :comment, :person_id, :inactive, :locked, :primary_address, :time_zone, :super_user,
+      :email, :comment, :person_id, :inactive, :locked, :primary_address, :time_zone, :super_user, :favorite_event_id,
 
       ##### legacy to remove later
       :agency_id, :legacy, :legacy_id, :subscribecode, :first_name, :last_name, # legacy to remove later

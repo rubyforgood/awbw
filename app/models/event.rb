@@ -1,6 +1,7 @@
 class Event < ApplicationRecord
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable
   include ActionText::Attachable
+  include RemoteSearchable
 
   has_rich_text :rhino_header
   has_rich_text :rhino_description
@@ -48,6 +49,18 @@ class Event < ApplicationRecord
   include SearchCop
   search_scope :search do
     attributes :title, :description
+  end
+
+  # Autocomplete (used by the admin "favorite event" picker on user accounts)
+  remote_searchable_by :title
+
+  def self.remote_search(query)
+    super.reorder(start_date: :desc)
+  end
+
+  def remote_search_label
+    label = start_date ? "#{title} (#{start_date.to_date.to_fs(:long)})" : title
+    { id: id, label: label }
   end
 
   # Scopes
