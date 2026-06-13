@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Run database migrations.
+# Create the database if it doesn't exist yet, then run any pending migrations.
+# db:create is a no-op when the database already exists, so this is idempotent.
+# Seeding is intentionally left out (use ai/seed or bin/setup) to mirror bin/setup,
+# which keeps db:create + db:migrate separate from db:seed.
 set -euo pipefail
 source "$(dirname "$0")/.ruby-env"
+bundle exec rails db:create
 bundle exec rails db:migrate "$@"
