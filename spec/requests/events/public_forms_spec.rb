@@ -254,4 +254,44 @@ RSpec.describe "Events::PublicForms", type: :request do
       expect(response.body).to include("<em>Name</em>")
     end
   end
+
+  describe "standalone scholarship_questions lane" do
+    let(:person) { create(:user, :with_person).person }
+    let!(:registration) { create(:event_registration, event: event, registrant: person) }
+    let(:scholarship_form) { create(:form, role: "scholarship") }
+    let!(:question) do
+      create(:form_field, form: scholarship_form, answer_type: :free_form_input_paragraph,
+             name: "Describe your need", required: true)
+    end
+
+    before { EventForm.create!(event: event, form: scholarship_form, role: "scholarship") }
+
+    it "attaches answers to the existing registration and flags it without creating a new one" do
+      expect {
+        post event_form_path(event, "scholarship_questions", reg: registration.slug),
+             params: { public_registration: { form_fields: { question.id.to_s => "I need assistance to attend" } } }
+      }.not_to change(EventRegistration, :count)
+
+      expect(registration.reload.scholarship_requested).to be(true)
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+
+      submission = scholarship_form.form_submissions.find_by(person: person)
+      expect(submission.form_answers.first.submitted_answer).to eq("I need assistance to attend")
+    end
+
+    it "redirects to the event when there is no registration to attach to" do
+      post event_form_path(event, "scholarship_questions"),
+           params: { public_registration: { form_fields: { question.id.to_s => "I need assistance to attend" } } }
+
+      expect(response).to redirect_to(event_path(event))
+    end
+
+    it "re-renders with errors when a required answer is blank" do
+      post event_form_path(event, "scholarship_questions", reg: registration.slug),
+           params: { public_registration: { form_fields: { question.id.to_s => "" } } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(registration.reload.scholarship_requested).to be(false)
+    end
+  end
 end
