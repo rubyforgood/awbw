@@ -108,7 +108,7 @@ RSpec.describe "Events::PublicForms", type: :request do
              name: "Tell us why", required: true, min_words: 5)
     end
     let!(:payment_method_field) do
-      create(:form_field, form: form, answer_type: :multiple_choice_radio,
+      create(:form_field, form: form, answer_type: :single_select_radio,
              field_identifier: "payment_method", name: "Payment method",
              required: false)
     end
@@ -122,7 +122,7 @@ RSpec.describe "Events::PublicForms", type: :request do
     end
 
     it "redirects to Stripe Checkout when paying by credit card" do
-      post event_public_registration_path(event),
+      post event_form_path(event, "registration"),
            params: { public_registration: { form_fields: {
              essay_field.id.to_s => "this answer has enough words for validation",
              payment_method_field.id.to_s => "Credit card (now)"
@@ -133,7 +133,7 @@ RSpec.describe "Events::PublicForms", type: :request do
     end
 
     it "does not redirect when payment method is not credit card" do
-      post event_public_registration_path(event),
+      post event_form_path(event, "registration"),
            params: { public_registration: { form_fields: {
              essay_field.id.to_s => "this answer has enough words for validation",
              payment_method_field.id.to_s => "Pay later"
@@ -147,7 +147,7 @@ RSpec.describe "Events::PublicForms", type: :request do
     it "does not redirect to Stripe when event is free" do
       event.update!(cost_cents: 0)
 
-      post event_public_registration_path(event),
+      post event_form_path(event, "registration"),
            params: { public_registration: { form_fields: {
              essay_field.id.to_s => "this answer has enough words for validation"
            } } }

@@ -12,7 +12,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
            required: true, min_words: 5)
   end
   let!(:payment_method_field) do
-    create(:form_field, form: form, answer_type: :multiple_choice_radio,
+    create(:form_field, form: form, answer_type: :single_select_radio,
            field_identifier: "payment_method", name: "Payment method",
            required: false)
   end
@@ -111,7 +111,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
            ) } }
 
       expect(response).to have_http_status(:redirect)
-      expect(response.location).to match(%r{/events/#{event.id}/bulk_payment})
+      expect(response.location).to match(%r{/events/#{event.id}/forms/bulk_payment})
       expect(flash[:notice]).to eq("Your bulk payment information has been submitted.")
     end
 
@@ -124,7 +124,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
            ) } }
 
       expect(response).to have_http_status(:redirect)
-      expect(response.location).to match(%r{/events/#{event.id}/bulk_payment})
+      expect(response.location).to match(%r{/events/#{event.id}/forms/bulk_payment})
     end
   end
 
