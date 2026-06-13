@@ -75,7 +75,7 @@
         <%= render "events/videoconference_link", event: event_registration.event.decorate, joinable: event_registration.joinable? %>
       </div>
 
-      <% if event_registration.event.cost_cents.to_i > 0 %>
+      <% if event_registration.event.cost_cents.to_i > 0 && event_registration.status != "cancelled" %>
         <% if event_registration.amount_due_cents <= 0 || @checkout_payment_status == "paid" %>
           <div class="text-center mt-2"><span class="inline-flex items-center gap-1 rounded-full text-sm font-medium border px-3 py-1 bg-green-50 text-green-700 border-green-200"> Paid </span></div>
         <% else %>
