@@ -144,9 +144,15 @@
         <dt class="w-28 text-gray-500">Noticeable</dt>
         <dd class="text-gray-900">
           <% if @notification.noticeable.present? %>
-            <%= link_to @notification.noticeable.class.name,
-                        polymorphic_path(@notification.noticeable),
-                        class: "text-blue-600 hover:underline" %>
+            <% record_path = routable_path(@notification.noticeable) %>
+            <span class="text-xs uppercase text-gray-400 mr-2"><%= noticeable_type_label(@notification.noticeable) %></span>
+            <% if record_path %>
+              <%= link_to noticeable_label(@notification.noticeable),
+                          record_path,
+                          class: "font-medium text-blue-600 hover:underline" %>
+            <% else %>
+              <span class="font-medium"><%= noticeable_label(@notification.noticeable) %></span>
+            <% end %>
           <% else %>
             —
           <% end %>
