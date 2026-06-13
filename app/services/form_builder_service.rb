@@ -382,10 +382,10 @@ class FormBuilderService
                          key: "workshop_environments", group: "professional", required: false,
                          hint: "Select all settings where you facilitate or plan to facilitate workshops.",
                          options: [
-                           "Clinical", "Educational", "Events / conferences",
-                           "Faith-based", "Home visits", "Hospitals",
-                           "Law enforcement / court / legal", "Outreach",
-                           "Prisons / jails", "Private practice", "Residential",
+                           "Clinical setting", "Educational setting", "Events and conferences",
+                           "Faith-based setting", "Home visits", "Hospitals",
+                           "Law enforcement/court/legal", "Outreach program",
+                           "Prisons/jails", "Private practice", "Residential program",
                            "Virtually", "With staff", "Other"
                          ])
     position = add_field(form, position, "Client Life Experiences", :multiple_choice_checkbox,

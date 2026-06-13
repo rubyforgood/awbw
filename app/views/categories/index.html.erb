@@ -64,6 +64,10 @@
                        data-sortable-handle=""></i>
                   </span>
                   <%= category.name %>
+                  <% if category.description.present? %>
+                    <i class="fa-solid fa-circle-info ml-1 text-sm font-normal text-gray-400 hover:text-blue-600 cursor-help"
+                       title="<%= category.description %>"></i>
+                  <% end %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-800 truncate">

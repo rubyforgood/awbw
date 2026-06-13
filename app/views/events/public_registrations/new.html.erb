@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "public") %>
 
-<div class="max-w-2xl mx-auto px-4">
+<div class="max-w-3xl mx-auto px-4">
   <div class="flex flex-wrap items-center gap-2 pt-4">
     <%= link_to event_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to event
@@ -16,7 +16,7 @@
   </div>
 </div>
 
-<div class="max-w-2xl mx-auto pb-12 pt-6 px-4">
+<div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
 
   <%# ---- EVENT HEADER ---- %>
   <div class="text-center mb-8">
@@ -55,11 +55,11 @@
 
     <%# Card Header %>
     <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
-      <div class="flex items-center gap-5">
+      <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
         <div class="shrink-0">
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
         </div>
-        <div>
+        <div class="min-w-0">
           <h2 class="text-xl font-semibold tracking-wide leading-tight">Registration</h2>
           <p class="text-sm text-blue-200">Reserve your spot.</p>
         </div>
