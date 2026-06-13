@@ -83,7 +83,7 @@ class FormsController < ApplicationController
     end
 
     removed_custom_ids = removed_custom_section_ids
-    current_sections = (@form.sections || []).map(&:to_sym)
+    current_sections = FormBuilderService.present_section_keys(@form)
     if sections.to_set == current_sections.to_set && removed_custom_ids.empty?
       redirect_to edit_form_path(@form, event_id: params[:event_id]), notice: "No section changes."
       return
