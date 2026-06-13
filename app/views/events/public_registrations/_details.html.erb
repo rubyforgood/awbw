@@ -2,9 +2,9 @@
     built from data already on the event — dates, time, platform/location, fee,
     and registration deadline. Date and time intentionally repeat the page hero:
     here they are plain, labeled text that's easy to read and copy/paste. The
-    Dates and Fee rows can carry an optional admin-authored qualifier (the event's
-    hint_dates / hint_registration_cost, e.g. "must attend both days"), rendered
-    as a small grey parenthetical. Reuses the same label helpers as the form
+    Dates, Time, and Fee rows can carry an optional admin-authored qualifier (the
+    event's hint_dates / hint_times / hint_registration_cost, e.g. "must attend
+    both days"), rendered as a small grey parenthetical. Reuses the same label helpers as the form
     header tokens so the two stay in sync.
     Shown above the form's header intro. Locals: event. %>
 <%
@@ -12,7 +12,7 @@
   parenthetical = ->(text) { text.present? ? "(#{text})" : nil }
   detail_rows = [
     { label: multi_day ? "Dates" : "Date", value: event_dates_detail_label(event), note: parenthetical.call(event.hint_dates) },
-    { label: multi_day ? "Times" : "Time", value: event_times_label(event) },
+    { label: multi_day ? "Times" : "Time", value: event_times_label(event), note: parenthetical.call(event.hint_times) },
     { label: "Fee", value: event_fee_label(event), note: parenthetical.call(event.hint_registration_cost) },
     { label: "Platform", value: event_platform_label(event) },
     { label: "Location", value: event_location_label(event) },

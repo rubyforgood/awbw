@@ -114,6 +114,7 @@ class EventPolicy < ApplicationPolicy
                   :signed_in_one_click_enabled,
                   :autoshow_registration_details,
                   :hint_dates,
+                  :hint_times,
                   :hint_registration_cost,
                   :pre_title,
                   :pre_date_text,
