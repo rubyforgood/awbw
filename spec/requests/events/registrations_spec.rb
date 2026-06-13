@@ -147,6 +147,34 @@ RSpec.describe "Events::Registrations", type: :request do
     end
   end
 
+  describe "POST /registration/:slug/pay" do
+    let(:event) { create(:event, cost_cents: 15_00) }
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+    let(:fake_session) { double(url: "https://checkout.stripe.com/test") }
+
+    before do
+      fake_processor = double(checkout: fake_session)
+      allow_any_instance_of(Person).to receive(:set_payment_processor)
+      allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
+    end
+
+    it "redirects to Stripe Checkout when payment is due" do
+      post registration_pay_path(registration.slug)
+
+      expect(response).to redirect_to("https://checkout.stripe.com/test")
+      expect(response.status).to eq(303)
+    end
+
+    it "shows an alert when no payment is due" do
+      event.update!(cost_cents: 0)
+
+      post registration_pay_path(registration.slug)
+
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+      expect(flash[:alert]).to eq("No payment is due.")
+    end
+  end
+
   describe "GET /events/:event_id/public_registration (show)" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
@@ -190,6 +218,24 @@ RSpec.describe "Events::Registrations", type: :request do
 
   describe "POST /events/:event_id/registrations" do
     let(:event) { create(:event, cost_cents: 0) }
+
+    context "with credit card payment" do
+      let(:event) { create(:event, cost_cents: 15_00) }
+      let(:fake_session) { double(url: "https://checkout.stripe.com/test") }
+
+      before do
+        fake_processor = double(checkout: fake_session)
+        allow_any_instance_of(Person).to receive(:set_payment_processor)
+        allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
+      end
+
+      it "redirects to Stripe Checkout" do
+        post event_registrant_registration_path(event_id: event.id)
+
+        expect(response).to redirect_to("https://checkout.stripe.com/test")
+        expect(response.status).to eq(303)
+      end
+    end
 
     context "when successful" do
       it "creates a registration and returns turbo stream" do

@@ -100,6 +100,64 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
   end
 
+  describe "POST create with credit card payment" do
+    let(:user) { create(:user, :with_person) }
+    let(:event) { create(:event, cost_cents: 15_00) }
+    let(:form) { create(:form) }
+    let!(:essay_field) do
+      create(:form_field, form: form, answer_type: :free_form_input_paragraph,
+             name: "Tell us why", required: true, min_words: 5)
+    end
+    let!(:payment_method_field) do
+      create(:form_field, form: form, answer_type: :multiple_choice_radio,
+             field_identifier: "payment_method", name: "Payment method",
+             required: false)
+    end
+    let(:fake_session) { double(url: "https://checkout.stripe.com/test") }
+
+    before do
+      sign_in user
+      fake_processor = double(checkout: fake_session)
+      allow_any_instance_of(Person).to receive(:set_payment_processor)
+      allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
+    end
+
+    it "redirects to Stripe Checkout when paying by credit card" do
+      post event_public_registration_path(event),
+           params: { public_registration: { form_fields: {
+             essay_field.id.to_s => "this answer has enough words for validation",
+             payment_method_field.id.to_s => "Credit card (now)"
+           } } }
+
+      expect(response).to redirect_to("https://checkout.stripe.com/test")
+      expect(response.status).to eq(303)
+    end
+
+    it "does not redirect when payment method is not credit card" do
+      post event_public_registration_path(event),
+           params: { public_registration: { form_fields: {
+             essay_field.id.to_s => "this answer has enough words for validation",
+             payment_method_field.id.to_s => "Pay later"
+           } } }
+
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to match(%r{/registration/})
+      expect(flash[:notice]).to eq("You have been successfully registered!")
+    end
+
+    it "does not redirect to Stripe when event is free" do
+      event.update!(cost_cents: 0)
+
+      post event_public_registration_path(event),
+           params: { public_registration: { form_fields: {
+             essay_field.id.to_s => "this answer has enough words for validation"
+           } } }
+
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to match(%r{/registration/})
+    end
+  end
+
   describe "GET new" do
     it "shows the minimum word hint below the field" do
       get new_event_public_registration_path(event)
