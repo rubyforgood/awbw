@@ -14,12 +14,21 @@
   </div>
 
   <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-    <div class="bg-purple-900 text-white px-6 py-4">
-      <div class="flex items-center gap-8">
-        <div class="shrink-0">
-          <%= image_tag("logo.png", alt: "Organization logo", class: "h-8 w-auto") %>
+    <%# Admin chrome wrapping the form preview below. The amber "Preview" badge
+        signals this is not the live page (echoing the amber token note inside). %>
+    <div class="bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 py-5">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <%= image_tag("logo.png", alt: "Organization logo", class: "h-8 w-auto shrink-0") %>
+          <div class="h-8 w-px bg-white/20"></div>
+          <div>
+            <h2 class="text-xl font-semibold tracking-wide leading-tight"><%= @form.display_name %></h2>
+            <p class="mt-0.5 text-xs text-purple-200"><%= form_role_label(@form) %> form</p>
+          </div>
         </div>
-        <h2 class="text-xl font-semibold tracking-wide"><%= @form.display_name %></h2>
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-[0.15em] text-purple-950 shadow-sm">
+          <i class="fa-solid fa-eye"></i>Preview
+        </span>
       </div>
     </div>
 
@@ -86,11 +95,14 @@
               <div class="<%= field.grid_span_class %>">
                 <% if conditional %>
                   <div class="border-l-4 <%= visibility_marker_styles[field.visibility] %> pl-3">
-                    <span class="inline-block mb-1.5 text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
+                    <div class="mb-1.5 flex flex-wrap items-center gap-1.5">
+                      <span class="text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
+                      <%= render "forms/option_source_link", field: field %>
+                    </div>
                     <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
                   </div>
                 <% else %>
-                  <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
+                  <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier], show_option_source: true %>
                 <% end %>
               </div>
             <% end %>

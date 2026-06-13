@@ -6,7 +6,7 @@
     <% end %>
     <%= link_to "Forms", forms_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <%= link_to "Edit questions", edit_form_path(@form, event_id: @dashboard_event&.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-    <%= link_to "View form", form_path(@form), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+    <%= form_editor_view_links(@form, @dashboard_event) %>
   </div>
 
   <%# Colored hero banner so the page reads at a glance instead of all-white %>
