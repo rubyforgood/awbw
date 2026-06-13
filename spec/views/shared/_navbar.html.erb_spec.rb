@@ -68,6 +68,7 @@ RSpec.describe "shared/_navbar", type: :view do
       allow(view).to receive(:current_user).and_return(admin_user)
       allow(view).to receive(:user_signed_in?).and_return(true)
       allow(view).to receive(:allowed_to?).and_return(true)
+      assign(:current_user_active_affiliations, [ create(:affiliation) ])
       render_nav
     end
 
@@ -80,8 +81,9 @@ RSpec.describe "shared/_navbar", type: :view do
       expect(rendered).to include("Admin")
     end
 
-    it "shows profile and team links" do
+    it "shows profile and organization links" do
       expect(rendered).to include("My profile")
+      expect(rendered).to include("My organization")
     end
 
     it "shows admin-only New dropdown items" do
