@@ -25,7 +25,8 @@ export default class extends Controller {
       this.trackTarget.classList.toggle("bg-fuchsia-600", this.shownValue)
     }
     if (this.hasKnobTarget) {
-      this.knobTarget.classList.toggle("translate-x-5", this.shownValue)
+      this.knobTarget.classList.toggle("translate-x-[1.125rem]", this.shownValue)
+      this.knobTarget.classList.toggle("translate-x-0.5", !this.shownValue)
     }
   }
 }
