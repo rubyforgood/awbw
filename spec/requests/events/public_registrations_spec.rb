@@ -113,7 +113,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
              field_identifier: "payment_method", name: "Payment method",
              required: false)
     end
-    let(:fake_session) { double(url: "https://checkout.stripe.com/test") }
+    let(:fake_session) { double(url: "https://checkout.stripe.com/test", id: "cs_test_123") }
 
     before do
       sign_in user

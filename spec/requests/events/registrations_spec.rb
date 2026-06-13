@@ -150,7 +150,7 @@ RSpec.describe "Events::Registrations", type: :request do
   describe "POST /registration/:slug/pay" do
     let(:event) { create(:event, cost_cents: 15_00) }
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
-    let(:fake_session) { double(url: "https://checkout.stripe.com/test") }
+    let(:fake_session) { double(url: "https://checkout.stripe.com/test", id: "cs_test_123") }
 
     before do
       fake_processor = double(checkout: fake_session)
@@ -221,7 +221,7 @@ RSpec.describe "Events::Registrations", type: :request do
 
     context "with credit card payment" do
       let(:event) { create(:event, cost_cents: 15_00) }
-      let(:fake_session) { double(url: "https://checkout.stripe.com/test") }
+      let(:fake_session) { double(url: "https://checkout.stripe.com/test", id: "cs_test_123") }
 
       before do
         fake_processor = double(checkout: fake_session)
