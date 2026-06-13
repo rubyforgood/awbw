@@ -18,6 +18,18 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#times styled" do
+    it "includes the year for a single-day event" do
+      event = build(:event, start_date: Time.zone.local(2026, 8, 12, 9), end_date: Time.zone.local(2026, 8, 12, 12)).decorate
+      expect(event.times(display_day: true, display_date: true, styled: true)).to include("2026")
+    end
+
+    it "includes the year for a multi-day event" do
+      event = build(:event, start_date: Time.zone.local(2026, 7, 23, 9), end_date: Time.zone.local(2026, 7, 24, 16)).decorate
+      expect(event.times(display_day: true, display_date: true, styled: true)).to include("2026")
+    end
+  end
+
   describe "#date_range" do
     it "shows a single weekday-prefixed date when there is no end date" do
       event = build(:event, start_date: Time.zone.local(2026, 6, 11, 12), end_date: nil).decorate

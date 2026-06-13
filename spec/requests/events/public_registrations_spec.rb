@@ -175,21 +175,13 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       get new_event_public_registration_path(event)
 
+      expect(response.body).to include("Dates:")
+      expect(response.body).to include("Time:")
       expect(response.body).to include("Platform:")
       expect(response.body).to include("Zoom")
       expect(response.body).to include("Fee:")
       expect(response.body).to include("$1,500")
       expect(response.body).to include("Registration closes")
-    end
-
-    it "leaves date and time to the hero, not the details panel" do
-      # Date/time live in the page hero, so the panel must not repeat them.
-      event.update!(autoshow_registration_details: true)
-
-      get new_event_public_registration_path(event)
-
-      expect(response.body).not_to include("Dates:")
-      expect(response.body).not_to include("Time:")
     end
 
     it "hides the duplicate hero badges when the details panel is shown" do

@@ -1,11 +1,13 @@
 <%# Structured "at a glance" event details for the public registration page,
-    built from data already on the event — platform/location, fee, and
-    registration deadline. Date and time live in the page hero above, so they
-    are intentionally omitted here to avoid repeating them. Reuses the same
-    label helpers as the form header tokens so the two stay in sync. Shown
-    above the form's header intro. Locals: event. %>
+    built from data already on the event — dates, time, platform/location, fee,
+    and registration deadline. Date and time intentionally repeat the page hero:
+    here they are plain, labeled text that's easy to read and copy/paste. Reuses
+    the same label helpers as the form header tokens so the two stay in sync.
+    Shown above the form's header intro. Locals: event. %>
 <%
   detail_rows = [
+    [ "Dates", event_dates_label(event) ],
+    [ "Time", event_times_label(event) ],
     [ "Platform", event_platform_label(event) ],
     [ "Location", event_location_label(event) ],
     [ "Fee", event_fee_label(event) ],

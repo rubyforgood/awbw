@@ -256,6 +256,22 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#event_platform_label" do
+    it "is nil for in-person events with no videoconference link" do
+      expect(helper.event_platform_label(build(:event, videoconference_url: nil))).to be_nil
+    end
+
+    it "uses the videoconference label when one is set" do
+      event = build(:event, videoconference_url: "https://zoom.us/j/1", videoconference_label: "Zoom")
+      expect(helper.event_platform_label(event)).to eq("Zoom")
+    end
+
+    it "derives the platform from the link when the label is blank" do
+      event = build(:event, videoconference_url: "https://us02web.zoom.us/j/1", videoconference_label: "")
+      expect(helper.event_platform_label(event)).to eq("Zoom")
+    end
+  end
+
   describe "#event_registration_close_default" do
     it "is 9am on the Monday of the start date's week" do
       event = build(:event, start_date: Time.zone.local(2026, 7, 22, 13, 0)) # Wednesday

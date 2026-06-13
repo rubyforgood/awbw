@@ -93,10 +93,12 @@ module ApplicationHelper
   end
 
   # Virtual platform label (e.g. "Zoom"), only for events with a videoconference
-  # link configured; nil otherwise (in-person or unset).
+  # link configured; nil otherwise (in-person or unset). Uses the event's own
+  # label, falling back to the platform name derived from the link's host when
+  # the label is blank.
   def event_platform_label(event)
     return unless event&.videoconference_url.present?
-    event.videoconference_label.presence
+    event.videoconference_label.presence || event.decorate.videoconference_domain
   end
 
   # In-person location name (e.g. "Los Angeles, CA"), or nil when the event has no
