@@ -62,7 +62,7 @@
               <%= "maxlength=\"#{field.max_characters}\"".html_safe if field.max_characters.to_i.positive? %>
               <%= "required" if field.required %>><%= value %></textarea>
 
-  <% when "multiple_choice_radio" %>
+  <% when "single_select_radio" %>
     <%# Dynamic fields (e.g. primary_service_area) source options from Sector/Category
         data and store none of their own, so fall back to those when present. %>
     <% radio_options = dynamic_form_field_options(field) ||
@@ -86,7 +86,22 @@
       <% end %>
     </div>
 
-  <% when "multiple_choice_checkbox" %>
+  <% when "single_select_dropdown" %>
+    <%# Dynamic fields (e.g. primary_service_area_single) source options from
+        Sector/Category data; everything else uses the field's own stored options. %>
+    <% dropdown_options = dynamic_form_field_options(field) ||
+         field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
+    <select name="<%= field_name %>"
+            id="<%= field_id %>"
+            class="<%= input_classes %>"
+            <%= "required" if field.required %>>
+      <option value="">Select one</option>
+      <% dropdown_options.each do |option_label, option_value| %>
+        <option value="<%= option_value %>" <%= "selected" if value == option_value %>><%= option_label %></option>
+      <% end %>
+    </select>
+
+  <% when "multi_select_checkbox" %>
     <% checkbox_name = "public_registration[form_fields][#{field.id}][]" %>
     <% selected_values = Array(value) %>
     <%# Dynamic fields (e.g. primary_service_area) source options from Sector/Category

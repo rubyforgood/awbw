@@ -108,6 +108,53 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "primary sector validation (SectorsTaggable)" do
+    let(:person) { build(:person) }
+    let(:sector_a) { create(:sector, :published) }
+    let(:sector_b) { create(:sector, :published) }
+
+    it "is valid with no primary sectors" do
+      person.sectorable_items.build(sector: sector_a, is_primary: false)
+      person.sectorable_items.build(sector: sector_b, is_primary: false)
+      expect(person).to be_valid
+    end
+
+    it "is valid with exactly one primary sector" do
+      person.sectorable_items.build(sector: sector_a, is_primary: true)
+      person.sectorable_items.build(sector: sector_b, is_primary: false)
+      expect(person).to be_valid
+    end
+
+    it "is invalid with more than one primary sector" do
+      person.sectorable_items.build(sector: sector_a, is_primary: true)
+      person.sectorable_items.build(sector: sector_b, is_primary: true)
+      expect(person).not_to be_valid
+      expect(person.errors[:base]).to include("Only one sector can be marked as primary")
+    end
+
+    it "ignores sectorable_items marked for destruction" do
+      person.sectorable_items.build(sector: sector_a, is_primary: true)
+      doomed = person.sectorable_items.build(sector: sector_b, is_primary: true)
+      doomed.mark_for_destruction
+      expect(person).to be_valid
+    end
+  end
+
+  describe "#sectorable_items_primary_first" do
+    it "orders the primary sector first, then the rest alphabetically" do
+      person = create(:person)
+      zebra = create(:sector, :published, name: "Zebra")
+      apple = create(:sector, :published, name: "Apple")
+      mango = create(:sector, :published, name: "Mango")
+      person.sectorable_items.create!(sector: zebra, is_primary: false)
+      person.sectorable_items.create!(sector: mango, is_primary: true)
+      person.sectorable_items.create!(sector: apple, is_primary: false)
+
+      person.reload
+      expect(person.sectorable_items_primary_first.map { |si| si.sector.name }).to eq(%w[Mango Apple Zebra])
+    end
+  end
+
   describe "#name" do
     let(:person) { build(:person, first_name: "Jane", last_name: "Doe") }
 

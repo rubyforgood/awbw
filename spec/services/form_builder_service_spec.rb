@@ -119,6 +119,19 @@ RSpec.describe FormBuilderService do
       end
     end
 
+    context "professional_info section" do
+      let(:form) { described_class.new(name: "Test", sections: %i[professional_info]).call }
+
+      it "asks for a single primary service area via a dropdown before the additional service areas checkboxes" do
+        primary = form.form_fields.find_by(field_identifier: "primary_service_area_single")
+        additional = form.form_fields.find_by(field_identifier: "primary_service_area")
+
+        expect(primary).to have_attributes(name: "Primary service area", answer_type: "single_select_dropdown")
+        expect(additional).to have_attributes(name: "Additional service areas", answer_type: "multi_select_checkbox")
+        expect(primary.position).to be < additional.position
+      end
+    end
+
     context "marketing section" do
       let(:form) { described_class.new(name: "Test", sections: %i[marketing]).call }
 

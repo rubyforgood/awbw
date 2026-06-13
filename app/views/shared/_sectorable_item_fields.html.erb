@@ -1,10 +1,11 @@
 <% collection ||= @sectors_collection || Sector.published.order(:name).pluck(:name, :id) %>
-<% show_is_leader = local_assigns.fetch(:show_is_leader, false) %>
+<% show_admin_flags = local_assigns.fetch(:show_admin_flags, false) %>
+<% is_primary = f.object&.is_primary? %>
 
-<div class="nested-fields inline-flex items-center
-            rounded-md border border-gray-300 hover:border-gray-400
-            <%= DomainTheme.bg_class_for(:sectors) %> hover:bg-lime-200
-            text-gray-500 px-3 py-1 text-sm font-medium transition">
+<div class="nested-fields inline-flex items-center gap-2
+            rounded-md border <%= is_primary ? "border-lime-500 bg-lime-200" : "border-gray-300 bg-white" %>
+            text-gray-700 px-3 py-1 text-sm font-medium transition"
+     data-primary-sector-target="chip">
   <% if f.object&.sector_id.present? %>
     <%= f.hidden_field :sector_id %>
     <span><%= f.object.sector&.name %></span>
@@ -20,20 +21,21 @@
                   class: "bg-transparent border-none focus:ring-0 text-sm text-gray-500 cursor-pointer py-0"
                 } %>
   <% end %>
-  <% if show_is_leader && allowed_to?(:manage?, Person) %>
-    <span class="admin-only bg-blue-100 inline-flex items-center gap-1 p-1">
-      <%= f.check_box :is_leader,
-                      class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
-      <span class="text-sm font-medium text-gray-700">Leader</span>
-    </span>
-    <span class="admin-only bg-blue-100 inline-flex items-center gap-1 p-1">
+  <% if show_admin_flags && allowed_to?(:manage?, Person) %>
+    <label class="admin-only cursor-pointer leading-none" title="Mark as primary service area">
       <%= f.check_box :is_primary,
-                      class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
-      <span class="text-sm font-medium text-gray-700">Primary</span>
-    </span>
+                      class: "peer sr-only",
+                      data: { primary_sector_target: "primary", action: "primary-sector#selectPrimary" } %>
+      <i class="fa-solid fa-star text-base text-gray-300 peer-checked:text-amber-400 transition-colors" aria-hidden="true"></i>
+      <span class="sr-only">Primary</span>
+    </label>
+    <label class="admin-only cursor-pointer leading-none" title="Mark as sector leader">
+      <%= f.check_box :is_leader, class: "peer sr-only" %>
+      <i class="fa-solid fa-crown text-base text-gray-300 peer-checked:text-lime-700 transition-colors" aria-hidden="true"></i>
+      <span class="sr-only">Leader</span>
+    </label>
   <% end %>
   <%= link_to_remove_association "✖",
                                  f,
-                                 class: "ml-1.5 text-gray-400 hover:text-gray-600
-                                 font-bold text-xs transition" %>
+                                 class: "ml-0.5 text-gray-400 hover:text-gray-600 font-bold text-xs transition" %>
 </div>

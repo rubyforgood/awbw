@@ -92,7 +92,7 @@ module EventHelper
 
     ids = submitted_answer.split(", ")
     case field&.field_identifier
-    when "primary_service_area"
+    when "primary_service_area", "primary_service_area_single"
       ids.filter_map { |id| Sector.find_by(id: id)&.name }.join(", ").presence || submitted_answer
     when "workshop_environments", "client_life_experiences", "primary_age_group"
       ids.filter_map { |id| Category.find_by(id: id)&.name }.join(", ").presence || submitted_answer

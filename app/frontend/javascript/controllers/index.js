@@ -138,6 +138,9 @@ application.register("searchable-select", SearchableSelectController)
 import SectionFilterController from "./section_filter_controller"
 application.register("section-filter", SectionFilterController)
 
+import PrimarySectorController from "./primary_sector_controller"
+application.register("primary-sector", PrimarySectorController)
+
 import FormSectionToggleController from "./form_section_toggle_controller"
 application.register("form-section-toggle", FormSectionToggleController)
 
