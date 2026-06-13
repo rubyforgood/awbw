@@ -69,7 +69,9 @@
 
     <%# Card Body %>
     <div class="px-6 sm:px-8 py-7">
-      <%= render "events/public_registrations/details", event: @event %>
+      <% if @event.autoshow_registration_details? %>
+        <%= render "events/public_registrations/details", event: @event %>
+      <% end %>
       <%= render "forms/header", form: @form, event: @event %>
 
       <% if flash[:alert] %>

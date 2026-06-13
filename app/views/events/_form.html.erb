@@ -401,6 +401,13 @@
               </div>
               <div>
                 <label class="flex items-center gap-2 cursor-pointer">
+                  <%= f.check_box :autoshow_registration_details %>
+                  <span class="text-sm font-medium text-gray-700">Show event details on registration page</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1">Add an at-a-glance list of dates, time, platform/location, fee, and deadline above the registration form. Pulled from this event's details.</p>
+              </div>
+              <div>
+                <label class="flex items-center gap-2 cursor-pointer">
                   <%= check_box_tag "event[scholarship_enabled]", "1", @event.scholarship_form.present? %>
                   <span class="text-sm font-medium text-gray-700">Enable scholarship application</span>
                 </label>

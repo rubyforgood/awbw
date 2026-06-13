@@ -112,6 +112,7 @@ class EventPolicy < ApplicationPolicy
                   :autoshow_registration_close,
                   :public_registration_enabled,
                   :signed_in_one_click_enabled,
+                  :autoshow_registration_details,
                   :pre_title,
                   :pre_date_text,
                   :featured,

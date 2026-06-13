@@ -215,6 +215,12 @@ RSpec.describe "Events", type: :request do
         patch event_path(event), params: update_params
         expect(event.reload.title).to eq("Updated")
       end
+
+      it "persists the show-details-on-registration toggle" do
+        event.update!(autoshow_registration_details: false)
+        patch event_path(event), params: { event: { autoshow_registration_details: "1" } }
+        expect(event.reload.autoshow_registration_details).to be(true)
+      end
     end
 
     context "as non-admin" do

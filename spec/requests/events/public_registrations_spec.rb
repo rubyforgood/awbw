@@ -165,10 +165,11 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Minimum of 5 words.")
     end
 
-    it "renders a structured details panel from known event data" do
+    it "renders a structured details panel from known event data when enabled" do
       # Guests view the page in Pacific time, so build the event times there.
       pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
       event.update!(
+        autoshow_registration_details: true,
         start_date: pacific.local(2026, 7, 23, 9),
         end_date: pacific.local(2026, 7, 24, 16, 30),
         cost_cents: 150000,
@@ -188,11 +189,19 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
 
     it "omits detail rows the event has no data for" do
-      event.update!(cost_cents: nil, videoconference_url: nil, location: nil)
+      event.update!(autoshow_registration_details: true, cost_cents: nil, videoconference_url: nil, location: nil)
 
       get new_event_public_registration_path(event)
 
       expect(response.body).not_to include("Platform:")
+      expect(response.body).not_to include("Fee:")
+    end
+
+    it "hides the details panel when the event has not enabled it" do
+      event.update!(autoshow_registration_details: false, cost_cents: 150000)
+
+      get new_event_public_registration_path(event)
+
       expect(response.body).not_to include("Fee:")
     end
 
