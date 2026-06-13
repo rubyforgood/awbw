@@ -38,13 +38,23 @@ RSpec.describe "Event registration show page", type: :system do
   end
 
   describe "calendar links" do
-    it "shows Add to Your Calendar header and calendar links" do
+    it "shows Add to your calendar header and calendar links" do
       sign_in(user)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_text("Add to Your Calendar")
+      expect(page).to have_text("Add to your calendar")
       expect(page).to have_link("Google")
       expect(page).to have_link("Office 365")
+    end
+  end
+
+  describe "payment due" do
+    it "shows the payment-due badge and pay button for an active registration with a balance" do
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_text("payment is due")
+      expect(page).to have_button("Pay with Credit Card")
     end
   end
 
@@ -105,13 +115,21 @@ RSpec.describe "Event registration show page", type: :system do
       expect(page).to have_text("Registration cancelled")
       expect(page).not_to have_button("Register again")
     end
+
+    it "does not show the payment-due badge or pay button" do
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).not_to have_text("payment is due")
+      expect(page).not_to have_button("Pay with Credit Card")
+    end
   end
 
   describe "guest access" do
     it "allows guests to view the ticket via slug" do
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_text("Event registration")
+      expect(page).to have_text("Registration ticket")
       expect(page).to have_text(registration.registrant.full_name)
     end
   end
