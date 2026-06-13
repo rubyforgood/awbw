@@ -8,7 +8,8 @@ module Events
     def show
       authorize! @event_registration, to: :show_public?
 
-      if @event_registration.checkout_session_id.present?
+      if @event_registration.checkout_session_id.present? &&
+         @event_registration.checkout_session_id != "unresolved"
         checkout_session = Stripe::Checkout::Session.retrieve(@event_registration.checkout_session_id)
         @checkout_payment_status = checkout_session.payment_status
       end
