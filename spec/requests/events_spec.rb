@@ -761,7 +761,7 @@ RSpec.describe "Events", type: :request do
       it "shows a primary age group breakdown from registration responses" do
         registration_form = create(:form, name: "Registration")
         field = create(:form_field, form: registration_form, field_identifier: "primary_age_group",
-                                    answer_type: :multiple_choice_checkbox)
+                                    answer_type: :multi_select_checkbox)
         create(:event_form, event: event, form: registration_form, role: "registration")
         age_range = create(:category_type, name: "AgeRange")
         adults = create(:category, name: "Adults", category_type: age_range)

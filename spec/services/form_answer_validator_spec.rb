@@ -17,7 +17,7 @@ RSpec.describe FormAnswerValidator do
     end
 
     it "treats an array of only blanks as blank" do
-      field = create(:form_field, form: form, required: true, answer_type: :multiple_choice_checkbox)
+      field = create(:form_field, form: form, required: true, answer_type: :multi_select_checkbox)
 
       expect(validate(field, [ "", "" ])).to eq(field.id => "can't be blank")
     end

@@ -126,8 +126,8 @@ RSpec.describe FormBuilderService do
         primary = form.form_fields.find_by(field_identifier: "primary_service_area_single")
         additional = form.form_fields.find_by(field_identifier: "primary_service_area")
 
-        expect(primary).to have_attributes(name: "Primary service area", answer_type: "multiple_choice_dropdown")
-        expect(additional).to have_attributes(name: "Additional service areas", answer_type: "multiple_choice_checkbox")
+        expect(primary).to have_attributes(name: "Primary service area", answer_type: "single_select_dropdown")
+        expect(additional).to have_attributes(name: "Additional service areas", answer_type: "multi_select_checkbox")
         expect(primary.position).to be < additional.position
       end
     end

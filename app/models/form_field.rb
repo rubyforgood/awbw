@@ -26,11 +26,11 @@ class FormField < ApplicationRecord
   enum :answer_type, [
     :free_form_input_one_line,
     :free_form_input_paragraph,
-    :multiple_choice_radio,
+    :single_select_radio,
     :no_user_input,
-    :multiple_choice_checkbox,
+    :multi_select_checkbox,
     :group_header,
-    :multiple_choice_dropdown
+    :single_select_dropdown
   ]
 
   enum :input_type, [
@@ -51,14 +51,15 @@ class FormField < ApplicationRecord
     "answers_on_file" => "Answers on file"
   }.freeze
 
-  # Human-friendly labels for answer types (radio is "single choice" because only one option can be picked)
+  # Human-friendly labels for answer types (radio/dropdown are "single select"
+  # because only one option can be picked; checkbox allows several)
   ANSWER_TYPE_LABELS = {
     "group_header" => "Section header",
     "free_form_input_one_line" => "One line",
     "free_form_input_paragraph" => "Paragraph",
-    "multiple_choice_radio" => "Single choice radio",
-    "multiple_choice_dropdown" => "Single choice dropdown",
-    "multiple_choice_checkbox" => "Multiple choice checkbox",
+    "single_select_radio" => "Single select radio",
+    "single_select_dropdown" => "Single select dropdown",
+    "multi_select_checkbox" => "Multiple select checkbox",
     "no_user_input" => "Informational-only"
   }.freeze
 
@@ -77,8 +78,10 @@ class FormField < ApplicationRecord
   scope :published, -> { where(status: "active") }
 
   # Methods
-  def multiple_choice?
-    answer_type ? answer_type.include?("multiple_choice") : false
+  SELECTABLE_ANSWER_TYPES = %w[single_select_radio single_select_dropdown multi_select_checkbox].freeze
+
+  def selectable?
+    answer_type.in?(SELECTABLE_ANSWER_TYPES)
   end
 
   def html_id
@@ -152,9 +155,9 @@ class FormField < ApplicationRecord
       :text
     when "free_form_input_paragraph"
       :textarea
-    when "multiple_choice_checkbox"
+    when "multi_select_checkbox"
       :checkbox
-    when "multiple_choice_radio"
+    when "single_select_radio"
       :radio
     when "no_user_input", "group_header"
       childs.any? ? :group_header : :label
@@ -169,9 +172,9 @@ class FormField < ApplicationRecord
       :text_field
     when "free_form_input_paragraph"
       :text_area
-    when "multiple_choice_checkbox"
+    when "multi_select_checkbox"
       :check_box
-    when "multiple_choice_radio"
+    when "single_select_radio"
       :radio_button
     when "no_user_input", "group_header"
       :label

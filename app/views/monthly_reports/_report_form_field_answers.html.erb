@@ -20,7 +20,7 @@
 
   <%= form.hidden_field :answer_option_id, id: "log-field-#{log_field.id}" %>
 
-  <% if log_field.multiple_choice? %>
+  <% if log_field.selectable? %>
     <% answer_option = answer.answer_option %>
     <% if log_field.form_helper_type == :radio_button %>
       <% log_field.answer_options.each do |answer_option| %>

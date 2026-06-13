@@ -40,7 +40,7 @@ RSpec.describe EventDashboard do
     let(:registration_form) { create(:form, name: "Registration") }
     let(:age_group_field) do
       create(:form_field, form: registration_form, field_identifier: "primary_age_group",
-                          name: "Primary Age Group(s) Served", answer_type: :multiple_choice_checkbox)
+                          name: "Primary Age Group(s) Served", answer_type: :multi_select_checkbox)
     end
 
     let!(:reg1) do
@@ -234,7 +234,7 @@ RSpec.describe EventDashboard do
         # primary for person1 AND an additional sector for person2 — the counts
         # overlap (don't partition).
         service_field = create(:form_field, form: registration_form, field_identifier: "primary_service_area_single",
-                                            answer_type: :multiple_choice_dropdown)
+                                            answer_type: :single_select_dropdown)
         create(:form_answer, form_field: service_field, submitted_answer: sector1.id.to_s,
                              form_submission: FormSubmission.find_by!(person: person1, form: registration_form))
         create(:form_answer, form_field: service_field, submitted_answer: sector2.id.to_s,

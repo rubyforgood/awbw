@@ -114,7 +114,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       # the dynamic options — otherwise the question shows up blank.
       sector_a = create(:sector, :published, name: "Healthcare")
       sector_b = create(:sector, :published, name: "Education")
-      create(:form_field, form: form, answer_type: :multiple_choice_radio,
+      create(:form_field, form: form, answer_type: :single_select_radio,
              field_identifier: "primary_service_area", name: "Primary service area",
              required: false)
 
@@ -128,7 +128,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
     it "still renders a dynamic-option field as checkboxes" do
       create(:sector, :published, name: "Healthcare")
-      create(:form_field, form: form, answer_type: :multiple_choice_checkbox,
+      create(:form_field, form: form, answer_type: :multi_select_checkbox,
              field_identifier: "primary_service_area", name: "Primary service area",
              required: false)
 
@@ -172,7 +172,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       category_type = create(:category_type, name: "WorkshopEnvironment")
       create(:category, :published, category_type: category_type,
              name: "Clinical setting", description: "Community mental health, outpatient, etc")
-      create(:form_field, form: form, answer_type: :multiple_choice_checkbox,
+      create(:form_field, form: form, answer_type: :multi_select_checkbox,
              field_identifier: "workshop_environments", name: "Workshop Settings", required: false)
 
       get new_event_public_registration_path(event)

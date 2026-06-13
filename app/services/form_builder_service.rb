@@ -307,7 +307,7 @@ class FormBuilderService
   def build_person_contact_info_fields(form, position)
     position = add_header(form, position, "Contact Information", group: "person_contact_info")
 
-    position = add_field(form, position, "Primary Email Type", :multiple_choice_radio,
+    position = add_field(form, position, "Primary Email Type", :single_select_radio,
                          key: "primary_email_type", group: "person_contact_info", required: true,
                          options: %w[Personal Work])
     position = add_field(form, position, "Preferred Nickname", :free_form_input_one_line,
@@ -316,14 +316,14 @@ class FormBuilderService
                          key: "pronouns", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Secondary Email", :free_form_input_one_line,
                          key: "secondary_email", group: "person_contact_info", required: false, width: :half)
-    position = add_field(form, position, "Secondary Email Type", :multiple_choice_radio,
+    position = add_field(form, position, "Secondary Email Type", :single_select_radio,
                          key: "secondary_email_type", group: "person_contact_info", required: false,
                          width: :half, options: %w[Personal Work])
 
     position = add_header(form, position, "Mailing Address", group: "person_contact_info")
     position = add_field(form, position, "Street Address", :free_form_input_one_line,
                          key: "mailing_street", group: "person_contact_info", required: true, width: :half)
-    position = add_field(form, position, "Address Type", :multiple_choice_radio,
+    position = add_field(form, position, "Address Type", :single_select_radio,
                          key: "mailing_address_type", group: "person_contact_info", required: true,
                          width: :half, options: %w[Work Personal])
     position = add_field(form, position, "City", :free_form_input_one_line,
@@ -335,7 +335,7 @@ class FormBuilderService
 
     position = add_field(form, position, "Phone", :free_form_input_one_line,
                          key: "phone", group: "person_contact_info", required: true, width: :half)
-    position = add_field(form, position, "Phone Type", :multiple_choice_radio,
+    position = add_field(form, position, "Phone Type", :single_select_radio,
                         key: "phone_type", group: "person_contact_info", required: true,
                         width: :half, options: %w[Work Personal])
 
@@ -352,7 +352,7 @@ class FormBuilderService
                          key: "agency_state", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Agency Zip / Postal Code", :free_form_input_one_line,
                          key: "agency_zip", group: "person_contact_info", required: false, width: :third)
-    position = add_field(form, position, "Agency Type", :multiple_choice_radio,
+    position = add_field(form, position, "Agency Type", :single_select_radio,
                          key: "agency_type", group: "person_contact_info", required: false,
                          options: [
                            "501c3/nonprofit", "For-profit", "Government agency",
@@ -375,13 +375,13 @@ class FormBuilderService
   def build_professional_info_fields(form, position)
     position = add_header(form, position, "Professional Information", group: "professional")
 
-    position = add_field(form, position, "Primary service area", :multiple_choice_dropdown,
+    position = add_field(form, position, "Primary service area", :single_select_dropdown,
                          key: "primary_service_area_single", group: "professional", required: false,
                          hint: "Select the sector you primarily serve.")
-    position = add_field(form, position, "Additional service areas", :multiple_choice_checkbox,
+    position = add_field(form, position, "Additional service areas", :multi_select_checkbox,
                          key: "primary_service_area", group: "professional", required: false,
                          hint: "Select all that apply. These represent the other sectors you serve.")
-    position = add_field(form, position, "Workshop Settings", :multiple_choice_checkbox,
+    position = add_field(form, position, "Workshop Settings", :multi_select_checkbox,
                          key: "workshop_environments", group: "professional", required: false,
                          hint: "Select all settings where you facilitate or plan to facilitate workshops.",
                          options: [
@@ -391,10 +391,10 @@ class FormBuilderService
                            "Prisons/jails", "Private practice", "Residential program",
                            "Virtually", "With staff", "Other"
                          ])
-    position = add_field(form, position, "Client Life Experiences", :multiple_choice_checkbox,
+    position = add_field(form, position, "Client Life Experiences", :multi_select_checkbox,
                          key: "client_life_experiences", group: "professional", required: false,
                          hint: "Select all that describe the populations you work with.")
-    position = add_field(form, position, "Primary Age Group(s) Served", :multiple_choice_checkbox,
+    position = add_field(form, position, "Primary Age Group(s) Served", :multi_select_checkbox,
                          key: "primary_age_group", group: "professional", required: false,
                          hint: "Select all age groups you primarily serve.")
     position
@@ -408,7 +408,7 @@ class FormBuilderService
     position = add_field(form, position, "What motivates you to attend this training?", :free_form_input_paragraph,
                          key: "training_motivation", group: "marketing", required: false)
     position = add_field(form, position, "Are you interested in learning more about upcoming trainings or resources?",
-                         :multiple_choice_radio,
+                         :single_select_radio,
                          key: "interested_in_more", group: "marketing", required: true,
                          options: %w[Yes No])
     position
@@ -419,7 +419,7 @@ class FormBuilderService
 
     position = add_field(form, position,
                          "I / my agency cannot afford the full training cost and need a scholarship to attend.",
-                         :multiple_choice_checkbox,
+                         :multi_select_checkbox,
                          key: "scholarship_eligibility", group: "scholarship", required: true,
                          options: [ "Yes" ])
     position = add_field(form, position,
@@ -440,7 +440,7 @@ class FormBuilderService
   def build_payment_fields(form, position)
     position = add_header(form, position, "Payment Information", group: "payment")
 
-    position = add_field(form, position, "Payment method", :multiple_choice_radio,
+    position = add_field(form, position, "Payment method", :single_select_radio,
                          key: "payment_method", group: "payment", required: true,
                          options: PAYMENT_METHOD_OPTIONS)
     position
@@ -450,7 +450,7 @@ class FormBuilderService
     position = add_header(form, position, "Consent", group: "consent")
     position = add_field(form, position,
                          "I agree to receive email communications from A Window Between Worlds.",
-                         :multiple_choice_checkbox,
+                         :multi_select_checkbox,
                          key: "communication_consent", group: "consent", required: true,
                          hint: "By submitting this form, I consent to receive updates from A Window Between Worlds, " \
                                "including information about this event as well as upcoming events, training opportunities, resources, " \
@@ -462,7 +462,7 @@ class FormBuilderService
   def build_post_event_feedback_fields(form, position)
     position = add_header(form, position, "Post-Event Feedback", group: "post_event_feedback")
 
-    position = add_field(form, position, "How would you rate this event?", :multiple_choice_radio,
+    position = add_field(form, position, "How would you rate this event?", :single_select_radio,
                          key: "event_rating", group: "post_event_feedback", required: true,
                          options: [ "Excellent", "Good", "Fair", "Poor" ])
     position = add_field(form, position, "What did you find most valuable?", :free_form_input_paragraph,
@@ -492,7 +492,7 @@ class FormBuilderService
                          visibility: :logged_out_only)
 
     position = add_header(form, position, "Payment Information", group: "bulk_payment")
-    position = add_field(form, position, "Payment method", :multiple_choice_radio,
+    position = add_field(form, position, "Payment method", :single_select_radio,
                          key: "payment_method", group: "bulk_payment", required: true,
                          options: PAYMENT_METHOD_OPTIONS)
 

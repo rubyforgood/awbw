@@ -32,8 +32,8 @@ RSpec.describe FormField do
   describe 'enums' do
     it { should define_enum_for(:status).with_values([ :inactive, :active ]) }
     it { should define_enum_for(:answer_type).with_values([ :free_form_input_one_line, :free_form_input_paragraph,
-                                                           :multiple_choice_radio, :no_user_input, :multiple_choice_checkbox,
-                                                           :group_header, :multiple_choice_dropdown ]) }
+                                                           :single_select_radio, :no_user_input, :multi_select_checkbox,
+                                                           :group_header, :single_select_dropdown ]) }
     it { should define_enum_for(:input_type).with_values([ :text_alphanumeric, :number_integer, :number_decimal, :date ]) }
   end
 
@@ -133,7 +133,7 @@ RSpec.describe FormField do
     end
 
     it "does not apply to non-text answer types" do
-      field = build(:form_field, form: form, answer_type: :multiple_choice_radio, min_words: 5)
+      field = build(:form_field, form: form, answer_type: :single_select_radio, min_words: 5)
       expect(field.min_words_error("Yes")).to be_nil
     end
   end
@@ -187,7 +187,7 @@ RSpec.describe FormField do
     end
 
     it "does not apply to non-text answer types" do
-      field = build(:form_field, form: form, answer_type: :multiple_choice_radio, max_characters: 1)
+      field = build(:form_field, form: form, answer_type: :single_select_radio, max_characters: 1)
       expect(field.max_characters_error("Yes")).to be_nil
     end
   end
@@ -211,22 +211,22 @@ RSpec.describe FormField do
     end
   end
 
-  describe "#multiple_choice?" do
+  describe "#selectable?" do
     let(:form) { create(:form) }
 
     it "returns true for checkbox fields" do
-      field = build(:form_field, form: form, answer_type: :multiple_choice_checkbox)
-      expect(field.multiple_choice?).to be true
+      field = build(:form_field, form: form, answer_type: :multi_select_checkbox)
+      expect(field.selectable?).to be true
     end
 
     it "returns true for radio fields" do
-      field = build(:form_field, form: form, answer_type: :multiple_choice_radio)
-      expect(field.multiple_choice?).to be true
+      field = build(:form_field, form: form, answer_type: :single_select_radio)
+      expect(field.selectable?).to be true
     end
 
     it "returns false for text fields" do
       field = build(:form_field, form: form, answer_type: :free_form_input_one_line)
-      expect(field.multiple_choice?).to be false
+      expect(field.selectable?).to be false
     end
   end
 
@@ -244,12 +244,12 @@ RSpec.describe FormField do
     end
 
     it "returns :checkbox for checkbox fields" do
-      field = build(:form_field, form: form, answer_type: :multiple_choice_checkbox)
+      field = build(:form_field, form: form, answer_type: :multi_select_checkbox)
       expect(field.html_input_type).to eq(:checkbox)
     end
 
     it "returns :radio for radio fields" do
-      field = build(:form_field, form: form, answer_type: :multiple_choice_radio)
+      field = build(:form_field, form: form, answer_type: :single_select_radio)
       expect(field.html_input_type).to eq(:radio)
     end
 
@@ -278,12 +278,12 @@ RSpec.describe FormField do
     end
 
     it "returns :check_box for checkbox fields" do
-      field = build(:form_field, form: form, answer_type: :multiple_choice_checkbox)
+      field = build(:form_field, form: form, answer_type: :multi_select_checkbox)
       expect(field.form_helper_type).to eq(:check_box)
     end
 
     it "returns :radio_button for radio fields" do
-      field = build(:form_field, form: form, answer_type: :multiple_choice_radio)
+      field = build(:form_field, form: form, answer_type: :single_select_radio)
       expect(field.form_helper_type).to eq(:radio_button)
     end
   end
@@ -291,14 +291,14 @@ RSpec.describe FormField do
   describe "#answer_type_label" do
     let(:form) { create(:form) }
 
-    it "calls radio fields single choice" do
-      field = build(:form_field, form: form, answer_type: :multiple_choice_radio)
-      expect(field.answer_type_label).to eq("Single choice radio")
+    it "calls radio fields single select" do
+      field = build(:form_field, form: form, answer_type: :single_select_radio)
+      expect(field.answer_type_label).to eq("Single select radio")
     end
 
-    it "calls checkbox fields multiple choice" do
-      field = build(:form_field, form: form, answer_type: :multiple_choice_checkbox)
-      expect(field.answer_type_label).to eq("Multiple choice checkbox")
+    it "calls checkbox fields multiple select" do
+      field = build(:form_field, form: form, answer_type: :multi_select_checkbox)
+      expect(field.answer_type_label).to eq("Multiple select checkbox")
     end
 
     it "falls back to a humanized label for unmapped types" do
