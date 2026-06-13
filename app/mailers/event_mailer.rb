@@ -19,6 +19,26 @@ class EventMailer < ApplicationMailer
     )
   end
 
+  def bulk_payment_confirmation(form_submission)
+    @submission = form_submission
+    @person = form_submission.person
+    @event = form_submission.event&.decorate
+    @answers = form_submission.answers_by_identifier
+    @attendees = form_submission.bulk_payment_attendees
+
+    @notification_type = "Bulk payment confirmation"
+
+    @submission_url = event_bulk_payment_url(@event, submission_id: @submission.id) if @event
+    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+
+    mail(
+      to: @person.preferred_email,
+      from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
+      reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      subject: "AWBW Portal: Bulk payment received for #{@event&.title}"
+    )
+  end
+
   def event_registration_reminder(event_registration, days_until_event: nil)
     @event_registration = event_registration
     @event = event_registration.event.decorate
