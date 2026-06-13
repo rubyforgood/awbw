@@ -207,7 +207,33 @@ class Person < ApplicationRecord
     }
   end
 
+  # Field identifiers whose "Other" free text maps onto the profile's sectors.
+  OTHER_SERVICE_AREA_IDENTIFIERS = %w[primary_service_area primary_service_area_single].freeze
+  # Field identifiers whose "Other" free text maps onto the workshop-setting
+  # categories shown on the edit page.
+  OTHER_WORKSHOP_SETTING_IDENTIFIERS = %w[workshop_environments client_life_experiences primary_age_group].freeze
+
+  # Free-text "Other" service areas the person typed on registration forms.
+  # They can't be Sector records, so they're surfaced beside the sector tags.
+  def other_service_area_responses
+    other_form_responses(OTHER_SERVICE_AREA_IDENTIFIERS)
+  end
+
+  # Free-text "Other" workshop settings (category-backed fields) from forms.
+  def other_workshop_setting_responses
+    other_form_responses(OTHER_WORKSHOP_SETTING_IDENTIFIERS)
+  end
+
   private
+
+  def other_form_responses(identifiers)
+    form_submissions
+      .joins(form_answers: :form_field)
+      .where(form_fields: { field_identifier: identifiers })
+      .pluck("form_answers.submitted_answer")
+      .flat_map { |answer| OtherOption.texts(answer) }
+      .uniq
+  end
 
   def strip_whitespace
     self.first_name = first_name&.strip

@@ -121,6 +121,7 @@
             <% sectorable_items = @person.sectorable_items.includes(:sector).order("sectors.name") %>
             <% primary_sector_items = sectorable_items.select(&:is_primary?) %>
             <% additional_sector_items = sectorable_items.reject(&:is_primary?) %>
+            <% other_service_areas = @person.other_service_area_responses %>
             <div class="md:col-span-2 p-3">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -134,9 +135,10 @@
                                      is_leader: si.is_leader %>
                       <% end %>
                     </div>
-                  <% else %>
+                  <% elsif other_service_areas.none? %>
                     <p class="text-gray-500 italic">None selected.</p>
                   <% end %>
+                  <%= render "people/other_responses", responses: other_service_areas %>
                 </div>
                 <div>
                   <h2 class="text-lg font-semibold text-gray-800 mb-3">Additional sectors</h2>
