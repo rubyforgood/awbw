@@ -10,14 +10,6 @@
       <label class="block font-medium mb-1 text-gray-700">Event title</label>
       <div class="border border-gray-200 rounded-lg p-4">
         <div>
-          <%= f.input :pre_title,
-                  label: "Pre-title",
-                  input_html: {
-                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                    placeholder: "e.g. Facilitator Training Series"
-                  } %>
-        </div>
-        <div>
           <%= f.input :title,
                   label: "Title",
                   required: true,
@@ -31,6 +23,15 @@
                   } %>
         </div>
         <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page" %>
+        <div>
+          <%= f.input :pre_title,
+                  label: "Pre-title",
+                  hint: "Displays above the title",
+                  input_html: {
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    placeholder: "e.g. Facilitator Training Series"
+                  } %>
+        </div>
       </div>
     </div>
 
@@ -50,21 +51,20 @@
     <% end %>
   </div>
 
-  <%# ---- HEADER CONTENT (top body) ---- %>
-  <div class="form-group mt-6 <%= 'has-error' if f.object.errors[:rhino_header].present? %>">
-    <%= rhino_editor(f, :header, label: "Header content") %>
+  <%# ---- EVENT DETAILS + DISPLAY OPTIONS (collapsible, expanded by default) ---- %>
+  <div class="event-details-section mt-12 mb-12" data-controller="dropdown">
+    <button
+      type="button"
+      id="event_details_button"
+      class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md"
+      data-action="dropdown#toggle"
+      data-dropdown-payload-param='[{"event_details":"hidden"}, {"event_details_arrow":"rotate-180"}, {"event_details_button":"rounded-t-md rounded-md"}]'>
+      Event details
+      <i id="event_details_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300 rotate-180"></i>
+    </button>
 
-    <% if f.object.errors[:rhino_header].present? %>
-      <div class="text-danger mt-1 text-sm">
-        Field <%= f.object.errors[:rhino_header].first %>
-      </div>
-    <% end %>
-  </div>
-
-  <%# ---- EVENT DETAILS + DISPLAY OPTIONS (two-column) ---- %>
-  <label class="block font-medium mb-1 text-gray-700 mt-12">Event details</label>
-  <div class="bg-gray-50 border border-gray-200 rounded-md p-6 mb-12">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div id="event_details" class="bg-gray-50 border border-gray-300 rounded-b-md p-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <%# LEFT: Date/time, location, videoconference, cost %>
       <div class="md:col-span-2 space-y-6">
       <div>
@@ -213,111 +213,12 @@
         <%= f.input :autoshow_registration, as: :boolean, label: "Registration button <span class='text-gray-400 font-normal'>Register + calendar links</span>".html_safe %>
       </div>
     </div>
+      </div>
     </div>
-  </div>
-
-  <%# ---- DESCRIPTION (bottom body) ---- %>
-  <div class="form-group mt-12">
-    <%= rhino_editor(f, :description, label: "Description") %>
   </div>
 
   <!-- Accordions -->
   <div class="space-y-4 mt-12">
-    <div class="images-section" data-controller="dropdown">
-      <button
-        type="button"
-        id="images_button"
-        class="
-          flex items-center justify-between cursor-pointer w-full
-          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
-        data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"images":"hidden"}, {"images_arrow":"rotate-180"}, {"images_button":"rounded-md rounded-t-md"}]'>
-        Images
-        <i id="images_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
-      </button>
-
-      <div id="images" class="hidden border border-gray-300 p-4 rounded-b-md">
-        <%= render "shared/form_image_fields", f: f, include_primary_asset: true, primary_title: "Primary (thumbnail)" %>
-      </div>
-    </div>
-    <div class="tags-section" data-controller="dropdown">
-      <button
-        type="button"
-        id="tags_button"
-        class="
-          flex items-center justify-between cursor-pointer w-full
-          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
-        data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'>
-        Tags
-        <i id="tags_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
-      </button>
-
-      <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
-          <!-- Header -->
-          <h3 class="text-base font-semibold text-gray-800 mb-3">
-            Sectors
-          </h3>
-
-          <!-- Checkbox List -->
-          <div class="flex flex-wrap gap-3">
-            <% @sectors.each do |sector| %>
-              <% id = "event_sector_ids_#{sector.id}" %>
-
-              <label
-                for="<%= id %>"
-                class="
-                  flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                  rounded-lg shadow-sm hover:bg-gray-100 transition">
-                <%= hidden_field_tag "event[sector_ids][]", "" %>
-                <!-- # To ensure unchecked boxes are submitted -->
-                <%= check_box_tag "event[sector_ids][]",
-                                  sector.id,
-                                  @event.sector_ids.include?(sector.id),
-                                  id: id,
-                                  class: "h-4 w-4 text-blue-600 rounded" %>
-
-                <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
-              </label>
-            <% end %>
-          </div>
-        </div>
-
-        <div class="form-group space-y-6">
-          <% @categories_grouped.each do |type, cats| %>
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-              <!-- Header -->
-              <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.underscore.humanize %></h3>
-
-              <!-- Checkbox List -->
-              <div class="flex flex-wrap gap-3">
-                <% cats.each do |category| %>
-                  <% id = "event_category_ids_#{category.id}" %>
-
-                  <label
-                    for="<%= id %>"
-                    class="
-                      flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                      border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                    <%= hidden_field_tag "event[category_ids][]", "" %>
-                    <!-- # To ensure unchecked boxes are submitted -->
-                    <%= check_box_tag "event[category_ids][]",
-                                      category.id,
-                                      @event.category_ids.include?(category.id),
-                                      id: id,
-                                      class: "h-4 w-4 text-blue-600 rounded" %>
-
-                    <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
-                  </label>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    </div>
-
     <% if allowed_to?(:manage?, @event) %>
       <div class="admin-only registration-form-section"
            data-controller="dropdown reveal-section"
@@ -462,6 +363,133 @@
         </div>
       </div>
     <% end %>
+
+    <%# ---- PAGE CONTENT (header + description) ---- %>
+    <div class="page-content-section" data-controller="dropdown">
+      <button
+        type="button"
+        id="page_content_button"
+        class="
+          flex items-center justify-between cursor-pointer w-full
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"page_content":"hidden"}, {"page_content_arrow":"rotate-180"}, {"page_content_button":"rounded-md rounded-t-md"}]'>
+        Page content
+        <i id="page_content_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+      </button>
+
+      <div id="page_content" class="hidden border border-gray-300 p-4 rounded-b-md">
+        <div class="form-group <%= 'has-error' if f.object.errors[:rhino_header].present? %>">
+          <%= rhino_editor(f, :header, label: "Header content") %>
+
+          <% if f.object.errors[:rhino_header].present? %>
+            <div class="text-danger mt-1 text-sm">
+              Field <%= f.object.errors[:rhino_header].first %>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="form-group mt-12">
+          <%= rhino_editor(f, :description, label: "Description") %>
+        </div>
+      </div>
+    </div>
+
+    <div class="images-section" data-controller="dropdown">
+      <button
+        type="button"
+        id="images_button"
+        class="
+          flex items-center justify-between cursor-pointer w-full
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"images":"hidden"}, {"images_arrow":"rotate-180"}, {"images_button":"rounded-md rounded-t-md"}]'>
+        Images
+        <i id="images_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+      </button>
+
+      <div id="images" class="hidden border border-gray-300 p-4 rounded-b-md">
+        <%= render "shared/form_image_fields", f: f, include_primary_asset: true, primary_title: "Primary (thumbnail)" %>
+      </div>
+    </div>
+    <div class="tags-section" data-controller="dropdown">
+      <button
+        type="button"
+        id="tags_button"
+        class="
+          flex items-center justify-between cursor-pointer w-full
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'>
+        Tags
+        <i id="tags_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+      </button>
+
+      <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+          <!-- Header -->
+          <h3 class="text-base font-semibold text-gray-800 mb-3">
+            Sectors
+          </h3>
+
+          <!-- Checkbox List -->
+          <div class="flex flex-wrap gap-3">
+            <% @sectors.each do |sector| %>
+              <% id = "event_sector_ids_#{sector.id}" %>
+
+              <label
+                for="<%= id %>"
+                class="
+                  flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
+                  rounded-lg shadow-sm hover:bg-gray-100 transition">
+                <%= hidden_field_tag "event[sector_ids][]", "" %>
+                <!-- # To ensure unchecked boxes are submitted -->
+                <%= check_box_tag "event[sector_ids][]",
+                                  sector.id,
+                                  @event.sector_ids.include?(sector.id),
+                                  id: id,
+                                  class: "h-4 w-4 text-blue-600 rounded" %>
+
+                <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="form-group space-y-6">
+          <% @categories_grouped.each do |type, cats| %>
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+              <!-- Header -->
+              <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.underscore.humanize %></h3>
+
+              <!-- Checkbox List -->
+              <div class="flex flex-wrap gap-3">
+                <% cats.each do |category| %>
+                  <% id = "event_category_ids_#{category.id}" %>
+
+                  <label
+                    for="<%= id %>"
+                    class="
+                      flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
+                      border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                    <%= hidden_field_tag "event[category_ids][]", "" %>
+                    <!-- # To ensure unchecked boxes are submitted -->
+                    <%= check_box_tag "event[category_ids][]",
+                                      category.id,
+                                      @event.category_ids.include?(category.id),
+                                      id: id,
+                                      class: "h-4 w-4 text-blue-600 rounded" %>
+
+                    <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+                  </label>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
     <% if allowed_to?(:google_analytics?, @event) %>
       <div data-controller="dropdown">
         <button

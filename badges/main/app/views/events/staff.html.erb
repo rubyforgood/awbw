@@ -1,25 +1,24 @@
 <% content_for(:page_bg_class, "public") %>
 
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6 sm:p-8">
-  <div class="flex flex-wrap items-center gap-2 mb-6 print:hidden">
-    <%= link_to "← Back to event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-    <div class="ml-auto flex flex-wrap gap-2">
-      <% if allowed_to?(:edit_staff?, @event) %>
-        <%= link_to "Edit staff", edit_staff_event_path(@event), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-      <% end %>
-      <% if allowed_to?(:manage?, @event) %>
-        <%= link_to "Registrants", registrants_event_path(@event), class: "admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
-      <% end %>
-      <button onclick="window.print();" class="text-sm text-gray-500 hover:text-gray-700 px-2 py-1 cursor-pointer">
-        <i class="fa-solid fa-print"></i> Print
-      </button>
-    </div>
+<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <%# Top bar: back link on the left; sub-nav (admins only) on the right %>
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-2 print:hidden">
+    <%= link_to "← Event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <% if allowed_to?(:manage?, @event) %>
+      <%= render "events/subnav", event: @event, current: :staff %>
+    <% end %>
   </div>
+  <% if allowed_to?(:edit_staff?, @event) %>
+    <div class="flex justify-end mb-6 print:hidden">
+      <%= link_to edit_staff_event_path(@event), class: "admin-only btn btn-primary btn--small" do %>
+        <i class="fa-solid fa-pen"></i> Edit staff
+      <% end %>
+    </div>
+  <% end %>
 
   <div class="text-center mb-10">
     <p class="text-sm font-semibold uppercase tracking-wide <%= DomainTheme.text_class_for(:events) %>">Meet the staff</p>
     <h1 class="text-3xl font-bold text-gray-900 mt-1"><%= @event.title %></h1>
-    <p class="text-gray-500 mt-2"><%= pluralize(@event_staffs.size, "staff member") %></p>
   </div>
 
   <% if @event_staffs.any? %>
@@ -140,7 +139,7 @@
     </div>
   <% else %>
     <div class="text-center py-12 text-gray-500">
-      No staff to show yet.
+      None yet!
     </div>
   <% end %>
 </div>

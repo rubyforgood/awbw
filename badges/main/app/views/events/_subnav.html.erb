@@ -1,5 +1,5 @@
 <%# Shared sub-navigation for an event's admin sub-pages.
-    Pass `event:` and `current:` (one of :dashboard, :background, :registrants, :scholarships, :staff, :edit, :view).
+    Pass `event:` and `current:` (one of :dashboard, :background, :registrants, :scholarships, :staff, :edit).
     The current page renders as a non-link underlined tab; the rest are muted links. %>
 <nav class="flex flex-wrap items-center gap-1" aria-label="Event views">
   <% tabs = [
@@ -8,8 +8,7 @@
        { key: :background, label: "Background", path: background_event_path(event), visible: allowed_to?(:background?, event) },
        { key: :scholarships, label: "Scholarships", path: recipients_event_path(event), visible: allowed_to?(:recipients?, event) },
        { key: :staff, label: "Staff", path: staff_event_path(event), visible: allowed_to?(:staff?, event) },
-       { key: :edit, label: "Edit event", path: edit_event_path(event), visible: allowed_to?(:edit?, event) },
-       { key: :view, label: "View event", path: event_path(event), visible: true }
+       { key: :edit, label: "Edit event", path: edit_event_path(event), visible: allowed_to?(:edit?, event) }
      ] %>
   <% tabs.each do |tab| %>
     <% next unless tab[:visible] %>
