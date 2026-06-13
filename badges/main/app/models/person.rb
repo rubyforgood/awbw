@@ -1,5 +1,5 @@
 class Person < ApplicationRecord
-  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable
+  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable
 
   pay_customer default_payment_processor: :stripe
 

@@ -761,7 +761,7 @@ RSpec.describe "Events", type: :request do
       it "shows a primary age group breakdown from registration responses" do
         registration_form = create(:form, name: "Registration")
         field = create(:form_field, form: registration_form, field_identifier: "primary_age_group",
-                                    answer_type: :multiple_choice_checkbox)
+                                    answer_type: :multi_select_checkbox)
         create(:event_form, event: event, form: registration_form, role: "registration")
         age_range = create(:category_type, name: "AgeRange")
         adults = create(:category, name: "Adults", category_type: age_range)
@@ -918,11 +918,77 @@ RSpec.describe "Events", type: :request do
       it "renders the collapsible card controls and an expand/collapse-all button" do
         get recipients_event_path(event)
 
-        expect(response.body).to include('data-controller="expandable-cards"')
+        expect(response.body).to include('data-controller="expandable-cards scholarship-status-toggle"')
         expect(response.body).to include("Collapse all")
         expect(response.body).to include('data-controller="expandable-card"')
         expect(response.body).to include("expandable-card#toggle")
         expect(response.body).to include('data-expandable-card-target="body"')
+      end
+
+      it "renders a page-wide toggle to show/hide scholarship status" do
+        get recipients_event_path(event)
+
+        expect(response.body).to include('data-controller="expandable-cards scholarship-status-toggle"')
+        expect(response.body).to include('data-action="scholarship-status-toggle#toggle"')
+        expect(response.body).to include("Show scholarship status")
+      end
+
+      it "shows each recipient's awarded amount and completed tasks status" do
+        event.update!(cost_cents: 50_000)
+        registration = event.event_registrations.find_by(registrant: applicant)
+        scholarship = create(:scholarship, recipient: applicant, amount_cents: 50_000, tasks_completed: true)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 50_000)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include('data-scholarship-status-toggle-target="status"')
+        expect(response.body).to include("$500.00")
+        expect(response.body).to include("Tasks completed")
+      end
+
+      it "names the funding donor when the scholarship is drawn from a grant" do
+        registration = event.event_registrations.find_by(registrant: applicant)
+        org = create(:organization, name: "Joyful Heart Foundation")
+        grant = create(:grant, name: "Healing Arts Fund", donor: org, amount_cents: 100_000)
+        scholarship = create(:scholarship, recipient: applicant, grant: grant, amount_cents: 1_000, tasks_completed: true)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Funded by")
+        expect(response.body).to include("Joyful Heart Foundation")
+      end
+
+      it "omits the donor line for a scholarship with no parent grant" do
+        registration = event.event_registrations.find_by(registrant: applicant)
+        scholarship = create(:scholarship, recipient: applicant, amount_cents: 1_000, tasks_completed: true)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+        get recipients_event_path(event)
+
+        expect(response.body).not_to include("Funded by")
+      end
+
+      it "flags a recipient whose tasks are still outstanding" do
+        registration = event.event_registrations.find_by(registrant: applicant)
+        scholarship = create(:scholarship, recipient: applicant, amount_cents: 25_000, tasks_completed: false)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("$250.00")
+        expect(response.body).to include("Tasks outstanding")
+      end
+
+      it "renders the tasks status as an inline toggle that flips the completed state" do
+        registration = event.event_registrations.find_by(registrant: applicant)
+        scholarship = create(:scholarship, recipient: applicant, amount_cents: 25_000, tasks_completed: false)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include(toggle_tasks_scholarship_path(scholarship))
+        expect(response.body).to include("Mark tasks complete")
       end
 
       it "shows the non-facilitator affiliation's title and linked organization, excluding facilitator roles" do

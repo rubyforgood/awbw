@@ -1,5 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
+<% primary_sector_data = @dashboard.primary_sectors.map { |s| [ s.name, @dashboard.primary_sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>
 <% sector_data = @dashboard.sectors.map { |s| [ s.name, @dashboard.sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>
 <% age_group_data = @dashboard.age_groups.map { |c| [ c.name, @dashboard.age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 <% state_data = @dashboard.state_counts.sort_by { |_, count| -count } %>
@@ -200,6 +201,7 @@
   <%# Per-row drill-ins: each breakdown row links to the registrant list filtered
       to the people behind it (sectors/states use their named filters, the rest use
       the matching registrant_ids set). %>
+  <% primary_sector_paths = @dashboard.primary_sectors.to_h { |s| [ s.name, registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids_by_sector.fetch(s.id, []).join("-")) ] } %>
   <% sector_paths = @dashboard.sectors.to_h { |s| [ s.name, registrants_event_path(@event, sector: s.id) ] } %>
   <% age_group_paths = @dashboard.age_groups.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% state_paths = @dashboard.states.index_with { |state| registrants_event_path(@event, state: state) } %>
@@ -209,8 +211,11 @@
   <% settings_paths = @dashboard.settings.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.settings_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% org_paths = @dashboard.organizations.to_h { |o| [ o.name, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-")) ] } %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+    <% if primary_sector_data.any? %>
+      <%= render "breakdown_card", title: "Primary service area", data: primary_sector_data, chart: :pie, palette: palette, row_paths: primary_sector_paths %>
+    <% end %>
     <% if sector_data.any? %>
-      <%= render "breakdown_card", title: "Primary service area", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
+      <%= render "breakdown_card", title: "All service areas", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
     <% end %>
     <%# States and countries use the addresses theme color (slate) for their map ramps. %>
     <% addresses_color = "#475569" %>

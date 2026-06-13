@@ -118,24 +118,42 @@
           <% end %>
           <!-- Sectors -->
           <% if @person.profile_show_sectors? %>
+            <% sectorable_items = @person.sectorable_items.includes(:sector).order("sectors.name") %>
+            <% primary_sector_items = sectorable_items.select(&:is_primary?) %>
+            <% additional_sector_items = sectorable_items.reject(&:is_primary?) %>
             <div class="md:col-span-2 p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
-              <% if @person.sectorable_items.any? %>
-                <div class="flex flex-wrap gap-2">
-                  <% @person
-                         .sectorable_items
-                         .includes(:sector)
-                         .order("sectors.name")
-                         .each do |si| %>
-                    <%= render "sectors/tagging_label",
-                                 sector: si.sector,
-                                 display_leader: true,
-                                 is_leader: si.is_leader %>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Primary sector</h2>
+                  <% if primary_sector_items.any? %>
+                    <div class="flex flex-wrap gap-2">
+                      <% primary_sector_items.each do |si| %>
+                        <%= render "sectors/tagging_label",
+                                     sector: si.sector,
+                                     display_leader: true,
+                                     is_leader: si.is_leader %>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <p class="text-gray-500 italic">None selected.</p>
                   <% end %>
                 </div>
-              <% else %>
-                <p class="text-gray-500 italic">None selected.</p>
-              <% end %>
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Additional sectors</h2>
+                  <% if additional_sector_items.any? %>
+                    <div class="flex flex-wrap gap-2">
+                      <% additional_sector_items.each do |si| %>
+                        <%= render "sectors/tagging_label",
+                                     sector: si.sector,
+                                     display_leader: true,
+                                     is_leader: si.is_leader %>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <p class="text-gray-500 italic">None selected.</p>
+                  <% end %>
+                </div>
+              </div>
             </div>
           <% end %>
         </div>

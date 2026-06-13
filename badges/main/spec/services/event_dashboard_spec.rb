@@ -40,7 +40,7 @@ RSpec.describe EventDashboard do
     let(:registration_form) { create(:form, name: "Registration") }
     let(:age_group_field) do
       create(:form_field, form: registration_form, field_identifier: "primary_age_group",
-                          name: "Primary Age Group(s) Served", answer_type: :multiple_choice_checkbox)
+                          name: "Primary Age Group(s) Served", answer_type: :multi_select_checkbox)
     end
 
     let!(:reg1) do
@@ -229,11 +229,12 @@ RSpec.describe EventDashboard do
 
     describe "sector primary/additional split (overlapping)" do
       before do
-        # person1 names sector1 as primary; person2 names sector2 as primary. Both
-        # also carry sector1 as a tag, so sector1 is primary for person1 AND an
-        # additional sector for person2 — the counts overlap (don't partition).
-        service_field = create(:form_field, form: registration_form, field_identifier: "primary_service_area",
-                                            answer_type: :multiple_choice_checkbox)
+        # person1 names sector1 as primary; person2 names sector2 as primary via the
+        # single-select dropdown. Both also carry sector1 as a tag, so sector1 is
+        # primary for person1 AND an additional sector for person2 — the counts
+        # overlap (don't partition).
+        service_field = create(:form_field, form: registration_form, field_identifier: "primary_service_area_single",
+                                            answer_type: :single_select_dropdown)
         create(:form_answer, form_field: service_field, submitted_answer: sector1.id.to_s,
                              form_submission: FormSubmission.find_by!(person: person1, form: registration_form))
         create(:form_answer, form_field: service_field, submitted_answer: sector2.id.to_s,
@@ -247,6 +248,20 @@ RSpec.describe EventDashboard do
       it "counts sectors carried as a non-primary tag, overlapping the primary count" do
         # sector1 is a tag for person2, who named sector2 (not sector1) as primary.
         expect(dashboard.additional_sector_count).to eq(1)
+      end
+
+      it "counts distinct registrants per primary sector, from the dropdown only" do
+        expect(dashboard.primary_sector_counts).to eq(sector1.id => 1, sector2.id => 1)
+      end
+
+      it "exposes only the dropdown-named sectors as primary (not every tag)" do
+        expect(dashboard.primary_sectors).to contain_exactly(sector1, sector2)
+      end
+
+      it "maps each primary sector to the registrants who named it, for drill-in" do
+        map = dashboard.primary_sector_registrant_ids_by_sector
+        expect(map[sector1.id]).to contain_exactly(person1.id)
+        expect(map[sector2.id]).to contain_exactly(person2.id)
       end
     end
 

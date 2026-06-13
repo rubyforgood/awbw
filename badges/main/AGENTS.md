@@ -51,7 +51,7 @@ This codebase (Rails 8.1)
 | `app/models/` | ActiveRecord models | ~75 files |
 | `app/services/` | Service objects for complex logic | ~23 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
-| `app/models/concerns/` | Shared model modules | 13 concerns |
+| `app/models/concerns/` | Shared model modules | 14 concerns |
 
 ### Presentation
 
@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (60) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (61) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -132,6 +132,7 @@ This codebase (Rails 8.1)
 | `PunctuationStrippable` | Strips punctuation from strings |
 | `RemoteSearchable` | AJAX remote search by column |
 | `RichTextSearchable` | Full-text search on ActionText rich_text fields |
+| `SectorsTaggable` | Enforces a single primary sector for sector-tagged owners |
 | `TagFilterable` | Scope-based filtering by tag names |
 | `Trendable` | Trending metrics tracking |
 | `WindowsTypeFilterable` | Filter by WindowsType association |

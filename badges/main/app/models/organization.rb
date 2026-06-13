@@ -1,5 +1,5 @@
 class Organization < ApplicationRecord
-  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable # Publishable
+  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable # Publishable
   belongs_to :organization_status
   belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused

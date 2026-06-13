@@ -127,10 +127,10 @@ RSpec.describe "Forms", type: :request do
       # person_identifier seeds only free-form fields (no multiple-choice).
       # The answer-options UI must still be present (hidden) so the type
       # dropdown can reveal it client-side — otherwise a field changed to
-      # "Single choice radio" saves with no options and shows nothing on the
+      # "Single select radio" saves with no options and shows nothing on the
       # public form.
       form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
-      expect(form.form_fields.none?(&:multiple_choice?)).to be(true)
+      expect(form.form_fields.none?(&:selectable?)).to be(true)
 
       get edit_form_path(form)
 
@@ -142,7 +142,7 @@ RSpec.describe "Forms", type: :request do
     it "shows an option-source badge linking to the managed list for dynamic fields" do
       type = CategoryType.create!(name: "AgeRange", published: true)
       form = create(:form, :standalone)
-      create(:form_field, form: form, answer_type: :multiple_choice_radio,
+      create(:form_field, form: form, answer_type: :single_select_radio,
              field_identifier: "primary_age_group", name: "Primary age group", status: :active)
 
       get edit_form_path(form)

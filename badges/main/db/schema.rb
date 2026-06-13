@@ -1071,6 +1071,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_130000) do
   create_table "sectorable_items", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.boolean "is_leader", default: false, null: false
+    t.boolean "is_primary", default: false, null: false
     t.integer "sector_id"
     t.integer "sectorable_id"
     t.string "sectorable_type"

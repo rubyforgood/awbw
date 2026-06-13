@@ -113,9 +113,12 @@
     <div class="font-semibold text-gray-700 mb-2">
       Sectors
     </div>
-    <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm">
-      <%= f.simple_fields_for :sectorable_items do |sfi| %>
-        <%= render "shared/sectorable_item_fields", f: sfi, show_is_leader: true %>
+    <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm
+                flex flex-wrap items-center gap-2"
+         data-controller="primary-sector">
+      <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
+      <%= f.simple_fields_for :sectorable_items, sectors_owner.sectorable_items_primary_first do |sfi| %>
+        <%= render "shared/sectorable_item_fields", f: sfi, show_admin_flags: true %>
       <% end %>
 
       <%= link_to_add_association "➕ Add Sector",
@@ -125,7 +128,7 @@
                                   render_options: {
                                     locals: { collection: (@sectors_collection || [])
                                       .reject { |_, id| (@current_sector_ids || []).include?(id) },
-                                              show_is_leader: true } },
+                                              show_admin_flags: true } },
                                   class: "btn btn-secondary-outline" %>
     </div>
   </div>
