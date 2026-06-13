@@ -47,6 +47,12 @@ class EventRegistrationsController < ApplicationController
   def edit
     authorize! @event_registration
     set_form_variables
+
+    if @event_registration.checkout_session_id.present? &&
+       @event_registration.payment_unresolved.nil? &&
+       stripe_session = Stripe::Checkout::Session.retrieve(@event_registration.checkout_session_id)
+      @checkout_payment_status = stripe_session.payment_status
+    end
   end
 
   def create

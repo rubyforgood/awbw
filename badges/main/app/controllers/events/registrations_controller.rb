@@ -8,11 +8,17 @@ module Events
     def show
       authorize! @event_registration, to: :show_public?
 
+      if @event_registration.checkout_session_id.present? &&
+         !@event_registration.payment_unresolved?
+        checkout_session = Stripe::Checkout::Session.retrieve(@event_registration.checkout_session_id)
+        @checkout_payment_status = checkout_session.payment_status
+      end
+
       case params[:checkout]
       when "success"
         flash.now[:notice] = "Your payment was successful! You are registered for this event."
       when "cancelled"
-        flash.now[:alert] = "Payment was cancelled. Your registration is saved but payment is still due."
+        flash.now[:alert] = "Payment was cancelled. You are registered for this event but payment may still be due."
       end
     end
 
@@ -206,7 +212,7 @@ module Events
         success_url: registration_ticket_url(registration.slug, checkout: "success"),
         cancel_url: registration_ticket_url(registration.slug, checkout: "cancelled")
       )
-
+      registration.update!(checkout_session_id: checkout_session.id)
       redirect_to checkout_session.url, allow_other_host: true, status: :see_other
     end
   end

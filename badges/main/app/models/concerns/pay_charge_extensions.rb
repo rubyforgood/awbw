@@ -42,13 +42,16 @@ module PayChargeExtensions
 
     remaining_needed = registration.remaining_cost
     allocation_amount = [ amount, remaining_needed ].min
-    return unless allocation_amount > 0
 
-    Allocation.create!(
-      source: payment,
-      allocatable: registration,
-      amount: allocation_amount
-    )
+    if allocation_amount > 0
+      Allocation.create!(
+        source: payment,
+        allocatable: registration,
+        amount: allocation_amount
+      )
+    end
+
+    registration.update!(payment_unresolved: false)
   end
 
   def create_bulk_payment(form_submission_id)
