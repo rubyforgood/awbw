@@ -235,11 +235,17 @@
         </button>
 
         <div id="registration_form_section" class="border border-gray-300 p-4 rounded-b-md" data-reveal-section-target="content">
+          <%# On a failed save the event_forms aren't persisted, so re-read the
+              admin's registration choices from the submitted params instead of
+              the (now-empty) associations. %>
+          <% resubmitted = params[:event].present? %>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Registration form</label>
               <% current_reg_form = @event.registration_form %>
-              <% default_form_id = if current_reg_form
+              <% default_form_id = if resubmitted
+                                     params.dig(:event, :registration_form_id).presence&.to_i
+                                   elsif current_reg_form
                                      current_reg_form.id
                                    elsif @event.title&.match?(/training/i)
                                      @registration_forms.find { |rf| rf.name == "Extended Event Registration" }&.id
@@ -332,7 +338,7 @@
               </div>
               <div>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <%= check_box_tag "event[scholarship_enabled]", "1", @event.scholarship_form.present? %>
+                  <%= check_box_tag "event[scholarship_enabled]", "1", resubmitted ? params.dig(:event, :scholarship_enabled) == "1" : @event.scholarship_form.present? %>
                   <span class="text-sm font-medium text-gray-700">Enable scholarship application</span>
                 </label>
                 <p class="text-xs text-gray-500 mt-1">Add a scholarship form so registrants can request financial assistance.</p>
@@ -346,7 +352,7 @@
               </div>
               <div class="pb-4">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <%= check_box_tag "event[bulk_payment_enabled]", "1", @event.bulk_payment_form.present? %>
+                  <%= check_box_tag "event[bulk_payment_enabled]", "1", resubmitted ? params.dig(:event, :bulk_payment_enabled) == "1" : @event.bulk_payment_form.present? %>
                   <span class="text-sm font-medium text-gray-700">Enable bulk payment</span>
                 </label>
                 <p class="text-xs text-gray-500 mt-1">Let one person register and pay for a group of attendees at once.</p>
