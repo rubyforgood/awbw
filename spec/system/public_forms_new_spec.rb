@@ -106,4 +106,22 @@ RSpec.describe "Public form pages", type: :system do
       expect(page).to have_css("form[action='#{event_ce_credit_form_path(event)}']")
     end
   end
+
+  describe "scholarship form header" do
+    let(:scholarship_form) do
+      create(:form, :standalone, :scholarship, :with_fields,
+             header: "<p>Scholarship intro for {{event_month_year}}.</p>")
+    end
+
+    before do
+      EventForm.create!(event: event, form: scholarship_form, role: "scholarship")
+    end
+
+    it "renders the scholarship form's header above the scholarship questions" do
+      visit new_event_registration_form_path(event, scholarship_requested: true)
+
+      expect(page).to have_text("Scholarship application")
+      expect(page).to have_text("Scholarship intro for #{event.start_date.strftime("%B %Y")}.")
+    end
+  end
 end

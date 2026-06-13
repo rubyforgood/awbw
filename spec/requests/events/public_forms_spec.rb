@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "Events::PublicRegistrations", type: :request do
+RSpec.describe "Events::PublicForms", type: :request do
   # A guest registering on a free event so we exercise the bare create path
   # without payment or auth.
   let(:event) { create(:event, cost_cents: 0) }
