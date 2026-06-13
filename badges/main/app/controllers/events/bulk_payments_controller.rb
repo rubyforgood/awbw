@@ -60,15 +60,7 @@ module Events
       authorize! :bulk_payment, to: :show?
 
       @submission = FormSubmission.find(params[:submission_id])
-      @form = @submission.form
-      @form_fields = @form.form_fields.reorder(position: :asc)
-      @responses = @submission.form_answers.index_by(&:form_field_id)
       @event = @event.decorate
-
-      attendee_answer = @responses.values.find { |a|
-        a.form_field&.field_identifier == "bulk_payment_attendees"
-      }
-      @attendees = parse_attendees(attendee_answer&.submitted_answer)
     end
 
     private
@@ -141,14 +133,6 @@ module Events
         success_url: event_bulk_payment_url(@event, submission_id: submission.id, checkout: "success"),
         cancel_url: event_bulk_payment_url(@event, submission_id: submission.id, checkout: "cancelled")
       )
-    end
-
-    def parse_attendees(json)
-      return [] if json.blank?
-      parsed = JSON.parse(json)
-      parsed.is_a?(Array) ? parsed : []
-    rescue JSON::ParserError
-      []
     end
   end
 end
