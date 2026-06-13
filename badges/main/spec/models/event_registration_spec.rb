@@ -312,6 +312,43 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#partially_paid?" do
+    let(:event) { create(:event, cost_cents: 1000) }
+    let(:user) { create(:user, :with_person) }
+
+    it "returns false when nothing has been paid" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      expect(reg).not_to be_partially_paid
+    end
+
+    it "returns true when a payment covers some but not all of the cost" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      payment = create(:payment, person: user.person, amount_cents: 500, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 500)
+      expect(reg).to be_partially_paid
+    end
+
+    it "returns false when only a scholarship covers part of the cost" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      scholarship = create(:scholarship, tasks_completed: true, amount_cents: 500)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 500)
+      expect(reg).not_to be_partially_paid
+    end
+
+    it "returns false when paid in full" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      payment = create(:payment, person: user.person, amount_cents: 1000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1000)
+      expect(reg).not_to be_partially_paid
+    end
+
+    it "returns false when the event is free" do
+      free_event = create(:event, cost_cents: 0)
+      reg = create(:event_registration, event: free_event, registrant: user.person)
+      expect(reg).not_to be_partially_paid
+    end
+  end
+
   describe '.search_by_params' do
     let(:person_alice) { create(:person, first_name: 'Alice', last_name: 'Smith') }
     let(:person_bob) { create(:person, first_name: 'Bob', last_name: 'Jones') }

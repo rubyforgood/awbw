@@ -423,6 +423,49 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "payment status column" do
+      let(:event) { create(:event, cost_cents: 1000) }
+
+      it "shows the due amount and no paid amount when nothing has been paid" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("fa-circle-exclamation")
+        expect(response.body).to include("$10.00 due")
+        expect(response.body).not_to include("Partial")
+      end
+
+      it "shows the partial badge when a payment covers part of the cost" do
+        payment = create(:payment, person: person, amount_cents: 400, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: registration, amount: 400)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("fa-circle-half-stroke")
+        expect(response.body).to include("Partial · $6.00 due")
+      end
+
+      it "does not show the partial badge when only a scholarship covers part of the cost" do
+        scholarship = create(:scholarship, recipient: person, tasks_completed: true, amount_cents: 400)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 400)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("fa-circle-exclamation")
+        expect(response.body).to include("$6.00 due")
+        expect(response.body).not_to include("Partial")
+      end
+
+      it "shows Paid when paid in full" do
+        payment = create(:payment, person: person, amount_cents: 1000, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: registration, amount: 1000)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("fa-circle-check")
+        expect(response.body).to include(">Paid</span>")
+      end
+    end
+
     context "registration form icon" do
       let(:reg_form) { create(:form, :standalone, name: "Registration Form") }
 
