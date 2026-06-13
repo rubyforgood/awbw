@@ -268,6 +268,58 @@ fund_registration.(trauma_training, angel_g,
 fund_registration.(mindful_art, amy_person,
   payments: [ { payer: amy_person, amount_cents: 5_000, kind: :cash } ])
 
+# --- AWBW Facilitator Training ($1,500): registrants with MORE THAN ONE payment ---
+# The scenarios above all fund a registration with a single payment. These four
+# brand-new people each have two or more payment records (some also carrying a
+# completed scholarship), split across paid-in-full and still-owing, so the
+# registrants payment-status column ("Paid" vs "Partial · $X due") can be
+# exercised against multi-payment registrations. Amounts target the event's real
+# $1,500 cost so the paid-in-full / partial split is genuine.
+register_with_payments = ->(event, first_name:, last_name:, email:, scholarship: nil, payments: []) do
+  return unless event
+  person = Person.find_or_create_by!(email: email) do |p|
+    p.first_name = first_name
+    p.last_name = last_name
+  end
+  registration = EventRegistration.find_or_create_by!(registrant: person, event: event)
+  return registration if registration.allocations.exists?
+
+  award_scholarship.(registration, **scholarship) if scholarship
+  payments.each { |payment| record_payment.(registration, **{ payer: person }.merge(payment)) }
+  registration
+end
+
+# Nina: paid in full via two payments (cash $1,000 + check $500)
+register_with_payments.(facilitator_training,
+  first_name: "Nina", last_name: "Multipay", email: "nina.multipay@seed.example.com",
+  payments: [
+    { amount_cents: 100_000, kind: :cash },
+    { amount_cents: 50_000, kind: :check }
+  ])
+# Omar: paid in full via completed scholarship ($500) + two cash payments ($600 + $400)
+register_with_payments.(facilitator_training,
+  first_name: "Omar", last_name: "Multipay", email: "omar.multipay@seed.example.com",
+  scholarship: { amount_cents: 50_000, tasks_completed: true },
+  payments: [
+    { amount_cents: 60_000, kind: :cash },
+    { amount_cents: 40_000, kind: :cash }
+  ])
+# Priya: still owes — two cash payments ($500 + $400) of the $1,500 cost
+register_with_payments.(facilitator_training,
+  first_name: "Priya", last_name: "Multipay", email: "priya.multipay@seed.example.com",
+  payments: [
+    { amount_cents: 50_000, kind: :cash },
+    { amount_cents: 40_000, kind: :cash }
+  ])
+# Quincy: still owes — completed scholarship ($300) + cash $400 + check $200 of the $1,500 cost
+register_with_payments.(facilitator_training,
+  first_name: "Quincy", last_name: "Multipay", email: "quincy.multipay@seed.example.com",
+  scholarship: { amount_cents: 30_000, tasks_completed: true },
+  payments: [
+    { amount_cents: 40_000, kind: :cash },
+    { amount_cents: 20_000, kind: :check }
+  ])
+
 [ facilitator_training, trauma_training, mindful_art ].compact.each do |event|
   dashboard = EventDashboard.new(event)
   puts "  #{event.title}: #{dashboard.registrant_count} registrants, " \
