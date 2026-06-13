@@ -394,7 +394,7 @@ class PeopleController < ApplicationController
       :twitter_url,
       :created_by_id, :updated_by_id,
       category_ids: [],
-      sectorable_items_attributes: [ :id, :sector_id, :is_leader, :_destroy ],
+      sectorable_items_attributes: [ :id, :sector_id, :is_leader, :is_primary, :_destroy ],
       addresses_attributes: [
         :id,
         :address_type,
