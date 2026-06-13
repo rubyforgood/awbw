@@ -48,4 +48,17 @@ RSpec.describe EventRegistrationServices::BulkPayment do
       expect(result.form_submission.person.contact_methods.where(kind: :phone)).to be_empty
     end
   end
+
+  describe "notifications" do
+    it "sends the payer confirmation and the staff FYI" do
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: :bulk_payment_confirmation, recipient_role: :person)
+      )
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: :bulk_payment_confirmation_fyi, recipient_role: :admin)
+      )
+
+      described_class.call(event: event, form: form, form_params: base_form_params)
+    end
+  end
 end

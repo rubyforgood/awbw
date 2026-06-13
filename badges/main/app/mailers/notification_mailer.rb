@@ -27,6 +27,19 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def bulk_payment_confirmation_fyi(notification)
+    @submission = notification.noticeable
+    @person = @submission.person
+    @event = @submission.event&.decorate
+    @answers = @submission.answers_by_identifier
+    @attendees = @submission.bulk_payment_attendees
+    @notification_type = "Bulk payment"
+
+    mail(
+      subject: "#{FYI_PREFIX} New bulk payment by #{@person.full_name} for #{@event&.title}"
+    )
+  end
+
   def idea_submitted(notification)
     @notification = notification
     @noticeable = notification.noticeable.decorate

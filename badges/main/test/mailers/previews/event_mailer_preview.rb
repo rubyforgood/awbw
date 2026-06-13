@@ -15,7 +15,17 @@ class EventMailerPreview < ActionMailer::Preview
     EventMailer.event_registration_cancelled(event_registration)
   end
 
+  def bulk_payment_confirmation
+    EventMailer.bulk_payment_confirmation(sample_bulk_payment_submission)
+  end
+
   private
+
+  def sample_bulk_payment_submission
+    FormSubmission.where(role: "bulk_payment").order(id: :desc).find_each.find(&:event) ||
+      FormSubmission.where(role: "bulk_payment").order(id: :desc).first ||
+      raise("Need a bulk_payment FormSubmission to preview")
+  end
 
   def sample_event_registration
     # Try to reuse existing records to avoid duplication

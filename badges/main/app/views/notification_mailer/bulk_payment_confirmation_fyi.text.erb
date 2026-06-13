@@ -1,0 +1,38 @@
+<% profile_url = person_url(@person) %>
+
+New Bulk Payment
+------------------------------------------------------------
+
+<%= @person.full_name %> (<%= @person.preferred_email %>)
+
+Submitted on
+<%= @submission.created_at
+               .in_time_zone("Pacific Time (US & Canada)")
+               .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+------------------------------------------------------------
+<% if @event %>
+Event
+<%= @event.title %>
+
+Event date
+<%= @event.times(display_day: true, display_date: true) %>
+<% if @event.labelled_cost.present? %>
+Cost
+<%= @event.labelled_cost %>
+<% end %><% end %>
+<% if @answers["payer_organization"].present? %>Organization: <%= @answers["payer_organization"] %>
+<% end %><% if @answers["payer_phone"].present? %>Phone: <%= @answers["payer_phone"] %>
+<% end %><% if @answers["number_of_attendees"].present? %>Number of attendees: <%= @answers["number_of_attendees"] %>
+<% end %><% if @answers["payment_method"].present? %>Payment method: <%= @answers["payment_method"] %>
+<% end %>
+<% if @attendees.any? %>Attendees:
+<% @attendees.each do |attendee| %>- <%= [ attendee["first_name"], attendee["last_name"] ].compact_blank.join(" ") %><%= " <#{attendee['email']}>" if attendee["email"].present? %>
+<% end %><% end %>
+------------------------------------------------------------
+<% if @event %>
+View submission:
+<%= event_bulk_payment_url(@event, submission_id: @submission.id) %>
+<% end %>
+View profile:
+<%= profile_url %>
