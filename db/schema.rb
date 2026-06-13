@@ -462,6 +462,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
   end
 
   create_table "event_staffs", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "bio"
     t.datetime "created_at", null: false
     t.bigint "event_id", null: false
     t.boolean "expected_to_attend", default: false, null: false

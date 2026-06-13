@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio ]
 
   def index
     authorize!
@@ -87,6 +87,21 @@ class PeopleController < ApplicationController
     elsif params[:external_title].present?
       @filtered_logs = all_logs.select { |log| log.external_workshop_title == params[:external_title] }
     end
+  end
+
+  # Read-only profile bio for the event-staff editor, fetched when a person is
+  # picked for a new staff row. Returns sanitized HTML so the client can render
+  # it directly. Person search is admin-gated, so show? (admin or owner) is the
+  # right authorization here.
+  def bio
+    authorize! @person, to: :show?
+    has_bio = @person.profile_show_bio? && @person.bio.present?
+    render json: {
+      show_bio: @person.profile_show_bio?,
+      has_bio: has_bio,
+      bio_html: (helpers.sanitize(@person.bio, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) if has_bio),
+      edit_path: (edit_person_path(@person) if allowed_to?(:edit?, @person))
+    }
   end
 
   def checkout
