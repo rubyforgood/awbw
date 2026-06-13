@@ -59,6 +59,57 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "CE credit interest (magic question)" do
+    let!(:ce_field) do
+      field = form.form_fields.create!(
+        name: "Might you be seeking continuing education (CE) hours for attending this training?",
+        answer_type: :single_select_radio,
+        status: :active,
+        position: (form.form_fields.maximum(:position) || 0) + 1,
+        required: false,
+        field_identifier: described_class::CE_CREDIT_INTEREST_IDENTIFIER,
+        section: "continuing_education",
+        visibility: :always_ask
+      )
+      %w[Yes No].each_with_index do |opt, idx|
+        ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
+        field.form_field_answer_options.create!(answer_option: ao)
+      end
+      field
+    end
+
+    def register_with_ce(answer)
+      params = base_form_params(first_name: "Cy", last_name: "Reed", email: "cy@example.com")
+      params = params.merge(ce_field.id.to_s => answer) unless answer.nil?
+      described_class.call(event: event, form: form, form_params: params)
+    end
+
+    it "toggles ce_credit_requested on when answered Yes" do
+      result = register_with_ce("Yes")
+      expect(result.event_registration.ce_credit_requested).to be true
+    end
+
+    it "leaves ce_credit_requested off when answered No" do
+      result = register_with_ce("No")
+      expect(result.event_registration.ce_credit_requested).to be false
+    end
+
+    it "leaves ce_credit_requested off when unanswered" do
+      result = register_with_ce(nil)
+      expect(result.event_registration.ce_credit_requested).to be false
+    end
+
+    it "toggles ce_credit_requested on for an existing registration that answers Yes" do
+      person = create(:person, first_name: "Cy", last_name: "Reed", email: "cy@example.com")
+      existing = create(:event_registration, event: event, registrant: person, ce_credit_requested: false)
+
+      result = register_with_ce("Yes")
+
+      expect(result.event_registration).to eq(existing)
+      expect(existing.reload.ce_credit_requested).to be true
+    end
+  end
+
   describe "re-registration after cancellation" do
     let(:person) { create(:person, first_name: "Jane", last_name: "Doe", email: "jane@example.com") }
     let!(:cancelled_registration) do
