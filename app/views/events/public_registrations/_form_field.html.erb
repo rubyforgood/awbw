@@ -72,15 +72,15 @@
         data and store none of their own, so fall back to those when present. %>
     <% radio_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
-    <% has_other = radio_options.any? { |option_label, option_value| other_option?(option_value) } %>
+    <% has_other = radio_options.any? { |option_label, option_value| other_option?(option_label) } %>
     <%= tag.div class: "flex flex-wrap gap-2.5 mt-1", data: (has_other ? { controller: "other-option", action: "change->other-option#update" } : {}) do %>
       <% radio_options.each do |option_label, option_value, option_description| %>
-        <% is_other = other_option?(option_value) %>
+        <% is_other = other_option?(option_label) %>
         <label class="flex flex-col gap-1 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <span class="flex items-center gap-2">
             <input type="radio"
                    name="<%= field_name %>"
-                   value="<%= option_value %>"
+                   value="<%= is_other ? "Other" : option_value %>"
                    class="text-blue-600 focus:ring-blue-500"
                    <%= "data-other-option-target=\"control\"".html_safe if is_other %>
                    <%= "checked" if (is_other ? other_option_selected?(value) : value == option_value) || (value.blank? && field.field_identifier == "interested_in_more" && option_value == "Yes") %>
@@ -96,7 +96,7 @@
                    value="<%= other_option_text(value) %>"
                    data-other-option-target="text"
                    data-action="input->other-option#typed"
-                   class="ml-6 w-full max-w-xs rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 <%= "hidden" unless other_option_selected?(value) %>">
+                   class="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 <%= "hidden" unless other_option_selected?(value) %>">
           <% end %>
         </label>
       <% end %>
@@ -125,17 +125,17 @@
         options carry an optional description, shown as subtext under the label. %>
     <% checkbox_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
-    <% has_other = checkbox_options.any? { |option_label, option_value| other_option?(option_value) } %>
+    <% has_other = checkbox_options.any? { |option_label, option_value| other_option?(option_label) } %>
     <%# Multi-column (not grid) so a sorted option list reads straight down each
         column then onto the next, rather than zig-zagging across rows. %>
     <%= tag.div class: "columns-1 sm:columns-2 gap-2.5 mt-1", data: (has_other ? { controller: "other-option", action: "change->other-option#update" } : {}) do %>
       <% checkbox_options.each do |option_label, option_value, option_description| %>
-        <% is_other = other_option?(option_value) %>
+        <% is_other = other_option?(option_label) %>
         <label class="flex flex-col gap-1 mb-2.5 break-inside-avoid rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <span class="flex items-center gap-2">
             <input type="checkbox"
                    name="<%= checkbox_name %>"
-                   value="<%= option_value %>"
+                   value="<%= is_other ? "Other" : option_value %>"
                    class="rounded text-blue-600 focus:ring-blue-500"
                    <%= "data-other-option-target=\"control\"".html_safe if is_other %>
                    <%= "checked" if is_other ? other_option_selected?(value) : selected_values.include?(option_value) %>>
@@ -150,7 +150,7 @@
                    value="<%= other_option_text(value) %>"
                    data-other-option-target="text"
                    data-action="input->other-option#typed"
-                   class="ml-6 w-full max-w-xs rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 <%= "hidden" unless other_option_selected?(value) %>">
+                   class="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 <%= "hidden" unless other_option_selected?(value) %>">
           <% end %>
         </label>
       <% end %>
