@@ -13,6 +13,7 @@ class Payment < ApplicationRecord
 
   validate :at_least_one_payer
 
+  before_create :set_external_origin
   before_validation :set_amount_cents_remaining, if: :new_record?
   before_validation :auto_set_payer_type
 
@@ -71,6 +72,10 @@ class Payment < ApplicationRecord
   end
 
   private
+
+  def set_external_origin
+    self.external_origin = false unless is_a?(ExternalProcessorPayment)
+  end
 
   def set_amount_cents_remaining
     self.amount_cents_remaining = amount_cents if amount_cents_remaining.nil? && amount_cents.present?

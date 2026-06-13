@@ -10,9 +10,14 @@ class Refund < ApplicationRecord
   validates :stripe_refund_id, uniqueness: true, allow_nil: true
 
   after_create :adjust_payment_remaining
+  after_destroy :reverse_payment_remaining
 
   def adjust_payment_remaining
     refundable.update!(amount_cents_remaining: refundable.amount_cents_remaining - amount_cents)
+  end
+
+  def reverse_payment_remaining
+    refundable.update!(amount_cents_remaining: refundable.amount_cents_remaining + amount_cents)
   end
 
   def amount_dollars
