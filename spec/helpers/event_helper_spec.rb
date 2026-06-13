@@ -35,6 +35,18 @@ RSpec.describe EventHelper, type: :helper do
     end
   end
 
+  describe "#resolve_answer_text" do
+    it "maps category ids to names while preserving an 'Other: <text>' token" do
+      category_type = create(:category_type, name: "StoryPopulation")
+      veterans = create(:category, :published, category_type: category_type, name: "Veterans")
+      field = build_stubbed(:form_field, field_identifier: "client_life_experiences")
+
+      result = helper.resolve_answer_text(field, "#{veterans.id}, Other: refugees")
+
+      expect(result).to eq("Veterans, Other: refugees")
+    end
+  end
+
   describe "#other_option_text" do
     it "extracts the custom text from an 'Other: <text>' answer" do
       expect(helper.other_option_text("Other: bright purple")).to eq("bright purple")
