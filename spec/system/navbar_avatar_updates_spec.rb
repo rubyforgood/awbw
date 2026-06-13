@@ -21,7 +21,10 @@ RSpec.describe "Navbar avatar behavior", type: :system do
 
       click_button "Save changes"
 
-      expect(page).to have_current_path(person_path(person), wait: 5)
+      # Saving direct-uploads the avatar before submitting, which can take well
+      # over the default 5s wait on a loaded CI runner, so allow extra time for
+      # the redirect rather than racing it.
+      expect(page).to have_current_path(person_path(person), wait: 20)
 
       person.reload
       expect(person.avatar).to be_attached
@@ -49,7 +52,9 @@ RSpec.describe "Navbar avatar behavior", type: :system do
       check "person__destroy"
       click_button "Save changes"
 
-      expect(page).to have_current_path(person_path(person), wait: 5)
+      # Removal still posts the form and redirects; give the redirect the same
+      # generous wait as the upload case so a slow CI runner doesn't flake.
+      expect(page).to have_current_path(person_path(person), wait: 20)
 
       person.reload
       expect(person.avatar).not_to be_attached
