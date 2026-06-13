@@ -26,6 +26,11 @@
                       class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
       <span class="text-sm font-medium text-gray-700">Leader</span>
     </span>
+    <span class="admin-only bg-blue-100 inline-flex items-center gap-1 p-1">
+      <%= f.check_box :is_primary,
+                      class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
+      <span class="text-sm font-medium text-gray-700">Primary</span>
+    </span>
   <% end %>
   <%= link_to_remove_association "✖",
                                  f,

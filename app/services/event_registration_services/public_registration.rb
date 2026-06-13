@@ -218,7 +218,7 @@ module EventRegistrationServices
 
       if sector_ids.any?
         sectors = Sector.where(id: sector_ids)
-        person.sectors = (person.sectors + sectors).uniq
+        assign_primary_sectors(person, sectors)
         organization.sectors = (organization.sectors + sectors).uniq if organization
       end
 
@@ -226,6 +226,13 @@ module EventRegistrationServices
         categories = Category.where(id: category_ids)
         person.categories = (person.categories + categories).uniq
         organization.categories = (organization.categories + categories).uniq if organization
+      end
+    end
+
+    def assign_primary_sectors(person, sectors)
+      sectors.each do |sector|
+        item = person.sectorable_items.find_or_initialize_by(sector: sector)
+        item.update!(is_primary: true)
       end
     end
 

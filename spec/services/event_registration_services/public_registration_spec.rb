@@ -24,6 +24,41 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
+  describe "primary service area tagging" do
+    let!(:primary_sector) { create(:sector, name: "Healthcare") }
+    let!(:other_sector) { create(:sector, name: "Education") }
+
+    it "tags the selected primary service area sectors as primary on the person" do
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+        )
+      )
+
+      expect(result.success?).to be true
+      person = result.event_registration.registrant
+      primary_item = person.sectorable_items.find_by(sector: primary_sector)
+      expect(primary_item.is_primary).to be true
+    end
+
+    it "marks an existing additional sector as primary when later selected" do
+      person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
+      person.sectorable_items.create!(sector: primary_sector, is_primary: false)
+
+      described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+        )
+      )
+
+      expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+    end
+  end
+
   describe "re-registration after cancellation" do
     let(:person) { create(:person, first_name: "Jane", last_name: "Doe", email: "jane@example.com") }
     let!(:cancelled_registration) do
