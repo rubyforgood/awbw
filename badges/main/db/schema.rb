@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_190000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1204,6 +1204,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
     t.string "email_type"
     t.string "encrypted_password", default: "", null: false
     t.integer "failed_attempts", default: 0, null: false
+    t.bigint "favorite_event_id"
     t.string "first_name", default: ""
     t.boolean "inactive", default: false
     t.string "last_name", default: ""
@@ -1240,6 +1241,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["created_by_id"], name: "index_users_on_created_by_id"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["favorite_event_id"], name: "index_users_on_favorite_event_id"
     t.index ["person_id"], name: "index_users_on_person_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
@@ -1635,6 +1637,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
   add_foreign_key "user_forms", "users"
   add_foreign_key "user_permissions", "permissions"
   add_foreign_key "user_permissions", "users"
+  add_foreign_key "users", "events", column: "favorite_event_id"
   add_foreign_key "users", "organizations", column: "agency_id"
   add_foreign_key "users", "people"
   add_foreign_key "users", "users", column: "created_by_id"

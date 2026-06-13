@@ -9,6 +9,7 @@ RSpec.describe User do
     subject { create(:user) }
 
     it { should belong_to(:person).optional }
+    it { should belong_to(:favorite_event).class_name("Event").optional }
     it { should have_many(:workshops) }
     it { should have_many(:workshop_logs) }
     it { should have_many(:reports) }

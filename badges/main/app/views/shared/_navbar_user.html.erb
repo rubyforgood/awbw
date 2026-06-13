@@ -73,6 +73,14 @@
       <% end %>
     <% end %>
 
+    <% if user&.favorite_event && allowed_to?(:dashboard?, user.favorite_event) %>
+      <%= link_to dashboard_event_path(user.favorite_event),
+                  class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 space-x-2" do %>
+        <i class="fas fa-calendar-day"></i>
+        <span>My favorite event</span>
+      <% end %>
+    <% end %>
+
     <% if allowed_to?(:personal?, Bookmark) %>
       <%= link_to personal_bookmarks_path,
                   class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 space-x-2" do %>

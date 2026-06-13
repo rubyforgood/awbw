@@ -39,6 +39,7 @@ class SearchController < ApplicationController
       "user"     => User,
       "workshop" => Workshop,
       "organization" => Organization,
+      "event" => Event,
       "event_registration" => EventRegistration
     }[model_param]
   end
