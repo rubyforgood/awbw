@@ -9,15 +9,15 @@
   <%# Centered title block %>
   <div class="text-center mb-8">
     <%= link_to @event.title, edit_event_path(@event), class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
-    <h1 class="text-3xl font-bold text-gray-900 mt-1 flex items-center justify-center gap-2">
-      <i class="fa-solid fa-chart-simple text-blue-600"></i>
-      Dashboard
-    </h1>
     <% if @event.start_date.present? %>
-      <p class="text-sm text-gray-500 mt-2">
+      <p class="text-sm text-gray-500 mt-1">
         <%= @event.date_range %>
       </p>
     <% end %>
+    <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
+      <i class="fa-solid fa-chart-simple text-blue-600"></i>
+      Dashboard
+    </h1>
   </div>
 
   <%# Quick links: registration forms and bulk payment. Each form link is gated by
