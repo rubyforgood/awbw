@@ -93,6 +93,27 @@ RSpec.describe "shared/_navbar", type: :view do
     end
   end
 
+  context "when admin has multiple active affiliations" do
+    before do
+      create(:person, user: admin_user)
+      admin_user.reload
+      allow(view).to receive(:current_user).and_return(admin_user)
+      allow(view).to receive(:user_signed_in?).and_return(true)
+      allow(view).to receive(:allowed_to?).and_return(true)
+      affiliations = [
+        create(:affiliation, organization: create(:organization, name: "Org Alpha")),
+        create(:affiliation, organization: create(:organization, name: "Org Beta"))
+      ]
+      assign(:current_user_active_affiliations, affiliations)
+      render_nav
+    end
+
+    it "shows an organization link per affiliation, each labelled with its name" do
+      expect(rendered).to have_css("a[href]", text: /My organization\s+\(Org Alpha\)/)
+      expect(rendered).to have_css("a[href]", text: /My organization\s+\(Org Beta\)/)
+    end
+  end
+
   context "when in staging environment" do
     before do
       allow(ENV).to receive(:[]).and_call_original
