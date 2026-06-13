@@ -9,7 +9,7 @@
   multi_day = event.multi_day?
   detail_rows = [
     { label: multi_day ? "Dates" : "Date", value: event_dates_detail_label(event), note: (multi_day ? "(must attend both days)" : nil) },
-    { label: multi_day ? "Times" : "Time", value: event_times_label(event), note: (multi_day ? "both days" : nil) },
+    { label: multi_day ? "Times" : "Time", value: event_times_label(event), note: (multi_day ? "(both days)" : nil) },
     { label: "Platform", value: event_platform_label(event) },
     { label: "Location", value: event_location_label(event) },
     { label: "Fee", value: event_fee_label(event) },

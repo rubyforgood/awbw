@@ -110,8 +110,19 @@
   <% end %>
 
   <% if @event.autoshow_date || @event.autoshow_time %>
-    <div class="font-bold text-blue-900 uppercase" style="font-family: Lato, sans-serif; font-size: 35px">
-      <%= @event.times(display_day: @event.autoshow_date, display_date: @event.autoshow_date, styled: true) %>
+    <%# Date is the headline (upper-cased, no weekday, includes the year); the
+        time sits smaller below in natural case so am/pm read lowercase. %>
+    <div>
+      <% if @event.autoshow_date %>
+        <div class="font-bold text-blue-900 uppercase" style="font-family: Lato, sans-serif; font-size: 35px">
+          <%= event_dates_label(@event) %>
+        </div>
+      <% end %>
+      <% if @event.autoshow_time %>
+        <div class="font-bold text-blue-900 mt-2" style="font-family: Lato, sans-serif; font-size: 24px">
+          <%= event_times_label(@event) %>
+        </div>
+      <% end %>
     </div>
   <% end %>
 
