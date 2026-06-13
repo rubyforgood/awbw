@@ -1,4 +1,24 @@
 module EventHelper
+  # The special free-text option label that reveals a "please specify" input.
+  OTHER_OPTION_PREFIX = "Other"
+
+  # True when an option label is the special free-text "Other" choice.
+  def other_option?(label)
+    label.to_s.strip.casecmp?(OTHER_OPTION_PREFIX)
+  end
+
+  # True when a stored answer represents the "Other" option being chosen. Works
+  # for both single answers (a string) and multi-select answers (an array).
+  def other_option_selected?(value)
+    Array(value).any? { |v| v.to_s == OTHER_OPTION_PREFIX || v.to_s.start_with?("#{OTHER_OPTION_PREFIX}:") }
+  end
+
+  # Extracts the user's custom text from a stored "Other: <text>" answer.
+  def other_option_text(value)
+    answer = Array(value).find { |v| v.to_s.start_with?(OTHER_OPTION_PREFIX) }
+    answer.to_s.delete_prefix(OTHER_OPTION_PREFIX).delete_prefix(":").strip
+  end
+
   # Splits an ActionText rich text into two HTML-safe fragments by character length.
   # Splits at the nearest block-element boundary after `split_length` plain-text characters.
   # Returns [top_html, bottom_html].

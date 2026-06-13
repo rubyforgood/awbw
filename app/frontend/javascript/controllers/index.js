@@ -87,6 +87,9 @@ application.register("inactive-toggle", InactiveToggleController)
 import OptimisticBookmarkController from "./optimistic_bookmark_controller"
 application.register("optimistic-bookmark", OptimisticBookmarkController)
 
+import OtherOptionController from "./other_option_controller"
+application.register("other-option", OtherOptionController)
+
 import OrgToggleController from "./org_toggle_controller"
 application.register("org-toggle", OrgToggleController)
 
