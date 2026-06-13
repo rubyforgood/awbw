@@ -128,7 +128,7 @@ module Events
 
       person.set_payment_processor :stripe
 
-      person.payment_processor.checkout(
+      checkout_session = person.payment_processor.checkout(
         mode: "payment",
         metadata: metadata,
         payment_intent_data: { metadata: metadata },
@@ -143,6 +143,9 @@ module Events
         success_url: registration_ticket_url(registration.slug, checkout: "success"),
         cancel_url: registration_ticket_url(registration.slug, checkout: "cancelled")
       )
+
+      registration.update!(checkout_session_id: checkout_session.id)
+      checkout_session
     end
 
     def set_event
