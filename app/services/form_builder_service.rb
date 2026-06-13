@@ -101,6 +101,17 @@ class FormBuilderService
     end
   end
 
+  # Built-in section keys that currently have fields on the form. This — not the
+  # stored `sections` column — is the source of truth for which sections are
+  # present, so add/remove stays consistent with the edit-sections checkboxes
+  # (which are rendered from the fields) even if the column drifts.
+  def self.present_section_keys(form)
+    group_to_key = SECTION_GROUPS.flat_map { |key, groups| groups.map { |group| [ group, key ] } }.to_h
+    # pluck runs a fresh query rather than reading (and caching) the association,
+    # so repeated calls within a single update see deletions made between them.
+    form.form_fields.pluck(:section).filter_map { |section| group_to_key[section] }.uniq
+  end
+
   # Ordered list of sections for the edit-sections page. Each entry is a hash
   # with a :kind of :builtin or :custom. Built-in sections carry their :label,
   # section :key, and :included state; custom (user-added) sections carry the
@@ -162,22 +173,19 @@ class FormBuilderService
   # user unchecked; each such header and the questions under it are deleted.
   def self.update_sections!(form, new_sections, remove_custom_section_ids: [])
     new_sections = new_sections.map(&:to_sym)
-    old_sections = (form.sections || []).map(&:to_sym)
+    old_sections = present_section_keys(form)
 
     remove_custom_sections!(form, remove_custom_section_ids)
 
     added = new_sections - old_sections
     removed = old_sections - new_sections
 
-    # Remove fields and headers belonging to removed sections
+    # Remove every field belonging to a removed section by its section group.
+    # Keying off the group (not the canonical field_identifier or default header
+    # name) deletes renamed headers too, so nothing is left orphaned to resurface
+    # as a duplicate when the section is added back.
     removed.each do |key|
-      identifiers = SECTION_FIELD_IDENTIFIERS.fetch(key)
-      form.form_fields.where(field_identifier: identifiers).destroy_all
-
-      headers = SECTION_HEADERS.fetch(key)
-      if headers.any?
-        form.form_fields.where(name: headers, answer_type: :group_header).destroy_all
-      end
+      form.form_fields.where(section: SECTION_GROUPS.fetch(key)).destroy_all
     end
 
     # Build fields for newly checked sections (created at the end for now), then

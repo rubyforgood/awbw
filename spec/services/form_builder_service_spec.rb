@@ -271,7 +271,8 @@ RSpec.describe FormBuilderService do
       next_section = form.form_fields.create!(name: "Background Information", answer_type: :group_header,
                                               status: :active, position: 102, section: "background", required: false)
 
-      described_class.update_sections!(form, %i[person_identifier], remove_custom_section_ids: [ header.id ])
+      described_class.update_sections!(form, %i[person_identifier person_background],
+                                       remove_custom_section_ids: [ header.id ])
 
       expect(FormField.where(id: [ header.id, question.id ])).to be_empty
       expect(FormField.where(id: next_section.id)).to exist
@@ -285,6 +286,63 @@ RSpec.describe FormBuilderService do
       described_class.update_sections!(form, %i[person_identifier])
 
       expect(FormField.where(id: header.id)).to exist
+    end
+
+    it "removes a section's header even after it has been renamed" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier scholarship]).call
+      form.form_fields.find_by(answer_type: :group_header, name: "Scholarship Application")
+          .update!(name: "Funding Help")
+
+      described_class.update_sections!(form, %i[person_identifier])
+
+      form.reload
+      expect(form.form_fields.where(answer_type: :group_header, section: "scholarship")).to be_empty
+    end
+
+    it "does not duplicate a header when a renamed section is removed then re-added" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier consent]).call
+      form.form_fields.find_by(answer_type: :group_header, name: "Consent").update!(name: "Agreement")
+
+      described_class.update_sections!(form, %i[person_identifier])
+      described_class.update_sections!(form, %i[person_identifier consent])
+
+      form.reload
+      expect(form.form_fields.where(answer_type: :group_header, section: "consent").count).to eq(1)
+      expect(form.form_fields.where(field_identifier: "communication_consent").count).to eq(1)
+    end
+
+    it "does not re-add fields when a section already present is submitted again" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier consent]).call
+      consent_count = form.form_fields.where(section: "consent").count
+
+      # Column drift: the stored sections list lost an entry that still has fields.
+      form.update_column(:sections, %w[person_identifier])
+      described_class.update_sections!(form, %i[person_identifier consent])
+
+      form.reload
+      expect(form.form_fields.where(section: "consent").count).to eq(consent_count)
+    end
+  end
+
+  describe ".present_section_keys" do
+    it "returns the built-in section keys that have fields on the form" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier consent]).call
+      expect(described_class.present_section_keys(form)).to contain_exactly(:person_identifier, :consent)
+    end
+
+    it "reflects fields present even when a header has been renamed" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier consent]).call
+      form.form_fields.find_by(answer_type: :group_header, name: "Consent").update!(name: "Agreement")
+
+      expect(described_class.present_section_keys(form)).to include(:consent)
+    end
+
+    it "ignores custom sections that are not built-in groups" do
+      form = described_class.new(name: "Test", sections: %i[person_identifier]).call
+      form.form_fields.create!(name: "Custom", answer_type: :group_header,
+                               status: :active, position: 100, required: false)
+
+      expect(described_class.present_section_keys(form)).to contain_exactly(:person_identifier)
     end
   end
 
