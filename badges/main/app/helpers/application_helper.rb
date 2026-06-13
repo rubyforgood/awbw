@@ -27,7 +27,7 @@ module ApplicationHelper
     "{{event_platform}}" => [ "Virtual platform", "Zoom" ],
     "{{event_location}}" => [ "In-person location", "Los Angeles, CA" ],
     "{{event_month_year}}" => [ "Event month and year", "July 2026" ],
-    "{{registration_close}}" => [ "Registration close date", "July 20th at 9am PST" ]
+    "{{registration_close}}" => [ "Registration close date", "July 20 at 9am PST" ]
   }.freeze
 
   # Render a form header, filling event-driven tokens (see FORM_HEADER_TOKENS) from
@@ -52,6 +52,21 @@ module ApplicationHelper
   def form_header_uses_tokens?(form)
     header = form&.header.to_s
     FORM_HEADER_TOKENS.keys.any? { |token| header.include?(token) }
+  end
+
+  # Weekday-prefixed date for the registration details panel, without the year
+  # (the year lives in the page hero) — e.g. "Wednesday, August 12" or
+  # "Thursday-Friday, July 23-24". Nil when the event has no start date.
+  def event_dates_detail_label(event)
+    return unless event&.start_date
+    s = event.start_date.in_time_zone(Time.zone)
+    e = (event.end_date || event.start_date).in_time_zone(Time.zone)
+    return s.strftime("%A, %B %-d") if s.to_date == e.to_date
+    if s.year == e.year && s.month == e.month
+      "#{s.strftime("%A")}-#{e.strftime("%A")}, #{s.strftime("%B %-d")}-#{e.strftime("%-d")}"
+    else
+      "#{s.strftime("%A, %B %-d")} - #{e.strftime("%A, %B %-d")}"
+    end
   end
 
   # Event date or date range as plain text (e.g. "July 23-24, 2026"), mirroring the
@@ -93,10 +108,12 @@ module ApplicationHelper
   end
 
   # Virtual platform label (e.g. "Zoom"), only for events with a videoconference
-  # link configured; nil otherwise (in-person or unset).
+  # link configured; nil otherwise (in-person or unset). Uses the event's own
+  # label, falling back to the platform name derived from the link's host when
+  # the label is blank.
   def event_platform_label(event)
     return unless event&.videoconference_url.present?
-    event.videoconference_label.presence
+    event.videoconference_label.presence || event.decorate.videoconference_domain
   end
 
   # In-person location name (e.g. "Los Angeles, CA"), or nil when the event has no
@@ -105,17 +122,33 @@ module ApplicationHelper
     event&.location&.name.presence
   end
 
-  # Registration close date for form-header interpolation, e.g.
-  # "July 20th at 9am PST": ordinal day, no year, compact time (minutes only
-  # when not on the hour). Nil when there's no close date.
+  # Registration close date for form-header interpolation and the details panel,
+  # e.g. "July 20 at 9am PST": plain day (no ordinal), no year, compact time
+  # (minutes only when not on the hour). Nil when there's no close date. The
+  # date and time parts are split out so the details panel can grey out the time.
   def event_registration_close_label(event)
+    return unless event&.registration_close_date
+    "#{event_registration_close_date_label(event)} #{event_registration_close_time_label(event)}"
+  end
+
+  # Just the day portion of the registration close (e.g. "July 20"), or nil.
+  def event_registration_close_date_label(event)
+    close = event&.registration_close_date
+    return unless close
+    close.in_time_zone(Time.zone).strftime("%B %-d")
+  end
+
+  # Just the time portion of the registration close, prefixed with "at" and
+  # carrying the zone (e.g. "at 9am PST"); minutes hidden on the hour. Nil when
+  # there's no close date.
+  def event_registration_close_time_label(event)
     close = event&.registration_close_date
     return unless close
     local = close.in_time_zone(Time.zone)
     time = local.strftime("%-l")
     time += ":#{local.strftime("%M")}" unless local.strftime("%M") == "00"
     time += local.strftime("%P")
-    "#{local.strftime("%B")} #{local.day.ordinalize} at #{time} #{local.strftime("%Z")}"
+    "at #{time} #{local.strftime("%Z")}"
   end
 
   # Default registration close datetime suggested on the event form: 9am on the

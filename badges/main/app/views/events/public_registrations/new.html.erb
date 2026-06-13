@@ -1,5 +1,8 @@
 <% content_for(:page_bg_class, "public") %>
 
+<%# ---- SOCIAL SHARE SIDEBAR ---- %>
+<%= render "events/social_share_sidebar", share_url: event_url(@event), share_title: @event.title %>
+
 <div class="max-w-3xl mx-auto px-4">
   <div class="flex flex-wrap items-center gap-2 pt-4">
     <%= link_to event_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
@@ -10,7 +13,7 @@
         <% if allowed_to?(:edit?, @form) %>
           <%= link_to "Edit form", edit_form_path(@form, event_id: @event.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 admin-only bg-blue-100" %>
         <% end %>
-        <%= link_to "Dashboard", dashboard_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 admin-only bg-blue-100" %>
+        <%= link_to "Edit event", edit_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 admin-only bg-blue-100" %>
       </div>
     <% end %>
   </div>
@@ -20,6 +23,11 @@
 
   <%# ---- EVENT HEADER ---- %>
   <div class="text-center mb-8">
+    <%# Organization logo leads the page so the publisher's identity (and the
+        "art transforming trauma" tagline) establishes trust before the event
+        and the registration ask. The color tagline lockup reads on the white
+        page; the white reversed mark no longer appears in the purple card. %>
+    <%= image_tag("logo-with-tagline.png", alt: "A Window Between Worlds — art transforming trauma", class: "mx-auto mb-6 block h-12 w-auto") %>
     <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
       <p class="text-lg sm:text-xl font-bold uppercase tracking-[0.2em] text-accent mb-3" style="font-family: 'Telefon Bold', sans-serif"><%= @event.pre_title %></p>
     <% end %>
@@ -27,27 +35,36 @@
       <%= link_to @event.title, event_path(@event), class: "hover:underline decoration-2 underline-offset-4" %>
     </h1>
 
-    <div class="font-bold text-blue-900 uppercase text-2xl sm:text-3xl mb-4" style="font-family: Lato, sans-serif">
-      <%= @event.times(display_day: true, display_date: true, styled: true) %>
+    <%# Date is upper-cased for hero emphasis (no weekday, includes the year);
+        the time line keeps natural case so am/pm read lowercase. %>
+    <div class="font-bold text-blue-900 uppercase text-2xl sm:text-3xl" style="font-family: Lato, sans-serif">
+      <%= event_dates_label(@event) %>
+    </div>
+    <div class="font-bold text-blue-900 text-lg sm:text-xl mt-2 mb-4" style="font-family: Lato, sans-serif">
+      <%= event_times_label(@event) %>
     </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-2.5">
-      <% if @event.labelled_cost.present? %>
-        <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
-          <i class="fa-solid fa-ticket text-blue-500"></i><%= @event.labelled_cost %>
-        </span>
-      <% end %>
-      <% if @event.location.present? %>
-        <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
-          <i class="fa-solid fa-location-dot text-blue-500"></i><%= @event.location.name %>
-        </span>
-      <% end %>
-      <% if @event.videoconference_url.present? && @event.autoshow_videoconference_label && @event.videoconference_label.present? %>
-        <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
-          <i class="fa-solid fa-video text-blue-500"></i><%= @event.videoconference_label %>
-        </span>
-      <% end %>
-    </div>
+    <%# Cost / location / platform badges. Hidden when the structured details
+        panel is enabled — the panel owns those facts, so they aren't repeated. %>
+    <% unless @event.autoshow_registration_details? %>
+      <div class="flex flex-wrap items-center justify-center gap-2.5">
+        <% if @event.labelled_cost.present? %>
+          <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
+            <i class="fa-solid fa-ticket text-blue-500"></i><%= @event.labelled_cost %>
+          </span>
+        <% end %>
+        <% if @event.location.present? %>
+          <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
+            <i class="fa-solid fa-location-dot text-blue-500"></i><%= @event.location.name %>
+          </span>
+        <% end %>
+        <% if @event.videoconference_url.present? && @event.autoshow_videoconference_label && @event.videoconference_label.present? %>
+          <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
+            <i class="fa-solid fa-video text-blue-500"></i><%= @event.videoconference_label %>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 
   <%# ---- REGISTRATION FORM CARD ---- %>
@@ -55,20 +72,17 @@
 
     <%# Card Header %>
     <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
-      <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
-        <div class="shrink-0">
-          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
-        </div>
-        <div class="min-w-0">
-          <h2 class="text-xl font-semibold tracking-wide leading-tight">Registration</h2>
-          <p class="text-sm text-blue-200">Reserve your spot.</p>
-        </div>
+      <div class="min-w-0">
+        <h2 class="text-xl font-semibold tracking-wide leading-tight"><%= @form.display_name %></h2>
       </div>
       <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
 
     <%# Card Body %>
     <div class="px-6 sm:px-8 py-7">
+      <% if @event.autoshow_registration_details? %>
+        <%= render "events/public_registrations/details", event: @event %>
+      <% end %>
       <%= render "forms/header", form: @form, event: @event %>
 
       <% if flash[:alert] %>

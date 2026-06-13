@@ -12,9 +12,31 @@ RSpec.describe EventDecorator do
       expect(event.videoconference_domain).to eq("Google")
     end
 
+    it "uses the second-to-last label, ignoring other subdomains" do
+      event = build(:event, videoconference_url: "https://abc.meet.com/x").decorate
+      expect(event.videoconference_domain).to eq("Meet")
+    end
+
     it "returns 'video call' for invalid URLs" do
       event = build(:event, videoconference_url: "not a url").decorate
       expect(event.videoconference_domain).to eq("video call")
+    end
+  end
+
+  describe "#multi_day?" do
+    it "is true when start and end fall on different days" do
+      event = build(:event, start_date: Time.zone.local(2026, 7, 23, 9), end_date: Time.zone.local(2026, 7, 24, 16)).decorate
+      expect(event.multi_day?).to be(true)
+    end
+
+    it "is false for a same-day event" do
+      event = build(:event, start_date: Time.zone.local(2026, 8, 12, 9), end_date: Time.zone.local(2026, 8, 12, 12)).decorate
+      expect(event.multi_day?).to be(false)
+    end
+
+    it "is false when there is no end date" do
+      event = build(:event, start_date: Time.zone.local(2026, 8, 12, 9), end_date: nil).decorate
+      expect(event.multi_day?).to be(false)
     end
   end
 

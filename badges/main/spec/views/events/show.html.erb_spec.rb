@@ -36,6 +36,23 @@ RSpec.describe "events/show", type: :view do
     expect(rendered).to have_content("Event ended") # event end_date is in the past
   end
 
+  it "shows the date with the year and no weekday" do
+    render
+
+    expect(rendered).to have_content("January 15, 2024")
+    expect(rendered).not_to have_content("Monday") # Jan 15, 2024 is a Monday
+  end
+
+  it "hides the time independently when autoshow_time is off" do
+    event.update!(autoshow_time: false)
+    assign(:event, event.decorate)
+
+    render
+
+    expect(rendered).to have_content("January 15") # date still shows
+    expect(rendered).not_to have_content("10 am")  # time hidden
+  end
+
   context "when unpublished with future dates" do
     let(:event) do
       create(:event,

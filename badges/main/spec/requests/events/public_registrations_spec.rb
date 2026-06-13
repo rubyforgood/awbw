@@ -165,6 +165,109 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Minimum of 5 words.")
     end
 
+    it "renders a structured details panel from known event data when enabled" do
+      pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+      event.update!(
+        autoshow_registration_details: true,
+        start_date: pacific.local(2026, 7, 23, 9),
+        end_date: pacific.local(2026, 7, 24, 16, 30),
+        cost_cents: 150000,
+        videoconference_url: "https://zoom.us/j/123",
+        videoconference_label: "Zoom"
+      )
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Platform:")
+      expect(response.body).to include("Zoom")
+      expect(response.body).to include("Fee:")
+      expect(response.body).to include("$1,500")
+      expect(response.body).to include("Registration closes")
+    end
+
+    it "pluralizes the date and time labels for a multi-day event" do
+      pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+      event.update!(autoshow_registration_details: true,
+                    start_date: pacific.local(2026, 7, 23, 9),
+                    end_date: pacific.local(2026, 7, 24, 16, 30))
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Dates:")
+      expect(response.body).to include("Times:")
+    end
+
+    it "uses singular date and time labels for a single-day event" do
+      pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+      event.update!(autoshow_registration_details: true,
+                    start_date: pacific.local(2026, 8, 12, 9),
+                    end_date: pacific.local(2026, 8, 12, 12))
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Date:")
+      expect(response.body).to include("Time:")
+      expect(response.body).not_to include("Dates:")
+      expect(response.body).not_to include("Times:")
+    end
+
+    it "renders the event's date and fee hints as grey parentheticals" do
+      event.update!(autoshow_registration_details: true,
+                    cost_cents: 150000,
+                    hint_dates: "must attend both days",
+                    hint_registration_cost: "due within 3 weeks of registration")
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("(must attend both days)")
+      expect(response.body).to include("(due within 3 weeks of registration)")
+    end
+
+    it "omits the hint parentheticals when the event has none" do
+      event.update!(autoshow_registration_details: true, cost_cents: 150000,
+                    hint_dates: nil, hint_registration_cost: nil)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).not_to include("must attend both days")
+      expect(response.body).not_to include("due within 3 weeks")
+    end
+
+    it "hides the duplicate hero badges when the details panel is shown" do
+      event.update!(autoshow_registration_details: true, cost_cents: 150000)
+
+      get new_event_public_registration_path(event)
+
+      # The fa-ticket cost badge only lives in the hero; the panel owns the fee now.
+      expect(response.body).not_to include("fa-ticket")
+      expect(response.body).to include("Fee:")
+    end
+
+    it "keeps the hero badges when the details panel is off" do
+      event.update!(autoshow_registration_details: false, cost_cents: 150000)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("fa-ticket")
+    end
+
+    it "omits detail rows the event has no data for" do
+      event.update!(autoshow_registration_details: true, cost_cents: nil, videoconference_url: nil, location: nil)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).not_to include("Platform:")
+      expect(response.body).not_to include("Fee:")
+    end
+
+    it "hides the details panel when the event has not enabled it" do
+      event.update!(autoshow_registration_details: false, cost_cents: 150000)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).not_to include("Fee:")
+    end
+
     it "renders a dynamic-option field switched to single choice as radio buttons" do
       # primary_service_area sources its options dynamically from Sector
       # (it stores no answer options of its own). When such a field is changed
