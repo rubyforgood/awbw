@@ -141,8 +141,9 @@ module ApplicationHelper
     "primary_age_group" => "AgeRange"
   }.freeze
 
-  # Returns the selectable options for a form field as [ label, value ] pairs,
-  # or nil when the field has no dynamic source (callers fall back to the
+  # Returns the selectable options for a form field as [ label, value, description ]
+  # tuples (description is nil for sectors and present only for categories that have
+  # one), or nil when the field has no dynamic source (callers fall back to the
   # field's own stored answer options). Shared by the public form's radio and
   # checkbox rendering so a dynamic field renders the same options regardless
   # of which single/multiple choice type it was set to.
@@ -152,7 +153,7 @@ module ApplicationHelper
       Sector.published.order(:name).map { |sector| [ sector.name, sector.id.to_s ] }
     when *DYNAMIC_FIELD_CATEGORY_TYPES.keys
       type = CategoryType.find_by(name: DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
-      (type&.categories&.published&.order(:position, :name) || []).map { |category| [ category.name, category.id.to_s ] }
+      (type&.categories&.published&.order(:position, :name) || []).map { |category| [ category.name, category.id.to_s, category.description ] }
     end
   end
 

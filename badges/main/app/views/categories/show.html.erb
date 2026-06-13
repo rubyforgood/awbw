@@ -29,6 +29,12 @@
               </div>
 
           </div>
+          <% if @category.description.present? %>
+            <div class="mb-3">
+              <p class="font-bold text-gray-700">Description:</p>
+              <p class="text-gray-900"><%= @category.description %></p>
+            </div>
+          <% end %>
         </div>
       </div>
 </div>
