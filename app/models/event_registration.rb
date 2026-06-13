@@ -208,8 +208,12 @@ class EventRegistration < ApplicationRecord
     allocations_sum >= event.cost_cents.to_i
   end
 
+  def payments_sum
+    allocations.where(source_type: Payment.polymorphic_name).sum(:amount)
+  end
+
   def partially_paid?
-    !paid_in_full? && allocations_sum.to_i.positive?
+    !paid_in_full? && payments_sum.to_i.positive?
   end
 
   def joinable?

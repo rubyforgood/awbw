@@ -434,7 +434,7 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Partial")
       end
 
-      it "shows both due and paid amounts for a partial payment" do
+      it "shows the partial badge when a payment covers part of the cost" do
         payment = create(:payment, person: person, amount_cents: 400, amount_cents_remaining: nil)
         create(:allocation, source: payment, allocatable: registration, amount: 400)
 
@@ -442,6 +442,17 @@ RSpec.describe "Events", type: :request do
 
         expect(response.body).to include("fa-circle-half-stroke")
         expect(response.body).to include("Partial · $6.00 due")
+      end
+
+      it "does not show the partial badge when only a scholarship covers part of the cost" do
+        scholarship = create(:scholarship, recipient: person, tasks_completed: true, amount_cents: 400)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 400)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("fa-circle-exclamation")
+        expect(response.body).to include("$6.00 due")
+        expect(response.body).not_to include("Partial")
       end
 
       it "shows Paid when paid in full" do

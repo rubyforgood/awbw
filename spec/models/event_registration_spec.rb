@@ -321,11 +321,18 @@ RSpec.describe EventRegistration, type: :model do
       expect(reg).not_to be_partially_paid
     end
 
-    it "returns true when some but not all of the cost is covered" do
+    it "returns true when a payment covers some but not all of the cost" do
       reg = create(:event_registration, event: event, registrant: user.person)
       payment = create(:payment, person: user.person, amount_cents: 500, amount_cents_remaining: nil)
       create(:allocation, source: payment, allocatable: reg, amount: 500)
       expect(reg).to be_partially_paid
+    end
+
+    it "returns false when only a scholarship covers part of the cost" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      scholarship = create(:scholarship, tasks_completed: true, amount_cents: 500)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 500)
+      expect(reg).not_to be_partially_paid
     end
 
     it "returns false when paid in full" do
