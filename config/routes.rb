@@ -146,6 +146,18 @@ Rails.application.routes.draw do
   public_form_lane = /registration|scholarship|scholarship_questions|ce_questions|general/
   get  "/events/:event_id/forms/:form_role/new", to: "events/public_forms#new",    as: :new_event_form, constraints: { form_role: public_form_lane }
   post "/events/:event_id/forms/:form_role",     to: "events/public_forms#create", as: :event_form,     constraints: { form_role: public_form_lane }
+
+  # --- Legacy public-form routes: only registration links were shared, so just
+  #     redirect those to the new URLs. Safe to remove once old links drain. ---
+  get "/events/:event_id/public_registration/new", to: redirect { |params, req|
+    query = req.query_string.present? ? "?#{req.query_string}" : ""
+    "/events/#{params[:event_id]}/forms/registration/new#{query}"
+  }
+  get "/events/:event_id/public_registration", to: redirect { |params, req|
+    req.params["reg"].present? ? "/submission/#{req.params['reg']}" : "/events/#{params[:event_id]}/forms/registration/new"
+  }
+  post "/events/:event_id/public_registration", to: "events/public_forms#create", defaults: { form_role: "registration" }
+
   resources :people do
     collection do
       get :check_duplicates
