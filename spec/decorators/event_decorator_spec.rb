@@ -18,15 +18,20 @@ RSpec.describe EventDecorator do
     end
   end
 
-  describe "#times styled" do
-    it "includes the year for a single-day event" do
-      event = build(:event, start_date: Time.zone.local(2026, 8, 12, 9), end_date: Time.zone.local(2026, 8, 12, 12)).decorate
-      expect(event.times(display_day: true, display_date: true, styled: true)).to include("2026")
+  describe "#multi_day?" do
+    it "is true when start and end fall on different days" do
+      event = build(:event, start_date: Time.zone.local(2026, 7, 23, 9), end_date: Time.zone.local(2026, 7, 24, 16)).decorate
+      expect(event.multi_day?).to be(true)
     end
 
-    it "includes the year for a multi-day event" do
-      event = build(:event, start_date: Time.zone.local(2026, 7, 23, 9), end_date: Time.zone.local(2026, 7, 24, 16)).decorate
-      expect(event.times(display_day: true, display_date: true, styled: true)).to include("2026")
+    it "is false for a same-day event" do
+      event = build(:event, start_date: Time.zone.local(2026, 8, 12, 9), end_date: Time.zone.local(2026, 8, 12, 12)).decorate
+      expect(event.multi_day?).to be(false)
+    end
+
+    it "is false when there is no end date" do
+      event = build(:event, start_date: Time.zone.local(2026, 8, 12, 9), end_date: nil).decorate
+      expect(event.multi_day?).to be(false)
     end
   end
 

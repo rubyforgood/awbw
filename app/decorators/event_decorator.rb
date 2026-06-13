@@ -122,6 +122,15 @@ class EventDecorator < ApplicationDecorator
     )
   end
 
+  # True when the event spans more than one calendar day in the viewer's time
+  # zone. Display-derived (so it agrees with the dates actually shown), which is
+  # why it lives here rather than on the model. Drives singular/plural labels and
+  # the "both days" notes in the registration details panel.
+  def multi_day?
+    return false unless start_date && end_date
+    start_date.in_time_zone(Time.zone).to_date != end_date.in_time_zone(Time.zone).to_date
+  end
+
   def times(display_day: false, display_date: false, inline: false, styled: false)
     s = start_date.in_time_zone(Time.zone)
     e = (end_date || start_date).in_time_zone(Time.zone)
@@ -177,9 +186,8 @@ class EventDecorator < ApplicationDecorator
         time_line = "#{format_time.call(s)} - #{format_time.call(e)}"
         return h.safe_join([ date_line, h.tag.br, time_line, styled_tz ])
       else
-        # Same day: date on row 1, time range on row 2. Include the year so a
-        # single-day event reads as complete as a multi-day range.
-        date_line = "#{full_day.call(s)}, #{full_date.call(s)}, #{s.strftime('%Y')}"
+        # Same day: date on row 1, time range on row 2
+        date_line = "#{full_day.call(s)}, #{full_date.call(s)}"
         same_exact_time = (s.hour == e.hour) && (s.min == e.min)
         time_line = if same_exact_time
           "#{format_time.call(s)}"

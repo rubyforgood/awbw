@@ -27,7 +27,7 @@ module ApplicationHelper
     "{{event_platform}}" => [ "Virtual platform", "Zoom" ],
     "{{event_location}}" => [ "In-person location", "Los Angeles, CA" ],
     "{{event_month_year}}" => [ "Event month and year", "July 2026" ],
-    "{{registration_close}}" => [ "Registration close date", "July 20th at 9am PST" ]
+    "{{registration_close}}" => [ "Registration close date", "July 20 at 9am PST" ]
   }.freeze
 
   # Render a form header, filling event-driven tokens (see FORM_HEADER_TOKENS) from
@@ -52,6 +52,21 @@ module ApplicationHelper
   def form_header_uses_tokens?(form)
     header = form&.header.to_s
     FORM_HEADER_TOKENS.keys.any? { |token| header.include?(token) }
+  end
+
+  # Weekday-prefixed date for the registration details panel, without the year
+  # (the year lives in the page hero) — e.g. "Wednesday, August 12" or
+  # "Thursday-Friday, July 23-24". Nil when the event has no start date.
+  def event_dates_detail_label(event)
+    return unless event&.start_date
+    s = event.start_date.in_time_zone(Time.zone)
+    e = (event.end_date || event.start_date).in_time_zone(Time.zone)
+    return s.strftime("%A, %B %-d") if s.to_date == e.to_date
+    if s.year == e.year && s.month == e.month
+      "#{s.strftime("%A")}-#{e.strftime("%A")}, #{s.strftime("%B %-d")}-#{e.strftime("%-d")}"
+    else
+      "#{s.strftime("%A, %B %-d")} - #{e.strftime("%A, %B %-d")}"
+    end
   end
 
   # Event date or date range as plain text (e.g. "July 23-24, 2026"), mirroring the
@@ -107,9 +122,9 @@ module ApplicationHelper
     event&.location&.name.presence
   end
 
-  # Registration close date for form-header interpolation, e.g.
-  # "July 20th at 9am PST": ordinal day, no year, compact time (minutes only
-  # when not on the hour). Nil when there's no close date.
+  # Registration close date for form-header interpolation and the details panel,
+  # e.g. "July 20 at 9am PST": plain day (no ordinal), no year, compact time
+  # (minutes only when not on the hour). Nil when there's no close date.
   def event_registration_close_label(event)
     close = event&.registration_close_date
     return unless close
@@ -117,7 +132,7 @@ module ApplicationHelper
     time = local.strftime("%-l")
     time += ":#{local.strftime("%M")}" unless local.strftime("%M") == "00"
     time += local.strftime("%P")
-    "#{local.strftime("%B")} #{local.day.ordinalize} at #{time} #{local.strftime("%Z")}"
+    "#{local.strftime("%B %-d")} at #{time} #{local.strftime("%Z")}"
   end
 
   # Default registration close datetime suggested on the event form: 9am on the

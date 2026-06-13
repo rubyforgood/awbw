@@ -166,8 +166,11 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
 
     it "renders a structured details panel from known event data when enabled" do
+      pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
       event.update!(
         autoshow_registration_details: true,
+        start_date: pacific.local(2026, 7, 23, 9),
+        end_date: pacific.local(2026, 7, 24, 16, 30),
         cost_cents: 150000,
         videoconference_url: "https://zoom.us/j/123",
         videoconference_label: "Zoom"
@@ -175,13 +178,40 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       get new_event_public_registration_path(event)
 
-      expect(response.body).to include("Dates:")
-      expect(response.body).to include("Time:")
       expect(response.body).to include("Platform:")
       expect(response.body).to include("Zoom")
       expect(response.body).to include("Fee:")
       expect(response.body).to include("$1,500")
       expect(response.body).to include("Registration closes")
+    end
+
+    it "pluralizes labels and adds both-days notes for a multi-day event" do
+      pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+      event.update!(autoshow_registration_details: true,
+                    start_date: pacific.local(2026, 7, 23, 9),
+                    end_date: pacific.local(2026, 7, 24, 16, 30))
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Dates:")
+      expect(response.body).to include("Times:")
+      expect(response.body).to include("(must attend both days)")
+      expect(response.body).to include("both days")
+    end
+
+    it "uses singular labels and no both-days notes for a single-day event" do
+      pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+      event.update!(autoshow_registration_details: true,
+                    start_date: pacific.local(2026, 8, 12, 9),
+                    end_date: pacific.local(2026, 8, 12, 12))
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Date:")
+      expect(response.body).to include("Time:")
+      expect(response.body).not_to include("Dates:")
+      expect(response.body).not_to include("Times:")
+      expect(response.body).not_to include("(must attend both days)")
     end
 
     it "hides the duplicate hero badges when the details panel is shown" do

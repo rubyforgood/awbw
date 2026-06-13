@@ -1,25 +1,29 @@
 <%# Structured "at a glance" event details for the public registration page,
     built from data already on the event — dates, time, platform/location, fee,
     and registration deadline. Date and time intentionally repeat the page hero:
-    here they are plain, labeled text that's easy to read and copy/paste. Reuses
+    here they are plain, labeled text that's easy to read and copy/paste. For a
+    multi-day event the date/time rows gain a small grey "both days" note. Reuses
     the same label helpers as the form header tokens so the two stay in sync.
     Shown above the form's header intro. Locals: event. %>
 <%
+  multi_day = event.multi_day?
   detail_rows = [
-    [ "Dates", event_dates_label(event) ],
-    [ "Time", event_times_label(event) ],
-    [ "Platform", event_platform_label(event) ],
-    [ "Location", event_location_label(event) ],
-    [ "Fee", event_fee_label(event) ],
-    [ "Registration closes", event_registration_close_label(event) ]
-  ].select { |_label, value| value.present? }
+    { label: multi_day ? "Dates" : "Date", value: event_dates_detail_label(event), note: (multi_day ? "(must attend both days)" : nil) },
+    { label: multi_day ? "Times" : "Time", value: event_times_label(event), note: (multi_day ? "both days" : nil) },
+    { label: "Platform", value: event_platform_label(event) },
+    { label: "Location", value: event_location_label(event) },
+    { label: "Fee", value: event_fee_label(event) },
+    { label: "Registration closes", value: event_registration_close_label(event) }
+  ].select { |row| row[:value].present? }
 %>
 <% if detail_rows.any? %>
-  <dl class="mb-6 space-y-1.5 text-sm leading-relaxed text-gray-700">
-    <% detail_rows.each do |label, value| %>
+  <dl class="mb-6 space-y-0.5 text-base text-gray-700">
+    <% detail_rows.each do |row| %>
       <div class="flex flex-wrap gap-x-2">
-        <dt class="font-bold text-gray-900"><%= label %>:</dt>
-        <dd><%= value %></dd>
+        <dt class="font-bold text-gray-900"><%= row[:label] %>:</dt>
+        <dd>
+          <%= row[:value] %><% if row[:note] %> <span class="text-xs text-gray-400"><%= row[:note] %></span><% end %>
+        </dd>
       </div>
     <% end %>
   </dl>

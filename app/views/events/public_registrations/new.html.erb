@@ -27,8 +27,13 @@
       <%= link_to @event.title, event_path(@event), class: "hover:underline decoration-2 underline-offset-4" %>
     </h1>
 
-    <div class="font-bold text-blue-900 uppercase text-2xl sm:text-3xl mb-4" style="font-family: Lato, sans-serif">
-      <%= @event.times(display_day: true, display_date: true, styled: true) %>
+    <%# Date is upper-cased for hero emphasis (no weekday, includes the year);
+        the time line keeps natural case so am/pm read lowercase. %>
+    <div class="font-bold text-blue-900 uppercase text-2xl sm:text-3xl" style="font-family: Lato, sans-serif">
+      <%= event_dates_label(@event) %>
+    </div>
+    <div class="font-bold text-blue-900 text-2xl sm:text-3xl mb-4" style="font-family: Lato, sans-serif">
+      <%= event_times_label(@event) %>
     </div>
 
     <%# Cost / location / platform badges. Hidden when the structured details
