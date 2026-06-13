@@ -77,6 +77,11 @@ RSpec.describe "Forms", type: :request do
         get edit_sections_form_path(form, event_id: event.id)
         expect(response.body).to include(dashboard_event_path(event))
       end
+
+      it "links Edit event to that event on the questions editor" do
+        get edit_form_path(form, event_id: event.id)
+        expect(response.body).to include(edit_event_path(event))
+      end
     end
 
     it "ignores an event_id that is not connected to the form" do
@@ -191,6 +196,39 @@ RSpec.describe "Forms", type: :request do
 
   describe "GET /forms/:id (preview)" do
     before { sign_in admin }
+
+    it "links Edit event to the sole connected event" do
+      form = create(:form, :standalone)
+      event = create(:event)
+      create(:event_form, form: form, event: event)
+
+      get form_path(form)
+
+      expect(response.body).to include(edit_event_path(event))
+    end
+
+    it "shows no Edit event link when the form has no connected event" do
+      form = create(:form, :standalone)
+      get form_path(form)
+      expect(response.body).not_to include("Edit event")
+    end
+
+    it "shows no Edit event link when the form spans multiple events and none is given" do
+      form = create(:form, :standalone)
+      create(:event_form, form: form, event: create(:event))
+      create(:event_form, form: form, event: create(:event))
+      get form_path(form)
+      expect(response.body).not_to include("Edit event")
+    end
+
+    it "links Edit event to the event given by param even when the form has several" do
+      form = create(:form, :standalone)
+      event = create(:event)
+      create(:event_form, form: form, event: event)
+      create(:event_form, form: form, event: create(:event))
+      get form_path(form, event_id: event.id)
+      expect(response.body).to include(edit_event_path(event))
+    end
 
     it "renders header and field-label HTML unescaped" do
       form = create(:form, :standalone)

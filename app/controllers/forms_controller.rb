@@ -1,6 +1,6 @@
 class FormsController < ApplicationController
   before_action :set_form, only: %i[show edit update destroy reorder_field reorder_fields edit_sections update_sections]
-  before_action :set_dashboard_event, only: %i[edit edit_sections update update_sections]
+  before_action :set_dashboard_event, only: %i[show edit edit_sections update update_sections]
 
   def index
     authorize!

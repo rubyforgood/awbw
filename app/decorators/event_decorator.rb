@@ -122,6 +122,15 @@ class EventDecorator < ApplicationDecorator
     )
   end
 
+  # True when the event spans more than one calendar day in the viewer's time
+  # zone. Display-derived (so it agrees with the dates actually shown), which is
+  # why it lives here rather than on the model. Drives singular/plural labels and
+  # the "both days" notes in the registration details panel.
+  def multi_day?
+    return false unless start_date && end_date
+    start_date.in_time_zone(Time.zone).to_date != end_date.in_time_zone(Time.zone).to_date
+  end
+
   def times(display_day: false, display_date: false, inline: false, styled: false)
     s = start_date.in_time_zone(Time.zone)
     e = (end_date || start_date).in_time_zone(Time.zone)
