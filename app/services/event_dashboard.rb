@@ -361,8 +361,29 @@ class EventDashboard
       end
   end
 
+  # Every sector tagged on registrants (primary + additional), backing the
+  # "All service areas" chart. The "Primary service area" chart instead uses
+  # #primary_sectors / #primary_sector_counts, which read only the dropdown.
   def sectors
     @sectors ||= Sector.where(id: registrant_sector_ids).order(:name)
+  end
+
+  # Sectors registrants named as their single primary service area (the
+  # registration dropdown), ordered for the "Primary service area" chart.
+  def primary_sectors
+    @primary_sectors ||= Sector.where(id: primary_sector_counts.keys).order(:name)
+  end
+
+  # Distinct-registrant count per sector named as the primary service area.
+  def primary_sector_counts
+    @primary_sector_counts ||= primary_sector_registrant_ids_by_sector.transform_values(&:size)
+  end
+
+  # Registrant ids per primary sector, for the chart's per-row drill-in links.
+  def primary_sector_registrant_ids_by_sector
+    @primary_sector_registrant_ids_by_sector ||= primary_service_area_rows
+      .group_by(&:last)
+      .transform_values { |rows| rows.map(&:first).uniq }
   end
 
   # Distinct registrant count per sector.
@@ -815,9 +836,11 @@ class EventDashboard
       .pluck(:sectorable_id, :sector_id)
   end
 
-  # [ person_id, sector_id ] pairs from registrants' primary_service_area answers.
+  # [ person_id, sector_id ] pairs from registrants' primary service area answers.
+  # Read from the single-select dropdown ("primary_service_area_single"); the
+  # checkbox "primary_service_area" field collects ADDITIONAL service areas.
   def primary_service_area_rows
-    field = registration_form_field("primary_service_area")
+    field = registration_form_field("primary_service_area_single")
     return [] unless field
 
     FormAnswer
