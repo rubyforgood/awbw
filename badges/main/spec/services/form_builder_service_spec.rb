@@ -419,5 +419,23 @@ RSpec.describe FormBuilderService do
 
       expect { described_class.editable_sections(form) }.not_to raise_error
     end
+
+    it "exposes each built-in section's question fields in order" do
+      identifier = described_class.editable_sections(form).find { |e| e[:key] == :person_identifier }
+      expect(identifier[:questions].map(&:name)).to eq([ "First Name", "Last Name", "Email", "Confirm Email" ])
+    end
+  end
+
+  # The new-form page lists a section's fields before the form exists, from the
+  # hard-coded SECTION_FIELD_NAMES. This guards it against drifting from what the
+  # builder methods actually create.
+  describe "SECTION_FIELD_NAMES" do
+    FormBuilderService::SECTIONS.each_key do |key|
+      it "matches the fields #{key} actually builds" do
+        form = described_class.new(name: "Test", sections: [ key ]).call
+        built = form.form_fields.where.not(answer_type: :group_header).reorder(:position).pluck(:name)
+        expect(built).to eq(FormBuilderService::SECTION_FIELD_NAMES[key])
+      end
+    end
   end
 end

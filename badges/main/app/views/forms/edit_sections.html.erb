@@ -58,34 +58,53 @@
         <ol class="space-y-2">
           <% @editable_sections.each_with_index do |section, index| %>
             <% if section[:kind] == :custom %>
-              <li data-controller="form-section-toggle"
+              <% names = section[:questions].map(&:name) %>
+              <li data-controller="form-section-toggle expandable-card" data-expandable-card-expanded-value="false"
                   data-form-section-toggle-included-value="true">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= index + 1 %>.</span>
-                  <%= hidden_field_tag "custom_sections[]", section[:header].id %>
-                  <%= check_box_tag "kept_custom_sections[]", section[:header].id, true,
-                        class: "rounded border-gray-300 text-purple-600",
-                        data: { form_section_toggle_target: "checkbox", action: "form-section-toggle#update" } %>
-                  <span class="text-sm font-semibold text-gray-800"><%= section[:label] %></span>
-                  <span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">Custom</span>
-                </label>
+                <div class="flex items-center gap-2">
+                  <label class="flex flex-1 items-center gap-2 cursor-pointer">
+                    <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= index + 1 %>.</span>
+                    <%= hidden_field_tag "custom_sections[]", section[:header].id %>
+                    <%= check_box_tag "kept_custom_sections[]", section[:header].id, true,
+                          class: "rounded border-gray-300 text-purple-600",
+                          data: { form_section_toggle_target: "checkbox", action: "form-section-toggle#update" } %>
+                    <span class="text-sm font-semibold text-gray-800"><%= section[:label] %></span>
+                    <span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">Custom</span>
+                  </label>
+                  <% if names.any? %>
+                    <%= render "forms/field_list_toggle", count: names.size %>
+                  <% end %>
+                </div>
+                <% if names.any? %>
+                  <%= render "forms/field_list", names: names, indent: "ml-12" %>
+                <% end %>
                 <p class="hidden mt-1 ml-12 text-xs" data-form-section-toggle-target="message"></p>
               </li>
             <% else %>
-              <li data-controller="form-section-toggle"
+              <%# Included sections list their real fields; not-yet-added ones fall back to the builder's defaults. %>
+              <% names = section[:questions].map(&:name).presence || FormBuilderService.section_field_names(section[:key]) %>
+              <li data-controller="form-section-toggle expandable-card" data-expandable-card-expanded-value="false"
                   data-form-section-toggle-included-value="<%= section[:included] %>">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= index + 1 %>.</span>
-                  <input type="checkbox" name="sections[]" value="<%= section[:key] %>"
-                         class="rounded border-gray-300 text-purple-600"
-                         data-form-section-toggle-target="checkbox"
-                         data-action="form-section-toggle#update"
-                         <%= "checked" if section[:included] %>>
-                  <span class="text-sm text-gray-800"><%= section[:label] %></span>
-                  <% if section[:renamed_header].present? %>
-                    <span class="text-xs text-gray-400 italic">titled &ldquo;<%= section[:renamed_header] %>&rdquo; on the form</span>
+                <div class="flex items-center gap-2">
+                  <label class="flex flex-1 items-center gap-2 cursor-pointer">
+                    <span class="w-5 text-sm text-gray-400 tabular-nums text-right"><%= index + 1 %>.</span>
+                    <input type="checkbox" name="sections[]" value="<%= section[:key] %>"
+                           class="rounded border-gray-300 text-purple-600"
+                           data-form-section-toggle-target="checkbox"
+                           data-action="form-section-toggle#update"
+                           <%= "checked" if section[:included] %>>
+                    <span class="text-sm text-gray-800"><%= section[:label] %></span>
+                    <% if section[:renamed_header].present? %>
+                      <span class="text-xs text-gray-400 italic">titled &ldquo;<%= section[:renamed_header] %>&rdquo; on the form</span>
+                    <% end %>
+                  </label>
+                  <% if names.any? %>
+                    <%= render "forms/field_list_toggle", count: names.size %>
                   <% end %>
-                </label>
+                </div>
+                <% if names.any? %>
+                  <%= render "forms/field_list", names: names, indent: "ml-12" %>
+                <% end %>
                 <p class="hidden mt-1 ml-12 text-xs" data-form-section-toggle-target="message"></p>
               </li>
             <% end %>
