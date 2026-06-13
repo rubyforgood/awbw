@@ -246,6 +246,38 @@ roundtable = Event.find_by(title: "Leaders in Creativity: Facilitator Roundtable
 family_day = Event.find_by(title: "Family Creative Expression Day")
 # "Community Open Studio Night" and "Annual Celebration of Voices" have no registration forms — left with zero registrations
 
+puts "Creating Event Staff…"
+# Staff the flagship training (event 1) so its "Meet the staff" page has content.
+# Amy carries an event-specific bio that OVERRIDES her profile bio here, while
+# Maria has no event bio so the page falls back to her profile bio — exercising
+# both sides of the per-event bio feature. Profile bios are set so the fallback
+# (and the edit form's "showing their profile bio" preview) have something to show.
+# Updates run unconditionally so re-seeding keeps the demo bios current.
+amy_person&.update!(
+  bio: "Amy User is a Windows facilitator with a decade of experience bringing trauma-informed art practices to survivors across Los Angeles. She believes the quietest moments at the art table are often the most transformative.",
+  profile_show_bio: true
+)
+maria_j&.update!(
+  bio: "Maria Johnson coordinates community workshops and has supported AWBW programs since 2019, with a focus on youth and family groups.",
+  profile_show_bio: true
+)
+
+if facilitator_training
+  if amy_person
+    amy_staff = EventStaff.find_or_create_by!(event: facilitator_training, person: amy_person)
+    amy_staff.update!(
+      title: "Lead facilitator",
+      expected_to_attend: true,
+      bio: "For the AWBW Facilitator Training, Amy leads the two-day intensive — walking new facilitators through the full Windows model and sharing what a decade at the art table has taught her about holding space."
+    )
+  end
+
+  if maria_j
+    maria_staff = EventStaff.find_or_create_by!(event: facilitator_training, person: maria_j)
+    maria_staff.update!(title: "Facilitator", expected_to_attend: false, bio: nil)
+  end
+end
+
 registrations_data = []
 
 # --- Facilitator Training: multiple registrations from different people, extended form ---
