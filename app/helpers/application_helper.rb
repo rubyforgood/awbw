@@ -282,6 +282,34 @@ module ApplicationHelper
     form_submission_path(submission)
   end
 
+  # A friendly type name for a noticeable record, e.g. "Registration" or "Bulk
+  # payment" rather than the raw model name ("EventRegistration").
+  def noticeable_type_label(record)
+    return "Registration" if record.is_a?(EventRegistration)
+
+    if record.is_a?(FormSubmission)
+      return record.role == "bulk_payment" ? "Bulk payment" : "Form submission"
+    end
+
+    record.class.name.underscore.humanize
+  end
+
+  # A human-friendly name for a noticeable record (the registrant and event for a
+  # registration, the submitter and form for a submission, otherwise the record's
+  # own title/name), so links read as the thing rather than its model class.
+  def noticeable_label(record)
+    label = case record
+    when EventRegistration
+      [ record.registrant&.name, record.event&.title ].compact_blank.join(" · ")
+    when FormSubmission
+      [ record.person&.name, record.form&.name ].compact_blank.join(" · ")
+    else
+      record.try(:title) || record.try(:name) || record.try(:full_name)
+    end
+
+    label.presence || "##{record.id}"
+  end
+
   def search_page(params)
     params[:search] ? params[:search][:page] : 1
   end

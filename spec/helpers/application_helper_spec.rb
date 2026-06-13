@@ -361,4 +361,44 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.routable_path(submission)).to eq(form_submission_path(submission))
     end
   end
+
+  describe "#noticeable_type_label" do
+    it "names registrations and bulk payments in plain language" do
+      registration = build(:event_registration)
+      bulk = build(:form_submission, role: "bulk_payment")
+      submission = build(:form_submission, role: "registration")
+
+      expect(helper.noticeable_type_label(registration)).to eq("Registration")
+      expect(helper.noticeable_type_label(bulk)).to eq("Bulk payment")
+      expect(helper.noticeable_type_label(submission)).to eq("Form submission")
+    end
+
+    it "humanizes other model names" do
+      expect(helper.noticeable_type_label(build(:user))).to eq("User")
+    end
+  end
+
+  describe "#noticeable_label" do
+    it "describes a registration by registrant and event" do
+      person = create(:person, first_name: "Jane", last_name: "Doe")
+      event = create(:event, title: "Summer Workshop")
+      registration = create(:event_registration, registrant: person, event: event)
+
+      expect(helper.noticeable_label(registration)).to eq("#{person.name} · Summer Workshop")
+    end
+
+    it "describes a form submission by submitter and form" do
+      person = create(:person, first_name: "Jane", last_name: "Doe")
+      form = create(:form, name: "Bulk Payment")
+      submission = create(:form_submission, person: person, form: form)
+
+      expect(helper.noticeable_label(submission)).to eq("#{person.name} · Bulk Payment")
+    end
+
+    it "uses the record's own name for other models" do
+      user = build(:user)
+
+      expect(helper.noticeable_label(user)).to eq(user.name)
+    end
+  end
 end
