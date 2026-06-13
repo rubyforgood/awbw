@@ -301,12 +301,12 @@ registrations_data.each do |data|
   )
 end
 
-# Give the flagship training a full cohort so the dashboard demo has volume: top
-# up to 15 active registrants with generated people (the named scenario
-# registrants above are kept; this only fills the remainder). Emails are
-# deterministic so re-seeding is idempotent.
+# Give the flagship training its demo cohort: top up to 10 active registrants with
+# generated people (the named scenario registrants above are kept; this only fills
+# the remainder). The scholarships seed makes 6 of these 10 scholarship recipients.
+# Emails are deterministic so re-seeding is idempotent.
 if facilitator_training
-  (15 - facilitator_training.event_registrations.active.count).times do |i|
+  (10 - facilitator_training.event_registrations.active.count).times do |i|
     person = Person.find_or_create_by!(email: "facilitator.cohort.#{i + 1}@seed.example.com") do |p|
       p.first_name = Faker::Name.first_name
       p.last_name = Faker::Name.last_name
