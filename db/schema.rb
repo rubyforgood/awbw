@@ -448,14 +448,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
 
   create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.boolean "ce_credit_requested", default: false, null: false
+    t.string "checkout_session_id"
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.boolean "payment_unresolved"
     t.bigint "registrant_id", null: false
     t.boolean "scholarship_requested", default: false, null: false
     t.string "slug"
     t.string "status", default: "registered", null: false
     t.datetime "updated_at", null: false
+    t.index ["checkout_session_id"], name: "index_event_registrations_on_checkout_session_id"
     t.index ["event_id"], name: "index_event_registrations_on_event_id"
+    t.index ["payment_unresolved"], name: "index_event_registrations_on_payment_unresolved"
     t.index ["registrant_id", "event_id"], name: "index_event_registrations_on_registrant_id_and_event_id", unique: true
     t.index ["registrant_id"], name: "index_event_registrations_on_registrant_id"
     t.index ["slug"], name: "index_event_registrations_on_slug", unique: true
