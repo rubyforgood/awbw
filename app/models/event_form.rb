@@ -2,7 +2,7 @@ class EventForm < ApplicationRecord
   belongs_to :event
   belongs_to :form
 
-  ROLES = %w[registration scholarship bulk_payment ce_credit].freeze
+  ROLES = %w[registration scholarship bulk_payment ce_credit general].freeze
 
   validates :role, presence: true, inclusion: { in: ROLES }
   validates :form_id, uniqueness: { scope: [ :event_id, :role ] }

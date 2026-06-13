@@ -12,13 +12,15 @@
   <div id="<%= dropdown_id %>"
        data-dropdown-target="content"
        class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
-    <% if @event.event_forms.registration.exists? || @event.scholarship_form || @event.bulk_payment_form %>
+    <% if @event.event_forms.registration.exists? || @event.scholarship_form || @event.bulk_payment_form || @event.general_form %>
       <% if @event.event_forms.registration.exists? %>
-        <%= link_to "Public registration", new_event_registration_form_path(@event, as_visitor: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
-        <%= link_to "CE credit", new_event_ce_credit_form_path(@event, as_visitor: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+        <%= link_to "Public registration", new_event_form_path(@event, "registration", as_visitor: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
       <% end %>
       <% if @event.scholarship_form %>
-        <%= link_to "Scholarship version", new_event_scholarship_form_path(@event, as_visitor: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+        <%= link_to "Scholarship", new_event_form_path(@event, "scholarship", as_visitor: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+      <% end %>
+      <% if @event.general_form %>
+        <%= link_to "General form", new_event_form_path(@event, "general", as_visitor: true), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
       <% end %>
       <% if @event.bulk_payment_form %>
         <%= link_to "Bulk payment form", new_event_bulk_payment_path(@event), class: item_class, target: "_blank", rel: "noopener noreferrer" %>

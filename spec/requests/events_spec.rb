@@ -122,9 +122,9 @@ RSpec.describe "Events", type: :request do
       create(:event_form, event: event, form: create(:form, name: "Bulk"), role: "bulk_payment")
       get edit_event_path(event)
       expect(response.body).to include("Preview scholarship form")
-      expect(response.body).to include("scholarship_requested=true")
+      expect(response.body).to include("/events/#{event.id}/forms/scholarship/new")
       expect(response.body).to include("Preview bulk payment page")
-      expect(response.body).to include("/events/#{event.id}/bulk_payment/new")
+      expect(response.body).to include("/events/#{event.id}/forms/bulk_payment/new")
     end
 
     it "omits preview links when add-ons are disabled" do
@@ -1188,7 +1188,7 @@ RSpec.describe "Events", type: :request do
   describe "GET /show register button for signed-in users" do
     let(:registerable_event) { create(:event, :published) }
     let(:one_click_action) { "/events/#{registerable_event.id}/registrations" }
-    let(:form_path) { new_event_registration_form_path(registerable_event) }
+    let(:form_path) { new_event_form_path(registerable_event, "registration") }
 
     before { sign_in user }
 

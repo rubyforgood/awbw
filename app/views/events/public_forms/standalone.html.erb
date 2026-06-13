@@ -1,0 +1,81 @@
+<% content_for(:page_bg_class, "public") %>
+
+<div class="max-w-2xl mx-auto px-4">
+  <div class="flex flex-wrap items-center gap-2 pt-4">
+    <%= link_to event_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to event
+    <% end %>
+  </div>
+</div>
+
+<div class="max-w-2xl mx-auto pb-12 pt-6 px-4">
+  <div class="text-center mb-8">
+    <h1 class="font-black text-green-800 leading-tight text-4xl sm:text-5xl mb-5" style="font-family: Lato, sans-serif">
+      <%= link_to @event.title, event_path(@event), class: "hover:underline decoration-2 underline-offset-4" %>
+    </h1>
+    <div class="font-bold text-blue-900 uppercase text-2xl sm:text-3xl" style="font-family: Lato, sans-serif">
+      <%= @event.times(display_day: true, display_date: true, styled: true) %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
+    <div class="relative bg-gradient-to-r from-blue-900 to-blue-800 text-white px-6 sm:px-8 py-5">
+      <div class="flex items-center gap-5">
+        <div class="shrink-0">
+          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
+        </div>
+        <div>
+          <h2 class="text-xl font-semibold tracking-wide leading-tight"><%= public_form_heading %></h2>
+        </div>
+      </div>
+      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+    </div>
+
+    <div class="px-6 sm:px-8 py-7">
+      <% if flash[:alert] %>
+        <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 mb-6">
+          <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
+          <span><%= flash[:alert] %></span>
+        </div>
+      <% end %>
+
+      <% if @form.header.present? %>
+        <%= render "forms/header", form: @form, event: @event %>
+      <% end %>
+
+      <%= form_with url: public_form_submit_path, method: :post, local: true, class: "space-y-2" do |f| %>
+        <% if params[:reg].present? %>
+          <input type="hidden" name="reg" value="<%= params[:reg] %>">
+        <% end %>
+
+        <%# Honeypot %>
+        <div class="hidden" aria-hidden="true">
+          <input type="text" name="public_registration[website_url]" tabindex="-1" autocomplete="off">
+        </div>
+
+        <% @form_fields.each do |field| %>
+          <% if field.group_header? %>
+            <div class="pt-7 pb-4">
+              <h3 class="flex items-center gap-2.5 text-lg font-bold text-blue-900">
+                <span class="h-5 w-1 rounded-full bg-accent"></span><%= field.name %>
+              </h3>
+            </div>
+          <% else %>
+            <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
+            <%= render "events/public_forms/form_field", field: field, value: submitted_value %>
+          <% end %>
+        <% end %>
+
+        <div class="pt-7">
+          <%= button_tag type: "submit",
+                class: "w-full inline-flex items-center justify-center gap-2.5 rounded-xl bg-blue-900 px-6 py-3.5 text-white font-semibold text-lg shadow-lg shadow-blue-900/20 transition hover:bg-blue-800 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer" do %>
+            <i class="fa-regular fa-circle-check"></i>Submit
+          <% end %>
+          <p class="mt-3 flex items-center justify-center gap-1.5 text-xs text-gray-400">
+            <i class="fa-solid fa-lock"></i>Your information is kept private. Fields marked <span class="text-red-500 font-medium">*</span> are required.
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

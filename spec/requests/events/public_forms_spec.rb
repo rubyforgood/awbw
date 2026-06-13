@@ -13,7 +13,7 @@ RSpec.describe "Events::PublicForms", type: :request do
   before { EventForm.create!(event: event, form: form, role: "registration") }
 
   def post_registration(answer)
-    post event_registration_form_path(event),
+    post event_form_path(event, "registration"),
          params: { public_registration: { form_fields: { essay_field.id.to_s => answer } } }
   end
 
@@ -41,7 +41,7 @@ RSpec.describe "Events::PublicForms", type: :request do
     end
 
     def post_bio(answer)
-      post event_registration_form_path(event),
+      post event_form_path(event, "registration"),
            params: { public_registration: { form_fields: {
              essay_field.id.to_s => "this answer has plenty of words",
              bio_field.id.to_s => answer
@@ -74,9 +74,8 @@ RSpec.describe "Events::PublicForms", type: :request do
     before { EventForm.create!(event: event, form: scholarship_form, role: "scholarship") }
 
     def post_with_scholarship(scholarship_answer)
-      post event_registration_form_path(event),
+      post event_form_path(event, "scholarship"),
            params: {
-             scholarship_requested: "true",
              public_registration: { form_fields: {
                essay_field.id.to_s => "this answer has plenty of words",
                scholarship_essay.id.to_s => scholarship_answer
@@ -160,7 +159,7 @@ RSpec.describe "Events::PublicForms", type: :request do
 
   describe "GET new" do
     it "shows the minimum word hint below the field" do
-      get new_event_registration_form_path(event)
+      get new_event_form_path(event, "registration")
 
       expect(response.body).to include("Minimum of 5 words.")
     end
@@ -176,7 +175,7 @@ RSpec.describe "Events::PublicForms", type: :request do
              field_identifier: "primary_service_area", name: "Primary service area",
              required: false)
 
-      get new_event_registration_form_path(event)
+      get new_event_form_path(event, "registration")
 
       expect(response.body.scan(/type="radio"/).size).to be >= 2
       expect(response.body).to include(sector_a.name)
@@ -190,7 +189,7 @@ RSpec.describe "Events::PublicForms", type: :request do
              field_identifier: "primary_service_area", name: "Primary service area",
              required: false)
 
-      get new_event_registration_form_path(event)
+      get new_event_form_path(event, "registration")
 
       expect(response.body.scan(/type="checkbox"/).size).to be >= 1
       expect(response.body).to include("Healthcare")
@@ -200,7 +199,7 @@ RSpec.describe "Events::PublicForms", type: :request do
       create(:form_field, form: form, answer_type: :free_form_input_paragraph,
              name: "Bio", required: false, max_characters: 250)
 
-      get new_event_registration_form_path(event)
+      get new_event_form_path(event, "registration")
 
       expect(response.body).to include("Maximum of 250 characters.")
     end
@@ -211,7 +210,7 @@ RSpec.describe "Events::PublicForms", type: :request do
       create(:form_field, form: form, answer_type: :free_form_input_one_line,
              name: "<h2>About you</h2>", required: false)
 
-      get new_event_registration_form_path(event)
+      get new_event_form_path(event, "registration")
 
       expect(response.body).to include(%(<a href="https://awbw.org">our site</a>))
       expect(response.body).to include("<h2>About you</h2>")
@@ -221,7 +220,7 @@ RSpec.describe "Events::PublicForms", type: :request do
     it "renders the form header HTML under the title" do
       form.update!(header: "<strong>Please complete all fields below.</strong>")
 
-      get new_event_registration_form_path(event)
+      get new_event_form_path(event, "registration")
 
       expect(response.body).to include("<strong>Please complete all fields below.</strong>")
     end
@@ -248,7 +247,7 @@ RSpec.describe "Events::PublicForms", type: :request do
       create(:form_field, form: form, answer_type: :group_header, name: "<strong>Your details</strong>")
       create(:form_field, form: form, answer_type: :free_form_input_one_line, name: "<em>Name</em>", required: false)
 
-      get event_registration_form_path(event, person_id: person.id)
+      get event_form_path(event, "registration", person_id: person.id)
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("<strong>Your details</strong>")

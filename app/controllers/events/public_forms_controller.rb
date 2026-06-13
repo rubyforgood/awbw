@@ -1,10 +1,15 @@
 module Events
   class PublicFormsController < ApplicationController
-    HEADINGS = {
-      "registration" => "Registration",
-      "scholarship" => "Scholarship application",
-      "bulk_payment" => "Bulk payment",
-      "ce_credit" => "Continuing education credit"
+    # Each public form lane maps to a presentation + behavior. `mode`:
+    #   :register   — render the registration form (+ scholarship section), create/update an EventRegistration
+    #   :addon      — render a single role form, attach answers to an EXISTING registration and flag it
+    #   :submission — render a single role form, record a standalone FormSubmission
+    LANES = {
+      "registration" => { heading: "Registration", mode: :register, scholarship: false },
+      "scholarship" => { heading: "Scholarship application", mode: :register, scholarship: true },
+      "scholarship_questions" => { heading: "Scholarship application", mode: :addon, role: "scholarship", flag: :scholarship_requested },
+      "ce_questions" => { heading: "Continuing education credit", mode: :addon, role: "ce_credit", flag: :ce_credit_requested },
+      "general" => { heading: "General", mode: :submission, role: "general" }
     }.freeze
 
     skip_before_action :authenticate_user!, only: [ :new, :create, :show ]
@@ -18,6 +23,7 @@ module Events
 
     def new
       authorize! :public_form, to: :new?
+      return new_standalone if standalone_lane?
 
       @form = registration_form
       unless @form
@@ -26,13 +32,14 @@ module Events
       end
 
       @form_fields = visible_form_fields
-      @scholarship = scholarship_mode?
+      @scholarship = lane[:scholarship]
       @scholarship_form = @event.scholarship_form if @scholarship
       @event = @event.decorate
     end
 
     def create
       authorize! :public_form, to: :create?
+      return create_standalone if standalone_lane?
 
       if params[:public_registration][:website_url].present?
         redirect_to public_form_new_path
@@ -40,7 +47,7 @@ module Events
       end
 
       @form = registration_form
-      @scholarship = scholarship_mode?
+      @scholarship = lane[:scholarship]
       @scholarship_form = @event.scholarship_form if @scholarship
 
       all_params = params.dig(:public_registration, :form_fields)&.to_unsafe_h || {}
@@ -161,30 +168,110 @@ module Events
     end
 
     def form_role
-      EventForm::ROLES.include?(params[:form_role]) ? params[:form_role] : "registration"
+      LANES.key?(params[:form_role]) ? params[:form_role] : "registration"
     end
     helper_method :form_role
 
-    def scholarship_mode?
-      if form_role == "scholarship"
-        params[:scholarship_requested] != "false"
-      else
-        params[:scholarship_requested] == "true"
-      end
+    def lane
+      LANES.fetch(form_role)
+    end
+
+    def standalone_lane?
+      lane[:mode] != :register
     end
 
     def public_form_new_path
-      send("new_event_#{form_role}_form_path", @event)
+      new_event_form_path(@event, form_role, reg: params[:reg].presence)
     end
 
     def public_form_submit_path
-      send("event_#{form_role}_form_path", @event)
+      event_form_path(@event, form_role, reg: params[:reg].presence)
     end
 
     def public_form_heading
-      HEADINGS.fetch(form_role)
+      lane.fetch(:heading)
     end
     helper_method :public_form_new_path, :public_form_submit_path, :public_form_heading
+
+    # ----- standalone lanes (:addon, :submission) -----
+
+    def new_standalone
+      @form = @event.public_send("#{lane[:role]}_form")
+      unless @form
+        redirect_to event_path(@event), alert: "This form is not available for this event."
+        return
+      end
+
+      if lane[:mode] == :addon && resolve_registration.nil?
+        redirect_to event_path(@event), alert: "Please register for this event first."
+        return
+      end
+
+      @form_fields = @form.form_fields.reorder(position: :asc)
+      @event = @event.decorate
+      render :standalone
+    end
+
+    def create_standalone
+      if params.dig(:public_registration, :website_url).present?
+        redirect_to public_form_new_path
+        return
+      end
+
+      @form = @event.public_send("#{lane[:role]}_form")
+      registration = resolve_registration if lane[:mode] == :addon
+      person = registration&.registrant || current_user&.person
+
+      if lane[:mode] == :addon && registration.nil?
+        redirect_to event_path(@event), alert: "Please register for this event first."
+        return
+      end
+      if person.nil?
+        redirect_to event_path(@event), alert: "Please sign in to submit this form."
+        return
+      end
+
+      answers = params.dig(:public_registration, :form_fields)&.to_unsafe_h || {}
+      fields = @form.form_fields.where.not(answer_type: :group_header).to_a
+      @field_errors = FormAnswerValidator.call(fields, answers)
+      if @field_errors.any?
+        @form_fields = @form.form_fields.reorder(position: :asc)
+        @event = @event.decorate
+        render :standalone, status: :unprocessable_content
+        return
+      end
+
+      record_form_submission(person, @form, answers)
+      registration&.update!(lane[:flag] => true) if lane[:flag]
+
+      if registration
+        redirect_to registration_ticket_path(registration.slug), notice: "Your responses have been submitted."
+      else
+        redirect_to event_path(@event), notice: "Your responses have been submitted."
+      end
+    end
+
+    def resolve_registration
+      @resolve_registration ||= if params[:reg].present?
+        @event.event_registrations.find_by(slug: params[:reg])
+      elsif current_user&.person
+        @event.active_registration_for(current_user.person)
+      end
+    end
+
+    def record_form_submission(person, form, answers)
+      submission = FormSubmission.find_or_create_by!(person: person, form: form, role: lane[:role])
+      answers.each do |field_id, raw_value|
+        field = form.form_fields.find_by(id: field_id)
+        next unless field
+        next if field.group_header?
+
+        text = raw_value.is_a?(Array) ? raw_value.reject(&:blank?).join(", ") : raw_value.to_s
+        record = submission.form_answers.find_or_initialize_by(form_field: field)
+        record.update!(submitted_answer: text, question_name_when_answered: field.name)
+      end
+      submission
+    end
 
     def split_form_params(all_params)
       reg_field_ids = @form.form_fields.pluck(:id).map(&:to_s)
@@ -197,26 +284,6 @@ module Events
       end
 
       [ registration, scholarship ]
-    end
-
-    def create_or_update_scholarship_submission(person, scholarship_params)
-      scholarship_form = @event.scholarship_form
-      return unless scholarship_form
-
-      submission = FormSubmission.find_or_create_by!(
-        person: person, form: scholarship_form, role: "scholarship"
-      )
-
-      scholarship_params.each do |field_id, raw_value|
-        field = scholarship_form.form_fields.find_by(id: field_id)
-        next unless field
-        next if field.group_header?
-
-        text = raw_value.is_a?(Array) ? raw_value.reject(&:blank?).join(", ") : raw_value.to_s
-
-        record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(submitted_answer: text, question_name_when_answered: field.name)
-      end
     end
 
     def visible_form_fields

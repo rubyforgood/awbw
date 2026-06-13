@@ -187,6 +187,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     # ─── public registration / slug-based views ───
     "app/views/events/public_forms/new.html.erb"  => "public",
     "app/views/events/public_forms/show.html.erb" => "public",
+    "app/views/events/public_forms/standalone.html.erb" => "public",
     "app/views/events/registrations/show.html.erb"        => "public",
 
     # ─── bulk payment views ───

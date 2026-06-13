@@ -21,107 +21,101 @@ RSpec.describe "Public form pages", type: :system do
     EventForm.create!(event: event, form: form, role: "registration")
   end
 
-  def add_scholarship_form
-    EventForm.create!(event: event, form: create(:form, :with_fields), role: "scholarship")
+  def add_form(role, **attrs)
+    EventForm.create!(event: event, form: create(:form, :standalone, :with_fields, **attrs), role: role)
   end
 
-  shared_examples "an event-linked public form" do |path_helper|
-    it "shows a back link to the event page" do
-      visit public_send(path_helper, event)
+  shared_examples "an event-linked public form" do
+    it "shows a back link and links the title to the event" do
+      visit path
       expect(page).to have_link("Back to event", href: event_path(event))
-    end
-
-    it "links the event title back to the event page" do
-      visit public_send(path_helper, event)
-      within("h1") do
-        expect(page).to have_link(event.title, href: event_path(event))
-      end
+      within("h1") { expect(page).to have_link(event.title, href: event_path(event)) }
     end
   end
 
-  describe "registration_form" do
-    it_behaves_like "an event-linked public form", :new_event_registration_form_path
+  describe "registration lane" do
+    let(:path) { new_event_form_path(event, "registration") }
+    it_behaves_like "an event-linked public form"
 
     it "uses the Registration heading and submits to its own endpoint" do
-      visit new_event_registration_form_path(event)
-
+      visit path
       expect(page).to have_css("h2", text: "Registration")
-      expect(page).to have_css("form[action='#{event_registration_form_path(event)}']")
+      expect(page).to have_css("form[action='#{event_form_path(event, "registration")}']")
     end
 
-    context "with a scholarship form available" do
-      before { add_scholarship_form }
-
-      it "hides the scholarship section by default" do
-        visit new_event_registration_form_path(event)
-
-        expect(page).to have_no_css("h3", text: "Scholarship application")
-      end
-
-      it "shows the scholarship section when scholarship_requested=true" do
-        visit new_event_registration_form_path(event, scholarship_requested: true)
-
-        expect(page).to have_css("h3", text: "Scholarship application")
-      end
+    it "does not show the scholarship section" do
+      add_form("scholarship")
+      visit path
+      expect(page).to have_no_css("h3", text: "Scholarship application")
     end
   end
 
-  describe "scholarship_form" do
-    before { add_scholarship_form }
+  describe "scholarship lane (registration + scholarship)" do
+    before { add_form("scholarship") }
+    let(:path) { new_event_form_path(event, "scholarship") }
+    it_behaves_like "an event-linked public form"
 
-    it_behaves_like "an event-linked public form", :new_event_scholarship_form_path
-
-    it "uses the Scholarship application heading and submits to its own endpoint" do
-      visit new_event_scholarship_form_path(event)
-
+    it "uses the Scholarship heading, shows the scholarship section, and submits to its endpoint" do
+      visit path
       expect(page).to have_css("h2", text: "Scholarship application")
-      expect(page).to have_css("form[action='#{event_scholarship_form_path(event)}']")
-    end
-
-    it "shows the scholarship section by default" do
-      visit new_event_scholarship_form_path(event)
-
       expect(page).to have_css("h3", text: "Scholarship application")
-    end
-  end
-
-  describe "bulk_payment_form" do
-    it_behaves_like "an event-linked public form", :new_event_bulk_payment_form_path
-
-    it "uses the Bulk payment heading and submits to its own endpoint" do
-      visit new_event_bulk_payment_form_path(event)
-
-      expect(page).to have_css("h2", text: "Bulk payment")
-      expect(page).to have_css("form[action='#{event_bulk_payment_form_path(event)}']")
-    end
-  end
-
-  describe "ce_credit_form" do
-    it_behaves_like "an event-linked public form", :new_event_ce_credit_form_path
-
-    it "uses the Continuing education credit heading and submits to its own endpoint" do
-      visit new_event_ce_credit_form_path(event)
-
-      expect(page).to have_css("h2", text: "Continuing education credit")
-      expect(page).to have_css("form[action='#{event_ce_credit_form_path(event)}']")
+      expect(page).to have_css("form[action='#{event_form_path(event, "scholarship")}']")
     end
   end
 
   describe "scholarship form header" do
-    let(:scholarship_form) do
-      create(:form, :standalone, :scholarship, :with_fields,
-             header: "<p>Scholarship intro for {{event_month_year}}.</p>")
-    end
-
     before do
-      EventForm.create!(event: event, form: scholarship_form, role: "scholarship")
+      EventForm.create!(event: event, role: "scholarship",
+                        form: create(:form, :standalone, :scholarship, :with_fields,
+                                     header: "<p>Scholarship intro for {{event_month_year}}.</p>"))
     end
 
-    it "renders the scholarship form's header above the scholarship questions" do
-      visit new_event_registration_form_path(event, scholarship_requested: true)
-
-      expect(page).to have_text("Scholarship application")
+    it "renders the scholarship form header above the questions" do
+      visit new_event_form_path(event, "scholarship")
       expect(page).to have_text("Scholarship intro for #{event.start_date.strftime("%B %Y")}.")
+    end
+  end
+
+  describe "general lane" do
+    before { add_form("general") }
+    let(:path) { new_event_form_path(event, "general") }
+    it_behaves_like "an event-linked public form"
+
+    it "uses the General heading and submits to its own endpoint" do
+      visit path
+      expect(page).to have_css("h2", text: "General")
+      expect(page).to have_css("form[action='#{event_form_path(event, "general")}']")
+    end
+  end
+
+  describe "scholarship_questions lane (standalone, attaches to an existing registration)" do
+    let(:person) { create(:user, :with_person).person }
+    let!(:registration) { create(:event_registration, event: event, registrant: person) }
+    before { add_form("scholarship") }
+
+    it "renders the scholarship questions for an existing registration" do
+      visit new_event_form_path(event, "scholarship_questions", reg: registration.slug)
+
+      expect(page).to have_css("h2", text: "Scholarship application")
+      expect(page).to have_css("form[action='#{event_form_path(event, "scholarship_questions", reg: registration.slug)}']")
+    end
+
+    it "redirects to the event when there is no registration to attach to" do
+      visit new_event_form_path(event, "scholarship_questions")
+      expect(page).to have_current_path(event_path(event))
+    end
+  end
+
+  describe "ce_questions lane (standalone, attaches to an existing registration)" do
+    let(:person) { create(:user, :with_person).person }
+    let!(:registration) { create(:event_registration, event: event, registrant: person) }
+    before { add_form("ce_credit") }
+
+    it "renders the CE questions for an existing registration" do
+      visit new_event_form_path(event, "ce_questions", reg: registration.slug)
+
+      expect(page).to have_css("h2", text: "Continuing education credit")
+      expect(page).to have_css("form[action='#{event_form_path(event, "ce_questions", reg: registration.slug)}']")
     end
   end
 end

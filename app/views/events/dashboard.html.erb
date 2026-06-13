@@ -30,7 +30,7 @@
   <% link_base = "inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm font-medium shadow-sm transition-colors" %>
   <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
     <% if @event.event_forms.registration.exists? %>
-      <%= link_to new_event_registration_form_path(@event, as_visitor: true), target: "_blank", rel: "noopener noreferrer",
+      <%= link_to new_event_form_path(@event, "registration", as_visitor: true), target: "_blank", rel: "noopener noreferrer",
             class: "#{link_base} #{DomainTheme.border_class_for(:events, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:events, intensity: 300)} hover:bg-gray-50" do %>
         <i class="fa-solid fa-clipboard-list <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
         Public registration form
@@ -39,7 +39,7 @@
     <% end %>
 
     <% if @event.event_forms.registration.exists? && @event.scholarship_form %>
-      <%= link_to new_event_registration_form_path(@event, scholarship_requested: true, as_visitor: true), target: "_blank", rel: "noopener noreferrer",
+      <%= link_to new_event_form_path(@event, "scholarship", as_visitor: true), target: "_blank", rel: "noopener noreferrer",
             class: "#{link_base} #{DomainTheme.border_class_for(:scholarships, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:scholarships, intensity: 300)} hover:bg-gray-50" do %>
         <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"></i>
         Scholarship form

@@ -135,14 +135,15 @@ Rails.application.routes.draw do
       post :send_reminder
     end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
-    resource :bulk_payment, only: [ :new, :create, :show ], module: :events
-    EventForm::ROLES.each do |form_role|
-      actions = form_role == "registration" ? %i[ new create show ] : %i[ new create ]
-      resource :"#{form_role}_form", only: actions,
-               controller: "public_forms", module: :events,
-               defaults: { form_role: form_role }
-    end
+    # Bulk payment keeps its own controller but lives under the uniform forms/ path.
+    resource :bulk_payment, path: "forms/bulk_payment", only: %i[ new create show ], module: :events
   end
+  # Public form lanes share one controller; the lane is the :form_role path segment.
+  # bulk_payment is excluded here (own controller, routed above).
+  public_form_lane = /registration|scholarship|scholarship_questions|ce_questions|general/
+  get  "/events/:event_id/forms/:form_role/new", to: "events/public_forms#new",    as: :new_event_form, constraints: { form_role: public_form_lane }
+  post "/events/:event_id/forms/:form_role",     to: "events/public_forms#create", as: :event_form,     constraints: { form_role: public_form_lane }
+  get  "/events/:event_id/forms/:form_role",     to: "events/public_forms#show",   constraints: { form_role: /registration/ }
   resources :people do
     collection do
       get :check_duplicates
