@@ -1,0 +1,25 @@
+Bulk payment received
+
+Hello <%= @person.full_name %>,
+
+We've received your bulk payment submission<%= " for the following event" if @event %>:
+
+<% if @event %><% if @event.respond_to?(:pre_title) && @event.pre_title.present? %><%= @event.pre_title %>
+<% end %><%= @event.title %>
+<%= @event.times(display_day: true, display_date: true) %>
+<% if @event.location.present? %>Location: <%= @event.location.name %>
+<% end %><% if @event.labelled_cost.present? %><%= @event.labelled_cost %>
+<% end %><% end %>
+<% if @answers["payer_organization"].present? %>Organization: <%= @answers["payer_organization"] %>
+<% end %><% if @answers["number_of_attendees"].present? %>Number of attendees: <%= @answers["number_of_attendees"] %>
+<% end %><% if @answers["payment_method"].present? %>Payment method: <%= @answers["payment_method"] %>
+<% end %>
+<% if @attendees.any? %>Attendees:
+<% @attendees.each do |attendee| %>- <%= [ attendee["first_name"], attendee["last_name"] ].compact_blank.join(" ") %><%= " <#{attendee['email']}>" if attendee["email"].present? %>
+<% end %><% end %>
+<% if @submission_url %>View submission:
+<%= @submission_url %>
+<% end %>
+--
+This is an automated confirmation from <%= @organization_name %>.
+If you did not expect this message, you may ignore it.

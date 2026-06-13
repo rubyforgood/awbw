@@ -68,6 +68,7 @@ RSpec.describe "shared/_navbar", type: :view do
       allow(view).to receive(:current_user).and_return(admin_user)
       allow(view).to receive(:user_signed_in?).and_return(true)
       allow(view).to receive(:allowed_to?).and_return(true)
+      assign(:current_user_active_affiliations, [ create(:affiliation) ])
       render_nav
     end
 
@@ -80,14 +81,36 @@ RSpec.describe "shared/_navbar", type: :view do
       expect(rendered).to include("Admin")
     end
 
-    it "shows profile and team links" do
+    it "shows profile and organization links" do
       expect(rendered).to include("My profile")
+      expect(rendered).to include("My organization")
     end
 
     it "shows admin-only New dropdown items" do
       expect(rendered).to have_css(".admin-only", text: "New story")
       expect(rendered).to have_css(".admin-only", text: "New workshop variation")
       expect(rendered).to have_css(".admin-only", text: "New workshop")
+    end
+  end
+
+  context "when admin has multiple active affiliations" do
+    before do
+      create(:person, user: admin_user)
+      admin_user.reload
+      allow(view).to receive(:current_user).and_return(admin_user)
+      allow(view).to receive(:user_signed_in?).and_return(true)
+      allow(view).to receive(:allowed_to?).and_return(true)
+      affiliations = [
+        create(:affiliation, organization: create(:organization, name: "Org Alpha")),
+        create(:affiliation, organization: create(:organization, name: "Org Beta"))
+      ]
+      assign(:current_user_active_affiliations, affiliations)
+      render_nav
+    end
+
+    it "shows an organization link per affiliation, each labelled with its name" do
+      expect(rendered).to have_css("a[href]", text: /My organization\s+\(Org Alpha\)/)
+      expect(rendered).to have_css("a[href]", text: /My organization\s+\(Org Beta\)/)
     end
   end
 

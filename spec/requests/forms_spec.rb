@@ -95,6 +95,20 @@ RSpec.describe "Forms", type: :request do
       get edit_form_path(form)
       expect(response.body).not_to include("Dashboard")
     end
+
+    it "offers only the standalone Preview link when no event is known" do
+      get edit_form_path(form)
+      expect(response.body).to include(">Preview<")
+      expect(response.body).not_to include(">View<")
+    end
+
+    it "adds a View link to the live registration form when the event is known" do
+      create(:event_form, form: form, event: event)
+      get edit_form_path(form, event_id: event.id)
+      expect(response.body).to include(">View<")
+      expect(response.body).to include(new_event_public_registration_path(event))
+      expect(response.body).to include(">Preview<")
+    end
   end
 
   describe "GET /forms/:id/edit" do
@@ -260,6 +274,31 @@ RSpec.describe "Forms", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("<strong>Welcome</strong>")
       expect(response.body).to include(%(<a href="https://awbw.org">learn more</a>))
+    end
+
+    it "labels the preview header with the form role and a Preview badge" do
+      form = create(:form, :standalone, name: "Summer Camp", role: "registration")
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Summer Camp")
+      expect(response.body).to include("Registration form")
+      expect(response.body).to include("Preview")
+    end
+
+    it "links a dynamic field's options to the managed list" do
+      type = CategoryType.create!(name: "AgeRange", published: true)
+      form = create(:form, :standalone)
+      create(:form_field, form: form, answer_type: :single_select_radio,
+             field_identifier: "primary_age_group", name: "Primary age group", status: :active)
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Options from")
+      expect(response.body).to include("Age range categories")
+      expect(response.body).to include(categories_path(category_type_id: type.id))
     end
   end
 

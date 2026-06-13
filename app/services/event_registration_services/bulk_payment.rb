@@ -19,6 +19,7 @@ module EventRegistrationServices
         person = find_or_create_person
         create_phone_contact(person) if field_value("payer_phone").present?
         submission = create_form_submission(person)
+        send_notifications(submission, person)
         Result.new(success?: true, form_submission: submission, errors: [])
       end
     rescue ActiveRecord::RecordInvalid => e
@@ -26,6 +27,28 @@ module EventRegistrationServices
     end
 
     private
+
+    # Emails the payer a confirmation and notifies staff with an FYI.
+    def send_notifications(submission, person)
+      payer_email = person.preferred_email.presence || field_value("payer_email")&.strip
+      if payer_email.present?
+        NotificationServices::CreateNotification.call(
+          noticeable: submission,
+          kind: :bulk_payment_confirmation,
+          recipient_role: :person,
+          recipient_email: payer_email,
+          notification_type: 0
+        )
+      end
+
+      NotificationServices::CreateNotification.call(
+        noticeable: submission,
+        kind: :bulk_payment_confirmation_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        notification_type: 0
+      )
+    end
 
     def field_value(key)
       field = @form.form_fields.find_by(field_identifier: key)
