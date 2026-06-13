@@ -12,7 +12,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
            required: true, min_words: 5)
   end
   let!(:payment_method_field) do
-    create(:form_field, form: form, answer_type: :multiple_choice_radio,
+    create(:form_field, form: form, answer_type: :single_select_radio,
            field_identifier: "payment_method", name: "Payment method",
            required: false)
   end

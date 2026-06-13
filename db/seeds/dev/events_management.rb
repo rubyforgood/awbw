@@ -4,9 +4,9 @@
 # Named people are looked up when present (e.g. after `rake db:seed:people_profiles`).
 
 puts "Creating standalone registration forms…"
-unless Form.standalone.exists?(name: "Registration")
+unless Form.standalone.exists?(name: "Training Registration Form")
   FormBuilderService.new(
-    name: "Registration",
+    name: "Training Registration Form",
     sections: %i[person_identifier professional_info payment],
     role: "registration"
   ).call
@@ -98,7 +98,7 @@ end
 # form_type: :long, :short, or :none. span_days (optional) makes a multi-day event.
 dev_events = [
   [ "AWBW Facilitator Training", :long, 150_000, true,
-    { published: true, featured: true, publicly_visible: true } ],
+    { published: true, featured: true, publicly_visible: true }, 2 ],
   [ "Facilitator Training: Trauma-Informed Art Practices", :long, 12_000, true,
     { published: true, featured: true }, 3 ],
   [ "A Year of Healing and Rebuilding Together Wellness Day", :short, 0, false,
@@ -172,10 +172,17 @@ end
 
 # The flagship training runs on Zoom — drive the platform from event settings so
 # it shows as a badge in the public registration header (rather than living in the
-# shared form header). force-set on re-seed, mirroring the date/cost refresh above.
+# shared form header). It also turns on the structured "at a glance" details panel
+# and carries the free-form qualifiers (hint_dates / hint_times / hint_registration_cost)
+# so the seeded data demonstrates those grey parentheticals on its registration
+# page. force-set on re-seed, mirroring the date/cost refresh above.
 Event.find_by(title: "AWBW Facilitator Training")&.update!(
   videoconference_url: "https://awbw-org.zoom.us/j/0000000000",
-  videoconference_label: "Zoom"
+  videoconference_label: "Zoom",
+  autoshow_registration_details: true,
+  hint_dates: "must attend both days",
+  hint_times: "both days",
+  hint_registration_cost: "due within 3 weeks of registration"
 )
 
 puts "Creating Event Registrations…"

@@ -1,0 +1,33 @@
+<%# Structured "at a glance" event details for the public registration page,
+    built from data already on the event — dates, time, platform/location, fee,
+    and registration deadline. Date and time intentionally repeat the page hero:
+    here they are plain, labeled text that's easy to read and copy/paste. The
+    Dates, Time, and Fee rows can carry an optional admin-authored qualifier (the
+    event's hint_dates / hint_times / hint_registration_cost, e.g. "must attend
+    both days"), rendered as a small grey parenthetical. Reuses the same label helpers as the form
+    header tokens so the two stay in sync.
+    Shown above the form's header intro. Locals: event. %>
+<%
+  multi_day = event.multi_day?
+  parenthetical = ->(text) { text.present? ? "(#{text})" : nil }
+  detail_rows = [
+    { label: multi_day ? "Dates" : "Date", value: event_dates_detail_label(event), note: parenthetical.call(event.hint_dates) },
+    { label: multi_day ? "Times" : "Time", value: event_times_label(event), note: parenthetical.call(event.hint_times) },
+    { label: "Fee", value: event_fee_label(event), note: parenthetical.call(event.hint_registration_cost) },
+    { label: "Platform", value: event_platform_label(event) },
+    { label: "Location", value: event_location_label(event) },
+    { label: "Registration closes", value: event_registration_close_date_label(event), note: "(#{event_registration_close_time_label(event)})" }
+  ].select { |row| row[:value].present? }
+%>
+<% if detail_rows.any? %>
+  <dl class="mb-6 space-y-0.5 text-base text-gray-700">
+    <% detail_rows.each do |row| %>
+      <div class="flex flex-wrap gap-x-2">
+        <dt class="font-bold text-gray-900"><%= row[:label] %>:</dt>
+        <dd>
+          <%= row[:value] %><% if row[:note] %> <span class="text-xs text-gray-400"><%= row[:note] %></span><% end %>
+        </dd>
+      </div>
+    <% end %>
+  </dl>
+<% end %>

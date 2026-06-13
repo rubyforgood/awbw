@@ -171,13 +171,13 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.form_header_html(form)).to eq("Register for our upcoming training.")
     end
 
-    it "fills the {{registration_close}} token as 'Month Dayth at time' without the year" do
+    it "fills the {{registration_close}} token as 'Month Day at time' without the year or ordinal" do
       form = build(:form, header: "Registration closes {{registration_close}}.")
       close = Time.zone.local(2026, 7, 20, 9, 0)
       event = build(:event, registration_close_date: close)
       tz = close.strftime("%Z")
       expect(helper.form_header_html(form, event: event))
-        .to eq("Registration closes July 20th at 9am #{tz}.")
+        .to eq("Registration closes July 20 at 9am #{tz}.")
     end
 
     it "includes minutes in the {{registration_close}} token when not on the hour" do
@@ -186,7 +186,7 @@ RSpec.describe ApplicationHelper, type: :helper do
       event = build(:event, registration_close_date: close)
       tz = close.strftime("%Z")
       expect(helper.form_header_html(form, event: event))
-        .to eq("Registration closes July 20th at 2:30pm #{tz}.")
+        .to eq("Registration closes July 20 at 2:30pm #{tz}.")
     end
 
     it "falls back when the event has no registration close date" do
@@ -253,6 +253,72 @@ RSpec.describe ApplicationHelper, type: :helper do
     it "is false for plain headers or none" do
       expect(helper.form_header_uses_tokens?(build(:form, header: "Welcome!"))).to be false
       expect(helper.form_header_uses_tokens?(build(:form, header: nil))).to be false
+    end
+  end
+
+  describe "#event_dates_detail_label" do
+    it "shows weekday and date without a year for a single-day event" do
+      event = build(:event, start_date: Time.zone.local(2026, 8, 12, 9), end_date: Time.zone.local(2026, 8, 12, 12))
+      expect(helper.event_dates_detail_label(event)).to eq("Wednesday, August 12")
+    end
+
+    it "shows a weekday range for a same-month multi-day event" do
+      event = build(:event, start_date: Time.zone.local(2026, 7, 23, 9), end_date: Time.zone.local(2026, 7, 24, 16))
+      expect(helper.event_dates_detail_label(event)).to eq("Thursday-Friday, July 23-24")
+    end
+
+    it "spells out both ends for a cross-month multi-day event" do
+      event = build(:event, start_date: Time.zone.local(2026, 7, 30, 9), end_date: Time.zone.local(2026, 8, 2, 16))
+      expect(helper.event_dates_detail_label(event)).to eq("Thursday, July 30 - Sunday, August 2")
+    end
+
+    it "is nil when the event has no start date" do
+      expect(helper.event_dates_detail_label(build(:event, start_date: nil))).to be_nil
+    end
+  end
+
+  describe "#event_platform_label" do
+    it "is nil for in-person events with no videoconference link" do
+      expect(helper.event_platform_label(build(:event, videoconference_url: nil))).to be_nil
+    end
+
+    it "uses the videoconference label when one is set" do
+      event = build(:event, videoconference_url: "https://zoom.us/j/1", videoconference_label: "Zoom")
+      expect(helper.event_platform_label(event)).to eq("Zoom")
+    end
+
+    it "derives the platform from the link when the label is blank" do
+      event = build(:event, videoconference_url: "https://us02web.zoom.us/j/1", videoconference_label: "")
+      expect(helper.event_platform_label(event)).to eq("Zoom")
+    end
+  end
+
+  describe "#event_registration_close_date_label" do
+    it "is the month and day, without year, ordinal, or time" do
+      event = build(:event, registration_close_date: Time.zone.local(2026, 8, 7, 8, 45))
+      expect(helper.event_registration_close_date_label(event)).to eq("August 7")
+    end
+
+    it "is nil when there's no close date" do
+      expect(helper.event_registration_close_date_label(build(:event, registration_close_date: nil))).to be_nil
+    end
+  end
+
+  describe "#event_registration_close_time_label" do
+    it "is the zoned time prefixed with 'at', keeping minutes when not on the hour" do
+      close = Time.zone.local(2026, 8, 7, 8, 45)
+      event = build(:event, registration_close_date: close)
+      expect(helper.event_registration_close_time_label(event)).to eq("at 8:45am #{close.strftime("%Z")}")
+    end
+
+    it "hides :00 minutes" do
+      close = Time.zone.local(2026, 7, 20, 9, 0)
+      event = build(:event, registration_close_date: close)
+      expect(helper.event_registration_close_time_label(event)).to eq("at 9am #{close.strftime("%Z")}")
+    end
+
+    it "is nil when there's no close date" do
+      expect(helper.event_registration_close_time_label(build(:event, registration_close_date: nil))).to be_nil
     end
   end
 

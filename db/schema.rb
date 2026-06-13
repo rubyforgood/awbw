@@ -484,6 +484,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_200000) do
     t.boolean "autoshow_pre_date_text", default: true, null: false
     t.boolean "autoshow_registration", default: true, null: false
     t.boolean "autoshow_registration_close", default: true, null: false
+    t.boolean "autoshow_registration_details", default: false, null: false
     t.boolean "autoshow_time", default: true, null: false
     t.boolean "autoshow_title", default: true, null: false
     t.boolean "autoshow_videoconference_label", default: true, null: false
@@ -497,6 +498,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_200000) do
     t.text "ga4_snippet"
     t.text "gtm_body_snippet"
     t.text "gtm_head_snippet"
+    t.string "hint_dates"
+    t.string "hint_registration_cost"
+    t.string "hint_times"
     t.boolean "inactive", default: true, null: false
     t.integer "location_id"
     t.string "pre_date_text"
