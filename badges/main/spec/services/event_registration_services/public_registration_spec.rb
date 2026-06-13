@@ -155,4 +155,55 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       )
     end
   end
+
+  describe "saving an \"Other\" answer with custom text" do
+    let!(:radio_field) do
+      field = form.form_fields.create!(
+        name: "How did you hear about us?",
+        answer_type: :single_select_radio,
+        status: :active,
+        position: (form.form_fields.maximum(:position) || 0) + 1,
+        required: false
+      )
+      %w[Email Other].each_with_index do |opt, idx|
+        ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
+        field.form_field_answer_options.create!(answer_option: ao)
+      end
+      field
+    end
+
+    it "stores the folded \"Other: <text>\" value from a radio field" do
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Jo", last_name: "Vo", email: "jo@example.com").merge(
+          radio_field.id.to_s => "Other: a friend told me"
+        )
+      )
+
+      answer = result.form_submission.form_answers.find_by(form_field: radio_field)
+      expect(answer.submitted_answer).to eq("Other: a friend told me")
+    end
+
+    it "stores the folded \"Other: <text>\" value alongside other checkbox selections" do
+      multi_field = form.form_fields.create!(
+        name: "Which topics interest you?",
+        answer_type: :multi_select_checkbox,
+        status: :active,
+        position: (form.form_fields.maximum(:position) || 0) + 1,
+        required: false
+      )
+
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Mo", last_name: "Vo", email: "mo@example.com").merge(
+          multi_field.id.to_s => [ "Healing", "Other: poetry therapy" ]
+        )
+      )
+
+      answer = result.form_submission.form_answers.find_by(form_field: multi_field)
+      expect(answer.submitted_answer).to eq("Healing, Other: poetry therapy")
+    end
+  end
 end

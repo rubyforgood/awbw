@@ -356,6 +356,24 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include('placeholder="Please specify"')
     end
 
+    it "reveals the text input for a category-backed dynamic field's Other option" do
+      # Dynamic fields source options from Category and use the category id as the
+      # option value, so the Other option must be detected by its label, not value.
+      category_type = create(:category_type, name: "StoryPopulation")
+      create(:category, :published, category_type: category_type, name: "Veterans")
+      create(:category, :published, category_type: category_type, name: "Other")
+      create(:form_field, form: form, answer_type: :multi_select_checkbox,
+             field_identifier: "client_life_experiences", name: "Populations", required: false)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include('data-controller="other-option"')
+      expect(response.body).to include('placeholder="Please specify"')
+      # The Other option submits the literal "Other", not the category id.
+      expect(response.body).to include('data-other-option-target="control"')
+      expect(response.body).to match(/data-other-option-target="control"[\s\S]*?value="Other"|value="Other"[\s\S]*?data-other-option-target="control"/)
+    end
+
     it "does not add the Other controller to fields without an Other option" do
       field = create(:form_field, form: form, answer_type: :single_select_radio,
              name: "Favorite color", required: false)

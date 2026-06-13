@@ -104,18 +104,23 @@ module EventHelper
   end
 
   # Resolve a stored answer to readable text, mapping the sector/category ids
-  # behind the professional fields to their names. Returns nil for a blank
-  # answer (unlike display_response_text, which renders a placeholder), so it
-  # suits inline header values on the scholarship recipients page.
+  # behind the professional fields to their names. Free-text tokens (e.g. an
+  # "Other: <text>" answer) aren't ids, so they pass through unchanged. Returns
+  # nil for a blank answer (unlike display_response_text, which renders a
+  # placeholder), so it suits inline header values on the scholarship page.
   def resolve_answer_text(field, submitted_answer)
     return if submitted_answer.blank?
 
-    ids = submitted_answer.split(", ")
+    tokens = submitted_answer.split(", ")
+    resolve = ->(klass) {
+      tokens.filter_map { |token| klass.find_by(id: token)&.name || (token unless token.match?(/\A\d+\z/)) }
+            .join(", ").presence || submitted_answer
+    }
     case field&.field_identifier
     when "primary_service_area", "primary_service_area_single"
-      ids.filter_map { |id| Sector.find_by(id: id)&.name }.join(", ").presence || submitted_answer
+      resolve.call(Sector)
     when "workshop_environments", "client_life_experiences", "primary_age_group"
-      ids.filter_map { |id| Category.find_by(id: id)&.name }.join(", ").presence || submitted_answer
+      resolve.call(Category)
     else
       submitted_answer
     end
