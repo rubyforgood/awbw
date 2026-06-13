@@ -1,0 +1,25 @@
+<%# Structured "at a glance" event details for the public registration page,
+    built from data already on the event — dates, time, platform/location, fee,
+    and registration deadline. Reuses the same label helpers as the form header
+    tokens so the two stay in sync. Shown above the form's header intro.
+    Locals: event. %>
+<%
+  detail_rows = [
+    [ "Dates", event_dates_label(event) ],
+    [ "Time", event_times_label(event) ],
+    [ "Platform", event_platform_label(event) ],
+    [ "Location", event_location_label(event) ],
+    [ "Fee", event_fee_label(event) ],
+    [ "Registration closes", event_registration_close_label(event) ]
+  ].select { |_label, value| value.present? }
+%>
+<% if detail_rows.any? %>
+  <dl class="mb-6 space-y-1.5 text-sm leading-relaxed text-gray-700">
+    <% detail_rows.each do |label, value| %>
+      <div class="flex flex-wrap gap-x-2">
+        <dt class="font-bold text-gray-900"><%= label %>:</dt>
+        <dd><%= value %></dd>
+      </div>
+    <% end %>
+  </dl>
+<% end %>

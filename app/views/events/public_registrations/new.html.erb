@@ -69,6 +69,7 @@
 
     <%# Card Body %>
     <div class="px-6 sm:px-8 py-7">
+      <%= render "events/public_registrations/details", event: @event %>
       <%= render "forms/header", form: @form, event: @event %>
 
       <% if flash[:alert] %>
