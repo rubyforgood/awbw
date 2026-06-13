@@ -340,6 +340,54 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       expect(response.body).to include("Community mental health, outpatient, etc")
     end
+
+    it "reveals a 'please specify' text input for a radio field's Other option" do
+      field = create(:form_field, form: form, answer_type: :single_select_radio,
+             name: "Favorite color", required: false)
+      [ "Red", "Other" ].each_with_index do |name, i|
+        option = create(:answer_option, name: name, position: i)
+        create(:form_field_answer_option, form_field: field, answer_option: option)
+      end
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include('data-controller="other-option"')
+      expect(response.body).to include('data-other-option-target="control"')
+      expect(response.body).to include('placeholder="Please specify"')
+    end
+
+    it "does not add the Other controller to fields without an Other option" do
+      field = create(:form_field, form: form, answer_type: :single_select_radio,
+             name: "Favorite color", required: false)
+      option = create(:answer_option, name: "Red", position: 0)
+      create(:form_field_answer_option, form_field: field, answer_option: option)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).not_to include('data-controller="other-option"')
+    end
+
+    it "re-checks Other and prefills the text input after a validation error" do
+      field = create(:form_field, form: form, answer_type: :single_select_radio,
+             name: "Favorite color", required: true)
+      [ "Red", "Other" ].each_with_index do |name, i|
+        option = create(:answer_option, name: name, position: i)
+        create(:form_field_answer_option, form_field: field, answer_option: option)
+      end
+      required = create(:form_field, form: form, answer_type: :free_form_input_one_line,
+             name: "Name", required: true)
+
+      post event_public_registration_path(event),
+           params: { public_registration: { form_fields: {
+             field.id.to_s => "Other: chartreuse",
+             required.id.to_s => ""
+           } } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('value="chartreuse"')
+      # The Other radio is re-checked and its text input is not hidden.
+      expect(response.body).not_to match(/placeholder="Please specify"[^>]*\bhidden\b/)
+    end
   end
 
   describe "GET show" do
