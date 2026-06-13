@@ -7,7 +7,7 @@
         <div class="shrink-0"><%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %></div>
 
         <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight">Event registration ticket</h1>
+          <h1 class="text-xl font-semibold tracking-wide leading-tight">Registration ticket</h1>
         </div>
       </div>
 
@@ -98,9 +98,9 @@
       <div class="border-t border-gray-200"></div>
 
       <!-- Status -->
-      <div class="mt-4 text-center space-y-2">
+      <div class="text-center space-y-2">
         <% if event_registration.checked_in? %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"> Checked In </span>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"> Checked in </span>
         <% elsif event_registration.status == "cancelled" %>
           <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"> Registration cancelled </span>
           <% if event_registration.event.registerable? %>
@@ -108,39 +108,38 @@
                               class: "text-sm text-gray-500 hover:text-blue-600 underline bg-transparent border-0 cursor-pointer p-0" %></div>
           <% end %>
         <% else %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Registered on <%= event_registration.created_at.strftime("%B %-d, %Y") %></span>
+          <p class="text-sm text-gray-500">Registered on <%= event_registration.created_at.strftime("%B %-d, %Y") %></p>
         <% end %>
       </div>
 
       <% if event_registration.active? %>
-        <!-- CALENDAR LINKS -->
-        <div class="flex flex-col items-center mt-4 pt-3 border-t border-gray-100">
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
-            Add to Your Calendar
-          </p>
-
-          <div class="flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium"><%= event_registration.event.decorate.calendar_links %></div>
-        </div>
-      <% end %>
-
-      <% if event_registration.active? %>
-        <div class="flex flex-col items-center gap-1">
+        <!-- Manage registration -->
+        <div class="flex flex-col items-center gap-1.5">
           <% registration_form = event_registration.event.registration_form %>
 
           <% if registration_form && registration_form.form_submissions.exists?(person: event_registration.registrant) %>
             <%= link_to "View registration details",
                           event_public_registration_path(event_registration.event, reg: event_registration.slug),
-                          class: "text-xs text-gray-400 hover:text-blue-600 underline" %>
+                          class: "text-sm text-gray-500 hover:text-blue-600 underline" %>
           <% end %>
 
           <%= button_to "Resend confirmation email",
                           registration_resend_confirmation_path(event_registration.slug),
-                          class: "text-xs text-gray-400 hover:text-blue-600 underline bg-transparent border-0 cursor-pointer p-0" %>
+                          class: "text-sm text-gray-500 hover:text-blue-600 underline bg-transparent border-0 cursor-pointer p-0" %>
 
           <%= button_to "Cancel registration",
                           registration_cancel_path(event_registration.slug),
                           data: { turbo_confirm: "Are you sure you want to cancel your registration?" },
-                          class: "text-xs text-gray-400 hover:text-red-600 underline bg-transparent border-0 cursor-pointer p-0" %>
+                          class: "text-sm text-gray-500 hover:text-red-600 underline bg-transparent border-0 cursor-pointer p-0" %>
+        </div>
+
+        <!-- Add to calendar (secondary utility, kept at the bottom) -->
+        <div class="flex flex-col items-center pt-5 border-t border-gray-100">
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+            Add to your calendar
+          </p>
+
+          <div class="flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium"><%= event_registration.event.decorate.calendar_links %></div>
         </div>
       <% end %>
     </div>
