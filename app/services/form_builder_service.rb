@@ -86,7 +86,7 @@ class FormBuilderService
       "Agency Type", "Agency Website"
     ],
     person_background: [ "Racial / Ethnic Identity" ],
-    professional_info: [ "Primary Service Area(s)", "Workshop Settings", "Client Life Experiences", "Primary Age Group(s) Served" ],
+    professional_info: [ "Primary service area", "Additional service areas", "Workshop Settings", "Client Life Experiences", "Primary Age Group(s) Served" ],
     marketing: [
       "How did you hear about this training?",
       "What motivates you to attend this training?",
