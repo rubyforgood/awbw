@@ -40,8 +40,6 @@ module PayChargeExtensions
       metadata: metadata
     )
 
-    registration.update!(checkout_session_id: nil) if registration.checkout_session_id.present?
-
     remaining_needed = registration.remaining_cost
     allocation_amount = [ amount, remaining_needed ].min
     return unless allocation_amount > 0

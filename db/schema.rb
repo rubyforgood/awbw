@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_140957) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_160556) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -451,6 +451,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_140957) do
     t.string "checkout_session_id"
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.boolean "payment_unresolved", default: false, null: false
     t.bigint "registrant_id", null: false
     t.boolean "scholarship_requested", default: false, null: false
     t.string "slug"
@@ -458,6 +459,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_140957) do
     t.datetime "updated_at", null: false
     t.index ["checkout_session_id"], name: "index_event_registrations_on_checkout_session_id"
     t.index ["event_id"], name: "index_event_registrations_on_event_id"
+    t.index ["payment_unresolved"], name: "index_event_registrations_on_payment_unresolved"
     t.index ["registrant_id", "event_id"], name: "index_event_registrations_on_registrant_id_and_event_id", unique: true
     t.index ["registrant_id"], name: "index_event_registrations_on_registrant_id"
     t.index ["slug"], name: "index_event_registrations_on_slug", unique: true
