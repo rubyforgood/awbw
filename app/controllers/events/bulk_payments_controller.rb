@@ -121,7 +121,7 @@ module Events
       person.payment_processor.checkout(
         mode: "payment",
         metadata: metadata,
-        payment_intent_data: { metadata: metadata },
+        payment_intent_data: { metadata: metadata, description: "Training Fee: #{@event.title}" },
         line_items: [ {
           price_data: {
             currency: "usd",

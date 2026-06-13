@@ -199,7 +199,8 @@ module Events
         mode: "payment",
         metadata: { event_registration_id: registration.id, event_id: @event.id },
         payment_intent_data: {
-          metadata: { event_registration_id: registration.id, event_id: @event.id }
+          metadata: { event_registration_id: registration.id, event_id: @event.id },
+          description: "Training Fee: #{@event.title}"
         },
         line_items: [ {
           price_data: {
