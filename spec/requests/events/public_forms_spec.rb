@@ -232,7 +232,7 @@ RSpec.describe "Events::PublicForms", type: :request do
       create(:form_field, form: form, answer_type: :multi_select_checkbox,
              field_identifier: "workshop_environments", name: "Workshop Settings", required: false)
 
-      get new_event_public_registration_path(event)
+      get new_event_form_path(event, "registration")
 
       expect(response.body).to include("Community mental health, outpatient, etc")
     end
