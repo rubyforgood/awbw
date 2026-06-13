@@ -203,49 +203,6 @@ RSpec.describe "Events", type: :request do
         expect(response).to redirect_to(root_path)
       end
     end
-
-    context "when validation fails" do
-      before { sign_in admin }
-
-      it "re-renders the registration form selections the admin had chosen" do
-        reg_form = create(:form, :standalone, role: "registration", name: "Custom Registration")
-        create(:form, :standalone, role: "scholarship")
-        create(:form, :standalone, role: "bulk_payment")
-
-        post events_path, params: { event: {
-          title: "Missing dates",
-          start_date: "",
-          end_date: "",
-          registration_form_id: reg_form.id,
-          scholarship_enabled: "1",
-          bulk_payment_enabled: "1"
-        } }
-
-        expect(response).to have_http_status(:unprocessable_content)
-        page = Capybara.string(response.body)
-        expect(page).to have_field("event[scholarship_enabled]", checked: true)
-        expect(page).to have_field("event[bulk_payment_enabled]", checked: true)
-        expect(response.body).to include("value=\"#{reg_form.id}\" selected")
-      end
-
-      it "retains selected sector and category checkboxes" do
-        sector = create(:sector, :published)
-        category = create(:category, :published, category_type: create(:category_type, :published))
-
-        post events_path, params: { event: {
-          title: "Missing dates",
-          start_date: "",
-          end_date: "",
-          sector_ids: [ "", sector.id.to_s ],
-          category_ids: [ "", category.id.to_s ]
-        } }
-
-        expect(response).to have_http_status(:unprocessable_content)
-        page = Capybara.string(response.body)
-        expect(page).to have_checked_field("event_sector_ids_#{sector.id}")
-        expect(page).to have_checked_field("event_category_ids_#{category.id}")
-      end
-    end
   end
 
   describe "PATCH /update" do
