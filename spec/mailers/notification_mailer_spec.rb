@@ -1,6 +1,30 @@
 require "rails_helper"
 
 RSpec.describe NotificationMailer, type: :mailer do
+  describe "#bulk_payment_confirmation_fyi" do
+    let(:event) { create(:event) }
+    let(:form) do
+      f = FormBuilderService.new(name: "Bulk Payment", sections: %i[bulk_payment], role: "bulk_payment").call
+      event.event_forms.create!(form: f, role: "bulk_payment")
+      f
+    end
+    let(:person) { create(:person, first_name: "Pat", last_name: "Payer", email: "pat@example.com") }
+    let(:submission) do
+      s = FormSubmission.create!(form: form, person: person, role: "bulk_payment")
+      s.form_answers.create!(form_field: form.form_fields.find_by(field_identifier: "number_of_attendees"), submitted_answer: "4")
+      s
+    end
+    let(:notification) { create(:notification, kind: "bulk_payment_confirmation_fyi", noticeable: submission) }
+
+    it "renders without raising" do
+      expect { described_class.bulk_payment_confirmation_fyi(notification).deliver_now }.not_to raise_error
+    end
+
+    it "names the payer in the subject" do
+      expect(described_class.bulk_payment_confirmation_fyi(notification).subject).to include("Pat Payer")
+    end
+  end
+
   describe "#report_submitted_fyi" do
     let(:notification) { create(:notification, kind: :report_submitted_fyi) }
 

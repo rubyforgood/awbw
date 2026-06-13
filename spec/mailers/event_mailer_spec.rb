@@ -47,6 +47,41 @@ RSpec.describe EventMailer, type: :mailer do
     end
   end
 
+  describe "#bulk_payment_confirmation" do
+    let(:event) { create(:event) }
+    let(:form) do
+      f = FormBuilderService.new(name: "Bulk Payment", sections: %i[bulk_payment], role: "bulk_payment").call
+      event.event_forms.create!(form: f, role: "bulk_payment")
+      f
+    end
+    let(:person) { create(:person, first_name: "Pat", last_name: "Payer", email: "pat@example.com") }
+    let(:submission) do
+      s = FormSubmission.create!(form: form, person: person, role: "bulk_payment")
+      s.form_answers.create!(form_field: form.form_fields.find_by(field_identifier: "number_of_attendees"), submitted_answer: "4")
+      s.form_answers.create!(form_field: form.form_fields.find_by(field_identifier: "payment_method"), submitted_answer: "Check")
+      s
+    end
+    let(:mail) { described_class.bulk_payment_confirmation(submission) }
+
+    it "renders without raising" do
+      expect { mail.deliver_now }.not_to raise_error
+    end
+
+    it "sends to the payer" do
+      expect(mail.to).to eq([ person.preferred_email ])
+    end
+
+    it "includes the event title in the subject" do
+      expect(mail.subject).to include(event.title)
+    end
+
+    it "includes the number of attendees and payment method in the body" do
+      body = mail.body.encoded
+      expect(body).to include("4")
+      expect(body).to include("Check")
+    end
+  end
+
   describe "#event_registration_reminder" do
     let(:event_registration) { create(:event_registration) }
     let(:mail) { described_class.event_registration_reminder(event_registration, days_until_event: days_until_event) }

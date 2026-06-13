@@ -26,6 +26,8 @@ class Notification < ApplicationRecord
     event_registration_confirmation_fyi
     event_registration_cancelled
     event_registration_cancelled_fyi
+    bulk_payment_confirmation
+    bulk_payment_confirmation_fyi
     idea_submitted
     idea_submitted_fyi
     report_submitted
@@ -56,6 +58,7 @@ class Notification < ApplicationRecord
 
   NOTICEABLE_TYPES = %w[
     EventRegistration
+    FormSubmission
     Report
     StoryIdea
     User
@@ -69,6 +72,7 @@ class Notification < ApplicationRecord
     [ "Admin FYI (all)", "[FYI]" ],
     [ "Admin FYI: event registration confirmed", "[FYI] New event registration" ],
     [ "Admin FYI: event registration cancelled", "[FYI] Event registration cancelled" ],
+    [ "Admin FYI: bulk payment", "[FYI] New bulk payment" ],
     [ "Admin FYI: idea submitted", "submission by" ],
     [ "Admin FYI: password reset", "[FYI] New password reset" ],
     [ "Admin FYI: workshop log submission", "New WorkshopLog submission" ],
@@ -76,6 +80,7 @@ class Notification < ApplicationRecord
     [ "Contact: form confirmation", "We received your message" ],
     [ "Event: event registration cancelled", "Event registration cancelled" ],
     [ "Event: event registration confirmed", "Event registration confirmed" ],
+    [ "Bulk payment: confirmation", "Bulk payment received" ],
     [ "Idea: confirmation (all)", "has been received" ],
     [ "Idea: confirmation: workshop log", "workshop log has been received" ],
     [ "User: confirm new email", "Confirm your new email address" ],
