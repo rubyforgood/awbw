@@ -31,23 +31,27 @@
       <%= @event.times(display_day: true, display_date: true, styled: true) %>
     </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-2.5">
-      <% if @event.labelled_cost.present? %>
-        <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
-          <i class="fa-solid fa-ticket text-blue-500"></i><%= @event.labelled_cost %>
-        </span>
-      <% end %>
-      <% if @event.location.present? %>
-        <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
-          <i class="fa-solid fa-location-dot text-blue-500"></i><%= @event.location.name %>
-        </span>
-      <% end %>
-      <% if @event.videoconference_url.present? && @event.autoshow_videoconference_label && @event.videoconference_label.present? %>
-        <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
-          <i class="fa-solid fa-video text-blue-500"></i><%= @event.videoconference_label %>
-        </span>
-      <% end %>
-    </div>
+    <%# Cost / location / platform badges. Hidden when the structured details
+        panel is enabled — the panel owns those facts, so they aren't repeated. %>
+    <% unless @event.autoshow_registration_details? %>
+      <div class="flex flex-wrap items-center justify-center gap-2.5">
+        <% if @event.labelled_cost.present? %>
+          <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
+            <i class="fa-solid fa-ticket text-blue-500"></i><%= @event.labelled_cost %>
+          </span>
+        <% end %>
+        <% if @event.location.present? %>
+          <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
+            <i class="fa-solid fa-location-dot text-blue-500"></i><%= @event.location.name %>
+          </span>
+        <% end %>
+        <% if @event.videoconference_url.present? && @event.autoshow_videoconference_label && @event.videoconference_label.present? %>
+          <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 ring-1 ring-blue-100">
+            <i class="fa-solid fa-video text-blue-500"></i><%= @event.videoconference_label %>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 
   <%# ---- REGISTRATION FORM CARD ---- %>

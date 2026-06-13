@@ -166,12 +166,8 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
 
     it "renders a structured details panel from known event data when enabled" do
-      # Guests view the page in Pacific time, so build the event times there.
-      pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
       event.update!(
         autoshow_registration_details: true,
-        start_date: pacific.local(2026, 7, 23, 9),
-        end_date: pacific.local(2026, 7, 24, 16, 30),
         cost_cents: 150000,
         videoconference_url: "https://zoom.us/j/123",
         videoconference_label: "Zoom"
@@ -179,13 +175,39 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       get new_event_public_registration_path(event)
 
-      expect(response.body).to include("Dates")
-      expect(response.body).to include("July 23-24, 2026")
-      expect(response.body).to include("Time")
-      expect(response.body).to include("Platform")
+      expect(response.body).to include("Platform:")
       expect(response.body).to include("Zoom")
-      expect(response.body).to include("Fee")
+      expect(response.body).to include("Fee:")
       expect(response.body).to include("$1,500")
+      expect(response.body).to include("Registration closes")
+    end
+
+    it "leaves date and time to the hero, not the details panel" do
+      # Date/time live in the page hero, so the panel must not repeat them.
+      event.update!(autoshow_registration_details: true)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).not_to include("Dates:")
+      expect(response.body).not_to include("Time:")
+    end
+
+    it "hides the duplicate hero badges when the details panel is shown" do
+      event.update!(autoshow_registration_details: true, cost_cents: 150000)
+
+      get new_event_public_registration_path(event)
+
+      # The fa-ticket cost badge only lives in the hero; the panel owns the fee now.
+      expect(response.body).not_to include("fa-ticket")
+      expect(response.body).to include("Fee:")
+    end
+
+    it "keeps the hero badges when the details panel is off" do
+      event.update!(autoshow_registration_details: false, cost_cents: 150000)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("fa-ticket")
     end
 
     it "omits detail rows the event has no data for" do
