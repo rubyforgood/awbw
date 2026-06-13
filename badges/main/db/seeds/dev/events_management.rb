@@ -94,6 +94,41 @@ if registration_form.form_fields.where(field_identifier: "primary_age_group").no
   FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :professional_info ])
 end
 
+# The CE-interest "magic question": a single Yes/No whose answer drives the
+# resulting registration's ce_credit_requested flag (see
+# EventRegistrationServices::PublicRegistration). Seeded straight onto the form
+# with its own section so the form builder's add/remove-section logic leaves it
+# alone, and carrying the well-known field_identifier the service keys off.
+ce_identifier = EventRegistrationServices::PublicRegistration::CE_CREDIT_INTEREST_IDENTIFIER
+if registration_form.form_fields.where(field_identifier: ce_identifier).none?
+  next_position = (registration_form.form_fields.maximum(:position) || 0) + 1
+  registration_form.form_fields.create!(
+    name: "Continuing education",
+    answer_type: :group_header,
+    status: :active,
+    position: next_position,
+    required: false,
+    section: "continuing_education",
+    visibility: :always_ask
+  )
+  ce_field = registration_form.form_fields.create!(
+    name: "Might you be seeking continuing education (CE) hours for attending this training?",
+    answer_type: :single_select_radio,
+    status: :active,
+    position: next_position + 1,
+    required: false,
+    field_identifier: ce_identifier,
+    section: "continuing_education",
+    visibility: :always_ask,
+    width: :full,
+    hint_text: "CE hours are available for select trainings. Let us know and our team will follow up with details."
+  )
+  %w[Yes No].each_with_index do |opt, idx|
+    ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
+    ce_field.form_field_answer_options.create!(answer_option: ao)
+  end
+end
+
 # Each entry: [title, form_type, cost_cents, scholarship?, visibility, span_days]
 # form_type: :long, :short, or :none. span_days (optional) makes a multi-day event.
 dev_events = [

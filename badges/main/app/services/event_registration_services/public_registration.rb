@@ -2,6 +2,11 @@ module EventRegistrationServices
   class PublicRegistration
     Result = Struct.new(:success?, :event_registration, :form_submission, :errors, keyword_init: true)
 
+    # Well-known field_identifier of the "magic" CE question seeded onto the
+    # registration form. Answering it "Yes" toggles the registration's
+    # ce_credit_requested flag. Kept here so the seed, service, and specs agree.
+    CE_CREDIT_INTEREST_IDENTIFIER = "ce_credit_interest".freeze
+
     def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil)
       new(event:, form:, form_params:, scholarship_requested:, person:).call
     end
@@ -31,6 +36,7 @@ module EventRegistrationServices
         existing = @event.event_registrations.find_by(registrant: person)
         if existing
           existing.update!(scholarship_requested: true) if @scholarship_requested
+          existing.update!(ce_credit_requested: true) if ce_credit_requested?
           if existing.status == "cancelled"
             existing.update!(status: "registered")
             send_notifications(existing)
@@ -248,8 +254,14 @@ module EventRegistrationServices
     def create_event_registration(person)
       @event.event_registrations.create!(
         registrant: person,
-        scholarship_requested: @scholarship_requested
+        scholarship_requested: @scholarship_requested,
+        ce_credit_requested: ce_credit_requested?
       )
+    end
+
+    # True when the registrant answered "Yes" to the seeded CE-interest question.
+    def ce_credit_requested?
+      field_value(CE_CREDIT_INTEREST_IDENTIFIER).to_s.strip.casecmp?("yes")
     end
 
     def create_form_submission(person)
