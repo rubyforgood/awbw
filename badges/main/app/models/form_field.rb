@@ -72,7 +72,6 @@ class FormField < ApplicationRecord
   accepts_nested_attributes_for :form_field_answer_options, allow_destroy: true,
     reject_if: ->(attrs) { attrs[:option_name].blank? }
 
-  default_scope { order(position: :desc) }
   scope :published, -> { where(status: "active") }
 
   # Methods
@@ -104,6 +103,16 @@ class FormField < ApplicationRecord
 
   def free_form_text?
     FREE_FORM_TEXT_TYPES.include?(answer_type)
+  end
+
+  # Field identifiers (system-assigned by FormBuilderService) that collect an
+  # email address, so a submitted value should be format-checked. The "*_type"
+  # selector fields are deliberately excluded — this is an exact allowlist, not
+  # a name-pattern match, so an unrelated field can't opt in by accident.
+  EMAIL_FIELD_IDENTIFIERS = %w[primary_email confirm_email secondary_email payer_email].freeze
+
+  def email_field?
+    field_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
   end
 
   def word_count(value)

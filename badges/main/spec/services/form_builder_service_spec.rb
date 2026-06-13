@@ -19,7 +19,7 @@ RSpec.describe FormBuilderService do
 
     it "creates fields with sequential positions" do
       form = described_class.new(name: "Test", sections: %i[person_identifier consent]).call
-      positions = form.form_fields.unscoped.where(form: form).order(:position).pluck(:position)
+      positions = form.form_fields.order(:position).pluck(:position)
       expect(positions).to eq((1..positions.size).to_a)
     end
 

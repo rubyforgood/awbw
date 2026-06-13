@@ -186,7 +186,7 @@ class ResourcesController < ApplicationController
     form = @resource.form
     if form
       @user_form = Report.new(created_by: current_user, owner: @resource)
-      form.form_fields.where(status: 1).each do |field|
+      form.form_fields.where(status: 1).order(:position).each do |field|
         @user_form.report_form_field_answers.build(form_field: field)
       end
     end

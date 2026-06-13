@@ -60,7 +60,7 @@ class WorkshopDecorator < ApplicationDecorator
   end
 
   def log_fields
-    form_builder ? form_builder.forms[0].form_fields : []
+    form_builder ? form_builder.forms[0].form_fields.order(:position) : []
   end
 
   def log_form_header
