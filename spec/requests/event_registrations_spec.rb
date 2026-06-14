@@ -315,19 +315,31 @@ RSpec.describe "EventRegistrations", type: :request do
           submission
         end
 
-        it "shows 'No affiliations on record' when the person has none" do
+        it "shows 'No other affiliations on record' when the person has none" do
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("No affiliations on record")
+          expect(response.body).to include("No other affiliations on record")
         end
 
-        it "lists an affiliation with its title and active status" do
+        it "shows the affiliation pill inline on the linked org" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
 
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).to include("Counselor")
           expect(response.body).to include("active")
+        end
+
+        it "lists affiliations for non-linked orgs under the registrant's other affiliations" do
+          other_org = create(:organization, name: "Unlinked Org Co")
+          create(:affiliation, person: regular_user.person, organization: other_org, title: "Board Member")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("other affiliations")
+          expect(response.body).to include(regular_user.person.first_name)
+          expect(response.body).to include("Unlinked Org Co")
+          expect(response.body).to include("Board Member")
         end
 
         it "shows 'Facilitator' active for an active facilitator affiliation" do
