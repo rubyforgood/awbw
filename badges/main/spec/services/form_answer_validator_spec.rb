@@ -89,6 +89,13 @@ RSpec.describe FormAnswerValidator do
 
       expect(validate(field, "way too long")).to eq(field.id => "must be 5 characters or fewer")
     end
+
+    it "enforces the default max-characters safety net when none is configured" do
+      field = create(:form_field, form: form, answer_type: :free_form_input_paragraph, max_characters: nil)
+      default = FormField::DEFAULT_MAX_CHARACTERS["free_form_input_paragraph"]
+
+      expect(validate(field, "a" * (default + 1))).to eq(field.id => "must be #{default} characters or fewer")
+    end
   end
 
   describe "skipping" do
