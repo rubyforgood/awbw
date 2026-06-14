@@ -184,6 +184,26 @@ class EventRegistrationsController < ApplicationController
     redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} linked."
   end
 
+  def create_organization
+    @event_registration = EventRegistration.find(params[:id])
+    authorize! @event_registration, to: :create_organization?
+    @person = @event_registration.registrant
+    # Build the org from the name the registrant typed on the form, so the button
+    # can't be used to create an arbitrary org — it only resolves the pending name.
+    name = find_submitted_agency_name(@event_registration)
+    if name.blank?
+      redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), alert: "No submitted organization name to create from."
+      return
+    end
+
+    organization = Organization.create!(name: name, organization_status: OrganizationStatus.find_by(name: "Active"))
+
+    Affiliation.find_or_create_by!(person: @person, organization: organization)
+    @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
+
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} created and linked."
+  end
+
   def unlink_organization
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :unlink_organization?

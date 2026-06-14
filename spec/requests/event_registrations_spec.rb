@@ -350,7 +350,7 @@ RSpec.describe "EventRegistrations", type: :request do
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).to include("View profile affiliations")
-          expect(response.body).to include("#{person_path(regular_user.person)}#affiliations")
+          expect(response.body).to include("#{edit_person_path(regular_user.person)}#affiliations")
         end
 
         it "lists affiliations for non-linked orgs under the registrant's other affiliations" do
@@ -384,13 +384,13 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("inactive")
         end
 
-        it "shows 'Title matches form' when the affiliation title equals the submitted position for the submitted org" do
+        it "does not show a title-comparison badge when the affiliation title matches the submitted position" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
           submit_form(org_name: organization.name, position: "Counselor")
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Title matches form")
+          expect(response.body).not_to include("Title differs from form")
         end
 
         it "shows 'Title differs from form' when the affiliation title differs from the submitted position" do
@@ -430,6 +430,24 @@ RSpec.describe "EventRegistrations", type: :request do
           }.to change { existing_registration.organizations.count }.by(1)
             .and change { regular_user.person.organizations.count }.by(1)
 
+          expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+        end
+      end
+
+      describe "POST /event_registrations/:id/create_organization" do
+        it "creates an org from the submitted name and links it" do
+          create(:organization_status, name: "Active")
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Brand New Org")
+
+          expect {
+            post create_organization_event_registration_path(existing_registration)
+          }.to change(Organization, :count).by(1)
+
+          expect(existing_registration.organizations.pluck(:name)).to include("Brand New Org")
           expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
         end
       end
