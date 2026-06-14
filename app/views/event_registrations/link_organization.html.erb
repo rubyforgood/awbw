@@ -5,11 +5,11 @@
       <%= link_to "← Back to registrants", registrants_event_path(@event_registration.event), class: "text-sm text-gray-500 hover:text-gray-700" %>
     </div>
 
-    <h1 class="text-xl font-semibold text-gray-900 mb-2">Organizations &amp; affiliations</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Organizations &amp; affiliations</h1>
     <p class="text-gray-600 mb-6">Registrant: <strong><%= @person.full_name %></strong></p>
 
     <%# === Linked organizations (registration–organization associations) === %>
-    <h2 class="text-lg font-semibold text-gray-800 mb-3">Linked organizations</h2>
+    <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Linked organizations</h2>
     <% if @linked_organizations.any? %>
       <ul class="space-y-2 mb-6">
         <% @linked_organizations.each do |org| %>
@@ -79,7 +79,7 @@
     </div>
 
     <%# === Registration form submission (what the registrant typed) === %>
-    <h2 class="text-lg font-semibold text-gray-800 mb-3">Registration form submission</h2>
+    <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Registration form submission</h2>
     <% form_show_params = @event_registration.slug.present? ? { reg: @event_registration.slug } : { person_id: @person.id } %>
     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8">
       <% if @submitted_org_name.present? || @submitted_position.present? %>
@@ -106,7 +106,7 @@
     </div>
 
     <%# === The person's affiliations to orgs NOT linked to this registration === %>
-    <h2 class="text-lg font-semibold text-gray-800 mb-3"><%= @person.first_name.presence || @person.full_name %>'s other affiliations</h2>
+    <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3"><%= @person.first_name.presence || @person.full_name %>'s other affiliations</h2>
     <% linked_org_ids = @linked_organizations.map(&:id) %>
     <% other_affiliations = @affiliations_by_org.reject { |org_id, _| linked_org_ids.include?(org_id) } %>
     <% if other_affiliations.any? %>
