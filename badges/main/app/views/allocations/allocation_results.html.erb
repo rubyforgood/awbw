@@ -80,7 +80,7 @@
 
                 <td class="px-4 py-2 text-sm text-gray-500 text-nowrap"><%= allocation.created_at.strftime("%B %d, %Y") %></td>
 
-                <td class="px-4 py-2 text-right text-sm font-medium">
+                <td class="px-4 py-2 text-left text-sm font-medium">
                   <% link_class = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer" %>
                   <% if allocation.source.respond_to?(:payer) %>
                     <%= link_to payment_path(allocation.source), data: { turbo_frame: "_top" }, class: link_class do %>
@@ -89,10 +89,10 @@
                     <% end %>
                   <% elsif allocation.source.is_a?(Discount) %>
                     <%= button_to discount_path(allocation.source), method: :delete,
-                          class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer",
+                          class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer",
                           data: { turbo_confirm: "Remove this discount?", turbo_frame: "_top" } do %>
                       <i class="fa-solid fa-trash-can text-[0.7rem]"></i>
-                      Remove
+                      Remove discount
                     <% end %>
                   <% else %>
                     <%= link_to edit_scholarship_path(allocation.source), data: { turbo_frame: "_top" }, class: link_class do %>
