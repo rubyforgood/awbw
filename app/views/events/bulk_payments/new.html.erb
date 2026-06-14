@@ -99,7 +99,7 @@
                                 end
                     extra_attrs = []
                     extra_attrs << 'min="1" step="1" pattern="[0-9]*" inputmode="numeric"' if field.number_integer?
-                    extra_attrs << %(maxlength="#{field.max_characters}") if field.max_characters.to_i.positive?
+                    extra_attrs << %(maxlength="#{field.effective_max_characters}") if field.effective_max_characters
                   %>
                   <input type="<%= html_type %>"
                          name="<%= field_name %>"

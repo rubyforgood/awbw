@@ -11,6 +11,21 @@ class FormField < ApplicationRecord
   # Answer types that collect free-form text, where a minimum word count applies
   FREE_FORM_TEXT_TYPES = %w[free_form_input_one_line free_form_input_paragraph].freeze
 
+  # Fallback character ceilings applied when a free-form field has no explicit
+  # max_characters set. This is a safety net against pathological submissions
+  # (megabyte answers that bloat the DB and break admin/email rendering), not a
+  # UX limit — the values are far above any realistic answer, and an explicit
+  # per-field max_characters always wins, including when it is larger.
+  DEFAULT_MAX_CHARACTERS = {
+    "free_form_input_one_line" => 1_000,
+    "free_form_input_paragraph" => 10_000
+  }.freeze
+
+  # Rough lower bound on characters a word consumes (average English word length
+  # plus a separating space). Used to flag a max_characters that can't possibly
+  # hold the min_words minimum, which would make the field impossible to submit.
+  MIN_CHARS_PER_WORD = 6
+
   # Validations
   validates_presence_of :name
   # Keeps an over-long name as a friendly validation error instead of a
@@ -18,6 +33,7 @@ class FormField < ApplicationRecord
   validates :name, length: { maximum: 1000 }
   validates :min_words, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :max_characters, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+  validate :max_characters_allows_min_words
 
   # Enum
   enum :status, [ :inactive, :active ]
@@ -136,15 +152,38 @@ class FormField < ApplicationRecord
     "must be at least #{min_words} #{"word".pluralize(min_words)}"
   end
 
-  # Returns a validation error string when a submitted value exceeds the
-  # configured maximum character count, or nil when it passes / does not apply.
-  def max_characters_error(value)
+  # Blocks an admin from saving a free-form field whose explicit max_characters
+  # is too small to ever satisfy its min_words minimum (e.g. 250 words capped at
+  # 1,000 characters) — otherwise the field could never be submitted. Compared
+  # against the explicit max only; the generous default never conflicts.
+  def max_characters_allows_min_words
     return unless free_form_text?
-    return unless max_characters.to_i.positive?
-    return if value.blank?
-    return if value.to_s.length <= max_characters
+    return unless min_words.to_i.positive? && max_characters.to_i.positive?
 
-    "must be #{max_characters} #{"character".pluralize(max_characters)} or fewer"
+    required = min_words * MIN_CHARS_PER_WORD
+    return if max_characters >= required
+
+    errors.add(:max_characters, "is too low for a #{min_words}-word minimum (allow at least #{required})")
+  end
+
+  # The character ceiling actually enforced for this field: the explicit
+  # max_characters when set, otherwise the per-type default safety net. Returns
+  # nil for non-free-form fields (no cap applies).
+  def effective_max_characters
+    return unless free_form_text?
+
+    max_characters || DEFAULT_MAX_CHARACTERS[answer_type]
+  end
+
+  # Returns a validation error string when a submitted value exceeds the
+  # effective maximum character count, or nil when it passes / does not apply.
+  def max_characters_error(value)
+    limit = effective_max_characters
+    return unless limit
+    return if value.blank?
+    return if value.to_s.length <= limit
+
+    "must be #{limit} #{"character".pluralize(limit)} or fewer"
   end
 
   def html_input_type

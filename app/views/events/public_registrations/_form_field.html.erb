@@ -48,7 +48,7 @@
                      end
         extra_attrs = []
         extra_attrs << 'min="1" step="1" pattern="[0-9]*" inputmode="numeric"' if field.number_integer?
-        extra_attrs << %(maxlength="#{field.max_characters}") if field.max_characters.to_i.positive?
+        extra_attrs << %(maxlength="#{field.effective_max_characters}") if field.effective_max_characters
       %>
       <input type="<%= html_type %>"
              name="<%= field_name %>"
@@ -64,7 +64,7 @@
               id="<%= field_id %>"
               rows="4"
               class="<%= input_classes %>"
-              <%= "maxlength=\"#{field.max_characters}\"".html_safe if field.max_characters.to_i.positive? %>
+              <%= "maxlength=\"#{field.effective_max_characters}\"".html_safe if field.effective_max_characters %>
               <%= "required" if field.required %>><%= value %></textarea>
 
   <% when "single_select_radio" %>
