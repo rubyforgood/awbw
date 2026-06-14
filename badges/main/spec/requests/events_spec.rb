@@ -1325,4 +1325,95 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include(form_path)
     end
   end
+
+  describe "POST /events/:id/allocate_bulk_payment" do
+    let(:admin) { create(:user, :admin) }
+    let(:event) { create(:event) }
+    let(:bulk_form) { create(:form) }
+    let!(:event_form) { create(:event_form, event: event, form: bulk_form, role: "bulk_payment") }
+    let(:payer) { create(:person) }
+    let!(:submission) { create(:form_submission, person: payer, form: bulk_form, role: "bulk_payment") }
+    let!(:payment) { create(:payment, person: payer, form_submission: submission,
+                            amount_cents: 1000, amount_cents_remaining: 1000) }
+    let(:registrant) { create(:person) }
+    let!(:event_registration) { create(:event_registration, event: event, registrant: registrant) }
+
+    let(:valid_params) do
+      { payment_id: payment.id, event_registration_id: event_registration.id, amount_dollars: "5.00" }
+    end
+
+    before { sign_in admin }
+
+    it "rejects unauthenticated request" do
+      sign_out admin
+      post allocate_bulk_payment_event_path(event), params: valid_params
+      expect(response).to redirect_to(new_user_session_path)
+    end
+
+    it "rejects non-admin request" do
+      sign_out admin
+      sign_in create(:user)
+      post allocate_bulk_payment_event_path(event), params: valid_params
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "creates an allocation and returns turbo_stream" do
+      expect {
+        post allocate_bulk_payment_event_path(event), params: valid_params, as: :turbo_stream
+      }.to change(Allocation, :count).by(1)
+
+      expect(payment.reload.amount_cents_remaining).to eq(500)
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+      expect(response.body).to include("Allocation successful")
+    end
+
+    it "shows alert when event_registration_id is blank" do
+      params = valid_params.merge(event_registration_id: "")
+      expect {
+        post allocate_bulk_payment_event_path(event), params: params, as: :turbo_stream
+      }.not_to change(Allocation, :count)
+
+      expect(response.body).to include("Please select a registrant")
+    end
+
+    it "shows alert when event_registration_id is invalid" do
+      params = valid_params.merge(event_registration_id: 999999)
+      expect {
+        post allocate_bulk_payment_event_path(event), params: params, as: :turbo_stream
+      }.not_to change(Allocation, :count)
+
+      expect(response.body).to include("Please select a registrant")
+    end
+
+    it "shows alert when amount is zero" do
+      params = valid_params.merge(amount_dollars: "0.00")
+      expect {
+        post allocate_bulk_payment_event_path(event), params: params, as: :turbo_stream
+      }.not_to change(Allocation, :count)
+
+      expect(response.body).to include("Amount must be greater than $0.00")
+    end
+
+    it "shows alert when amount exceeds remaining balance" do
+      params = valid_params.merge(amount_dollars: "20.00")
+      expect {
+        post allocate_bulk_payment_event_path(event), params: params, as: :turbo_stream
+      }.not_to change(Allocation, :count)
+
+      expect(response.body).to include("Amount exceeds remaining balance")
+    end
+
+    it "shows alert when event registration is already fully paid" do
+      large_payment = create(:payment, person: payer, form_submission: submission,
+                             amount_cents: 2000, amount_cents_remaining: 2000)
+      create(:allocation, source: large_payment, allocatable: event_registration, amount: 1099)
+
+      params = { payment_id: large_payment.id, event_registration_id: event_registration.id, amount_dollars: "5.00" }
+      expect {
+        post allocate_bulk_payment_event_path(event), params: params, as: :turbo_stream
+      }.not_to change(Allocation, :count)
+
+      expect(response.body).to include("already fully paid")
+    end
+  end
 end

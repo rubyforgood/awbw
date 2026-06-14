@@ -1,0 +1,16 @@
+<% if payment %>
+  <% if payment.amount_cents_remaining > 0 %>
+    <%= link_to payment_path(payment),
+                class: "inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 hover:bg-green-200 shrink-0" do %>
+      <i class="fa-solid fa-circle-check text-green-500"></i> Paid — $<%= format("%.2f", payment.remaining_dollars) %> remaining
+    <% end %>
+  <% else %>
+    <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 shrink-0">
+      <i class="fa-solid fa-circle-check text-green-500"></i> Fully allocated
+    </span>
+  <% end %>
+<% else %>
+  <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 shrink-0">
+    <i class="fa-solid fa-clock text-amber-500"></i> Pending
+  </span>
+<% end %>
