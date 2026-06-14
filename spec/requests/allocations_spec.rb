@@ -29,6 +29,18 @@ RSpec.describe "Allocations", type: :request do
 
       expect(response).to have_http_status(:success)
     end
+
+    it "links the back link to the registrants roster when return_to=registrants" do
+      get allocations_path(allocatable_sgid: reg.to_sgid.to_s, return_to: "registrants")
+
+      expect(response.body).to include("href=\"#{registrants_event_path(event)}\"")
+    end
+
+    it "links the back link to the registration by default" do
+      get allocations_path(allocatable_sgid: reg.to_sgid.to_s)
+
+      expect(response.body).to include("href=\"#{edit_event_registration_path(reg)}\"")
+    end
   end
 
   describe "POST /allocations" do
