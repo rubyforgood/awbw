@@ -376,9 +376,7 @@ end
 scholarship_events.each do |event|
   dashboard = EventDashboard.new(event)
   puts "  #{event.title}: scholarships #{dashboard.scholarship_total_cents / 100.0} " \
-       "(#{dashboard.scholarship_recipient_count} recipients), " \
-       "allocated #{dashboard.allocated_scholarship_cents / 100.0}, " \
-       "outstanding #{dashboard.outstanding_scholarship_cents / 100.0}"
+       "(#{dashboard.scholarship_recipient_count} recipients)"
 end
 
 # --- Standalone grant-funded scholarships ----------------------------------

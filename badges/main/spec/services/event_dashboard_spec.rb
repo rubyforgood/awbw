@@ -147,7 +147,7 @@ RSpec.describe EventDashboard do
       it "reports grand total as registration subtotal plus completed scholarships plus cont ed" do
         expect(dashboard.grand_total_cents).to eq(20_000)
         expect(dashboard.grand_total_cents).to eq(
-          dashboard.registration_subtotal_cents + dashboard.allocated_scholarship_cents + dashboard.cont_ed_total_cents
+          dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents + dashboard.cont_ed_total_cents
         )
       end
 
@@ -506,28 +506,23 @@ RSpec.describe EventDashboard do
       completed = create(:scholarship, recipient: completed_person, amount_cents: 10_000, tasks_completed: true)
       create(:allocation, source: completed, allocatable: completed_reg, amount: 10_000)
       pending = create(:scholarship, recipient: pending_person, amount_cents: 10_000, tasks_completed: false)
-      create(:allocation, source: pending, allocatable: pending_reg, amount: 0)
+      create(:allocation, source: pending, allocatable: pending_reg, amount: 10_000)
     end
 
     it "lists registrants paid in full (including scholarship-covered)" do
-      expect(dashboard.paid_registrants).to contain_exactly(paid_person, completed_person)
+      expect(dashboard.paid_registrants).to contain_exactly(paid_person, completed_person, pending_person)
     end
 
     it "lists registrants not paid in full" do
-      expect(dashboard.unpaid_registrants).to contain_exactly(unpaid_person, pending_person)
+      expect(dashboard.unpaid_registrants).to contain_exactly(unpaid_person)
     end
 
-    it "splits scholarship dollars into completed and outstanding" do
-      expect(dashboard.allocated_scholarship_cents).to eq(10_000)
-      expect(dashboard.outstanding_scholarship_cents).to eq(10_000)
+    it "reports all scholarships as allocated" do
+      expect(dashboard.scholarship_total_cents).to eq(20_000)
     end
 
-    it "lists completed scholarship recipients" do
-      expect(dashboard.allocated_scholarship_registrants).to contain_exactly(completed_person)
-    end
-
-    it "lists outstanding scholarship recipients" do
-      expect(dashboard.outstanding_scholarship_registrants).to contain_exactly(pending_person)
+    it "lists all scholarship recipients" do
+      expect(dashboard.scholarship_registrants).to contain_exactly(completed_person, pending_person)
     end
 
     describe "per-person amounts" do
@@ -541,20 +536,15 @@ RSpec.describe EventDashboard do
       it "maps each registrant to their registration due amount, reconciling with outstanding" do
         amounts = dashboard.registration_due_by_registrant
         expect(amounts[unpaid_person.id]).to eq(8_000)
-        expect(amounts[pending_person.id]).to eq(10_000)
+        expect(amounts).not_to have_key(pending_person.id)
         expect(amounts.values.sum).to eq(dashboard.outstanding_cents)
       end
 
-      it "maps each recipient to their allocated scholarship amount" do
-        amounts = dashboard.allocated_scholarship_by_recipient
+      it "maps each recipient to their scholarship amount" do
+        amounts = dashboard.scholarship_amounts_by_recipient
         expect(amounts[completed_person.id]).to eq(10_000)
-        expect(amounts.values.sum).to eq(dashboard.allocated_scholarship_cents)
-      end
-
-      it "maps each recipient to their outstanding scholarship amount" do
-        amounts = dashboard.outstanding_scholarship_by_recipient
         expect(amounts[pending_person.id]).to eq(10_000)
-        expect(amounts.values.sum).to eq(dashboard.outstanding_scholarship_cents)
+        expect(amounts.values.sum).to eq(dashboard.scholarship_total_cents)
       end
     end
 
@@ -563,7 +553,7 @@ RSpec.describe EventDashboard do
     end
 
     it "reports due as outstanding registration plus cont ed fees" do
-      expect(dashboard.due_cents).to eq(18_000)
+      expect(dashboard.due_cents).to eq(8_000)
     end
 
     it "splits monies made into collected and due" do
@@ -571,8 +561,8 @@ RSpec.describe EventDashboard do
     end
 
     it "reports monies made as registration fees plus cont ed fees, excluding scholarships" do
-      expect(dashboard.monies_made_cents).to eq(30_000)
-      expect(dashboard.monies_made_cents).to eq(dashboard.grand_total_cents - dashboard.allocated_scholarship_cents)
+      expect(dashboard.monies_made_cents).to eq(20_000)
+      expect(dashboard.monies_made_cents).to eq(dashboard.grand_total_cents - dashboard.scholarship_total_cents)
     end
   end
 
@@ -597,30 +587,25 @@ RSpec.describe EventDashboard do
 
     it "adds nothing to the grand total" do
       expect(dashboard.grand_total_cents).to eq(
-        dashboard.allocated_scholarship_cents + dashboard.received_cents + dashboard.outstanding_cents
+        dashboard.scholarship_total_cents + dashboard.received_cents + dashboard.outstanding_cents
       )
     end
   end
 
-  # An outstanding scholarship (tasks not yet completed) has a zero allocation,
-  # so the registration's full cost still sits in outstanding_cents. The grand
-  # total must not also add the awarded amount, or it double-counts that cost
-  # and climbs above the full-price total_cents.
-  context "with an outstanding (unapplied) scholarship" do
+  # All scholarships are fully allocated regardless of tasks_completed, so the
+  # grand total never exceeds the full-price total.
+  context "with a scholarship" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:recipient) { create(:person) }
     let!(:registration) { create(:event_registration, event: event, registrant: recipient, status: "registered") }
 
     before do
       scholarship = create(:scholarship, recipient: recipient, amount_cents: 10_000, tasks_completed: false)
-      create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 10_000)
     end
 
-    it "still reports the awarded amount on the scholarship card headline" do
+    it "reports the awarded amount on the scholarship card headline" do
       expect(dashboard.scholarship_total_cents).to eq(10_000)
-      expect(dashboard.scholarship_total_cents).to eq(
-        dashboard.allocated_scholarship_cents + dashboard.outstanding_scholarship_cents
-      )
     end
 
     it "does not let the grand total exceed the full-price total" do
