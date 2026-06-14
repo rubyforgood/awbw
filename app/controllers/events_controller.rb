@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form allocate_bulk_payment ]
 
   def index
     authorize!
@@ -125,8 +125,45 @@ class EventsController < ApplicationController
     @event = @event.decorate
     @submissions = FormSubmission.joins(form: :event_forms)
                                  .where(event_forms: { event_id: @event.id, role: "bulk_payment" })
-                                 .includes(:person, form_answers: :form_field)
+                                 .includes(:person, form_answers: :form_field, payments: :allocations)
                                  .order(created_at: :desc)
+  end
+
+  def allocate_bulk_payment
+    authorize! @event
+    @event = @event.decorate
+    payment = Payment.find(params[:payment_id])
+    event_registration = EventRegistration.find_by(id: params[:event_registration_id])
+    unless event_registration
+      flash.now[:alert] = "Please select a registrant"
+      @payment = payment.reload
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to bulk_payments_event_path(@event), alert: "Please select a registrant" }
+      end
+      return
+    end
+    amount_cents = (params[:amount_dollars].to_d * 100).to_i
+
+    if amount_cents <= 0
+      flash.now[:alert] = "Amount must be greater than $0.00"
+    elsif amount_cents > (payment.amount_cents_remaining || 0)
+      flash.now[:alert] = "Amount exceeds remaining balance"
+    else
+      allocation = Allocation.new(source: payment, allocatable: event_registration, amount: amount_cents)
+      if allocation.save
+        flash.now[:notice] = "Allocation successful"
+      else
+        flash.now[:alert] = allocation.errors.full_messages.to_sentence
+      end
+    end
+
+    @payment = payment.reload
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to bulk_payments_event_path(@event), notice: flash.now[:alert] || "Allocation successful" }
+    end
   end
 
   def preview_reminder

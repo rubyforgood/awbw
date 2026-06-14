@@ -1,0 +1,40 @@
+<% allocations = payment.allocations.includes(:allocatable) %>
+<% if allocations.any? %>
+  <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200 text-xs">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase">Allocated To</th>
+          <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase">Amount</th>
+          <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase">Date</th>
+          <th class="px-3 py-2 text-right font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% allocations.each do |allocation| %>
+          <tr class="<%= 'bg-red-50' if allocation.amount.to_i < 0 %>">
+            <td class="px-3 py-2 text-gray-900">
+              <% if allocation.allocatable_type == "EventRegistration" && allocation.allocatable.present? %>
+                <%= allocation.allocatable.registrant.full_name %> — <%= allocation.allocatable.event.title %>
+              <% else %>
+                <%= allocation.allocatable_type.underscore.titleize %>
+              <% end %>
+            </td>
+            <td class="px-3 py-2 text-gray-900 whitespace-nowrap">$<%= "%.2f" % (allocation.amount.to_d / 100) %></td>
+            <td class="px-3 py-2 text-gray-500 whitespace-nowrap"><%= allocation.created_at.strftime("%b %-d, %Y") %></td>
+            <td class="px-3 py-2 text-right whitespace-nowrap">
+              <% unless allocation.reverted? || allocation.amount.to_i < 0 %>
+                <%= button_to "revert", revert_allocation_path(allocation), method: :post, class: "text-danger hover:text-danger-dark", data: { turbo_confirm: "Are you sure?" } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="text-sm text-gray-500 font-medium text-right">
+    $<%= format("%.2f", payment.remaining_dollars) %> remaining
+  </div>
+<% else %>
+  <p class="text-sm text-gray-400 italic">No allocations yet. $<%= format("%.2f", payment.remaining_dollars) %> remaining.</p>
+<% end %>
