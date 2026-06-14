@@ -127,6 +127,8 @@ class EventsController < ApplicationController
                                  .where(event_forms: { event_id: @event.id, role: "bulk_payment" })
                                  .includes(:person, form_answers: :form_field)
                                  .order(created_at: :desc)
+
+    @attendee_matches = build_attendee_matches(@submissions, @event.event_registrations.active.includes(:registrant))
   end
 
   def preview_reminder
@@ -254,6 +256,48 @@ class EventsController < ApplicationController
   end
 
   private
+
+  def build_attendee_matches(submissions, registrations)
+    matches = {}
+    submissions.each do |submission|
+      attendees = submission.bulk_payment_attendees
+      next if attendees.empty?
+
+      matches[submission.id] = attendees.map do |attendee|
+        {
+          first_name: attendee["first_name"],
+          last_name: attendee["last_name"],
+          email: attendee["email"],
+          matches: match_attendee(attendee, registrations)
+        }
+      end
+    end
+    matches
+  end
+
+  def match_attendee(attendee, registrations)
+    first = attendee["first_name"]&.strip
+    last  = attendee["last_name"]&.strip
+    email = attendee["email"]&.strip
+
+    first_variants = first.present? ? NicknameMap.variants_for(first).to_set : Set.new
+    normalized_last = last.present? ? NicknameMap.normalize(last) : nil
+
+    registrations.select do |reg|
+      person = reg.registrant
+      next false unless person
+
+      first_matches = first_variants.include?(NicknameMap.normalize(person.first_name))
+      last_matches  = normalized_last.present? &&
+                     NicknameMap.normalize(person.last_name) == normalized_last
+      email_matches = email.present? && (
+        person.email&.downcase == email.downcase ||
+        person.email_2&.downcase == email.downcase
+      )
+
+      (first_matches && last_matches) || email_matches
+    end
+  end
 
   def event_registrations_csv_string
     require "csv"
