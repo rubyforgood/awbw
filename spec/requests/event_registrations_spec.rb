@@ -291,6 +291,39 @@ RSpec.describe "EventRegistrations", type: :request do
         }.to change(EventRegistration, :count).by(-1)
       end
     end
+
+    describe "organization linking" do
+      let(:organization) { create(:organization, name: "Helping Hands") }
+
+      describe "POST /event_registrations/:id/select_organization" do
+        it "links the org to the registration and the person, then returns to the edit page" do
+          expect {
+            post select_organization_event_registration_path(existing_registration),
+              params: { organization_id: organization.id }
+          }.to change { existing_registration.organizations.count }.by(1)
+            .and change { regular_user.person.organizations.count }.by(1)
+
+          expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+        end
+      end
+
+      describe "DELETE /event_registrations/:id/unlink_organization" do
+        before do
+          create(:event_registration_organization, event_registration: existing_registration, organization: organization)
+          create(:affiliation, person: regular_user.person, organization: organization)
+        end
+
+        it "removes only the registration link, leaving the person's affiliation intact" do
+          expect {
+            delete unlink_organization_event_registration_path(existing_registration),
+              params: { organization_id: organization.id }
+          }.to change { existing_registration.organizations.count }.by(-1)
+
+          expect(regular_user.person.affiliations.where(organization: organization)).to exist
+          expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+        end
+      end
+    end
   end
 
   # ============================================================

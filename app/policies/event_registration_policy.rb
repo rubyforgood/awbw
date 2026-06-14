@@ -13,6 +13,7 @@ class EventRegistrationPolicy < ApplicationPolicy
   def process_confirm? = admin?
   def link_organization? = admin?
   def select_organization? = admin?
+  def unlink_organization? = admin?
 
 
   relation_scope do |relation|

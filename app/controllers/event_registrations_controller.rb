@@ -147,12 +147,13 @@ class EventRegistrationsController < ApplicationController
   end
 
   def link_organization
-    @event_registration = EventRegistration.includes(:event, registrant: :form_submissions).find(params[:id])
+    @event_registration = EventRegistration.includes(:event, :organizations, registrant: :form_submissions).find(params[:id])
     authorize! @event_registration, to: :link_organization?
     @person = @event_registration.registrant
+    @linked_organizations = @event_registration.organizations.order(:name)
     @submitted_org_name = find_submitted_agency_name(@event_registration)
     @potential_matches = if @submitted_org_name.present?
-      Organization.remote_search(@submitted_org_name).limit(10)
+      Organization.remote_search(@submitted_org_name).where.not(id: @linked_organizations.ids).limit(10)
     else
       Organization.none
     end
@@ -169,7 +170,18 @@ class EventRegistrationsController < ApplicationController
     @event_registration.event_registration_organizations
       .find_or_create_by!(organization: organization)
 
-    redirect_to registrants_event_path(@event_registration.event), notice: "Organization linked successfully."
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} linked."
+  end
+
+  def unlink_organization
+    @event_registration = EventRegistration.find(params[:id])
+    authorize! @event_registration, to: :unlink_organization?
+    organization = Organization.find(params[:organization_id])
+
+    # Removes only the registration-scoped link; the person's global affiliation is left intact.
+    @event_registration.event_registration_organizations.where(organization_id: organization.id).destroy_all
+
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} removed from this registration."
   end
 
   def destroy

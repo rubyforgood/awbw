@@ -8,6 +8,27 @@
     <h1 class="text-xl font-semibold text-gray-900 mb-2">Link Organization</h1>
     <p class="text-gray-600 mb-6">Registrant: <strong><%= @person.full_name %></strong></p>
 
+    <h2 class="text-lg font-semibold text-gray-800 mb-3">Linked organizations</h2>
+    <% if @linked_organizations.any? %>
+      <ul class="space-y-2 mb-8">
+        <% @linked_organizations.each do |org| %>
+          <li class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-3">
+            <div>
+              <p class="font-medium text-gray-800"><%= org.name %></p>
+              <p class="text-xs text-gray-500"><%= org.city_state %></p>
+            </div>
+            <%= button_to "Remove",
+                          unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
+                          method: :delete,
+                          form: { data: { turbo_frame: "_top" } },
+                          class: "rounded-md bg-red-50 px-4 py-1.5 text-red-700 text-sm font-medium border border-red-200 hover:bg-red-100 transition cursor-pointer" %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-gray-500 mb-8">No organizations are linked to this registration yet.</p>
+    <% end %>
+
     <% if @submitted_org_name.present? %>
       <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
         <p class="text-sm text-gray-500 mb-1">Submitted organization name on registration form:</p>

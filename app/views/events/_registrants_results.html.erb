@@ -34,6 +34,9 @@
 
     <% event_form_ids = @event.form_ids %>
     <% form_submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
+    <% registration_form = @event.registration_form %>
+    <% agency_name_field = registration_form&.form_fields&.find_by(field_identifier: "agency_name") %>
+    <% submitted_org_names = agency_name_field ? FormAnswer.joins(:form_submission).where(form_submissions: { person_id: @event_registrations.map(&:registrant_id), form_id: registration_form.id }, form_field_id: agency_name_field.id).pluck(Arel.sql("form_submissions.person_id"), :submitted_answer).to_h : {} %>
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <% payment_col = @event.cost_cents.to_i > 0 %>
@@ -117,7 +120,7 @@
                     <ul class="space-y-0.5">
                       <% registration.organizations.each do |org| %>
                         <li>
-                          <%= link_to truncate(org.name, length: 40), organization_path(org),
+                          <%= link_to truncate(org.name, length: 40), link_organization_event_registration_path(registration, return_to: "registrants"),
                                       title: org.name,
                                       class: "text-gray-800 hover:text-gray-900 hover:underline",
                                       data: { turbo_frame: "_top" } %>
@@ -125,10 +128,13 @@
                       <% end %>
                     </ul>
                   <% else %>
+                    <% submitted_org_name = submitted_org_names[registration.registrant_id].presence %>
+                    <% chip_classes = submitted_org_name ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-gray-50 text-gray-500 border-gray-200" %>
                     <%= link_to link_organization_event_registration_path(registration, return_to: "registrants"),
-                                class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 bg-gray-50 text-gray-500 border-gray-200 hover:opacity-80",
+                                title: submitted_org_name,
+                                class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 #{chip_classes} hover:opacity-80",
                                 data: { turbo_frame: "_top" } do %>
-                      <span>None</span>
+                      <span><%= submitted_org_name ? "Pending" : "None" %></span>
                     <% end %>
                   <% end %>
                 </td>

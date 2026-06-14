@@ -416,6 +416,39 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "organization column" do
+      let(:organization) { create(:organization, name: "Helping Hands") }
+
+      it "links a linked organization to the edit page rather than its profile" do
+        create(:event_registration_organization, event_registration: registration, organization: organization)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(link_organization_event_registration_path(registration, return_to: "registrants"))
+        expect(response.body).not_to include(organization_path(organization))
+      end
+
+      it "shows a 'Pending' chip when a registrant submitted an org name but has no linked org" do
+        registration_form = create(:form, name: "Registration")
+        field = create(:form_field, form: registration_form, field_identifier: "agency_name")
+        create(:event_form, :registration, event: event, form: registration_form)
+        submission = create(:form_submission, person: person, form: registration_form)
+        create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Some Unlisted Org")
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(">Pending<")
+        expect(response.body).not_to include(">None<")
+      end
+
+      it "shows a 'None' chip when a registrant has no linked org and submitted nothing" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include(">None<")
+        expect(response.body).not_to include(">Pending<")
+      end
+    end
+
     context "event heading" do
       it "shows the event title and date range after the heading" do
         event.update!(start_date: Time.zone.local(2026, 6, 2, 9), end_date: Time.zone.local(2026, 6, 2, 17))
