@@ -84,23 +84,13 @@
     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8">
       <% if @submitted_org_name.present? || @submitted_position.present? %>
         <p class="text-sm text-gray-500 mb-2">
-          On the
-          <% if @form_submission %>
-            <%= link_to "registration form submission", event_public_registration_path(@event_registration.event, **form_show_params), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %>
-          <% else %>
-            registration form
-          <% end %>, the registrant entered:
+          On the <% if @form_submission %><%= link_to "registration form submission", event_public_registration_path(@event_registration.event, **form_show_params), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %><% else %>registration form<% end %>, <%= @person.first_name.presence || @person.full_name %> entered:
         </p>
         <p class="text-base text-gray-800">Organization: <strong><%= @submitted_org_name.presence || "—" %></strong></p>
         <p class="text-base text-gray-800">Position / title: <strong><%= @submitted_position.presence || "—" %></strong></p>
       <% else %>
         <p class="text-sm text-gray-500">
-          No organization was submitted on the
-          <% if @form_submission %>
-            <%= link_to "registration form submission", event_public_registration_path(@event_registration.event, **form_show_params), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %>
-          <% else %>
-            registration form
-          <% end %>.
+          No organization was submitted on the <% if @form_submission %><%= link_to "registration form submission", event_public_registration_path(@event_registration.event, **form_show_params), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %><% else %>registration form<% end %>.
         </p>
       <% end %>
     </div>
