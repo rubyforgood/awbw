@@ -1,6 +1,7 @@
 <%# Renders affiliation-status pills for one org's affiliations. Shows nothing
-    when the person has no affiliation for the org.
-    Locals: org, affiliations, submitted_org_name, submitted_position %>
+    when the person has no affiliation for the org. Non-Facilitator titles are
+    editable inline.
+    Locals: org, affiliations, submitted_org_name, submitted_position, event_registration %>
 <% if affiliations.any? %>
   <% badge = "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-2.5 py-0.5" %>
   <% active = ->(a) { !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) } %>
@@ -11,10 +12,28 @@
     <span class="text-[0.65rem] font-semibold uppercase tracking-wide text-gray-400">Affiliations:</span>
     <% affiliations.each do |a| %>
       <% a_active = active.call(a) %>
-      <span class="<%= badge %> <%= a_active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>"
-            title="<%= a.facilitator? ? "Facilitator role — determines whether the org is active with AWBW" : "Affiliation title" %>">
-        <%= a.facilitator? ? "Facilitator" : (a.title.presence || "Untitled") %> — <%= a_active ? "active" : "inactive" %>
-      </span>
+      <% color = a_active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>
+      <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "Untitled")}#{" — inactive" unless a_active}" %>
+      <% if a.facilitator? %>
+        <span class="<%= badge %> <%= color %>" title="Facilitator role — determines whether the org is active with AWBW"><%= label %></span>
+      <% else %>
+        <span data-controller="affiliation-title-edit" class="inline-flex">
+          <button type="button" data-action="affiliation-title-edit#edit" data-affiliation-title-edit-target="display"
+                  class="<%= badge %> <%= color %> cursor-pointer hover:opacity-80" title="Edit affiliation title">
+            <%= label %>
+            <i class="fa-solid fa-pen text-[0.55rem] opacity-60"></i>
+          </button>
+          <%= form_with model: a, data: { turbo_frame: "_top", affiliation_title_edit_target: "form" }, class: "hidden inline-flex items-center gap-1" do |f| %>
+            <%= hidden_field_tag :event_registration_id, event_registration&.id %>
+            <%= hidden_field_tag :return_to, params[:return_to] %>
+            <%= f.text_field :title, value: a.title,
+                             data: { affiliation_title_edit_target: "input" },
+                             class: "w-32 rounded-md border border-gray-300 px-2 py-0.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none" %>
+            <%= f.submit "Save", class: "rounded-md bg-blue-900 px-2 py-0.5 text-white text-xs font-medium hover:bg-blue-800 cursor-pointer" %>
+            <button type="button" data-action="affiliation-title-edit#cancel" class="text-xs text-gray-500 underline hover:no-underline">Cancel</button>
+          <% end %>
+        </span>
+      <% end %>
     <% end %>
     <% if is_submitted_org && position.present? %>
       <% if role_affiliations.any? { |a| a.title.to_s.casecmp?(position) } %>

@@ -20,13 +20,21 @@
                 <p class="text-xs text-gray-500"><%= org.city_state %></p>
               <% end %>
               <%= render "org_affiliation_pills", org: org, affiliations: (@affiliations_by_org[org.id] || []),
-                                                  submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
+                                                  submitted_org_name: @submitted_org_name, submitted_position: @submitted_position,
+                                                  event_registration: @event_registration %>
             </div>
-            <%= button_to "Remove",
-                          unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
-                          method: :delete,
-                          form: { class: "shrink-0", data: { turbo_frame: "_top" } },
-                          class: "inline-flex items-center rounded-full border border-transparent px-3 py-0.5 text-sm text-gray-500 underline transition hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:no-underline cursor-pointer" %>
+            <div class="shrink-0 flex flex-col items-end gap-1">
+              <%= button_to "Remove",
+                            unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
+                            method: :delete,
+                            form: { data: { turbo_frame: "_top" } },
+                            class: "inline-flex items-center rounded-full border border-transparent px-3 py-0.5 text-sm text-gray-500 underline transition hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:no-underline cursor-pointer" %>
+              <%= link_to organization_path(org, anchor: "affiliations"), target: "_blank", rel: "noopener",
+                          class: "inline-flex items-center gap-1 px-3 text-sm text-gray-500 underline hover:text-gray-700" do %>
+                View profile
+                <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+              <% end %>
+            </div>
           </li>
         <% end %>
       </ul>
@@ -110,7 +118,8 @@
               <p class="text-xs text-gray-500"><%= org.city_state %></p>
             <% end %>
             <%= render "org_affiliation_pills", org: org, affiliations: affs,
-                                                submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
+                                                submitted_org_name: @submitted_org_name, submitted_position: @submitted_position,
+                                                event_registration: @event_registration %>
           </li>
         <% end %>
       </ul>

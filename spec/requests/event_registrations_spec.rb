@@ -327,7 +327,30 @@ RSpec.describe "EventRegistrations", type: :request do
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).to include("Counselor")
-          expect(response.body).to include("active")
+          expect(response.body).not_to include("Counselor — inactive")
+        end
+
+        it "renders an inline editable title field for a non-facilitator affiliation" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include('name="affiliation[title]"')
+        end
+
+        it "does not render an editable field for a Facilitator affiliation" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Facilitator")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).not_to include('name="affiliation[title]"')
+        end
+
+        it "links 'View profile' to the org profile affiliations anchor in a new tab" do
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("View profile")
+          expect(response.body).to include("#{organization_path(organization)}#affiliations")
         end
 
         it "lists affiliations for non-linked orgs under the registrant's other affiliations" do
@@ -342,13 +365,13 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("Board Member")
         end
 
-        it "shows 'Facilitator' active for an active facilitator affiliation" do
+        it "shows 'Facilitator' for an active facilitator affiliation" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Facilitator")
 
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).to include("Facilitator")
-          expect(response.body).to include("active")
+          expect(response.body).not_to include("Facilitator — inactive")
         end
 
         it "shows a facilitator affiliation as inactive once it has ended" do

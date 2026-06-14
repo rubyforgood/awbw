@@ -6,6 +6,9 @@ application.register("affiliation-dates", AffiliationDatesController)
 import AffiliationFacilitatorWarningController from "./affiliation_facilitator_warning_controller"
 application.register("affiliation-facilitator-warning", AffiliationFacilitatorWarningController)
 
+import AffiliationTitleEditController from "./affiliation_title_edit_controller"
+application.register("affiliation-title-edit", AffiliationTitleEditController)
+
 import AllocationRefController from "./allocation_ref_controller"
 application.register("allocation-ref", AllocationRefController)
 
