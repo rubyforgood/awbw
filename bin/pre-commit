@@ -13,7 +13,7 @@ fi
 
 # Check for merge conflict markers
 if [ -n "$staged_files" ]; then
-  if echo "$staged_files" | xargs grep -n '<<<<<<<\|>>>>>>>\|=======' 2>/dev/null; then
+  if echo "$staged_files" | xargs grep -nE '^(<<<<<<<|=======|>>>>>>>)( |$)' 2>/dev/null; then
     echo "ERROR: Merge conflict markers found in staged files. Resolve them before committing."
     exit 1
   fi
