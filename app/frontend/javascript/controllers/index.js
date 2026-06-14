@@ -3,6 +3,9 @@ import { application } from "./application"
 import AffiliationDatesController from "./affiliation_dates_controller"
 application.register("affiliation-dates", AffiliationDatesController)
 
+import AffiliationFacilitatorWarningController from "./affiliation_facilitator_warning_controller"
+application.register("affiliation-facilitator-warning", AffiliationFacilitatorWarningController)
+
 import AllocationRefController from "./allocation_ref_controller"
 application.register("allocation-ref", AllocationRefController)
 
