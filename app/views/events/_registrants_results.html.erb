@@ -131,6 +131,7 @@
                                   class: "#{pill_classes} bg-gray-50 text-gray-500 border-gray-200",
                                   data: { turbo_frame: "_top" } do %>
                         <span><%= truncate(org.name, length: 40) %></span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                       <% end %>
                     <% end %>
                     <% if needs_linking %>
@@ -139,6 +140,7 @@
                                   class: "#{pill_classes} bg-amber-50 text-amber-700 border-amber-200",
                                   data: { turbo_frame: "_top" } do %>
                         <span>Pending</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                       <% end %>
                     <% end %>
                     <% if linked_orgs.none? && !needs_linking %>
@@ -146,6 +148,7 @@
                                   class: "#{pill_classes} bg-gray-50 text-gray-500 border-gray-200",
                                   data: { turbo_frame: "_top" } do %>
                         <span>None</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                       <% end %>
                     <% end %>
                   </div>
