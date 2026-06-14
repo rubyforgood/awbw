@@ -109,9 +109,13 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
              name: "Tell us why", required: true, min_words: 5)
     end
     let!(:payment_method_field) do
-      create(:form_field, form: form, answer_type: :single_select_radio,
-             field_identifier: "payment_method", name: "Payment method",
-             required: false)
+      field = create(:form_field, form: form, answer_type: :single_select_radio,
+                     field_identifier: "payment_method", name: "Payment method",
+                     required: false)
+      FormBuilderService::PAYMENT_METHOD_OPTIONS.each do |option_name|
+        field.form_field_answer_options.create!(answer_option: AnswerOption.find_or_create_by!(name: option_name))
+      end
+      field
     end
     let(:fake_session) { double(url: "https://checkout.stripe.com/test", id: "cs_test_123") }
 
@@ -137,7 +141,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       post event_public_registration_path(event),
            params: { public_registration: { form_fields: {
              essay_field.id.to_s => "this answer has enough words for validation",
-             payment_method_field.id.to_s => "Pay later"
+             payment_method_field.id.to_s => "Check"
            } } }
 
       expect(response).to have_http_status(:redirect)
