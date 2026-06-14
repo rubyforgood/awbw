@@ -133,11 +133,17 @@ class EventsController < ApplicationController
     authorize! @event
     @event = @event.decorate
     payment = Payment.find(params[:payment_id])
-    event_registration = EventRegistration.find(params[:event_registration_id])
+    event_registration = EventRegistration.find_by(id: params[:event_registration_id])
+    unless event_registration
+      flash.now[:alert] = "Please select a registrant"
+      @payment = payment.reload
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to bulk_payments_event_path(@event), alert: "Please select a registrant" }
+      end
+      return
+    end
     amount_cents = (params[:amount_dollars].to_d * 100).to_i
-    @from_no_match = params[:submission_id].present?
-    @submission_id = params[:submission_id]
-    @attendee_index = params[:attendee_index]
 
     if amount_cents <= 0
       flash.now[:alert] = "Amount must be greater than $0.00"
@@ -147,14 +153,12 @@ class EventsController < ApplicationController
       allocation = Allocation.new(source: payment, allocatable: event_registration, amount: amount_cents)
       if allocation.save
         flash.now[:notice] = "Allocation successful"
-        @allocated_amount_dollars = amount_cents / 100.0
       else
         flash.now[:alert] = allocation.errors.full_messages.to_sentence
       end
     end
 
     @payment = payment.reload
-    @event_registration = event_registration
 
     respond_to do |format|
       format.turbo_stream

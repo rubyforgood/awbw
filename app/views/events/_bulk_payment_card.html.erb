@@ -34,105 +34,99 @@
   end
 %>
 <div data-controller="dropdown" class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow">
-    <div class="flex items-center justify-between gap-2">
-      <span class="text-sm font-medium text-gray-900 truncate"><%= submission.person.name %></span>
-      <span class="text-sm text-gray-500 truncate"><%= submission.person.email %></span>
-      <span class="text-sm text-gray-500 shrink-0 text-center"><%= payment_method.presence || "—" %></span>
-      <span id="<%= dom_id(payment, :remaining) if payment %>">
-        <%= render "payment_badge", payment: payment %>
-      </span>
-      <span class="text-sm text-gray-500 whitespace-nowrap shrink-0"><%= submission.created_at.strftime("%b %-d, %Y") %></span>
-      <button type="button"
-              data-action="dropdown#toggle"
-              data-dropdown-payload-param='[{"<%= content_id %>":"hidden"}, {"<%= arrow_id %>":"rotate-180"}]'
-              class="text-gray-400 hover:text-gray-600 p-1 shrink-0"
-              title="More info">
-        <i id="<%= arrow_id %>" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
-      </button>
-    </div>
-    <div id="<%= content_id %>"
-         class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3"
-         data-dropdown-target="content">
-      <div>
-        <%= link_to form_submission_path(submission),
-                    class: "text-sm text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1",
-                    target: "_blank", rel: "noopener noreferrer" do %>
-          <i class="fa-solid fa-file-lines text-xs"></i> View submission
-        <% end %>
-      </div>
-      <% if attendee_matches.present? %>
-        <div class="border-t border-gray-100 pt-2 space-y-1.5">
-          <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Attendee matches</h4>
-          <% attendee_matches.each_with_index do |am, idx| %>
-            <div class="flex items-start justify-between border-b border-gray-100 last:border-b-0 pb-2 last:pb-0 gap-4">
-              <div class="min-w-0 shrink-0">
-                <span class="text-gray-900 font-medium"><%= am[:first_name] %> <%= am[:last_name] %></span>
-                <div class="text-sm text-gray-500"><%= am[:email] %></div>
-              </div>
-              <div>
-                <div class="flex flex-col gap-1">
-                  <% if am[:matches].any? %>
-                    <% am[:matches].each do |reg| %>
-                      <%
-                        existing = payment&.allocations&.find { |a| a.allocatable_id == reg.id && a.allocatable_type == "EventRegistration" }
-                      %>
-                      <div id="<%= dom_id(reg, :allocation_form) %>" class="flex items-start gap-3">
-                        <% if existing %>
-                          <%= render "attendee_allocation_result",
-                                     person: reg.registrant,
-                                     amount_dollars: existing.amount_dollars %>
-                        <% else %>
-                          <%= render "matched_person_card", person: reg.registrant %>
-                          <% if payment && payment.amount_cents_remaining > 0 %>
-                            <%= form_tag allocate_bulk_payment_event_path(@event),
-                                         class: "flex items-center gap-1 shrink-0 mt-1" do %>
-                              <%= hidden_field_tag :payment_id, payment.id %>
-                              <%= hidden_field_tag :event_registration_id, reg.id %>
-                              <span class="text-sm text-gray-500">$</span>
-                              <%= number_field_tag :amount_dollars, nil,
-                                                   step: "0.01", min: "0.01",
-                                                   class: "w-20 rounded border border-gray-300 px-1.5 py-1 text-sm",
-                                                   placeholder: "0.00" %>
-                              <%= button_tag "Allocate",
-                                  class: "rounded bg-blue-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-700 transition-colors" %>
-                            <% end %>
-                          <% end %>
-                        <% end %>
-                      </div>
-                    <% end %>
-                  <% elsif payment %>
-                    <div id="no-match-<%= submission.id %>-<%= idx %>" class="flex items-start gap-3">
-                      <%= form_tag allocate_bulk_payment_event_path(@event),
-                                   class: "flex items-center gap-1 shrink-0 mt-1" do %>
-                        <%= hidden_field_tag :payment_id, payment.id %>
-                        <%= hidden_field_tag :submission_id, submission.id %>
-                        <%= hidden_field_tag :attendee_index, idx %>
-                        <div class="w-64 shrink-0 rounded-lg border border-gray-300 bg-white px-2 py-1.5 mr-2 shadow-sm focus-within:ring focus-within:ring-blue-200 focus-within:border-blue-500">
-                          <%= select_tag :event_registration_id, nil,
-                               data: {
-                                 controller: "remote-select",
-                                 remote_select_model_value: "event_registration"
-                               },
-                               prompt: "Search registrant...",
-                               class: "w-full" %>
-                        </div>
-                        <span class="text-sm text-gray-500">$</span>
-                        <%= number_field_tag :amount_dollars, nil,
-                                             step: "0.01", min: "0.01",
-                                             class: "w-20 rounded border border-gray-300 px-1.5 py-1 text-sm",
-                                             placeholder: "0.00" %>
-                        <%= button_tag "Allocate",
-                            class: "rounded bg-blue-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-700 transition-colors" %>
-                      <% end %>
-                    </div>
-                  <% else %>
-                    <span class="text-gray-400 text-sm">No match</span>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-          <% end %>
-        </div>
+  <div class="flex items-center justify-between gap-2">
+    <span class="text-sm font-medium text-gray-900 truncate"><%= submission.person.name %></span>
+    <span class="text-sm text-gray-500 truncate"><%= submission.person.email %></span>
+    <span class="text-sm text-gray-500 shrink-0 text-center"><%= payment_method.presence || "—" %></span>
+    <span id="<%= dom_id(payment, :remaining) if payment %>">
+      <%= render "payment_badge", payment: payment %>
+    </span>
+    <span class="text-sm text-gray-500 whitespace-nowrap shrink-0"><%= submission.created_at.strftime("%b %-d, %Y") %></span>
+    <button type="button"
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"<%= content_id %>":"hidden"}, {"<%= arrow_id %>":"rotate-180"}]'
+            class="text-gray-400 hover:text-gray-600 p-1 shrink-0"
+            title="More info">
+      <i id="<%= arrow_id %>" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+    </button>
+  </div>
+  <div id="<%= content_id %>"
+       class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3"
+       data-dropdown-target="content">
+    <div>
+      <%= link_to form_submission_path(submission),
+                  class: "text-sm text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1",
+                  target: "_blank", rel: "noopener noreferrer" do %>
+        <i class="fa-solid fa-file-lines text-xs"></i> View submission
       <% end %>
     </div>
+    <% if attendee_matches.present? %>
+      <div class="border-t border-gray-100 pt-2 space-y-1.5">
+        <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Attendee matches</h4>
+        <% attendee_matches.each do |am| %>
+          <div class="flex items-start justify-between border-b border-gray-100 last:border-b-0 pb-2 last:pb-0 gap-4">
+            <div class="min-w-0 shrink-0">
+              <span class="text-gray-900 font-medium"><%= am[:first_name] %> <%= am[:last_name] %></span>
+              <div class="text-sm text-gray-500"><%= am[:email] %></div>
+            </div>
+            <div>
+              <% if am[:matches].any? %>
+                <div class="flex flex-col gap-1">
+                  <% am[:matches].each do |reg| %>
+                    <div class="flex items-center gap-2">
+                      <% if payment && payment.amount_cents_remaining > 0 && !reg.paid_in_full? %>
+                        <%= form_tag allocate_bulk_payment_event_path(@event), class: "flex items-center gap-1 shrink-0" do %>
+                          <%= hidden_field_tag :payment_id, payment.id %>
+                          <%= hidden_field_tag :event_registration_id, reg.id %>
+                          <span class="text-sm text-gray-500">$</span>
+                          <%= number_field_tag :amount_dollars, nil, step: "0.01", min: "0.01", class: "w-16 rounded border border-gray-300 px-1 py-1 text-xs", placeholder: "0.00" %>
+                          <%= button_tag "Allocate", class: "rounded bg-blue-600 px-1.5 py-1 text-xs font-medium text-white hover:bg-blue-700 transition-colors" %>
+                        <% end %>
+                      <% end %>
+                      <%= render "matched_person_card", person: reg.registrant %>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <span class="text-gray-400 text-sm">No match</span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    <% if payment %>
+      <div class="border-t border-gray-100 pt-2 space-y-2">
+        <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Payment Allocations</h4>
+        <div id="<%= dom_id(payment, :allocations) %>">
+          <%= render "payment_allocations", payment: payment %>
+        </div>
+        <% if payment.amount_cents_remaining > 0 %>
+          <div class="pt-2 border-t border-gray-100">
+            <h5 class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">New Allocation</h5>
+            <%= form_tag allocate_bulk_payment_event_path(@event),
+                         class: "flex items-center gap-2" do %>
+              <%= hidden_field_tag :payment_id, payment.id %>
+              <div class="w-64 shrink-0 rounded-lg border border-gray-300 bg-white px-2 py-1.5 shadow-sm focus-within:ring focus-within:ring-blue-200 focus-within:border-blue-500">
+                <%= select_tag :event_registration_id, nil,
+                     data: {
+                       controller: "remote-select",
+                       remote_select_model_value: "event_registration"
+                     },
+                     prompt: "Search registrant...",
+                     class: "w-full" %>
+              </div>
+              <span class="text-sm text-gray-500">$</span>
+              <%= number_field_tag :amount_dollars, nil,
+                                   step: "0.01", min: "0.01",
+                                   class: "w-20 rounded border border-gray-300 px-1.5 py-1.5 text-sm",
+                                   placeholder: "0.00" %>
+              <%= button_tag "Allocate",
+                  class: "rounded bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors" %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
   </div>
+</div>
