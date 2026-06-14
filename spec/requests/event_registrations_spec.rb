@@ -346,11 +346,11 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include('name="affiliation[title]"')
         end
 
-        it "links 'View profile' to the org profile affiliations anchor in a new tab" do
+        it "links 'View profile affiliations' to the registrant profile affiliations anchor" do
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("View profile")
-          expect(response.body).to include("#{organization_path(organization)}#affiliations")
+          expect(response.body).to include("View profile affiliations")
+          expect(response.body).to include("#{person_path(regular_user.person)}#affiliations")
         end
 
         it "lists affiliations for non-linked orgs under the registrant's other affiliations" do

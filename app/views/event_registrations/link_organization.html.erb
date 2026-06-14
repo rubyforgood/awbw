@@ -9,7 +9,14 @@
     <p class="text-gray-600 mb-6">Registrant: <strong><%= @person.full_name %></strong></p>
 
     <%# === Linked organizations (registration–organization associations) === %>
-    <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Linked organizations</h2>
+    <div class="flex items-center justify-between gap-3 mb-3">
+      <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500">Linked organizations</h2>
+      <%= link_to person_path(@person, anchor: "affiliations"), target: "_blank", rel: "noopener",
+                  class: "inline-flex items-center gap-1 text-sm text-gray-500 underline hover:text-gray-700" do %>
+        View profile affiliations
+        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+      <% end %>
+    </div>
     <% if @linked_organizations.any? %>
       <ul class="space-y-2 mb-6">
         <% @linked_organizations.each do |org| %>
@@ -23,18 +30,11 @@
                                                   submitted_org_name: @submitted_org_name, submitted_position: @submitted_position,
                                                   event_registration: @event_registration %>
             </div>
-            <div class="shrink-0 flex flex-col items-end gap-1">
-              <%= button_to "Remove",
-                            unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
-                            method: :delete,
-                            form: { data: { turbo_frame: "_top" } },
-                            class: "inline-flex items-center rounded-full border border-transparent px-3 py-0.5 text-sm text-gray-500 underline transition hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:no-underline cursor-pointer" %>
-              <%= link_to organization_path(org, anchor: "affiliations"), target: "_blank", rel: "noopener",
-                          class: "inline-flex items-center gap-1 px-3 text-sm text-gray-500 underline hover:text-gray-700" do %>
-                View profile
-                <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-              <% end %>
-            </div>
+            <%= button_to "Remove",
+                          unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
+                          method: :delete,
+                          form: { class: "shrink-0", data: { turbo_frame: "_top" } },
+                          class: "inline-flex items-center rounded-full border border-transparent px-3 py-0.5 text-sm text-gray-500 underline transition hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:no-underline cursor-pointer" %>
           </li>
         <% end %>
       </ul>
