@@ -110,34 +110,31 @@ class EventDashboard
     @registration_slug_by_registrant ||= active_registrations.pluck(:registrant_id, :slug).to_h
   end
 
-  # Scholarships whose tasks are done, so their dollars are allocated to the
-  # registration, vs still outstanding (awarded but not yet allocated).
+  # All scholarships are fully allocated at their awarded amount, so these
+  # methods all return the same totals. The tasks_completed flag is retained
+  # for informational tracking only, not for financial calculations.
   def allocated_scholarship_cents
-    allocated_scholarships.sum(:amount_cents)
+    scholarships.sum(:amount_cents)
   end
 
   def outstanding_scholarship_cents
-    outstanding_scholarships.sum(:amount_cents)
+    0
   end
 
   def allocated_scholarship_registrants
-    @allocated_scholarship_registrants ||= people_sorted(allocated_scholarships.distinct.pluck(:recipient_id))
+    @allocated_scholarship_registrants ||= people_sorted(scholarships.distinct.pluck(:recipient_id))
   end
 
   def outstanding_scholarship_registrants
-    @outstanding_scholarship_registrants ||= people_sorted(outstanding_scholarships.distinct.pluck(:recipient_id))
+    []
   end
 
-  # Per-recipient awarded cents for completed (allocated) scholarships. Keyed by
-  # Person id; sums to allocated_scholarship_cents.
   def allocated_scholarship_by_recipient
-    @allocated_scholarship_by_recipient ||= allocated_scholarships.group(:recipient_id).sum(:amount_cents)
+    @allocated_scholarship_by_recipient ||= scholarships.group(:recipient_id).sum(:amount_cents)
   end
 
-  # Per-recipient awarded cents for outstanding (unallocated) scholarships. Keyed
-  # by Person id; sums to outstanding_scholarship_cents.
   def outstanding_scholarship_by_recipient
-    @outstanding_scholarship_by_recipient ||= outstanding_scholarships.group(:recipient_id).sum(:amount_cents)
+    {}
   end
 
   # Per-registrant payment-sourced cents received, keyed by Person id. Aggregates

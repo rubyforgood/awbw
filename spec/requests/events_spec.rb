@@ -577,8 +577,8 @@ RSpec.describe "Events", type: :request do
     end
     let!(:pending_scholarship_reg) do
       reg = create(:event_registration, event: event, registrant: pending_scholarship_person)
-      scholarship = create(:scholarship, recipient: pending_scholarship_person, tasks_completed: false, amount_cents: 1_000)
-      create(:allocation, source: scholarship, allocatable: reg, amount: 0)
+      scholarship = create(:scholarship, recipient: pending_scholarship_person, tasks_completed: false, amount_cents: 500)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 500)
       reg
     end
 
@@ -1029,19 +1029,19 @@ RSpec.describe "Events", type: :request do
 
       it "flags a recipient whose tasks are still outstanding" do
         registration = event.event_registrations.find_by(registrant: applicant)
-        scholarship = create(:scholarship, recipient: applicant, amount_cents: 25_000, tasks_completed: false)
-        create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+        scholarship = create(:scholarship, recipient: applicant, amount_cents: 1_000, tasks_completed: false)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
 
         get recipients_event_path(event)
 
-        expect(response.body).to include("$250.00")
+        expect(response.body).to include("$10.00")
         expect(response.body).to include("Tasks outstanding")
       end
 
       it "renders the tasks status as an inline toggle that flips the completed state" do
         registration = event.event_registrations.find_by(registrant: applicant)
-        scholarship = create(:scholarship, recipient: applicant, amount_cents: 25_000, tasks_completed: false)
-        create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+        scholarship = create(:scholarship, recipient: applicant, amount_cents: 1_000, tasks_completed: false)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
 
         get recipients_event_path(event)
 

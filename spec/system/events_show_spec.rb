@@ -410,11 +410,11 @@ RSpec.describe "Event show page", type: :system do
       end
     end
 
-    context "user has scholarship but tasks not completed" do
+    context "user has partial scholarship not covering full cost" do
       before do
         registration = create(:event_registration, event: event, registrant: user.person)
-        scholarship = create(:scholarship, tasks_completed: false, amount_cents: event.cost_cents)
-        create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+        scholarship = create(:scholarship, tasks_completed: false, amount_cents: 500)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 500)
       end
 
       it "does not show the join link" do

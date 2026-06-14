@@ -18,7 +18,6 @@ class ScholarshipsController < ApplicationController
     redirect_to allocations_path, alert: "Allocatable not found." and return unless @allocatable
 
     @scholarship = Scholarship.new(recipient: @allocatable.registrant)
-    @scholarship.build_allocation(allocatable: @allocatable, amount: 0)
     @grants = Grant.selectable_for(@scholarship)
     authorize! @scholarship
   end
@@ -40,7 +39,7 @@ class ScholarshipsController < ApplicationController
     redirect_to allocations_path, alert: "Allocatable not found." and return unless @allocatable
 
     @scholarship = Scholarship.new(scholarship_params.merge(recipient: @allocatable.registrant))
-    @scholarship.build_allocation(allocatable: @allocatable, amount: 0)
+    @scholarship.build_allocation(allocatable: @allocatable, amount: @scholarship.amount_cents.to_i)
     authorize! @scholarship
 
     if @scholarship.save

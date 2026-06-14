@@ -228,7 +228,7 @@ RSpec.describe "EventRegistrations", type: :request do
     describe "PATCH /event_registrations/:id scholarship handling" do
       def link_scholarship(registration, amount_cents:, tasks_completed: false)
         scholarship = Scholarship.new(recipient: registration.registrant, amount_cents: amount_cents, tasks_completed: tasks_completed)
-        scholarship.build_allocation(allocatable: registration, amount: 0)
+        scholarship.build_allocation(allocatable: registration, amount: amount_cents)
         scholarship.save!
         scholarship
       end
@@ -247,27 +247,9 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(existing_registration.reload.scholarship_requested).to be(true)
       end
 
-      it "removes an empty stub scholarship when unrequested on save" do
-        existing_registration.update!(scholarship_requested: true)
-        link_scholarship(existing_registration, amount_cents: 0)
-
-        expect { unrequest(existing_registration) }
-          .to change { existing_registration.scholarships.count }.by(-1)
-
-        expect(existing_registration.reload.scholarship_requested).to be(false)
-      end
-
       it "keeps a funded scholarship when unrequested" do
         existing_registration.update!(scholarship_requested: true)
         link_scholarship(existing_registration, amount_cents: 5000)
-
-        expect { unrequest(existing_registration) }
-          .not_to change { existing_registration.scholarships.count }
-      end
-
-      it "keeps a scholarship with completed tasks when unrequested" do
-        existing_registration.update!(scholarship_requested: true)
-        link_scholarship(existing_registration, amount_cents: 0, tasks_completed: true)
 
         expect { unrequest(existing_registration) }
           .not_to change { existing_registration.scholarships.count }
