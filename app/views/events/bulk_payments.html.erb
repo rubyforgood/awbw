@@ -9,43 +9,44 @@
   </div>
 
   <% if @submissions.any? %>
-    <div class="space-y-3">
+    <div class="grid grid-cols-1 gap-3">
       <% @submissions.each do |submission| %>
         <%
-          answers_by_id = submission.form_answers.index_by(&:form_field_id)
           answers_by_identifier = submission.form_answers.select { |a| a.form_field&.field_identifier.present? }
                                                   .index_by { |a| a.form_field.field_identifier }
-          num_attendees = answers_by_identifier["number_of_attendees"]&.submitted_answer
           payment_method = answers_by_identifier["payment_method"]&.submitted_answer
         %>
-        <div class="bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 flex items-center gap-4 hover:shadow-md transition-shadow">
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate"><%= submission.person.name %></div>
-            <div class="text-sm text-gray-500 truncate"><%= submission.person.email %></div>
-          </div>
-          <div class="text-sm text-gray-900 w-16 text-center shrink-0"><%= num_attendees.presence || "—" %></div>
-          <div class="text-sm text-gray-900 w-28 shrink-0"><%= payment_method.presence || "—" %></div>
-          <div class="w-24 shrink-0">
+        <%
+          content_id = "payment-details-#{submission.id}"
+          arrow_id = "payment-arrow-#{submission.id}"
+        %>
+        <div data-controller="dropdown" class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm font-medium text-gray-900 truncate"><%= submission.person.name %></span>
+            <span class="text-sm text-gray-500 truncate"><%= submission.person.email %></span>
+            <span class="text-sm text-gray-500 shrink-0 text-center"><%= payment_method.presence || "—" %></span>
             <% if submission.payments.any? %>
               <%= link_to payment_path(submission.payments.first),
-                          class: "inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 hover:bg-green-200" do %>
+                          class: "inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 hover:bg-green-200 shrink-0" do %>
                 <i class="fa-solid fa-circle-check text-green-500"></i> Paid
               <% end %>
             <% else %>
-              <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+              <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 shrink-0">
                 <i class="fa-solid fa-clock text-amber-500"></i> Pending
               </span>
             <% end %>
+            <span class="text-sm text-gray-500 whitespace-nowrap shrink-0"><%= submission.created_at.strftime("%b %-d, %Y") %></span>
+            <button type="button"
+                    data-action="dropdown#toggle"
+                    data-dropdown-payload-param='[{"<%= content_id %>":"hidden"}, {"<%= arrow_id %>":"rotate-180"}]'
+                    class="text-gray-400 hover:text-gray-600 p-1 shrink-0"
+                    title="More info">
+              <i id="<%= arrow_id %>" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+            </button>
           </div>
-          <div class="text-sm text-gray-500 whitespace-nowrap w-24 shrink-0">
-            <%= submission.created_at.strftime("%b %-d, %Y") %>
-          </div>
-          <div class="shrink-0">
-            <%= link_to event_bulk_payment_path(@event, submission_id: submission.id),
-                        class: "text-sm text-blue-600 hover:text-blue-800 font-medium",
-                        target: "_blank", rel: "noopener noreferrer" do %>
-              View <i class="fa-solid fa-arrow-right text-xs ml-0.5"></i>
-            <% end %>
+          <div id="<%= content_id %>"
+               class="hidden mt-3 pt-3 border-t border-gray-100 space-y-2"
+               data-dropdown-target="content">
           </div>
         </div>
       <% end %>
