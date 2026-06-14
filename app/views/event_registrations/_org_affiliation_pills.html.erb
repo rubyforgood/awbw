@@ -7,7 +7,8 @@
   <% position = submitted_position.to_s.strip %>
   <% is_submitted_org = submitted_org_name.to_s.strip.present? && org.name.to_s.strip.casecmp?(submitted_org_name.to_s.strip) %>
   <% role_affiliations = affiliations.reject(&:facilitator?) %>
-  <div class="flex flex-wrap gap-1.5 mt-1.5">
+  <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+    <span class="text-[0.65rem] font-semibold uppercase tracking-wide text-gray-400">Affiliations:</span>
     <% affiliations.each do |a| %>
       <% a_active = active.call(a) %>
       <span class="<%= badge %> <%= a_active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>"

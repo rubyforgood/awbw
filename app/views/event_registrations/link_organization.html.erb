@@ -5,7 +5,7 @@
       <%= link_to "← Back to registrants", registrants_event_path(@event_registration.event), class: "text-sm text-gray-500 hover:text-gray-700" %>
     </div>
 
-    <h1 class="text-xl font-semibold text-gray-900 mb-2">Link organization</h1>
+    <h1 class="text-xl font-semibold text-gray-900 mb-2">Organizations &amp; affiliations</h1>
     <p class="text-gray-600 mb-6">Registrant: <strong><%= @person.full_name %></strong></p>
 
     <%# === Linked organizations (registration–organization associations) === %>
@@ -65,12 +65,14 @@
                     data: { turbo_frame: "_top" },
                     class: "flex items-stretch gap-2" do %>
         <%= hidden_field_tag :return_to, params[:return_to] %>
-        <%= select_tag :organization_id,
-                       options_from_collection_for_select([], :id, :name),
-                       include_blank: true,
-                       class: "flex-1 min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                       data: { controller: "remote-select", remote_select_model_value: "organization" },
-                       prompt: "Type to search organizations…" %>
+        <div class="flex-1 min-w-0">
+          <%= select_tag :organization_id,
+                         options_from_collection_for_select([], :id, :name),
+                         include_blank: true,
+                         class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                         data: { controller: "remote-select", remote_select_model_value: "organization" },
+                         prompt: "Type to search organizations…" %>
+        </div>
         <%= submit_tag "Link organization",
                        class: "shrink-0 rounded-md bg-blue-900 px-6 py-2 text-white font-semibold hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
       <% end %>
