@@ -151,7 +151,14 @@ class EventRegistrationsController < ApplicationController
     authorize! @event_registration, to: :link_organization?
     @person = @event_registration.registrant
     @linked_organizations = @event_registration.organizations.order(:name)
+    # The registrant's global affiliations, keyed by org, so the editor can show
+    # whether each linked org is also an active/inactive affiliation (removing a
+    # link here leaves the affiliation untouched).
+    @affiliations_by_org = @person.affiliations.group_by(&:organization_id)
     @submitted_org_name = find_submitted_agency_name(@event_registration)
+    # The job title/position the registrant typed on the form, to compare against
+    # the title on any existing affiliation for a linked org.
+    @submitted_position = find_submitted_answer(@event_registration, "agency_position")
     @potential_matches = if @submitted_org_name.present?
       Organization.remote_search(@submitted_org_name).where.not(id: @linked_organizations.ids).limit(10)
     else
@@ -263,10 +270,14 @@ class EventRegistrationsController < ApplicationController
   end
 
   def find_submitted_agency_name(registration)
+    find_submitted_answer(registration, "agency_name")
+  end
+
+  def find_submitted_answer(registration, field_identifier)
     form = registration.event.registration_form
     return nil unless form
 
-    field = form.form_fields.find_by(field_identifier: "agency_name")
+    field = form.form_fields.find_by(field_identifier: field_identifier)
     return nil unless field
 
     FormAnswer

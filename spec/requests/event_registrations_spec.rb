@@ -295,6 +295,74 @@ RSpec.describe "EventRegistrations", type: :request do
     describe "organization linking" do
       let(:organization) { create(:organization, name: "Helping Hands") }
 
+      describe "GET /event_registrations/:id/link_organization" do
+        before do
+          create(:event_registration_organization, event_registration: existing_registration, organization: organization)
+        end
+
+        # Records the position/title the registrant "typed on the form" so the
+        # editor can compare it to the title on an existing affiliation.
+        def submit_position(value)
+          reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
+          field = reg_form.form_fields.find_by(field_identifier: "agency_position") ||
+            create(:form_field, form: reg_form, field_identifier: "agency_position")
+          create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+        end
+
+        it "shows 'No affiliation on record' when the org is linked but the person has none" do
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("No affiliation on record")
+        end
+
+        it "shows the recorded title and no-facilitator state for a non-facilitator affiliation" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("On record: Counselor")
+          expect(response.body).to include("No facilitator affiliation")
+        end
+
+        it "shows 'Title matches form' when the affiliation title equals the submitted position" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
+          submit_position("Counselor")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Title matches form: Counselor")
+        end
+
+        it "shows 'Title differs' when the affiliation title differs from the submitted position" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
+          submit_position("Director")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Title differs")
+          expect(response.body).to include("Director")
+        end
+
+        it "shows 'Facilitator: active' for an active facilitator affiliation" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Facilitator")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Facilitator: active")
+        end
+
+        it "shows 'Facilitator: inactive' for an ended facilitator affiliation" do
+          create(:affiliation, person: regular_user.person, organization: organization,
+                               title: "Facilitator", end_date: 1.month.ago.to_date)
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Facilitator: inactive")
+        end
+      end
+
       describe "POST /event_registrations/:id/select_organization" do
         it "links the org to the registration and the person, then returns to the edit page" do
           expect {

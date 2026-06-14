@@ -11,11 +11,41 @@
     <h2 class="text-lg font-semibold text-gray-800 mb-3">Linked organizations</h2>
     <% if @linked_organizations.any? %>
       <ul class="space-y-2 mb-8">
+        <% active = ->(a) { !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) } %>
+        <% badge = "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-2.5 py-0.5" %>
         <% @linked_organizations.each do |org| %>
-          <li class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-3">
-            <div>
+          <% affiliations = @affiliations_by_org[org.id] || [] %>
+          <% facilitator_affiliations = affiliations.select(&:facilitator?) %>
+          <% role_affiliations = affiliations - facilitator_affiliations %>
+          <% active_facilitator = facilitator_affiliations.find(&active) %>
+          <% submitted_position = @submitted_position.to_s.strip %>
+          <% role_titles = role_affiliations.filter_map { |a| a.title.presence }.uniq %>
+          <% title_matches_form = submitted_position.present? && role_titles.any? { |t| t.casecmp?(submitted_position) } %>
+          <li class="flex items-start justify-between gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+            <div class="min-w-0">
               <p class="font-medium text-gray-800"><%= org.name %></p>
-              <p class="text-xs text-gray-500"><%= org.city_state %></p>
+              <p class="text-xs text-gray-500 mb-1.5"><%= org.city_state %></p>
+              <div class="flex flex-wrap gap-1.5">
+                <%# 1. Does an affiliation exist, and does its title match the form? %>
+                <% if affiliations.empty? %>
+                  <span class="<%= badge %> bg-amber-50 text-amber-700 border-amber-200">No affiliation on record</span>
+                <% elsif submitted_position.blank? %>
+                  <span class="<%= badge %> bg-gray-100 text-gray-600 border-gray-200">On record: <%= role_titles.join(", ").presence || "no title" %></span>
+                <% elsif title_matches_form %>
+                  <span class="<%= badge %> bg-green-50 text-green-700 border-green-200">Title matches form: <%= submitted_position %></span>
+                <% else %>
+                  <span class="<%= badge %> bg-amber-50 text-amber-700 border-amber-200"
+                        title="Form: <%= submitted_position %>">Title differs — form: <%= submitted_position %>; on record: <%= role_titles.join(", ").presence || "none" %></span>
+                <% end %>
+                <%# 2. Facilitator affiliation — this is what marks the org active with AWBW. %>
+                <% if active_facilitator %>
+                  <span class="<%= badge %> bg-green-50 text-green-700 border-green-200" title="Active with AWBW">Facilitator: active</span>
+                <% elsif facilitator_affiliations.any? %>
+                  <span class="<%= badge %> bg-gray-100 text-gray-600 border-gray-200">Facilitator: inactive</span>
+                <% else %>
+                  <span class="<%= badge %> bg-amber-50 text-amber-700 border-amber-200">No facilitator affiliation</span>
+                <% end %>
+              </div>
             </div>
             <%= button_to "Remove",
                           unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
