@@ -21,6 +21,11 @@ class FormField < ApplicationRecord
     "free_form_input_paragraph" => 10_000
   }.freeze
 
+  # Rough lower bound on characters a word consumes (average English word length
+  # plus a separating space). Used to flag a max_characters that can't possibly
+  # hold the min_words minimum, which would make the field impossible to submit.
+  MIN_CHARS_PER_WORD = 6
+
   # Validations
   validates_presence_of :name
   # Keeps an over-long name as a friendly validation error instead of a
@@ -28,6 +33,7 @@ class FormField < ApplicationRecord
   validates :name, length: { maximum: 1000 }
   validates :min_words, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :max_characters, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+  validate :max_characters_allows_min_words
 
   # Enum
   enum :status, [ :inactive, :active ]
@@ -144,6 +150,20 @@ class FormField < ApplicationRecord
     return if word_count(value) >= min_words
 
     "must be at least #{min_words} #{"word".pluralize(min_words)}"
+  end
+
+  # Blocks an admin from saving a free-form field whose explicit max_characters
+  # is too small to ever satisfy its min_words minimum (e.g. 250 words capped at
+  # 1,000 characters) — otherwise the field could never be submitted. Compared
+  # against the explicit max only; the generous default never conflicts.
+  def max_characters_allows_min_words
+    return unless free_form_text?
+    return unless min_words.to_i.positive? && max_characters.to_i.positive?
+
+    required = min_words * MIN_CHARS_PER_WORD
+    return if max_characters >= required
+
+    errors.add(:max_characters, "is too low for a #{min_words}-word minimum (allow at least #{required})")
   end
 
   # The character ceiling actually enforced for this field: the explicit

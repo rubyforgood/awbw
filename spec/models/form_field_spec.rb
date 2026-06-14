@@ -239,6 +239,38 @@ RSpec.describe FormField do
     end
   end
 
+  describe "min_words / max_characters consistency" do
+    let(:form) { create(:form) }
+
+    it "rejects a max too small to hold the word minimum" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 250, max_characters: 1_000)
+      expect(field).not_to be_valid
+      expect(field.errors[:max_characters]).to include("is too low for a 250-word minimum (allow at least 1500)")
+    end
+
+    it "allows a max with room for the word minimum" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 250, max_characters: 2_000)
+      expect(field).to be_valid
+    end
+
+    it "allows the exact boundary" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 10, max_characters: 60)
+      expect(field).to be_valid
+    end
+
+    it "does not flag when only one of the two is set" do
+      min_only = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 250, max_characters: nil)
+      max_only = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: nil, max_characters: 50)
+      expect(min_only).to be_valid
+      expect(max_only).to be_valid
+    end
+
+    it "does not apply to non-free-form fields" do
+      field = build(:form_field, form: form, answer_type: :single_select_radio, min_words: 250, max_characters: 1)
+      expect(field).to be_valid
+    end
+  end
+
   describe "#selectable?" do
     let(:form) { create(:form) }
 
