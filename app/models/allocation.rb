@@ -89,13 +89,22 @@ class Allocation < ApplicationRecord
     event_reg = allocatable
     return unless event_reg.is_a?(EventRegistration)
 
-    if event_reg.event.cost_cents.blank?
+    cost_cents = event_reg.event.cost_cents
+    if cost_cents.blank?
       errors.add(:base, "Cannot allocate to a free event.")
-    elsif amount.to_i > 0 && event_reg.paid_in_full?
-      errors.add(:base, "Event registration is already fully paid.")
-    elsif amount.to_i > 0 && amount > event_reg.remaining_cost
-      remaining = event_reg.remaining_cost
-      errors.add(:base, "Cannot allocate more than remaining event cost. Remaining: $#{'%.2f' % (remaining / 100.0)}")
+      return
+    end
+
+    other_total = event_reg.allocations_sum
+    other_total -= amount_was if persisted?
+
+    if amount.to_i > 0
+      if other_total >= cost_cents
+        errors.add(:base, "Event registration is already fully paid.")
+      elsif other_total + amount > cost_cents
+        remaining = cost_cents - other_total
+        errors.add(:base, "Cannot allocate more than remaining event cost. Remaining: $#{'%.2f' % (remaining / 100.0)}")
+      end
     end
   end
 

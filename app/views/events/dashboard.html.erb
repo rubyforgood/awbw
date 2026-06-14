@@ -94,8 +94,8 @@
               </div>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
               <div class="leading-tight">
-                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> tabular-nums"><%= number_to_currency(@dashboard.allocated_scholarship_cents / 100.0) %></p>
-                <p class="hidden lg:block text-xs text-gray-500">Scholarships allocated</p>
+                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> tabular-nums"><%= number_to_currency(@dashboard.scholarship_total_cents / 100.0) %></p>
+                <p class="hidden lg:block text-xs text-gray-500">Scholarships</p>
               </div>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
               <div class="leading-tight whitespace-nowrap">
@@ -103,7 +103,7 @@
                 <p class="hidden lg:block text-xs text-gray-500">Continuing education fees</p>
               </div>
             </div>
-            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships allocated + continuing education fees</p>
+            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + continuing education fees</p>
           </div>
 
           <%# Cash view of the same money: what's collected (registration paid +
@@ -185,32 +185,20 @@
                 <%= pluralize(@dashboard.scholarship_recipient_count, "recipient") %>
               <% end %>
             </div>
-            <%# Unlike the other two cards, this headline is the full amount
-                potentially awarded — not what flows into the grand total. The
-                allocated portion (tasks complete) that counts toward the grand
-                total is broken out in the sub-rows below. %>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">
                 <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> tabular-nums"><%= number_to_currency(@dashboard.scholarship_total_cents / 100.0) %></span>
-                <span class="text-xs text-gray-500">including unallocated</span>
               </p>
               <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
             </div>
           </summary>
 
           <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
-            <%= render "dashboard_money_row", label: "Completed & allocated", icon: "fa-circle-check",
-                  amount_cents: @dashboard.allocated_scholarship_cents,
-                  count: @dashboard.allocated_scholarship_registrants.size, registrants: @dashboard.allocated_scholarship_registrants,
-                  amounts_by_registrant_id: @dashboard.allocated_scholarship_by_recipient,
-                  filter_path: registrants_event_path(@event, scholarship: "complete") %>
-            <%= render "dashboard_money_row", label: "Incomplete & unallocated", icon: "fa-hourglass-half",
-                  icon_color: @dashboard.outstanding_scholarship_registrants.any? ? "text-white" : "text-gray-400",
-                  icon_bg: @dashboard.outstanding_scholarship_registrants.any? ? "bg-orange-500" : nil,
-                  amount_cents: @dashboard.outstanding_scholarship_cents,
-                  count: @dashboard.outstanding_scholarship_registrants.size, registrants: @dashboard.outstanding_scholarship_registrants,
-                  amounts_by_registrant_id: @dashboard.outstanding_scholarship_by_recipient,
-                  filter_path: registrants_event_path(@event, scholarship: "incomplete") %>
+            <%= render "dashboard_money_row", label: "Scholarships", icon: "fa-graduation-cap",
+                  amount_cents: @dashboard.scholarship_total_cents,
+                  count: @dashboard.scholarship_registrants.size, registrants: @dashboard.scholarship_registrants,
+                  amounts_by_registrant_id: @dashboard.scholarship_amounts_by_recipient,
+                  filter_path: registrants_event_path(@event, scholarship: "yes") %>
           </div>
         </details>
 

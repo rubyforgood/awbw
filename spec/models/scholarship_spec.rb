@@ -17,14 +17,14 @@ RSpec.describe Scholarship, type: :model do
 
       it "is valid when recipient matches the allocation's registrant" do
         scholarship = build(:scholarship, recipient: person)
-        scholarship.build_allocation(allocatable: registration, amount: 0)
+        scholarship.build_allocation(allocatable: registration, amount: scholarship.amount_cents)
         expect(scholarship).to be_valid
       end
 
       it "is invalid when recipient differs from the allocation's registrant" do
         other_person = create(:person)
         scholarship = build(:scholarship, recipient: other_person)
-        scholarship.build_allocation(allocatable: registration, amount: 0)
+        scholarship.build_allocation(allocatable: registration, amount: scholarship.amount_cents)
         expect(scholarship).not_to be_valid
         expect(scholarship.errors[:recipient]).to include("must be the same person as the event registration's registrant")
       end

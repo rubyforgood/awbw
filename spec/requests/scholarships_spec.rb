@@ -158,14 +158,14 @@ RSpec.describe "Scholarships", type: :request do
   describe "PATCH /scholarships/:id/toggle_tasks" do
     let(:tasks_status_id) { ActionView::RecordIdentifier.dom_id(scholarship, :tasks_status) }
 
-    it "flips a completed scholarship to outstanding and de-allocates the award" do
+    it "flips the tasks-completed flag without affecting the allocation amount" do
       patch toggle_tasks_scholarship_path(scholarship)
 
       expect(scholarship.reload.tasks_completed?).to be(false)
-      expect(allocation.reload.amount).to eq(0)
+      expect(allocation.reload.amount).to eq(5000)
     end
 
-    it "flips an outstanding scholarship to completed and allocates the award" do
+    it "flips an outstanding scholarship to completed without affecting the allocation" do
       scholarship.update!(tasks_completed: false)
 
       patch toggle_tasks_scholarship_path(scholarship)

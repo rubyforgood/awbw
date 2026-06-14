@@ -7,9 +7,8 @@
 <%= render "shared/errors", resource: f.object if f.object.errors.any? %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          data-controller="scholarship-preview"
-         data-scholarship-preview-event-cost-value="<%= @allocatable.respond_to?(:event) ? @allocatable.event.cost_cents.to_i : 0 %>"
-         data-scholarship-preview-other-allocated-value="<%= @allocatable.respond_to?(:event) ? (@allocatable.allocations_sum.to_i - f.object.allocation&.amount.to_i) : 0 %>"
-         data-scholarship-preview-completed-initial-value="<%= f.object.tasks_completed? %>">
+          data-scholarship-preview-event-cost-value="<%= @allocatable.respond_to?(:event) ? @allocatable.event.cost_cents.to_i : 0 %>"
+          data-scholarship-preview-other-allocated-value="<%= @allocatable.respond_to?(:event) ? (@allocatable.allocations_sum.to_i - f.object.allocation&.amount.to_i) : 0 %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
       <i class="fa-solid fa-graduation-cap"></i>
@@ -20,8 +19,7 @@
   <div class="space-y-6 p-4">
     <% if @allocatable.respond_to?(:event) %>
       <% owed_cents = [ @allocatable.event.cost_cents.to_i - @allocatable.allocations_sum.to_i, 0 ].max %>
-      <% completed = f.object.tasks_completed? %>
-      <% allocated_cents = completed ? f.object.amount_cents.to_i : 0 %>
+      <% allocated_cents = f.object.amount_cents.to_i %>
       <% paid = owed_cents <= 0 %>
       <div class="space-y-4">
         <%# Three equal-height stat cards (grid stretches them to match) so every
@@ -35,7 +33,7 @@
           <%# The amount cell reads neutral grey until "Tasks completed" is on; amber
               while that toggle is changed but unsaved (allocation pending); fuchsia
               once saved. scholarship_preview_controller keeps it in sync. %>
-          <div data-scholarship-preview-target="amountBox" class="rounded-lg border px-4 py-3 <%= completed ? "border-fuchsia-300 bg-fuchsia-50" : "border-gray-100 bg-gray-50" %>">
+          <div data-scholarship-preview-target="amountBox" class="rounded-lg border px-4 py-3 <%= allocated_cents > 0 ? "border-fuchsia-300 bg-fuchsia-50" : "border-gray-100 bg-gray-50" %>">
             <%= f.label :amount_dollars, "Scholarship amount", class: "block text-xs font-medium uppercase tracking-wide text-gray-400" %>
             <div class="relative mt-1">
               <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">$</span>
@@ -56,18 +54,16 @@
           </div>
         </dl>
 
-        <%# Allocation strip: the "Tasks completed" toggle drives the allocation and
-            the resulting chip sits alongside it. Full-width below the stats, tinted
-            by state (grey off, amber while unsaved, fuchsia once allocated) — the
-            control and the status it produces stay together. %>
-        <div data-scholarship-preview-target="allocationStrip" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 <%= completed ? "border-fuchsia-300 bg-fuchsia-50" : "border-gray-100 bg-gray-50" %>">
+        <%# Allocation strip: shows the scholarship amount as allocated alongside
+            the informational "Tasks completed" toggle. %>
+        <div data-scholarship-preview-target="allocationStrip" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 <%= allocated_cents > 0 ? "border-fuchsia-300 bg-fuchsia-50" : "border-gray-100 bg-gray-50" %>">
           <label class="flex items-center gap-2.5 cursor-pointer">
             <span class="text-xs font-medium text-gray-600">Tasks completed</span>
-            <%= f.check_box :tasks_completed, class: "sr-only peer", data: { "scholarship-preview-target": "completed", action: "change->scholarship-preview#update" } %>
-            <span data-scholarship-preview-target="completedTrack" class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+            <%= f.check_box :tasks_completed, class: "sr-only peer" %>
+            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
           </label>
           <div data-scholarship-preview-target="allocatedHint">
-            <% if completed %>
+            <% if allocated_cents > 0 %>
               <span class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-100 px-2 py-0.5 text-[0.65rem] font-medium text-fuchsia-700">
                 <i class="fa-solid fa-circle-check text-[0.55rem]"></i>
                 $<%= "%.2f" % (allocated_cents.to_f / 100) %> allocated to registration
@@ -107,8 +103,8 @@
         <div>
           <%= f.label :tasks_completed, "Tasks completed", class: "block text-sm font-medium text-gray-700 mb-1" %>
           <label class="flex h-[2.625rem] items-center gap-2.5 cursor-pointer">
-            <%= f.check_box :tasks_completed, class: "sr-only peer", data: { "scholarship-preview-target": "completed", action: "change->scholarship-preview#update" } %>
-            <span data-scholarship-preview-target="completedTrack" class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+            <%= f.check_box :tasks_completed, class: "sr-only peer" %>
+            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
             <span class="text-sm text-gray-400 peer-checked:hidden">Not yet</span>
             <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Completed</span>
           </label>

@@ -206,7 +206,7 @@ RSpec.describe EventRegistration, type: :model do
     it "returns false when scholarship exists but tasks not completed" do
       reg = create(:event_registration)
       scholarship = create(:scholarship, tasks_completed: false, amount_cents: 1099)
-      create(:allocation, source: scholarship, allocatable: reg, amount: 0)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1099)
       expect(reg.scholarship_tasks_met?).to be false
     end
 
@@ -241,11 +241,11 @@ RSpec.describe EventRegistration, type: :model do
       expect(reg).not_to be_joinable
     end
 
-    it "returns false for scholarship with tasks not completed" do
+    it "returns true for scholarship covering full cost regardless of tasks status" do
       reg = create(:event_registration, event: event, registrant: user.person)
       scholarship = create(:scholarship, tasks_completed: false, amount_cents: 1099)
-      create(:allocation, source: scholarship, allocatable: reg, amount: 0)
-      expect(reg).not_to be_joinable
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1099)
+      expect(reg).to be_joinable
     end
 
     it "returns true for scholarship with tasks completed" do
