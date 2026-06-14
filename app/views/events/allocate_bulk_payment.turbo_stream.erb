@@ -1,0 +1,11 @@
+<%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>
+
+<%= turbo_stream.replace dom_id(@payment, :remaining) do %>
+  <%= render "payment_badge", payment: @payment %>
+<% end %>
+
+<% unless flash[:alert] %>
+  <%= turbo_stream.replace dom_id(@event_registration, :allocation_form) do %>
+    <%= render "matched_person_card", person: @event_registration.registrant %>
+  <% end %>
+<% end %>
