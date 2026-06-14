@@ -60,19 +60,19 @@
       <%= form_with url: select_organization_event_registration_path(@event_registration),
                     method: :post,
                     data: { turbo_frame: "_top" },
-                    class: "space-y-4" do %>
+                    class: "space-y-1" do %>
         <%= hidden_field_tag :return_to, params[:return_to] %>
-        <div>
-          <%= label_tag :organization_id, "Search all organizations", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= label_tag :organization_id, "Search all organizations", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <div class="flex items-stretch gap-2">
           <%= select_tag :organization_id,
                          options_from_collection_for_select([], :id, :name),
                          include_blank: true,
-                         class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                         class: "flex-1 min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                          data: { controller: "remote-select", remote_select_model_value: "organization" },
                          prompt: "Type to search organizations…" %>
+          <%= submit_tag "Link organization",
+                         class: "shrink-0 rounded-md bg-blue-900 px-6 py-2 text-white font-semibold hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
         </div>
-        <%= submit_tag "Link organization",
-                       class: "rounded-md bg-blue-900 px-6 py-2 text-white font-semibold hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
       <% end %>
     </div>
 
