@@ -225,14 +225,23 @@ record_payment = ->(registration, payer:, amount_cents:, kind: :cash) do
   Allocation.create!(source: payment, allocatable: registration, amount: amount_cents, created_at: created_at)
 end
 
-# Funds a registration once. `scholarship` and `payments` describe what to build.
-fund_registration = ->(event, person, scholarship: nil, payments: []) do
+# Applies a discount to a registration — a Discount-sourced allocation that
+# reduces the amount owed (drives the "Discounted $X due" / "Nothing owed" chip).
+record_discount = ->(registration, amount_cents:) do
+  created_at = rand(3..30).days.ago
+  discount = Discount.create!(amount_cents: amount_cents)
+  Allocation.create!(source: discount, allocatable: registration, amount: amount_cents, created_at: created_at)
+end
+
+# Funds a registration once. `scholarship`, `discount`, and `payments` describe what to build.
+fund_registration = ->(event, person, scholarship: nil, discount: nil, payments: []) do
   return unless event && person
   registration = EventRegistration.find_by(event: event, registrant: person)
   return unless registration
   return if registration.allocations.exists?
 
   award_scholarship.(registration, **scholarship) if scholarship
+  record_discount.(registration, **discount) if discount
   payments.each { |payment| record_payment.(registration, **payment) }
 end
 
@@ -268,14 +277,13 @@ fund_registration.(trauma_training, angel_g,
 fund_registration.(mindful_art, amy_person,
   payments: [ { payer: amy_person, amount_cents: 5_000, kind: :cash } ])
 
-# --- AWBW Facilitator Training ($1,500): registrants with MORE THAN ONE payment ---
-# The scenarios above all fund a registration with a single payment. These four
-# brand-new people each have two or more payment records (some also carrying a
-# completed scholarship), split across paid-in-full and still-owing, so the
-# registrants payment-status column ("Paid" vs "Partial · $X due") can be
-# exercised against multi-payment registrations. Amounts target the event's real
-# $1,500 cost so the paid-in-full / partial split is genuine.
-register_with_payments = ->(event, first_name:, last_name:, email:, scholarship: nil, payments: []) do
+# --- AWBW Facilitator Training ($1,500): discount + multi-payment chip states ---
+# Getting more than one payment from a single registrant is rare, so only Nina
+# keeps that shape (it still exercises multi-payment allocations). The rest are
+# single-payment, and three carry a Discount so the payment-status column shows
+# the "Discounted $X due" / fully-discounted "Nothing owed" chips. Amounts target
+# the event's real $1,500 cost.
+register_with_payments = ->(event, first_name:, last_name:, email:, scholarship: nil, discount: nil, payments: []) do
   return unless event
   person = Person.find_or_create_by!(email: email) do |p|
     p.first_name = first_name
@@ -285,40 +293,42 @@ register_with_payments = ->(event, first_name:, last_name:, email:, scholarship:
   return registration if registration.allocations.exists?
 
   award_scholarship.(registration, **scholarship) if scholarship
+  record_discount.(registration, **discount) if discount
   payments.each { |payment| record_payment.(registration, **{ payer: person }.merge(payment)) }
   registration
 end
 
-# Nina: paid in full via two payments (cash $1,000 + check $500)
+# Recreate the demo registrants from scratch each run so re-seeding refreshes
+# their scenarios (e.g. when the set of multipay/discount examples changes).
+# Drop their registrations (cascades the allocations) and payments before the
+# person, since payments reference the person without a destroy cascade.
+Person.where("email LIKE ? OR email LIKE ?",
+  "%.multipay@seed.example.com", "%.discount@seed.example.com").find_each do |demo_person|
+  demo_person.event_registrations.destroy_all
+  Payment.where(person: demo_person).destroy_all
+  demo_person.destroy
+end
+
+# Nina: the one multi-payment registrant — paid in full via cash $1,000 + check $500
 register_with_payments.(facilitator_training,
   first_name: "Nina", last_name: "Multipay", email: "nina.multipay@seed.example.com",
   payments: [
     { amount_cents: 100_000, kind: :cash },
     { amount_cents: 50_000, kind: :check }
   ])
-# Omar: paid in full via completed scholarship ($500) + two cash payments ($600 + $400)
+# Dana: $300 discount, no payment → still owes $1,200 ("Discounted $1200.00 due")
 register_with_payments.(facilitator_training,
-  first_name: "Omar", last_name: "Multipay", email: "omar.multipay@seed.example.com",
-  scholarship: { amount_cents: 50_000, tasks_completed: true },
-  payments: [
-    { amount_cents: 60_000, kind: :cash },
-    { amount_cents: 40_000, kind: :cash }
-  ])
-# Priya: still owes — two cash payments ($500 + $400) of the $1,500 cost
+  first_name: "Dana", last_name: "Discount", email: "dana.discount@seed.example.com",
+  discount: { amount_cents: 30_000 })
+# Dexter: fully discounted ($1,500) → "Nothing owed"
 register_with_payments.(facilitator_training,
-  first_name: "Priya", last_name: "Multipay", email: "priya.multipay@seed.example.com",
-  payments: [
-    { amount_cents: 50_000, kind: :cash },
-    { amount_cents: 40_000, kind: :cash }
-  ])
-# Quincy: still owes — completed scholarship ($300) + cash $400 + check $200 of the $1,500 cost
+  first_name: "Dexter", last_name: "Discount", email: "dexter.discount@seed.example.com",
+  discount: { amount_cents: 150_000 })
+# Delia: $500 discount + single $200 cash payment → still owes $800 ("Discounted $800.00 due")
 register_with_payments.(facilitator_training,
-  first_name: "Quincy", last_name: "Multipay", email: "quincy.multipay@seed.example.com",
-  scholarship: { amount_cents: 30_000, tasks_completed: true },
-  payments: [
-    { amount_cents: 40_000, kind: :cash },
-    { amount_cents: 20_000, kind: :check }
-  ])
+  first_name: "Delia", last_name: "Discount", email: "delia.discount@seed.example.com",
+  discount: { amount_cents: 50_000 },
+  payments: [ { amount_cents: 20_000, kind: :cash } ])
 
 [ facilitator_training, trauma_training, mindful_art ].compact.each do |event|
   dashboard = EventDashboard.new(event)

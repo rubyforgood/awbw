@@ -123,34 +123,32 @@
                       attention; a name matching a linked org is already resolved. %>
                   <% needs_linking = submitted_org_name.present? && linked_org_names.exclude?(submitted_org_name.downcase) %>
                   <% editor_path = link_organization_event_registration_path(registration, return_to: "registrants") %>
-                  <% if linked_orgs.any? %>
-                    <ul class="space-y-0.5">
-                      <% linked_orgs.each do |org| %>
-                        <li>
-                          <%= link_to truncate(org.name, length: 40), editor_path,
-                                      title: org.name,
-                                      class: "text-gray-800 hover:text-gray-900 hover:underline",
-                                      data: { turbo_frame: "_top" } %>
-                        </li>
+                  <% pill_classes = "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 hover:opacity-80" %>
+                  <div class="flex flex-wrap gap-1.5">
+                    <% linked_orgs.each do |org| %>
+                      <%= link_to editor_path,
+                                  title: org.name,
+                                  class: "#{pill_classes} bg-gray-50 text-gray-500 border-gray-200",
+                                  data: { turbo_frame: "_top" } do %>
+                        <span><%= truncate(org.name, length: 40) %></span>
                       <% end %>
-                    </ul>
+                    <% end %>
                     <% if needs_linking %>
                       <%= link_to editor_path,
                                   title: submitted_org_name,
-                                  class: "mt-1 inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 bg-amber-50 text-amber-700 border-amber-200 hover:opacity-80",
+                                  class: "#{pill_classes} bg-amber-50 text-amber-700 border-amber-200",
                                   data: { turbo_frame: "_top" } do %>
                         <span>Pending</span>
                       <% end %>
                     <% end %>
-                  <% else %>
-                    <% chip_classes = needs_linking ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-gray-50 text-gray-500 border-gray-200" %>
-                    <%= link_to editor_path,
-                                title: submitted_org_name.presence,
-                                class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 #{chip_classes} hover:opacity-80",
-                                data: { turbo_frame: "_top" } do %>
-                      <span><%= needs_linking ? "Pending" : "None" %></span>
+                    <% if linked_orgs.none? && !needs_linking %>
+                      <%= link_to editor_path,
+                                  class: "#{pill_classes} bg-gray-50 text-gray-500 border-gray-200",
+                                  data: { turbo_frame: "_top" } do %>
+                        <span>None</span>
+                      <% end %>
                     <% end %>
-                  <% end %>
+                  </div>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-center">
@@ -198,9 +196,12 @@
                   <% due_cents = @event.cost_cents - paid_cents %>
                   <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= due_cents %>">
                     <% is_paid = registration.paid_in_full? %>
-                    <% is_partial = registration.partially_paid? %>
+                    <% is_discounted = !is_paid && registration.discounted? %>
+                    <% is_partial = !is_discounted && registration.partially_paid? %>
                     <% badge_classes = if is_paid
                          "bg-green-50 text-green-700 border-green-200"
+                       elsif is_discounted
+                         "bg-purple-50 text-purple-700 border-purple-200"
                        elsif is_partial
                          "bg-blue-50 text-blue-700 border-blue-200"
                        else
@@ -208,18 +209,28 @@
                        end %>
                     <% badge_icon = if is_paid
                          "fa-circle-check"
+                       elsif is_discounted
+                         "fa-tag"
                        elsif is_partial
                          "fa-circle-half-stroke"
                        else
                          "fa-circle-exclamation"
                        end %>
 
-                    <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"), class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-5 py-0.5 #{badge_classes} hover:opacity-80", data: { turbo_frame: "_top" } do %>
+                    <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"), class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 #{badge_classes} hover:opacity-80", data: { turbo_frame: "_top" } do %>
                       <i class="fas <%= badge_icon %>"></i>
                       <% if is_paid %>
-                        <span>Paid</span>
+                        <span>Nothing owed</span>
+                      <% elsif is_discounted %>
+                        <span class="flex flex-col leading-tight text-left">
+                          <span>Discounted</span>
+                          <span><%= "$%.2f due" % (due_cents / 100.0) %></span>
+                        </span>
                       <% elsif is_partial %>
-                        <span>Partial · <%= "$%.2f due" % (due_cents / 100.0) %></span>
+                        <span class="flex flex-col leading-tight text-left">
+                          <span>Partial payment</span>
+                          <span><%= "$%.2f due" % (due_cents / 100.0) %></span>
+                        </span>
                       <% else %>
                         <span><%= "$%.2f due" % (due_cents / 100.0) %></span>
                       <% end %>
