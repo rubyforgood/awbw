@@ -11,6 +11,16 @@ class FormField < ApplicationRecord
   # Answer types that collect free-form text, where a minimum word count applies
   FREE_FORM_TEXT_TYPES = %w[free_form_input_one_line free_form_input_paragraph].freeze
 
+  # Fallback character ceilings applied when a free-form field has no explicit
+  # max_characters set. This is a safety net against pathological submissions
+  # (megabyte answers that bloat the DB and break admin/email rendering), not a
+  # UX limit — the values are far above any realistic answer, and an explicit
+  # per-field max_characters always wins, including when it is larger.
+  DEFAULT_MAX_CHARACTERS = {
+    "free_form_input_one_line" => 1_000,
+    "free_form_input_paragraph" => 10_000
+  }.freeze
+
   # Validations
   validates_presence_of :name
   # Keeps an over-long name as a friendly validation error instead of a
@@ -136,15 +146,24 @@ class FormField < ApplicationRecord
     "must be at least #{min_words} #{"word".pluralize(min_words)}"
   end
 
-  # Returns a validation error string when a submitted value exceeds the
-  # configured maximum character count, or nil when it passes / does not apply.
-  def max_characters_error(value)
+  # The character ceiling actually enforced for this field: the explicit
+  # max_characters when set, otherwise the per-type default safety net. Returns
+  # nil for non-free-form fields (no cap applies).
+  def effective_max_characters
     return unless free_form_text?
-    return unless max_characters.to_i.positive?
-    return if value.blank?
-    return if value.to_s.length <= max_characters
 
-    "must be #{max_characters} #{"character".pluralize(max_characters)} or fewer"
+    max_characters || DEFAULT_MAX_CHARACTERS[answer_type]
+  end
+
+  # Returns a validation error string when a submitted value exceeds the
+  # effective maximum character count, or nil when it passes / does not apply.
+  def max_characters_error(value)
+    limit = effective_max_characters
+    return unless limit
+    return if value.blank?
+    return if value.to_s.length <= limit
+
+    "must be #{limit} #{"character".pluralize(limit)} or fewer"
   end
 
   def html_input_type

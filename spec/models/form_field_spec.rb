@@ -152,12 +152,40 @@ RSpec.describe FormField do
     end
   end
 
+  describe "#effective_max_characters" do
+    let(:form) { create(:form) }
+
+    it "returns the explicit maximum when one is set" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, max_characters: 250)
+      expect(field.effective_max_characters).to eq(250)
+    end
+
+    it "honors an explicit maximum larger than the default" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, max_characters: 50_000)
+      expect(field.effective_max_characters).to eq(50_000)
+    end
+
+    it "falls back to the per-type default when none is set" do
+      one_line = build(:form_field, form: form, answer_type: :free_form_input_one_line, max_characters: nil)
+      paragraph = build(:form_field, form: form, answer_type: :free_form_input_paragraph, max_characters: nil)
+      expect(one_line.effective_max_characters).to eq(FormField::DEFAULT_MAX_CHARACTERS["free_form_input_one_line"])
+      expect(paragraph.effective_max_characters).to eq(FormField::DEFAULT_MAX_CHARACTERS["free_form_input_paragraph"])
+    end
+
+    it "returns nil for non-free-form fields" do
+      field = build(:form_field, form: form, answer_type: :single_select_radio, max_characters: nil)
+      expect(field.effective_max_characters).to be_nil
+    end
+  end
+
   describe "#max_characters_error" do
     let(:form) { create(:form) }
 
-    it "returns nil when no maximum is configured" do
+    it "applies the per-type default safety net when no maximum is configured" do
       field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, max_characters: nil)
-      expect(field.max_characters_error("a" * 500)).to be_nil
+      default = FormField::DEFAULT_MAX_CHARACTERS["free_form_input_paragraph"]
+      expect(field.max_characters_error("a" * default)).to be_nil
+      expect(field.max_characters_error("a" * (default + 1))).to eq("must be #{default} characters or fewer")
     end
 
     it "returns nil when the value is within the maximum" do
