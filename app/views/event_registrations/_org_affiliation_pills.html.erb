@@ -23,7 +23,7 @@
             <%= label %>
             <i class="fa-solid fa-pen text-[0.55rem] opacity-60"></i>
           </button>
-          <%= form_with model: a, data: { turbo_frame: "_top", affiliation_title_edit_target: "form" }, class: "hidden inline-flex items-center gap-1" do |f| %>
+          <%= form_with model: a, data: { turbo_frame: "_top", affiliation_title_edit_target: "form" }, class: "hidden items-center gap-1" do |f| %>
             <%= hidden_field_tag :event_registration_id, event_registration&.id %>
             <%= hidden_field_tag :return_to, params[:return_to] %>
             <%= f.text_field :title, value: a.title,
