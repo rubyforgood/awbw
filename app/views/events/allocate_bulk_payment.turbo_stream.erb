@@ -5,7 +5,10 @@
 <% end %>
 
 <% unless flash[:alert] %>
-  <%= turbo_stream.replace dom_id(@event_registration, :allocation_form) do %>
-    <%= render "matched_person_card", person: @event_registration.registrant %>
+  <% target_id = @from_no_match ? "no-match-#{@submission_id}-#{@attendee_index}" : dom_id(@event_registration, :allocation_form) %>
+  <%= turbo_stream.replace target_id do %>
+    <%= render "attendee_allocation_result",
+               person: @event_registration.registrant,
+               amount_dollars: @allocated_amount_dollars %>
   <% end %>
 <% end %>

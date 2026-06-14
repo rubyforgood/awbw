@@ -125,7 +125,7 @@ class EventsController < ApplicationController
     @event = @event.decorate
     @submissions = FormSubmission.joins(form: :event_forms)
                                  .where(event_forms: { event_id: @event.id, role: "bulk_payment" })
-                                 .includes(:person, form_answers: :form_field)
+                                 .includes(:person, form_answers: :form_field, payments: :allocations)
                                  .order(created_at: :desc)
   end
 
@@ -135,6 +135,9 @@ class EventsController < ApplicationController
     payment = Payment.find(params[:payment_id])
     event_registration = EventRegistration.find(params[:event_registration_id])
     amount_cents = (params[:amount_dollars].to_d * 100).to_i
+    @from_no_match = params[:submission_id].present?
+    @submission_id = params[:submission_id]
+    @attendee_index = params[:attendee_index]
 
     if amount_cents <= 0
       flash.now[:alert] = "Amount must be greater than $0.00"
@@ -144,6 +147,7 @@ class EventsController < ApplicationController
       allocation = Allocation.new(source: payment, allocatable: event_registration, amount: amount_cents)
       if allocation.save
         flash.now[:notice] = "Allocation successful"
+        @allocated_amount_dollars = amount_cents / 100.0
       else
         flash.now[:alert] = allocation.errors.full_messages.to_sentence
       end
