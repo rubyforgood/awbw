@@ -1,6 +1,7 @@
 module EventHelper
   # The special free-text option label that reveals a "please specify" input.
-  OTHER_OPTION_PREFIX = "Other"
+  # Canonical definition lives on FormField (shared with answer validation).
+  OTHER_OPTION_PREFIX = FormField::OTHER_OPTION_PREFIX
 
   # True when an option label is the special free-text "Other" choice.
   def other_option?(label)

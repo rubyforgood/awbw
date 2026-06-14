@@ -165,27 +165,19 @@ module ApplicationHelper
     "h-5 w-1 rounded-full bg-[linear-gradient(to_bottom,#ec4899,#f97316,#22c55e,#3b82f6,#8b5cf6)]"
   end
 
-  # Category types backing the professional form fields whose options are
-  # sourced dynamically (from Sector/Category data) rather than from the
-  # field's own stored answer options.
-  DYNAMIC_FIELD_CATEGORY_TYPES = {
-    "workshop_environments" => "WorkshopEnvironment",
-    "client_life_experiences" => "StoryPopulation",
-    "primary_age_group" => "AgeRange"
-  }.freeze
-
   # Returns the selectable options for a form field as [ label, value, description ]
   # tuples (description is nil for sectors and present only for categories that have
   # one), or nil when the field has no dynamic source (callers fall back to the
   # field's own stored answer options). Shared by the public form's radio and
   # checkbox rendering so a dynamic field renders the same options regardless
-  # of which single/multiple choice type it was set to.
+  # of which single/multiple choice type it was set to. The set of valid submission
+  # values for these is mirrored by FormField#allowed_answer_values.
   def dynamic_form_field_options(field)
     case field.field_identifier
-    when "primary_service_area", "primary_service_area_single"
+    when *FormField::SERVICE_AREA_FIELD_IDENTIFIERS
       Sector.published.order(:name).map { |sector| [ sector.name, sector.id.to_s ] }
-    when *DYNAMIC_FIELD_CATEGORY_TYPES.keys
-      type = CategoryType.find_by(name: DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
+    when *FormField::DYNAMIC_FIELD_CATEGORY_TYPES.keys
+      type = CategoryType.find_by(name: FormField::DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
       (type&.categories&.published&.order(:position, :name) || []).map { |category| [ category.name, category.id.to_s, category.description ] }
     end
   end
@@ -194,9 +186,9 @@ module ApplicationHelper
   # editor badge: a sentence-case label and a link to the filtered admin list
   # that manages those options. Returns nil for fields with stored options.
   def form_field_option_source(field)
-    if field.field_identifier.in?(%w[primary_service_area primary_service_area_single])
+    if field.field_identifier.in?(FormField::SERVICE_AREA_FIELD_IDENTIFIERS)
       { label: "Sectors", path: sectors_path }
-    elsif (type_name = DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
+    elsif (type_name = FormField::DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
       type = CategoryType.find_by(name: type_name)
       return unless type
       { label: "#{type.name.underscore.humanize} categories", path: categories_path(category_type_id: type.id) }
