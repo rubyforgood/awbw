@@ -116,25 +116,39 @@
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% if registration.organizations.any? %>
+                  <% linked_orgs = registration.organizations %>
+                  <% submitted_org_name = submitted_org_names[registration.registrant_id].to_s.strip %>
+                  <% linked_org_names = linked_orgs.map { |org| org.name.to_s.strip.downcase } %>
+                  <%# A submitted name not represented among the linked orgs still needs admin
+                      attention; a name matching a linked org is already resolved. %>
+                  <% needs_linking = submitted_org_name.present? && linked_org_names.exclude?(submitted_org_name.downcase) %>
+                  <% editor_path = link_organization_event_registration_path(registration, return_to: "registrants") %>
+                  <% if linked_orgs.any? %>
                     <ul class="space-y-0.5">
-                      <% registration.organizations.each do |org| %>
+                      <% linked_orgs.each do |org| %>
                         <li>
-                          <%= link_to truncate(org.name, length: 40), link_organization_event_registration_path(registration, return_to: "registrants"),
+                          <%= link_to truncate(org.name, length: 40), editor_path,
                                       title: org.name,
                                       class: "text-gray-800 hover:text-gray-900 hover:underline",
                                       data: { turbo_frame: "_top" } %>
                         </li>
                       <% end %>
                     </ul>
+                    <% if needs_linking %>
+                      <%= link_to editor_path,
+                                  title: submitted_org_name,
+                                  class: "mt-1 inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 bg-amber-50 text-amber-700 border-amber-200 hover:opacity-80",
+                                  data: { turbo_frame: "_top" } do %>
+                        <span>Pending</span>
+                      <% end %>
+                    <% end %>
                   <% else %>
-                    <% submitted_org_name = submitted_org_names[registration.registrant_id].presence %>
-                    <% chip_classes = submitted_org_name ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-gray-50 text-gray-500 border-gray-200" %>
-                    <%= link_to link_organization_event_registration_path(registration, return_to: "registrants"),
-                                title: submitted_org_name,
+                    <% chip_classes = needs_linking ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-gray-50 text-gray-500 border-gray-200" %>
+                    <%= link_to editor_path,
+                                title: submitted_org_name.presence,
                                 class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 #{chip_classes} hover:opacity-80",
                                 data: { turbo_frame: "_top" } do %>
-                      <span><%= submitted_org_name ? "Pending" : "None" %></span>
+                      <span><%= needs_linking ? "Pending" : "None" %></span>
                     <% end %>
                   <% end %>
                 </td>

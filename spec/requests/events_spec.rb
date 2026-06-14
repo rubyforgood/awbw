@@ -419,6 +419,17 @@ RSpec.describe "Events", type: :request do
     context "organization column" do
       let(:organization) { create(:organization, name: "Helping Hands") }
 
+      # Stores a submitted "agency_name" answer for the registrant, mirroring what
+      # public registration captures, so the Pending/None chip logic has data.
+      def submit_agency_name(name)
+        registration_form = Form.find_by(name: "Registration") || create(:form, name: "Registration")
+        field = registration_form.form_fields.find_by(field_identifier: "agency_name") ||
+          create(:form_field, form: registration_form, field_identifier: "agency_name")
+        create(:event_form, :registration, event: event, form: registration_form) unless event.registration_form
+        submission = create(:form_submission, person: person, form: registration_form)
+        create(:form_answer, form_submission: submission, form_field: field, submitted_answer: name)
+      end
+
       it "links a linked organization to the edit page rather than its profile" do
         create(:event_registration_organization, event_registration: registration, organization: organization)
 
@@ -429,11 +440,7 @@ RSpec.describe "Events", type: :request do
       end
 
       it "shows a 'Pending' chip when a registrant submitted an org name but has no linked org" do
-        registration_form = create(:form, name: "Registration")
-        field = create(:form_field, form: registration_form, field_identifier: "agency_name")
-        create(:event_form, :registration, event: event, form: registration_form)
-        submission = create(:form_submission, person: person, form: registration_form)
-        create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Some Unlisted Org")
+        submit_agency_name("Some Unlisted Org")
 
         get registrants_event_path(event)
 
@@ -445,6 +452,26 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include(">None<")
+        expect(response.body).not_to include(">Pending<")
+      end
+
+      it "shows the linked org AND a 'Pending' chip when the submitted name is not among the linked orgs" do
+        create(:event_registration_organization, event_registration: registration, organization: organization)
+        submit_agency_name("A Different Unlisted Agency")
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(organization.name)
+        expect(response.body).to include(">Pending<")
+      end
+
+      it "does not show 'Pending' when the submitted name matches a linked org" do
+        create(:event_registration_organization, event_registration: registration, organization: organization)
+        submit_agency_name(organization.name)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(organization.name)
         expect(response.body).not_to include(">Pending<")
       end
     end
