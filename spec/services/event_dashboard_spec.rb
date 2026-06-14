@@ -146,9 +146,9 @@ RSpec.describe EventDashboard do
 
       it "reports grand total as registration subtotal plus completed scholarships plus cont ed" do
         expect(dashboard.grand_total_cents).to eq(20_000)
-      expect(dashboard.grand_total_cents).to eq(
-        dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents + dashboard.cont_ed_total_cents
-      )
+        expect(dashboard.grand_total_cents).to eq(
+          dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents + dashboard.cont_ed_total_cents
+        )
       end
 
       it "is not free when the event has a cost" do
