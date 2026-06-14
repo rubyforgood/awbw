@@ -53,6 +53,19 @@ RSpec.describe Allocation, type: :model do
         expect(allocation.errors[:base]).to include(a_string_starting_with("Cannot allocate more than remaining"))
       end
 
+      it "allows increasing an existing allocation when there is room" do
+        allocation = create(:allocation, source: payment, allocatable: registration, amount: 3_000)
+        allocation.amount = 7_000
+        expect(allocation).to be_valid
+      end
+
+      it "blocks increasing an existing allocation beyond the event cost" do
+        allocation = create(:allocation, source: payment, allocatable: registration, amount: 3_000)
+        allocation.amount = 15_000
+        expect(allocation).not_to be_valid
+        expect(allocation.errors[:base]).to include(a_string_starting_with("Cannot allocate more than remaining"))
+      end
+
       it "skips validation when allocatable is not an EventRegistration" do
         allocation = build(:allocation, source: payment, allocatable: registration, amount: 5_000)
         allow(allocation).to receive(:allocatable).and_return(nil)
