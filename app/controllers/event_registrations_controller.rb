@@ -159,6 +159,10 @@ class EventRegistrationsController < ApplicationController
     # The job title/position the registrant typed on the form, to compare against
     # the title on any existing affiliation for a linked org.
     @submitted_position = find_submitted_answer(@event_registration, "agency_position")
+    # The registrant's submission of the event's registration form, so we can link
+    # out to the public-facing form view.
+    reg_form = @event_registration.event.registration_form
+    @form_submission = reg_form && @person.form_submissions.find_by(form: reg_form)
     @potential_matches = if @submitted_org_name.present?
       Organization.remote_search(@submitted_org_name).where.not(id: @linked_organizations.ids).limit(10)
     else

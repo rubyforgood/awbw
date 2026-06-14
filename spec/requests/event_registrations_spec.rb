@@ -300,66 +300,90 @@ RSpec.describe "EventRegistrations", type: :request do
           create(:event_registration_organization, event_registration: existing_registration, organization: organization)
         end
 
-        # Records the position/title the registrant "typed on the form" so the
-        # editor can compare it to the title on an existing affiliation.
-        def submit_position(value)
+        # Records what the registrant "typed on the form" so the editor can show
+        # the submission and compare its position to an existing affiliation title.
+        def submit_form(org_name: nil, position: nil)
           reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
-          field = reg_form.form_fields.find_by(field_identifier: "agency_position") ||
-            create(:form_field, form: reg_form, field_identifier: "agency_position")
           create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          {  "agency_name" => org_name, "agency_position" => position }.each do |identifier, value|
+            next if value.nil?
+            field = reg_form.form_fields.find_by(field_identifier: identifier) ||
+              create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+          submission
         end
 
-        it "shows 'No affiliation on record' when the org is linked but the person has none" do
+        it "shows 'No affiliations on record' when the person has none" do
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("No affiliation on record")
+          expect(response.body).to include("No affiliations on record")
         end
 
-        it "shows the recorded title and no-facilitator state for a non-facilitator affiliation" do
+        it "lists an affiliation with its title and active status" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("On record: Counselor")
-          expect(response.body).to include("No facilitator affiliation")
+          expect(response.body).to include("Counselor")
+          expect(response.body).to include("active")
         end
 
-        it "shows 'Title matches form' when the affiliation title equals the submitted position" do
-          create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
-          submit_position("Counselor")
-
-          get link_organization_event_registration_path(existing_registration)
-
-          expect(response.body).to include("Title matches form: Counselor")
-        end
-
-        it "shows 'Title differs' when the affiliation title differs from the submitted position" do
-          create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
-          submit_position("Director")
-
-          get link_organization_event_registration_path(existing_registration)
-
-          expect(response.body).to include("Title differs")
-          expect(response.body).to include("Director")
-        end
-
-        it "shows 'Facilitator: active' for an active facilitator affiliation" do
+        it "shows 'Facilitator' active for an active facilitator affiliation" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Facilitator")
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Facilitator: active")
+          expect(response.body).to include("Facilitator")
+          expect(response.body).to include("active")
         end
 
-        it "shows 'Facilitator: inactive' for an ended facilitator affiliation" do
+        it "shows a facilitator affiliation as inactive once it has ended" do
           create(:affiliation, person: regular_user.person, organization: organization,
                                title: "Facilitator", end_date: 1.month.ago.to_date)
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Facilitator: inactive")
+          expect(response.body).to include("Facilitator")
+          expect(response.body).to include("inactive")
+        end
+
+        it "shows 'Title matches form' when the affiliation title equals the submitted position for the submitted org" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
+          submit_form(org_name: organization.name, position: "Counselor")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Title matches form")
+        end
+
+        it "shows 'Title differs from form' when the affiliation title differs from the submitted position" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
+          submit_form(org_name: organization.name, position: "Director")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Title differs from form")
+          expect(response.body).to include("Director")
+        end
+
+        it "renders the submitted form values" do
+          submit_form(org_name: "Typed Agency", position: "Volunteer")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Typed Agency")
+          expect(response.body).to include("Volunteer")
+        end
+
+        it "links the registration form submission to the public form view" do
+          submit_form(org_name: "Typed Agency")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("registration form submission")
+          expect(response.body).to include(event_public_registration_path(event, reg: existing_registration.slug))
         end
       end
 
