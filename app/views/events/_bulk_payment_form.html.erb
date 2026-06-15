@@ -42,6 +42,7 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">Who is paying?</label>
         <%= select_tag :payer_type,
              options_for_select(Payment::PAYER_TYPES, "Organization"),
+             required: true,
              class: "bg-white w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
       </div>
 

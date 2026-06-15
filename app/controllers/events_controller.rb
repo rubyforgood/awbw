@@ -177,14 +177,26 @@ class EventsController < ApplicationController
 
     unless %w[CashPayment CheckPayment].include?(payment_type)
       flash.now[:alert] = "Invalid payment type"
-      respond_to(&:turbo_stream) and return
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to bulk_payments_event_path(@event), alert: "Invalid payment type" }
+      end
+      return
     end
 
     payer_type = params[:payer_type].presence
 
+    if payer_type == "Organization"
+      person_id = params[:person_id].presence
+      organization_id = params[:organization_id].presence
+    else
+      person_id = params[:person_id].presence || submission.person_id
+      organization_id = params[:organization_id].presence
+    end
+
     payment = submission.payments.new(
-      person_id: params[:person_id].presence || submission.person_id,
-      organization_id: params[:organization_id].presence,
+      person_id: person_id,
+      organization_id: organization_id,
       payer_type: payer_type,
       amount_cents: (params[:amount_dollars].to_d * 100).to_i,
       currency: params[:currency].presence || "usd",
