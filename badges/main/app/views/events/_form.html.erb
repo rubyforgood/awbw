@@ -65,18 +65,9 @@
 
     <div id="event_details" class="bg-gray-50 border border-gray-300 rounded-b-md p-6">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <%# LEFT: Date/time, location, videoconference, cost %>
+      <%# LEFT: Date/time, cost + pre-date text, videoconference + location %>
       <div class="md:col-span-2 space-y-6">
-      <div>
-        <%= f.input :pre_date_text,
-                label: "Pre-date text",
-                input_html: {
-                  class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                  placeholder: "e.g. Upcoming Workshop"
-                } %>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
         <div>
           <%= f.label :start_date,
                   "Start time",
@@ -134,36 +125,6 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
-          <%= f.input :location_id,
-                      label: "Location",
-                      collection: @locations,
-                      label_method: :name,
-                      value_method: :id,
-                      include_blank: true,
-                      input_html: {
-                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                        data: { searchable_select_target: "select" },
-                      } %>
-        </div>
-
-        <div>
-          <%= f.input :videoconference_url,
-                      label: "Videoconference URL",
-                      as: :url,
-                      input_html: {
-                        placeholder: "https://…",
-                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                      } %>
-          <%= f.input :videoconference_label,
-                      label: "Videoconference label",
-                      input_html: {
-                        placeholder: "Virtual event",
-                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                      } %>
-        </div>
-      </div>
-
         <div>
           <div class="flex items-center justify-between gap-2 mb-1">
             <%= f.label :cost, "Event Cost", class: "block font-medium" %>
@@ -189,6 +150,47 @@
               <%= f.object.errors[:cost].join(", ") %></p>
           <% end %>
         </div>
+
+        <div>
+          <%= f.input :pre_date_text,
+                  label: "Pre-date text",
+                  input_html: {
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    placeholder: "e.g. Upcoming Workshop"
+                  } %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <%= f.input :videoconference_url,
+                      label: "Videoconference URL",
+                      as: :url,
+                      input_html: {
+                        placeholder: "https://…",
+                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                      } %>
+          <%= f.input :videoconference_label,
+                      label: "Videoconference label",
+                      input_html: {
+                        placeholder: "Virtual event",
+                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                      } %>
+        </div>
+
+        <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
+          <%= f.input :location_id,
+                      label: "Location",
+                      collection: @locations,
+                      label_method: :name,
+                      value_method: :id,
+                      include_blank: true,
+                      input_html: {
+                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                        data: { searchable_select_target: "select" },
+                      } %>
+        </div>
+      </div>
 
     </div>
 
