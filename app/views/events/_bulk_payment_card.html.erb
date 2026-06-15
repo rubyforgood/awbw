@@ -1,7 +1,7 @@
 <% submission = submission.decorate %>
 <% payment = submission.payments.first %>
 <% attendee_matches = submission.matched_attendees(event_registrations) %>
-<div data-controller="dropdown" class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow">
+<div id="<%= dom_id(submission, :card) %>" data-controller="dropdown" class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow">
   <div class="flex items-center justify-between gap-2">
     <span class="text-sm font-medium text-gray-900 truncate"><%= submission.person.name %></span>
     <span class="text-sm text-gray-500 truncate"><%= submission.person.email %></span>
@@ -101,6 +101,8 @@
           </div>
         <% end %>
       </div>
+    <% else %>
+      <%= render "bulk_payment_form", submission: submission %>
     <% end %>
   </div>
 </div>
