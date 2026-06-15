@@ -19,6 +19,7 @@
 %>
 <div id="payment-card-<%= submission.id %>"
      data-controller="dropdown"
+     data-dropdown-open-value="<%= expanded %>"
      class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow scroll-mt-4">
   <%# Fixed column template (shared by every card so columns align row-to-row):
       name | email | method | amount | badge | date | submission | chevron. %>
@@ -101,10 +102,14 @@
                       <div class="flex flex-col gap-1 items-start">
                         <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
                                     target: "_blank", rel: "noopener noreferrer",
-                                    title: "#{dollars_from_cents(remaining_cents)} due · Registration fee #{dollars_from_cents(event_cost_cents)}",
+                                    title: "View #{reg.registrant.name}'s registration for #{@event.title}",
                                     class: "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                           <i class="fa-solid fa-pen-to-square text-gray-400"></i>
-                          <span class="font-semibold text-orange-600 tabular-nums whitespace-nowrap"><%= dollars_from_cents(remaining_cents) %></span>
+                          <% if remaining_cents.zero? %>
+                            <span class="font-semibold text-gray-500 whitespace-nowrap">Paid</span>
+                          <% else %>
+                            <span class="font-semibold text-orange-600 tabular-nums whitespace-nowrap"><%= dollars_from_cents(remaining_cents) %></span>
+                          <% end %>
                         <% end %>
                       </div>
                     <% end %>

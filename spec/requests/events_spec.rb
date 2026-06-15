@@ -1400,15 +1400,18 @@ RSpec.describe "Events", type: :request do
     it "renders the targeted submission's row expanded when given an expand param" do
       get bulk_payments_event_path(event, expand: submission.id)
 
-      expect(response.body).to include("id=\"#{ActionView::RecordIdentifier.dom_id(submission, :card)}\"")
-      expect(response.body).to include("data-dropdown-open-value=\"true\"")
+      expect(response.body).to include("id=\"payment-card-#{submission.id}\"")
+      # Expanded server-side: the details panel renders without `hidden` and the chevron is rotated.
+      expect(response.body).to match(/id="payment-arrow-#{submission.id}"[^>]*rotate-180/)
+      expect(response.body).not_to match(/id="payment-details-#{submission.id}"\s+class="hidden/)
     end
 
     it "renders rows collapsed without an expand param" do
       get bulk_payments_event_path(event)
 
-      expect(response.body).to include("data-dropdown-open-value=\"false\"")
-      expect(response.body).not_to include("data-dropdown-open-value=\"true\"")
+      # Collapsed: the details panel keeps the `hidden` class and this card's chevron is not rotated.
+      expect(response.body).to match(/id="payment-details-#{submission.id}"\s+class="hidden/)
+      expect(response.body).not_to match(/id="payment-arrow-#{submission.id}"[^>]*rotate-180/)
     end
 
     it "renders a Profile column with a circle-only profile button for matched attendees" do
@@ -1429,6 +1432,25 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include(person_path(attendee))
       expect(response.body).to include("bg-sky-100")
       expect(response.body).to include("h-5 w-5")
+    end
+
+    it "shows a grey \"Paid\" instead of an orange balance when the registration is fully covered" do
+      attendee = create(:person, first_name: "Paid", last_name: "Infull", email: "paid.infull@example.com")
+      registration = create(:event_registration, event: event, registrant: attendee, status: "registered")
+      create(:form_field, form: bulk_form, field_identifier: "bulk_payment_attendees", name: "Attendees list")
+      submission.form_answers.create!(
+        form_field: bulk_form.form_fields.find_by(field_identifier: "bulk_payment_attendees"),
+        submitted_answer: [ { first_name: "Paid", last_name: "Infull", email: "paid.infull@example.com" } ].to_json
+      )
+      # Fully cover the $25 registration fee so nothing is owed.
+      create(:allocation, source: create(:payment, amount_cents: 2500, amount_cents_remaining: 2500),
+             allocatable: registration, amount: 2500)
+
+      get bulk_payments_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("text-gray-500 whitespace-nowrap\">Paid<")
+      expect(response.body).not_to include("$0.00")
     end
   end
 
@@ -1492,10 +1514,11 @@ RSpec.describe "Events", type: :request do
              params: { payment_id: payment.id, event_registration_id: event_registration.id, amount_dollars: "5.00" },
              as: :turbo_stream
 
-        # The whole card is re-rendered (kept expanded) with the new totals.
-        expect(response.body).to include(ActionView::RecordIdentifier.dom_id(submission, :card))
-        expect(response.body).to include("data-dropdown-open-value=\"true\"")
-        expect(response.body).to include("$0 due")
+        # The whole card is re-rendered (kept expanded) with the new totals: the
+        # registration is now fully paid, so its due button reads "Paid".
+        expect(response.body).to include("payment-card-#{submission.id}")
+        expect(response.body).to include("rotate-180")
+        expect(response.body).to include(">Paid</span>")
         # Payment still has $5 left, so only the bottom "New allocation" form
         # remains — the inline per-row box for the now-paid registration is gone.
         expect(response.body.scan(">Allocate</button>").size).to eq(1)
