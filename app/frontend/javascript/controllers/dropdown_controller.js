@@ -14,13 +14,9 @@ import { Controller } from "@hotwired/stimulus";
 export default class extends Controller {
   // add a content target if you want the dropdown to close with "escape button" or clicking outside of content
   static targets = ["content"];
-  // set open-value to true in the view to render the dropdown already expanded
-  // (the view supplies the open-state utility classes); keeps internal state in
-  // sync so the first toggle collapses rather than re-opening it.
-  static values = { open: Boolean };
 
   connect() {
-    this.open = this.openValue;
+    this.open = false;
     this.handleOutsideClick = this.handleOutsideClick.bind(this);
     this.handleEscapeKey = this.handleEscapeKey.bind(this);
   }

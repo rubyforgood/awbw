@@ -4,9 +4,10 @@
   payment_method = submission.answers_by_identifier["payment_method"]
   content_id = "payment-details-#{submission.id}"
   arrow_id = "payment-arrow-#{submission.id}"
-  # Expanded on load when returning from a page (e.g. allocations) that links
-  # back with this submission's id, so the user lands on the row they left.
-  # The allocate turbo stream re-renders the card and forces it expanded.
+  # Expanded on load when returning from another page (e.g. allocations) that
+  # links back with this submission's id in `expand`, so the server renders this
+  # card open and the matching `#payment-card-<id>` URL anchor scrolls to it. The
+  # allocate/create turbo stream also forces it open via `expanded: true`.
   expanded = local_assigns.fetch(:expanded) { params[:expand].to_i == submission.id }
 
   # Shared across every card so attendee matching and allocated totals don't
@@ -16,9 +17,8 @@
   event_cost_cents = @event.cost_cents.to_i
   attendee_matches = submission.matched_attendees(event_registrations)
 %>
-<div id="<%= dom_id(submission, :card) %>"
+<div id="payment-card-<%= submission.id %>"
      data-controller="dropdown"
-     data-dropdown-open-value="<%= expanded %>"
      class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow scroll-mt-4">
   <%# Fixed column template (shared by every card so columns align row-to-row):
       name | email | method | amount | badge | date | submission | chevron. %>

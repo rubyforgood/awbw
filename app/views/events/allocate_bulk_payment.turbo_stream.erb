@@ -5,7 +5,7 @@
     once a registration is paid in full) all reflect the new allocation. Kept
     expanded so the admin stays on the row they were working in. %>
 <% if @submission %>
-  <%= turbo_stream.replace dom_id(@submission, :card) do %>
+  <%= turbo_stream.replace "payment-card-#{@submission.id}" do %>
     <%= render "events/bulk_payment_card", submission: @submission,
           event_registrations: @event_registrations,
           allocated_by_registration: @allocated_by_registration,
