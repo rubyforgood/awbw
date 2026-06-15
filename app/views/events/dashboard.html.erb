@@ -75,7 +75,14 @@
           $grand = $registration + $scholarships + $cont_ed. Left-aligned; the headline
           figure dominates while the addends stay muted, and the row wraps on mobile. %>
       <% show_bulk_payments = @dashboard.unallocated_bulk_payment_cents.positive? %>
-      <% addend_class = "leading-tight rounded px-1 -mx-1 hover:bg-white/70 transition-colors" %>
+      <%# Each equation term is colorless at rest and reveals its domain color on
+          hover — a tinted fill + darker border, matching the amber bulk-payments
+          term's look but per-domain. border-transparent reserves the border so
+          there's no layout shift on hover. %>
+      <% addend_class = ->(domain) do
+           color = DomainTheme.color_for(domain)
+           "leading-tight rounded-lg border border-transparent px-3 py-2 transition-colors hover:bg-#{color}-50 hover:border-#{color}-300"
+         end %>
       <div class="rounded-xl border <%= DomainTheme.border_class_for(:event_dashboard, intensity: 200) %> <%= DomainTheme.bg_class_for(:event_dashboard, intensity: 50) %> p-4 shadow-sm">
         <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:event_dashboard, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
           <i class="fa-solid fa-coins"></i>
@@ -89,27 +96,33 @@
           <div class="lg:shrink-0 lg:pt-2">
             <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
               <%= link_to number_to_currency(@dashboard.grand_total_cents / 100.0), registrants_event_path(@event),
-                    class: "text-3xl sm:text-4xl font-bold #{DomainTheme.text_class_for(:event_dashboard, intensity: 700)} tabular-nums hover:underline",
+                    class: "text-3xl sm:text-4xl font-bold #{DomainTheme.text_class_for(:event_dashboard, intensity: 700)} tabular-nums #{addend_class.call(:event_dashboard)}",
                     title: "View all registrants" %>
               <span class="text-2xl font-light text-gray-300 select-none">=</span>
-              <%= link_to registrants_event_path(@event), class: addend_class, title: "Manage registrants" do %>
+              <%= link_to registrants_event_path(@event), class: addend_class.call(:payments), title: "Manage registrants" do %>
                 <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:payments, intensity: 600) %> tabular-nums"><%= number_to_currency(@dashboard.registration_subtotal_cents / 100.0) %></p>
                 <p class="hidden lg:block text-xs text-gray-500">Registration fees</p>
               <% end %>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
-              <%= link_to recipients_event_path(@event), class: addend_class, title: "View scholarships" do %>
+              <%= link_to recipients_event_path(@event), class: addend_class.call(:scholarships), title: "View scholarships" do %>
                 <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> tabular-nums"><%= number_to_currency(@dashboard.scholarship_total_cents / 100.0) %></p>
                 <p class="hidden lg:block text-xs text-gray-500">Scholarships</p>
               <% end %>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
-              <%= link_to registrants_event_path(@event), class: "#{addend_class} whitespace-nowrap", title: "Manage registrants" do %>
+              <%= link_to registrants_event_path(@event), class: "#{addend_class.call(:continuing_education)} whitespace-nowrap", title: "Manage registrants" do %>
                 <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> tabular-nums"><%= number_to_currency(@dashboard.cont_ed_total_cents / 100.0) %></p>
                 <p class="hidden lg:block text-xs text-gray-500">CE fees</p>
               <% end %>
               <% if show_bulk_payments %>
                 <span class="text-2xl font-light text-gray-300 select-none">+</span>
-                <%= link_to bulk_payments_event_path(@event), class: "#{addend_class} whitespace-nowrap", title: "Allocate bulk payments" do %>
-                  <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:bulk_payments, intensity: 600) %> tabular-nums"><%= number_to_currency(@dashboard.unallocated_bulk_payment_cents / 100.0) %></p>
+                <%# Styled like the "Amount due" subcard on a registration: a little
+                    amber-bordered card with a warning icon, since unallocated bulk
+                    payment money still needs action. %>
+                <%= link_to bulk_payments_event_path(@event), class: "whitespace-nowrap leading-tight rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 hover:bg-amber-100 transition-colors", title: "Allocate bulk payments" do %>
+                  <p class="flex items-center gap-1.5 text-lg sm:text-xl font-semibold text-amber-700 tabular-nums">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <%= number_to_currency(@dashboard.unallocated_bulk_payment_cents / 100.0) %>
+                  </p>
                   <p class="hidden lg:block text-xs text-gray-500">Unallocated bulk payments</p>
                 <% end %>
               <% end %>
