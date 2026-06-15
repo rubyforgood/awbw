@@ -711,7 +711,7 @@ RSpec.describe "Events", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Registration fees")
-        expect(response.body).to include("Continuing education fees")
+        expect(response.body).to include("CE fees")
         expect(response.body).to include("Paid")
         expect(response.body).to include("$60.00")
       end
