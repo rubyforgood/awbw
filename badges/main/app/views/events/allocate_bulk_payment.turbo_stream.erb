@@ -1,11 +1,15 @@
 <%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>
 
 <%= turbo_stream.replace dom_id(@payment, :remaining) do %>
-  <%= render "payment_badge", payment: @payment %>
+  <span id="<%= dom_id(@payment, :remaining) %>">
+    <%= render "payment_badge", payment: @payment %>
+  </span>
 <% end %>
 
 <% unless flash[:alert] %>
   <%= turbo_stream.replace dom_id(@payment, :allocations) do %>
-    <%= render "payment_allocations", payment: @payment %>
+    <div id="<%= dom_id(@payment, :allocations) %>">
+      <%= render "payment_allocations", payment: @payment %>
+    </div>
   <% end %>
 <% end %>

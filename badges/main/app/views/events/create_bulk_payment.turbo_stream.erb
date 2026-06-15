@@ -1,0 +1,7 @@
+<%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>
+
+<% unless flash[:alert] %>
+  <%= turbo_stream.replace dom_id(@submission, :card) do %>
+    <%= render "bulk_payment_card", submission: @submission, event_registrations: @event_registrations %>
+  <% end %>
+<% end %>

@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form allocate_bulk_payment ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
 
   def index
     authorize!
@@ -123,6 +123,7 @@ class EventsController < ApplicationController
     authorize! @event
 
     @event = @event.decorate
+    @event_registrations = @event.event_registrations.active.includes(:registrant)
     @submissions = @event.form_submissions
                          .where(role: "bulk_payment")
                          .includes(:person, form_answers: :form_field, payments: :allocations)
@@ -163,6 +164,62 @@ class EventsController < ApplicationController
     respond_to do |format|
       format.turbo_stream
       format.html { redirect_to bulk_payments_event_path(@event), notice: flash.now[:alert] || "Allocation successful" }
+    end
+  end
+
+  def create_bulk_payment
+    authorize! @event
+    @event = @event.decorate
+    @event_registrations = @event.event_registrations.active.includes(:registrant)
+
+    submission = @event.form_submissions.find(params[:submission_id])
+    payment_type = params[:payment_type]
+
+    unless %w[CashPayment CheckPayment].include?(payment_type)
+      flash.now[:alert] = "Invalid payment type"
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to bulk_payments_event_path(@event), alert: "Invalid payment type" }
+      end
+      return
+    end
+
+    person_id = params[:person_id].presence
+    organization_id = params[:organization_id].presence
+
+    if organization_id.present? && person_id.blank?
+      payer_type = "Organization"
+    elsif person_id.present? && organization_id.blank?
+      payer_type = "Person"
+    elsif person_id.present? && organization_id.present?
+      payer_type = params[:payer_type].presence || "Organization"
+    else
+      person_id = submission.person_id
+      payer_type = "Person"
+    end
+
+    payment = submission.payments.new(
+      person_id: person_id,
+      organization_id: organization_id,
+      payer_type: payer_type,
+      amount_cents: (params[:amount_dollars].to_d * 100).to_i,
+      currency: params[:currency].presence || "usd",
+      type: payment_type,
+      check_number: params[:check_number].presence,
+      memo: params[:memo].presence
+    )
+
+    if payment.save
+      @payment = payment
+      @submission = submission.decorate
+      flash.now[:notice] = "Payment recorded"
+    else
+      flash.now[:alert] = payment.errors.full_messages.to_sentence
+    end
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to bulk_payments_event_path(@event), notice: flash.now[:alert] || "Payment recorded" }
     end
   end
 
