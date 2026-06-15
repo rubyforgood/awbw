@@ -54,4 +54,32 @@ RSpec.describe Scholarship, type: :model do
       end
     end
   end
+
+  describe "marking the event registration's scholarship_requested flag" do
+    let(:event) { create(:event) }
+    let(:person) { create(:person) }
+    let(:registration) { create(:event_registration, event:, registrant: person, scholarship_requested: false) }
+
+    it "sets scholarship_requested to true on the connected event registration" do
+      scholarship = build(:scholarship, recipient: person)
+      scholarship.build_allocation(allocatable: registration, amount: scholarship.amount_cents)
+      scholarship.save!
+
+      expect(registration.reload.scholarship_requested).to be(true)
+    end
+
+    it "leaves scholarship_requested true when the scholarship is destroyed" do
+      scholarship = build(:scholarship, recipient: person)
+      scholarship.build_allocation(allocatable: registration, amount: scholarship.amount_cents)
+      scholarship.save!
+
+      scholarship.destroy!
+
+      expect(registration.reload.scholarship_requested).to be(true)
+    end
+
+    it "does nothing when the scholarship is not connected to an event registration" do
+      expect { create(:scholarship, grant: create(:grant), recipient: person) }.not_to raise_error
+    end
+  end
 end
