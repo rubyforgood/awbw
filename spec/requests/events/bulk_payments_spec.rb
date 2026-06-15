@@ -132,6 +132,32 @@ RSpec.describe "Events::BulkPayments", type: :request do
     end
   end
 
+  describe "POST create as a signed-in payer" do
+    let(:admin) { create(:user, :admin, :with_person) }
+
+    before do
+      # Mirror the seeded form: payer fields are hidden from signed-in users, so
+      # they are neither rendered nor validated and must be backfilled.
+      [ org_field, payer_first_name_field, payer_last_name_field, payer_email_field ].each do |f|
+        f.update!(visibility: :logged_out_only, required: false)
+      end
+      admin.person.update!(first_name: "Signed", last_name: "Inn")
+    end
+
+    it "records the payer fields from the signed-in person" do
+      post event_bulk_payment_path(event),
+           params: { bulk_payment: { form_fields: { payment_method_field.id.to_s => "Check" } } }
+
+      expect(response).to have_http_status(:redirect)
+      submission = FormSubmission.last
+      expect(submission.person).to eq(admin.person)
+      answers = submission.answers_by_identifier
+      expect(answers["payer_first_name"]).to eq("Signed")
+      expect(answers["payer_last_name"]).to eq("Inn")
+      expect(answers["payer_email"]).to eq(admin.person.preferred_email)
+    end
+  end
+
   describe "GET new with the seeded bulk payment form" do
     let(:seeded_form) do
       FormBuilderService.new(name: "Bulk Payment", sections: %i[bulk_payment], role: "bulk_payment").call

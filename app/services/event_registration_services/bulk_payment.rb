@@ -17,7 +17,11 @@ module EventRegistrationServices
     def call
       ActiveRecord::Base.transaction do
         person = find_or_create_person
-        create_phone_contact(person) if field_value("payer_phone").present?
+        if @person
+          backfill_payer_fields(@person)
+        elsif field_value("payer_phone").present?
+          create_phone_contact(person)
+        end
         submission = create_form_submission(person)
         send_notifications(submission, person)
         Result.new(success?: true, form_submission: submission, errors: [])
@@ -54,6 +58,25 @@ module EventRegistrationServices
       field = @form.form_fields.find_by(field_identifier: key)
       return nil unless field
       @form_params[field.id.to_s]
+    end
+
+    # Logged-in payers never see the payer information fields (they're
+    # logged_out_only), so fill those answers from the signed-in person's record
+    # to keep the submission self-describing. Their existing contact methods are
+    # left untouched.
+    def backfill_payer_fields(person)
+      {
+        "payer_first_name" => person.first_name,
+        "payer_last_name" => person.last_name,
+        "payer_email" => person.preferred_email,
+        "payer_phone" => person.phone_number,
+        "payer_organization" => person.primary_organization&.name
+      }.each do |key, value|
+        next if value.blank?
+        field = @form.form_fields.find_by(field_identifier: key)
+        next unless field
+        @form_params[field.id.to_s] = value
+      end
     end
 
     def find_or_create_person

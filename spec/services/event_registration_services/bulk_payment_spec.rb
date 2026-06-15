@@ -49,6 +49,50 @@ RSpec.describe EventRegistrationServices::BulkPayment do
     end
   end
 
+  describe "logged-in payer" do
+    let(:person) do
+      create(:person, :with_organization, first_name: "Logged", last_name: "In",
+             user: create(:user, email: "loggedin@example.com"))
+    end
+
+    before do
+      person.contact_methods.create!(kind: :phone, value: "555-987-6543", contact_type: "personal", primary: true)
+    end
+
+    def logged_in_params
+      {
+        field_id("payment_method") => "Check",
+        field_id("number_of_attendees") => "2"
+      }
+    end
+
+    it "records the payer fields from the logged-in person's data" do
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: logged_in_params,
+        person: person
+      )
+
+      expect(result.success?).to be true
+      submission = result.form_submission
+      expect(submission.person).to eq(person)
+
+      answers = submission.answers_by_identifier
+      expect(answers["payer_first_name"]).to eq("Logged")
+      expect(answers["payer_last_name"]).to eq("In")
+      expect(answers["payer_email"]).to eq("loggedin@example.com")
+      expect(answers["payer_phone"]).to eq("555-987-6543")
+      expect(answers["payer_organization"]).to eq(person.primary_organization.name)
+    end
+
+    it "does not alter the logged-in person's existing phone contact methods" do
+      expect {
+        described_class.call(event: event, form: form, form_params: logged_in_params, person: person)
+      }.not_to change { person.contact_methods.where(kind: :phone).count }
+    end
+  end
+
   describe "notifications" do
     it "sends the payer confirmation and the staff FYI" do
       expect(NotificationServices::CreateNotification).to receive(:call).with(
