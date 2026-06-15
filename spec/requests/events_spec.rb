@@ -719,7 +719,7 @@ RSpec.describe "Events", type: :request do
       it "shows unallocated bulk payments in the equation, linking to the bulk payments page" do
         bulk_form = create(:form)
         create(:event_form, event: event, form: bulk_form, role: "bulk_payment")
-        submission = create(:form_submission, person: person, form: bulk_form, role: "bulk_payment")
+        submission = create(:form_submission, person: person, form: bulk_form, event: event, role: "bulk_payment")
         create(:payment, person: person, form_submission: submission,
                amount_cents: 5_000, amount_cents_remaining: 5_000)
 
