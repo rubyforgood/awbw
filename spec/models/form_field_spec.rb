@@ -271,6 +271,78 @@ RSpec.describe FormField do
     end
   end
 
+  describe "#answer_inclusion_error" do
+    let(:form) { create(:form) }
+
+    def selectable_field(type:, option_names:)
+      field = create(:form_field, form: form, answer_type: type)
+      option_names.each do |name|
+        create(:form_field_answer_option, form_field: field, answer_option: create(:answer_option, name: name))
+      end
+      field
+    end
+
+    it "returns nil for a value that is one of the offered options" do
+      field = selectable_field(type: :single_select_radio, option_names: %w[Red Blue])
+      expect(field.answer_inclusion_error("Red")).to be_nil
+    end
+
+    it "returns an error for a value that was never offered" do
+      field = selectable_field(type: :single_select_radio, option_names: %w[Red Blue])
+      expect(field.answer_inclusion_error("Green")).to eq("has an invalid selection")
+    end
+
+    it "leaves blank values to the required check" do
+      field = selectable_field(type: :single_select_radio, option_names: %w[Red Blue])
+      expect(field.answer_inclusion_error("")).to be_nil
+      expect(field.answer_inclusion_error(nil)).to be_nil
+    end
+
+    it "validates every value in a multi-select answer" do
+      field = selectable_field(type: :multi_select_checkbox, option_names: %w[Red Blue Green])
+      expect(field.answer_inclusion_error([ "Red", "Blue" ])).to be_nil
+      expect(field.answer_inclusion_error([ "Red", "Purple" ])).to eq("has an invalid selection")
+    end
+
+    it "accepts an Other free-text answer when the field offers Other" do
+      field = selectable_field(type: :single_select_radio, option_names: [ "Red", "Other" ])
+      expect(field.answer_inclusion_error("Other")).to be_nil
+      expect(field.answer_inclusion_error("Other: chartreuse")).to be_nil
+    end
+
+    it "rejects an Other answer when the field does not offer Other" do
+      field = selectable_field(type: :single_select_radio, option_names: %w[Red Blue])
+      expect(field.answer_inclusion_error("Other: chartreuse")).to eq("has an invalid selection")
+    end
+
+    it "does not apply to free-form fields" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph)
+      expect(field.answer_inclusion_error("anything at all")).to be_nil
+    end
+
+    context "with dynamically-sourced options" do
+      it "accepts a published Sector id and rejects others for a service-area field" do
+        field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
+        offered = create(:sector, :published)
+        unpublished = create(:sector, :unpublished)
+
+        expect(field.answer_inclusion_error(offered.id.to_s)).to be_nil
+        expect(field.answer_inclusion_error(unpublished.id.to_s)).to eq("has an invalid selection")
+        expect(field.answer_inclusion_error("999999")).to eq("has an invalid selection")
+      end
+
+      it "accepts a published Category id from the backing type for a category field" do
+        type = create(:category_type, name: "WorkshopEnvironment")
+        offered = create(:category, :published, category_type: type)
+        other_type_category = create(:category, :published)
+        field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "workshop_environments")
+
+        expect(field.answer_inclusion_error([ offered.id.to_s ])).to be_nil
+        expect(field.answer_inclusion_error([ other_type_category.id.to_s ])).to eq("has an invalid selection")
+      end
+    end
+  end
+
   describe "#selectable?" do
     let(:form) { create(:form) }
 

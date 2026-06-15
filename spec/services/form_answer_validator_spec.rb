@@ -98,6 +98,28 @@ RSpec.describe FormAnswerValidator do
     end
   end
 
+  describe "selectable option inclusion" do
+    def radio_field_with_options(*names)
+      field = create(:form_field, form: form, answer_type: :single_select_radio)
+      names.each do |name|
+        create(:form_field_answer_option, form_field: field, answer_option: create(:answer_option, name: name))
+      end
+      field
+    end
+
+    it "passes an offered option" do
+      field = radio_field_with_options("Red", "Blue")
+
+      expect(validate(field, "Red")).to eq({})
+    end
+
+    it "surfaces an error for a value that was never offered" do
+      field = radio_field_with_options("Red", "Blue")
+
+      expect(validate(field, "Green")).to eq(field.id => "has an invalid selection")
+    end
+  end
+
   describe "skipping" do
     it "ignores group header fields entirely" do
       header = create(:form_field, form: form, answer_type: :group_header, required: true)

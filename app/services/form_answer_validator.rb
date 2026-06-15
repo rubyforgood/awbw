@@ -1,7 +1,9 @@
 # Validates submitted answer values against each form field's configuration:
-# presence (required), integer/email format, and the per-field min-words /
-# max-characters settings. Returns a hash of { field_id => error_message } so
-# results from multiple forms (e.g. registration + scholarship) can be merged.
+# presence (required), integer/email format, the per-field min-words /
+# max-characters settings, and — for selectable fields — that the value is one
+# of the field's offered options (guarding against forged submissions). Returns
+# a hash of { field_id => error_message } so results from multiple forms (e.g.
+# registration + scholarship) can be merged.
 #
 # Group headers are skipped here; any other field-specific exclusions (e.g.
 # bulk payment's nested attendees) are the caller's responsibility — pass only
@@ -39,7 +41,7 @@ class FormAnswerValidator
     elsif field.email_field? && value.to_s !~ EMAIL_FORMAT
       "must be a valid email address"
     else
-      field.min_words_error(value) || field.max_characters_error(value)
+      field.min_words_error(value) || field.max_characters_error(value) || field.answer_inclusion_error(value)
     end
   end
 

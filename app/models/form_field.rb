@@ -11,6 +11,24 @@ class FormField < ApplicationRecord
   # Answer types that collect free-form text, where a minimum word count applies
   FREE_FORM_TEXT_TYPES = %w[free_form_input_one_line free_form_input_paragraph].freeze
 
+  # Field identifiers whose selectable options are sourced dynamically from
+  # Sector records rather than the field's own stored answer options. The
+  # submitted value for these is a Sector id (as a string).
+  SERVICE_AREA_FIELD_IDENTIFIERS = %w[primary_service_area primary_service_area_single].freeze
+
+  # Field identifiers whose selectable options are sourced dynamically from a
+  # CategoryType's published categories. The submitted value is a Category id
+  # (as a string). Maps the field identifier to its backing CategoryType name.
+  DYNAMIC_FIELD_CATEGORY_TYPES = {
+    "workshop_environments" => "WorkshopEnvironment",
+    "client_life_experiences" => "StoryPopulation",
+    "primary_age_group" => "AgeRange"
+  }.freeze
+
+  # The special free-text option label that lets a respondent supply their own
+  # value; a chosen "Other" answer is stored as "Other" or "Other: <text>".
+  OTHER_OPTION_PREFIX = "Other"
+
   # Fallback character ceilings applied when a free-form field has no explicit
   # max_characters set. This is a safety net against pathological submissions
   # (megabyte answers that bloat the DB and break admin/email rendering), not a
@@ -184,6 +202,63 @@ class FormField < ApplicationRecord
     return if value.to_s.length <= limit
 
     "must be #{limit} #{"character".pluralize(limit)} or fewer"
+  end
+
+  # True when this field's selectable options come from Sector/Category data
+  # rather than its own stored answer options. Dynamic fields never offer "Other".
+  def dynamic_options?
+    field_identifier.in?(SERVICE_AREA_FIELD_IDENTIFIERS) ||
+      DYNAMIC_FIELD_CATEGORY_TYPES.key?(field_identifier)
+  end
+
+  # The set of values a submission may legitimately contain for this selectable
+  # field — stored option names, or dynamic Sector/Category ids as strings —
+  # exactly mirroring what the public form renders. nil for non-selectable
+  # fields. This is the source of truth for both rendering and validation.
+  def allowed_answer_values
+    return unless selectable?
+
+    values = if field_identifier.in?(SERVICE_AREA_FIELD_IDENTIFIERS)
+      Sector.published.pluck(:id).map(&:to_s)
+    elsif (type_name = DYNAMIC_FIELD_CATEGORY_TYPES[field_identifier])
+      type = CategoryType.find_by(name: type_name)
+      type ? type.categories.published.pluck(:id).map(&:to_s) : []
+    else
+      answer_options.pluck(:name)
+    end
+
+    values.to_set
+  end
+
+  # True when this field offers the free-text "Other" choice (stored fields only).
+  def other_option?
+    return false if dynamic_options?
+
+    answer_options.any? { |option| option.name.to_s.strip.casecmp?(OTHER_OPTION_PREFIX) }
+  end
+
+  # True when a submitted value is a valid "Other" answer for a field that offers
+  # the "Other" choice: bare "Other" or the "Other: <free text>" form.
+  def other_answer?(value)
+    return false unless other_option?
+
+    value == OTHER_OPTION_PREFIX || value.start_with?("#{OTHER_OPTION_PREFIX}:")
+  end
+
+  # Returns a validation error string when a submitted selectable value is not
+  # one of the field's offered options — guarding against tampered/forged
+  # submissions — or nil when it passes / does not apply. Handles single and
+  # multi-select, and allows "Other" / "Other: <text>" when the field offers it.
+  # Blank values are left to the presence (required) check.
+  def answer_inclusion_error(value)
+    allowed = allowed_answer_values
+    return unless allowed
+
+    submitted = Array(value).map(&:to_s).reject(&:blank?)
+    return if submitted.empty?
+    return if submitted.all? { |v| allowed.include?(v) || other_answer?(v) }
+
+    "has an invalid selection"
   end
 
   def html_input_type
