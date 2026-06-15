@@ -104,7 +104,7 @@
                                     title: "#{dollars_from_cents(remaining_cents)} due · Registration fee #{dollars_from_cents(event_cost_cents)}",
                                     class: "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                           <i class="fa-solid fa-pen-to-square text-gray-400"></i>
-                          <span class="js-reg-due-<%= reg.id %> font-semibold text-orange-600 tabular-nums whitespace-nowrap"><%= dollars_from_cents(remaining_cents) %></span>
+                          <span class="font-semibold text-orange-600 tabular-nums whitespace-nowrap"><%= dollars_from_cents(remaining_cents) %></span>
                         <% end %>
                       </div>
                     <% end %>
@@ -118,7 +118,7 @@
                                     title: "View registration allocations",
                                     class: "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                           <i class="fa-solid fa-list-check text-gray-400"></i>
-                          <span class="js-reg-allocated-<%= reg.id %> font-semibold text-green-600 tabular-nums"><%= dollars_from_cents(allocated_cents) %></span>
+                          <span class="font-semibold text-green-600 tabular-nums"><%= dollars_from_cents(allocated_cents) %></span>
                         <% end %>
                       </div>
                     <% end %>
@@ -127,7 +127,7 @@
                     <% am[:matches].each do |reg| %>
                       <% allocated_cents = allocated_by_registration.fetch(reg.id, 0) %>
                       <% reg_paid_in_full = allocated_cents >= event_cost_cents %>
-                      <div class="js-reg-allocate-<%= reg.id %> flex flex-col gap-1 items-start">
+                      <div class="flex flex-col gap-1 items-start">
                         <% if payment && payment.amount_cents_remaining > 0 && !reg_paid_in_full %>
                           <%= form_tag allocate_bulk_payment_event_path(@event), class: "flex items-center gap-1.5" do %>
                             <%= hidden_field_tag :payment_id, payment.id %>

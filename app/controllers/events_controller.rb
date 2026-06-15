@@ -157,9 +157,6 @@ class EventsController < ApplicationController
       allocation = Allocation.new(source: payment, allocatable: event_registration, amount: amount_cents)
       if allocation.save
         flash.now[:notice] = "Allocation successful"
-        # Set only on a real allocation so the turbo stream broadcasts this
-        # registration's refreshed totals to every card that shows it.
-        @allocated_registration = event_registration
       else
         flash.now[:alert] = allocation.errors.full_messages.to_sentence
       end

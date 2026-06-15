@@ -12,19 +12,3 @@
           expanded: true %>
   <% end %>
 <% end %>
-
-<%# Broadcast the affected registration's refreshed totals to every other card
-    that lists the same registrant (a payer can appear in multiple submissions),
-    targeting the per-registration amount spans by class so each card keeps its
-    own expand state and back-link params. %>
-<% if @allocated_registration %>
-  <% reg_id = @allocated_registration.id %>
-  <% allocated_cents = @allocated_by_registration.fetch(reg_id, 0) %>
-  <% remaining_cents = [ @event.cost_cents.to_i - allocated_cents, 0 ].max %>
-  <%= turbo_stream.update_all ".js-reg-due-#{reg_id}" do %><%= dollars_from_cents(remaining_cents) %><% end %>
-  <%= turbo_stream.update_all ".js-reg-allocated-#{reg_id}" do %><%= dollars_from_cents(allocated_cents) %><% end %>
-  <%# Once the registration is fully paid, no card should still offer to allocate to it. %>
-  <% if allocated_cents >= @event.cost_cents.to_i %>
-    <%= turbo_stream.update_all ".js-reg-allocate-#{reg_id}" do %><% end %>
-  <% end %>
-<% end %>

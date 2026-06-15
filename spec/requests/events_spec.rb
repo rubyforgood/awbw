@@ -1500,18 +1500,6 @@ RSpec.describe "Events", type: :request do
         # remains — the inline per-row box for the now-paid registration is gone.
         expect(response.body.scan(">Allocate</button>").size).to eq(1)
       end
-
-      it "broadcasts the registration's refreshed totals to every card that lists it" do
-        post allocate_bulk_payment_event_path(event),
-             params: { payment_id: payment.id, event_registration_id: event_registration.id, amount_dollars: "5.00" },
-             as: :turbo_stream
-
-        # Class-targeted updates reach the same registrant in other submissions' cards.
-        expect(response.body).to include("targets=\".js-reg-due-#{event_registration.id}\"")
-        expect(response.body).to include("targets=\".js-reg-allocated-#{event_registration.id}\"")
-        # Fully paid, so the allocate box is cleared everywhere too.
-        expect(response.body).to include("targets=\".js-reg-allocate-#{event_registration.id}\"")
-      end
     end
 
     it "shows alert when event_registration_id is blank" do
