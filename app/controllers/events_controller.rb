@@ -184,14 +184,18 @@ class EventsController < ApplicationController
       return
     end
 
-    payer_type = params[:payer_type].presence
+    person_id = params[:person_id].presence
+    organization_id = params[:organization_id].presence
 
-    if payer_type == "Organization"
-      person_id = params[:person_id].presence
-      organization_id = params[:organization_id].presence
+    if organization_id.present? && person_id.blank?
+      payer_type = "Organization"
+    elsif person_id.present? && organization_id.blank?
+      payer_type = "Person"
+    elsif person_id.present? && organization_id.present?
+      payer_type = params[:payer_type].presence || "Organization"
     else
-      person_id = params[:person_id].presence || submission.person_id
-      organization_id = params[:organization_id].presence
+      person_id = submission.person_id
+      payer_type = "Person"
     end
 
     payment = submission.payments.new(
