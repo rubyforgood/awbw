@@ -27,4 +27,17 @@ class FormSubmission < ApplicationRecord
   rescue JSON::ParserError
     []
   end
+
+  # Number of attendees the payer submitted, falling back to the size of the
+  # attendees list when an explicit count is absent.
+  def bulk_payment_attendee_count
+    count = answers_by_identifier["number_of_attendees"].to_i
+    count.positive? ? count : bulk_payment_attendees.size
+  end
+
+  # Expected total for the submission (event cost times attendee count), so the
+  # amount can be shown even before a payment record lands.
+  def bulk_payment_amount_cents(event)
+    event.cost_cents.to_i * bulk_payment_attendee_count
+  end
 end

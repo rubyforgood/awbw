@@ -320,6 +320,12 @@ register_with_payments.(facilitator_training,
     { amount_cents: 20_000, kind: :check }
   ])
 
+# Bulk payments for the flagship event are seeded separately in
+# db/seeds/dev/bulk_payments.rb, which reproduces the real production channels
+# (Stripe-webhook ExternalProcessorPayment, staff-logged cash/check, and pending)
+# across the full matrix of allocation states, using dedicated demo people so
+# those states stay clean and don't collide with the registrants funded above.
+
 [ facilitator_training, trauma_training, mindful_art ].compact.each do |event|
   dashboard = EventDashboard.new(event)
   puts "  #{event.title}: #{dashboard.registrant_count} registrants, " \

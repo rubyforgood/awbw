@@ -2,6 +2,9 @@
 
 <% unless flash[:alert] %>
   <%= turbo_stream.replace dom_id(@submission, :card) do %>
-    <%= render "bulk_payment_card", submission: @submission, event_registrations: @event_registrations %>
+    <%= render "bulk_payment_card", submission: @submission,
+          event_registrations: @event_registrations,
+          allocated_by_registration: @allocated_by_registration,
+          expanded: true %>
   <% end %>
 <% end %>
