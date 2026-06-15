@@ -70,7 +70,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
         it "shows green icon when person submitted the current registration form" do
           create(:event_form, event: event, form: reg_form, role: "registration")
-          create(:form_submission, person: person, form: reg_form)
+          create(:form_submission, person: person, form: reg_form, event: event)
 
           get event_registrations_path
 

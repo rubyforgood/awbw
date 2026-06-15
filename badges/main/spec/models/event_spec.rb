@@ -8,6 +8,24 @@ RSpec.describe Event, type: :model do
     it { should validate_numericality_of(:cost_cents).is_greater_than_or_equal_to(0).allow_nil }
   end
 
+  describe "destroying with form submissions" do
+    it "is blocked and keeps the submission when the event has one" do
+      event = create(:event)
+      create(:form_submission, :with_event, event: event)
+
+      expect(event.destroy).to be(false)
+      expect(event.errors[:base]).to be_present
+      expect(Event.exists?(event.id)).to be(true)
+    end
+
+    it "is allowed when the event has no submissions" do
+      event = create(:event)
+
+      expect(event.destroy).to be_truthy
+      expect(Event.exists?(event.id)).to be(false)
+    end
+  end
+
   describe "staff uniqueness on update" do
     it "rejects two staff rows for the same person added in one update" do
       event = create(:event)

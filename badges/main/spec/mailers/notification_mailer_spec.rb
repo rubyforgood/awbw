@@ -10,7 +10,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
     let(:person) { create(:person, first_name: "Pat", last_name: "Payer", email: "pat@example.com") }
     let(:submission) do
-      s = FormSubmission.create!(form: form, person: person, role: "bulk_payment")
+      s = FormSubmission.create!(form: form, person: person, event: event, role: "bulk_payment")
       s.form_answers.create!(form_field: form.form_fields.find_by(field_identifier: "number_of_attendees"), submitted_answer: "4")
       s
     end

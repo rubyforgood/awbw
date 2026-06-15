@@ -340,6 +340,25 @@ RSpec.describe "Events", type: :request do
           delete event_path(event)
         }.to change(Event, :count).by(-1)
       end
+
+      context "when the event has form submissions" do
+        before { create(:form_submission, :with_event, event: event) }
+
+        it "does not destroy the event" do
+          event
+          expect {
+            delete event_path(event)
+          }.not_to change(Event, :count)
+        end
+
+        it "redirects back to the event with an alert" do
+          delete event_path(event)
+
+          expect(response).to redirect_to(event_path(event))
+          follow_redirect!
+          expect(flash[:alert]).to be_present
+        end
+      end
     end
 
     context "as non-admin" do

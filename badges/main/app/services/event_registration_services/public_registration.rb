@@ -265,13 +265,15 @@ module EventRegistrationServices
     end
 
     def create_form_submission(person)
-      submission = FormSubmission.create!(person: person, form: @form)
+      submission = FormSubmission.create!(person: person, form: @form, event: @event)
       save_form_answers(submission)
       submission
     end
 
     def update_form_submission(person)
-      submission = FormSubmission.find_or_create_by!(person: person, form: @form)
+      submission = FormSubmission.find_or_create_by!(person: person, form: @form) do |record|
+        record.event = @event
+      end
       save_form_answers(submission)
       submission
     end

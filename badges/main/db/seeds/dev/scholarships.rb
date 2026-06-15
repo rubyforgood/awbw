@@ -266,7 +266,9 @@ ensure_registration_submission = ->(person, event) do
   reg_form = event.registration_form
   return unless reg_form
 
-  submission = FormSubmission.find_or_create_by!(person: person, form: reg_form)
+  submission = FormSubmission.find_or_create_by!(person: person, form: reg_form) do |fs|
+    fs.event = event
+  end
   reg_form.form_fields.where.not(answer_type: :group_header).each do |field|
     value = case field.field_identifier
     when "first_name" then person.first_name
@@ -312,7 +314,9 @@ setup_recipient = ->(registration, second_form:) do
   ensure_recipient_affiliation.(person, event, set, recipient_orgs[application_index % recipient_orgs.length]) if recipient_orgs.any?
 
   if second_form && scholarship_form
-    separate = FormSubmission.find_or_create_by!(person: person, form: scholarship_form, role: "scholarship")
+    separate = FormSubmission.find_or_create_by!(person: person, form: scholarship_form, role: "scholarship") do |fs|
+      fs.event = event
+    end
     attach_scholarship_answers.(separate, set)
   elsif reg_submission
     attach_scholarship_answers.(reg_submission, set)

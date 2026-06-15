@@ -123,10 +123,10 @@ class EventsController < ApplicationController
     authorize! @event
 
     @event = @event.decorate
-    @submissions = FormSubmission.joins(form: :event_forms)
-                                 .where(event_forms: { event_id: @event.id, role: "bulk_payment" })
-                                 .includes(:person, form_answers: :form_field, payments: :allocations)
-                                 .order(created_at: :desc)
+    @submissions = @event.form_submissions
+                         .where(role: "bulk_payment")
+                         .includes(:person, form_answers: :form_field, payments: :allocations)
+                         .order(created_at: :desc)
   end
 
   def allocate_bulk_payment
@@ -268,11 +268,18 @@ class EventsController < ApplicationController
 
   def destroy
     authorize! @event
-    @event.destroy
 
-    respond_to do |format|
-      format.html { redirect_to events_path, status: :see_other, notice: "Event was successfully destroyed." }
-      format.json { head :no_content }
+    if @event.destroy
+      respond_to do |format|
+        format.html { redirect_to events_path, status: :see_other, notice: "Event was successfully destroyed." }
+        format.json { head :no_content }
+      end
+    else
+      message = @event.errors.full_messages.to_sentence.presence || "Event could not be destroyed."
+      respond_to do |format|
+        format.html { redirect_to event_path(@event), status: :see_other, alert: message }
+        format.json { render json: { errors: @event.errors.full_messages }, status: :unprocessable_entity }
+      end
     end
   end
 

@@ -264,11 +264,13 @@ module ApplicationHelper
 
   # Where to view a form submission. When the submitter has a public event
   # registration, send the viewer to their registration details page (the public
-  # "ticket"/details view, keyed by the registration slug). Otherwise — bulk
-  # payments and event-less submissions, which have no registration — fall back
-  # to the form submission show page.
+  # "ticket"/details view, keyed by the registration slug). The event is resolved
+  # directly, or indirectly through the form's matching join role for older
+  # submissions without a stored event. Otherwise — bulk payments and event-less
+  # submissions, which have no registration — fall back to the form submission
+  # show page.
   def form_submission_link_path(submission)
-    event = submission.event
+    event = submission.event || submission.form.events.find_by(event_forms: { role: submission.role })
     registration = event && submission.person.event_registrations.find_by(event: event)
     return event_public_registration_path(event, reg: registration.slug) if registration&.slug.present?
     form_submission_path(submission)
