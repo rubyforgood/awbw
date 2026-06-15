@@ -51,7 +51,7 @@
         <dd class="mt-1 text-sm text-gray-900"><%= @payment.pay_charge_id %></dd>
       </div>
     <% end %>
-    <% receipt_url = @payment.metadata.dig("stripe_charge", "receipt_url") %>
+    <% receipt_url = @payment.metadata&.dig("stripe_charge", "receipt_url") %>
     <% if receipt_url.present? %>
       <div>
         <dt class="text-sm font-medium text-gray-500">Stripe Receipt</dt>

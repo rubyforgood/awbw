@@ -135,6 +135,7 @@ Rails.application.routes.draw do
       post :copy_registration_form
       post :send_reminder
       post :allocate_bulk_payment
+      post :create_bulk_payment
     end
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
