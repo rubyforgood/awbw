@@ -104,7 +104,7 @@
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
               <%= link_to registrants_event_path(@event), class: "#{addend_class} whitespace-nowrap", title: "Manage registrants" do %>
                 <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> tabular-nums"><%= number_to_currency(@dashboard.cont_ed_total_cents / 100.0) %></p>
-                <p class="hidden lg:block text-xs text-gray-500">Continuing education fees</p>
+                <p class="hidden lg:block text-xs text-gray-500">CE fees</p>
               <% end %>
               <% if show_bulk_payments %>
                 <span class="text-2xl font-light text-gray-300 select-none">+</span>
@@ -114,7 +114,7 @@
                 <% end %>
               <% end %>
             </div>
-            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + continuing education fees<%= " + unallocated bulk payments" if show_bulk_payments %></p>
+            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees<%= " + unallocated bulk payments" if show_bulk_payments %></p>
           </div>
 
           <%# Cash view of the same money: what's collected (registration paid +
