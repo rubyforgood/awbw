@@ -4,19 +4,9 @@ RSpec.describe FormSubmission do
   describe "associations" do
     it { should belong_to(:person) }
     it { should belong_to(:form) }
+    it { should belong_to(:event).optional }
     it { should have_many(:form_answers).dependent(:destroy) }
     it { should accept_nested_attributes_for(:form_answers) }
-  end
-
-  describe "#event" do
-    it "returns the event whose join role matches the submission role" do
-      event = create(:event)
-      form = create(:form)
-      event.event_forms.create!(form: form, role: "bulk_payment")
-      submission = create(:form_submission, form: form, role: "bulk_payment")
-
-      expect(submission.event).to eq(event)
-    end
   end
 
   describe "#answers_by_identifier" do

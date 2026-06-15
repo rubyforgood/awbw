@@ -464,7 +464,7 @@ if facilitator_training
   if reg_form
     # People with users who filled out the form
     [ amy_person, maria_j, anna_g ].compact.each do |person|
-      form_submissions << { person: person, form: reg_form }
+      form_submissions << { person: person, form: reg_form, event: facilitator_training }
     end
     # Mario Johnson (no user) did NOT fill out the form — registration without form submission
   end
@@ -476,10 +476,10 @@ if trauma_training
   if reg_form
     # Sarah Smith (has user) and Jessica Brown (has user) filled out forms
     [ sarah_s, jessica_b ].compact.each do |person|
-      form_submissions << { person: person, form: reg_form }
+      form_submissions << { person: person, form: reg_form, event: trauma_training }
     end
     # Angel Garcia (no user) filled out the form — person without user + form
-    form_submissions << { person: angel_g, form: reg_form } if angel_g
+    form_submissions << { person: angel_g, form: reg_form, event: trauma_training } if angel_g
     # Linda Williams (no user) did NOT fill out the form
   end
 end
@@ -490,10 +490,10 @@ if wellness_day
   if reg_form
     # People with users
     [ amy_person, maria_j, sarah_s, jessica_b, kim_d ].compact.each do |person|
-      form_submissions << { person: person, form: reg_form }
+      form_submissions << { person: person, form: reg_form, event: wellness_day }
     end
     # Rosa (has user) filled it out too
-    form_submissions << { person: rosa_dlc, form: reg_form } if rosa_dlc
+    form_submissions << { person: rosa_dlc, form: reg_form, event: wellness_day } if rosa_dlc
     # Lisa Williams (has user) registered but didn't fill out the form — person with user + no form
   end
 end
@@ -501,20 +501,20 @@ end
 # Mindful Art (short form, has scholarship) — Amy filled out the form
 if mindful_art
   reg_form = mindful_art.registration_form
-  form_submissions << { person: amy_person, form: reg_form } if reg_form && amy_person
+  form_submissions << { person: amy_person, form: reg_form, event: mindful_art } if reg_form && amy_person
 end
 
 # Youth Day (short form) — Maria filled it out
 if youth_day
   reg_form = youth_day.registration_form
-  form_submissions << { person: maria_j, form: reg_form } if reg_form && maria_j
+  form_submissions << { person: maria_j, form: reg_form, event: youth_day } if reg_form && maria_j
 end
 
 # Virtual Session (short form) — Amy (has user) registered but no form submission — person with user + no form
 # Family Day (short form) — Rosa filled it out
 if family_day
   reg_form = family_day.registration_form
-  form_submissions << { person: rosa_dlc, form: reg_form } if reg_form && rosa_dlc
+  form_submissions << { person: rosa_dlc, form: reg_form, event: family_day } if reg_form && rosa_dlc
 end
 
 # Create all form submissions with sample field responses
@@ -522,7 +522,7 @@ form_submissions.each do |data|
   next unless data[:person] && data[:form]
   next if FormSubmission.exists?(person: data[:person], form: data[:form])
 
-  pf = FormSubmission.create!(person: data[:person], form: data[:form])
+  pf = FormSubmission.create!(person: data[:person], form: data[:form], event: data[:event])
 
   # Fill in required text fields with sample data
   data[:form].form_fields.where(answer_type: [ :free_form_input_one_line, :free_form_input_paragraph ]).each do |field|
@@ -600,7 +600,9 @@ if facilitator_training && (reg_form = facilitator_training.registration_form)
   facilitator_training.event_registrations.active.includes(:registrant).each do |registration|
     person = registration.registrant
     next unless person&.email.to_s.start_with?("facilitator.cohort.")
-    FormSubmission.find_or_create_by!(person: person, form: reg_form)
+    FormSubmission.find_or_create_by!(person: person, form: reg_form) do |fs|
+      fs.event = facilitator_training
+    end
   end
 end
 

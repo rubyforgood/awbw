@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_15_115052) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -599,10 +599,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_190000) do
 
   create_table "form_submissions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "event_id"
     t.integer "form_id", null: false
     t.bigint "person_id", null: false
     t.string "role"
     t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_form_submissions_on_event_id"
     t.index ["form_id"], name: "index_form_submissions_on_form_id"
     t.index ["person_id"], name: "index_form_submissions_on_person_id"
   end
@@ -1584,6 +1586,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_190000) do
   add_foreign_key "form_field_answer_options", "answer_options"
   add_foreign_key "form_field_answer_options", "form_fields"
   add_foreign_key "form_fields", "forms"
+  add_foreign_key "form_submissions", "events"
   add_foreign_key "form_submissions", "forms"
   add_foreign_key "form_submissions", "people"
   add_foreign_key "forms", "form_builders"

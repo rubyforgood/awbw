@@ -349,7 +349,7 @@ RSpec.describe ApplicationHelper, type: :helper do
       create(:event_form, event: event, form: form, role: "registration")
       person = create(:person)
       registration = create(:event_registration, event: event, registrant: person)
-      submission = create(:form_submission, form: form, person: person, role: "registration")
+      submission = create(:form_submission, event: nil, form: form, person: person, role: "registration")
 
       expect(helper.routable_path(submission))
         .to eq(event_public_registration_path(event, reg: registration.slug))
