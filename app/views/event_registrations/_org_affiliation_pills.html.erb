@@ -14,7 +14,7 @@
       <% affiliations.each do |a| %>
         <% a_active = active.call(a) %>
         <% color = a_active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>
-        <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "Untitled")}#{" — inactive" unless a_active}" %>
+        <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "No title")}#{" — inactive" unless a_active}" %>
         <% if a.facilitator? %>
           <span class="<%= badge %> <%= color %>" title="Facilitator role — determines whether the org is active with AWBW"><%= label %></span>
         <% else %>
