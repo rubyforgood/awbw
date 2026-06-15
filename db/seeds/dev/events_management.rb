@@ -559,6 +559,29 @@ form_submissions.each do |data|
   end
 end
 
+puts "Giving Amy free-text \"Other\" answers on her Facilitator Training submission…"
+# Demo data for the "Other" chips on the person profile + edit pages: a registrant
+# who picked the "Other" option (folded into "Other: <text>") on a sector-backed
+# field (Primary service area) and a category-backed field (Workshop Settings).
+# These free-text values can't be Sector/Category records, so they only surface
+# via Person#other_service_area_responses / #other_workshop_setting_responses.
+# Seeded before the professional-answer enrichment below so the primary_service_area
+# value survives its "skip if already answered" guard. Idempotent.
+if facilitator_training && amy_person
+  amy_submission = FormSubmission.find_by(person: amy_person, form: facilitator_training.registration_form)
+  if amy_submission
+    {
+      "primary_service_area" => "Other: Equine-assisted therapy",
+      "workshop_environments" => "Other: Mobile art van"
+    }.each do |identifier, value|
+      field = amy_submission.form.form_fields.find_by(field_identifier: identifier)
+      next unless field
+      answer = amy_submission.form_answers.find_or_initialize_by(form_field: field)
+      answer.update!(submitted_answer: value, question_name_when_answered: field.name)
+    end
+  end
+end
+
 puts "Recording professional answers (age group / service area) on registration submissions…"
 # The Background page charts the registrants' "Primary Age Group(s) Served" and
 # "Primary Service Area(s)" registration answers. Public registration stores
