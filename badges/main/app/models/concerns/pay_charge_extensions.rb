@@ -37,7 +37,7 @@ module PayChargeExtensions
       amount_cents_remaining: amount,
       currency: currency,
       pay_charge_id: id,
-      metadata: metadata
+      metadata: metadata.merge(stripe_charge: object)
     )
 
     remaining_needed = registration.remaining_cost
@@ -85,7 +85,7 @@ module PayChargeExtensions
       amount_cents_remaining: amount,
       currency: currency,
       pay_charge_id: id,
-      metadata: payment_metadata
+      metadata: payment_metadata.merge(stripe_charge: object)
     )
   end
 
@@ -101,7 +101,7 @@ module PayChargeExtensions
       amount_cents_remaining: amount,
       currency: currency,
       pay_charge_id: id,
-      metadata: metadata
+      metadata: metadata.merge(stripe_charge: object)
     )
   end
 
