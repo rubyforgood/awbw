@@ -311,7 +311,7 @@ class EventsController < ApplicationController
     org_names = orgs.map(&:name).join("; ")
     total_cents = registration.allocations_sum
     payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
-    payment_status = cost_required ? (registration.paid_in_full? ? "Paid in full" : "Not paid in full") : ""
+    payment_status = cost_required ? (registration.paid_in_full? ? "Nothing owed" : "Monies due") : ""
     [
       person.first_name,
       person.last_name,

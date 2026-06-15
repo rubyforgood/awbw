@@ -58,7 +58,7 @@ RSpec.describe "EventRegistrations", type: :request do
           "Registered",
           "No",
           "No",
-          "Not paid in full",
+          "Monies due",
           ""
         ]
         expect(data_rows).to include(expected_row)

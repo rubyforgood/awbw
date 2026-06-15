@@ -867,7 +867,7 @@ if facilitator_training && registration_form
 
   aff_scenarios.each_with_index do |scenario, i|
     next unless aff_org
-    person = Person.create!(email: "affdemo.#{i + 1}@seed.example.com", first_name: "Aff Demo", last_name: scenario[:last])
+    person = Person.create!(email: "affdemo.#{i + 1}@seed.example.com", first_name: "Demo Affiliation", last_name: scenario[:last])
     registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
     registration.event_registration_organizations.find_or_create_by!(organization: aff_org)
     add_affiliation.call(person, aff_org, title: scenario[:job])
@@ -879,7 +879,7 @@ if facilitator_training && registration_form
   # An affiliation to an org NOT linked to the registration → shows under the
   # registrant's "other affiliations" section.
   if aff_org && other_org
-    person = Person.create!(email: "affdemo.4@seed.example.com", first_name: "Aff Demo", last_name: "A4 Other affiliation")
+    person = Person.create!(email: "affdemo.4@seed.example.com", first_name: "Demo Affiliation", last_name: "A4 Other affiliation")
     registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
     registration.event_registration_organizations.find_or_create_by!(organization: aff_org)
     add_affiliation.call(person, aff_org, title: "Facilitator")
