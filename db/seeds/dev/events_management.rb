@@ -816,9 +816,9 @@ if facilitator_training && registration_form
   scenarios = [
     { last: "1 Linked one org",       orgs: demo_orgs.first(1) },
     { last: "2 Linked three orgs",    orgs: demo_orgs.first(3) },
-    { last: "3 Pending no match",     agency: "Riverside Healing Arts Collective (unlisted)" },
+    { last: "3 Pending no match",     agency: "Riverside Healing Arts Collective" },
     { last: "4 Matched name auto-linked", orgs: demo_orgs.first(1), agency: matched_org&.name },
-    { last: "5 Mixed linked + pending", orgs: demo_orgs.first(1), agency: "Some Other Unlisted Agency" },
+    { last: "5 Mixed linked + pending", orgs: demo_orgs.first(1), agency: "Westview Community Healing" },
     { last: "6 None blank typed",     agency: "" },
     { last: "7 None nothing typed" },
     { last: "8 Pending matches existing org", agency: matched_org&.name }

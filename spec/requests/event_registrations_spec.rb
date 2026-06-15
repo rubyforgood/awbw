@@ -315,6 +315,12 @@ RSpec.describe "EventRegistrations", type: :request do
           submission
         end
 
+        # Whether the <details> section whose text contains `heading` is expanded.
+        def details_open?(body, heading)
+          element = Nokogiri::HTML(body).css("details").find { |d| d.text.include?(heading) }
+          element&.key?("open")
+        end
+
         it "shows 'No other affiliations on record' when the person has none" do
           get link_organization_event_registration_path(existing_registration)
 
@@ -436,6 +442,44 @@ RSpec.describe "EventRegistrations", type: :request do
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).not_to include(create_organization_event_registration_path(existing_registration))
+        end
+
+        context "section collapse state" do
+          it "expands the form submission section when nothing was submitted" do
+            get link_organization_event_registration_path(existing_registration)
+
+            expect(details_open?(response.body, "Registration form submission")).to be true
+          end
+
+          it "expands the form submission section when the submitted org has no match" do
+            submit_form(org_name: "Nonexistent Agency XYZ")
+
+            get link_organization_event_registration_path(existing_registration)
+
+            expect(details_open?(response.body, "Registration form submission")).to be true
+          end
+
+          it "collapses the form submission section when the submitted org already exists" do
+            submit_form(org_name: organization.name)
+
+            get link_organization_event_registration_path(existing_registration)
+
+            expect(details_open?(response.body, "Registration form submission")).to be false
+          end
+
+          it "expands the other-affiliations section when there are none" do
+            get link_organization_event_registration_path(existing_registration)
+
+            expect(details_open?(response.body, "other affiliations")).to be true
+          end
+
+          it "collapses the other-affiliations section when the person has other affiliations" do
+            create(:affiliation, person: regular_user.person, organization: create(:organization, name: "Unlinked Co"), title: "Member")
+
+            get link_organization_event_registration_path(existing_registration)
+
+            expect(details_open?(response.body, "other affiliations")).to be false
+          end
         end
       end
 
