@@ -239,9 +239,8 @@ module Events
             answered_field_ids.concat(answered_one_time)
           end
 
-          # Regular fields: hide if answered on forms within this event
-          event_form_ids = @event.forms.ids
-          event_submissions = FormSubmission.where(person: person, form_id: event_form_ids)
+          # Regular fields: hide if answered on a submission for this event
+          event_submissions = FormSubmission.where(person: person, event_id: @event.id)
           if event_submissions.exists?
             regular_field_ids = @form.form_fields.where(visibility: :answers_on_file, one_time: false)
                                      .where.not(answer_type: :group_header).ids

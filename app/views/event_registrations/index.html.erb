@@ -46,18 +46,19 @@
                 </tr>
                 </thead>
 
-                <% all_event_form_ids = @event_registrations.flat_map { |er| er.event.event_forms.map(&:form_id) }.uniq %>
-                <% submitted_pairs = all_event_form_ids.any? ? FormSubmission.where(form_id: all_event_form_ids, person_id: @event_registrations.map(&:registrant_id).uniq).pluck(:person_id, :form_id).to_set : Set.new %>
+                <% event_ids = @event_registrations.map(&:event_id).uniq %>
+                <% registrant_ids = @event_registrations.map(&:registrant_id).uniq %>
+                <% submitted_pairs = FormSubmission.where(event_id: event_ids, person_id: registrant_ids).pluck(:person_id, :event_id).to_set %>
+                <% events_with_forms = EventForm.where(event_id: event_ids).distinct.pluck(:event_id).to_set %>
                 <tbody class="divide-y divide-gray-200">
                   <% @event_registrations.each do |event_registration| %>
                     <tr id="<%= dom_id(event_registration) %>" class="hover:bg-gray-50 transition-colors duration-150">
                       <td class="px-4 py-2 text-sm text-gray-800 align-top">
                         <div class="flex items-center gap-2">
                           <%= person_profile_button(event_registration.registrant) %>
-                          <% er_form_ids = event_registration.event.event_forms.map(&:form_id) %>
-                          <% if er_form_ids.any? && er_form_ids.any? { |fid| submitted_pairs.include?([ event_registration.registrant_id, fid ]) } %>
+                          <% if submitted_pairs.include?([ event_registration.registrant_id, event_registration.event_id ]) %>
                             <i class="fa-solid fa-file-lines text-green-600 shrink-0" title="Completed registration form"></i>
-                          <% elsif er_form_ids.any? %>
+                          <% elsif events_with_forms.include?(event_registration.event_id) %>
                             <i class="fa-regular fa-file-lines text-gray-300 shrink-0" title="No registration form submitted"></i>
                           <% end %>
                         </div>
