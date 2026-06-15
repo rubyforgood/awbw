@@ -16,6 +16,11 @@ class FormField < ApplicationRecord
   # submitted value for these is a Sector id (as a string).
   SERVICE_AREA_FIELD_IDENTIFIERS = %w[primary_service_area primary_service_area_single].freeze
 
+  # The single-select "primary" service-area field. Unlike the multi-select
+  # "additional" field, it omits the catch-all "Other" sector — a respondent's
+  # primary service area must be a concrete sector.
+  PRIMARY_SERVICE_AREA_FIELD_IDENTIFIER = "primary_service_area_single"
+
   # Field identifiers whose selectable options are sourced dynamically from a
   # CategoryType's published categories. The submitted value is a Category id
   # (as a string). Maps the field identifier to its backing CategoryType name.
@@ -219,7 +224,7 @@ class FormField < ApplicationRecord
     return unless selectable?
 
     values = if field_identifier.in?(SERVICE_AREA_FIELD_IDENTIFIERS)
-      Sector.published.pluck(:id).map(&:to_s)
+      service_area_sectors.pluck(:id).map(&:to_s)
     elsif (type_name = DYNAMIC_FIELD_CATEGORY_TYPES[field_identifier])
       type = CategoryType.find_by(name: type_name)
       type ? type.categories.published.pluck(:id).map(&:to_s) : []
@@ -228,6 +233,15 @@ class FormField < ApplicationRecord
     end
 
     values.to_set
+  end
+
+  # The published Sector records a service-area field offers, in name order. The
+  # single-select "primary" field omits the catch-all "Other" sector; the
+  # multi-select "additional" field includes it. Source of truth shared by the
+  # public form's rendering and submission validation.
+  def service_area_sectors
+    scope = Sector.published.order(:name)
+    field_identifier == PRIMARY_SERVICE_AREA_FIELD_IDENTIFIER ? scope.excluding_other : scope
   end
 
   # True when this field offers the free-text "Other" choice (stored fields only).

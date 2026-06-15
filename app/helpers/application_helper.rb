@@ -175,7 +175,7 @@ module ApplicationHelper
   def dynamic_form_field_options(field)
     case field.field_identifier
     when *FormField::SERVICE_AREA_FIELD_IDENTIFIERS
-      Sector.published.order(:name).map { |sector| [ sector.name, sector.id.to_s ] }
+      field.service_area_sectors.map { |sector| [ sector.name, sector.id.to_s ] }
     when *FormField::DYNAMIC_FIELD_CATEGORY_TYPES.keys
       type = CategoryType.find_by(name: FormField::DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
       (type&.categories&.published&.order(:position, :name) || []).map { |category| [ category.name, category.id.to_s, category.description ] }
