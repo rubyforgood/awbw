@@ -1,17 +1,11 @@
 class FormSubmission < ApplicationRecord
   belongs_to :person
   belongs_to :form
+  belongs_to :event, optional: true
   has_many :form_answers, dependent: :destroy
   has_many :payments
 
   accepts_nested_attributes_for :form_answers
-
-  # The event this submission belongs to, resolved through the join role that
-  # matches the submission's own role (e.g. a "bulk_payment" submission maps to
-  # the event_form with role "bulk_payment").
-  def event
-    form.events.find_by(event_forms: { role: role })
-  end
 
   # Answers keyed by their field's identifier. Bulk payment (and similar) forms
   # address fields by identifier rather than position.

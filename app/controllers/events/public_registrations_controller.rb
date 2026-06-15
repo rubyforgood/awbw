@@ -179,7 +179,9 @@ module Events
 
       submission = FormSubmission.find_or_create_by!(
         person: person, form: scholarship_form, role: "scholarship"
-      )
+      ) do |record|
+        record.event = @event
+      end
 
       scholarship_params.each do |field_id, raw_value|
         field = scholarship_form.form_fields.find_by(id: field_id)
