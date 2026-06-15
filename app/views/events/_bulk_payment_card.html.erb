@@ -1,56 +1,24 @@
-<%
-  answers_by_identifier = submission.form_answers.select { |a| a.form_field&.field_identifier.present? }
-                                              .index_by { |a| a.form_field.field_identifier }
-  payment_method = answers_by_identifier["payment_method"]&.submitted_answer
-  payment = submission.payments.first
-  content_id = "payment-details-#{submission.id}"
-  arrow_id = "payment-arrow-#{submission.id}"
-
-  registrations ||= @event.event_registrations.active.includes(:registrant)
-  attendee_matches = submission.bulk_payment_attendees.map do |attendee|
-    first = attendee["first_name"]&.strip
-    last  = attendee["last_name"]&.strip
-    email = attendee["email"]&.strip
-
-    first_variants = first.present? ? NicknameMap.variants_for(first).to_set : Set.new
-    normalized_last = last.present? ? NicknameMap.normalize(last) : nil
-
-    matches = registrations.select do |reg|
-      person = reg.registrant
-      next false unless person
-
-      first_matches = first_variants.include?(NicknameMap.normalize(person.first_name))
-      last_matches  = normalized_last.present? &&
-                     NicknameMap.normalize(person.last_name) == normalized_last
-      email_matches = email.present? && (
-        person.email&.downcase == email.downcase ||
-        person.email_2&.downcase == email.downcase
-      )
-
-      (first_matches && last_matches) || email_matches
-    end
-
-    { first_name: first, last_name: last, email: email, matches: matches }
-  end
-%>
+<% submission = submission.decorate %>
+<% payment = submission.payments.first %>
+<% attendee_matches = submission.matched_attendees(event_registrations) %>
 <div data-controller="dropdown" class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow">
   <div class="flex items-center justify-between gap-2">
     <span class="text-sm font-medium text-gray-900 truncate"><%= submission.person.name %></span>
     <span class="text-sm text-gray-500 truncate"><%= submission.person.email %></span>
-    <span class="text-sm text-gray-500 shrink-0 text-center"><%= payment_method.presence || "—" %></span>
+    <span class="text-sm text-gray-500 shrink-0 text-center"><%= submission.answers_by_identifier["payment_method"].presence || "—" %></span>
     <span id="<%= dom_id(payment, :remaining) if payment %>">
       <%= render "payment_badge", payment: payment %>
     </span>
     <span class="text-sm text-gray-500 whitespace-nowrap shrink-0"><%= submission.created_at.strftime("%b %-d, %Y") %></span>
     <button type="button"
             data-action="dropdown#toggle"
-            data-dropdown-payload-param='[{"<%= content_id %>":"hidden"}, {"<%= arrow_id %>":"rotate-180"}]'
+            data-dropdown-payload-param='[{"payment-details-<%= submission.id %>":"hidden"}, {"payment-arrow-<%= submission.id %>":"rotate-180"}]'
             class="text-gray-400 hover:text-gray-600 p-1 shrink-0"
             title="More info">
-      <i id="<%= arrow_id %>" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+      <i id="payment-arrow-<%= submission.id %>" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
     </button>
   </div>
-  <div id="<%= content_id %>"
+  <div id="payment-details-<%= submission.id %>"
        class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3"
        data-dropdown-target="content">
     <div>

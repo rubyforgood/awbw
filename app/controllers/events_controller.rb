@@ -123,6 +123,7 @@ class EventsController < ApplicationController
     authorize! @event
 
     @event = @event.decorate
+    @event_registrations = @event.event_registrations.active.includes(:registrant)
     @submissions = @event.form_submissions
                          .where(role: "bulk_payment")
                          .includes(:person, form_answers: :form_field, payments: :allocations)
