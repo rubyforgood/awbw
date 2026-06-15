@@ -24,6 +24,63 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
+  describe "logged-in registrant profile backfill" do
+    let(:person) do
+      p = create(:person, user: create(:user, email: "u@example.com"),
+                 first_name: "Sam", legal_first_name: "Samuel", last_name: "Stone",
+                 email: "sam@example.com", email_type: "personal",
+                 email_2: "sam2@example.com", email_2_type: "work",
+                 pronouns: "they/them")
+      p.addresses.create!(street_address: "1 Main St", city: "Townsville", state: "CA",
+                          zip_code: "90001", locality: "Unknown", address_type: "personal", primary: true)
+      p.contact_methods.create!(kind: :phone, value: "555-111-2222", contact_type: "work", primary: true)
+      p
+    end
+
+    it "records the known profile data as form answers even though the fields are hidden" do
+      result = described_class.call(event: event, form: form, form_params: {}, person: person)
+
+      expect(result.success?).to be true
+      answers = result.form_submission.answers_by_identifier
+      expect(answers).to include(
+        "first_name" => "Samuel",
+        "nickname" => "Sam",
+        "last_name" => "Stone",
+        "primary_email" => "sam@example.com",
+        "primary_email_type" => "Personal",
+        "secondary_email" => "sam2@example.com",
+        "secondary_email_type" => "Work",
+        "pronouns" => "they/them",
+        "mailing_street" => "1 Main St",
+        "mailing_city" => "Townsville",
+        "mailing_state" => "CA",
+        "mailing_zip" => "90001",
+        "mailing_address_type" => "Personal",
+        "phone" => "555-111-2222",
+        "phone_type" => "Work"
+      )
+    end
+
+    it "does not save the confirm_email helper field" do
+      result = described_class.call(event: event, form: form, form_params: {}, person: person)
+
+      expect(result.form_submission.answers_by_identifier).not_to have_key("confirm_email")
+    end
+
+    it "does not duplicate or mutate the person's address and phone records" do
+      expect {
+        described_class.call(event: event, form: form, form_params: {}, person: person)
+      }.not_to change { [ person.addresses.count, person.contact_methods.count ] }
+    end
+
+    it "does not overwrite values the registrant explicitly submitted" do
+      result = described_class.call(event: event, form: form,
+                                    form_params: { field_id("pronouns") => "she/her" }, person: person)
+
+      expect(result.form_submission.answers_by_identifier["pronouns"]).to eq("she/her")
+    end
+  end
+
   describe "affiliation creation" do
     let!(:organization) { create(:organization, name: "Helping Hands") }
 

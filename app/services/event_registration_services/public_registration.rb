@@ -54,6 +54,8 @@ module EventRegistrationServices
 
         assign_tags(person, organization)
 
+        backfill_profile_fields(person) if @person
+
         existing = @event.event_registrations.find_by(registrant: person)
         if existing
           existing.update!(scholarship_requested: true) if @scholarship_requested
@@ -118,6 +120,59 @@ module EventRegistrationServices
       else
         { first_name: submitted_first, legal_first_name: nil }
       end
+    end
+
+    # Logged-in registrants don't see the profile fields they already have on
+    # file (they're hidden as logged_out_only), so those answers would otherwise
+    # be missing from the submission. Capture them from the person's record so
+    # the submission reflects all the data known at the time it was submitted.
+    # Only fields left blank by the registrant are filled, and the person's own
+    # records (addresses, contacts) are not touched.
+    def backfill_profile_fields(person)
+      profile_field_values(person).each do |key, value|
+        next if value.blank?
+        field = @form.form_fields.find_by(field_identifier: key)
+        next unless field
+        next if @form_params[field.id.to_s].present?
+        @form_params[field.id.to_s] = value
+      end
+    end
+
+    def profile_field_values(person)
+      {
+        "first_name" => person.legal_first_name.presence || person.first_name,
+        "last_name" => person.last_name,
+        "primary_email" => person.email,
+        "primary_email_type" => person.email_type&.capitalize,
+        "nickname" => (person.first_name if person.legal_first_name.present?),
+        "pronouns" => person.pronouns,
+        "secondary_email" => person.email_2,
+        "secondary_email_type" => person.email_2_type&.capitalize
+      }.merge(address_field_values(person)).merge(phone_field_values(person))
+    end
+
+    def address_field_values(person)
+      return {} unless person.addresses.exists?
+
+      address = person.addresses.find_by(primary: true) || person.addresses.first
+      {
+        "mailing_street" => address.street_address,
+        "mailing_address_type" => address.address_type&.capitalize,
+        "mailing_city" => address.city,
+        "mailing_state" => address.state,
+        "mailing_zip" => address.zip_code
+      }
+    end
+
+    def phone_field_values(person)
+      phones = person.contact_methods.where(kind: :phone)
+      phone = phones.find_by(primary: true, inactive: false) || phones.where(inactive: false).first || phones.first
+      return {} unless phone
+
+      {
+        "phone" => phone.value,
+        "phone_type" => phone.contact_type&.capitalize
+      }
     end
 
     def find_or_create_person
