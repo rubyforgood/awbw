@@ -111,6 +111,20 @@ RSpec.describe PersonPolicy, type: :policy do
     end
   end
 
+  describe "#archive?" do
+    context "with an admin" do
+      subject { policy_for(record: create(:person), user: admin_user) }
+
+      it { is_expected.to be_allowed_to(:archive?) }
+    end
+
+    context "with a regular user" do
+      subject { policy_for(record: create(:person), user: regular_user) }
+
+      it { is_expected.not_to be_allowed_to(:archive?) }
+    end
+  end
+
   describe "relation_scope" do
     context "with admin user" do
       let(:policy) { policy_for(record: Person, user: admin_user) }

@@ -29,6 +29,11 @@ class PersonPolicy < ApplicationPolicy
     admin? && record.persisted? && !has_associated_data?
   end
 
+  # Soft-delete (archive) the person and their user.
+  def archive?
+    admin? && record.persisted?
+  end
+
   def search?
     admin?
   end
@@ -38,7 +43,7 @@ class PersonPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
-    relation.searchable.with_active_affiliations.where_user_not_locked
+    relation.kept.searchable.with_active_affiliations.where_user_not_locked
   end
 
   private

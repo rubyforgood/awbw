@@ -1,4 +1,5 @@
 class Person < ApplicationRecord
+  include Discard::Model
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable
 
   pay_customer default_payment_processor: :stripe

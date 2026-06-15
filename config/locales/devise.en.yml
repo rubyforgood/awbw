@@ -8,6 +8,7 @@ en:
       send_paranoid_instructions: "If your email address exists in our database, you will receive an email with instructions for how to confirm your email address in a few minutes."
     failure:
       already_authenticated: "You are already signed in."
+      archived: "Invalid email or password. Please email us or fill out our Contact Us form for assistance."
       inactive: "Invalid email or password. Please email us or fill out our Contact Us form for assistance."
       invalid: "Invalid email or password. Please email us or fill out our Contact Us form for assistance."
       locked: "Please email us or fill out our Contact Us form for assistance."

@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio ]
+  before_action :set_person, only: %i[ show edit update destroy archive unarchive workshop_logs checkout bio ]
 
   def index
     authorize!
@@ -14,6 +14,7 @@ class PeopleController < ApplicationController
         affiliations: :organization,
         categorizable_items: { category: :category_type }
       ).references(:user))
+      base_scope = ActiveModel::Type::Boolean.new.cast(params[:archived]) ? base_scope.discarded : base_scope.kept
       filtered = base_scope.search_by_params(params.to_unsafe_h)
                            .order(:first_name, :last_name)
       @count_display = filtered.count
@@ -224,6 +225,24 @@ class PeopleController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to people_path, status: :see_other, notice: "Person was successfully destroyed." }
+    end
+  end
+
+  def archive
+    authorize! @person, to: :archive?
+    PersonArchivalService.new(@person).archive!
+
+    respond_to do |format|
+      format.html { redirect_to @person, status: :see_other, notice: "Person was archived." }
+    end
+  end
+
+  def unarchive
+    authorize! @person, to: :archive?
+    PersonArchivalService.new(@person).restore!
+
+    respond_to do |format|
+      format.html { redirect_to @person, status: :see_other, notice: "Person was restored." }
     end
   end
 

@@ -172,6 +172,8 @@ Rails.application.routes.draw do
       get :workshop_logs
       get :checkout
       get :bio
+      patch :archive
+      patch :unarchive
     end
     resources :comments, only: [ :index, :create, :update ]
   end

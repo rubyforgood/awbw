@@ -186,6 +186,7 @@ end
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
+- `PersonArchivalService` — Soft-delete (discard) / restore a person together with their user
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic

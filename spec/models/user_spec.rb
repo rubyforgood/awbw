@@ -231,6 +231,12 @@ RSpec.describe User do
       user = create(:user, locked: true)
       expect(user.active_for_authentication?).to be false
     end
+
+    it "returns false when discarded (archived)" do
+      user = create(:user)
+      user.discard!
+      expect(user.active_for_authentication?).to be false
+    end
   end
 
   describe "#first_name_or_email" do

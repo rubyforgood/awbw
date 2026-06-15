@@ -948,6 +948,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_213947) do
     t.integer "created_by_id"
     t.string "credentials"
     t.date "date_of_birth"
+    t.datetime "discarded_at"
     t.string "display_name_preference"
     t.string "email"
     t.string "email_2"
@@ -988,6 +989,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_213947) do
     t.integer "updated_by_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_people_on_created_by_id"
+    t.index ["discarded_at"], name: "index_people_on_discarded_at"
     t.index ["updated_by_id"], name: "index_people_on_updated_by_id"
   end
 
@@ -1267,6 +1269,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_213947) do
     t.integer "created_by_id"
     t.datetime "current_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
+    t.datetime "discarded_at"
     t.string "email", default: "", null: false
     t.string "email_type"
     t.string "encrypted_password", default: "", null: false
@@ -1307,6 +1310,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_213947) do
     t.index ["agency_id"], name: "index_users_on_agency_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["created_by_id"], name: "index_users_on_created_by_id"
+    t.index ["discarded_at"], name: "index_users_on_discarded_at"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["favorite_event_id"], name: "index_users_on_favorite_event_id"
     t.index ["person_id"], name: "index_users_on_person_id"

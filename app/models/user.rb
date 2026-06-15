@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  include Discard::Model
+
   # Include default devise modules. Others available are:
   # :confirmable, :timeoutable and :omniauthable
   devise :database_authenticatable, :recoverable, :confirmable,
@@ -82,7 +84,7 @@ class User < ApplicationRecord
     attributes user: "organizations.name"
   end
 
-  scope :has_access, -> { where(locked_at: nil, inactive: [ false, nil ]).where.not(confirmed_at: nil) }
+  scope :has_access, -> { kept.where(locked_at: nil, inactive: [ false, nil ]).where.not(confirmed_at: nil) }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
@@ -118,7 +120,11 @@ class User < ApplicationRecord
   end
 
   def active_for_authentication?
-    super && !inactive?
+    super && !inactive? && !discarded?
+  end
+
+  def inactive_message
+    discarded? ? :archived : super
   end
 
   # Instance-level mirror of the `has_access` scope: the account can sign in —

@@ -12,6 +12,7 @@ class UsersController < ApplicationController
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(User.includes(:created_by, :updated_by,
                                                   person: { avatar_attachment: :blob }))
+      base_scope = ActiveModel::Type::Boolean.new.cast(params[:archived]) ? base_scope.discarded : base_scope.kept
       filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
       @users_count = filtered.count
       @users = filtered.paginate(page: params[:page], per_page: per_page)

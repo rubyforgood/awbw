@@ -64,6 +64,9 @@ gem "action_policy", "~> 0.7.6"
 
 gem "active_storage_validations", "~> 3.0"
 
+# Soft-delete / archive support (kept/discarded scopes, no default scope)
+gem "discard", "~> 2.0"
+
 gem "solid_cache"
 
 # Payments
