@@ -1,0 +1,691 @@
+<% content_for(:title, "Header styles") %>
+
+<div class="max-w-5xl mx-auto space-y-10 pb-24">
+  <header class="border-b border-gray-200 pb-6">
+    <p class="text-sm font-semibold uppercase tracking-wide text-gray-500">Design reference</p>
+    <h1 class="text-3xl font-bold text-gray-900 mt-1">Page header styles</h1>
+    <p class="text-gray-600 mt-2 max-w-2xl">
+      A single header anatomy, three visual families, and a page-kind state
+      (<strong>index / show / new-edit</strong>) for each. Everything shares the same utility
+      row (back-link left, subnav right) and action placement, so the whole site reads as one
+      system. Pick the variants you want and I'll build the partials and sweep the pages.
+    </p>
+  </header>
+
+  <%# ============================================================ %>
+  <%# SECTION 0 — ANATOMY + RULES                                  %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">The shared anatomy</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        Every page header is built from up to three stacked rows. The families below only change
+        how the <em>title row</em> looks — the utility row and action rules stay constant.
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-300 border-dashed overflow-hidden">
+      <div class="flex items-center justify-between gap-4 bg-amber-50 border-b border-amber-200 px-4 py-3">
+        <span class="text-xs font-mono font-semibold text-amber-800">ROW 1 · utility</span>
+        <div class="flex items-center gap-2 text-sm">
+          <span class="rounded bg-white border border-amber-300 px-2 py-0.5 text-amber-800">← Back link <span class="text-amber-500">(left)</span></span>
+        </div>
+        <div class="ml-auto rounded bg-white border border-amber-300 px-2 py-0.5 text-sm text-amber-800">Subnav tabs <span class="text-amber-500">(right)</span></div>
+      </div>
+      <div class="flex items-center justify-between gap-4 bg-blue-50 border-b border-blue-200 px-4 py-4">
+        <span class="text-xs font-mono font-semibold text-blue-800">ROW 2 · title</span>
+        <div class="rounded bg-white border border-blue-300 px-2 py-0.5 text-sm text-blue-800">[icon] Title (count) <span class="text-blue-400">(left)</span></div>
+        <div class="ml-auto rounded bg-white border border-blue-300 px-2 py-0.5 text-sm text-blue-800">Primary actions <span class="text-blue-400">(right)</span></div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3">
+        <span class="text-xs font-mono font-semibold text-gray-600">ROW 3 · subtitle / context</span>
+        <span class="text-sm text-gray-500 ml-2">muted one-liner — event date, description, entity meta</span>
+      </div>
+    </div>
+    <div class="grid sm:grid-cols-3 gap-3 text-sm">
+      <div class="rounded-lg border border-gray-200 p-3">
+        <p class="font-semibold text-gray-900"><i class="fa-solid fa-arrow-left text-gray-400"></i> Back link</p>
+        <p class="text-gray-600 mt-1">Always top-left, its own slot. Defaults to <code class="text-xs bg-gray-100 px-1 rounded">admin_path</code> on admin-only pages, else the parent index.</p>
+      </div>
+      <div class="rounded-lg border border-gray-200 p-3">
+        <p class="font-semibold text-gray-900"><i class="fa-solid fa-table-columns text-gray-400"></i> Subnav</p>
+        <p class="text-gray-600 mt-1">Top-right of the utility row — never mixed with action buttons. One style (below).</p>
+      </div>
+      <div class="rounded-lg border border-gray-200 p-3">
+        <p class="font-semibold text-gray-900"><i class="fa-solid fa-bolt text-gray-400"></i> Actions</p>
+        <p class="text-gray-600 mt-1">Title row, right side. Primary = solid/outline button; secondary = dropdown menu.</p>
+      </div>
+    </div>
+  </section>
+
+  <%# ============================================================ %>
+  <%# SECTION A — LIST HEADER (index / new-edit)                   %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Family A · List header</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        Left-aligned, flat (no banner). The workhorse for ~70 admin/CRUD pages. Shown here in its
+        two page-kind states; simple show pages reuse the <strong>A · new-edit</strong> shape.
+      </p>
+    </div>
+
+    <%= render layout: "styleguide/demo", locals: { id: "A · index", name: "Icon chip + count pill + subtitle + New action", usage: "Index pages", recommended: true } do %>
+      <%= render "styleguide/utility_row", back: "Admin", subnav: false %>
+      <div class="flex items-start justify-between gap-6">
+        <div class="flex items-start gap-4">
+          <span class="hidden sm:flex h-12 w-12 shrink-0 items-center justify-center rounded-xl <%= DomainTheme.bg_class_for(:grants, intensity: 100) %> <%= DomainTheme.text_class_for(:grants, intensity: 700) %> shadow-sm">
+            <i class="fa-solid fa-hand-holding-dollar text-xl"></i>
+          </span>
+          <div>
+            <h1 class="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+              Grants
+              <span class="inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:grants, intensity: 100) %> px-2.5 py-0.5 text-sm font-semibold <%= DomainTheme.text_class_for(:grants, intensity: 700) %>">128</span>
+            </h1>
+            <p class="text-gray-600 mt-1">Funds donated by organizations and people, from which scholarships are awarded.</p>
+          </div>
+        </div>
+        <div class="shrink-0">
+          <%= link_to "#", class: "btn btn-primary-outline whitespace-nowrap" do %>
+            <i class="fa-solid fa-plus"></i> New grant
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "A · new-edit", name: "Back-link + title + subtitle + Preview action", usage: "New / edit forms, simple show pages", recommended: true } do %>
+      <%= render "styleguide/utility_row", back: "Allocations", subnav: false %>
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-900">Edit scholarship</h1>
+          <p class="text-gray-600 mt-1">Jordan Rivera</p>
+        </div>
+        <%= link_to "Preview", "#", class: "btn btn-secondary-outline" %>
+      </div>
+    <% end %>
+  </section>
+
+  <%# ============================================================ %>
+  <%# SECTION B — TOPPER (index / show / new-edit)                 %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Family B · Topper</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        A domain-colored banner strip that gives a whole resource (people, orgs, users, forms) a
+        consistent identity across <strong>all</strong> its pages. Here's the full set —
+        index, show, and new-edit — for one domain.
+      </p>
+    </div>
+
+    <%= render layout: "styleguide/demo", locals: { id: "B · index", name: "Topper band over a list", usage: "Index for a topper-domain", recommended: true } do %>
+      <div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+        <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people, intensity: 300) %> px-6 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-user <%= DomainTheme.text_class_for(:people, intensity: 700) %>"></i>
+              <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:people, intensity: 900) %> uppercase tracking-wide">People</span>
+            </div>
+            <%= link_to "← Admin", "#", class: "text-sm text-gray-500 hover:text-gray-700" %>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center justify-between gap-4">
+            <h1 class="text-2xl font-semibold text-gray-900">People <span class="text-gray-400 font-normal">(1,204)</span></h1>
+            <%= link_to "New person", "#", class: "btn btn-primary-outline" %>
+          </div>
+          <p class="text-gray-500 text-sm mt-3">List rows…</p>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "B · show", name: "Topper band + avatar/name body", usage: "Person / org / user record", recommended: true } do %>
+      <div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+        <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people, intensity: 300) %> px-6 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-user <%= DomainTheme.text_class_for(:people, intensity: 700) %>"></i>
+              <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:people, intensity: 900) %> uppercase tracking-wide">Individual profile</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <%= link_to "← People", "#", class: "text-sm text-gray-500 hover:text-gray-700" %>
+              <%= link_to "Edit", "#", class: "text-sm text-gray-500 hover:text-gray-700" %>
+            </div>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-6">
+            <span class="h-24 w-24 rounded-full bg-gray-100 border-2 border-gray-200 shadow flex items-center justify-center text-gray-400">
+              <i class="fa-solid fa-user text-3xl"></i>
+            </span>
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900">
+                Jordan Rivera
+                <span class="text-gray-500 font-normal text-base italic">(they/them)</span>
+              </h1>
+              <p class="mt-1 text-gray-500 text-sm">Facilitator since <span class="font-medium">March 2021</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "B · new-edit", name: "Topper band over a form", usage: "New / edit for a topper-domain", recommended: true } do %>
+      <div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+        <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people, intensity: 300) %> px-6 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-user-pen <%= DomainTheme.text_class_for(:people, intensity: 700) %>"></i>
+              <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:people, intensity: 900) %> uppercase tracking-wide">Edit person</span>
+            </div>
+            <%= link_to "← Back", "#", class: "text-sm text-gray-500 hover:text-gray-700" %>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center justify-between gap-4">
+            <h1 class="text-2xl font-semibold text-gray-900">Jordan Rivera</h1>
+            <%= link_to "Save", "#", class: "btn btn-primary-outline" %>
+          </div>
+          <p class="text-gray-500 text-sm mt-3">Form fields…</p>
+        </div>
+      </div>
+    <% end %>
+
+    <p class="text-sm text-gray-500">
+      Note: <code class="text-xs bg-gray-100 px-1 rounded">forms/*</code> uses a much louder purple
+      <strong>gradient</strong> topper. I'd keep that as a deliberate exception for the public-facing
+      form flow rather than fold it into the quiet admin topper above.
+    </p>
+  </section>
+
+  <%# ============================================================ %>
+  <%# SECTION C — HERO (show/dashboard / new-edit)                 %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Family C · Centered hero</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        Centered, large, icon-led — for event-scoped & ceremonial pages. These nearly always carry
+        the event <strong>subnav</strong>, so they're the best place to show the subnav + actions rule.
+      </p>
+    </div>
+
+    <%= render layout: "styleguide/demo", locals: { id: "C · show", name: "Subnav row + centered hero + context", usage: "Dashboard, background, recipients", recommended: true } do %>
+      <%= render "styleguide/utility_row", back: "Event", subnav: true %>
+      <div class="text-center">
+        <a href="#" class="text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700">Spring Art Workshop</a>
+        <p class="text-sm text-gray-500 mt-1">May 3–5, 2026</p>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-black mt-2 flex items-center justify-center gap-3">
+          <i class="fa-solid fa-users-viewfinder <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
+          Get to know the registrants
+        </h1>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "C · new-edit", name: "Subnav + actions + centered title", usage: "Registrants, edit event (forms with subnav)" } do %>
+      <%= render "styleguide/utility_row", back: "Dashboard", subnav: true %>
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-900">Registrants <span class="text-gray-400 font-normal">(42)</span></h1>
+          <p class="text-gray-600 mt-1">Spring Art Workshop &middot; May 3–5, 2026</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-1">
+          <button type="button" class="btn btn-utility-outline">Form actions <i class="fa-solid fa-chevron-down text-gray-400"></i></button>
+          <button type="button" class="btn btn-utility-outline">Bulk actions <i class="fa-solid fa-chevron-down text-gray-400"></i></button>
+          <%= link_to "Add registrant", "#", class: "btn btn-primary-outline" %>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <%# ============================================================ %>
+  <%# SECTION D — SUBNAV STYLE                                     %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Subnav — pick one style</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        You have two today. <strong>D1</strong> is the compact inline tabs from
+        <code class="text-xs bg-gray-100 px-1 rounded">events/_subnav</code> (sits in the utility row,
+        right of the back-link). <strong>D2</strong> is the full-width tab bar from
+        <code class="text-xs bg-gray-100 px-1 rounded">admin/_activities_tabs</code>. I recommend
+        standardizing on D1 everywhere for consistency.
+      </p>
+    </div>
+
+    <%= render layout: "styleguide/demo", locals: { id: "D1", name: "Inline tabs (in utility row)", usage: "Events + admin — recommended", recommended: true } do %>
+      <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+        <%= link_to "← Admin", "#", class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <nav class="flex flex-wrap items-center gap-1">
+          <span aria-current="page" class="text-sm font-semibold text-gray-900 border-b-2 border-indigo-600 px-2 py-1">Counts</span>
+          <%= link_to "Charts", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+          <%= link_to "Activities", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+          <%= link_to "Visits", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+        </nav>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "D2", name: "Full-width tab bar (own row)", usage: "Current admin/activities — to retire" } do %>
+      <ul class="flex border-b border-gray-300">
+        <li class="-mb-px mr-1"><span class="inline-block px-4 py-2 font-medium text-gray-900 border-b-2 border-indigo-600">Counts</span></li>
+        <li class="-mb-px mr-1"><%= link_to "Charts", "#", class: "inline-block px-4 py-2 font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300" %></li>
+        <li class="-mb-px mr-1"><%= link_to "Activities", "#", class: "inline-block px-4 py-2 font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300" %></li>
+        <li class="-mb-px mr-1"><%= link_to "Visits", "#", class: "inline-block px-4 py-2 font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300" %></li>
+      </ul>
+    <% end %>
+  </section>
+
+  <%# ============================================================ %>
+  <%# SECTION E — ALIGNMENT: centered vs left (+ icons)            %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Question · centered or left-aligned?</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        Same page, same icon, two alignments. <strong>Centering is a signal</strong> — if every
+        page is centered it stops meaning anything. The cleanest rule: <strong>centered = the four
+        public-facing event pages</strong>, left-aligned = everything admin.
+      </p>
+      <div class="mt-3 grid sm:grid-cols-2 gap-3">
+        <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+          <p class="font-semibold text-emerald-900"><i class="fa-solid fa-globe"></i> Public-facing → centered</p>
+          <p class="text-emerald-800 mt-1">Meet the staff · Event show · Public registration · Public submission "details"</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p class="font-semibold text-gray-900"><i class="fa-solid fa-lock"></i> Admin-only → left-aligned</p>
+          <p class="text-gray-700 mt-1">Background, dashboard, registrants, edit, recipients, and all CRUD. <strong>Background is admin</strong> — so under this rule it loses its big centered hero.</p>
+        </div>
+      </div>
+      <p class="text-gray-600 text-sm mt-3">
+        Open question: <strong>background</strong> is admin-only but reads as a fun "get to know the
+        registrants" browsing page. Left-align it like other admin tools, or keep a centered hero as
+        a deliberate "ceremonial admin" exception? (E1/E2 below show the centered-vs-left contrast
+        using the public staff page.)
+      </p>
+    </div>
+
+    <%= render layout: "styleguide/demo", locals: { id: "E1", name: "Centered + icon", usage: "Public / ceremonial — draws attention", recommended: true } do %>
+      <%= render "styleguide/utility_row", back: "Event", subnav: true %>
+      <div class="text-center">
+        <p class="text-sm font-semibold uppercase tracking-wide <%= DomainTheme.text_class_for(:events) %>">Meet the staff</p>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-black mt-1 flex items-center justify-center gap-3">
+          <i class="fa-solid fa-people-group <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
+          Spring Art Workshop
+        </h1>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "E2", name: "Left-aligned + icon", usage: "Same content, admin-tool feel", recommended: false } do %>
+      <%= render "styleguide/utility_row", back: "Event", subnav: true %>
+      <div class="flex items-center gap-3">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl <%= DomainTheme.bg_class_for(:events, intensity: 100) %> <%= DomainTheme.text_class_for(:events, intensity: 600) %>">
+          <i class="fa-solid fa-people-group text-lg"></i>
+        </span>
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wide <%= DomainTheme.text_class_for(:events) %>">Meet the staff</p>
+          <h1 class="text-2xl font-semibold text-gray-900">Spring Art Workshop</h1>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <%# ============================================================ %>
+  <%# SECTION F — EVENT REGISTRATION (admin vs public)            %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Question · event registration forms</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        Two very different jobs share the name "registration form." The <strong>admin</strong> one
+        is a data-entry tool → it could drop to flat Style A. The <strong>public</strong> one is a
+        branded conversion page (logo, brand fonts) → it should stay a bespoke hero, like the forms
+        gradient. Comparing the admin options:
+      </p>
+    </div>
+
+    <%= render layout: "styleguide/demo", locals: { id: "F1", name: "Admin registration — Style A (flat)", usage: "Treat the admin form as a tool", recommended: true } do %>
+      <%= render "styleguide/utility_row", back: "Registrations", subnav: false %>
+      <div class="flex items-center gap-3">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl <%= DomainTheme.bg_class_for(:event_registrations, intensity: 100) %> <%= DomainTheme.text_class_for(:event_registrations, intensity: 600) %>">
+          <i class="fa-solid fa-user-plus text-lg"></i>
+        </span>
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-900">New registration</h1>
+          <p class="text-gray-600 mt-0.5">Spring Art Workshop &middot; May 3–5, 2026</p>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "F2", name: "Admin registration — Style C (current hero)", usage: "Today's centered treatment", recommended: false } do %>
+      <%= render "styleguide/utility_row", back: "Registrations", subnav: false %>
+      <div class="text-center">
+        <h1 class="flex items-center justify-center gap-3 text-3xl sm:text-4xl font-extrabold text-black">
+          <i class="fa-solid fa-user-plus <%= DomainTheme.text_class_for(:event_registrations, intensity: 600) %>"></i>
+          New registration
+        </h1>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "F3", name: "Public registration — bespoke branded hero", usage: "Conversion page — keep as exception", recommended: true } do %>
+      <div class="text-center max-w-2xl mx-auto py-2">
+        <div class="mx-auto mb-4 inline-flex h-10 items-center rounded bg-gray-100 px-4 text-xs font-semibold uppercase tracking-widest text-gray-400">logo + tagline</div>
+        <p class="text-base font-bold uppercase tracking-[0.2em] text-amber-600 mb-2">Free virtual workshop</p>
+        <h1 class="font-black text-green-800 leading-tight text-4xl sm:text-5xl mb-3">Spring Art Workshop</h1>
+        <div class="font-bold text-blue-900 uppercase text-2xl">May 3–5, 2026</div>
+      </div>
+    <% end %>
+  </section>
+
+  <%# ============================================================ %>
+  <%# SECTION G — A+B COMBO AS A UNIVERSAL WRAPPER                 %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Question · should the band wrap everything?</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        The "combo" = Family B's colored band + Family A's left-aligned title row, applied to
+        <em>every</em> domain — even pure-utility CRUD. Maximum cohesion (every page wears its
+        domain color), but the band adds weight to simple tables. Here it is on a normally-flat
+        domain (Quotes) so you can judge "band everywhere" vs. flat. My lean: combo for
+        identity domains, flat Style A for utility tables (tags, categories, sectors).
+      </p>
+    </div>
+
+    <%= render layout: "styleguide/demo", locals: { id: "G · index", name: "Combo on a utility domain (index)", usage: "Band everywhere?", recommended: false } do %>
+      <div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+        <div class="<%= DomainTheme.bg_class_for(:quotes, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:quotes, intensity: 300) %> px-6 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-quote-left <%= DomainTheme.text_class_for(:quotes, intensity: 700) %>"></i>
+              <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:quotes, intensity: 900) %> uppercase tracking-wide">Quotes</span>
+            </div>
+            <%= link_to "← Admin", "#", class: "text-sm text-gray-500 hover:text-gray-700" %>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center justify-between gap-4">
+            <h1 class="text-2xl font-semibold text-gray-900">Quotes <span class="text-gray-400 font-normal">(57)</span></h1>
+            <%= link_to "New quote", "#", class: "btn btn-primary-outline" %>
+          </div>
+          <p class="text-gray-500 text-sm mt-3">List rows…</p>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "vs flat", name: "Same domain — flat Style A (no band)", usage: "The lighter alternative", recommended: true } do %>
+      <%= render "styleguide/utility_row", back: "Admin", subnav: false %>
+      <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl font-semibold text-gray-900">Quotes <span class="text-gray-400 font-normal">(57)</span></h1>
+        <%= link_to "New quote", "#", class: "btn btn-primary-outline" %>
+      </div>
+    <% end %>
+  </section>
+
+  <%# ============================================================ %>
+  <%# SECTION H — MORE SUBNAVS                                     %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Question · more subnavs?</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        Only events &amp; admin/activities have real subnavs today; dozens of show/edit pages fake
+        it with ad-hoc "Home / Index / View / Edit" link rows. Two kinds of subnav are worth adding —
+        a <strong>per-record</strong> nav (tabs across one record's views) and a <strong>cross-section
+        area</strong> nav (tabs across sibling resources). Both reuse the D1 style.
+      </p>
+    </div>
+
+    <%= render layout: "styleguide/demo", locals: { id: "H1", name: "Per-record subnav (Organization)", usage: "One record, many views", recommended: true } do %>
+      <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+        <%= link_to "← Organizations", "#", class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <nav class="flex flex-wrap items-center gap-1">
+          <span aria-current="page" class="text-sm font-semibold text-gray-900 border-b-2 <%= DomainTheme.border_class_for(:organizations, intensity: 600) %> px-2 py-1">Profile</span>
+          <%= link_to "Members", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+          <%= link_to "Monthly reports", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+          <%= link_to "Affiliations", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+        </nav>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "H2", name: "Cross-section area subnav (Taxonomy)", usage: "Sibling resources, one area", recommended: true } do %>
+      <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+        <%= link_to "← Admin", "#", class: "text-sm text-gray-500 hover:text-gray-700" %>
+        <nav class="flex flex-wrap items-center gap-1">
+          <span aria-current="page" class="text-sm font-semibold text-gray-900 border-b-2 <%= DomainTheme.border_class_for(:tags, intensity: 600) %> px-2 py-1">Tags</span>
+          <%= link_to "Sectors", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+          <%= link_to "Categories", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+          <%= link_to "Category types", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+          <%= link_to "Windows types", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+          <%= link_to "Org statuses", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+        </nav>
+      </div>
+    <% end %>
+
+    <p class="text-sm text-gray-500">
+      Both use one <code class="text-xs bg-gray-100 px-1 rounded">shared/_subnav</code> partial fed a
+      list of <code class="text-xs bg-gray-100 px-1 rounded">{ label, path, current }</code> tabs —
+      so adding a new section nav is just defining its tab list, not new markup.
+    </p>
+  </section>
+
+  <%# ============================================================ %>
+  <%# SECTION I — RICH GRADIENT FOR PUBLIC SUBMISSION FORMS        %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Question · rich gradient for contribution forms?</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        New public registration, new story idea, new workshop idea, new workshop variation idea —
+        these are <strong>invitations to contribute</strong>, but today they look like plain admin
+        forms (flat title + a paragraph of encouragement). A warm gradient topper signals "we value
+        what you're about to share." Two ways to do it: <strong>per-domain color</strong> (ties to
+        the resource) or <strong>one unified brand gradient</strong> (every public form looks alike).
+      </p>
+    </div>
+
+    <%= render layout: "styleguide/demo", locals: { id: "I1", name: "Per-domain gradient — new story idea", usage: "Gradient in the resource's color (fuchsia)", recommended: true } do %>
+      <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5">
+        <div class="relative bg-gradient-to-br from-fuchsia-900 to-fuchsia-600 text-white px-6 sm:px-10 py-8">
+          <div class="flex items-center gap-4">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15">
+              <i class="fa-solid fa-feather-pointed text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Share your idea</p>
+              <h1 class="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">New story idea</h1>
+              <p class="mt-1 text-sm text-white/80 max-w-md">Your stories strengthen our community and inspire healing through art.</p>
+            </div>
+          </div>
+          <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400"></div>
+        </div>
+        <div class="p-6 bg-white border border-t-0 border-gray-200 rounded-b-2xl text-gray-500 text-sm">Form fields…</div>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "I2", name: "Per-domain gradient — new workshop idea", usage: "Indigo, matching the workshops domain", recommended: true } do %>
+      <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5">
+        <div class="relative bg-gradient-to-br from-indigo-900 to-indigo-600 text-white px-6 sm:px-10 py-8">
+          <div class="flex items-center gap-4">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15">
+              <i class="fa-solid fa-lightbulb text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Create something new</p>
+              <h1 class="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">New workshop idea</h1>
+              <p class="mt-1 text-sm text-white/80 max-w-md">We encourage Windows Facilitator creativity — most fields are optional.</p>
+            </div>
+          </div>
+          <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400"></div>
+        </div>
+        <div class="p-6 bg-white border border-t-0 border-gray-200 rounded-b-2xl text-gray-500 text-sm">Form fields…</div>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "I3", name: "Unified brand gradient — new public registration", usage: "One look for every public form", recommended: false } do %>
+      <div class="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5">
+        <div class="relative bg-gradient-to-br from-purple-950 via-purple-800 to-fuchsia-700 text-white px-6 sm:px-10 py-8">
+          <div class="flex items-center gap-4">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15">
+              <i class="fa-solid fa-user-plus text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Join us</p>
+              <h1 class="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">Register — Spring Art Workshop</h1>
+              <p class="mt-1 text-sm text-white/80 max-w-md">May 3–5, 2026 · Free virtual workshop.</p>
+            </div>
+          </div>
+          <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400"></div>
+        </div>
+        <div class="p-6 bg-white border border-t-0 border-gray-200 rounded-b-2xl text-gray-500 text-sm">Form fields…</div>
+      </div>
+    <% end %>
+
+    <p class="text-sm text-gray-500">
+      Heads up: public registration already has a bespoke <strong>logo + brand-font hero</strong> (F3) —
+      the richest tier. Decide whether that stays premium-and-unique, or collapses into this gradient
+      system so all public forms share one language. Per-domain gradient stops need adding to the
+      Tailwind safelist (the same place domain colors already live).
+    </p>
+  </section>
+
+  <%# ============================================================ %>
+  <%# SECTION J — CHARCOAL BASE + THIN MODEL STRIPE                %>
+  <%# ============================================================ %>
+  <section class="space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Proposal · charcoal base + thin model stripe</h2>
+      <p class="text-gray-600 text-sm mt-1">
+        One backbone for the whole admin site: a <strong>charcoal band</strong> = "you're in an admin
+        tool." Utility tables get just the charcoal (shared identity, no orphans). Individual models
+        add a <strong>thin stripe in their domain color</strong> on top — enough to say "this is a
+        person / an org / an event" without a heavy color block. The charcoal stays constant across
+        index / new-edit / show; only the stripe marks the model.
+      </p>
+    </div>
+
+    <%= render layout: "styleguide/demo", locals: { id: "J1 · utility", name: "Charcoal only — settings table", usage: "Tags, sectors, categories… (+ area subnav)", recommended: true } do %>
+      <div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+        <div class="bg-slate-800 px-6 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-slate-300"></i>
+              <span class="text-sm font-semibold text-white uppercase tracking-wide">Settings</span>
+            </div>
+            <%= link_to "← Admin", "#", class: "text-sm text-slate-300 hover:text-white" %>
+          </div>
+        </div>
+        <div class="px-6 pt-3 border-b border-gray-100">
+          <nav class="flex flex-wrap items-center gap-1 -mb-px">
+            <%= link_to "Tags", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+            <span aria-current="page" class="text-sm font-semibold text-gray-900 border-b-2 border-slate-700 px-2 py-1">Sectors</span>
+            <%= link_to "Categories", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+            <%= link_to "Category types", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+            <%= link_to "Windows types", "#", class: "text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+          </nav>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center justify-between gap-4">
+            <h1 class="text-2xl font-semibold text-gray-900">Sectors <span class="text-gray-400 font-normal">(12)</span></h1>
+            <%= link_to "New sector", "#", class: "btn btn-primary-outline" %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "J2 · model show", name: "Charcoal + thin sky stripe — person", usage: "Identity model, show page", recommended: true } do %>
+      <div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+        <div class="h-1.5 bg-sky-500"></div>
+        <div class="bg-slate-800 px-6 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-user text-sky-300"></i>
+              <span class="text-sm font-semibold text-white uppercase tracking-wide">Individual profile</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <%= link_to "← People", "#", class: "text-sm text-slate-300 hover:text-white" %>
+              <%= link_to "Edit", "#", class: "text-sm text-slate-300 hover:text-white" %>
+            </div>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-6">
+            <span class="h-24 w-24 rounded-full bg-gray-100 border-2 border-gray-200 shadow flex items-center justify-center text-gray-400">
+              <i class="fa-solid fa-user text-3xl"></i>
+            </span>
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900">Jordan Rivera <span class="text-gray-500 font-normal text-base italic">(they/them)</span></h1>
+              <p class="mt-1 text-gray-500 text-sm">Facilitator since <span class="font-medium">March 2021</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "J3 · model new-edit", name: "Same model, edit page — band persists", usage: "Charcoal + stripe stay across page kinds", recommended: true } do %>
+      <div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+        <div class="h-1.5 bg-sky-500"></div>
+        <div class="bg-slate-800 px-6 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-user-pen text-sky-300"></i>
+              <span class="text-sm font-semibold text-white uppercase tracking-wide">Edit person</span>
+            </div>
+            <%= link_to "← Back", "#", class: "text-sm text-slate-300 hover:text-white" %>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center justify-between gap-4">
+            <h1 class="text-2xl font-semibold text-gray-900">Jordan Rivera</h1>
+            <%= link_to "Save", "#", class: "btn btn-primary-outline" %>
+          </div>
+          <p class="text-gray-500 text-sm mt-3">Form fields…</p>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render layout: "styleguide/demo", locals: { id: "J · color check", name: "Stripe carries the domain color", usage: "Org = emerald, Event = blue, Grant = green", recommended: false } do %>
+      <div class="grid sm:grid-cols-3 gap-3">
+        <% [ [ "Organization", "fa-building", "bg-emerald-500", "text-emerald-300" ], [ "Event", "fa-calendar-day", "bg-blue-500", "text-blue-300" ], [ "Grant", "fa-hand-holding-dollar", "bg-green-500", "text-green-300" ] ].each do |label, icon, stripe, tint| %>
+          <div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+            <div class="h-1.5 <%= stripe %>"></div>
+            <div class="bg-slate-800 px-4 py-2.5">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid <%= icon %> <%= tint %>"></i>
+                <span class="text-xs font-semibold text-white uppercase tracking-wide"><%= label %></span>
+              </div>
+            </div>
+            <div class="p-4 text-gray-400 text-xs">Body…</div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <p class="text-sm text-gray-500">
+      Notes: charcoal = <code class="text-xs bg-gray-100 px-1 rounded">bg-slate-800</code>; stripe =
+      <code class="text-xs bg-gray-100 px-1 rounded">h-1.5 bg-{model}-500</code> and the band icon
+      can pick up the same color (<code class="text-xs bg-gray-100 px-1 rounded">text-{model}-300</code>)
+      for a touch more identity. This <strong>replaces the light Family B band</strong> — one system,
+      uniform chrome, color only where it identifies a model. Public-facing pages still break out into
+      gradients / centered heroes (rich = public still holds).
+    </p>
+  </section>
+
+  <div class="rounded-xl border border-blue-200 bg-blue-50 p-5 text-sm text-blue-900 space-y-2">
+    <p class="font-semibold">Proposed system</p>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>One <strong>utility row</strong> everywhere: back-link left (defaults to <code class="bg-white/60 px-1 rounded">admin_path</code> on admin-only pages), subnav right.</li>
+      <li><strong>Actions</strong> always live in the title row on the right — primary = button, secondary = dropdown. Never mixed into the subnav.</li>
+      <li><strong>Alignment (E):</strong> centered = the four public-facing event pages (meet the staff, event show, public registration, public submission "details"); left-aligned = all admin, including background. Background's centered hero is the one open call.</li>
+      <li><strong>Charcoal base + stripe (J):</strong> one charcoal admin band everywhere; utility tables get charcoal-only (+ area subnav), individual models add a thin domain-color stripe. Replaces the light Family B band and resolves the band-vs-flat (G) question — uniform chrome, color only where it identifies a model. Persists across index/new-edit/show.</li>
+      <li><strong>Registration (F):</strong> admin form → Style A tool; public form → keep its bespoke branded hero, like the forms gradient.</li>
+      <li>Standardize subnav on <strong>D1</strong>; icons render as a left chip when left-aligned, inline when centered.</li>
+      <li><strong>More subnavs (H):</strong> add per-record navs (Organization, Person, Workshop) and area navs (Taxonomy, Finance, Content) to replace the ad-hoc "Home / Index / View / Edit" link rows — all from one <code class="bg-white/60 px-1 rounded">shared/_subnav</code> fed a tab list.</li>
+      <li><strong>Public contribution forms (I):</strong> give new public registration / story idea / workshop idea / variation idea a rich gradient topper — per-domain color, or one unified brand gradient.</li>
+    </ul>
+    <p class="rounded-lg bg-white/60 px-3 py-2 font-medium">
+      The unifying principle: <strong>rich = public-facing, quiet = admin.</strong> Gradient toppers,
+      centered heroes, and brand fonts all become signals a user is on a public/outward page; flat
+      left-aligned headers mean an internal tool. Consistent on both sides, and instantly legible.
+    </p>
+    <p>Partials to build: <code class="bg-white/60 px-1 rounded">shared/_page_header</code> (utility row + title row, drives A, B &amp; the combo via locals), reuse <code class="bg-white/60 px-1 rounded">_event_page_header</code> for centered/C, and one <code class="bg-white/60 px-1 rounded">shared/_subnav</code>.</p>
+  </div>
+</div>

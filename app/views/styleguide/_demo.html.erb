@@ -1,0 +1,17 @@
+<%# locals: id, name, usage, recommended: false %>
+<% recommended = local_assigns.fetch(:recommended, false) %>
+<div class="rounded-xl border <%= recommended ? "border-green-300 ring-1 ring-green-200" : "border-gray-200" %> overflow-hidden">
+  <div class="flex flex-wrap items-center gap-2 bg-gray-50 border-b border-gray-200 px-4 py-2">
+    <span class="text-xs font-mono font-semibold text-gray-700"><%= id %></span>
+    <span class="text-sm font-semibold text-gray-900"><%= name %></span>
+    <% if recommended %>
+      <span class="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5">
+        <i class="fa-solid fa-star"></i> Recommended
+      </span>
+    <% end %>
+    <span class="text-xs text-gray-500 ml-auto"><%= usage %></span>
+  </div>
+  <div class="p-6 bg-white">
+    <%= yield %>
+  </div>
+</div>

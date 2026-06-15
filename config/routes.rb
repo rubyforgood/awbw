@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # Internal design reference for comparing page-header treatments
+  get "styleguide/headers", to: "styleguide#headers"
+
   # temporary direct routes to images for migration audit
   resources :attachments, only: [ :show ]
   resources :media_files, only: [ :show ]
