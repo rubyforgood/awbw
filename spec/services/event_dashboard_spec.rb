@@ -729,7 +729,7 @@ RSpec.describe EventDashboard do
     let(:bulk_form) { create(:form) }
     let!(:event_form) { create(:event_form, event: event, form: bulk_form, role: "bulk_payment") }
     let(:payer) { create(:person) }
-    let!(:submission) { create(:form_submission, person: payer, form: bulk_form, role: "bulk_payment") }
+    let!(:submission) { create(:form_submission, person: payer, form: bulk_form, event: event, role: "bulk_payment") }
 
     it "sums the unallocated remainder across the event's bulk payments" do
       create(:payment, person: payer, form_submission: submission,
@@ -754,9 +754,23 @@ RSpec.describe EventDashboard do
       other_event = create(:event, cost_cents: 10_000)
       other_form = create(:form)
       create(:event_form, event: other_event, form: other_form, role: "bulk_payment")
-      other_submission = create(:form_submission, person: payer, form: other_form, role: "bulk_payment")
+      other_submission = create(:form_submission, person: payer, form: other_form,
+                                event: other_event, role: "bulk_payment")
       create(:payment, person: payer, form_submission: other_submission,
              amount_cents: 9_000, amount_cents_remaining: 9_000)
+
+      expect(dashboard.unallocated_bulk_payment_cents).to eq(0)
+    end
+
+    it "ignores submissions on a SHARED bulk form that belong to another event" do
+      # Same bulk_form, reused by another event — scoping must key off the
+      # submission's own event_id, not the form's event_forms, or this leaks in.
+      other_event = create(:event, cost_cents: 10_000)
+      create(:event_form, event: other_event, form: bulk_form, role: "bulk_payment")
+      other_submission = create(:form_submission, person: payer, form: bulk_form,
+                                event: other_event, role: "bulk_payment")
+      create(:payment, person: payer, form_submission: other_submission,
+             amount_cents: 7_000, amount_cents_remaining: 7_000)
 
       expect(dashboard.unallocated_bulk_payment_cents).to eq(0)
     end

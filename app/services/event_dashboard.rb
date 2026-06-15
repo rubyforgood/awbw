@@ -686,13 +686,13 @@ class EventDashboard
     @allocated_by_registration ||= registration_allocations.group(:allocatable_id).sum(:amount)
   end
 
-  # Payments tied to this event's bulk payment form submissions.
+  # Payments tied to this event's bulk payment form submissions. Scoped by the
+  # submission's own event_id (matching the bulk payments page) rather than the
+  # shared form's event_forms, so a form reused across events doesn't pull in
+  # other events' submissions.
   def bulk_payments
     @bulk_payments ||= Payment.where(
-      form_submission_id: FormSubmission
-        .joins(form: :event_forms)
-        .where(event_forms: { event_id: event.id, role: "bulk_payment" })
-        .select(:id)
+      form_submission_id: event.form_submissions.where(role: "bulk_payment").select(:id)
     )
   end
 
