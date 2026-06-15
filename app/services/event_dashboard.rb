@@ -688,14 +688,12 @@ class EventDashboard
 
   # Payments tied to this event's bulk payment form submissions.
   def bulk_payments
-    @bulk_payments ||= Payment.where(form_submission_id: bulk_payment_submission_ids)
-  end
-
-  def bulk_payment_submission_ids
-    @bulk_payment_submission_ids ||= FormSubmission
-      .joins(form: :event_forms)
-      .where(event_forms: { event_id: event.id, role: "bulk_payment" })
-      .pluck(:id)
+    @bulk_payments ||= Payment.where(
+      form_submission_id: FormSubmission
+        .joins(form: :event_forms)
+        .where(event_forms: { event_id: event.id, role: "bulk_payment" })
+        .select(:id)
+    )
   end
 
   def scholarships
