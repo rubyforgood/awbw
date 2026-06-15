@@ -156,6 +156,11 @@ class EventRegistrationsController < ApplicationController
     # link here leaves the affiliation untouched).
     @affiliations_by_org = @person.affiliations.group_by(&:organization_id)
     @submitted_org_name = find_submitted_agency_name(@event_registration)
+    # Whether an org with the submitted name already exists — if so, there's
+    # nothing to create (the admin links the existing one), so the "Create org
+    # & link" button is hidden.
+    @submitted_org_exists = @submitted_org_name.present? &&
+      Organization.where("LOWER(name) = ?", @submitted_org_name.strip.downcase).exists?
     # The job title/position the registrant typed on the form, to compare against
     # the title on any existing affiliation for a linked org.
     @submitted_position = find_submitted_answer(@event_registration, "agency_position")
@@ -196,12 +201,15 @@ class EventRegistrationsController < ApplicationController
       return
     end
 
-    organization = Organization.create!(name: name, organization_status: OrganizationStatus.find_by(name: "Active"))
+    # Reuse an existing org with that name rather than creating a duplicate.
+    existing = Organization.where("LOWER(name) = ?", name.strip.downcase).first
+    organization = existing || Organization.create!(name: name.strip, organization_status: OrganizationStatus.find_by(name: "Active"))
 
     Affiliation.find_or_create_by!(person: @person, organization: organization)
     @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
 
-    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} created and linked."
+    notice = existing ? "#{organization.name} linked." : "#{organization.name} created and linked."
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: notice
   end
 
   def unlink_organization

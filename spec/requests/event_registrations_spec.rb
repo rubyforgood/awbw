@@ -420,6 +420,23 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("registration form submission")
           expect(response.body).to include(event_public_registration_path(event, reg: existing_registration.slug))
         end
+
+        it "shows 'Create org & link' when the submitted org has no existing match" do
+          submit_form(org_name: "Brand New Unlisted Org")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include(create_organization_event_registration_path(existing_registration))
+        end
+
+        it "hides 'Create org & link' when an org with the submitted name already exists" do
+          create(:organization, name: "Already Exists Org")
+          submit_form(org_name: "Already Exists Org")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).not_to include(create_organization_event_registration_path(existing_registration))
+        end
       end
 
       describe "POST /event_registrations/:id/select_organization" do
@@ -449,6 +466,21 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(existing_registration.organizations.pluck(:name)).to include("Brand New Org")
           expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+        end
+
+        it "links an existing org instead of creating a duplicate" do
+          existing = create(:organization, name: "Existing Org")
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Existing Org")
+
+          expect {
+            post create_organization_event_registration_path(existing_registration)
+          }.not_to change(Organization, :count)
+
+          expect(existing_registration.organizations).to include(existing)
         end
       end
 

@@ -103,7 +103,7 @@
           </p>
         <% end %>
       </div>
-      <% if @submitted_org_name.present? %>
+      <% if @submitted_org_name.present? && !@submitted_org_exists %>
         <%# Creates an org from the typed name and links it in one step, for names with no existing match. %>
         <%= button_to create_organization_event_registration_path(@event_registration, return_to: params[:return_to]),
                       method: :post,
