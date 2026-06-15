@@ -7,6 +7,13 @@ class FormSubmission < ApplicationRecord
 
   accepts_nested_attributes_for :form_answers
 
+  # The event this submission belongs to: the directly stored one, or — for
+  # submissions created before event_id existed — resolved through the form's
+  # matching join role.
+  def resolved_event
+    event || form.events.find_by(event_forms: { role: role })
+  end
+
   # Answers keyed by their field's identifier. Bulk payment (and similar) forms
   # address fields by identifier rather than position.
   def answers_by_identifier

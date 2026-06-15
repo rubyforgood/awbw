@@ -1,4 +1,4 @@
-<% event = @form_submission.event %>
+<% event = @form_submission.resolved_event %>
 <div class="max-w-2xl mx-auto px-4 pt-4">
   <div class="flex flex-wrap items-center gap-2">
     <% if event && params[:return_to] == "bulk_payments" %>
