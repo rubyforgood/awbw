@@ -207,3 +207,6 @@ application.register("currency-input", CurrencyInputController)
 import BulkPaymentAttendeesController from "./bulk_payment_attendees_controller"
 application.register("bulk-payment-attendees", BulkPaymentAttendeesController)
 
+import ConditionalFieldsController from "./conditional_fields_controller"
+application.register("conditional-fields", ConditionalFieldsController)
+

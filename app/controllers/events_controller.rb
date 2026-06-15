@@ -180,12 +180,17 @@ class EventsController < ApplicationController
       respond_to(&:turbo_stream) and return
     end
 
+    payer_type = params[:payer_type].presence
+
     payment = submission.payments.new(
-      person: submission.person,
+      person_id: params[:person_id].presence || submission.person_id,
+      organization_id: params[:organization_id].presence,
+      payer_type: payer_type,
       amount_cents: (params[:amount_dollars].to_d * 100).to_i,
-      currency: "usd",
+      currency: params[:currency].presence || "usd",
       type: payment_type,
-      check_number: params[:check_number].presence
+      check_number: params[:check_number].presence,
+      memo: params[:memo].presence
     )
 
     if payment.save
