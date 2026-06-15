@@ -1,5 +1,5 @@
 <%= simple_form_for @person, html: { multipart: true, class: "space-y-8",
-                                          data: { controller: "dirty-form affiliation-dates" } } do |f| %>
+                                          data: { controller: "dirty-form affiliation-dates affiliation-facilitator-warning" } } do |f| %>
   <%= render 'shared/errors', resource: @person if @person.errors.any? %>
   <%= render "duplicate_people_warning" %>
 
