@@ -260,6 +260,41 @@ module ApplicationHelper
     end
   end
 
+  # Link that opens in a new browser tab. Renders the link with the standard
+  # "opens in a new tab" affordance appended after its content: the box-arrow
+  # icon (decorative) plus screen-reader-only warning text (WCAG G201), and sets
+  # target/rel for you. This is the ONLY place the box-arrow icon should
+  # originate — never reuse `fa-arrow-up-right-from-square` for same-tab or
+  # in-page navigation, where it misleads; use a directional arrow there instead.
+  # Pass `icon_class:` to size/color the trailing icon to the surrounding text.
+  #
+  #   <%= new_tab_link "View receipt", receipt_url, class: "underline" %>
+  #   <%= new_tab_link grants_path, class: "..." do %>View all grants<% end %>
+  def new_tab_link(name = nil, options = nil, html_options = nil, &block)
+    if block
+      html_options = (options || {}).dup
+      options = name
+    else
+      html_options = (html_options || {}).dup
+    end
+
+    icon_class = html_options.delete(:icon_class).presence || "text-[0.7rem]"
+    html_options[:target] = "_blank"
+    html_options[:rel] = [ html_options[:rel], "noopener" ].compact.join(" ")
+
+    body = block ? capture(&block) : name.to_s
+    link_to(options, html_options) { safe_join([ body, new_tab_marker(icon_class) ], " ") }
+  end
+
+  # The standalone "opens in a new tab" marker (decorative box-arrow icon plus
+  # screen-reader-only warning) for the rare new-tab link whose markup
+  # new_tab_link can't wrap — e.g. an icon that must be absolutely
+  # positioned. Prefer new_tab_link.
+  def new_tab_marker(icon_class = "text-[0.7rem]")
+    tag.i(class: "fa-solid fa-arrow-up-right-from-square #{icon_class}", aria: { hidden: "true" }) +
+      tag.span("(opens in new tab)", class: "sr-only")
+  end
+
   # Best viewable path for a record (e.g. a notification's noticeable), or nil
   # when its model has no route. FormSubmissions have no polymorphic route, so
   # they get a tailored destination via form_submission_link_path.

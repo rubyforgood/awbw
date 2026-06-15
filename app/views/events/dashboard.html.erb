@@ -30,29 +30,26 @@
   <% link_base = "inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm font-medium shadow-sm transition-colors" %>
   <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
     <% if @event.event_forms.registration.exists? %>
-      <%= link_to new_event_public_registration_path(@event, as_visitor: true), target: "_blank", rel: "noopener noreferrer",
+      <%= new_tab_link new_event_public_registration_path(@event, as_visitor: true), rel: "noreferrer",
             class: "#{link_base} #{DomainTheme.border_class_for(:events, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:events, intensity: 300)} hover:bg-gray-50" do %>
         <i class="fa-solid fa-clipboard-list <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
         Public registration form
-        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
       <% end %>
     <% end %>
 
     <% if @event.event_forms.registration.exists? && @event.scholarship_form %>
-      <%= link_to new_event_public_registration_path(@event, scholarship_requested: true, as_visitor: true), target: "_blank", rel: "noopener noreferrer",
+      <%= new_tab_link new_event_public_registration_path(@event, scholarship_requested: true, as_visitor: true), rel: "noreferrer",
             class: "#{link_base} #{DomainTheme.border_class_for(:scholarships, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:scholarships, intensity: 300)} hover:bg-gray-50" do %>
         <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"></i>
         Scholarship form
-        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
       <% end %>
     <% end %>
 
     <% if @event.bulk_payment_form %>
-      <%= link_to new_event_bulk_payment_path(@event), target: "_blank", rel: "noopener noreferrer",
+      <%= new_tab_link new_event_bulk_payment_path(@event), rel: "noreferrer",
             class: "#{link_base} #{DomainTheme.border_class_for(:payments, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:payments, intensity: 300)} hover:bg-gray-50" do %>
         <i class="fa-solid fa-money-check-dollar <%= DomainTheme.text_class_for(:payments, intensity: 600) %>"></i>
         Bulk payment form
-        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
       <% end %>
     <% end %>
   </div>
@@ -257,7 +254,7 @@
           </h3>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Active registrations<% if @dashboard.inactive_registration_count.positive? %> · <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.inactive_registrant_ids.join("-")), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.inactive_registration_count %> inactive <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% end %></p>
+        <p class="text-xs text-gray-500 mt-1">Active registrations<% if @dashboard.inactive_registration_count.positive? %> · <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.inactive_registrant_ids.join("-")), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.inactive_registration_count %> inactive <i class="fa-solid fa-arrow-right text-[10px]"></i><% end %><% end %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.registrants.any? %>
@@ -296,7 +293,7 @@
             <% @dashboard.organizations.each do |organization| %>
               <li class="flex items-center gap-1.5">
                 <%= link_to organization_path(organization), class: "#{DomainTheme.text_class_for(:organizations, intensity: 600)} hover:#{DomainTheme.text_class_for(:organizations, intensity: 800)} shrink-0", title: "View #{organization.name} profile" do %>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                  <i class="fa-solid fa-arrow-right text-xs"></i>
                 <% end %>
                 <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "flex items-center justify-between gap-2 flex-1 min-w-0 rounded px-1 py-0.5 hover:bg-gray-50", title: "Registrants from #{organization.name}" do %>
                   <span class="truncate min-w-0"><%= organization.name %></span>

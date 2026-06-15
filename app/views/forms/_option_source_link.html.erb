@@ -1,9 +1,8 @@
 <%# locals: (field:) %>
 <% source = form_field_option_source(field) %>
 <% if source %>
-  <%= link_to source[:path], target: "_blank", rel: "noopener",
+  <%= new_tab_link source[:path],
         class: "inline-flex items-center gap-1 text-xs font-medium text-purple-700 hover:text-purple-900" do %>
     <span class="underline">Options from <%= source[:label] %></span>
-    <i class="fa-solid fa-arrow-up-right-from-square"></i>
   <% end %>
 <% end %>

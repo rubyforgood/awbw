@@ -7,7 +7,7 @@
     <%= link_to edit_event_registration_path(allocatable),
                 class: "relative block rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 transition-colors hover:border-gray-400 hover:bg-gray-50",
                 data: { turbo_frame: "_top" } do %>
-      <i class="fa-solid fa-arrow-up-right-from-square absolute right-2 top-2 text-[0.6rem] text-gray-400"></i>
+      <i class="fa-solid fa-arrow-right absolute right-2 top-2 text-[0.6rem] text-gray-400"></i>
       <span class="block font-medium text-gray-800">Event registration for <%= allocatable.registrant&.full_name %></span>
       <span class="block text-sm text-gray-500"><%= allocatable.event.title %> &middot; <%= allocatable.event.decorate.times(display_day: true, display_date: true) %></span>
     <% end %>

@@ -1,6 +1,39 @@
 require "rails_helper"
 
 RSpec.describe ApplicationHelper, type: :helper do
+  describe "#new_tab_link" do
+    it "opens in a new tab with rel=noopener and a screen-reader warning" do
+      html = helper.new_tab_link("View receipt", "https://example.com")
+      expect(html).to have_link("View receipt", href: "https://example.com")
+
+      link = Capybara.string(html).find("a")
+      expect(link[:target]).to eq("_blank")
+      expect(link[:rel]).to eq("noopener")
+      expect(link).to have_css("i.fa-arrow-up-right-from-square[aria-hidden='true']")
+      expect(link).to have_css("span.sr-only", text: "(opens in new tab)", visible: :all)
+    end
+
+    it "preserves caller rel and merges noopener" do
+      html = helper.new_tab_link("Out", "https://example.com", rel: "noreferrer")
+      expect(Capybara.string(html).find("a")[:rel]).to eq("noreferrer noopener")
+    end
+
+    it "appends the marker after block content and keeps the caller's class" do
+      html = helper.new_tab_link("/grants", class: "btn") { "View all grants".html_safe }
+      link = Capybara.string(html).find("a")
+      expect(link[:class]).to eq("btn")
+      expect(link).to have_text("View all grants")
+      expect(link).to have_css("i.fa-arrow-up-right-from-square")
+    end
+
+    it "lets icon_class size the marker without leaking onto the link" do
+      html = helper.new_tab_link("Out", "https://example.com", icon_class: "text-xs text-gray-400")
+      link = Capybara.string(html).find("a")
+      expect(link).to have_css("i.fa-arrow-up-right-from-square.text-xs.text-gray-400")
+      expect(link[:class]).to be_blank
+    end
+  end
+
   describe "#dollars_from_cents" do
     it "drops the cents for whole-dollar amounts and adds thousands separators" do
       expect(helper.dollars_from_cents(150_000)).to eq("$1,500")

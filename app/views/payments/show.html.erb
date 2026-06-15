@@ -56,10 +56,7 @@
       <div>
         <dt class="text-sm font-medium text-gray-500">Stripe Receipt</dt>
         <dd class="mt-1 text-sm">
-          <a href="<%= receipt_url %>" target="_blank" rel="noopener" class="text-primary hover:text-primary-dark underline inline-flex items-center gap-1">
-            View Receipt
-            <i class="fa-solid fa-arrow-up-right-from-square w-3 h-3"></i>
-          </a>
+          <%= new_tab_link "View Receipt", receipt_url, class: "text-primary hover:text-primary-dark underline inline-flex items-center gap-1" %>
         </dd>
       </div>
     <% end %>

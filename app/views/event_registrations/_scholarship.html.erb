@@ -32,12 +32,8 @@
       <div class="space-y-2">
         <div class="flex items-center gap-2">
           <span class="text-sm font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (scholarship.amount_cents.to_f / 100) %></span>
-          <%= link_to edit_scholarship_path(scholarship, return_to: "registration"),
-                      class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
-                      target: "_blank", rel: "noopener" do %>
-            Edit
-            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
-          <% end %>
+          <%= new_tab_link "Edit", edit_scholarship_path(scholarship, return_to: "registration"),
+                      class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline" %>
         </div>
 
         <div class="flex flex-wrap items-center gap-1.5">
@@ -56,12 +52,10 @@
       </div>
     <% else %>
       <div class="border-t border-gray-100 pt-3">
-        <%= link_to new_scholarship_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
-                    class: "inline-flex items-center gap-1.5 text-sm font-medium #{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:underline",
-                    target: "_blank", rel: "noopener" do %>
+        <%= new_tab_link new_scholarship_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
+                    class: "inline-flex items-center gap-1.5 text-sm font-medium #{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:underline" do %>
           <i class="fa-solid fa-plus text-[0.7rem]"></i>
           Add scholarship
-          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
         <% end %>
       </div>
     <% end %>

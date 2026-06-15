@@ -287,11 +287,8 @@
                    data-anchor-highlight-target-param="public_registration_setting">Change</a>
               </div>
               <% if @event.event_forms.registration.exists? %>
-                <%= link_to new_event_public_registration_path(@event),
-                            class: "inline-flex items-center gap-1 text-sm text-blue-700 hover:text-blue-900 underline mt-2",
-                            target: "_blank" do %>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> View public registration page
-                <% end %>
+                <%= new_tab_link "View public registration page", new_event_public_registration_path(@event),
+                            class: "inline-flex items-center gap-1 text-sm text-blue-700 hover:text-blue-900 underline mt-2" %>
               <% end %>
             </div>
           </div>
@@ -343,11 +340,8 @@
                 </label>
                 <p class="text-xs text-gray-500 mt-1">Add a scholarship form so registrants can request financial assistance.</p>
                 <% if @event.scholarship_form.present? %>
-                  <%= link_to new_event_public_registration_path(@event, scholarship_requested: true),
-                              class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
-                              target: "_blank" do %>
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview scholarship form
-                  <% end %>
+                  <%= new_tab_link "Preview scholarship form", new_event_public_registration_path(@event, scholarship_requested: true),
+                              class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1" %>
                 <% end %>
               </div>
               <div class="pb-4">
@@ -357,11 +351,8 @@
                 </label>
                 <p class="text-xs text-gray-500 mt-1">Let one person register and pay for a group of attendees at once.</p>
                 <% if @event.bulk_payment_form.present? %>
-                  <%= link_to new_event_bulk_payment_path(@event),
-                              class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
-                              target: "_blank" do %>
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview bulk payment page
-                  <% end %>
+                  <%= new_tab_link "Preview bulk payment page", new_event_bulk_payment_path(@event),
+                              class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1" %>
                 <% end %>
               </div>
             </div>

@@ -109,25 +109,21 @@
           </span>
 
           <% if f.object.slug.present? %>
-            <%= link_to registration_ticket_path(f.object.slug),
+            <%= new_tab_link registration_ticket_path(f.object.slug),
                         class: "group inline-flex items-center gap-1.5 font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
-                        target: "_blank",
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-ticket"></i>
               View ticket
-              <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem] text-gray-400"></i>
             <% end %>
           <% end %>
 
           <% submissions.each_with_index do |(form_name, ts), i| %>
-            <%= link_to event_public_registration_path(f.object.event, **form_show_params),
+            <%= new_tab_link event_public_registration_path(f.object.event, **form_show_params),
                         class: "group inline-flex items-center gap-1.5 font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
-                        target: "_blank",
                         title: "#{form_name} — submitted #{ts.strftime('%b %-d, %Y')}",
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-file-lines"></i>
               View submission<%= " ##{i + 1}" if submissions.size > 1 %>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem] text-gray-400"></i>
             <% end %>
           <% end %>
         </div>
@@ -270,12 +266,8 @@
             <i class="fa-solid fa-comments"></i>
           </span>
           <h2 class="text-sm font-semibold text-gray-700">Registration comments</h2>
-          <%= link_to event_registration_comments_path(f.object),
-                      class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
-                      target: "_blank", rel: "noopener" do %>
-            View all
-            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
-          <% end %>
+          <%= new_tab_link "View all", event_registration_comments_path(f.object),
+                      class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline" %>
         </div>
 
         <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
