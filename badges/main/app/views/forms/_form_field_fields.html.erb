@@ -33,6 +33,8 @@
   <%= f.hidden_field :position, value: field.position %>
 
   <% if field.group_header? %>
+    <%# Section headers never collect an answer, so they're never required. %>
+    <%= f.hidden_field :required, value: false %>
     <div class="flex-1 min-w-0" data-controller="field-options">
       <div class="flex items-start gap-3">
         <div class="flex-1 min-w-0">
@@ -72,8 +74,9 @@
               {},
               class: "flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
               data: { answer_options_target: "type", action: "answer-options#typeChanged" } %>
-        <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0">
-          <%= f.check_box :required, class: "rounded border-gray-300 text-purple-600" %>
+        <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0" data-answer-options-target="requiredLabel">
+          <%= f.check_box :required, class: "rounded border-gray-300 text-purple-600",
+                data: { answer_options_target: "required" } %>
           Required
         </label>
         <label class="flex items-center gap-1 text-sm text-gray-600 shrink-0 ml-auto" title="Ask only the first time — hide if the person already answered it on any form, not just this event">

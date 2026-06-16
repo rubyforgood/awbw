@@ -27,6 +27,44 @@ RSpec.describe FormField do
       field = build(:form_field, form: create(:form), name: "A. " * 100)
       expect(field).to be_valid
     end
+
+    describe "required flag on display-only types" do
+      let(:form) { create(:form) }
+
+      %i[no_user_input group_header].each do |type|
+        it "rejects a required #{type} field" do
+          field = build(:form_field, form: form, answer_type: type, required: true)
+          expect(field).not_to be_valid
+          expect(field.errors[:required]).to be_present
+        end
+
+        it "allows a non-required #{type} field" do
+          field = build(:form_field, form: form, answer_type: type, required: false)
+          expect(field).to be_valid
+        end
+      end
+
+      it "still allows a required input field" do
+        field = build(:form_field, form: form, answer_type: :free_form_input_one_line, required: true)
+        expect(field).to be_valid
+      end
+    end
+  end
+
+  describe "#collects_input?" do
+    let(:form) { create(:form) }
+
+    %i[no_user_input group_header].each do |type|
+      it "is false for #{type}" do
+        expect(build(:form_field, form: form, answer_type: type).collects_input?).to be false
+      end
+    end
+
+    %i[free_form_input_one_line single_select_radio multi_select_checkbox].each do |type|
+      it "is true for #{type}" do
+        expect(build(:form_field, form: form, answer_type: type).collects_input?).to be true
+      end
+    end
   end
 
   describe 'enums' do
