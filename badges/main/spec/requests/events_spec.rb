@@ -94,6 +94,23 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /details" do
+    let(:event) { create(:event, :published, :publicly_visible) }
+
+    it "renders the details page when details are present" do
+      event.update!(event_details_label: "Art supplies", event_details: "<p>Bring scissors</p>")
+      get details_event_path(event)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Art supplies")
+      expect(response.body).to include("Bring scissors")
+    end
+
+    it "redirects to the event when details are blank" do
+      get details_event_path(event)
+      expect(response).to redirect_to(event_path(event))
+    end
+  end
+
   describe "GET /new" do
     context "as admin" do
       it "renders successfully" do
@@ -131,6 +148,13 @@ RSpec.describe "Events", type: :request do
       get edit_event_path(event)
       expect(response.body).not_to include("Preview scholarship form")
       expect(response.body).not_to include("Preview bulk payment page")
+    end
+
+    it "renders the 'Before you attend' toggle with the details fields" do
+      get edit_event_path(event)
+      expect(response.body).to include("Before you attend")
+      expect(response.body).to include("event[event_details_label]")
+      expect(response.body).to include("event[event_details]")
     end
   end
 

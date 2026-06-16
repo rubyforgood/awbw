@@ -58,6 +58,24 @@ RSpec.describe "Event registration show page", type: :system do
     end
   end
 
+  describe "before-you-attend call-out" do
+    it "links to the details page using the event's label when details are present" do
+      event.update!(event_details_label: "Art supplies", event_details: "<p>Bring scissors</p>")
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_link("Art supplies", href: details_event_path(event, reg: registration.slug))
+    end
+
+    it "is hidden when no details are set" do
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_no_link(href: details_event_path(event, reg: registration.slug))
+    end
+  end
+
   describe "view registration form link" do
     it "links to form show with slug param" do
       FormBuilderService.new(
@@ -70,7 +88,7 @@ RSpec.describe "Event registration show page", type: :system do
       sign_in(user)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_link("View registration details",
+      expect(page).to have_link("View your form responses",
         href: event_public_registration_path(event, reg: registration.slug))
     end
   end

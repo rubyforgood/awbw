@@ -94,6 +94,21 @@
         <% end %>
       <% end %>
 
+      <!-- Before you attend (materials / supplies / what to bring) -->
+      <% if event_registration.event.event_details.present? %>
+        <%= link_to details_event_path(event_registration.event, reg: event_registration.slug),
+                      class: "flex items-center gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 hover:bg-amber-100 transition-colors" do %>
+          <i class="fa-solid fa-circle-info text-amber-500 text-xl shrink-0"></i>
+
+          <div class="flex-1 min-w-0 text-left">
+            <p class="font-semibold text-amber-900"><%= event_registration.event.event_details_label %></p>
+            <p class="text-sm text-amber-700">Important info for this event — please read</p>
+          </div>
+
+          <i class="fa-solid fa-arrow-right text-amber-500 shrink-0"></i>
+        <% end %>
+      <% end %>
+
       <!-- Divider -->
       <div class="border-t border-gray-200"></div>
 
@@ -118,7 +133,7 @@
           <% registration_form = event_registration.event.registration_form %>
 
           <% if registration_form && registration_form.form_submissions.exists?(person: event_registration.registrant) %>
-            <%= link_to "View registration details",
+            <%= link_to "View your form responses",
                           event_public_registration_path(event_registration.event, reg: event_registration.slug),
                           class: "text-sm text-gray-500 hover:text-blue-600 underline" %>
           <% end %>
