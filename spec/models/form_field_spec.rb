@@ -348,6 +348,17 @@ RSpec.describe FormField do
       expect(field.answer_inclusion_error("Other: chartreuse")).to be_nil
     end
 
+    it "accepts a named specify option's free-text answer when the field offers it" do
+      field = selectable_field(type: :single_select_radio, option_names: [ "Online Search", "Word of Mouth" ])
+      expect(field.answer_inclusion_error("Word of Mouth")).to be_nil
+      expect(field.answer_inclusion_error("Word of Mouth: Jane Doe")).to be_nil
+    end
+
+    it "rejects a specify free-text answer for an option the field does not offer" do
+      field = selectable_field(type: :single_select_radio, option_names: [ "Online Search", "Word of Mouth" ])
+      expect(field.answer_inclusion_error("Foundation/Funder: ACME")).to eq("has an invalid selection")
+    end
+
     it "rejects an Other answer when the field does not offer Other" do
       field = selectable_field(type: :single_select_radio, option_names: %w[Red Blue])
       expect(field.answer_inclusion_error("Other: chartreuse")).to eq("has an invalid selection")

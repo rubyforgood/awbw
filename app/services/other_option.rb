@@ -1,7 +1,7 @@
 # Extracts free-text "Other" answers out of a stored form answer.
 #
 # When a registrant picks the "Other" option on a form question, their answer is
-# folded into "Other: <text>" (see the other-option Stimulus controller). On the
+# folded into "Other: <text>" (see the specify-option Stimulus controller). On the
 # sector/category-backed questions the chosen ids are joined with the free text,
 # e.g. "5, 12, Other: Equine therapy". Those free-text values can't be Sector or
 # Category records, so they never become tags — this pulls them out so they can
