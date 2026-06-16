@@ -177,8 +177,7 @@ module ApplicationHelper
     when *FormField::SERVICE_AREA_FIELD_IDENTIFIERS
       field.service_area_sectors.map { |sector| [ sector.name, sector.id.to_s ] }
     when *FormField::DYNAMIC_FIELD_CATEGORY_TYPES.keys
-      type = CategoryType.find_by(name: FormField::DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
-      (type&.categories&.published&.order(:position, :name) || []).map { |category| [ category.name, category.id.to_s, category.description ] }
+      field.dynamic_categories.map { |category| [ category.name, category.id.to_s, category.description ] }
     end
   end
 
