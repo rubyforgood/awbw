@@ -674,6 +674,15 @@ record_professional_answers = ->(submission, i) do
   end
   # Service area chart reads SectorableItem tags, mirroring assign_tags.
   sectors.each { |sector| SectorableItem.find_or_create_by!(sector: sector, sectorable: person) }
+  # Make the first submitted service area the person's single primary sector, so the
+  # recipients page + profile crown a primary that matches what they selected on the
+  # registration form. Demote any other primary first to keep exactly one (a person
+  # registered for several events is enriched once per event). Idempotent.
+  primary_sector = sectors.first
+  if primary_sector
+    person.sectorable_items.where(is_primary: true).where.not(sector: primary_sector).update_all(is_primary: false)
+    person.sectorable_items.find_by(sector: primary_sector)&.update!(is_primary: true)
+  end
 end
 
 # Give the flagship cohort registration submissions so its Background charts have
