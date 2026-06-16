@@ -95,7 +95,7 @@
       <% end %>
 
       <!-- Before you attend (materials / supplies / what to bring) -->
-      <% if event_registration.event.rhino_event_details.present? %>
+      <% if event_registration.event.event_details.present? %>
         <%= link_to details_event_path(event_registration.event, reg: event_registration.slug),
                       class: "flex items-center gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 hover:bg-amber-100 transition-colors" do %>
           <i class="fa-solid fa-circle-info text-amber-500 text-xl shrink-0"></i>

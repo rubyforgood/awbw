@@ -98,7 +98,7 @@ RSpec.describe "Events", type: :request do
     let(:event) { create(:event, :published, :publicly_visible) }
 
     it "renders the details page when details are present" do
-      event.update!(event_details_label: "Art supplies", rhino_event_details: "<p>Bring scissors</p>")
+      event.update!(event_details_label: "Art supplies", event_details: "<p>Bring scissors</p>")
       get details_event_path(event)
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Art supplies")

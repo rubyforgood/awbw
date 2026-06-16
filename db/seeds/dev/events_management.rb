@@ -226,9 +226,8 @@ Event.find_by(title: "AWBW Facilitator Training")&.update!(
 # A custom label demonstrates that the heading is admin-editable. Only set when
 # blank so admin edits survive a re-seed.
 flagship = Event.find_by(title: "AWBW Facilitator Training")
-if flagship && flagship.rhino_event_details.blank?
-  flagship.update!(event_details_label: "Art supplies & what to bring")
-  flagship.rhino_event_details = <<~HTML.strip
+if flagship && flagship.event_details.blank?
+  flagship.update!(event_details_label: "Art supplies & what to bring", event_details: <<~HTML.strip)
     <p>We will be facilitating five hands-on art workshops, all of which can be done with paper, writing utensils (crayons, colored pencils, markers, etc.) and scissors.</p>
     <ul>
       <li>You'll receive printable workshop worksheets once your training fees are paid — printing them is optional.</li>
@@ -275,7 +274,6 @@ if flagship && flagship.rhino_event_details.blank?
       <li>Collage materials</li>
     </ul>
   HTML
-  flagship.save!
 end
 
 puts "Creating Event Registrations…"

@@ -410,9 +410,13 @@
         </div>
 
         <div class="form-group mt-6">
-          <%= rhino_editor(f, :event_details,
-                label: "Details content",
-                hint: "Materials, supplies, what to bring, and policies — shown on its own page linked prominently from the ticket. Leave blank to hide it entirely.") %>
+          <%= f.label :event_details, "Details content", class: "block font-medium mb-1 text-gray-700" %>
+          <p class="text-xs text-gray-500 mb-1">
+            Materials, supplies, what to bring, and policies — shown on its own page linked prominently from the ticket. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.
+          </p>
+          <%= f.text_area :event_details, rows: 8,
+                placeholder: "e.g. <h3>Workshop 1</h3><ul><li>Clear glass stones</li></ul>",
+                class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono" %>
         </div>
       </div>
     </div>

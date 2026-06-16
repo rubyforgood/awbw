@@ -96,7 +96,7 @@ class EventsController < ApplicationController
   def details
     authorize! @event, to: :details?
 
-    if @event.rhino_event_details.blank?
+    if @event.event_details.blank?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
     end

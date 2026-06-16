@@ -9,10 +9,6 @@ class Event < ApplicationRecord
 
   has_rich_text :rhino_header
   has_rich_text :rhino_description
-  # Free-form "Before you attend" content (materials, supplies, what to bring,
-  # policies) shown on its own ticket-linked page so registrants stop missing the
-  # details that used to live in a long confirmation email.
-  has_rich_text :rhino_event_details
 
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :location, optional: true

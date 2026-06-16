@@ -495,6 +495,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_120000) do
     t.integer "created_by_id"
     t.text "description"
     t.datetime "end_date", precision: nil
+    t.text "event_details"
     t.string "event_details_label", default: "Before you attend", null: false
     t.boolean "featured", default: false, null: false
     t.text "ga4_snippet"

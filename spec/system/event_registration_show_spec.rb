@@ -60,7 +60,7 @@ RSpec.describe "Event registration show page", type: :system do
 
   describe "before-you-attend call-out" do
     it "links to the details page using the event's label when details are present" do
-      event.update!(event_details_label: "Art supplies", rhino_event_details: "<p>Bring scissors</p>")
+      event.update!(event_details_label: "Art supplies", event_details: "<p>Bring scissors</p>")
 
       sign_in(user)
       visit registration_ticket_path(registration.slug)

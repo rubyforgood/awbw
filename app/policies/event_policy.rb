@@ -106,7 +106,7 @@ class EventPolicy < ApplicationPolicy
                   :videoconference_label,
                   :rhino_header,
                   :rhino_description,
-                  :rhino_event_details,
+                  :event_details,
                   :event_details_label,
                   :autoshow_cost,
                   :autoshow_date,
