@@ -227,6 +227,19 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("The \"Other\" option is hidden on dropdown fields")
     end
 
+    it "warns when a dynamic (category-backed) dropdown sources an Other option" do
+      category_type = create(:category_type, name: "StoryPopulation")
+      create(:category, :published, category_type: category_type, name: "Veterans")
+      create(:category, :published, category_type: category_type, name: "Other")
+      form = create(:form, :standalone)
+      create(:form_field, form: form, answer_type: :single_select_dropdown,
+             field_identifier: "client_life_experiences", name: "Populations")
+
+      get edit_form_path(form)
+
+      expect(response.body).to include("The \"Other\" option is hidden on dropdown fields")
+    end
+
     it "does not warn about Other on a dropdown field without an Other option" do
       form = create(:form, :standalone)
       field = create(:form_field, form: form, answer_type: :single_select_dropdown, name: "Favorite color")

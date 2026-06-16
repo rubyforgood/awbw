@@ -1,6 +1,7 @@
 <%# Dropdowns can't collect free text, so the public form strips the "Other" option.
-    Warn the author whenever a dropdown still carries an "Other" option. %>
-<% if field.answer_type == "single_select_dropdown" && field.other_option? %>
+    Warn the author whenever a dropdown still carries an "Other" option —
+    including dynamic dropdowns sourced from sectors/categories. %>
+<% if dropdown_hides_other?(field) %>
   <p class="mt-1.5 flex items-start gap-1.5 text-xs text-amber-700">
     <i class="fa-solid fa-triangle-exclamation mt-0.5 text-amber-500"></i>
     <span>The "Other" option is hidden on dropdown fields because dropdowns can't collect free text. Switch to radio buttons or checkboxes to offer "Other".</span>
