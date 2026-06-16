@@ -3,7 +3,7 @@ class FormSubmission < ApplicationRecord
   belongs_to :form
   belongs_to :event, optional: true
   has_many :form_answers, dependent: :destroy
-  has_many :payments
+  has_one :payment
 
   accepts_nested_attributes_for :form_answers
 

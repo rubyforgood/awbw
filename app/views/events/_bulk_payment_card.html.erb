@@ -1,6 +1,6 @@
 <%
   submission = submission.decorate
-  payment = submission.payments.first
+  payment = submission.payment
   payment_method = submission.answers_by_identifier["payment_method"]
   content_id = "payment-details-#{submission.id}"
   arrow_id = "payment-arrow-#{submission.id}"

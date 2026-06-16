@@ -128,7 +128,7 @@ class EventsController < ApplicationController
     @event_registrations = @event.event_registrations.active.includes(:registrant)
     @submissions = @event.form_submissions
                          .where(role: "bulk_payment")
-                         .includes(:person, form_answers: :form_field, payments: :allocations)
+                         .includes(:person, form_answers: :form_field, payment: :allocations)
                          .order(created_at: :desc)
     @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
   end
@@ -202,7 +202,7 @@ class EventsController < ApplicationController
       payer_type = "Person"
     end
 
-    payment = submission.payments.new(
+    payment = submission.build_payment(
       person_id: person_id,
       organization_id: organization_id,
       payer_type: payer_type,

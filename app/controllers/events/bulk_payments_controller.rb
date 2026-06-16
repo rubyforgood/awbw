@@ -60,7 +60,7 @@ module Events
       authorize! :bulk_payment, to: :show?
 
       @submission = FormSubmission.find(params[:submission_id])
-      @payment = @submission.payments.first
+      @payment = @submission.payment
       @event = @event.decorate
     end
 
