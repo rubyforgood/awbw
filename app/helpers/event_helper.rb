@@ -113,6 +113,14 @@ module EventHelper
     end
   end
 
+  # The question label to show next to a stored answer: the wording captured at
+  # submission time (so editing a question later doesn't rewrite history), falling
+  # back to the field's current name when there's no answer on file — e.g. a
+  # question added after this person submitted.
+  def display_question_label(field, response)
+    response&.question_name_when_answered.presence || field&.name
+  end
+
   def display_response_text(field, response)
     text = resolve_answer_text(field, response&.submitted_answer)
     return tag.span("—", class: "text-gray-400") if text.blank?
