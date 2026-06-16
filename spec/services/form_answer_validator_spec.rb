@@ -122,7 +122,7 @@ RSpec.describe FormAnswerValidator do
 
   describe "skipping" do
     it "ignores group header fields entirely" do
-      header = create(:form_field, form: form, answer_type: :group_header, required: true)
+      header = create(:form_field, form: form, answer_type: :group_header)
 
       expect(validate(header, "")).to eq({})
     end

@@ -11,6 +11,10 @@ class FormField < ApplicationRecord
   # Answer types that collect free-form text, where a minimum word count applies
   FREE_FORM_TEXT_TYPES = %w[free_form_input_one_line free_form_input_paragraph].freeze
 
+  # Answer types that display text only and never collect a response — so a
+  # "required" flag is meaningless for them (nothing to fill in).
+  NON_INPUT_ANSWER_TYPES = %w[no_user_input group_header].freeze
+
   # Field identifiers whose selectable options are sourced dynamically from
   # Sector records rather than the field's own stored answer options. The
   # submitted value for these is a Sector id (as a string).
@@ -52,6 +56,7 @@ class FormField < ApplicationRecord
   validates :min_words, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :max_characters, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :max_characters_allows_min_words
+  validate :non_input_types_cannot_be_required
 
   # Enum
   enum :status, [ :inactive, :active ]
@@ -144,6 +149,12 @@ class FormField < ApplicationRecord
     FREE_FORM_TEXT_TYPES.include?(answer_type)
   end
 
+  # False for display-only types (informational text, section headers) that
+  # never collect an answer; true for every field a respondent fills in.
+  def collects_input?
+    NON_INPUT_ANSWER_TYPES.exclude?(answer_type)
+  end
+
   # Field identifiers (system-assigned by FormBuilderService) that collect an
   # email address, so a submitted value should be format-checked. The "*_type"
   # selector fields are deliberately excluded — this is an exact allowlist, not
@@ -182,6 +193,15 @@ class FormField < ApplicationRecord
     return if max_characters >= required
 
     errors.add(:max_characters, "is too low for a #{min_words}-word minimum (allow at least #{required})")
+  end
+
+  # Display-only fields (informational text, section headers) have nothing to
+  # fill in, so they can't be marked required.
+  def non_input_types_cannot_be_required
+    return if collects_input?
+    return unless required?
+
+    errors.add(:required, "is not available for #{answer_type_label.downcase} fields")
   end
 
   # The character ceiling actually enforced for this field: the explicit
