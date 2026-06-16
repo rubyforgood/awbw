@@ -369,6 +369,15 @@ RSpec.describe FormField do
         expect(field.answer_inclusion_error("999999")).to eq("has an invalid selection")
       end
 
+      it "rejects the Other sector for the primary service-area field but accepts it for additional" do
+        other = create(:sector, :published, name: "Other")
+        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
+        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+
+        expect(primary.answer_inclusion_error(other.id.to_s)).to eq("has an invalid selection")
+        expect(additional.answer_inclusion_error([ other.id.to_s ])).to be_nil
+      end
+
       it "accepts a published Category id from the backing type for a category field" do
         type = create(:category_type, name: "WorkshopEnvironment")
         offered = create(:category, :published, category_type: type)
