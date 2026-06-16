@@ -400,8 +400,27 @@
         <div class="form-group mt-12">
           <%= rhino_editor(f, :description, label: "Description") %>
         </div>
+      </div>
+    </div>
 
-        <div class="form-group mt-12">
+    <%# ---- BEFORE YOU ATTEND (ticket call-out + details page) ---- %>
+    <div class="ticket-details-section" data-controller="dropdown">
+      <button
+        type="button"
+        id="ticket_details_button"
+        class="
+          flex items-center justify-between cursor-pointer w-full
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"ticket_details":"hidden"}, {"ticket_details_arrow":"rotate-180"}, {"ticket_details_button":"rounded-md rounded-t-md"}]'>
+        Before you attend
+        <i id="ticket_details_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+      </button>
+
+      <div id="ticket_details" class="hidden border border-gray-300 p-4 rounded-b-md">
+        <p class="text-sm text-gray-500 mb-4">Extra info shown on the registration ticket as a prominent call-out linking to its own details page — for materials, supplies, what to bring, and policies (the kind of thing that used to live in a long confirmation email).</p>
+
+        <div class="form-group">
           <%= f.label :event_details_label, "Details section label", class: "block font-medium mb-1 text-gray-700" %>
           <%= f.text_field :event_details_label,
                        placeholder: "Before you attend",

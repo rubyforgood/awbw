@@ -149,6 +149,13 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("Preview scholarship form")
       expect(response.body).not_to include("Preview bulk payment page")
     end
+
+    it "renders the 'Before you attend' toggle with the details fields" do
+      get edit_event_path(event)
+      expect(response.body).to include("Before you attend")
+      expect(response.body).to include("event[event_details_label]")
+      expect(response.body).to include("event[event_details]")
+    end
   end
 
   describe "POST /create" do
