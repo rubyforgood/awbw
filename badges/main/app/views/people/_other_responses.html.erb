@@ -1,0 +1,13 @@
+<%# Read-only chips for free-text "Other" answers pulled from registration form
+    responses. These aren't Sector/Category records, so they're shown for
+    reference rather than as editable tags. Renders bare chips — the caller
+    supplies the surrounding flex container so they sit at the end of the
+    relevant section (sectors box, workshop-settings card, etc.). %>
+<% responses ||= [] %>
+<% responses.each do |text| %>
+  <span class="inline-flex items-center rounded-md border border-gray-300 bg-white text-gray-600 px-3 py-1 text-sm font-medium"
+        title="Other response entered during registration">
+    <%= text %>
+    <span class="ml-1 text-xs text-gray-400">(other)</span>
+  </span>
+<% end %>

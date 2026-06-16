@@ -383,4 +383,53 @@ RSpec.describe Person, type: :model do
       expect(Person.published).not_to include(not_searchable_with_active)
     end
   end
+
+  describe "Other form responses" do
+    let(:person) { create(:person) }
+    let(:form) { create(:form) }
+    let(:submission) { create(:form_submission, person: person, form: form) }
+
+    def answer(identifier, value)
+      field = create(:form_field, form: form, field_identifier: identifier)
+      create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+    end
+
+    describe "#other_service_area_responses" do
+      it "returns free-text Other values from primary service area fields" do
+        answer("primary_service_area", "5, Other: Equine therapy")
+        answer("primary_service_area_single", "Other: Music therapy")
+
+        expect(person.other_service_area_responses).to contain_exactly("Equine therapy", "Music therapy")
+      end
+
+      it "ignores answers without an Other value" do
+        answer("primary_service_area", "5, 12")
+
+        expect(person.other_service_area_responses).to be_empty
+      end
+
+      it "does not pull from unrelated fields" do
+        answer("workshop_environments", "Other: School")
+
+        expect(person.other_service_area_responses).to be_empty
+      end
+    end
+
+    describe "#other_workshop_setting_responses" do
+      it "returns free-text Other values from the category-backed fields" do
+        answer("workshop_environments", "3, Other: Equine center")
+        answer("client_life_experiences", "Other: Refugees")
+        answer("primary_age_group", "Other: Toddlers")
+
+        expect(person.other_workshop_setting_responses)
+          .to contain_exactly("Equine center", "Refugees", "Toddlers")
+      end
+
+      it "does not pull from the service area fields" do
+        answer("primary_service_area", "Other: Equine therapy")
+
+        expect(person.other_workshop_setting_responses).to be_empty
+      end
+    end
+  end
 end

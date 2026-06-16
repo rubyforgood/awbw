@@ -130,6 +130,7 @@
                                       .reject { |_, id| (@current_sector_ids || []).include?(id) },
                                               show_admin_flags: true } },
                                   class: "btn btn-secondary-outline" %>
+      <%= render "people/other_responses", responses: @person.other_service_area_responses %>
     </div>
   </div>
 
@@ -154,6 +155,12 @@
               </label>
             <% end %>
           </div>
+        </div>
+      <% end %>
+      <% workshop_other = @person.other_workshop_setting_responses %>
+      <% if workshop_other.any? %>
+        <div class="flex flex-wrap gap-2">
+          <%= render "people/other_responses", responses: workshop_other %>
         </div>
       <% end %>
     </div>
