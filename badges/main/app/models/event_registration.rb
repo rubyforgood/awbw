@@ -209,8 +209,12 @@ class EventRegistration < ApplicationRecord
     !paid_in_full? && payments_sum.to_i.positive?
   end
 
+  def discounted?
+    allocations.where(source_type: "Discount").exists?
+  end
+
   def joinable?
-    active? && paid?
+    active? && paid? && event.videoconference_window_open?
   end
 
   def attendance_status_label

@@ -764,3 +764,127 @@ school_district_names = [ "Los Angeles Unified", "Garden Grove Unified", "Compto
     address.update!(district: school_district_names[(i / 2) % school_district_names.size])
   end
 end
+
+puts "Creating organization-link demo registrants on the flagship training…"
+# Exercises every state of the registrants Organization column and the Link
+# Organization editor: linked org(s), the amber "Pending" chip (the registrant
+# typed an agency name that is not linked to an org), and the grey "None" chip
+# (nothing submitted). Deterministic, clearly-named people so each state is easy
+# to spot in the browser at the flagship event's registrants page. Runs last so
+# the earlier affiliation backfill / form-fill passes leave these registrants
+# exactly as configured here.
+if facilitator_training && registration_form
+  # "Pending" only exists when the form has the Agency / Organization Name field,
+  # which lives in the person_contact_info section the dev form otherwise omits.
+  unless registration_form.form_fields.exists?(field_identifier: "agency_name")
+    FormBuilderService.update_sections!(
+      registration_form,
+      (registration_form.sections || []).map(&:to_sym) | [ :person_contact_info ]
+    )
+  end
+  agency_field = registration_form.form_fields.find_by(field_identifier: "agency_name")
+
+  # Real, existing orgs to link against / match on (skip the AWBW house org).
+  demo_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
+  matched_org = demo_orgs.first
+
+  link_org = ->(registration, organization) do
+    Affiliation.find_or_create_by!(person: registration.registrant, organization: organization) do |aff|
+      aff.title = "Facilitator"
+      aff.start_date = Date.current
+    end
+    registration.event_registration_organizations.find_or_create_by!(organization: organization)
+  end
+
+  submit_agency_name = ->(registration, value) do
+    submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form)
+    if agency_field
+      answer = submission.form_answers.find_or_initialize_by(form_field: agency_field)
+      answer.update!(submitted_answer: value.to_s, question_name_when_answered: agency_field.name)
+    end
+  end
+
+  # Recreate from scratch each run so re-seeding refreshes labels and link state.
+  Person.where("email LIKE ? OR email LIKE ?",
+    "orgchip.demo.%@seed.example.com", "affdemo.%@seed.example.com").find_each(&:destroy)
+
+  # Each scenario => one registrant. :orgs link real orgs (→ chip shows links);
+  # :agency stores a submitted name. A typed name matching an existing org is linked
+  # (as registration does), so "Pending" only shows for names not among the linked
+  # orgs — on its own (case 3) or alongside linked orgs (case 5). "None" = nothing typed.
+  # Case 8 is the stale edge case: a typed name that matches an existing org but was
+  # never linked (e.g. the org was created after the person registered) — it reads as
+  # "Pending", and the editor offers that org as a one-click match to select.
+  scenarios = [
+    { last: "1 Linked one org",       orgs: demo_orgs.first(1) },
+    { last: "2 Linked three orgs",    orgs: demo_orgs.first(3) },
+    { last: "3 Pending no match",     agency: "Riverside Healing Arts Collective" },
+    { last: "4 Matched name auto-linked", orgs: demo_orgs.first(1), agency: matched_org&.name },
+    { last: "5 Mixed linked + pending", orgs: demo_orgs.first(1), agency: "Westview Community Healing" },
+    { last: "6 None blank typed",     agency: "" },
+    { last: "7 None nothing typed" },
+    { last: "8 Pending matches existing org", agency: matched_org&.name }
+  ]
+
+  scenarios.each_with_index do |scenario, i|
+    person = Person.create!(
+      email: "orgchip.demo.#{i + 1}@seed.example.com",
+      first_name: "Org Demo",
+      last_name: scenario[:last]
+    )
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) do |reg|
+      reg.status = "registered"
+    end
+
+    Array(scenario[:orgs]).each { |org| link_org.call(registration, org) }
+    submit_agency_name.call(registration, scenario[:agency]) if scenario.key?(:agency)
+  end
+
+  # --- Affiliation-status demo: two affiliations per org (a real job title plus the
+  # Facilitator role that gates AWBW-active), plus the position typed on the form, so
+  # the org-link editor's affiliation pills can be seen across their states. ---
+  position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
+  submit_field = ->(registration, field, value) do
+    if field
+      submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form)
+      answer = submission.form_answers.find_or_initialize_by(form_field: field)
+      answer.update!(submitted_answer: value.to_s, question_name_when_answered: field.name)
+    end
+  end
+  add_affiliation = ->(person, organization, title:, end_date: nil) do
+    Affiliation.find_or_create_by!(person: person, organization: organization, title: title) do |aff|
+      aff.start_date = Date.current - 1.year
+      aff.end_date = end_date
+    end
+  end
+
+  aff_org = demo_orgs.first
+  other_org = demo_orgs[1] || demo_orgs.first
+
+  aff_scenarios = [
+    { last: "A1 Title matches form",      job: "Counselor", position: "Counselor", facilitator_end: nil },
+    { last: "A2 Title differs from form", job: "Counselor", position: "Director",  facilitator_end: nil },
+    { last: "A3 Facilitator inactive",    job: "Counselor", position: "Counselor", facilitator_end: Date.current - 1.month }
+  ]
+
+  aff_scenarios.each_with_index do |scenario, i|
+    next unless aff_org
+    person = Person.create!(email: "affdemo.#{i + 1}@seed.example.com", first_name: "Demo Affiliation", last_name: scenario[:last])
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    registration.event_registration_organizations.find_or_create_by!(organization: aff_org)
+    add_affiliation.call(person, aff_org, title: scenario[:job])
+    add_affiliation.call(person, aff_org, title: "Facilitator", end_date: scenario[:facilitator_end])
+    submit_field.call(registration, agency_field, aff_org.name)
+    submit_field.call(registration, position_field, scenario[:position])
+  end
+
+  # An affiliation to an org NOT linked to the registration → shows under the
+  # registrant's "other affiliations" section.
+  if aff_org && other_org
+    person = Person.create!(email: "affdemo.4@seed.example.com", first_name: "Demo Affiliation", last_name: "A4 Other affiliation")
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    registration.event_registration_organizations.find_or_create_by!(organization: aff_org)
+    add_affiliation.call(person, aff_org, title: "Facilitator")
+    add_affiliation.call(person, other_org, title: "Board Member")
+  end
+end

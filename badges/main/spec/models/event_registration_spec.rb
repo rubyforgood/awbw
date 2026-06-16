@@ -219,7 +219,7 @@ RSpec.describe EventRegistration, type: :model do
   end
 
   describe "#joinable?" do
-    let(:event) { create(:event, cost_cents: 1099) }
+    let(:event) { create(:event, cost_cents: 1099, start_date: 1.hour.ago, end_date: 1.hour.from_now) }
     let(:user) { create(:user, :with_person) }
 
     it "returns true for active, paid, non-scholarship registration" do
@@ -256,9 +256,21 @@ RSpec.describe EventRegistration, type: :model do
     end
 
     it "returns true for free event with active registration" do
-      free_event = create(:event, cost_cents: 0)
+      free_event = create(:event, cost_cents: 0, start_date: 1.hour.ago, end_date: 1.hour.from_now)
       reg = create(:event_registration, event: free_event, registrant: user.person)
       expect(reg).to be_joinable
+    end
+
+    it "returns false when the event has not entered the join window yet" do
+      upcoming = create(:event, cost_cents: 0, start_date: 31.minutes.from_now, end_date: 2.hours.from_now)
+      reg = create(:event_registration, event: upcoming, registrant: user.person)
+      expect(reg).not_to be_joinable
+    end
+
+    it "returns false once the event's join window has closed" do
+      finished = create(:event, cost_cents: 0, start_date: 2.hours.ago, end_date: 31.minutes.ago)
+      reg = create(:event_registration, event: finished, registrant: user.person)
+      expect(reg).not_to be_joinable
     end
 
     it "returns true for partial scholarship + partial payment covering full cost" do
@@ -346,6 +358,25 @@ RSpec.describe EventRegistration, type: :model do
       free_event = create(:event, cost_cents: 0)
       reg = create(:event_registration, event: free_event, registrant: user.person)
       expect(reg).not_to be_partially_paid
+    end
+  end
+
+  describe "#discounted?" do
+    let(:event) { create(:event, cost_cents: 1000) }
+    let(:user) { create(:user, :with_person) }
+
+    it "returns true when a discount allocation exists" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      discount = Discount.create!(amount_cents: 400)
+      create(:allocation, source: discount, allocatable: reg, amount: 400)
+      expect(reg).to be_discounted
+    end
+
+    it "returns false when only a payment covers part of the cost" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      payment = create(:payment, person: user.person, amount_cents: 400, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 400)
+      expect(reg).not_to be_discounted
     end
   end
 

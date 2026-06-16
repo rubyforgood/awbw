@@ -147,12 +147,29 @@ class EventRegistrationsController < ApplicationController
   end
 
   def link_organization
-    @event_registration = EventRegistration.includes(:event, registrant: :form_submissions).find(params[:id])
+    @event_registration = EventRegistration.includes(:event, :organizations, registrant: :form_submissions).find(params[:id])
     authorize! @event_registration, to: :link_organization?
     @person = @event_registration.registrant
+    @linked_organizations = @event_registration.organizations.order(:name)
+    # The registrant's global affiliations, keyed by org, so the editor can show
+    # whether each linked org is also an active/inactive affiliation (removing a
+    # link here leaves the affiliation untouched).
+    @affiliations_by_org = @person.affiliations.group_by(&:organization_id)
     @submitted_org_name = find_submitted_agency_name(@event_registration)
+    # Whether an org with the submitted name already exists — if so, there's
+    # nothing to create (the admin links the existing one), so the "Create org
+    # & link" button is hidden.
+    @submitted_org_exists = @submitted_org_name.present? &&
+      Organization.where("LOWER(name) = ?", @submitted_org_name.strip.downcase).exists?
+    # The job title/position the registrant typed on the form, to compare against
+    # the title on any existing affiliation for a linked org.
+    @submitted_position = find_submitted_answer(@event_registration, "agency_position")
+    # The registrant's submission of the event's registration form, so we can link
+    # out to the public-facing form view.
+    reg_form = @event_registration.event.registration_form
+    @form_submission = reg_form && @person.form_submissions.find_by(form: reg_form)
     @potential_matches = if @submitted_org_name.present?
-      Organization.remote_search(@submitted_org_name).limit(10)
+      Organization.remote_search(@submitted_org_name).where.not(id: @linked_organizations.ids).limit(10)
     else
       Organization.none
     end
@@ -169,7 +186,41 @@ class EventRegistrationsController < ApplicationController
     @event_registration.event_registration_organizations
       .find_or_create_by!(organization: organization)
 
-    redirect_to registrants_event_path(@event_registration.event), notice: "Organization linked successfully."
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} linked."
+  end
+
+  def create_organization
+    @event_registration = EventRegistration.find(params[:id])
+    authorize! @event_registration, to: :create_organization?
+    @person = @event_registration.registrant
+    # Build the org from the name the registrant typed on the form, so the button
+    # can't be used to create an arbitrary org — it only resolves the pending name.
+    name = find_submitted_agency_name(@event_registration)
+    if name.blank?
+      redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), alert: "No submitted organization name to create from."
+      return
+    end
+
+    # Reuse an existing org with that name rather than creating a duplicate.
+    existing = Organization.where("LOWER(name) = ?", name.strip.downcase).first
+    organization = existing || Organization.create!(name: name.strip, organization_status: OrganizationStatus.find_by(name: "Active"))
+
+    Affiliation.find_or_create_by!(person: @person, organization: organization)
+    @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
+
+    notice = existing ? "#{organization.name} linked." : "#{organization.name} created and linked."
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: notice
+  end
+
+  def unlink_organization
+    @event_registration = EventRegistration.find(params[:id])
+    authorize! @event_registration, to: :unlink_organization?
+    organization = Organization.find(params[:organization_id])
+
+    # Removes only the registration-scoped link; the person's global affiliation is left intact.
+    @event_registration.event_registration_organizations.where(organization_id: organization.id).destroy_all
+
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} removed from this registration."
   end
 
   def destroy
@@ -243,7 +294,7 @@ class EventRegistrationsController < ApplicationController
           er.attendance_status_label,
           er.scholarships.any? ? "Yes" : "No",
           er.scholarships.completed.any? ? "Yes" : "No",
-          cost_required ? (er.paid_in_full? ? "Paid in full" : "Not paid in full") : "",
+          cost_required ? (er.paid_in_full? ? "Paid" : "Due") : "",
           total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
         ]
       end
@@ -251,10 +302,14 @@ class EventRegistrationsController < ApplicationController
   end
 
   def find_submitted_agency_name(registration)
+    find_submitted_answer(registration, "agency_name")
+  end
+
+  def find_submitted_answer(registration, field_identifier)
     form = registration.event.registration_form
     return nil unless form
 
-    field = form.form_fields.find_by(field_identifier: "agency_name")
+    field = form.form_fields.find_by(field_identifier: field_identifier)
     return nil unless field
 
     FormAnswer

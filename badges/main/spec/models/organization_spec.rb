@@ -29,6 +29,23 @@ RSpec.describe Organization do
     # expect(build(:organization)).to be_valid
   end
 
+  describe "#city_state" do
+    it "joins locality and state with a comma" do
+      org = create(:organization)
+      org.addresses.destroy_all
+      create(:address, addressable: org, locality: "Los Angeles", state: "CA")
+
+      expect(org.reload.city_state).to eq("Los Angeles, CA")
+    end
+
+    it "omits the comma when there is no locality or state" do
+      org = create(:organization)
+      org.addresses.destroy_all
+
+      expect(org.reload.city_state).to eq("")
+    end
+  end
+
   describe '#facilitator_status' do
     let(:organization) { create(:organization) }
     let(:current) do

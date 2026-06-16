@@ -435,6 +435,66 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "organization column" do
+      let(:organization) { create(:organization, name: "Helping Hands") }
+
+      # Stores a submitted "agency_name" answer for the registrant, mirroring what
+      # public registration captures, so the Pending/None chip logic has data.
+      def submit_agency_name(name)
+        registration_form = Form.find_by(name: "Registration") || create(:form, name: "Registration")
+        field = registration_form.form_fields.find_by(field_identifier: "agency_name") ||
+          create(:form_field, form: registration_form, field_identifier: "agency_name")
+        create(:event_form, :registration, event: event, form: registration_form) unless event.registration_form
+        submission = create(:form_submission, person: person, form: registration_form)
+        create(:form_answer, form_submission: submission, form_field: field, submitted_answer: name)
+      end
+
+      it "links a linked organization to the edit page rather than its profile" do
+        create(:event_registration_organization, event_registration: registration, organization: organization)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(link_organization_event_registration_path(registration, return_to: "registrants"))
+        expect(response.body).not_to include(organization_path(organization))
+      end
+
+      it "shows a 'Pending' chip when a registrant submitted an org name but has no linked org" do
+        submit_agency_name("Some Unlisted Org")
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(">Pending<")
+        expect(response.body).not_to include(">None<")
+      end
+
+      it "shows a 'None' chip when a registrant has no linked org and submitted nothing" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include(">None<")
+        expect(response.body).not_to include(">Pending<")
+      end
+
+      it "shows the linked org AND a 'Pending' chip when the submitted name is not among the linked orgs" do
+        create(:event_registration_organization, event_registration: registration, organization: organization)
+        submit_agency_name("A Different Unlisted Agency")
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(organization.name)
+        expect(response.body).to include(">Pending<")
+      end
+
+      it "does not show 'Pending' when the submitted name matches a linked org" do
+        create(:event_registration_organization, event_registration: registration, organization: organization)
+        submit_agency_name(organization.name)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(organization.name)
+        expect(response.body).not_to include(">Pending<")
+      end
+    end
+
     context "event heading" do
       it "shows the event title and date range after the heading" do
         event.update!(start_date: Time.zone.local(2026, 6, 2, 9), end_date: Time.zone.local(2026, 6, 2, 17))
@@ -518,7 +578,8 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include("fa-circle-half-stroke")
-        expect(response.body).to include("Partial · $6.00 due")
+        expect(response.body).to include("Partial payment")
+        expect(response.body).to include("$6.00 due")
       end
 
       it "does not show the partial badge when only a scholarship covers part of the cost" do
@@ -540,6 +601,27 @@ RSpec.describe "Events", type: :request do
 
         expect(response.body).to include("fa-circle-check")
         expect(response.body).to include(">Paid</span>")
+      end
+
+      it "shows a Discounted chip when a discount leaves a balance due" do
+        discount = Discount.create!(amount_cents: 400)
+        create(:allocation, source: discount, allocatable: registration, amount: 400)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("fa-tag")
+        expect(response.body).to include(">Discounted<")
+        expect(response.body).to include("$6.00 due")
+      end
+
+      it "shows Paid when a discount fully covers the cost" do
+        discount = Discount.create!(amount_cents: 1000)
+        create(:allocation, source: discount, allocatable: registration, amount: 1000)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(">Paid</span>")
+        expect(response.body).not_to include(">Discounted<")
       end
     end
 

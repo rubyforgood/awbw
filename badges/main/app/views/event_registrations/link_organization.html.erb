@@ -5,57 +5,152 @@
       <%= link_to "← Back to registrants", registrants_event_path(@event_registration.event), class: "text-sm text-gray-500 hover:text-gray-700" %>
     </div>
 
-    <h1 class="text-xl font-semibold text-gray-900 mb-2">Link Organization</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Organizations &amp; affiliations</h1>
     <p class="text-gray-600 mb-6">Registrant: <strong><%= @person.full_name %></strong></p>
 
-    <% if @submitted_org_name.present? %>
-      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-        <p class="text-sm text-gray-500 mb-1">Submitted organization name on registration form:</p>
-        <p class="text-base font-medium text-gray-800"><%= @submitted_org_name %></p>
-      </div>
+    <%# === Linked organizations (registration–organization associations) === %>
+    <div class="flex items-center justify-between gap-3 mb-3">
+      <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500">Registration-linked organizations</h2>
+      <%= link_to edit_person_path(@person, anchor: "affiliations"), target: "_blank", rel: "noopener",
+                  class: "inline-flex items-center gap-1 text-sm text-gray-500 underline hover:text-gray-700" do %>
+        View profile affiliations
+        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+      <% end %>
+    </div>
+    <% if @linked_organizations.any? %>
+      <ul class="space-y-2 mb-6">
+        <% @linked_organizations.each do |org| %>
+          <li class="flex items-start justify-between gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+            <div class="min-w-0">
+              <p class="font-medium text-gray-800"><%= org.name %></p>
+              <% if org.city_state.present? %>
+                <p class="text-xs text-gray-500"><%= org.city_state %></p>
+              <% end %>
+              <%= render "org_affiliation_pills", org: org, affiliations: (@affiliations_by_org[org.id] || []),
+                                                  submitted_org_name: @submitted_org_name, submitted_position: @submitted_position,
+                                                  event_registration: @event_registration %>
+            </div>
+            <%= button_to "Remove",
+                          unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
+                          method: :delete,
+                          form: { class: "shrink-0", data: { turbo_frame: "_top" } },
+                          class: "inline-flex items-center rounded-full border border-transparent px-3 py-0.5 text-sm text-gray-500 underline transition hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:no-underline cursor-pointer" %>
+          </li>
+        <% end %>
+      </ul>
     <% else %>
-      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-        <p class="text-sm text-gray-500">No organization was submitted on the registration form.</p>
-      </div>
+      <p class="text-gray-500 mb-6">No organizations are linked to this registration yet.</p>
     <% end %>
 
-    <% if @potential_matches.any? %>
-      <h2 class="text-lg font-semibold text-gray-800 mb-3">Potential matches</h2>
-      <div class="space-y-2 mb-8">
-        <% @potential_matches.each do |org| %>
-          <%= form_with url: select_organization_event_registration_path(@event_registration),
+    <%# Adding an org is part of managing the links, so it's nested here. %>
+    <div class="border-t border-gray-100 pt-4 pl-4 mb-8">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Add an organization</h3>
+
+      <% if @potential_matches.any? %>
+        <p class="text-xs text-gray-500 mb-2">Suggested matches for the submitted name:</p>
+        <div class="space-y-2 mb-4">
+          <% @potential_matches.each do |org| %>
+            <%= form_with url: select_organization_event_registration_path(@event_registration),
+                          method: :post,
+                          data: { turbo_frame: "_top" },
+                          class: "flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3" do %>
+              <%= hidden_field_tag :organization_id, org.id %>
+              <%= hidden_field_tag :return_to, params[:return_to] %>
+              <div>
+                <p class="font-medium text-gray-800"><%= org.name %></p>
+                <% if org.city_state.present? %>
+                  <p class="text-xs text-gray-500"><%= org.city_state %></p>
+                <% end %>
+              </div>
+              <%= submit_tag "Select", class: "rounded-md bg-blue-900 px-4 py-1.5 text-white text-sm font-medium hover:bg-blue-800 transition cursor-pointer" %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%= form_with url: select_organization_event_registration_path(@event_registration),
+                    method: :post,
+                    data: { turbo_frame: "_top" },
+                    class: "flex items-stretch gap-2" do %>
+        <%= hidden_field_tag :return_to, params[:return_to] %>
+        <div class="flex-1 min-w-0">
+          <%= select_tag :organization_id,
+                         options_from_collection_for_select([], :id, :name),
+                         include_blank: true,
+                         class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                         data: { controller: "remote-select", remote_select_model_value: "organization" },
+                         prompt: "Type to search organizations…" %>
+        </div>
+        <%= submit_tag "Link organization",
+                       class: "shrink-0 rounded-md bg-blue-900 px-6 py-2 text-white font-semibold hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
+      <% end %>
+    </div>
+
+    <%# === Registration form submission (what the registrant typed). Collapsed by
+        default; expanded when the submitted org isn't in the DB (needs attention). === %>
+    <% form_show_params = @event_registration.slug.present? ? { reg: @event_registration.slug } : { person_id: @person.id } %>
+    <% submitted_org_unmatched = @submitted_org_name.present? && !@submitted_org_exists %>
+    <%# Expand unless the submitted org is resolved (matches an existing org), so it
+        opens both when nothing was submitted and when the name has no DB match. %>
+    <details class="mb-8"<%= " open" unless @submitted_org_exists %>>
+      <summary class="flex items-center justify-between gap-3 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden mb-3">
+        <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500">Registration form submission</h2>
+        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+      </summary>
+      <div class="flex items-stretch gap-3">
+        <div class="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <% if @submitted_org_name.present? || @submitted_position.present? %>
+            <p class="text-sm text-gray-500 mb-2">
+              On the <% if @form_submission %><%= link_to "registration form submission", event_public_registration_path(@event_registration.event, **form_show_params), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %><% else %>registration form<% end %>, <%= @person.first_name.presence || @person.full_name %> entered:
+            </p>
+            <p class="text-base text-gray-800">Organization: <strong><%= @submitted_org_name.presence || "—" %></strong></p>
+            <p class="text-base text-gray-800">Position / title: <strong><%= @submitted_position.presence || "—" %></strong></p>
+          <% else %>
+            <p class="text-sm text-gray-500">
+              No organization was submitted on the <% if @form_submission %><%= link_to "registration form submission", event_public_registration_path(@event_registration.event, **form_show_params), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %><% else %>registration form<% end %>.
+            </p>
+          <% end %>
+        </div>
+        <% if submitted_org_unmatched %>
+          <%# Creates an org from the typed name and links it in one step, for names with no existing match. %>
+          <%= button_to create_organization_event_registration_path(@event_registration, return_to: params[:return_to]),
                         method: :post,
-                        data: { turbo_frame: "_top" },
-                        class: "flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3" do %>
-            <%= hidden_field_tag :organization_id, org.id %>
-            <%= hidden_field_tag :return_to, params[:return_to] %>
-            <div>
-              <p class="font-medium text-gray-800"><%= org.name %></p>
-              <p class="text-xs text-gray-500"><%= org.city_state %></p>
-            </div>
-            <%= submit_tag "Select", class: "rounded-md bg-blue-900 px-4 py-1.5 text-white text-sm font-medium hover:bg-blue-800 transition cursor-pointer" %>
+                        form: { class: "shrink-0 self-center", data: { turbo_frame: "_top" } },
+                        class: "inline-flex items-center rounded-md border border-blue-900 px-5 py-2 text-blue-900 font-semibold hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" do %>
+            Create org &amp; link
           <% end %>
         <% end %>
       </div>
-    <% end %>
+    </details>
 
-    <h2 class="text-lg font-semibold text-gray-800 mb-3">Or search all organizations</h2>
-    <%= form_with url: select_organization_event_registration_path(@event_registration),
-                  method: :post,
-                  data: { turbo_frame: "_top" },
-                  class: "space-y-4" do %>
-      <%= hidden_field_tag :return_to, params[:return_to] %>
-      <div>
-        <%= label_tag :organization_id, "Organization", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= select_tag :organization_id,
-                       options_from_collection_for_select([], :id, :name),
-                       include_blank: true,
-                       class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                       data: { controller: "remote-select", remote_select_model_value: "organization" },
-                       prompt: "Type to search organizations…" %>
-      </div>
-      <%= submit_tag "Link organization",
-                     class: "rounded-md bg-blue-900 px-6 py-2 text-white font-semibold hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
-    <% end %>
+    <%# === The person's affiliations to orgs NOT linked to this registration.
+        Collapsed by default; expanded when there are none (to show that state). === %>
+    <% linked_org_ids = @linked_organizations.map(&:id) %>
+    <% other_affiliations = @affiliations_by_org.reject { |org_id, _| linked_org_ids.include?(org_id) } %>
+    <details<%= " open" if other_affiliations.empty? %>>
+      <summary class="flex items-center justify-between gap-3 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden mb-3">
+        <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500"><%= @person.first_name.presence || @person.full_name %>'s other affiliations</h2>
+        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+      </summary>
+      <% if other_affiliations.any? %>
+        <ul class="space-y-2">
+          <% other_affiliations.values.sort_by { |affs| affs.first.organization&.name.to_s.downcase }.each do |affs| %>
+            <% org = affs.first.organization %>
+            <% next unless org %>
+            <li class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <p class="font-medium text-gray-800"><%= org.name %></p>
+              <% if org.city_state.present? %>
+                <p class="text-xs text-gray-500"><%= org.city_state %></p>
+              <% end %>
+              <%= render "org_affiliation_pills", org: org, affiliations: affs,
+                                                  submitted_org_name: @submitted_org_name, submitted_position: @submitted_position,
+                                                  event_registration: @event_registration %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="text-gray-500">No other affiliations on record.</p>
+      <% end %>
+    </details>
   </div>
 </div>

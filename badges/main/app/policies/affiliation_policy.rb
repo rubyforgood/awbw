@@ -5,6 +5,10 @@ class AffiliationPolicy < ApplicationPolicy
     record.persisted? && admin? # we don't allow users to edit their own
   end
 
+  def update?
+    record.persisted? && admin? # we don't allow users to edit their own
+  end
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
 

@@ -36,7 +36,7 @@
       <%= label_tag :payment_status, "Payment", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= select_tag :payment_status,
                      options_for_select(
-                       [ [ "Paid in full", "paid" ], [ "Not paid in full", "unpaid" ] ],
+                       [ [ "Due", "unpaid" ], [ "Paid", "paid" ] ],
                        params[:payment_status]
                      ),
                      include_blank: "Any payment status",

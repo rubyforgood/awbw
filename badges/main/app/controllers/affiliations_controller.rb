@@ -1,5 +1,20 @@
 class AffiliationsController < ApplicationController
-  before_action :set_affiliation, only: %i[ destroy ]
+  before_action :set_affiliation, only: %i[ destroy update ]
+
+  # Inline title edit from the event-registration org-link editor.
+  def update
+    authorize! @affiliation, to: :update?
+    updated = @affiliation.update(affiliation_params)
+    notice = updated ? "Affiliation title updated." : nil
+    alert = updated ? nil : "Could not update the affiliation title."
+
+    if params[:event_registration_id].present?
+      redirect_to link_organization_event_registration_path(params[:event_registration_id], return_to: params[:return_to].presence),
+                  notice: notice, alert: alert
+    else
+      redirect_back fallback_location: root_path, notice: notice, alert: alert
+    end
+  end
 
   def destroy
     authorize! @affiliation, to: :destroy?
@@ -32,5 +47,9 @@ class AffiliationsController < ApplicationController
 
   def set_affiliation
     @affiliation = Affiliation.find(params[:id])
+  end
+
+  def affiliation_params
+    params.require(:affiliation).permit(:title)
   end
 end
