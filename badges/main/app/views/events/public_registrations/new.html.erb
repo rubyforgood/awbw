@@ -118,14 +118,7 @@
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
           <% @form_fields.each do |field| %>
             <% if field.group_header? %>
-              <div class="md:col-span-12 pt-7 pb-4">
-                <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-purple-900">
-                  <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
-                </h3>
-                <% if field.hint_text.present? %>
-                  <p class="mt-1.5 text-sm text-gray-500"><%= field.hint_text %></p>
-                <% end %>
-              </div>
+              <%= render "events/public_registrations/group_header", field: field %>
             <% else %>
               <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
               <% if submitted_value.blank? && field.field_identifier == "payment_method" %>
@@ -141,16 +134,21 @@
         <% if @scholarship_form && @scholarship_form.form_fields.any? %>
           <div class="mt-8 rounded-xl border border-blue-100 bg-blue-50/50 px-5 py-6">
             <h3 class="flex items-center gap-2.5 text-lg font-bold text-purple-900 mb-5">
-              <i class="fa-solid fa-hand-holding-heart text-accent"></i>Scholarship application
+              <i class="fa-solid fa-hand-holding-heart text-accent"></i><%= @scholarship_form.display_name %>
             </h3>
             <%= render "forms/header", form: @scholarship_form, event: @event %>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
               <% @scholarship_form.form_fields.reorder(position: :asc).each do |field| %>
-                <% next if field.group_header? %>
-                <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
-                <div class="<%= field.grid_span_class %>">
-                  <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
-                </div>
+                <% if field.group_header? %>
+                  <%# Skip a section header that just repeats the form name shown as the title above %>
+                  <% next if field.name.to_s.strip.casecmp?(@scholarship_form.display_name.to_s.strip) %>
+                  <%= render "events/public_registrations/group_header", field: field %>
+                <% else %>
+                  <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
+                  <div class="<%= field.grid_span_class %>">
+                    <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
+                  </div>
+                <% end %>
               <% end %>
             </div>
           </div>
