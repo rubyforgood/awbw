@@ -17,7 +17,7 @@ export default class extends Controller {
   static targets = ["content", "expand"];
 
   connect() {
-    this.open = false;
+    this.listenersActive = false;
     this.handleOutsideClick = this.handleOutsideClick.bind(this);
     this.handleEscapeKey = this.handleEscapeKey.bind(this);
     if (this.hasExpandTarget) {
@@ -28,7 +28,7 @@ export default class extends Controller {
   toggle(event) {
     this.processPayload(event.params.payload);
     this.manageEventListeners();
-    this.open = !this.open;
+    this.listenersActive = !this.listenersActive;
   }
 
   toggleClassesOnElement(element, classString) {
@@ -45,7 +45,7 @@ export default class extends Controller {
   }
 
   manageEventListeners() {
-    if (this.open) {
+    if (this.listenersActive) {
       this.removeEventListeners();
     } else {
       // Add delay to avoid immediate trigger
@@ -83,10 +83,10 @@ export default class extends Controller {
   }
 
   close() {
-    if (this.open) {
+    if (this.listenersActive) {
       this.processPayload(this.lastPayload);
       this.removeEventListeners();
-      this.open = false;
+      this.listenersActive = false;
     }
   }
 
