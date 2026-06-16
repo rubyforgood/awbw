@@ -30,7 +30,11 @@
                   <%= link_to dup[:name], person_path(dup[:id]), target: "_blank", class: "text-blue-600 hover:text-blue-800 underline" %>
 
                   <% if dup[:blocked] %>
-                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">exact match</span>
+                    <% if dup[:match_type] == "approximate" %>
+                      <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">approximate match</span>
+                    <% else %>
+                      <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">exact match</span>
+                    <% end %>
                   <% else %>
                     <% if dup[:name_match] %>
                       <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700">name match</span>
@@ -38,7 +42,7 @@
                     <% if dup[:match_type] == "nickname" %>
                       <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-700">similar name</span>
                     <% end %>
-                    <% if %w[email approximate].include?(dup[:match_type]) %>
+                    <% if dup[:match_type] == "email" %>
                       <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">email match</span>
                     <% end %>
                   <% end %>
@@ -60,10 +64,17 @@
           </div>
 
           <% if @blocked %>
-            <p class="text-sm text-red-600 font-medium m-2">An <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">existing user</span> with this email already exists.</p>
-            <p class="text-sm text-gray-500 mb-6">
-              Edit the existing user or change this user's email.
-            </p>
+            <% if @duplicates.any? { |d| d[:match_type] == "exact" } %>
+              <p class="text-sm text-red-600 font-medium m-2">An <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">existing user</span> with this email already exists.</p>
+              <p class="text-sm text-gray-500 mb-6">
+                Edit the existing user or change this user's email.
+              </p>
+            <% else %>
+              <p class="text-sm text-orange-600 font-medium m-2">A person with this name has a matching <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">secondary or user email</span>.</p>
+              <p class="text-sm text-gray-500 mb-6">
+                Edit the existing person or change this email.
+              </p>
+            <% end %>
           <% end %>
 
           <% unless @blocked %>

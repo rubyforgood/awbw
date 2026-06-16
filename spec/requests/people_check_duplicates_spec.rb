@@ -123,7 +123,7 @@ RSpec.describe "/people/check_duplicates", type: :request do
       end
     end
 
-    # --- Blocked (exact name + primary email) ---
+    # --- Blocked (exact name + any email) ---
 
     context "when exact name and primary email match (blocked)" do
       it "shows the exact match badge and block message" do
@@ -145,10 +145,8 @@ RSpec.describe "/people/check_duplicates", type: :request do
       end
     end
 
-    # --- Name + email match (exact name + secondary/user email) ---
-
-    context "when exact name and secondary email match" do
-      it "shows both name match and email match badges" do
+    context "when exact name and secondary email match (blocked)" do
+      it "shows the approximate match badge and block message" do
         existing_person.update!(email_2: "jane.secondary@testmail.org")
 
         get check_duplicates_people_path, params: {
@@ -156,19 +154,42 @@ RSpec.describe "/people/check_duplicates", type: :request do
         }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("name match")
-        expect(response.body).to include("email match")
+        expect(response.body).to include("approximate match")
+        expect(response.body).not_to include("exact match")
+        expect(response.body).to include("matching secondary or user email")
+        expect(response.body).to include("Please edit the existing record instead")
       end
 
-      it "shows the secondary email warning" do
+      it "hides the Create anyway button" do
         existing_person.update!(email_2: "jane.secondary@testmail.org")
 
         get check_duplicates_people_path, params: {
           first_name: "Jane", last_name: "Doe", email: "jane.secondary@testmail.org"
         }
 
+        expect(response.body).not_to include("Create anyway")
+      end
+    end
+
+    context "when exact name and user email match (blocked)" do
+      it "shows the approximate match badge and block message" do
+        get check_duplicates_people_path, params: {
+          first_name: "Jane", last_name: "Doe", email: existing_person.user.email
+        }
+
         expect(response).to have_http_status(:ok)
+        expect(response.body).to include("approximate match")
+        expect(response.body).not_to include("exact match")
         expect(response.body).to include("matching secondary or user email")
+        expect(response.body).to include("Please edit the existing record instead")
+      end
+
+      it "hides the Create anyway button" do
+        get check_duplicates_people_path, params: {
+          first_name: "Jane", last_name: "Doe", email: existing_person.user.email
+        }
+
+        expect(response.body).not_to include("Create anyway")
       end
     end
 

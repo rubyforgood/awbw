@@ -348,6 +348,8 @@ class PeopleController < ApplicationController
       person.email.present? && person.email.downcase == entered_email.downcase
     secondary_email_match = exact && any_email_match && !primary_email_match
 
+    # Exact name + primary email is an "exact" match; exact name + a secondary or
+    # user email is "approximate" — distinct display, but both block creation.
     match_type = if primary_email_match
       "exact"
     elsif secondary_email_match
@@ -366,7 +368,7 @@ class PeopleController < ApplicationController
       labeled_emails: labeled_emails,
       match_type: match_type,
       name_match: exact,
-      blocked: primary_email_match
+      blocked: primary_email_match || secondary_email_match
     }
   end
 
