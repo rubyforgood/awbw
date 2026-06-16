@@ -13,6 +13,7 @@ class Scholarship < ApplicationRecord
   validate :within_grant_budget, if: :grant
 
   after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? }
+  after_create_commit :flag_event_registration_scholarship_requested
 
   scope :completed, -> { where(tasks_completed: true) }
 
@@ -47,5 +48,16 @@ class Scholarship < ApplicationRecord
     return unless allocation
 
     allocation.update!(amount: amount_cents.to_i)
+  end
+
+  # When a scholarship is awarded against an event registration, the registration
+  # should reflect that a scholarship was requested. We never clear this on delete:
+  # removing an awarded scholarship doesn't undo the fact that one was requested.
+  def flag_event_registration_scholarship_requested
+    registration = allocation&.allocatable
+    return unless registration.is_a?(EventRegistration)
+    return if registration.scholarship_requested?
+
+    registration.update!(scholarship_requested: true)
   end
 end
