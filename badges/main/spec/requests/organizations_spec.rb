@@ -67,6 +67,57 @@ RSpec.describe "/organizations", type: :request do
     end
   end
 
+  describe "sector displays" do
+    let!(:organization_with_sectors) do
+      affiliated_sector_1 = create(:sector, name: "Affiliated Sector 1")
+      affiliated_sector_2 = create(:sector, name: "Affiliated Sector 2")
+      person_1 = create(:person)
+      person_2 = create(:person)
+      create(:sectorable_item, sector: affiliated_sector_1, sectorable: person_1)
+      create(:sectorable_item, sector: affiliated_sector_2, sectorable: person_2)
+
+      org = create(:organization, organization_status: organization_status)
+      create(:sectorable_item, sector: create(:sector, name: "Direct Sector 1"), sectorable: org)
+      create(:sectorable_item, sector: create(:sector, name: "Direct Sector 2"), sectorable: org)
+      create(:affiliation, organization: org, person: person_1, position: :default)
+      create(:affiliation, organization: org, person: person_2, position: :default)
+      org
+    end
+
+    it "truncates sectors to the first 3 with a 'more' indicator on the show page" do
+      get organization_url(organization_with_sectors)
+
+      page = Capybara.string(response.body)
+      all_sector_names = organization_with_sectors.all_sectors.map(&:name).sort
+      expect(all_sector_names.length).to be > 3
+      all_sector_names.first(3).each { |name| expect(page).to have_content(name) }
+      expect(page).not_to have_content(all_sector_names[3])
+      expect(page).to have_content(/\+?[0-9]+ more|\.\.\./i)
+    end
+
+    it "lists all sectors with per-sector people counts on the populations served page" do
+      get populations_served_organization_url(organization_with_sectors)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_content("Sector Distribution")
+      expect(page).to have_content(organization_with_sectors.name)
+
+      organization_with_sectors.all_sectors.map(&:name).each do |name|
+        expect(page).to have_content(name)
+      end
+
+      people = organization_with_sectors.users.includes(person: :sectors).map(&:person).compact
+      expected_counts = Hash.new(0)
+      people.each do |person|
+        primary_sector = person.sectors.first
+        expected_counts[primary_sector.name] += 1 if primary_sector
+      end
+      expected_counts.each do |_sector_name, count|
+        expect(page).to have_content("#{count} #{count == 1 ? 'person' : 'people'}")
+      end
+    end
+  end
+
   describe "GET /new" do
     it "renders a successful response" do
       get new_organization_url

@@ -70,6 +70,11 @@ RSpec.describe "/faqs", type: :request do
         expect(response.body).to include("Unpublished FAQ")
       end
 
+      it "shows the New FAQ admin control" do
+        get faqs_path
+        expect(response.body).to include("New FAQ")
+      end
+
       it "filters by unpublished param" do
         get faqs_path, params: { published: "false" } # needs to be string param
         expect(response.body).to include("Unpublished FAQ")
@@ -109,6 +114,12 @@ RSpec.describe "/faqs", type: :request do
         expect(response.body).to include("Published FAQ")
         expect(response.body).not_to include("Unpublished FAQ")
       end
+
+      it "hides admin controls" do
+        get faqs_path
+        expect(response.body).not_to include("New FAQ")
+        expect(response.body).not_to include(edit_faq_path(published_faq))
+      end
     end
 
     context "as a guest" do
@@ -123,6 +134,12 @@ RSpec.describe "/faqs", type: :request do
         expect(response.body).to include("Public FAQ")
         expect(response.body).not_to include("Published FAQ")
         expect(response.body).not_to include("Unpublished FAQ")
+      end
+
+      it "hides admin controls" do
+        get faqs_path
+        expect(response.body).not_to include("New FAQ")
+        expect(response.body).not_to include(edit_faq_path(public_faq))
       end
     end
   end

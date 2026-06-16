@@ -54,6 +54,79 @@ RSpec.describe "/workshop_logs", type: :request do
     clear_enqueued_jobs
   end
 
+  describe "GET /show" do
+    it "renders the organization as plain text and the creator as a link (non-admin)" do
+      person = create(:person, user: user)
+      create(:affiliation, person: person, organization: organization)
+      workshop_log = create(:workshop_log, created_by: user, organization: organization,
+                            workshop: workshop, windows_type: windows_type, workshop_held_on: 1.day.ago)
+
+      get workshop_log_path(workshop_log)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_text(organization.name)
+      expect(page).not_to have_link(organization.name)
+      expect(page).to have_link(user.name, href: person_path(person))
+    end
+
+    it "renders the creator as plain text when they have no person record" do
+      workshop_log = create(:workshop_log, created_by: user, organization: organization,
+                            workshop: workshop, windows_type: windows_type, workshop_held_on: 1.day.ago)
+
+      get workshop_log_path(workshop_log)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_text(user.name)
+      expect(page).not_to have_link(user.name)
+    end
+
+    it "shows the external title in the heading and beside the Workshop label when there is no workshop" do
+      workshop_log = create(:workshop_log, created_by: user, organization: organization,
+                            workshop: nil, windows_type: windows_type,
+                            external_workshop_title: "Community Mural Project", workshop_held_on: 1.day.ago)
+
+      get workshop_log_path(workshop_log)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css("h1", text: "Community Mural Project")
+      workshop_div = page.find("span", text: "Workshop:").ancestor("div", match: :first)
+      expect(workshop_div).to have_text("Community Mural Project")
+    end
+
+    it "shows the workshop name in the heading and both the workshop and external title when both are present" do
+      titled_workshop = create(:workshop, :published, title: "Healing Through Art", windows_type: windows_type)
+      workshop_log = create(:workshop_log, created_by: user, organization: organization,
+                            workshop: titled_workshop, windows_type: windows_type,
+                            external_workshop_title: "Guest-led Session", workshop_held_on: 1.day.ago)
+
+      get workshop_log_path(workshop_log)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css("h1", text: "Healing Through Art")
+      workshop_div = page.find("span", text: "Workshop:").ancestor("div", match: :first)
+      expect(workshop_div).to have_text("Healing Through Art")
+      expect(workshop_div).to have_text("Guest-led Session")
+    end
+
+    context "as an admin" do
+      let(:admin) { create(:user, :admin) }
+      before { sign_in admin }
+
+      it "renders the organization and creator as links" do
+        person = create(:person, user: user)
+        create(:affiliation, person: person, organization: organization)
+        workshop_log = create(:workshop_log, created_by: user, organization: organization,
+                              workshop: workshop, windows_type: windows_type, workshop_held_on: 1.day.ago)
+
+        get workshop_log_path(workshop_log)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link(organization.name, href: organization_path(organization))
+        expect(page).to have_link(user.name, href: person_path(person))
+      end
+    end
+  end
+
   describe "GET /index" do
     it "loads the index page successfully" do
       get workshop_logs_path
