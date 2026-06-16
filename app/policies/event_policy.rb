@@ -106,6 +106,8 @@ class EventPolicy < ApplicationPolicy
                   :videoconference_label,
                   :rhino_header,
                   :rhino_description,
+                  :event_details,
+                  :event_details_label,
                   :autoshow_cost,
                   :autoshow_date,
                   :autoshow_location,
@@ -142,6 +144,7 @@ class EventPolicy < ApplicationPolicy
   end
 
   alias_rule :preview?, to: :edit?
+  alias_rule :details?, to: :show?
 
   private
 

@@ -149,6 +149,12 @@ class Event < ApplicationRecord
     title
   end
 
+  # Heading shown on the ticket call-out and the details page. Falls back to the
+  # default even when an admin clears it, so the section never renders unlabelled.
+  def event_details_label
+    super.presence || "Before you attend"
+  end
+
   # Virtual attribute for cost in dollars (converts to/from cost_cents)
   def cost
     return nil if cost_cents.nil?
