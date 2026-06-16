@@ -3,10 +3,6 @@ class Event < ApplicationRecord
   include ActionText::Attachable
   include RemoteSearchable
 
-  # Grace window on either side of the event during which the videoconference
-  # link is available to paid registrants.
-  VIDEOCONFERENCE_JOIN_BUFFER = 30.minutes
-
   has_rich_text :rhino_header
   has_rich_text :rhino_description
 
@@ -121,12 +117,6 @@ class Event < ApplicationRecord
 
   def ended?
     end_date < Time.current
-  end
-
-  def videoconference_window_open?
-    return false unless start_date && end_date
-    now = Time.current
-    now >= start_date - VIDEOCONFERENCE_JOIN_BUFFER && now <= end_date + VIDEOCONFERENCE_JOIN_BUFFER
   end
 
   def registerable?

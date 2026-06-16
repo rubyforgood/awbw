@@ -61,33 +61,6 @@ RSpec.describe Event, type: :model do
     end
   end
 
-  describe "#videoconference_window_open?" do
-    it "returns false more than 30 minutes before the start" do
-      event = build(:event, start_date: 31.minutes.from_now, end_date: 2.hours.from_now)
-      expect(event.videoconference_window_open?).to be false
-    end
-
-    it "returns true within 30 minutes before the start" do
-      event = build(:event, start_date: 29.minutes.from_now, end_date: 2.hours.from_now)
-      expect(event.videoconference_window_open?).to be true
-    end
-
-    it "returns true while the event is in progress" do
-      event = build(:event, start_date: 1.hour.ago, end_date: 1.hour.from_now)
-      expect(event.videoconference_window_open?).to be true
-    end
-
-    it "returns true within 30 minutes after the end" do
-      event = build(:event, start_date: 2.hours.ago, end_date: 29.minutes.ago)
-      expect(event.videoconference_window_open?).to be true
-    end
-
-    it "returns false more than 30 minutes after the end" do
-      event = build(:event, start_date: 2.hours.ago, end_date: 31.minutes.ago)
-      expect(event.videoconference_window_open?).to be false
-    end
-  end
-
   describe "#registerable?" do
     it "returns true when registration_close_date is in the future" do
       event = build(:event, published: true, registration_close_date: 5.days.from_now)
