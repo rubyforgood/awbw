@@ -246,17 +246,25 @@
     <!-- SUBMITTED SECTION -->
     <% if allowed_to?(:show?, @person) %>
       <div class="user-only <%= DomainTheme.bg_class_for(:user_only) %>
-            border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm">
+            border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm"
+           data-controller="expandable-card"
+           data-expandable-card-expanded-value="false">
         <!-- Header -->
-        <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3
+        <button type="button" data-action="expandable-card#toggle"
+                aria-expanded="false"
+                class="section-header w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 text-left
               border-b <%= DomainTheme.border_class_for(:user_only) %>">
           <h2 class="text-xl font-semibold text-gray-800">
             Submitted content
           </h2>
-          <span class="text-sm text-amber-700 italic">Only visible to you</span>
-        </div>
+          <span class="flex items-center gap-3">
+            <span class="text-sm text-amber-700 italic">Only visible to you</span>
+            <i class="fa-solid fa-chevron-down transition-transform text-gray-400" data-expandable-card-target="icon"></i>
+          </span>
+        </button>
         <!-- Submitted Content -->
-        <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
+        <div class="section-content hidden px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10"
+             data-expandable-card-target="body">
           <!-- Workshop ideas -->
           <% if @person.profile_show_workshop_ideas? %>
             <div class="p-3">
