@@ -398,6 +398,16 @@ RSpec.describe FormField do
         expect(field.answer_inclusion_error([ offered.id.to_s ])).to be_nil
         expect(field.answer_inclusion_error([ other_type_category.id.to_s ])).to eq("has an invalid selection")
       end
+
+      it "rejects the Mixed-age groups category for the primary age group field" do
+        type = create(:category_type, name: "AgeRange")
+        concrete = create(:category, :published, category_type: type, name: "3-5")
+        mixed = create(:category, :published, category_type: type, name: Category::MIXED_AGE_RANGE_NAME)
+        field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_age_group")
+
+        expect(field.answer_inclusion_error([ concrete.id.to_s ])).to be_nil
+        expect(field.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
+      end
     end
   end
 

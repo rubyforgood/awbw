@@ -34,6 +34,11 @@ class FormField < ApplicationRecord
     "primary_age_group" => "AgeRange"
   }.freeze
 
+  # The "primary age group(s) served" field. Backed by AgeRange categories but
+  # omits the catch-all "Mixed-age groups" category — a respondent names the
+  # concrete age groups they serve, not the mixed bucket.
+  PRIMARY_AGE_GROUP_FIELD_IDENTIFIER = "primary_age_group"
+
   # The generic free-text option label that lets a respondent supply their own
   # value; a chosen "Other" answer is stored as "Other" or "Other: <text>".
   OTHER_OPTION_PREFIX = "Other"
@@ -257,9 +262,8 @@ class FormField < ApplicationRecord
 
     values = if field_identifier.in?(SERVICE_AREA_FIELD_IDENTIFIERS)
       service_area_sectors.pluck(:id).map(&:to_s)
-    elsif (type_name = DYNAMIC_FIELD_CATEGORY_TYPES[field_identifier])
-      type = CategoryType.find_by(name: type_name)
-      type ? type.categories.published.pluck(:id).map(&:to_s) : []
+    elsif DYNAMIC_FIELD_CATEGORY_TYPES.key?(field_identifier)
+      dynamic_categories.pluck(:id).map(&:to_s)
     else
       answer_options.pluck(:name)
     end
@@ -274,6 +278,19 @@ class FormField < ApplicationRecord
   def service_area_sectors
     scope = Sector.published.order(:name)
     field_identifier == PRIMARY_SERVICE_AREA_FIELD_IDENTIFIER ? scope.excluding_other : scope
+  end
+
+  # The published Category records a category-backed dynamic field offers, in
+  # position/name order. The "primary age group" field omits the catch-all
+  # "Mixed-age groups" AgeRange category — a respondent names the concrete age
+  # groups they serve. Empty when the backing CategoryType is missing. Source of
+  # truth shared by the public form's rendering and submission validation.
+  def dynamic_categories
+    type = CategoryType.find_by(name: DYNAMIC_FIELD_CATEGORY_TYPES[field_identifier])
+    return Category.none unless type
+
+    scope = type.categories.published.order(:position, :name)
+    field_identifier == PRIMARY_AGE_GROUP_FIELD_IDENTIFIER ? scope.excluding_mixed_age : scope
   end
 
   # The "please specify" placeholder for an option label, or nil when the option
