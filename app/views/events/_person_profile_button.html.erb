@@ -11,7 +11,7 @@
 <% person_link_params = local_assigns[:return_to] == "bulk_payments" ?
      { return_to: "bulk_payments", event_id: local_assigns[:event]&.id, expand: local_assigns[:expand] } : {} %>
 <%= link_to person_path(person, person_link_params),
-            title: profile_person.name,
+            title: "#{profile_person.name} — #{person.preferred_email}",
             class: "inline-flex items-center gap-2 shrink-0 rounded-lg border border-sky-300 bg-sky-100 hover:bg-sky-200 px-3 py-2 shadow-sm transition-colors" do %>
   <% if profile_person.avatar.present? %>
     <%= image_tag profile_person.avatar.variant(:thumbnail),
