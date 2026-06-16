@@ -14,16 +14,17 @@ RSpec.describe "Person Other form responses", type: :request do
   before { sign_in admin }
 
   describe "profile page" do
-    it "shows the Other service area as an additional sector" do
+    it "shows the Other service area as a free-text chip, not the primary sector" do
       person.update!(profile_show_sectors: true)
       answer("primary_service_area", "Other: Equine therapy")
 
       get person_path(person)
 
       expect(response.body).to include("Equine therapy")
-      # The Other chip sits in the "Additional sectors" column, not "Primary sector".
-      additional_section = response.body.split("Additional sectors").last
-      expect(additional_section).to include("Equine therapy")
+      # The combined Sectors list renders it via the free-text "(other)" chip rather
+      # than promoting it to the starred primary sector.
+      equine_chip = response.body[/Equine therapy.{0,80}/m]
+      expect(equine_chip).to include("(other)")
     end
   end
 
