@@ -166,14 +166,11 @@
             <%= form_tag allocate_bulk_payment_event_path(@event),
                          class: "flex items-center gap-2" do %>
               <%= hidden_field_tag :payment_id, payment.id %>
-              <div class="w-64 shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm focus-within:ring focus-within:ring-blue-200 focus-within:border-blue-500">
-                <%= select_tag :event_registration_id, nil,
-                     data: {
-                       controller: "remote-select",
-                       remote_select_model_value: "event_registration"
-                     },
-                     prompt: "Search registrant...",
-                     class: "w-full" %>
+              <div class="w-64 shrink-0">
+                <%= select_tag :event_registration_id,
+                     options_from_collection_for_select(event_registrations, :id, ->(r) { "#{r.registrant.name} — #{r.registrant.email}" }),
+                     prompt: "Select registrant...",
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring focus:ring-blue-200 focus:border-blue-500" %>
               </div>
               <span class="text-sm text-gray-500">$</span>
               <%= number_field_tag :amount_dollars, nil,
