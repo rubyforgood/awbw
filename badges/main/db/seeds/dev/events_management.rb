@@ -648,7 +648,10 @@ puts "Recording professional answers (age group / service area) on registration 
 # answered on a submission, and only enriches people who have a submission (so the
 # "registered but didn't fill the form" scenarios stay answer-free).
 age_range_categories = Category.age_ranges.published.order(:position, :name).to_a
-service_area_sectors = Sector.published.order(:name).to_a
+# Exclude the catch-all "Other" sector: it's the free-text fallback registrants
+# type into (surfaced via Person#other_service_area_responses), not a selectable
+# service area. Seeding it as a sector tag would list "Other" as a real service area.
+service_area_sectors = Sector.published.excluding_other.order(:name).to_a
 
 record_professional_answers = ->(submission, i) do
   person = submission.person
