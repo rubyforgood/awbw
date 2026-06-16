@@ -99,6 +99,8 @@ Rails.application.routes.draw do
       post :process_confirm
       get :link_organization
       post :select_organization
+      post :create_organization
+      delete :unlink_organization
     end
     resources :comments, only: [ :index, :create, :update ]
   end

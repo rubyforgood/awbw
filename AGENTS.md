@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (62) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (70) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -257,6 +257,7 @@ end
 ### Stimulus Controllers
 
 - `affiliation_dates` — Recalculate affiliation date ranges
+- `affiliation_title_edit` — Inline-edit an affiliation title pill on the org-link editor
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state

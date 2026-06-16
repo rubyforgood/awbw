@@ -361,6 +361,25 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#discounted?" do
+    let(:event) { create(:event, cost_cents: 1000) }
+    let(:user) { create(:user, :with_person) }
+
+    it "returns true when a discount allocation exists" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      discount = Discount.create!(amount_cents: 400)
+      create(:allocation, source: discount, allocatable: reg, amount: 400)
+      expect(reg).to be_discounted
+    end
+
+    it "returns false when only a payment covers part of the cost" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      payment = create(:payment, person: user.person, amount_cents: 400, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 400)
+      expect(reg).not_to be_discounted
+    end
+  end
+
   describe '.search_by_params' do
     let(:person_alice) { create(:person, first_name: 'Alice', last_name: 'Smith') }
     let(:person_bob) { create(:person, first_name: 'Bob', last_name: 'Jones') }

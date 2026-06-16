@@ -109,7 +109,7 @@
         <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
           <!-- Organization affiliations -->
           <% if @person.profile_show_affiliations? %>
-            <div class="md:col-span-3 p-3">
+            <div id="affiliations" class="md:col-span-3 p-3 scroll-mt-4">
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Affiliations</h2>
               <%= turbo_frame_tag "person_affiliations_section", src: person_path(@person, section: "affiliations"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading affiliations...</p>

@@ -151,7 +151,7 @@ class Organization < ApplicationRecord
     else
       addresses.active.first
     end
-    "#{organization_locality}, #{first_active&.state}"
+    [ organization_locality, first_active&.state ].compact_blank.join(", ")
   end
 
   def type_name
