@@ -1401,9 +1401,9 @@ RSpec.describe "Events", type: :request do
       get bulk_payments_event_path(event, expand: submission.id)
 
       expect(response.body).to include("id=\"payment-card-#{submission.id}\"")
-      # Expanded server-side: the details panel renders without `hidden` and the chevron is rotated.
-      expect(response.body).to match(/id="payment-arrow-#{submission.id}"[^>]*rotate-180/)
-      expect(response.body).not_to match(/id="payment-details-#{submission.id}"\s+class="hidden/)
+      # Expanded server-side: the toggle button gets data-dropdown-target="expand"
+      # so the dropdown controller clicks it on connect to open the card.
+      expect(response.body).to include("data-dropdown-target=\"expand\"")
     end
 
     it "renders rows collapsed without an expand param" do
