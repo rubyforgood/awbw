@@ -19,8 +19,7 @@
 %>
 <div id="payment-card-<%= submission.id %>"
      data-controller="dropdown"
-     data-dropdown-open-value="<%= expanded %>"
-     class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow scroll-mt-4">
+      class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow scroll-mt-4">
   <%# Fixed column template (shared by every card so columns align row-to-row):
       name | email | method | amount | badge | date | submission | chevron. %>
   <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_8rem_6rem_13rem_7rem_auto_1.5rem]">
@@ -41,16 +40,18 @@
                 class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
       <i class="fa-solid fa-file-lines text-xs"></i> Submission
     <% end %>
+
     <button type="button"
             data-action="dropdown#toggle"
+            <% if expanded %>data-dropdown-target="expand"<% end %>
             data-dropdown-payload-param='[{"<%= content_id %>":"hidden"}, {"<%= arrow_id %>":"rotate-180"}]'
             class="text-gray-400 hover:text-gray-600 p-1 justify-self-end"
             title="More info">
-      <i id="<%= arrow_id %>" class="fa-solid fa-chevron-down transition-transform duration-200 <%= "rotate-180" if expanded %>"></i>
+      <i id="<%= arrow_id %>" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
     </button>
   </div>
   <div id="<%= content_id %>"
-       class="<%= "hidden" unless expanded %> mt-3 pt-3 border-t border-gray-100 space-y-3"
+       class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3"
        data-dropdown-target="content">
     <% if attendee_matches.present? %>
       <div class="@container border-t border-gray-100 pt-2 space-y-1.5">
