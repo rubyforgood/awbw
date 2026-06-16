@@ -1,37 +1,46 @@
 require "rails_helper"
 
 RSpec.describe EventHelper, type: :helper do
-  describe "#other_option?" do
-    it "matches the 'Other' label case- and whitespace-insensitively" do
-      expect(helper.other_option?("Other")).to be true
-      expect(helper.other_option?("other")).to be true
-      expect(helper.other_option?("  OTHER  ")).to be true
+  describe "#specify_placeholder" do
+    it "returns the placeholder for 'Other' case- and whitespace-insensitively" do
+      expect(helper.specify_placeholder("Other")).to eq("Please specify")
+      expect(helper.specify_placeholder("  other  ")).to eq("Please specify")
     end
 
-    it "does not match other labels" do
-      expect(helper.other_option?("Yes")).to be false
-      expect(helper.other_option?("Other reasons")).to be false
-      expect(helper.other_option?(nil)).to be false
+    it "returns the option-specific placeholder for named sources" do
+      expect(helper.specify_placeholder("Word of Mouth")).to eq("Please list the name of the person")
+      expect(helper.specify_placeholder("Foundation/Funder")).to eq("Please list the name of the foundation/funder")
+      expect(helper.specify_placeholder("Work(ed) at an agency that has/had an AWBW program"))
+        .to eq("Please specify organization")
+    end
+
+    it "returns nil for options that do not reveal a box" do
+      expect(helper.specify_placeholder("Yes")).to be_nil
+      expect(helper.specify_placeholder("Other reasons")).to be_nil
+      expect(helper.specify_placeholder(nil)).to be_nil
     end
   end
 
-  describe "#other_option_selected?" do
-    it "is true for a bare 'Other' answer" do
-      expect(helper.other_option_selected?("Other")).to be true
+  describe "#specify_option_selected?" do
+    it "is true for a bare label answer" do
+      expect(helper.specify_option_selected?("Other", "Other")).to be true
+      expect(helper.specify_option_selected?("Word of Mouth", "Word of Mouth")).to be true
     end
 
-    it "is true for an 'Other: <text>' answer" do
-      expect(helper.other_option_selected?("Other: purple")).to be true
+    it "is true for a '<label>: <text>' answer" do
+      expect(helper.specify_option_selected?("Other", "Other: purple")).to be true
+      expect(helper.specify_option_selected?("Word of Mouth", "Word of Mouth: Jane")).to be true
     end
 
-    it "is true when an array of answers includes the Other choice" do
-      expect(helper.other_option_selected?([ "Red", "Other: teal" ])).to be true
+    it "is true when an array of answers includes the option" do
+      expect(helper.specify_option_selected?("Other", [ "Red", "Other: teal" ])).to be true
     end
 
-    it "is false when no answer represents the Other choice" do
-      expect(helper.other_option_selected?("Yes")).to be false
-      expect(helper.other_option_selected?([ "Red", "Blue" ])).to be false
-      expect(helper.other_option_selected?(nil)).to be false
+    it "is false when no answer represents the given option" do
+      expect(helper.specify_option_selected?("Other", "Yes")).to be false
+      expect(helper.specify_option_selected?("Other", [ "Red", "Blue" ])).to be false
+      expect(helper.specify_option_selected?("Word of Mouth", "Other: teal")).to be false
+      expect(helper.specify_option_selected?("Other", nil)).to be false
     end
   end
 
@@ -47,22 +56,24 @@ RSpec.describe EventHelper, type: :helper do
     end
   end
 
-  describe "#other_option_text" do
-    it "extracts the custom text from an 'Other: <text>' answer" do
-      expect(helper.other_option_text("Other: bright purple")).to eq("bright purple")
+  describe "#specify_option_text" do
+    it "extracts the custom text from a '<label>: <text>' answer" do
+      expect(helper.specify_option_text("Other", "Other: bright purple")).to eq("bright purple")
+      expect(helper.specify_option_text("Word of Mouth", "Word of Mouth: Jane Doe")).to eq("Jane Doe")
     end
 
     it "extracts the custom text from a multi-select answer array" do
-      expect(helper.other_option_text([ "Red", "Other: teal" ])).to eq("teal")
+      expect(helper.specify_option_text("Other", [ "Red", "Other: teal" ])).to eq("teal")
     end
 
-    it "returns an empty string for a bare 'Other' answer" do
-      expect(helper.other_option_text("Other")).to eq("")
+    it "returns an empty string for a bare label answer" do
+      expect(helper.specify_option_text("Other", "Other")).to eq("")
     end
 
-    it "returns an empty string when there is no Other answer" do
-      expect(helper.other_option_text("Yes")).to eq("")
-      expect(helper.other_option_text(nil)).to eq("")
+    it "returns an empty string when there is no answer for the option" do
+      expect(helper.specify_option_text("Other", "Yes")).to eq("")
+      expect(helper.specify_option_text("Word of Mouth", "Other: teal")).to eq("")
+      expect(helper.specify_option_text("Other", nil)).to eq("")
     end
   end
 end

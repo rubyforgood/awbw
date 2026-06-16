@@ -192,7 +192,7 @@ module ApplicationHelper
 
     options = dynamic_form_field_options(field) ||
       field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name ] }
-    options.any? { |label, _| other_option?(label) }
+    options.any? { |label, _| FormField.other_option?(label) }
   end
 
   # Describes where a dynamic-option field's choices come from, for the form
