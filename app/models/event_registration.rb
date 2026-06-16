@@ -210,7 +210,7 @@ class EventRegistration < ApplicationRecord
   end
 
   def joinable?
-    active? && paid?
+    active? && paid? && event.videoconference_window_open?
   end
 
   def attendance_status_label
