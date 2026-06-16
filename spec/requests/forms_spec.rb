@@ -213,6 +213,30 @@ RSpec.describe "Forms", type: :request do
 
       expect(response.body).to include("[hint_text]")
     end
+
+    it "warns that the Other option is hidden on a dropdown field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown, name: "Favorite color")
+      [ "Red", "Other" ].each_with_index do |name, i|
+        option = create(:answer_option, name: name, position: i)
+        create(:form_field_answer_option, form_field: field, answer_option: option)
+      end
+
+      get edit_form_path(form)
+
+      expect(response.body).to include("The \"Other\" option is hidden on dropdown fields")
+    end
+
+    it "does not warn about Other on a dropdown field without an Other option" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown, name: "Favorite color")
+      option = create(:answer_option, name: "Red", position: 0)
+      create(:form_field_answer_option, form_field: field, answer_option: option)
+
+      get edit_form_path(form)
+
+      expect(response.body).not_to include("The \"Other\" option is hidden on dropdown fields")
+    end
   end
 
   describe "GET /forms/:id (preview)" do
@@ -261,6 +285,19 @@ RSpec.describe "Forms", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("<strong>Section</strong>")
       expect(response.body).to include("<em>Your name</em>")
+    end
+
+    it "warns that the Other option is hidden on a dropdown field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown, name: "Favorite color")
+      [ "Red", "Other" ].each_with_index do |name, i|
+        option = create(:answer_option, name: name, position: i)
+        create(:form_field_answer_option, form_field: field, answer_option: option)
+      end
+
+      get form_path(form)
+
+      expect(response.body).to include("The \"Other\" option is hidden on dropdown fields")
     end
 
     it "renders a section header's subtext under the heading" do

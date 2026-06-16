@@ -378,6 +378,20 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to match(/data-other-option-target="control"[\s\S]*?value="Other"|value="Other"[\s\S]*?data-other-option-target="control"/)
     end
 
+    it "omits the Other option from a dropdown field" do
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown,
+             name: "Favorite color", required: false)
+      [ "Red", "Other" ].each_with_index do |name, i|
+        option = create(:answer_option, name: name, position: i)
+        create(:form_field_answer_option, form_field: field, answer_option: option)
+      end
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("<option value=\"Red\"")
+      expect(response.body).not_to include("<option value=\"Other\"")
+    end
+
     it "does not add the Other controller to fields without an Other option" do
       field = create(:form_field, form: form, answer_type: :single_select_radio,
              name: "Favorite color", required: false)
