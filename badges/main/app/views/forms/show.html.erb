@@ -104,6 +104,7 @@
                 <% else %>
                   <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier], show_option_source: true %>
                 <% end %>
+                <%= render "forms/dropdown_other_warning", field: field %>
               </div>
             <% end %>
           <% end %>
