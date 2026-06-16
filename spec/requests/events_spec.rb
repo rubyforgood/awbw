@@ -574,14 +574,14 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Partial")
       end
 
-      it "shows Nothing owed when paid in full" do
+      it "shows Paid when paid in full" do
         payment = create(:payment, person: person, amount_cents: 1000, amount_cents_remaining: nil)
         create(:allocation, source: payment, allocatable: registration, amount: 1000)
 
         get registrants_event_path(event)
 
         expect(response.body).to include("fa-circle-check")
-        expect(response.body).to include(">Nothing owed</span>")
+        expect(response.body).to include(">Paid</span>")
       end
 
       it "shows a Discounted chip when a discount leaves a balance due" do
@@ -595,13 +595,13 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("$6.00 due")
       end
 
-      it "shows Nothing owed when a discount fully covers the cost" do
+      it "shows Paid when a discount fully covers the cost" do
         discount = Discount.create!(amount_cents: 1000)
         create(:allocation, source: discount, allocatable: registration, amount: 1000)
 
         get registrants_event_path(event)
 
-        expect(response.body).to include(">Nothing owed</span>")
+        expect(response.body).to include(">Paid</span>")
         expect(response.body).not_to include(">Discounted<")
       end
     end

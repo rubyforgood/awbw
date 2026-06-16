@@ -223,7 +223,7 @@
                     <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"), class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 #{badge_classes} hover:opacity-80", data: { turbo_frame: "_top" } do %>
                       <i class="fas <%= badge_icon %>"></i>
                       <% if is_paid %>
-                        <span>Nothing owed</span>
+                        <span>Paid</span>
                       <% elsif is_discounted %>
                         <span class="flex flex-col leading-tight text-left">
                           <span>Discounted</span>

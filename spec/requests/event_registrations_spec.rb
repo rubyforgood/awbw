@@ -58,7 +58,7 @@ RSpec.describe "EventRegistrations", type: :request do
           "Registered",
           "No",
           "No",
-          "Monies due",
+          "Due",
           ""
         ]
         expect(data_rows).to include(expected_row)
@@ -525,6 +525,16 @@ RSpec.describe "EventRegistrations", type: :request do
           }.not_to change(Organization, :count)
 
           expect(existing_registration.organizations).to include(existing)
+        end
+
+        it "does nothing when no organization name was submitted" do
+          expect {
+            post create_organization_event_registration_path(existing_registration)
+          }.not_to change(Organization, :count)
+
+          expect(existing_registration.organizations).to be_empty
+          expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+          expect(flash[:alert]).to be_present
         end
       end
 

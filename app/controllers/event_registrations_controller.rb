@@ -294,7 +294,7 @@ class EventRegistrationsController < ApplicationController
           er.attendance_status_label,
           er.scholarships.any? ? "Yes" : "No",
           er.scholarships.completed.any? ? "Yes" : "No",
-          cost_required ? (er.paid_in_full? ? "Nothing owed" : "Monies due") : "",
+          cost_required ? (er.paid_in_full? ? "Paid" : "Due") : "",
           total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
         ]
       end
