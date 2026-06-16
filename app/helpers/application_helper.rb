@@ -182,6 +182,19 @@ module ApplicationHelper
     end
   end
 
+  # True when a dropdown field carries an "Other" option that the public form
+  # strips (dropdowns have no free-text input). Checks the field's effective
+  # options — dynamic sources (sectors/categories) as well as author-managed
+  # stored options — so the editor and preview warn wherever "Other" would
+  # silently disappear.
+  def dropdown_hides_other?(field)
+    return false unless field.answer_type == "single_select_dropdown"
+
+    options = dynamic_form_field_options(field) ||
+      field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name ] }
+    options.any? { |label, _| other_option?(label) }
+  end
+
   # Describes where a dynamic-option field's choices come from, for the form
   # editor badge: a sentence-case label and a link to the filtered admin list
   # that manages those options. Returns nil for fields with stored options.
