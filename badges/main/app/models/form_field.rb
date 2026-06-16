@@ -34,9 +34,21 @@ class FormField < ApplicationRecord
     "primary_age_group" => "AgeRange"
   }.freeze
 
-  # The special free-text option label that lets a respondent supply their own
+  # The generic free-text option label that lets a respondent supply their own
   # value; a chosen "Other" answer is stored as "Other" or "Other: <text>".
   OTHER_OPTION_PREFIX = "Other"
+
+  # Selectable option labels that reveal a free-text "please specify" box when
+  # chosen, each mapped to that box's placeholder. A chosen answer is stored as
+  # "<label>: <typed text>" (or the bare label when nothing is typed), so the
+  # server needs no extra params. "Other" is the generic catch-all; the rest
+  # capture a specific named source for "how did you hear about us" questions.
+  SPECIFY_OPTION_PLACEHOLDERS = {
+    OTHER_OPTION_PREFIX => "Please specify",
+    "Work(ed) at an agency that has/had an AWBW program" => "Please specify organization",
+    "Word of Mouth" => "Please list the name of the person",
+    "Foundation/Funder" => "Please list the name of the foundation/funder"
+  }.freeze
 
   # Fallback character ceilings applied when a free-form field has no explicit
   # max_characters set. This is a safety net against pathological submissions
@@ -264,33 +276,58 @@ class FormField < ApplicationRecord
     field_identifier == PRIMARY_SERVICE_AREA_FIELD_IDENTIFIER ? scope.excluding_other : scope
   end
 
-  # True when this field offers the free-text "Other" choice (stored fields only).
-  def other_option?
-    return false if dynamic_options?
+  # The "please specify" placeholder for an option label, or nil when the option
+  # does not reveal a free-text box. Matched case- and whitespace-insensitively
+  # against SPECIFY_OPTION_PLACEHOLDERS.
+  def self.specify_placeholder_for(label)
+    normalized = label.to_s.strip
+    return if normalized.blank?
 
-    answer_options.any? { |option| option.name.to_s.strip.casecmp?(OTHER_OPTION_PREFIX) }
+    SPECIFY_OPTION_PLACEHOLDERS.find { |key, _| key.casecmp?(normalized) }&.last
   end
 
-  # True when a submitted value is a valid "Other" answer for a field that offers
-  # the "Other" choice: bare "Other" or the "Other: <free text>" form.
-  def other_answer?(value)
-    return false unless other_option?
+  # True when an option label reveals a free-text "please specify" box.
+  def self.specify_option?(label)
+    specify_placeholder_for(label).present?
+  end
 
-    value == OTHER_OPTION_PREFIX || value.start_with?("#{OTHER_OPTION_PREFIX}:")
+  # True when an option label is the generic free-text "Other" choice. Unlike
+  # the named specify options (whose bare label still carries meaning), a bare
+  # "Other" is useless, so dropdowns — which can't collect the free text —
+  # strip it entirely.
+  def self.other_option?(label)
+    label.to_s.strip.casecmp?(OTHER_OPTION_PREFIX)
+  end
+
+  # The labels of this field's offered options that reveal a free-text box
+  # (e.g. "Other", "Word of Mouth"). Empty for dynamic fields, which never
+  # offer them.
+  def specify_option_labels
+    return [] if dynamic_options?
+
+    answer_options.map(&:name).select { |name| FormField.specify_option?(name) }
+  end
+
+  # True when a submitted value is a valid "specify" answer for one of this
+  # field's specify options: the bare label or its "<label>: <free text>" form.
+  def specify_answer?(value)
+    specify_option_labels.any? do |label|
+      value == label || value.start_with?("#{label}:")
+    end
   end
 
   # Returns a validation error string when a submitted selectable value is not
   # one of the field's offered options — guarding against tampered/forged
   # submissions — or nil when it passes / does not apply. Handles single and
-  # multi-select, and allows "Other" / "Other: <text>" when the field offers it.
-  # Blank values are left to the presence (required) check.
+  # multi-select, and allows a "specify" option's "<label>: <text>" free-text
+  # form when the field offers it. Blank values are left to the presence check.
   def answer_inclusion_error(value)
     allowed = allowed_answer_values
     return unless allowed
 
     submitted = Array(value).map(&:to_s).reject(&:blank?)
     return if submitted.empty?
-    return if submitted.all? { |v| allowed.include?(v) || other_answer?(v) }
+    return if submitted.all? { |v| allowed.include?(v) || specify_answer?(v) }
 
     "has an invalid selection"
   end

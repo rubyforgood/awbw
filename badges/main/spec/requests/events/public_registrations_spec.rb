@@ -355,9 +355,25 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       get new_event_public_registration_path(event)
 
-      expect(response.body).to include('data-controller="other-option"')
-      expect(response.body).to include('data-other-option-target="control"')
+      expect(response.body).to include('data-controller="specify-option"')
+      expect(response.body).to include('data-specify-option-target="control"')
       expect(response.body).to include('placeholder="Please specify"')
+    end
+
+    it "reveals an option-specific text input for a named specify option" do
+      field = create(:form_field, form: form, answer_type: :single_select_radio,
+             name: "How did you hear about this AWBW training?", required: false)
+      [ "Online Search", "Word of Mouth" ].each_with_index do |name, i|
+        option = create(:answer_option, name: name, position: i)
+        create(:form_field_answer_option, form_field: field, answer_option: option)
+      end
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include('data-controller="specify-option"')
+      expect(response.body).to include('placeholder="Please list the name of the person"')
+      # The named option submits its own label, optionally with the typed text.
+      expect(response.body).to match(/data-specify-option-target="control"[\s\S]*?value="Word of Mouth"|value="Word of Mouth"[\s\S]*?data-specify-option-target="control"/)
     end
 
     it "reveals the text input for a category-backed dynamic field's Other option" do
@@ -371,11 +387,11 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       get new_event_public_registration_path(event)
 
-      expect(response.body).to include('data-controller="other-option"')
+      expect(response.body).to include('data-controller="specify-option"')
       expect(response.body).to include('placeholder="Please specify"')
       # The Other option submits the literal "Other", not the category id.
-      expect(response.body).to include('data-other-option-target="control"')
-      expect(response.body).to match(/data-other-option-target="control"[\s\S]*?value="Other"|value="Other"[\s\S]*?data-other-option-target="control"/)
+      expect(response.body).to include('data-specify-option-target="control"')
+      expect(response.body).to match(/data-specify-option-target="control"[\s\S]*?value="Other"|value="Other"[\s\S]*?data-specify-option-target="control"/)
     end
 
     it "omits the Other option from a dropdown field" do
@@ -392,7 +408,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).not_to include("<option value=\"Other\"")
     end
 
-    it "does not add the Other controller to fields without an Other option" do
+    it "does not add the specify controller to fields without a specify option" do
       field = create(:form_field, form: form, answer_type: :single_select_radio,
              name: "Favorite color", required: false)
       option = create(:answer_option, name: "Red", position: 0)
@@ -400,7 +416,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       get new_event_public_registration_path(event)
 
-      expect(response.body).not_to include('data-controller="other-option"')
+      expect(response.body).not_to include('data-controller="specify-option"')
     end
 
     it "re-checks Other and prefills the text input after a validation error" do
