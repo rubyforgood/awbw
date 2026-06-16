@@ -401,4 +401,26 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.noticeable_label(user)).to eq(user.name)
     end
   end
+
+  describe "#dynamic_form_field_options" do
+    let(:form) { create(:form) }
+
+    it "omits the Other sector for the primary service-area dropdown" do
+      create(:sector, :published, name: "Domestic Violence")
+      create(:sector, :published, name: "Other")
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
+
+      labels = helper.dynamic_form_field_options(field).map(&:first)
+      expect(labels).to include("Domestic Violence")
+      expect(labels).not_to include("Other")
+    end
+
+    it "includes the Other sector for the additional service-areas field" do
+      create(:sector, :published, name: "Other")
+      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+
+      labels = helper.dynamic_form_field_options(field).map(&:first)
+      expect(labels).to include("Other")
+    end
+  end
 end

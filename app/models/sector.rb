@@ -24,6 +24,10 @@ class Sector < ApplicationRecord
     "Other"
   ]
 
+  # The catch-all sector. Offered for "additional" service areas but not as a
+  # respondent's single "primary" service area.
+  OTHER_SECTOR_NAME = "Other"
+
   STORY_DISPLAY_TEXT = "Which sectors does this story fit into?"
   VIDEO_DISPLAY_TEXT = "Which sectors apply?"
 
@@ -44,6 +48,7 @@ class Sector < ApplicationRecord
   scope :sector_name, ->(sector_name) {
     sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }
   scope :sector_ids, ->(ids) { where(id: ids.to_s.split("-").map(&:to_i)) }
+  scope :excluding_other, -> { where.not(name: OTHER_SECTOR_NAME) }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
   scope :has_published_taggings, -> {
     subqueries = Tag::TAGGABLE_META.map do |_key, data|
