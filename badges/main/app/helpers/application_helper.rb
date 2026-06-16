@@ -283,7 +283,7 @@ module ApplicationHelper
   # submissions, which have no registration — fall back to the form submission
   # show page.
   def form_submission_link_path(submission)
-    event = submission.event || submission.form.events.find_by(event_forms: { role: submission.role })
+    event = submission.resolved_event
     registration = event && submission.person.event_registrations.find_by(event: event)
     return event_public_registration_path(event, reg: registration.slug) if registration&.slug.present?
     form_submission_path(submission)

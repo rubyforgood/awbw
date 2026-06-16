@@ -168,7 +168,13 @@ class EventDashboard
   end
 
   def grand_total_cents
-    registration_subtotal_cents + scholarship_total_cents + cont_ed_total_cents
+    registration_subtotal_cents + scholarship_total_cents + cont_ed_total_cents + unallocated_bulk_payment_cents
+  end
+
+  # Money received through this event's bulk payment submissions that hasn't been
+  # allocated to a registration yet — cash on hand still waiting to be applied.
+  def unallocated_bulk_payment_cents
+    bulk_payments.sum(:amount_cents_remaining)
   end
 
   # Cash actually collected from registrants: registration payments received plus
@@ -678,6 +684,16 @@ class EventDashboard
 
   def allocated_by_registration
     @allocated_by_registration ||= registration_allocations.group(:allocatable_id).sum(:amount)
+  end
+
+  # Payments tied to this event's bulk payment form submissions. Scoped by the
+  # submission's own event_id (matching the bulk payments page) rather than the
+  # shared form's event_forms, so a form reused across events doesn't pull in
+  # other events' submissions.
+  def bulk_payments
+    @bulk_payments ||= Payment.where(
+      form_submission_id: event.form_submissions.where(role: "bulk_payment").select(:id)
+    )
   end
 
   def scholarships

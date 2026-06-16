@@ -156,4 +156,59 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(response.body).to include("Attendee first name", "Attendee last name", "Attendee email")
     end
   end
+
+  describe "GET show" do
+    # Publicly visible so the signed-out viewer can load the page; admins see it
+    # regardless. A non-zero cost lets a registration carry a balance to allocate.
+    let(:event) { create(:event, :publicly_visible, cost_cents: 1000) }
+    let(:payer) { create(:person) }
+    let!(:submission) { create(:form_submission, person: payer, form: form, role: "bulk_payment") }
+
+    def get_show
+      get event_bulk_payment_path(event, submission_id: submission.id)
+    end
+
+    context "as an admin" do
+      it "shows the admin dashboard and bulk payments links" do
+        get_show
+
+        expect(response.body).to include(dashboard_event_path(event))
+        expect(response.body).to include(bulk_payments_event_path(event))
+      end
+
+      it "notes when no payment has been recorded" do
+        get_show
+
+        expect(response.body).to include("No payment has been recorded")
+      end
+
+      context "with a recorded payment and allocation" do
+        let(:registrant) { create(:person, first_name: "Jordan", last_name: "Rivers") }
+        let!(:event_registration) { create(:event_registration, event: event, registrant: registrant) }
+        let!(:payment) do
+          create(:payment, person: payer, form_submission: submission,
+                 amount_cents: 1000, amount_cents_remaining: 500)
+        end
+        let!(:allocation) { create(:allocation, source: payment, allocatable: event_registration, amount: 500) }
+
+        it "shows the relevant allocations" do
+          get_show
+
+          expect(response.body).to include("Payment allocations")
+          expect(response.body).to include("Jordan Rivers")
+        end
+      end
+    end
+
+    context "as a signed-out viewer" do
+      before { sign_out admin }
+
+      it "does not show the admin allocations section" do
+        get_show
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("Payment allocations")
+      end
+    end
+  end
 end

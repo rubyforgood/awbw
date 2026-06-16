@@ -1,102 +1,181 @@
-<% submission = submission.decorate %>
-<% payment = submission.payments.first %>
-<% attendee_matches = submission.matched_attendees(event_registrations) %>
-<div id="<%= dom_id(submission, :card) %>" data-controller="dropdown" class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow">
-  <div class="flex items-center justify-between gap-2">
-    <span class="text-sm font-medium text-gray-900 truncate"><%= submission.person.name %></span>
-    <span class="text-sm text-gray-500 truncate"><%= submission.person.email %></span>
-    <span class="text-sm text-gray-500 shrink-0 text-center"><%= submission.answers_by_identifier["payment_method"].presence || "—" %></span>
-    <span id="<%= dom_id(payment, :remaining) if payment %>">
+<%
+  submission = submission.decorate
+  payment = submission.payment
+  payment_method = submission.answers_by_identifier["payment_method"]
+  content_id = "payment-details-#{submission.id}"
+  arrow_id = "payment-arrow-#{submission.id}"
+  # Expanded on load when returning from another page (e.g. allocations) that
+  # links back with this submission's id in `expand`, so the server renders this
+  # card open and the matching `#payment-card-<id>` URL anchor scrolls to it. The
+  # allocate/create turbo stream also forces it open via `expanded: true`.
+  expanded = local_assigns.fetch(:expanded) { params[:expand].to_i == submission.id }
+
+  # Shared across every card so attendee matching and allocated totals don't
+  # re-query per registration per card (preloaded by the controller).
+  event_registrations ||= @event_registrations || @event.event_registrations.active.includes(:registrant)
+  allocated_by_registration ||= {}
+  event_cost_cents = @event.cost_cents.to_i
+  attendee_matches = submission.matched_attendees(event_registrations)
+%>
+<div id="payment-card-<%= submission.id %>"
+     data-controller="dropdown"
+      class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow scroll-mt-4">
+  <%# Fixed column template (shared by every card so columns align row-to-row):
+      name | email | method | amount | badge | date | submission | chevron. %>
+  <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_8rem_6rem_13rem_7rem_auto_1.5rem]">
+    <span class="text-sm font-medium text-gray-900 min-w-0 lg:truncate"><%= submission.person.name %></span>
+    <span class="text-sm text-gray-500 min-w-0 break-all lg:break-normal lg:truncate"><%= submission.person.email %></span>
+    <span class="text-sm text-gray-500 min-w-0 whitespace-nowrap lg:truncate"><%= payment_method.presence || "—" %></span>
+    <span class="text-sm text-gray-500 whitespace-nowrap tabular-nums lg:text-right">
+      <% amount_cents = payment&.amount_cents || submission.bulk_payment_amount_cents(@event) %>
+      <%= dollars_from_cents(amount_cents) %>
+    </span>
+    <span id="<%= dom_id(payment, :remaining) if payment %>" class="min-w-0">
       <%= render "payment_badge", payment: payment %>
     </span>
-    <span class="text-sm text-gray-500 whitespace-nowrap shrink-0"><%= submission.created_at.strftime("%b %-d, %Y") %></span>
+    <span class="text-sm text-gray-500 whitespace-nowrap"><%= submission.created_at.strftime("%b %-d, %Y") %></span>
+    <%= link_to form_submission_path(submission, return_to: "bulk_payments", expand: submission.id),
+                title: "View form submission",
+                class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
+      <i class="fa-solid fa-file-lines text-xs"></i> Submission
+    <% end %>
+
     <button type="button"
             data-action="dropdown#toggle"
-            data-dropdown-payload-param='[{"payment-details-<%= submission.id %>":"hidden"}, {"payment-arrow-<%= submission.id %>":"rotate-180"}]'
-            class="text-gray-400 hover:text-gray-600 p-1 shrink-0"
+            <% if expanded %>data-dropdown-target="expand"<% end %>
+            data-dropdown-payload-param='[{"<%= content_id %>":"hidden"}, {"<%= arrow_id %>":"rotate-180"}]'
+            class="text-gray-400 hover:text-gray-600 p-1 justify-self-end"
             title="More info">
-      <i id="payment-arrow-<%= submission.id %>" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+      <i id="<%= arrow_id %>" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
     </button>
   </div>
-  <div id="payment-details-<%= submission.id %>"
+  <div id="<%= content_id %>"
        class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3"
        data-dropdown-target="content">
-    <div>
-      <%= link_to form_submission_path(submission),
-                  class: "text-sm text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1",
-                  target: "_blank", rel: "noopener noreferrer" do %>
-        <i class="fa-solid fa-file-lines text-xs"></i> View submission
-      <% end %>
-    </div>
     <% if attendee_matches.present? %>
-      <div class="border-t border-gray-100 pt-2 space-y-1.5">
-        <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Submitted Info</h4>
-        <table class="min-w-full">
-          <thead>
-            <tr class="text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-200">
-              <th class="text-left pb-1 pr-2 font-medium">First Name</th>
-              <th class="text-left pb-1 pr-2 font-medium">Last Name</th>
-              <th class="text-left pb-1 pr-2 font-medium">Email</th>
-              <th class="pb-1"></th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <% attendee_matches.each do |am| %>
-              <tr class="align-top text-sm">
-                <td class="py-2 pr-2 text-gray-900 font-medium whitespace-nowrap"><%= am[:first_name] %></td>
-                <td class="py-2 pr-2 text-gray-900 whitespace-nowrap"><%= am[:last_name] %></td>
-                <td class="py-2 pr-2 text-gray-500"><%= am[:email] %></td>
-                <td class="py-2 whitespace-nowrap text-right">
-                  <% if am[:matches].any? %>
-                    <div class="flex flex-col gap-1 items-end">
-                      <% am[:matches].each do |reg| %>
-                        <div class="flex items-center gap-2">
-                          <% if payment && payment.amount_cents_remaining > 0 && !reg.paid_in_full? %>
-                            <%= form_tag allocate_bulk_payment_event_path(@event), class: "flex items-center gap-1 shrink-0" do %>
-                              <%= hidden_field_tag :payment_id, payment.id %>
-                              <%= hidden_field_tag :event_registration_id, reg.id %>
-                              <span class="text-sm text-gray-500">$</span>
-                              <%= number_field_tag :amount_dollars, nil, step: "0.01", min: "0.01", class: "w-16 rounded border border-gray-300 px-1 py-1 text-xs", placeholder: "0.00" %>
-                              <%= button_tag "Allocate", class: "rounded bg-blue-600 px-1.5 py-1 text-xs font-medium text-white hover:bg-blue-700 transition-colors" %>
-                            <% end %>
+      <div class="@container border-t border-gray-100 pt-2 space-y-1.5">
+        <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Submitted info</h4>
+        <%# Names/email stay fluid (fr) and shrink with the container; the
+            profile/amount/action columns get fixed widths so they align across
+            every row and the header (each row is its own grid, so shared fixed
+            tracks are what keeps the columns from going jagged).
+            Breakpoint is a CONTAINER query (@4xl), not a viewport one, so the
+            grid only turns on when this card is actually wide enough to hold
+            the fixed columns — otherwise (e.g. sidebar open) rows fall back to
+            the stacked/wrapping layout below instead of being crushed. %>
+        <% submitted_cols = "@4xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)_3.5rem_8rem_8rem_13rem]" %>
+        <%# Header row — only shown once the grid is active. When narrower, each
+            attendee stacks into an identity row (name + email) and an actions
+            row below it, so the header columns would be meaningless. %>
+        <div class="hidden @4xl:grid <%= submitted_cols %> @4xl:gap-4 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-200 pb-1">
+          <div>First name</div>
+          <div>Last name</div>
+          <div>Email</div>
+          <div>Profile</div>
+          <div>Registration</div>
+          <div>Allocations</div>
+          <div>Action</div>
+        </div>
+        <div class="divide-y divide-gray-100">
+          <% attendee_matches.each do |am| %>
+            <%# @4xl:contents flattens the identity/actions groups into the parent
+                grid so columns align across rows; when narrower they stack as
+                two wrapping rows (identity, then actions). %>
+            <div class="text-sm flex flex-col gap-3 py-3 @4xl:grid <%= submitted_cols %> @4xl:gap-4 @4xl:items-start @4xl:py-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1 @4xl:contents">
+                <div class="text-gray-900 font-medium"><%= am[:first_name] %></div>
+                <div class="text-gray-900"><%= am[:last_name] %></div>
+                <div class="text-gray-500 break-all"><%= am[:email] %></div>
+              </div>
+              <div class="flex flex-wrap items-start gap-3 @4xl:contents">
+                <% if am[:matches].any? %>
+                  <div class="flex flex-col gap-1.5">
+                    <% am[:matches].each do |reg| %>
+                      <div class="flex flex-col gap-1 items-start">
+                        <%= render "person_profile_button", person: reg.registrant, return_to: "bulk_payments", event: @event, expand: submission.id %>
+                      </div>
+                    <% end %>
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <% am[:matches].each do |reg| %>
+                      <% remaining_cents = [ event_cost_cents - allocated_by_registration.fetch(reg.id, 0), 0 ].max %>
+                      <div class="flex flex-col gap-1 items-start">
+                        <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
+                                    title: "View #{reg.registrant.name}'s registration for #{@event.title}",
+                                    class: "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
+                          <i class="fa-solid fa-pen-to-square text-gray-400"></i>
+                          <% if remaining_cents.zero? %>
+                            <span class="font-semibold text-gray-500 whitespace-nowrap">Paid</span>
+                          <% else %>
+                            <span class="font-semibold text-orange-600 tabular-nums whitespace-nowrap"><%= dollars_from_cents(remaining_cents) %></span>
                           <% end %>
-                          <%= render "matched_person_card", person: reg.registrant %>
-                        </div>
-                      <% end %>
-                    </div>
-                  <% else %>
-                    <span class="text-gray-400 text-sm">No match</span>
-                  <% end %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <% am[:matches].each do |reg| %>
+                      <% allocated_cents = allocated_by_registration.fetch(reg.id, 0) %>
+                      <div class="flex flex-col gap-1 items-start">
+                        <%= link_to allocations_path(allocatable_sgid: reg.to_sgid.to_s, return_to: "bulk_payments", expand: submission.id),
+                                    title: "View registration allocations",
+                                    class: "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
+                          <i class="fa-solid fa-list-check text-gray-400"></i>
+                          <span class="font-semibold text-green-600 tabular-nums"><%= dollars_from_cents(allocated_cents) %></span>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <% am[:matches].each do |reg| %>
+                      <% allocated_cents = allocated_by_registration.fetch(reg.id, 0) %>
+                      <% reg_paid_in_full = allocated_cents >= event_cost_cents %>
+                      <div class="flex flex-col gap-1 items-start">
+                        <% if payment && payment.amount_cents_remaining > 0 && !reg_paid_in_full %>
+                          <%= form_tag allocate_bulk_payment_event_path(@event), class: "flex items-center gap-1.5" do %>
+                            <%= hidden_field_tag :payment_id, payment.id %>
+                            <%= hidden_field_tag :event_registration_id, reg.id %>
+                            <span class="text-sm text-gray-500">$</span>
+                            <%= number_field_tag :amount_dollars, nil, step: "0.01", min: "0.01", class: "w-20 rounded-lg border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", placeholder: "0.00" %>
+                            <%= button_tag "Allocate", class: "btn btn-primary" %>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <div class="text-gray-400 @4xl:col-span-4">No match</div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
       </div>
     <% end %>
     <% if payment %>
       <div class="border-t border-gray-100 pt-2 space-y-2">
-        <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Payment Allocations</h4>
+        <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Payment allocations</h4>
         <div id="<%= dom_id(payment, :allocations) %>">
-          <%= render "payment_allocations", payment: payment %>
+          <%= render "payment_allocations", payment: payment, return_params: { return_to: "bulk_payments", expand: submission.id } %>
         </div>
         <% if payment.amount_cents_remaining > 0 %>
           <div class="pt-2 border-t border-gray-100">
-            <h5 class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">New Allocation</h5>
+            <h5 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">New allocation</h5>
             <%= form_tag allocate_bulk_payment_event_path(@event),
                          class: "flex items-center gap-2" do %>
               <%= hidden_field_tag :payment_id, payment.id %>
-              <%= select_tag :event_registration_id,
-                   options_from_collection_for_select(event_registrations, :id, ->(er) { "#{er.registrant.name} — #{er.registrant.preferred_email}" }),
-                   prompt: "Select registrant...",
-                   class: "w-64 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm shadow-sm" %>
+              <div class="w-64 shrink-0">
+                <%= select_tag :event_registration_id,
+                     options_from_collection_for_select(event_registrations, :id, ->(r) { "#{r.registrant.name} — #{r.registrant.email}" }),
+                     prompt: "Select registrant...",
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring focus:ring-blue-200 focus:border-blue-500" %>
+              </div>
               <span class="text-sm text-gray-500">$</span>
               <%= number_field_tag :amount_dollars, nil,
                                    step: "0.01", min: "0.01",
-                                   class: "w-20 rounded border border-gray-300 px-1.5 py-1.5 text-sm",
+                                   class: "w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
                                    placeholder: "0.00" %>
-              <%= button_tag "Allocate",
-                  class: "rounded bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors" %>
+              <%= button_tag "Allocate", class: "btn btn-primary" %>
             <% end %>
           </div>
         <% end %>

@@ -3,11 +3,13 @@ module AllocationsHelper
   # the allocations index reads the same for any allocatable type and links
   # through to the record when a route exists. Add a `when` clause for each new
   # allocatable type; everything else falls back to a name + humanized type.
-  def allocatable_descriptor(allocatable)
+  # `return_params` (e.g. from a bulk payment tray) are appended to a linkable
+  # path so the destination's back link can return to the origin.
+  def allocatable_descriptor(allocatable, return_params: {})
     case allocatable
     when EventRegistration
       {
-        path: edit_event_registration_path(allocatable),
+        path: edit_event_registration_path(allocatable, return_params),
         title: "Event registration for #{allocatable.registrant&.full_name}",
         subtitle: allocatable.event&.title
       }

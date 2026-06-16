@@ -1,30 +1,38 @@
 <% allocations = payment.allocations.includes(:allocatable) %>
 <% if allocations.any? %>
-  <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-200 text-xs">
+  <div class="border border-gray-200 rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
       <thead class="bg-gray-100">
         <tr>
-          <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase">Allocated To</th>
-          <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase">Amount</th>
-          <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase">Date</th>
-          <th class="px-3 py-2 text-right font-medium text-gray-500 uppercase">Actions</th>
+          <th class="px-3 py-2 text-left text-sm font-semibold text-gray-700">Allocated to</th>
+          <th class="px-3 py-2 text-left text-sm font-semibold text-gray-700">Amount</th>
+          <th class="px-3 py-2 text-left text-sm font-semibold text-gray-700">Date</th>
+          <th class="px-3 py-2 text-right text-sm font-semibold text-gray-700">Actions</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200">
         <% allocations.each do |allocation| %>
-          <tr class="<%= 'bg-red-50' if allocation.amount.to_i < 0 %>">
-            <td class="px-3 py-2 text-gray-900">
-              <% if allocation.allocatable_type == "EventRegistration" && allocation.allocatable.present? %>
-                <%= allocation.allocatable.registrant.full_name %> — <%= allocation.allocatable.event.title %>
-              <% else %>
-                <%= allocation.allocatable_type.underscore.titleize %>
-              <% end %>
+          <% row_class = if allocation.amount.to_i < 0
+              "bg-red-50 hover:bg-red-100"
+            elsif allocation.reverted_id.present?
+              "bg-gray-100 opacity-60 hover:bg-gray-200 hover:opacity-100"
+            else
+              "hover:bg-gray-50"
+            end %>
+          <tr class="<%= row_class %> transition-colors duration-150">
+            <td class="px-3 py-2 text-gray-800">
+              <%= render "allocations/allocatable_link", allocation: allocation, return_params: local_assigns.fetch(:return_params, {}) %>
             </td>
-            <td class="px-3 py-2 text-gray-900 whitespace-nowrap">$<%= "%.2f" % (allocation.amount.to_d / 100) %></td>
+            <td class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap tabular-nums">$<%= "%.2f" % allocation.amount_dollars %></td>
             <td class="px-3 py-2 text-gray-500 whitespace-nowrap"><%= allocation.created_at.strftime("%b %-d, %Y") %></td>
             <td class="px-3 py-2 text-right whitespace-nowrap">
               <% unless allocation.reverted? || allocation.amount.to_i < 0 %>
-                <%= button_to "revert", revert_allocation_path(allocation), method: :post, class: "text-danger hover:text-danger-dark", data: { turbo_confirm: "Are you sure?" } %>
+                <%= button_to revert_allocation_path(allocation), method: :post,
+                      class: "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer",
+                      data: { turbo_confirm: "Are you sure?" } do %>
+                  <i class="fa-solid fa-rotate-left text-[0.7rem]"></i>
+                  Revert
+                <% end %>
               <% end %>
             </td>
           </tr>
