@@ -35,7 +35,6 @@
     </span>
     <span class="text-sm text-gray-500 whitespace-nowrap"><%= submission.created_at.strftime("%b %-d, %Y") %></span>
     <%= link_to form_submission_path(submission, return_to: "bulk_payments", expand: submission.id),
-                target: "_blank", rel: "noopener noreferrer",
                 title: "View form submission",
                 class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
       <i class="fa-solid fa-file-lines text-xs"></i> Submission
@@ -102,7 +101,6 @@
                       <% remaining_cents = [ event_cost_cents - allocated_by_registration.fetch(reg.id, 0), 0 ].max %>
                       <div class="flex flex-col gap-1 items-start">
                         <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
-                                    target: "_blank", rel: "noopener noreferrer",
                                     title: "View #{reg.registrant.name}'s registration for #{@event.title}",
                                     class: "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                           <i class="fa-solid fa-pen-to-square text-gray-400"></i>
@@ -120,7 +118,6 @@
                       <% allocated_cents = allocated_by_registration.fetch(reg.id, 0) %>
                       <div class="flex flex-col gap-1 items-start">
                         <%= link_to allocations_path(allocatable_sgid: reg.to_sgid.to_s, return_to: "bulk_payments", expand: submission.id),
-                                    target: "_blank", rel: "noopener noreferrer",
                                     title: "View registration allocations",
                                     class: "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                           <i class="fa-solid fa-list-check text-gray-400"></i>
