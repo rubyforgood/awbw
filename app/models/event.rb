@@ -9,6 +9,10 @@ class Event < ApplicationRecord
 
   has_rich_text :rhino_header
   has_rich_text :rhino_description
+  # Free-form "Before you attend" content (materials, supplies, what to bring,
+  # policies) shown on its own ticket-linked page so registrants stop missing the
+  # details that used to live in a long confirmation email.
+  has_rich_text :rhino_event_details
 
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :location, optional: true
@@ -147,6 +151,12 @@ class Event < ApplicationRecord
 
   def name
     title
+  end
+
+  # Heading shown on the ticket call-out and the details page. Falls back to the
+  # default even when an admin clears it, so the section never renders unlabelled.
+  def event_details_label
+    super.presence || "Before you attend"
   end
 
   # Virtual attribute for cost in dollars (converts to/from cost_cents)

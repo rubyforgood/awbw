@@ -400,6 +400,20 @@
         <div class="form-group mt-12">
           <%= rhino_editor(f, :description, label: "Description") %>
         </div>
+
+        <div class="form-group mt-12">
+          <%= f.label :event_details_label, "Details section label", class: "block font-medium mb-1 text-gray-700" %>
+          <%= f.text_field :event_details_label,
+                       placeholder: "Before you attend",
+                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" %>
+          <p class="text-gray-500 text-sm mt-1">Heading for the details call-out on the ticket and the details page (e.g. "Before you attend", "Art supplies &amp; materials").</p>
+        </div>
+
+        <div class="form-group mt-6">
+          <%= rhino_editor(f, :event_details,
+                label: "Details content",
+                hint: "Materials, supplies, what to bring, and policies — shown on its own page linked prominently from the ticket. Leave blank to hide it entirely.") %>
+        </div>
       </div>
     </div>
 

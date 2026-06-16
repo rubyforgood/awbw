@@ -94,6 +94,23 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /details" do
+    let(:event) { create(:event, :published, :publicly_visible) }
+
+    it "renders the details page when details are present" do
+      event.update!(event_details_label: "Art supplies", rhino_event_details: "<p>Bring scissors</p>")
+      get details_event_path(event)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Art supplies")
+      expect(response.body).to include("Bring scissors")
+    end
+
+    it "redirects to the event when details are blank" do
+      get details_event_path(event)
+      expect(response).to redirect_to(event_path(event))
+    end
+  end
+
   describe "GET /new" do
     context "as admin" do
       it "renders successfully" do

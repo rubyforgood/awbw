@@ -1,8 +1,8 @@
 class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
-  skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
+  skip_before_action :authenticate_user!, only: [ :index, :show, :staff, :details ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants details staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
 
   def index
     authorize!
@@ -88,6 +88,20 @@ class EventsController < ApplicationController
           disposition: "attachment"
       end
     end
+  end
+
+  # Public "Before you attend" page (materials, supplies, policies). Linked from
+  # the registration ticket. When no details are set there is nothing to show, so
+  # fall back to the event page.
+  def details
+    authorize! @event, to: :details?
+
+    if @event.rhino_event_details.blank?
+      redirect_to event_path(@event, reg: params[:reg].presence)
+      return
+    end
+
+    @event = @event.decorate
   end
 
   def staff
