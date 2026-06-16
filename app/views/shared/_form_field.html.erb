@@ -1,7 +1,8 @@
 <% case field.html_input_type %>
 <% when :label %>
   <div class="label-plus-comment">
-    <label><%= field.name %> <%= "*" if field.required? %></label>
+    <%# Display-only field — never collects input, so no required marker. %>
+    <label><%= field.name %></label>
     <div class="custom-smaller"> <%= field.hint_text %> </div>
   </div>
 

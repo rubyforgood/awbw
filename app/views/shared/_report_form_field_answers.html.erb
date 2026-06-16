@@ -8,7 +8,7 @@
 
   <div class="label-plus-comment">
     <% unless answers.include?(log_field.id) %>
-      <label class='bold'><%= "#{log_field.name}" %><% if log_field.required %><%= " *" %><% end %></label>
+      <label class='bold'><%= log_field.name %><% if log_field.required && log_field.collects_input? %><%= " *" %><% end %></label>
     <% end %>
 
     <% unless answers.include?(log_field.hint_text) %>
