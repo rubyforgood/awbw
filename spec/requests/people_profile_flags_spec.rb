@@ -21,7 +21,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
     profile_show_member_since: "Facilitator since",
     profile_show_phone: "555-123-4567",
     profile_show_affiliations: "Affiliations",
-    profile_show_sectors: "mb-3\">Primary sector</h2>",
+    profile_show_sectors: "mb-3\">Sectors</h2>",
     profile_show_bio: "mb-3\">Bio</h2>",
     profile_show_workshops: "mb-3\">Workshops authored</h2>",
     profile_show_workshop_variations: "Workshop variations authored",

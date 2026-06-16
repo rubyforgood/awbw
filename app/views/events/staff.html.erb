@@ -28,7 +28,9 @@
         <% active_affiliation = person.affiliations.find { |a| !a.inactive? } %>
         <% org = active_affiliation&.organization %>
         <% bio = event_staff.public_bio %>
-        <% sectors = person.profile_show_sectors? ? person.sectors.sort_by(&:name) : [] %>
+        <%# Primary sector first (starred, darker chip), then the rest alphabetically —
+            the same treatment as the recipients page. %>
+        <% sector_items = person.profile_show_sectors? ? person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } : [] %>
         <%# Facilitator tenure → one experience badge, computed from already-loaded
             affiliations (avoids the decorator's query-heavy badges call). Thresholds
             match PersonDecorator#compute_badges. %>
@@ -93,13 +95,13 @@
                 </span>
               <% end %>
 
-              <% if sectors.any? %>
+              <% if sector_items.any? %>
                 <div class="mt-1.5 flex flex-wrap justify-center gap-1">
-                  <% sectors.first(3).each do |sector| %>
-                    <span class="px-2 py-0.5 rounded-md text-xs font-medium <%= DomainTheme.bg_class_for(:sectors, intensity: 100) %> <%= DomainTheme.text_class_for(:sectors, intensity: 700) %>"><%= sector.name %></span>
+                  <% sector_items.first(3).each do |si| %>
+                    <%= render "sectors/tagging_label", sector: si.sector, is_primary: si.is_primary? %>
                   <% end %>
-                  <% if sectors.size > 3 %>
-                    <span class="px-2 py-0.5 rounded-md text-xs font-medium text-gray-400">+<%= sectors.size - 3 %></span>
+                  <% if sector_items.size > 3 %>
+                    <span class="px-2 py-0.5 rounded-md text-xs font-medium text-gray-400">+<%= sector_items.size - 3 %></span>
                   <% end %>
                 </div>
               <% end %>

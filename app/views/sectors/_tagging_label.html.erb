@@ -4,11 +4,18 @@
 
 <% display_leader ||= false %>
 
-<% bg_color ||= DomainTheme.bg_class_for(:sectors) %>
+<% is_primary ||= false %>
+
+<%# Primary service areas read as a darker-green chip with a star so they stand
+    out from the additional sectors, matching the star used in the chip editor;
+    everyone else keeps the light-lime default. %>
+<% bg_color ||= is_primary ? "bg-lime-200" : DomainTheme.bg_class_for(:sectors) %>
 
 <%# bg_hover_color ||= DomainTheme.bg_class_for(:sectors, hover: true) %>
 
-<% bg_hover_color ||= "bg-lime-200" %>
+<% bg_hover_color ||= is_primary ? "bg-lime-300" : "bg-lime-200" %>
+
+<% text_color ||= is_primary ? "text-lime-800" : "text-gray-500" %>
 
 <% if sector %>
   <%= link_to taggings_path(sector_names_all: sector.name),
@@ -17,11 +24,11 @@
                       rounded-md
                       border #{ DomainTheme.border_class_for(:sectors) } hover:#{ DomainTheme.border_class_for(:sectors, intensity: 500) }
                       #{ bg_color } hover:#{ bg_hover_color }
-                      text-gray-500
+                      #{ text_color }
                       px-3 py-1
                       text-sm font-medium
                       transition" do %>
-    <span data-tag-link-loading-target="text"><%= sector.name %><% if display_leader && is_leader %><span class="ml-1 text-xs text-indigo-600">(Leader)</span><% end %></span>
+    <span data-tag-link-loading-target="text"><% if is_primary %><i class="fa-solid fa-star mr-1 text-xs text-amber-400" aria-hidden="true" title="Primary service area"></i><% end %><%= sector.name %><% if display_leader && is_leader %><span class="ml-1 text-xs text-indigo-600">(Leader)</span><% end %></span>
     <span data-tag-link-loading-target="spinner" class="hidden"><i class="fa-solid fa-spinner animate-spin" aria-hidden="true"></i></span>
   <% end %>
 <% end %>
