@@ -75,7 +75,10 @@
               the avatar stays blank). Calm palette: neutral name/org links, with
               the sector chips as the single accent. %>
           <% dp = person.decorate %>
-          <% has_sectors = person.sectors.any? %>
+          <%# Primary service area first (rendered as a darker-green crowned chip),
+              then the additional sectors alphabetically. %>
+          <% sectorable_items = person.sectorable_items_primary_first %>
+          <% has_sectors = sectorable_items.any? %>
           <div class="relative px-5 py-4 pr-12 <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:scholarships) %>">
             <button type="button" data-action="expandable-card#toggle"
                     aria-label="Toggle <%= person.name %> application"
@@ -119,8 +122,8 @@
                     <% if has_sectors %>
                       <div class="flex flex-wrap items-center gap-2">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Serves</span>
-                        <% person.sectors.sort_by(&:name).each do |sector| %>
-                          <%= render "sectors/tagging_label", sector: sector %>
+                        <% sectorable_items.each do |si| %>
+                          <%= render "sectors/tagging_label", sector: si.sector, is_primary: si.is_primary? %>
                         <% end %>
                       </div>
                     <% elsif service_area_text.present? %>

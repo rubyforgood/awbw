@@ -124,44 +124,27 @@
           <% end %>
           <!-- Sectors -->
           <% if @person.profile_show_sectors? %>
-            <% sectorable_items = @person.sectorable_items.includes(:sector).order("sectors.name") %>
-            <% primary_sector_items = sectorable_items.select(&:is_primary?) %>
-            <% additional_sector_items = sectorable_items.reject(&:is_primary?) %>
+            <%# One combined list: the primary sector leads as a darker-green starred
+                chip, followed by the additional sectors alphabetically and any
+                free-text "Other" responses. %>
+            <% sectorable_items = @person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
             <% other_service_areas = @person.other_service_area_responses %>
             <div class="md:col-span-2 p-3">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Primary sector</h2>
-                  <% if primary_sector_items.any? %>
-                    <div class="flex flex-wrap gap-2">
-                      <% primary_sector_items.each do |si| %>
-                        <%= render "sectors/tagging_label",
-                                     sector: si.sector,
-                                     display_leader: true,
-                                     is_leader: si.is_leader %>
-                      <% end %>
-                    </div>
-                  <% else %>
-                    <p class="text-gray-500 italic">None selected.</p>
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+              <% if sectorable_items.any? || other_service_areas.any? %>
+                <div class="flex flex-wrap gap-2">
+                  <% sectorable_items.each do |si| %>
+                    <%= render "sectors/tagging_label",
+                                 sector: si.sector,
+                                 is_primary: si.is_primary?,
+                                 display_leader: true,
+                                 is_leader: si.is_leader %>
                   <% end %>
+                  <%= render "people/other_responses", responses: other_service_areas %>
                 </div>
-                <div>
-                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Additional sectors</h2>
-                  <% if additional_sector_items.any? || other_service_areas.any? %>
-                    <div class="flex flex-wrap gap-2">
-                      <% additional_sector_items.each do |si| %>
-                        <%= render "sectors/tagging_label",
-                                     sector: si.sector,
-                                     display_leader: true,
-                                     is_leader: si.is_leader %>
-                      <% end %>
-                      <%= render "people/other_responses", responses: other_service_areas %>
-                    </div>
-                  <% else %>
-                    <p class="text-gray-500 italic">None selected.</p>
-                  <% end %>
-                </div>
-              </div>
+              <% else %>
+                <p class="text-gray-500 italic">None selected.</p>
+              <% end %>
             </div>
           <% end %>
         </div>

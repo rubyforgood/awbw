@@ -37,12 +37,15 @@
                 </td>
                 <!-- Sectors -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% sectors = person.sectorable_items.to_a %>
+                  <%# Index stays scannable: show only the primary sector(s) as the
+                      darker-green starred chip; the full set lives on the profile. %>
+                  <% sectors = person.sectorable_items.select(&:is_primary?).sort_by { |si| si.sector&.name.to_s.downcase } %>
                   <% if sectors.any? %>
                     <div class="flex flex-wrap gap-2">
                       <% sectors.each do |si| %>
                         <%= render "sectors/tagging_label",
                                    sector: si.sector,
+                                   is_primary: true,
                                    display_leader: true,
                                    is_leader: si.is_leader %>
                       <% end %>
