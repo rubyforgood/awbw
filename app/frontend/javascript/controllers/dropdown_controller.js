@@ -13,18 +13,22 @@ import { Controller } from "@hotwired/stimulus";
 //
 export default class extends Controller {
   // add a content target if you want the dropdown to close with "escape button" or clicking outside of content
-  static targets = ["content"];
+  // add an expand target (the toggle button) if you want to trigger the toggle on initial connect
+  static targets = ["content", "expand"];
 
   connect() {
-    this.open = false;
+    this.listenersActive = false;
     this.handleOutsideClick = this.handleOutsideClick.bind(this);
     this.handleEscapeKey = this.handleEscapeKey.bind(this);
+    if (this.hasExpandTarget) {
+      this.expandTarget.click();
+    }
   }
 
   toggle(event) {
     this.processPayload(event.params.payload);
     this.manageEventListeners();
-    this.open = !this.open;
+    this.listenersActive = !this.listenersActive;
   }
 
   toggleClassesOnElement(element, classString) {
@@ -41,7 +45,7 @@ export default class extends Controller {
   }
 
   manageEventListeners() {
-    if (this.open) {
+    if (this.listenersActive) {
       this.removeEventListeners();
     } else {
       // Add delay to avoid immediate trigger
@@ -79,10 +83,10 @@ export default class extends Controller {
   }
 
   close() {
-    if (this.open) {
+    if (this.listenersActive) {
       this.processPayload(this.lastPayload);
       this.removeEventListeners();
-      this.open = false;
+      this.listenersActive = false;
     }
   }
 

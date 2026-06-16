@@ -793,9 +793,29 @@ RSpec.describe "Events", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Registration fees")
-        expect(response.body).to include("Continuing education fees")
+        expect(response.body).to include("CE fees")
         expect(response.body).to include("Paid")
         expect(response.body).to include("$60.00")
+      end
+
+      it "shows unallocated bulk payments in the equation, linking to the bulk payments page" do
+        bulk_form = create(:form)
+        create(:event_form, event: event, form: bulk_form, role: "bulk_payment")
+        submission = create(:form_submission, person: person, form: bulk_form, event: event, role: "bulk_payment")
+        create(:payment, person: person, form_submission: submission,
+               amount_cents: 5_000, amount_cents_remaining: 5_000)
+
+        get dashboard_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Unallocated bulk payments")
+        expect(response.body).to include(bulk_payments_event_path(event))
+      end
+
+      it "omits the bulk payments term when nothing is unallocated" do
+        get dashboard_event_path(event)
+
+        expect(response.body).not_to include("Unallocated bulk payments")
       end
     end
 
@@ -1427,13 +1447,102 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /events/:id/bulk_payments" do
+    let(:admin) { create(:user, :admin) }
+    let(:event) { create(:event, cost_cents: 2500) }
+    let(:bulk_form) { create(:form) }
+    let!(:event_form) { create(:event_form, event: event, form: bulk_form, role: "bulk_payment") }
+    let(:payer) { create(:person) }
+    let!(:submission) { create(:form_submission, person: payer, form: bulk_form, event: event, role: "bulk_payment") }
+    let!(:attendees_field) do
+      create(:form_field, form: bulk_form, field_identifier: "number_of_attendees", name: "Attendees")
+    end
+
+    before { sign_in admin }
+
+    it "shows the submitted amount even when no payment has landed" do
+      submission.form_answers.create!(form_field: attendees_field, submitted_answer: "3")
+
+      get bulk_payments_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("$75")
+    end
+
+    it "shows the recorded payment amount when a payment exists" do
+      submission.form_answers.create!(form_field: attendees_field, submitted_answer: "3")
+      create(:payment, person: payer, form_submission: submission,
+             amount_cents: 5000, amount_cents_remaining: 5000)
+
+      get bulk_payments_event_path(event)
+
+      expect(response.body).to include("$50")
+    end
+
+    it "renders the targeted submission's row expanded when given an expand param" do
+      get bulk_payments_event_path(event, expand: submission.id)
+
+      expect(response.body).to include("id=\"payment-card-#{submission.id}\"")
+      # Expanded server-side: the toggle button gets data-dropdown-target="expand"
+      # so the dropdown controller clicks it on connect to open the card.
+      expect(response.body).to include("data-dropdown-target=\"expand\"")
+    end
+
+    it "renders rows collapsed without an expand param" do
+      get bulk_payments_event_path(event)
+
+      # Collapsed: the details panel keeps the `hidden` class and this card's chevron is not rotated.
+      expect(response.body).to match(/id="payment-details-#{submission.id}"\s+class="hidden/)
+      expect(response.body).not_to match(/id="payment-arrow-#{submission.id}"[^>]*rotate-180/)
+    end
+
+    it "renders a Profile column with a circle-only profile button for matched attendees" do
+      attendee = create(:person, first_name: "Match", last_name: "Attendee", email: "match.attendee@example.com")
+      create(:event_registration, event: event, registrant: attendee, status: "registered")
+      create(:form_field, form: bulk_form, field_identifier: "bulk_payment_attendees", name: "Attendees list")
+      submission.form_answers.create!(
+        form_field: bulk_form.form_fields.find_by(field_identifier: "bulk_payment_attendees"),
+        submitted_answer: [ { first_name: "Match", last_name: "Attendee", email: "match.attendee@example.com" } ].to_json
+      )
+
+      get bulk_payments_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(">Profile<")
+      # Circle-only profile button: a boxed (sky) link to the person holding just
+      # the compact h-5 avatar circle.
+      expect(response.body).to include(person_path(attendee))
+      expect(response.body).to include("bg-sky-100")
+      expect(response.body).to include("h-5 w-5")
+    end
+
+    it "shows a grey \"Paid\" instead of an orange balance when the registration is fully covered" do
+      attendee = create(:person, first_name: "Paid", last_name: "Infull", email: "paid.infull@example.com")
+      registration = create(:event_registration, event: event, registrant: attendee, status: "registered")
+      create(:form_field, form: bulk_form, field_identifier: "bulk_payment_attendees", name: "Attendees list")
+      submission.form_answers.create!(
+        form_field: bulk_form.form_fields.find_by(field_identifier: "bulk_payment_attendees"),
+        submitted_answer: [ { first_name: "Paid", last_name: "Infull", email: "paid.infull@example.com" } ].to_json
+      )
+      # Fully cover the $25 registration fee so nothing is owed.
+      create(:allocation, source: create(:payment, amount_cents: 2500, amount_cents_remaining: 2500),
+             allocatable: registration, amount: 2500)
+
+      get bulk_payments_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("text-gray-500 whitespace-nowrap\">Paid<")
+      expect(response.body).not_to include("$0.00")
+    end
+  end
+
   describe "POST /events/:id/allocate_bulk_payment" do
     let(:admin) { create(:user, :admin) }
     let(:event) { create(:event) }
     let(:bulk_form) { create(:form) }
     let!(:event_form) { create(:event_form, event: event, form: bulk_form, role: "bulk_payment") }
     let(:payer) { create(:person) }
-    let!(:submission) { create(:form_submission, person: payer, form: bulk_form, role: "bulk_payment") }
+    let!(:submission) { create(:form_submission, person: payer, form: bulk_form, event: event, role: "bulk_payment") }
     let!(:payment) { create(:payment, person: payer, form_submission: submission,
                             amount_cents: 1000, amount_cents_remaining: 1000) }
     let(:registrant) { create(:person) }
@@ -1466,6 +1575,36 @@ RSpec.describe "Events", type: :request do
       expect(payment.reload.amount_cents_remaining).to eq(500)
       expect(response.media_type).to eq(Mime[:turbo_stream])
       expect(response.body).to include("Allocation successful")
+    end
+
+    context "when the allocation pays a matched registration in full" do
+      let(:event) { create(:event, cost_cents: 500) }
+      let(:registrant) { create(:person, email: "match@example.com") }
+      let!(:attendees_field) do
+        create(:form_field, form: bulk_form, field_identifier: "bulk_payment_attendees", name: "Attendees")
+      end
+
+      before do
+        submission.form_answers.create!(
+          form_field: attendees_field,
+          submitted_answer: [ { first_name: registrant.first_name, last_name: registrant.last_name, email: "match@example.com" } ].to_json
+        )
+      end
+
+      it "re-renders the card with refreshed totals and hides the inline allocate box for that registration" do
+        post allocate_bulk_payment_event_path(event),
+             params: { payment_id: payment.id, event_registration_id: event_registration.id, amount_dollars: "5.00" },
+             as: :turbo_stream
+
+        # The whole card is re-rendered (kept expanded) with the new totals: the
+        # registration is now fully paid, so its due button reads "Paid".
+        expect(response.body).to include("payment-card-#{submission.id}")
+        expect(response.body).to include("rotate-180")
+        expect(response.body).to include(">Paid</span>")
+        # Payment still has $5 left, so only the bottom "New allocation" form
+        # remains — the inline per-row box for the now-paid registration is gone.
+        expect(response.body.scan(">Allocate</button>").size).to eq(1)
+      end
     end
 
     it "shows alert when event_registration_id is blank" do

@@ -12,6 +12,12 @@
   <div class="p-4 sm:p-8 relative">
     <!-- Header actions -->
     <div class="flex flex-wrap justify-end gap-2 mb-4">
+      <% if params[:return_to] == "bulk_payments" && params[:event_id].present? %>
+        <%# Returned from a bulk payment tray: mr-auto pins this back link left while the rest stay right. %>
+        <%= link_to bulk_payments_return_path(params[:event_id]), class: "mr-auto text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> Bulk payments
+        <% end %>
+      <% end %>
       <% unless @person.user %>
         <div class="admin-only bg-blue-100 p-2">
           No user!

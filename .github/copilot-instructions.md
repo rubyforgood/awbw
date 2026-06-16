@@ -98,6 +98,7 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - **Use `Foo.method`** not `Foo::method` for method calls
 - **No parentheses around conditions:** `if foo` not `if (foo)`
 - **No semicolons** to separate statements
+- **Use `format(...)`** for string formatting, not the `%` operator: `format("%.2f", amount)` not `"%.2f" % amount`
 
 ## Casing
 
@@ -123,6 +124,34 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
        id="dropdown"
   >
   ```
+
+## Navigation & back links (eyebrows)
+
+The "eyebrow" is the back/return link in a page's top bar (e.g. `← Registrants`).
+**Whenever you add a link from one page to another, think through the eyebrow on the
+destination** — the user must be able to return to exactly where they came from, not a
+generic default. This applies to any navigation, and matters most for links that open in
+a new tab (`target: "_blank"`), where the browser back button is useless. When a page is
+reachable from several origins, the eyebrow must adapt to whichever one the user came from.
+
+- **Pass a `return_to` param** from the originating link identifying the origin context.
+  The destination's eyebrow branches on `params[:return_to]` to build the correct back
+  link, falling back to a sensible default when it's absent or unrecognized.
+- **Preserve UI state on return.** If the origin had an expanded row, open accordion,
+  active tab, scroll position, or filter, pass enough params to restore it — an identifier
+  to re-open the element **and** an `anchor:` fragment so the browser scrolls to it. The
+  target element needs a matching `id` and a `scroll-mt-*` utility so it isn't hidden under
+  sticky headers.
+- **Carry whatever the destination can't infer.** If the back link needs context the
+  destination doesn't already have (e.g. linking to a record that isn't scoped to the
+  origin's parent), pass that too (an `event_id`, a parent slug, etc.).
+- **Keep both ends in sync.** When you change what a `return_to` value means, update every
+  page that consumes it. Controller `case params[:return_to]` redirects (after save/destroy)
+  and the view eyebrow should agree on where a given origin returns to.
+- **Reuse, don't reinvent.** Match the mechanism already used by nearby flows, and extract a
+  helper when the same back-link is built in more than one destination (e.g.
+  `EventHelper#bulk_payments_return_path` centralizes the expand + anchor logic for the bulk
+  payments flow).
 
 ## JavaScript
 

@@ -21,6 +21,7 @@ namespace :db do
       analytics
       payments
       scholarships
+      bulk_payments
     ]
 
     desc "Generate representative sample data for development"
@@ -109,6 +110,11 @@ namespace :db do
     desc "Seed sample scholarships and their allocations (dev only)"
     task scholarships: :environment do
       load Rails.root.join("db/seeds/dev/scholarships.rb")
+    end
+
+    desc "Seed bulk payment demo submissions, payments, and allocations (dev only)"
+    task bulk_payments: :environment do
+      load Rails.root.join("db/seeds/dev/bulk_payments.rb")
     end
   end
 end

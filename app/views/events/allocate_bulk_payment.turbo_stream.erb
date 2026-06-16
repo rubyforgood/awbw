@@ -1,15 +1,14 @@
 <%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>
 
-<%= turbo_stream.replace dom_id(@payment, :remaining) do %>
-  <span id="<%= dom_id(@payment, :remaining) %>">
-    <%= render "payment_badge", payment: @payment %>
-  </span>
-<% end %>
-
-<% unless flash[:alert] %>
-  <%= turbo_stream.replace dom_id(@payment, :allocations) do %>
-    <div id="<%= dom_id(@payment, :allocations) %>">
-      <%= render "payment_allocations", payment: @payment %>
-    </div>
+<%# Re-render the whole card so the per-registration due/allocated totals, the
+    payment badge and allocations table, and the inline allocate boxes (hidden
+    once a registration is paid in full) all reflect the new allocation. Kept
+    expanded so the admin stays on the row they were working in. %>
+<% if @submission %>
+  <%= turbo_stream.replace "payment-card-#{@submission.id}" do %>
+    <%= render "events/bulk_payment_card", submission: @submission,
+          event_registrations: @event_registrations,
+          allocated_by_registration: @allocated_by_registration,
+          expanded: true %>
   <% end %>
 <% end %>

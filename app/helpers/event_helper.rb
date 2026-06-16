@@ -56,6 +56,20 @@ module EventHelper
     [ top_html, bottom_html ]
   end
 
+  # Back link for any page reached from a bulk payment tray (the expanded card on
+  # the bulk payments index). Returns to that index re-expanding the originating
+  # submission's row and anchor-scrolling to it. Relies on the originating link
+  # passing `expand: submission.id`; the card reads `params[:expand]` to expand and
+  # carries a matching `id="payment-card-<id>"` + `scroll-mt-*` for the anchor.
+  def bulk_payments_return_path(event)
+    expand = params[:expand].presence
+    bulk_payments_event_path(
+      event,
+      expand: expand,
+      anchor: ("payment-card-#{expand}" if expand)
+    )
+  end
+
   def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil)
     bg = DomainTheme.bg_class_for(:events, intensity: 100)
     hover_bg = DomainTheme.bg_class_for(:events, intensity: 100, hover: true)

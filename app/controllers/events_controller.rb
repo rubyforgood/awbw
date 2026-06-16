@@ -123,11 +123,14 @@ class EventsController < ApplicationController
     authorize! @event
 
     @event = @event.decorate
+    # Shared across every card so attendee matching and allocated totals don't
+    # re-query per registration per card.
     @event_registrations = @event.event_registrations.active.includes(:registrant)
     @submissions = @event.form_submissions
                          .where(role: "bulk_payment")
-                         .includes(:person, form_answers: :form_field, payments: :allocations)
+                         .includes(:person, form_answers: :form_field, payment: :allocations)
                          .order(created_at: :desc)
+    @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
   end
 
   def allocate_bulk_payment
@@ -137,7 +140,7 @@ class EventsController < ApplicationController
     event_registration = EventRegistration.find_by(id: params[:event_registration_id])
     unless event_registration
       flash.now[:alert] = "Please select a registrant"
-      @payment = payment.reload
+      assign_allocation_card_data(payment)
       respond_to do |format|
         format.turbo_stream
         format.html { redirect_to bulk_payments_event_path(@event), alert: "Please select a registrant" }
@@ -159,7 +162,7 @@ class EventsController < ApplicationController
       end
     end
 
-    @payment = payment.reload
+    assign_allocation_card_data(payment)
 
     respond_to do |format|
       format.turbo_stream
@@ -171,6 +174,7 @@ class EventsController < ApplicationController
     authorize! @event
     @event = @event.decorate
     @event_registrations = @event.event_registrations.active.includes(:registrant)
+    @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
 
     submission = @event.form_submissions.find(params[:submission_id])
     payment_type = params[:payment_type]
@@ -198,7 +202,7 @@ class EventsController < ApplicationController
       payer_type = "Person"
     end
 
-    payment = submission.payments.new(
+    payment = submission.build_payment(
       person_id: person_id,
       organization_id: organization_id,
       payer_type: payer_type,
@@ -355,6 +359,25 @@ class EventsController < ApplicationController
   end
 
   private
+
+  # Reloads the payment and the data its bulk payment card needs, so the
+  # allocate turbo stream can re-render the whole card with fresh due/allocated
+  # totals and re-evaluate whether each registration is now paid in full.
+  def assign_allocation_card_data(payment)
+    @payment = payment.reload
+    @submission = @payment.form_submission
+    @event_registrations = @event.event_registrations.active.includes(:registrant)
+    @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+  end
+
+  # Allocated cents per registration id, fetched in one grouped query so the
+  # bulk payment cards read totals from a hash instead of querying per row.
+  def allocated_cents_by_registration(registrations)
+    Allocation
+      .where(allocatable_type: "EventRegistration", allocatable_id: registrations.ids)
+      .group(:allocatable_id)
+      .sum(:amount)
+  end
 
   def event_registrations_csv_string
     require "csv"
