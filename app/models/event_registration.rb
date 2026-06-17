@@ -22,11 +22,16 @@ class EventRegistration < ApplicationRecord
   INACTIVE_STATUSES = %w[ cancelled no_show ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
 
+  # Default price the registrant owes per requested continuing-education hour.
+  # The CE summary on the registration form multiplies it by ce_hours_requested.
+  CE_HOURLY_RATE_DOLLARS = 25
+
   # Validations
   validates :registrant_id, uniqueness: { scope: :event_id }
   validates :event_id, presence: true
   validates :status, inclusion: { in: ATTENDANCE_STATUSES }, allow_nil: false
   validates :slug, uniqueness: true, allow_nil: true
+  validates :ce_hours_requested, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   # Scopes
   scope :registrant_name, ->(registrant_name) { joins(:registrant).where(
@@ -211,6 +216,17 @@ class EventRegistration < ApplicationRecord
 
   def discounted?
     allocations.where(source_type: "Discount").exists?
+  end
+
+  # True when the registrant has supplied a CE license number.
+  def ce_license_provided?
+    ce_license_number.present?
+  end
+
+  # What the registrant owes for their requested CE hours, in cents, at the
+  # default hourly rate. Zero when no hours were requested.
+  def ce_amount_owed_cents
+    ce_hours_requested.to_i * CE_HOURLY_RATE_DOLLARS * 100
   end
 
   def joinable?
