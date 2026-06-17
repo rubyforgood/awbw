@@ -29,6 +29,15 @@
     </div>
     <div class="px-6 sm:px-8 py-7">
       <%= render "form_submissions/submission", submission: @form_submission %>
+
+      <% if event && @form_submission.role == "bulk_payment" %>
+        <div class="mt-6 flex justify-center">
+          <%= link_to event_invoice_path(event, submission_id: @form_submission.id, return_to: "form_submission"),
+                      class: "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors" do %>
+            <i class="fa-solid fa-file-invoice-dollar"></i> View invoice
+          <% end %>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>

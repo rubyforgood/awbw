@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (71) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (70) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -281,7 +281,6 @@ end
 - `paginated_fields` — Client-side pagination of nested fields
 - `password_toggle` — Show/hide password fields
 - `prefetch_lazy` — Prefetch lazy-loaded content
-- `print` — Triggers the browser print dialog (used by the invoice "Download PDF" button)
 - `print_options` — Print options toggle for analytics
 - `remote_select` — AJAX-powered select dropdown
 - `reveal_section` — Expand a collapsible section and scroll to it when loaded via matching URL hash

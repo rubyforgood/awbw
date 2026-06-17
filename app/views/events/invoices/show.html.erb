@@ -1,14 +1,21 @@
-<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "Invoice — #{@event.title}") %>
-<% if @submission %>
-  <%= render "events/invoices/actions",
-        back_path: bulk_payments_event_path(@event, expand: @submission.id, anchor: "payment-card-#{@submission.id}"),
-        back_label: "Back to bulk payments" %>
-<% else %>
-  <%= render "events/invoices/actions",
-        back_path: dashboard_event_path(@event),
-        back_label: "Back to event" %>
-<% end %>
+<%
+  back_path, back_label =
+    if @submission
+      case params[:return_to]
+      when "bulk_payment_show"
+        [ event_bulk_payment_path(@event, submission_id: @submission.id), "Back to submission" ]
+      when "form_submission"
+        [ form_submission_path(@submission), "Back to submission" ]
+      else
+        [ bulk_payments_event_path(@event, expand: @submission.id, anchor: "payment-card-#{@submission.id}"), "Back to bulk payments" ]
+      end
+    else
+      [ dashboard_event_path(@event), "Back to event" ]
+    end
+%>
+<%= render "events/invoices/actions", back_path: back_path, back_label: back_label %>
 <div class="px-4 sm:px-8 py-6 print:p-0">
   <%= render "events/invoices/invoice", invoice: @invoice %>
 </div>

@@ -49,7 +49,29 @@ RSpec.describe "Events::Invoices", type: :request do
     context "as a non-admin" do
       before { sign_in create(:user) }
 
-      it "is denied and redirected" do
+      it "is denied the blank template and redirected" do
+        get event_invoice_path(event)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "as a guest (no account)" do
+      let(:form) { create(:form) }
+      let!(:submission) { create(:form_submission, form: form, event: event, role: "bulk_payment") }
+
+      it "can view a bulk-payment submission's invoice (matches the public show page)" do
+        get event_invoice_path(event, submission_id: submission.id)
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("INVOICE")
+      end
+
+      it "is denied an invoice for a non-bulk submission" do
+        other = create(:form_submission, form: form, event: event, role: "registration")
+        get event_invoice_path(event, submission_id: other.id)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "is still denied the blank template" do
         get event_invoice_path(event)
         expect(response).to redirect_to(root_path)
       end

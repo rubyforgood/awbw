@@ -117,9 +117,6 @@ application.register("search-type-select", SearchTypeSelectController)
 import PrefetchLazyController from "./prefetch_lazy_controller"
 application.register("prefetch-lazy", PrefetchLazyController)
 
-import PrintController from "./print_controller"
-application.register("print", PrintController)
-
 import PrintOptionsController from "./print_options_controller"
 application.register("print-options", PrintOptionsController)
 
