@@ -9,6 +9,20 @@ RSpec.describe FormSubmission do
     it { should accept_nested_attributes_for(:form_answers) }
   end
 
+  describe "slug" do
+    it "generates a unique slug for bulk payment submissions" do
+      submission = create(:form_submission, role: "bulk_payment")
+
+      expect(submission.slug).to be_present
+    end
+
+    it "leaves the slug blank for other submission roles" do
+      submission = create(:form_submission, role: "registration")
+
+      expect(submission.slug).to be_nil
+    end
+  end
+
   describe "#answers_by_identifier" do
     it "maps submitted answers by their field identifier" do
       form = create(:form)

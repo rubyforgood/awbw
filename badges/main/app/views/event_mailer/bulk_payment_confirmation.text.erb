@@ -17,8 +17,8 @@ We've received your bulk payment submission<%= " for the following event" if @ev
 <% if @attendees.any? %>Attendees:
 <% @attendees.each do |attendee| %>- <%= [ attendee["first_name"], attendee["last_name"] ].compact_blank.join(" ") %><%= " <#{attendee['email']}>" if attendee["email"].present? %>
 <% end %><% end %>
-<% if @submission_url %>View submission:
-<%= @submission_url %>
+<% if @ticket_url %>View bulk payment:
+<%= @ticket_url %>
 <% end %>
 --
 This is an automated confirmation from <%= @organization_name %>.

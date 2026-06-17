@@ -32,7 +32,7 @@ Cost
 ------------------------------------------------------------
 <% if @event %>
 View submission:
-<%= event_bulk_payment_url(@event, submission_id: @submission.id) %>
+<%= event_bulk_payment_url(@event, reg: @submission.slug) %>
 <% end %>
 View profile:
 <%= profile_url %>
