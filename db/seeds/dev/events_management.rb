@@ -378,14 +378,14 @@ registrations_data = []
 
 # --- Facilitator Training: multiple registrations from different people, extended form ---
 # Amy: registered, with form submission, scholarship recipient
-# Maria Johnson: registered, with form submission (has user)
+# Maria Johnson: registered, with form submission (has user), requested an invoice
 # Anna Garcia: attended, with form submission (has user)
 # Mario Johnson: registered, no form submission (no user)
 # Kim Davis: cancelled (has user)
 if facilitator_training
   [
     { person: amy_person, status: "registered", scholarship_requested: true },
-    { person: maria_j, status: "registered" },
+    { person: maria_j, status: "registered", invoice_requested: true },
     { person: anna_g, status: "attended" },
     { person: mario_j, status: "registered" },
     { person: kim_d, status: "cancelled" }
@@ -396,13 +396,13 @@ if facilitator_training
 end
 
 # --- Trauma Training: extended form, scholarship ---
-# Sarah Smith: registered with form (has user)
+# Sarah Smith: registered with form (has user), requested an invoice
 # Jessica Brown: registered with form, scholarship (has user)
 # Angel Garcia: registered, no form (no user)
 # Linda Williams: no_show (no user)
 if trauma_training
   [
-    { person: sarah_s, status: "registered" },
+    { person: sarah_s, status: "registered", invoice_requested: true },
     { person: jessica_b, status: "registered", scholarship_requested: true },
     { person: angel_g, status: "registered" },
     { person: linda_w, status: "no_show" }
@@ -467,7 +467,8 @@ registrations_data.each do |data|
     event: data[:event],
     registrant: data[:person],
     status: data[:status] || "registered",
-    scholarship_requested: data[:scholarship_requested] || false
+    scholarship_requested: data[:scholarship_requested] || false,
+    invoice_requested: data[:invoice_requested] || false
   )
 end
 
