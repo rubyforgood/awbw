@@ -176,13 +176,15 @@ RSpec.describe "Events", type: :request do
       it "stores start_date/end_date in UTC when created by user in Pacific time zone" do
         admin_pt = create(:user, :admin, time_zone: "Pacific Time (US & Canada)")
         sign_in admin_pt
-        # datetime-local sends "YYYY-MM-DDTHH:MM" — interpreted in request's Time.zone (PT)
+        # date+time inputs send separate values — interpreted in request's Time.zone (PT)
         # 12:00–13:00 PT (PDT) on 2025-06-15 = 19:00–20:00 UTC
         post events_url, params: { event: {
           title: "PT event",
           description: "desc",
-          start_date: "2025-06-15T12:00",
-          end_date: "2025-06-15T13:00",
+          start_date_date: "2025-06-15",
+          start_date_time: "12:00",
+          end_date_date: "2025-06-15",
+          end_date_time: "13:00",
           registration_close_date: 1.day.ago,
           public: true
         } }
@@ -200,8 +202,10 @@ RSpec.describe "Events", type: :request do
         post events_url, params: { event: {
           title: "ET event",
           description: "desc",
-          start_date: "2025-06-15T15:00",
-          end_date: "2025-06-15T16:00",
+          start_date_date: "2025-06-15",
+          start_date_time: "15:00",
+          end_date_date: "2025-06-15",
+          end_date_time: "16:00",
           registration_close_date: 1.day.ago,
           public: true
         } }
@@ -238,8 +242,10 @@ RSpec.describe "Events", type: :request do
 
         post events_path, params: { event: {
           title: "Missing dates",
-          start_date: "",
-          end_date: "",
+          start_date_date: "",
+          start_date_time: "",
+          end_date_date: "",
+          end_date_time: "",
           registration_form_id: reg_form.id,
           scholarship_enabled: "1",
           bulk_payment_enabled: "1"
@@ -258,8 +264,10 @@ RSpec.describe "Events", type: :request do
 
         post events_path, params: { event: {
           title: "Missing dates",
-          start_date: "",
-          end_date: "",
+          start_date_date: "",
+          start_date_time: "",
+          end_date_date: "",
+          end_date_time: "",
           sector_ids: [ "", sector.id.to_s ],
           category_ids: [ "", category.id.to_s ]
         } }

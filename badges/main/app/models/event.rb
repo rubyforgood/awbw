@@ -42,6 +42,7 @@ class Event < ApplicationRecord
 
   # Callbacks
   after_commit :build_public_registration_form, if: :public_registration_just_enabled?
+  before_validation :merge_date_time_fields
 
   # Validations
   validates_presence_of :title, :start_date, :end_date
@@ -155,6 +156,35 @@ class Event < ApplicationRecord
     super.presence || "Before you attend"
   end
 
+  # Virtual attributes for date/time inputs (Firefox datetime-local compat)
+  attr_writer :start_date_date, :start_date_time,
+              :end_date_date, :end_date_time,
+              :registration_close_date_date, :registration_close_date_time
+
+  def start_date_date
+    @start_date_date || start_date&.strftime("%Y-%m-%d")
+  end
+
+  def start_date_time
+    @start_date_time || start_date&.strftime("%H:%M")
+  end
+
+  def end_date_date
+    @end_date_date || end_date&.strftime("%Y-%m-%d")
+  end
+
+  def end_date_time
+    @end_date_time || end_date&.strftime("%H:%M")
+  end
+
+  def registration_close_date_date
+    @registration_close_date_date || registration_close_date&.strftime("%Y-%m-%d")
+  end
+
+  def registration_close_date_time
+    @registration_close_date_time || registration_close_date&.strftime("%H:%M")
+  end
+
   # Virtual attribute for cost in dollars (converts to/from cost_cents)
   def cost
     return nil if cost_cents.nil?
@@ -187,6 +217,25 @@ class Event < ApplicationRecord
   end
 
   private
+
+  def merge_date_time_fields
+    merge_date_time(:start_date)
+    merge_date_time(:end_date)
+    merge_date_time(:registration_close_date)
+  end
+
+  def merge_date_time(field)
+    date_val = send(:"#{field}_date")
+    time_val = send(:"#{field}_time")
+    self[field] = build_datetime(date_val, time_val)
+  end
+
+  def build_datetime(date_str, time_str)
+    return nil if date_str.blank? && time_str.blank?
+    return Time.zone.parse(date_str) if date_str.present? && time_str.blank?
+    return Time.zone.parse("2000-01-01 #{time_str}") if date_str.blank? && time_str.present?
+    Time.zone.parse("#{date_str} #{time_str}")
+  end
 
   def registration_form_required_when_publicly_registerable
     return unless public_registration_enabled?
