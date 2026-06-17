@@ -3,7 +3,7 @@ class FormBuilderService
   # charge, so controllers match against PAYMENT_METHOD_PAY_NOW rather than
   # repeating its label. Keep this the single source of truth for the label.
   PAYMENT_METHOD_PAY_NOW = "Credit card (now)".freeze
-  PAYMENT_METHOD_OPTIONS = [ PAYMENT_METHOD_PAY_NOW, "Credit card (later)", "Check", "Other" ].freeze
+  PAYMENT_METHOD_OPTIONS = [ PAYMENT_METHOD_PAY_NOW, "Credit card (later)", "Check" ].freeze
 
   SECTIONS = {
     person_identifier: { label: "Person identifier", method: :build_person_identifier_fields },
