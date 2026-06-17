@@ -3,7 +3,7 @@ module Events
     before_action :authenticate_user!, only: [ :create, :destroy ]
     before_action :set_event, only: [ :create, :destroy ]
     before_action :set_registrant, only: [ :create, :destroy ]
-    before_action :set_event_registration, only: [ :show, :resend_confirmation, :cancel, :reactivate, :pay ]
+    before_action :set_event_registration, only: [ :show, :invoice, :resend_confirmation, :cancel, :reactivate, :pay ]
 
     def show
       authorize! @event_registration, to: :show_public?
@@ -20,6 +20,12 @@ module Events
       when "cancelled"
         flash.now[:alert] = "Payment was cancelled. You are registered for this event but payment may still be due."
       end
+    end
+
+    def invoice
+      authorize! @event_registration, to: :show_public?
+      @event = @event_registration.event
+      @invoice = EventInvoice.from_registration(@event_registration)
     end
 
     def resend_confirmation

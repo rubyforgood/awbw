@@ -1,0 +1,14 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% content_for(:page_title, "Invoice — #{@event.title}") %>
+<% if @submission %>
+  <%= render "events/invoices/actions",
+        back_path: bulk_payments_event_path(@event, expand: @submission.id, anchor: "payment-card-#{@submission.id}"),
+        back_label: "Back to bulk payments" %>
+<% else %>
+  <%= render "events/invoices/actions",
+        back_path: dashboard_event_path(@event),
+        back_label: "Back to event" %>
+<% end %>
+<div class="px-4 sm:px-8 py-6 print:p-0">
+  <%= render "events/invoices/invoice", invoice: @invoice %>
+</div>

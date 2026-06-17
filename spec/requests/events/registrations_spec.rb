@@ -69,6 +69,36 @@ RSpec.describe "Events::Registrations", type: :request do
     end
   end
 
+  describe "GET /registration/:slug/invoice" do
+    let(:event) { create(:event, title: "AWBW 2-Day Art Facilitator Training", cost_cents: 150_000) }
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "renders the invoice for the registrant" do
+      get registration_invoice_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("INVOICE")
+      expect(response.body).to include("AWBW 2-Day Art Facilitator Training")
+      expect(response.body).to include("$1,500")
+    end
+
+    context "as a guest" do
+      before { sign_out user }
+
+      it "renders the invoice (slug is authorization)" do
+        get registration_invoice_path(registration.slug)
+        expect(response).to have_http_status(:success)
+      end
+    end
+
+    context "with an invalid slug" do
+      it "returns 404" do
+        get registration_invoice_path("nonexistent-slug")
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+  end
+
   describe "POST /registration/:slug/resend_confirmation" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 

@@ -34,11 +34,18 @@
       <%= render "payment_badge", payment: payment %>
     </span>
     <span class="text-sm text-gray-500 whitespace-nowrap"><%= submission.created_at.strftime("%b %-d, %Y") %></span>
-    <%= link_to form_submission_path(submission, return_to: "bulk_payments", expand: submission.id),
-                title: "View form submission",
-                class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
-      <i class="fa-solid fa-file-lines text-xs"></i> Submission
-    <% end %>
+    <div class="flex items-center gap-2">
+      <%= link_to form_submission_path(submission, return_to: "bulk_payments", expand: submission.id),
+                  title: "View form submission",
+                  class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
+        <i class="fa-solid fa-file-lines text-xs"></i> Submission
+      <% end %>
+      <%= link_to event_invoice_path(@event, submission_id: submission.id),
+                  title: "View invoice",
+                  class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
+        <i class="fa-solid fa-file-invoice-dollar text-xs"></i> Invoice
+      <% end %>
+    </div>
 
     <button type="button"
             data-action="dropdown#toggle"

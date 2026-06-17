@@ -128,6 +128,15 @@
       <!-- Divider -->
       <div class="border-t border-gray-200"></div>
 
+      <% if event_registration.event.cost_cents.to_i > 0 %>
+        <div class="text-center">
+          <%= link_to registration_invoice_path(event_registration.slug),
+                        class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 underline" do %>
+            <i class="fa-solid fa-file-invoice-dollar text-xs"></i> View invoice
+          <% end %>
+        </div>
+      <% end %>
+
       <!-- Status -->
       <div class="text-center space-y-2">
         <% if event_registration.checked_in? %>
