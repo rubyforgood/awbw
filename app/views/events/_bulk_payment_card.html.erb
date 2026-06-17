@@ -35,7 +35,7 @@
     </span>
     <span class="text-sm text-gray-500 whitespace-nowrap"><%= submission.created_at.strftime("%b %-d, %Y") %></span>
     <div class="flex items-center gap-2">
-      <%= link_to form_submission_path(submission, return_to: "bulk_payments", expand: submission.id),
+      <%= link_to event_bulk_payment_path(@event, reg: submission.slug, return_to: "bulk_payments", expand: submission.id),
                   title: "View form submission",
                   class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
         <i class="fa-solid fa-file-lines text-xs"></i> Submission

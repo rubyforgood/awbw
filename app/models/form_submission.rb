@@ -7,6 +7,25 @@ class FormSubmission < ApplicationRecord
 
   accepts_nested_attributes_for :form_answers
 
+  scope :bulk_payment, -> { where(role: "bulk_payment") }
+
+  validates :slug, uniqueness: true, allow_nil: true
+
+  # Bulk payment submissions are reachable by their payer (who has no account)
+  # through a public, slug-based ticket URL. Other roles are reached by id.
+  before_create :generate_slug, if: :bulk_payment?
+
+  def self.generate_unique_slug
+    loop do
+      slug = SecureRandom.urlsafe_base64(16)
+      break slug unless exists?(slug: slug)
+    end
+  end
+
+  def bulk_payment?
+    role == "bulk_payment"
+  end
+
   # The event this submission belongs to: the directly stored one, or — for
   # submissions created before event_id existed — resolved through the form's
   # matching join role.
@@ -46,5 +65,11 @@ class FormSubmission < ApplicationRecord
   # amount can be shown even before a payment record lands.
   def bulk_payment_amount_cents(event)
     event.cost_cents.to_i * bulk_payment_attendee_count
+  end
+
+  private
+
+  def generate_slug
+    self.slug ||= self.class.generate_unique_slug
   end
 end

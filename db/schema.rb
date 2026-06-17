@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_17_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_17_210000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -611,10 +611,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_17_200000) do
     t.integer "form_id", null: false
     t.bigint "person_id", null: false
     t.string "role"
+    t.string "slug"
     t.datetime "updated_at", null: false
     t.index ["event_id"], name: "index_form_submissions_on_event_id"
     t.index ["form_id"], name: "index_form_submissions_on_form_id"
     t.index ["person_id"], name: "index_form_submissions_on_person_id"
+    t.index ["slug"], name: "index_form_submissions_on_slug", unique: true
   end
 
   create_table "forms", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
