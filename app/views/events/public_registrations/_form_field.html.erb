@@ -72,6 +72,12 @@
         data and store none of their own, so fall back to those when present. %>
     <% radio_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
+    <%# "Other" is hidden on the payment method field for now (it stays in code/data
+        for the scholarship flow). Keep it only when it's already the selected value
+        so a preset/stored "Other" still renders checked. %>
+    <% if field.field_identifier == "payment_method" %>
+      <% radio_options = radio_options.reject { |_option_label, option_value| option_value == FormBuilderService::PAYMENT_METHOD_OTHER && value != FormBuilderService::PAYMENT_METHOD_OTHER } %>
+    <% end %>
     <% has_specify = radio_options.any? { |option_label, _option_value| specify_placeholder(option_label).present? } %>
     <%= tag.div class: "flex flex-wrap gap-2.5 mt-1", data: (has_specify ? { controller: "specify-option", action: "change->specify-option#update" } : {}) do %>
       <% radio_options.each do |option_label, option_value, option_description| %>
