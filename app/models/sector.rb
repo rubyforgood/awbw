@@ -62,6 +62,12 @@ class Sector < ApplicationRecord
   scope :sector_name, ->(sector_name) {
     sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }
   scope :sector_ids, ->(ids) { where(id: ids.to_s.split("-").map(&:to_i)) }
+  scope :sector_names_all, ->(names) do
+    return all if names.blank?
+    parsed = Array(names).flat_map { |n| n.to_s.split("--") }.map(&:strip).reject(&:blank?).map(&:downcase)
+    return all if parsed.empty?
+    where("LOWER(sectors.name) IN (?)", parsed)
+  end
   scope :excluding_other, -> { where.not(name: OTHER_SECTOR_NAME) }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
   scope :has_published_taggings, -> {
