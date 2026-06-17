@@ -158,8 +158,8 @@ RSpec.describe "Events::BulkPayments", type: :request do
   end
 
   describe "GET show" do
-    # Publicly visible so the signed-out viewer can load the page; admins see it
-    # regardless. A non-zero cost lets a registration carry a balance to allocate.
+    # The canonical admin entry point (id-based); it redirects to the public
+    # slug ticket so there's a single page to maintain.
     let(:event) { create(:event, :publicly_visible, cost_cents: 1000) }
     let(:payer) { create(:person) }
     let!(:submission) { create(:form_submission, person: payer, form: form, role: "bulk_payment") }
@@ -169,52 +169,20 @@ RSpec.describe "Events::BulkPayments", type: :request do
     end
 
     context "as an admin" do
-      it "shows the admin dashboard and bulk payments links" do
+      it "redirects to the public ticket" do
         get_show
 
-        expect(response.body).to include(dashboard_event_path(event))
-        expect(response.body).to include(bulk_payments_event_path(event))
-      end
-
-      it "notes when no payment has been recorded" do
-        get_show
-
-        expect(response.body).to include("No payment has been recorded")
-      end
-
-      context "with a recorded payment and allocation" do
-        let(:registrant) { create(:person, first_name: "Jordan", last_name: "Rivers") }
-        let!(:event_registration) { create(:event_registration, event: event, registrant: registrant) }
-        let!(:payment) do
-          create(:payment, person: payer, form_submission: submission,
-                 amount_cents: 1000, amount_cents_remaining: 500)
-        end
-        let!(:allocation) { create(:allocation, source: payment, allocatable: event_registration, amount: 500) }
-
-        it "shows the relevant allocations" do
-          get_show
-
-          expect(response.body).to include("Payment allocations")
-          expect(response.body).to include("Jordan Rivers")
-        end
+        expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
       end
     end
 
     context "as a signed-out viewer" do
       before { sign_out admin }
 
-      it "does not show the admin allocations section" do
+      it "requires authentication" do
         get_show
 
-        expect(response).to have_http_status(:ok)
-        expect(response.body).not_to include("Payment allocations")
-      end
-
-      it "links to the submission's invoice" do
-        get_show
-
-        expect(response.body).to include("/events/#{event.id}/invoice")
-        expect(response.body).to include("submission_id=#{submission.id}")
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end

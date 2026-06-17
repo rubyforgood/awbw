@@ -6,8 +6,6 @@
       case params[:return_to]
       when "bulk_payment_ticket"
         [ bulk_payment_ticket_path(@submission.slug), "Back to ticket" ]
-      when "bulk_payment_show"
-        [ event_bulk_payment_path(@event, submission_id: @submission.id), "Back to submission" ]
       when "form_submission"
         [ form_submission_path(@submission), "Back to submission" ]
       else

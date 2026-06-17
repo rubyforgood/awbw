@@ -196,7 +196,7 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     # ─── bulk payment views ───
     "app/views/events/bulk_payments/new.html.erb"        => "public",
-    "app/views/events/bulk_payments/show.html.erb"       => "public",
+    "app/views/events/bulk_payments/ticket.html.erb"     => "public",
 
     # ─── event invoice (slug/submission-reachable; blank template gated in controller) ───
     "app/views/events/invoices/show.html.erb"            => "public",
