@@ -5,10 +5,20 @@
 %>
 
 <div class="max-w-2xl mx-auto px-4 pt-4">
-  <div class="flex flex-wrap items-center gap-2">
-    <%= link_to event_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Back to event
-    <% end %>
+  <div class="flex flex-wrap items-start gap-2">
+    <%# Primary eyebrow is the event. Admins arriving from the bulk payments
+        dashboard (return_to=bulk_payments) get a second link back there, with
+        their originating row re-expanded. %>
+    <div class="flex flex-col items-start gap-1">
+      <%= link_to event_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Back to event
+      <% end %>
+      <% if params[:return_to] == "bulk_payments" %>
+        <%= link_to bulk_payments_return_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> Back to bulk payments
+        <% end %>
+      <% end %>
+    </div>
     <% if allowed_to?(:dashboard?, @event) %>
       <div class="ml-auto flex flex-wrap items-center gap-1">
         <%= link_to "Bulk payments", bulk_payments_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 admin-only bg-blue-100" %>
@@ -159,6 +169,13 @@
 
         <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
       <% end %>
+
+      <!-- Resend confirmation -->
+      <div class="text-center">
+        <%= button_to "Resend confirmation email",
+                      bulk_payment_resend_confirmation_path(@submission.slug),
+                      class: "text-sm text-gray-500 hover:text-blue-600 underline bg-transparent border-0 cursor-pointer p-0" %>
+      </div>
 
       <% if allowed_to?(:dashboard?, @event) %>
         <div class="admin-only rounded-lg border border-blue-200 bg-blue-50/50 px-4 py-4 space-y-3">

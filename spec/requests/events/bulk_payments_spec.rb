@@ -115,7 +115,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
            ) } }
 
       expect(response).to have_http_status(:redirect)
-      expect(response.location).to match(%r{/bulk-payment/})
+      expect(response.location).to match(%r{/bulk_payment/})
       expect(flash[:notice]).to eq("Your bulk payment information has been submitted.")
     end
 
@@ -128,7 +128,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
            ) } }
 
       expect(response).to have_http_status(:redirect)
-      expect(response.location).to match(%r{/bulk-payment/})
+      expect(response.location).to match(%r{/bulk_payment/})
     end
   end
 
@@ -198,9 +198,10 @@ RSpec.describe "Events::BulkPayments", type: :request do
     end
 
     context "as an admin arriving from the dashboard" do
-      it "backs to the bulk payments dashboard" do
+      it "shows a Back to ticket link plus a second Back to bulk payments link" do
         get event_bulk_payment_path(event, reg: submission.slug, return_to: "bulk_payments")
 
+        expect(response.body).to include("Back to ticket")
         expect(response.body).to include("Back to bulk payments")
       end
     end
@@ -267,6 +268,13 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
+    it "adds a Back to bulk payments eyebrow when arriving from the dashboard" do
+      get bulk_payment_ticket_path(submission.slug, return_to: "bulk_payments", expand: submission.id)
+
+      expect(response.body).to include("Back to event")
+      expect(response.body).to include("Back to bulk payments")
+    end
+
     context "as an admin" do
       before { sign_in admin }
 
@@ -275,6 +283,23 @@ RSpec.describe "Events::BulkPayments", type: :request do
 
         expect(response.body).to include("Payment allocations")
       end
+    end
+  end
+
+  describe "POST resend_confirmation" do
+    let(:event) { create(:event, :publicly_visible, cost_cents: 1000) }
+    let(:payer) { create(:person, email: "payer@example.com") }
+    let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
+
+    before { sign_out admin }
+
+    it "re-sends the payer confirmation and returns to the ticket" do
+      expect {
+        post bulk_payment_resend_confirmation_path(submission.slug)
+      }.to change(Notification, :count).by(1)
+
+      expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
+      expect(flash[:notice]).to eq("Confirmation email sent.")
     end
   end
 end

@@ -1,20 +1,16 @@
 <% content_for(:page_bg_class, "public") %>
-<%
-  # Default back link is the payer's ticket; admins arriving from the bulk
-  # payments dashboard (return_to=bulk_payments) go back there with their row
-  # re-expanded.
-  if params[:return_to] == "bulk_payments"
-    back_path = bulk_payments_return_path(@event)
-    back_label = "Back to bulk payments"
-  else
-    back_path = bulk_payment_ticket_path(@submission.slug)
-    back_label = "Back to ticket"
-  end
-%>
 <div class="max-w-3xl mx-auto px-4 pt-4">
-  <div class="flex flex-wrap items-center gap-2">
-    <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
+  <%# Primary back link is always the payer's ticket. Admins arriving from the
+      bulk payments dashboard (return_to=bulk_payments) also get a second link
+      back there, with their originating row re-expanded. %>
+  <div class="flex flex-col items-start gap-1">
+    <%= link_to bulk_payment_ticket_path(@submission.slug, return_to: params[:return_to], expand: params[:expand]), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
+    <% end %>
+    <% if params[:return_to] == "bulk_payments" %>
+      <%= link_to bulk_payments_return_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Back to bulk payments
+      <% end %>
     <% end %>
   </div>
 </div>

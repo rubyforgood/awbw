@@ -1,6 +1,6 @@
 module Events
   class BulkPaymentsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket ]
+    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :resend_confirmation ]
     before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
 
@@ -75,6 +75,30 @@ module Events
       @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
       @payment = @submission.payment
       @event = @submission.event.decorate
+    end
+
+    # Re-sends the payer their bulk payment confirmation email (the one carrying
+    # the ticket link). Reachable by the payer from the ticket.
+    def resend_confirmation
+      authorize! :bulk_payment, to: :show?
+
+      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      payer_email = @submission.person.preferred_email.presence ||
+                    @submission.answers_by_identifier["payer_email"]&.strip
+
+      if payer_email.present?
+        NotificationServices::CreateNotification.call(
+          noticeable: @submission,
+          kind: :bulk_payment_confirmation,
+          recipient_role: :person,
+          recipient_email: payer_email,
+          notification_type: 0
+        )
+        redirect_to bulk_payment_ticket_path(@submission.slug), notice: "Confirmation email sent."
+      else
+        redirect_to bulk_payment_ticket_path(@submission.slug),
+                    alert: "No email address on file to send the confirmation to."
+      end
     end
 
     private
