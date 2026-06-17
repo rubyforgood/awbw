@@ -22,6 +22,7 @@ class User < ApplicationRecord
   after_commit :create_email_changed_notification, on: :update
 
   before_destroy :track_account_deleted
+  before_destroy :reassign_owned_records
 
   # Associations
   belongs_to :person, optional: true
@@ -268,6 +269,53 @@ class User < ApplicationRecord
     errors.add(:person_id, "cannot be removed once set")
   end
 
+  def reassign_owned_records
+    orphaned_user = User.find_by(email: "orphaned_reports@awbw.org")
+    return unless orphaned_user
+
+    orphaned_id = orphaned_user.id
+
+    # Reassign NOT NULL created_by_id / updated_by_id to orphaned user
+    Banner.where(created_by_id: id).update_all(created_by_id: orphaned_id)
+    Banner.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
+    CommunityNews.where(author_id: id).update_all(author_id: orphaned_id)
+    CommunityNews.where(created_by_id: id).update_all(created_by_id: orphaned_id)
+    CommunityNews.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
+    Report.where(created_by_id: id).update_all(created_by_id: orphaned_id)
+    Resource.where(created_by_id: id).update_all(created_by_id: orphaned_id)
+    Story.where(created_by_id: id).update_all(created_by_id: orphaned_id)
+    Story.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
+    StoryIdea.where(created_by_id: id).update_all(created_by_id: orphaned_id)
+    StoryIdea.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
+    WorkshopIdea.where(created_by_id: id).update_all(created_by_id: orphaned_id)
+    WorkshopIdea.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
+    WorkshopVariationIdea.where(created_by_id: id).update_all(created_by_id: orphaned_id)
+    WorkshopVariationIdea.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
+
+    # Nullify nullable foreign keys
+    Comment.where(created_by_id: id).update_all(created_by_id: nil)
+    Comment.where(updated_by_id: id).update_all(updated_by_id: nil)
+    Event.where(created_by_id: id).update_all(created_by_id: nil)
+    Person.where(created_by_id: id).update_all(created_by_id: nil)
+    Person.where(updated_by_id: id).update_all(updated_by_id: nil)
+    User.where(created_by_id: id).update_all(created_by_id: nil)
+    User.where(updated_by_id: id).update_all(updated_by_id: nil)
+    Workshop.where(created_by_id: id).update_all(created_by_id: nil)
+    WorkshopVariation.where(created_by_id: id).update_all(created_by_id: nil)
+
+    # Nullify legacy table FK references
+    nullify_legacy_fk("affiliations", "user_id")
+    nullify_legacy_fk("workshop_logs", "user_id")
+    nullify_legacy_fk("user_permissions", "user_id")
+  end
+
+  def nullify_legacy_fk(table, column)
+    self.class.connection.execute(
+      ActiveRecord::Base.sanitize_sql_array(
+        [ "UPDATE #{table} SET #{column} = NULL WHERE #{column} = ?", id ]
+      )
+    )
+  end
 
   def after_confirmation
     super
