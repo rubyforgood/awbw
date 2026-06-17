@@ -442,6 +442,38 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
   end
 
+  describe "GET new payment method options" do
+    # A paid event so the payment section is not stripped from the form.
+    let(:event) { create(:event, cost_cents: 150_00) }
+    let!(:payment_method_field) do
+      field = create(:form_field, form: form, answer_type: :single_select_radio,
+                     field_identifier: "payment_method", name: "Payment method",
+                     required: false)
+      FormBuilderService::PAYMENT_METHOD_OPTIONS.each do |option_name|
+        field.form_field_answer_options.create!(answer_option: AnswerOption.find_or_create_by!(name: option_name))
+      end
+      field
+    end
+
+    it "does not offer 'Other' as a payment method" do
+      expect(FormBuilderService::PAYMENT_METHOD_OPTIONS).not_to include("Other")
+    end
+
+    it "renders the remaining payment methods without 'Other'" do
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include(%(value="Check"))
+      expect(response.body).not_to include(%(value="Other"))
+    end
+
+    it "still shows the payment method (without 'Other') for a scholarship registrant" do
+      get new_event_public_registration_path(event, scholarship_requested: "true")
+
+      expect(response.body).to include(%(value="Check"))
+      expect(response.body).not_to include(%(value="Other"))
+    end
+  end
+
   describe "GET show" do
     let(:person) { create(:person) }
 
