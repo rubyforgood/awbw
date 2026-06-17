@@ -39,6 +39,30 @@ RSpec.describe "/resources", type: :request do
     end
   end
 
+  describe "GET /index search results filtering" do
+    let!(:visible_resource) do
+      create(:resource, :publicly_visible, :published, title: "Visible In Search")
+    end
+    let!(:hidden_resource) do
+      create(:resource, :publicly_visible, :published, :hidden_from_search, title: "Hidden From Search")
+    end
+
+    it "includes hidden resources for an admin" do
+      get resources_url, headers: { "Turbo-Frame" => "resource_results" }
+
+      expect(response.body).to include("Visible In Search")
+      expect(response.body).to include("Hidden From Search")
+    end
+
+    it "excludes hidden resources for a guest" do
+      sign_out user
+      get resources_url, headers: { "Turbo-Frame" => "resource_results" }
+
+      expect(response.body).to include("Visible In Search")
+      expect(response.body).not_to include("Hidden From Search")
+    end
+  end
+
   describe "GET /show" do
     context "when resource has NO external link" do
       let(:resource) do
