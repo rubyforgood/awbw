@@ -49,6 +49,7 @@ class Resource < ApplicationRecord
 
   # Default values
   attribute :published, :boolean, default: false
+  attribute :hidden_from_search, :boolean, default: false
 
   # Validations
   validates :title, presence: true, uniqueness: { case_sensitive: false }
@@ -89,6 +90,9 @@ class Resource < ApplicationRecord
     result = value ? published_kinds.where(published: true) : where(published: false)
   end
   scope :recent, -> { published.by_created }
+  # Resources flagged hidden_from_search stay publicly accessible by direct link
+  # but are excluded from non-admin portal searches and listings.
+  scope :searchable, -> { where(hidden_from_search: false) }
   scope :sector_impact, -> { where(kind: "SectorImpact") }
   scope :scholarship, -> { where(kind: "Scholarship") }
   scope :story, -> { where(kind: [ "Story", "LeaderSpotlight" ]).order(created_at: :desc) }

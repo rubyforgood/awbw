@@ -29,5 +29,9 @@ FactoryBot.define do
     trait :publicly_featured do
       publicly_featured { true }
     end
+
+    trait :hidden_from_search do
+      hidden_from_search { true }
+    end
   end
 end
