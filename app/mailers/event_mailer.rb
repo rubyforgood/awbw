@@ -28,7 +28,7 @@ class EventMailer < ApplicationMailer
 
     @notification_type = "Bulk payment confirmation"
 
-    @submission_url = event_bulk_payment_url(@event, submission_id: @submission.id) if @event
+    @submission_url = bulk_payment_ticket_url(@submission.slug) if @submission.slug.present?
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
 
     mail(

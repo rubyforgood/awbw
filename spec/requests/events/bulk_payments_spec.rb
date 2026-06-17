@@ -115,7 +115,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
            ) } }
 
       expect(response).to have_http_status(:redirect)
-      expect(response.location).to match(%r{/events/#{event.id}/bulk_payment})
+      expect(response.location).to match(%r{/bulk-payment/})
       expect(flash[:notice]).to eq("Your bulk payment information has been submitted.")
     end
 
@@ -128,7 +128,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
            ) } }
 
       expect(response).to have_http_status(:redirect)
-      expect(response.location).to match(%r{/events/#{event.id}/bulk_payment})
+      expect(response.location).to match(%r{/bulk-payment/})
     end
   end
 
@@ -215,6 +215,72 @@ RSpec.describe "Events::BulkPayments", type: :request do
 
         expect(response.body).to include("/events/#{event.id}/invoice")
         expect(response.body).to include("submission_id=#{submission.id}")
+      end
+    end
+  end
+
+  describe "GET ticket" do
+    let(:event) { create(:event, :publicly_visible, cost_cents: 1000, title: "Spring Workshop") }
+    let(:payer) { create(:person) }
+    let(:attendees_json) do
+      [ { "first_name" => "Jordan", "last_name" => "Rivers", "email" => "jordan@example.com" } ].to_json
+    end
+    let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
+    let!(:attendees_field) do
+      create(:form_field, form: form, answer_type: :free_form_input_one_line,
+             field_identifier: "bulk_payment_attendees", name: "Attendees", required: false)
+    end
+
+    before do
+      submission.form_answers.create!(form_field: attendees_field, submitted_answer: attendees_json,
+                                      question_name_when_answered: "Attendees")
+      sign_out admin
+    end
+
+    def get_ticket
+      get bulk_payment_ticket_path(submission.slug)
+    end
+
+    it "renders the ticket for the public payer using the slug" do
+      get_ticket
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Bulk payment ticket")
+      expect(response.body).to include("Spring Workshop")
+    end
+
+    it "lists the registrants" do
+      get_ticket
+
+      expect(response.body).to include("Jordan Rivers")
+      expect(response.body).to include("jordan@example.com")
+    end
+
+    it "does not show per-person actions like cancelling a registration" do
+      get_ticket
+
+      expect(response.body).not_to include("Cancel registration")
+    end
+
+    it "links the invoice back to the ticket" do
+      get_ticket
+
+      expect(response.body).to include("return_to=bulk_payment_ticket")
+    end
+
+    it "returns 404 for an unknown slug" do
+      get bulk_payment_ticket_path("nope")
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "shows the admin allocations section" do
+        get_ticket
+
+        expect(response.body).to include("Payment allocations")
       end
     end
   end

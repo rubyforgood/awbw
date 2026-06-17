@@ -4,6 +4,8 @@
   back_path, back_label =
     if @submission
       case params[:return_to]
+      when "bulk_payment_ticket"
+        [ bulk_payment_ticket_path(@submission.slug), "Back to ticket" ]
       when "bulk_payment_show"
         [ event_bulk_payment_path(@event, submission_id: @submission.id), "Back to submission" ]
       when "form_submission"

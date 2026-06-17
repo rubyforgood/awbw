@@ -1,7 +1,7 @@
 module Events
   class BulkPaymentsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create, :show ]
-    before_action :set_event
+    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket ]
+    before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
 
     rescue_from ActionController::InvalidAuthenticityToken do
@@ -44,7 +44,7 @@ module Events
           checkout_session = create_stripe_checkout_session(result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
         else
-          redirect_to event_bulk_payment_path(@event, submission_id: result.form_submission.id),
+          redirect_to bulk_payment_ticket_path(result.form_submission.slug),
                       notice: "Your bulk payment information has been submitted."
         end
       else
@@ -62,6 +62,17 @@ module Events
       @submission = FormSubmission.find(params[:submission_id])
       @payment = @submission.payment
       @event = @event.decorate
+    end
+
+    # Public, slug-based ticket for the payer. Shows the event details, the
+    # registrants they paid for, and the submitted form — but none of the
+    # per-person admin actions found on the bulk payments dashboard.
+    def ticket
+      authorize! :bulk_payment, to: :ticket?
+
+      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      @payment = @submission.payment
+      @event = @submission.event.decorate
     end
 
     private
@@ -131,8 +142,8 @@ module Events
           },
           quantity: qty
         } ],
-        success_url: event_bulk_payment_url(@event, submission_id: submission.id, checkout: "success"),
-        cancel_url: event_bulk_payment_url(@event, submission_id: submission.id, checkout: "cancelled")
+        success_url: bulk_payment_ticket_url(submission.slug, checkout: "success"),
+        cancel_url: bulk_payment_ticket_url(submission.slug, checkout: "cancelled")
       )
     end
   end
