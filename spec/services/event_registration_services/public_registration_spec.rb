@@ -108,6 +108,38 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(result.event_registration).to eq(existing)
       expect(existing.reload.ce_credit_requested).to be true
     end
+
+    it "saves the hours folded into a 'Yes: <n>' specify answer" do
+      result = register_with_ce("Yes: 6")
+      expect(result.event_registration.ce_credit_requested).to be true
+      expect(result.event_registration.ce_hours_requested).to eq(6)
+    end
+
+    it "leaves ce_hours_requested nil when Yes carries no hours" do
+      result = register_with_ce("Yes")
+      expect(result.event_registration.ce_hours_requested).to be_nil
+    end
+
+    it "leaves ce_hours_requested nil when answered No" do
+      result = register_with_ce("No")
+      expect(result.event_registration.ce_hours_requested).to be_nil
+    end
+
+    it "ignores non-numeric hours in the specify answer" do
+      result = register_with_ce("Yes: lots")
+      expect(result.event_registration.ce_credit_requested).to be true
+      expect(result.event_registration.ce_hours_requested).to be_nil
+    end
+
+    it "saves the hours onto an existing registration that answers Yes" do
+      person = create(:person, first_name: "Cy", last_name: "Reed", email: "cy@example.com")
+      existing = create(:event_registration, event: event, registrant: person, ce_credit_requested: false)
+
+      register_with_ce("Yes: 4")
+
+      expect(existing.reload.ce_credit_requested).to be true
+      expect(existing.ce_hours_requested).to eq(4)
+    end
   end
 
   describe "Additional forms (multi-select magic question)" do

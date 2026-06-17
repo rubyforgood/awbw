@@ -72,10 +72,10 @@
         data and store none of their own, so fall back to those when present. %>
     <% radio_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
-    <% has_specify = radio_options.any? { |option_label, _option_value| specify_placeholder(option_label).present? } %>
+    <% has_specify = radio_options.any? { |option_label, _option_value| specify_placeholder(option_label, field).present? } %>
     <%= tag.div class: "flex flex-wrap gap-2.5 mt-1", data: (has_specify ? { controller: "specify-option", action: "change->specify-option#update" } : {}) do %>
       <% radio_options.each do |option_label, option_value, option_description| %>
-        <% placeholder = specify_placeholder(option_label) %>
+        <% placeholder = specify_placeholder(option_label, field) %>
         <% is_specify = placeholder.present? %>
         <label class="flex flex-col gap-1 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <span class="flex items-center gap-2">
@@ -132,12 +132,12 @@
         Category options carry an optional description, shown as subtext under the label. %>
     <% checkbox_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
-    <% has_specify = checkbox_options.any? { |option_label, _option_value| specify_placeholder(option_label).present? } %>
+    <% has_specify = checkbox_options.any? { |option_label, _option_value| specify_placeholder(option_label, field).present? } %>
     <%# Multi-column (not grid) so a sorted option list reads straight down each
         column then onto the next, rather than zig-zagging across rows. %>
     <%= tag.div class: "columns-1 sm:columns-2 gap-2.5 mt-1", data: (has_specify ? { controller: "specify-option", action: "change->specify-option#update" } : {}) do %>
       <% checkbox_options.each do |option_label, option_value, option_description| %>
-        <% placeholder = specify_placeholder(option_label) %>
+        <% placeholder = specify_placeholder(option_label, field) %>
         <% is_specify = placeholder.present? %>
         <label class="flex flex-col gap-1 mb-2.5 break-inside-avoid rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <span class="flex items-center gap-2">

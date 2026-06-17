@@ -44,7 +44,7 @@ module EventRegistrationServices
         existing = @event.event_registrations.find_by(registrant: person)
         if existing
           existing.update!(scholarship_requested: true) if @scholarship_requested
-          existing.update!(ce_credit_requested: true) if ce_credit_requested?
+          existing.update!(ce_credit_requested: true, ce_hours_requested: ce_hours_requested) if ce_credit_requested?
           existing.update!(w9_requested: true) if w9_requested?
           existing.update!(invoice_requested: true) if invoice_requested?
           if existing.status == "cancelled"
@@ -266,14 +266,31 @@ module EventRegistrationServices
         registrant: person,
         scholarship_requested: @scholarship_requested,
         ce_credit_requested: ce_credit_requested?,
+        ce_hours_requested: ce_hours_requested,
         w9_requested: w9_requested?,
         invoice_requested: invoice_requested?
       )
     end
 
+    # The CE-interest answer, which "Yes" folds an hours specify box into as
+    # "Yes: <hours>". Split off the leading label so a Yes/No check ignores the
+    # folded hours (see FormField::FIELD_SPECIFY_OPTION_PLACEHOLDERS).
+    def ce_answer_label
+      field_value(CE_CREDIT_INTEREST_IDENTIFIER).to_s.split(":", 2).first.to_s.strip
+    end
+
     # True when the registrant answered "Yes" to the seeded CE-interest question.
     def ce_credit_requested?
-      field_value(CE_CREDIT_INTEREST_IDENTIFIER).to_s.strip.casecmp?("yes")
+      ce_answer_label.casecmp?("yes")
+    end
+
+    # The CE hours typed into the "Yes" specify box, as a positive integer, or nil
+    # when CE was not requested or no valid hours were entered.
+    def ce_hours_requested
+      return unless ce_credit_requested?
+
+      hours = field_value(CE_CREDIT_INTEREST_IDENTIFIER).to_s.split(":", 2).last.to_s.strip.to_i
+      hours.positive? ? hours : nil
     end
 
     # The "Additional forms" question is a multi-select, so its submitted value is
