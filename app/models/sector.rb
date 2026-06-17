@@ -1,26 +1,40 @@
 class Sector < ApplicationRecord
   include NameFilterable, Publishable
+  # Canonical service-area sector tags, in display order. "Other" is kept at the end
+  # as the catch-all free-text fallback for additional service areas (see
+  # OTHER_SECTOR_NAME below) — it isn't a selectable tag itself. Descriptions for
+  # these (the parenthetical clarifications) live in db/seeds.rb.
   SECTOR_TYPES = [
-    "Child Abuse",
-    "Community Oppression/Violence",
-    "Criminal/Legal",
-    "Disability",
+    "Batterers Intervention",
+    "Child Abuse/Neglect",
+    "Climate/Environmental",
+    "Community Violence",
+    "Court/Legal System",
+    "Disability Services",
     "Domestic Violence",
-    "Education/Schools",
+    "Education",
     "Foster Care/Adoption",
-    "Homeless",
+    "Fundraising/Donor Engagement",
+    "Grief/Loss",
+    "Health/Medical",
+    "Homelessness",
     "Human Trafficking",
     "Immigration",
     "Incarceration",
     "Indigenous/Tribal Nation",
     "LGBTQIA+",
     "Mental Health",
-    "Reproductive",
+    "Military/Veterans",
+    "Private Practice/Sole Proprietor",
+    "Racial/Social Justice",
+    "Religious/Faith Based",
+    "Reproductive Services",
     "Restorative/Transformative Justice",
+    "Self-Care/Personal Growth",
     "Sexual Assault",
-    "Student",
-    "Substance Use",
-    "Veterans & Military",
+    "Staff/Organizational Development",
+    "Substance Use/Recovery",
+    "Systems/Policy Change",
     "Other"
   ]
 

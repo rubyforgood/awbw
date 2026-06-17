@@ -149,10 +149,34 @@ OrganizationObligation::OBLIGATION_TYPES.each do |obligation_type|
 end
 
 puts "Creating Sectors…"
+# Optional descriptions clarify a sector on the public registration form: shown as
+# subtext under the checkbox in the additional service-areas list, and folded into
+# the "Name (description)" label in the single primary service-area dropdown (which
+# can't show subtext). They come from the parenthetical clarifications on the
+# canonical sector list. Names without an entry below have no description. Admins
+# can edit each from the Sectors admin once seeded.
+sector_descriptions = {
+  "Climate/Environmental" => "fire recovery, disaster response, environmental trauma",
+  "Community Violence" => "gang violence, police violence, mass shootings, etc.",
+  "Health/Medical" => "hospitals, first responders, illness and chronic disease",
+  "Immigration" => "family separation, deportation, refugees/asylees, etc.",
+  "Incarceration" => "including re-entry services",
+  "Reproductive Services" => "birth trauma, perinatal care, challenges conceiving, etc.",
+  "Restorative/Transformative Justice" => "individual and community reconciliation",
+  "Staff/Organizational Development" => "Secondary/Vicarious Trauma",
+  "Systems/Policy Change" => "Advocating at state/government levels for policy change"
+}
 Sector::SECTOR_TYPES.each do |sector_type|
   sector = find_or_create_by_name!(Sector, sector_type)
-  sector.update!(published: true) unless sector.published?
+  sector.update!(published: true, description: sector_descriptions[sector_type])
 end
+
+# Unpublish any sector no longer on the canonical list, preserving its historical
+# taggings rather than destroying them. SECTOR_TYPES already includes the "Other"
+# catch-all, so it stays published.
+canonical_names = Sector::SECTOR_TYPES.map(&:downcase)
+Sector.reject { |sector| canonical_names.include?(sector.name.downcase) }
+  .each { |sector| sector.update!(published: false) }
 
 puts "Creating CategoryTypes/Categories…"
 category_type_categories = [

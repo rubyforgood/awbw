@@ -122,7 +122,8 @@ RSpec.describe "/sectors", type: :request do
     context "with valid parameters" do
       let(:new_attributes) do
         valid_attributes.merge(
-          name: "Updated Sector Name"
+          name: "Updated Sector Name",
+          description: "Clarifying subtext for this sector"
         )
       end
 
@@ -130,7 +131,8 @@ RSpec.describe "/sectors", type: :request do
         sector = Sector.create! valid_attributes
         patch sector_url(sector), params: { sector: new_attributes }
         sector.reload
-        skip("Add assertions for updated state")
+        expect(sector.name).to eq("Updated Sector Name")
+        expect(sector.description).to eq("Clarifying subtext for this sector")
       end
 
       it "redirects to the sector" do
