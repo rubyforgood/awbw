@@ -247,6 +247,40 @@ RSpec.describe User do
       resource = create(:resource)
       expect(resource.created_by.deletable?).to be false
     end
+
+    it "returns false when user created a banner" do
+      banner = create(:banner)
+      expect(banner.created_by.deletable?).to be false
+    end
+
+    it "returns false when user authored community news" do
+      news = create(:community_news)
+      expect(news.author.deletable?).to be false
+    end
+
+    it "returns false when user created an event" do
+      event = create(:event)
+      expect(event.created_by.deletable?).to be false
+    end
+
+    it "returns false when user created a person" do
+      person = create(:person)
+      expect(person.created_by.deletable?).to be false
+    end
+
+    it "returns false when user authored a comment" do
+      user = create(:user)
+      create(:comment, created_by: user)
+      expect(user.deletable?).to be false
+    end
+
+    it "returns false when user is referenced by a legacy table" do
+      user = create(:user)
+      User.connection.execute(
+        "INSERT INTO user_permissions (user_id, created_at, updated_at) VALUES (#{user.id}, NOW(), NOW())"
+      )
+      expect(user.deletable?).to be false
+    end
   end
 
   describe '.search_by_params' do

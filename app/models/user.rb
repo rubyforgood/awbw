@@ -22,7 +22,6 @@ class User < ApplicationRecord
   after_commit :create_email_changed_notification, on: :update
 
   before_destroy :track_account_deleted
-  before_destroy :reassign_owned_records
 
   # Associations
   belongs_to :person, optional: true
@@ -62,6 +61,36 @@ class User < ApplicationRecord
   accepts_nested_attributes_for :user_forms
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
+  # Tables with a RESTRICT foreign key to users that block destruction.
+  # bookmarks and user_forms are omitted: they're removed via dependent: :destroy.
+  OWNED_RECORD_REFERENCES = {
+    Banner => %i[created_by_id updated_by_id],
+    Comment => %i[created_by_id updated_by_id],
+    CommunityNews => %i[author_id created_by_id updated_by_id],
+    Event => %i[created_by_id],
+    Notification => %i[sender_id],
+    Person => %i[created_by_id updated_by_id],
+    Report => %i[created_by_id],
+    Resource => %i[created_by_id],
+    Story => %i[created_by_id updated_by_id],
+    StoryIdea => %i[created_by_id updated_by_id],
+    Affiliation => %i[user_id],
+    User => %i[created_by_id updated_by_id],
+    Workshop => %i[created_by_id],
+    WorkshopIdea => %i[created_by_id updated_by_id],
+    WorkshopLog => %i[created_by_id],
+    WorkshopVariation => %i[created_by_id],
+    WorkshopVariationIdea => %i[created_by_id updated_by_id]
+  }.freeze
+
+  # Legacy tables (no ActiveRecord model) with a RESTRICT foreign key to users.
+  LEGACY_OWNED_RECORD_REFERENCES = {
+    "user_permissions" => "user_id",
+    "blazer_audits" => "user_id",
+    "blazer_checks" => "creator_id",
+    "blazer_dashboards" => "creator_id",
+    "blazer_queries" => "creator_id"
+  }.freeze
 
   before_validation :strip_whitespace
 
@@ -179,16 +208,11 @@ class User < ApplicationRecord
     end
   end
 
+  # A user can only be destroyed when nothing references them via a RESTRICT
+  # foreign key. We check every such reference so the UI reflects deletability
+  # accurately, rather than relying on the controller's InvalidForeignKey rescue.
   def deletable?
-    !reports.exists? &&
-      !workshop_logs.exists? &&
-      !resources.exists? &&
-      !workshops.exists? &&
-      !stories_as_creator.exists? &&
-      !story_ideas_as_creator.exists? &&
-      !workshop_ideas_as_creator.exists? &&
-      !workshop_variations_as_creator.exists? &&
-      !workshop_variation_ideas_creator.exists?
+    !owns_model_records? && !owns_legacy_records?
   end
 
   def name
@@ -269,52 +293,24 @@ class User < ApplicationRecord
     errors.add(:person_id, "cannot be removed once set")
   end
 
-  def reassign_owned_records
-    orphaned_user = User.find_by(email: "orphaned_reports@awbw.org")
-    return unless orphaned_user
-
-    orphaned_id = orphaned_user.id
-
-    # Reassign NOT NULL created_by_id / updated_by_id to orphaned user
-    Banner.where(created_by_id: id).update_all(created_by_id: orphaned_id)
-    Banner.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
-    CommunityNews.where(author_id: id).update_all(author_id: orphaned_id)
-    CommunityNews.where(created_by_id: id).update_all(created_by_id: orphaned_id)
-    CommunityNews.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
-    Report.where(created_by_id: id).update_all(created_by_id: orphaned_id)
-    Resource.where(created_by_id: id).update_all(created_by_id: orphaned_id)
-    Story.where(created_by_id: id).update_all(created_by_id: orphaned_id)
-    Story.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
-    StoryIdea.where(created_by_id: id).update_all(created_by_id: orphaned_id)
-    StoryIdea.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
-    WorkshopIdea.where(created_by_id: id).update_all(created_by_id: orphaned_id)
-    WorkshopIdea.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
-    WorkshopVariationIdea.where(created_by_id: id).update_all(created_by_id: orphaned_id)
-    WorkshopVariationIdea.where(updated_by_id: id).update_all(updated_by_id: orphaned_id)
-
-    # Nullify nullable foreign keys
-    Comment.where(created_by_id: id).update_all(created_by_id: nil)
-    Comment.where(updated_by_id: id).update_all(updated_by_id: nil)
-    Event.where(created_by_id: id).update_all(created_by_id: nil)
-    Person.where(created_by_id: id).update_all(created_by_id: nil)
-    Person.where(updated_by_id: id).update_all(updated_by_id: nil)
-    User.where(created_by_id: id).update_all(created_by_id: nil)
-    User.where(updated_by_id: id).update_all(updated_by_id: nil)
-    Workshop.where(created_by_id: id).update_all(created_by_id: nil)
-    WorkshopVariation.where(created_by_id: id).update_all(created_by_id: nil)
-
-    # Nullify legacy table FK references
-    nullify_legacy_fk("affiliations", "user_id")
-    nullify_legacy_fk("workshop_logs", "user_id")
-    nullify_legacy_fk("user_permissions", "user_id")
+  def owns_model_records?
+    OWNED_RECORD_REFERENCES.any? do |model, columns|
+      columns.any? { |column| model.where(column => id).exists? }
+    end
   end
 
-  def nullify_legacy_fk(table, column)
-    self.class.connection.execute(
+  def owns_legacy_records?
+    LEGACY_OWNED_RECORD_REFERENCES.any? do |table, column|
+      legacy_reference_exists?(table, column)
+    end
+  end
+
+  def legacy_reference_exists?(table, column)
+    self.class.connection.select_value(
       ActiveRecord::Base.sanitize_sql_array(
-        [ "UPDATE #{table} SET #{column} = NULL WHERE #{column} = ?", id ]
+        [ "SELECT 1 FROM #{table} WHERE #{column} = ? LIMIT 1", id ]
       )
-    )
+    ).present?
   end
 
   def after_confirmation
