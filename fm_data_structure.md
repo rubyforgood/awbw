@@ -191,15 +191,20 @@ Full columns (14): Preferred, Zipcode, State, City, County, AreaCode, FIPS, Time
 | `WORKSHOPLOG` | `ProjectID` | `PRJ__Projects` | `ProjectID` |
 | `WORKSHOPLOG` | `LeaderID` | `prj_RDX__Rolodex` | `ID` |
 | `WORKSHOPLOG` | `AgencyID` | `prj_RDX__Rolodex` | `ID` |
+| `prj_ALC__Allocations` | `FundingRecID` | `prj_FND__FundingviaTempID` | `RecordID` |
 | `prj_ALC__Allocations` | `ProjectID` | `PRJ__Projects` | `ProjectID` |
 | `prj_EXP__Expenditure` | `ProjectID` | `PRJ__Projects` | `ProjectID` |
 | `prj_EVT__Events` | `EventID` | (self) | `EventID` |
 | `prj_PTC__Participants` | `EventID` | `prj_EVT__Events` | `EventID` |
 | `prj_PTC__Participants` | `ProjectID` | `PRJ__Projects` | `ProjectID` |
-| `prj_PTC__Participants` | `PersonID` | `prj_RDX__Rolodex` | `ID` |
+| `prj_PTC__Participants` | `ParticipantID` | `prj_RDX__Rolodex` | `ID` |
+| `prj_PTC__Participants` | `AllocRecID` | `prj_ALC__Allocations` | `AllocRecID` |
+| `prj_PTC__Participants` | `OrgID` | `prj_ORG__Organization` | `OrgID` |
+| `prj_PTC__Participants` | `PaymentID` | `prj_PMT__Payment` | `RecordID` |
 | `prj_PMT__Payment` | `RolodexID` | `prj_RDX__Rolodex` | `ID` |
 | `prj_PMT__Payment` | `OrgID` | `prj_ORG__Organization` | `OrgID` |
 | `prj_PMT__Payment` | `ProjectID` | `PRJ__Projects` | `ProjectID` |
+| `prj_PMT__Payment` | `ParticRecID` | `prj_PTC__Participants` | `PRecID` |
 | `prj_NTS__Notes` | `RolodexID` | `prj_RDX__Rolodex` | `ID` |
 | `prj_NTS__Notes` | `OrgID` | `prj_ORG__Organization` | `OrgID` |
 | `prj_NTS__Notes` | `ProjectID` | `PRJ__Projects` | `ProjectID` |
@@ -212,6 +217,29 @@ Full columns (14): Preferred, Zipcode, State, City, County, AreaCode, FIPS, Time
 | `prj_FND__FundingviaTempID` | `RecordID` | (self) | `RecordID` |
 | `prj_PSP__ProgramSponsorships` | `FundingID` | `prj_FND__FundingviaTempID` | `RecordID` |
 | `prj_PSP__ProgramSponsorships` | `FunderID` | `prj_RDX__Rolodex` | `ID` |
+
+### Allocation Data Flow
+
+The allocation/funding chain in FileMaker flows as:
+
+```
+prj_FND__FundingviaTempID (grants/funding sources, 1,391 rows)
+  └─ FundingRecID → prj_ALC__Allocations (funding → project allocations, 3,099 rows)
+       └─ ProjectID → PRJ__Projects (project receiving the allocation)
+       └─ AllocRecID → prj_PTC__Participants (participants drawing from this allocation)
+
+prj_PTC__Participants (event participants/registrations, 68,497 rows)
+  └─ EventID → prj_EVT__Events (event they registered for)
+  └─ PersonID → prj_RDX__Rolodex (individual person)
+  └─ PaymentID → prj_PMT__Payment (payment/link to payment record)
+  └─ AllocRecID → prj_ALC__Allocations (funding allocation covering their participation)
+
+prj_PMT__Payment (donations and payments, 27,146 rows)
+  └─ RolodexID → prj_RDX__Rolodex (payer/donor)
+  └─ ParticRecID → prj_PTC__Participants (participant this payment is for)
+  └─ OrgID → prj_ORG__Organization (org linked to payment)
+  └─ ProjectID → PRJ__Projects (project linked to payment)
+```
 
 ### Notes
 - The `prj_psp_FND__Funding` table is an alias for `prj_FND__FundingviaTempID` (same data, same count 1,391).
