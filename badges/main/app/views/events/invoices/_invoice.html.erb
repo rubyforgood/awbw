@@ -1,0 +1,92 @@
+<%# Renders one EventInvoice as a printable document. Shared by the per-
+    registration and bulk-payment invoice pages. `invoice` is an EventInvoice. %>
+<article class="mx-auto max-w-3xl bg-white text-gray-800 px-8 py-10 print:px-0 print:py-0 print:max-w-none">
+  <%# Header: issuer details (left) + brand logo (right) %>
+  <header class="flex items-start justify-between gap-6">
+    <address class="not-italic text-sm leading-snug">
+      <p class="font-medium"><%= invoice.issuer_name %></p>
+      <% invoice.issuer_address_lines.each do |line| %>
+        <p><%= line %></p>
+      <% end %>
+      <p><%= invoice.issuer_email %></p>
+    </address>
+    <%= image_tag "logo-with-tagline.png", alt: invoice.issuer_name, class: "h-16 w-auto shrink-0" %>
+  </header>
+
+  <h1 class="text-center text-3xl font-semibold tracking-wide my-8">INVOICE</h1>
+
+  <%# Bill-to %>
+  <div class="space-y-1">
+    <p class="text-sm font-bold">Invoice To:</p>
+    <div class="rounded-2xl border border-gray-300 px-4 py-3 text-sm leading-relaxed">
+      <p class="font-medium"><%= invoice.bill_to_name %></p>
+      <% invoice.bill_to_address_lines.each do |line| %>
+        <p><%= line %></p>
+      <% end %>
+      <% if invoice.bill_to_email.present? %>
+        <p class="text-gray-500"><%= invoice.bill_to_email %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Attention %>
+  <div class="space-y-1 mt-5">
+    <p class="text-sm font-bold">Attention:</p>
+    <div class="rounded-2xl border border-gray-300 px-4 py-3 text-sm">
+      <%= invoice.attention.presence || "—" %>
+    </div>
+  </div>
+
+  <%# Meta row: number / date / reference / client id %>
+  <div class="mt-6 rounded-2xl border border-gray-300 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 text-center">
+    <% [
+         [ "Invoice Number", invoice.number ],
+         [ "Invoice Date", invoice.date&.strftime("%-d %b, %Y") ],
+         [ "Your Reference", invoice.reference ],
+         [ "Client ID", invoice.client_id ]
+       ].each do |label, value| %>
+      <div class="px-3 py-3">
+        <p class="text-xs font-bold text-gray-600"><%= label %></p>
+        <p class="text-sm mt-1"><%= value.presence || " " %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Line items %>
+  <table class="w-full mt-8 text-sm">
+    <thead>
+      <tr class="border-b border-gray-300 text-xs font-bold text-gray-700">
+        <th class="text-left py-2 pr-3">Date</th>
+        <th class="text-left py-2 pr-3">Job/Item Description</th>
+        <th class="text-right py-2 px-3 whitespace-nowrap">Quantity/Units</th>
+        <th class="text-right py-2 px-3 whitespace-nowrap">Unit Price</th>
+        <th class="text-right py-2 pl-3 whitespace-nowrap">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% invoice.line_items.each do |item| %>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 whitespace-nowrap align-top"><%= item.date&.strftime("%m/%d/%y") %></td>
+          <td class="py-2 pr-3 align-top"><%= item.description %></td>
+          <td class="py-2 px-3 text-right tabular-nums align-top"><%= item.quantity %></td>
+          <td class="py-2 px-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(item.unit_price_cents) %></td>
+          <td class="py-2 pl-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(item.amount_cents) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3"></td>
+        <td class="pt-4 text-right text-sm font-bold">Total</td>
+        <td class="pt-4 text-right">
+          <span class="inline-block rounded-md border border-gray-400 px-3 py-1 text-sm font-bold tabular-nums whitespace-nowrap"><%= dollars_from_cents(invoice.total_cents) %></span>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <footer class="mt-12 text-sm">
+    <p><%= invoice.payable_to_note %></p>
+    <p class="font-bold mt-1">Thank you.</p>
+  </footer>
+</article>

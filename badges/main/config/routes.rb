@@ -89,6 +89,7 @@ Rails.application.routes.draw do
   end
   resources :community_news
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket
+  get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
@@ -143,6 +144,7 @@ Rails.application.routes.draw do
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
     resource :bulk_payment, only: [ :new, :create, :show ], module: :events
+    resource :invoice, only: [ :show ], module: :events
   end
   resources :people do
     collection do

@@ -209,6 +209,13 @@ RSpec.describe "Events::BulkPayments", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).not_to include("Payment allocations")
       end
+
+      it "links to the submission's invoice" do
+        get_show
+
+        expect(response.body).to include("/events/#{event.id}/invoice")
+        expect(response.body).to include("submission_id=#{submission.id}")
+      end
     end
   end
 end

@@ -45,6 +45,13 @@
       <% end %>
       <%= render "form_submissions/submission", submission: @submission %>
 
+      <div class="mt-6 flex justify-center">
+        <%= link_to event_invoice_path(@event, submission_id: @submission.id, return_to: "bulk_payment_show"),
+                    class: "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors" do %>
+          <i class="fa-solid fa-file-invoice-dollar"></i> View invoice
+        <% end %>
+      </div>
+
       <% if allowed_to?(:dashboard?, @event) %>
         <div class="admin-only mt-6 rounded-lg border border-blue-200 bg-blue-50/50 px-4 py-4 space-y-3">
           <div class="flex items-center justify-between gap-2">

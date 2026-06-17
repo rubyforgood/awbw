@@ -83,6 +83,10 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
+  def invoice?
+    manage?
+  end
+
   def preview_reminder?
     manage?
   end

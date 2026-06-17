@@ -125,6 +125,21 @@
         <% end %>
       <% end %>
 
+      <% if event_registration.invoice_requested? %>
+        <%= link_to registration_invoice_path(event_registration.slug),
+                      target: "_blank", rel: "noopener",
+                      class: "flex items-center gap-3 rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors" do %>
+          <i class="fa-solid fa-file-invoice-dollar text-blue-500 text-xl shrink-0"></i>
+
+          <div class="flex-1 min-w-0 text-left">
+            <p class="font-semibold text-blue-900">View invoice</p>
+            <p class="text-sm text-blue-700">Itemized invoice for this registration</p>
+          </div>
+
+          <i class="fa-solid fa-arrow-right text-blue-500 shrink-0"></i>
+        <% end %>
+      <% end %>
+
       <!-- Divider -->
       <div class="border-t border-gray-200"></div>
 
