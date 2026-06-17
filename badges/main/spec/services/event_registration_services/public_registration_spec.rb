@@ -110,6 +110,68 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "Additional forms (multi-select magic question)" do
+    let!(:additional_forms_field) do
+      field = form.form_fields.create!(
+        name: "Do you need either of the following?",
+        answer_type: :multi_select_checkbox,
+        status: :active,
+        position: (form.form_fields.maximum(:position) || 0) + 1,
+        required: false,
+        field_identifier: described_class::ADDITIONAL_FORMS_IDENTIFIER,
+        section: "additional_forms",
+        visibility: :always_ask
+      )
+      [ described_class::ADDITIONAL_FORMS_INVOICE, described_class::ADDITIONAL_FORMS_W9 ].each_with_index do |opt, idx|
+        ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
+        field.form_field_answer_options.create!(answer_option: ao)
+      end
+      field
+    end
+
+    def register_with_additional_forms(selections)
+      params = base_form_params(first_name: "Wendy", last_name: "Nein", email: "wendy@example.com")
+      params = params.merge(additional_forms_field.id.to_s => selections) unless selections.nil?
+      described_class.call(event: event, form: form, form_params: params)
+    end
+
+    it "sets both flags when both options are checked" do
+      registration = register_with_additional_forms([ "Invoice", "W-9" ]).event_registration
+      expect(registration.invoice_requested).to be true
+      expect(registration.w9_requested).to be true
+    end
+
+    it "sets only w9_requested when only W-9 is checked" do
+      registration = register_with_additional_forms([ "W-9" ]).event_registration
+      expect(registration.w9_requested).to be true
+      expect(registration.invoice_requested).to be false
+    end
+
+    it "sets only invoice_requested when only Invoice is checked" do
+      registration = register_with_additional_forms([ "Invoice" ]).event_registration
+      expect(registration.invoice_requested).to be true
+      expect(registration.w9_requested).to be false
+    end
+
+    it "leaves both flags off when nothing is checked" do
+      registration = register_with_additional_forms(nil).event_registration
+      expect(registration.w9_requested).to be false
+      expect(registration.invoice_requested).to be false
+    end
+
+    it "turns the flags on for an existing registration that now checks the options" do
+      person = create(:person, first_name: "Wendy", last_name: "Nein", email: "wendy@example.com")
+      existing = create(:event_registration, event: event, registrant: person,
+                                              w9_requested: false, invoice_requested: false)
+
+      result = register_with_additional_forms([ "Invoice", "W-9" ])
+
+      expect(result.event_registration).to eq(existing)
+      expect(existing.reload.w9_requested).to be true
+      expect(existing.reload.invoice_requested).to be true
+    end
+  end
+
   describe "re-registration after cancellation" do
     let(:person) { create(:person, first_name: "Jane", last_name: "Doe", email: "jane@example.com") }
     let!(:cancelled_registration) do

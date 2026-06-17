@@ -109,6 +109,22 @@
         <% end %>
       <% end %>
 
+      <!-- Additional forms the registrant asked for during registration -->
+      <% if event_registration.w9_requested? %>
+        <%= link_to "/documents/awbw-w9.pdf",
+                      target: "_blank", rel: "noopener",
+                      class: "flex items-center gap-3 rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors" do %>
+          <i class="fa-solid fa-file-pdf text-blue-500 text-xl shrink-0"></i>
+
+          <div class="flex-1 min-w-0 text-left">
+            <p class="font-semibold text-blue-900">Download W-9</p>
+            <p class="text-sm text-blue-700">AWBW's W-9 tax form for your records</p>
+          </div>
+
+          <i class="fa-solid fa-download text-blue-500 shrink-0"></i>
+        <% end %>
+      <% end %>
+
       <!-- Divider -->
       <div class="border-t border-gray-200"></div>
 
