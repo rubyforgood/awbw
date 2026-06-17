@@ -9,7 +9,13 @@
 
   <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
     <h1 class="text-2xl font-semibold text-gray-900">Bulk payments</h1>
-    <p class="text-sm text-gray-500"><%= @submissions.size %> submission<%= "s" unless @submissions.size == 1 %></p>
+    <div class="flex items-center gap-3">
+      <%= link_to event_invoice_path(@event),
+                  class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors" do %>
+        <i class="fa-solid fa-file-invoice-dollar text-xs"></i> Blank invoice
+      <% end %>
+      <p class="text-sm text-gray-500"><%= @submissions.size %> submission<%= "s" unless @submissions.size == 1 %></p>
+    </div>
   </div>
 
   <% if @submissions.any? %>

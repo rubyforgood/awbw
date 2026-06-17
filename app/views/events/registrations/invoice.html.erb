@@ -1,0 +1,8 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Invoice — #{@event.title}") %>
+<%= render "events/invoices/actions",
+      back_path: registration_ticket_path(@event_registration.slug),
+      back_label: "Back to registration" %>
+<div class="px-4 sm:px-8 py-6 print:p-0">
+  <%= render "events/invoices/invoice", invoice: @invoice %>
+</div>
