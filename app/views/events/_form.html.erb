@@ -454,6 +454,43 @@
       </div>
     </div>
 
+    <%# ---- CE HOURS (ticket call-out + details page) ---- %>
+    <div class="ce-hours-section" data-controller="dropdown">
+      <button
+        type="button"
+        id="ce_hours_button"
+        class="
+          flex items-center justify-between cursor-pointer w-full
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+        data-action="dropdown#toggle"
+        data-dropdown-payload-param='[{"ce_hours_details":"hidden"}, {"ce_hours_arrow":"rotate-180"}, {"ce_hours_button":"rounded-md rounded-t-md"}]'>
+        CE hours
+        <i id="ce_hours_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+      </button>
+
+      <div id="ce_hours_details" class="hidden border border-gray-300 p-4 rounded-b-md">
+        <p class="text-sm text-gray-500 mb-4">Continuing education info shown on the registration ticket as a prominent call-out linking to its own details page — CAMFT approval, license-number and payment requirements, sign-in rules, and the post-training evaluation (the kind of thing that used to live in a long CE confirmation email).</p>
+
+        <div class="form-group">
+          <%= f.label :ce_hours_details_label, "CE hours section label", class: "block font-medium mb-1 text-gray-700" %>
+          <%= f.text_field :ce_hours_details_label,
+                       placeholder: "CE hours",
+                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" %>
+          <p class="text-gray-500 text-sm mt-1">Heading for the CE hours call-out on the ticket and the details page (e.g. "CE hours", "Continuing education").</p>
+        </div>
+
+        <div class="form-group mt-6">
+          <%= f.label :ce_hours_details, "CE hours content", class: "block font-medium mb-1 text-gray-700" %>
+          <p class="text-xs text-gray-500 mb-1">
+            CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked prominently from the ticket. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.
+          </p>
+          <%= f.text_area :ce_hours_details, rows: 8,
+                placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><h3>Before the training</h3><ul><li>Email your license number</li></ul>",
+                class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono" %>
+        </div>
+      </div>
+    </div>
+
     <div class="images-section" data-controller="dropdown">
       <button
         type="button"

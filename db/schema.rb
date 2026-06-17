@@ -492,6 +492,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_17_180000) do
     t.boolean "autoshow_title", default: true, null: false
     t.boolean "autoshow_videoconference_label", default: true, null: false
     t.boolean "autoshow_videoconference_link", default: true, null: false
+    t.text "ce_hours_details"
+    t.string "ce_hours_details_label", default: "CE hours", null: false
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
