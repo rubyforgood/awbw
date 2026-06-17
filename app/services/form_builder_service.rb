@@ -3,12 +3,7 @@ class FormBuilderService
   # charge, so controllers match against PAYMENT_METHOD_PAY_NOW rather than
   # repeating its label. Keep this the single source of truth for the label.
   PAYMENT_METHOD_PAY_NOW = "Credit card (now)".freeze
-  # "Other" is retained as a payment method in code and form data — the scholarship
-  # flow stores it as the payment method — but it is intentionally hidden from the
-  # options surfaced on public forms for now (see the public registration and bulk
-  # payment views, which filter it out).
-  PAYMENT_METHOD_OTHER = "Other".freeze
-  PAYMENT_METHOD_OPTIONS = [ PAYMENT_METHOD_PAY_NOW, "Credit card (later)", "Check", PAYMENT_METHOD_OTHER ].freeze
+  PAYMENT_METHOD_OPTIONS = [ PAYMENT_METHOD_PAY_NOW, "Credit card (later)", "Check" ].freeze
 
   SECTIONS = {
     person_identifier: { label: "Person identifier", method: :build_person_identifier_fields },

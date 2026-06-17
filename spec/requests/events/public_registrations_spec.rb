@@ -455,17 +455,22 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       field
     end
 
-    it "hides the 'Other' payment method from a normal registrant" do
+    it "does not offer 'Other' as a payment method" do
+      expect(FormBuilderService::PAYMENT_METHOD_OPTIONS).not_to include("Other")
+    end
+
+    it "renders the remaining payment methods without 'Other'" do
       get new_event_public_registration_path(event)
 
       expect(response.body).to include(%(value="Check"))
       expect(response.body).not_to include(%(value="Other"))
     end
 
-    it "keeps 'Other' as the preselected payment method for a scholarship registrant" do
+    it "still shows the payment method (without 'Other') for a scholarship registrant" do
       get new_event_public_registration_path(event, scholarship_requested: "true")
 
-      expect(response.body).to match(/value="Other"[^>]*\bchecked\b/)
+      expect(response.body).to include(%(value="Check"))
+      expect(response.body).not_to include(%(value="Other"))
     end
   end
 
