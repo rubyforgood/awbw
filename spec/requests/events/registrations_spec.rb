@@ -61,6 +61,20 @@ RSpec.describe "Events::Registrations", type: :request do
       end
     end
 
+    context "invoice link" do
+      it "shows the invoice link when invoice_requested" do
+        registration.update!(invoice_requested: true)
+        get registration_ticket_path(registration.slug)
+        expect(response.body).to include(registration_invoice_path(registration.slug))
+        expect(response.body).to include("View invoice")
+      end
+
+      it "hides the invoice link when not requested" do
+        get registration_ticket_path(registration.slug)
+        expect(response.body).not_to include(registration_invoice_path(registration.slug))
+      end
+    end
+
     context "with an invalid slug" do
       it "returns 404" do
         get registration_ticket_path("nonexistent-slug")
