@@ -112,6 +112,8 @@ class EventPolicy < ApplicationPolicy
                   :rhino_description,
                   :event_details,
                   :event_details_label,
+                  :ce_hours_details,
+                  :ce_hours_details_label,
                   :autoshow_cost,
                   :autoshow_date,
                   :autoshow_location,
@@ -150,6 +152,7 @@ class EventPolicy < ApplicationPolicy
 
   alias_rule :preview?, to: :edit?
   alias_rule :details?, to: :show?
+  alias_rule :ce_hours?, to: :show?
 
   private
 

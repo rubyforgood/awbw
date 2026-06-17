@@ -1,8 +1,8 @@
 class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
-  skip_before_action :authenticate_user!, only: [ :index, :show, :staff, :details ]
+  skip_before_action :authenticate_user!, only: [ :index, :show, :staff, :details, :ce_hours ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants details staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
 
   def index
     authorize!
@@ -97,6 +97,20 @@ class EventsController < ApplicationController
     authorize! @event, to: :details?
 
     if @event.event_details.blank?
+      redirect_to event_path(@event, reg: params[:reg].presence)
+      return
+    end
+
+    @event = @event.decorate
+  end
+
+  # Public CE hours page (continuing education requirements, payment, sign-in
+  # rules). Linked from the registration ticket. When no details are set there
+  # is nothing to show, so fall back to the event page.
+  def ce_hours
+    authorize! @event, to: :ce_hours?
+
+    if @event.ce_hours_details.blank?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
     end

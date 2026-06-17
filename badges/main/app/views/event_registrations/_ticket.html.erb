@@ -109,6 +109,21 @@
         <% end %>
       <% end %>
 
+      <!-- CE hours (continuing education requirements, payment, sign-in rules) -->
+      <% if event_registration.event.ce_hours_details.present? %>
+        <%= link_to ce_hours_event_path(event_registration.event, reg: event_registration.slug),
+                      class: "flex items-center gap-3 rounded-xl border-2 border-indigo-300 bg-indigo-50 px-4 py-3 hover:bg-indigo-100 transition-colors" do %>
+          <i class="fa-solid fa-graduation-cap text-indigo-500 text-xl shrink-0"></i>
+
+          <div class="flex-1 min-w-0 text-left">
+            <p class="font-semibold text-indigo-900"><%= event_registration.event.ce_hours_details_label %></p>
+            <p class="text-sm text-indigo-700">Continuing education hours — requirements &amp; next steps</p>
+          </div>
+
+          <i class="fa-solid fa-arrow-right text-indigo-500 shrink-0"></i>
+        <% end %>
+      <% end %>
+
       <!-- Additional forms the registrant asked for during registration -->
       <% if event_registration.w9_requested? %>
         <%= link_to "/documents/awbw-w9.pdf",
