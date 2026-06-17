@@ -377,14 +377,14 @@ end
 registrations_data = []
 
 # --- Facilitator Training: multiple registrations from different people, extended form ---
-# Amy: registered, with form submission, scholarship recipient
+# Amy: registered, with form submission, scholarship recipient, requested W-9 and invoice
 # Maria Johnson: registered, with form submission (has user), requested an invoice
 # Anna Garcia: attended, with form submission (has user)
 # Mario Johnson: registered, no form submission (no user)
 # Kim Davis: cancelled (has user)
 if facilitator_training
   [
-    { person: amy_person, status: "registered", scholarship_requested: true },
+    { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true },
     { person: maria_j, status: "registered", invoice_requested: true },
     { person: anna_g, status: "attended" },
     { person: mario_j, status: "registered" },
@@ -468,6 +468,7 @@ registrations_data.each do |data|
     registrant: data[:person],
     status: data[:status] || "registered",
     scholarship_requested: data[:scholarship_requested] || false,
+    w9_requested: data[:w9_requested] || false,
     invoice_requested: data[:invoice_requested] || false
   )
 end
