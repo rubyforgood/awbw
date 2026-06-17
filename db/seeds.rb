@@ -175,7 +175,7 @@ end
 # taggings rather than destroying them. SECTOR_TYPES already includes the "Other"
 # catch-all, so it stays published.
 canonical_names = Sector::SECTOR_TYPES.map(&:downcase)
-Sector.reject { |sector| canonical_names.include?(sector.name.downcase) }
+Sector.all.reject { |sector| canonical_names.include?(sector.name.downcase) }
   .each { |sector| sector.update!(published: false) }
 
 puts "Creating CategoryTypes/Categories…"
