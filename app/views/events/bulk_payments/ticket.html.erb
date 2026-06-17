@@ -87,12 +87,6 @@
         <% if @event.location.present? %>
           <div class="text-base text-gray-700"><%= @event.location.name %></div>
         <% end %>
-
-        <% if @event.autoshow_videoconference_label && @event.videoconference_label.present? %>
-          <div class="text-base text-gray-700"><%= @event.videoconference_label %></div>
-        <% end %>
-
-        <%= render "events/videoconference_link", event: @event, joinable: false %>
       </div>
 
       <!-- Payment status -->
@@ -107,21 +101,6 @@
           </span>
         <% end %>
       </div>
-
-      <!-- Before you attend (materials / supplies / what to bring) -->
-      <% if @event.event_details.present? %>
-        <%= link_to details_event_path(@event),
-                      class: "flex items-center gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 hover:bg-amber-100 transition-colors" do %>
-          <i class="fa-solid fa-circle-info text-amber-500 text-xl shrink-0"></i>
-
-          <div class="flex-1 min-w-0 text-left">
-            <p class="font-semibold text-amber-900"><%= @event.event_details_label %></p>
-            <p class="text-sm text-amber-700">Important info for this event — please read</p>
-          </div>
-
-          <i class="fa-solid fa-arrow-right text-amber-500 shrink-0"></i>
-        <% end %>
-      <% end %>
 
       <!-- Invoice -->
       <%= link_to event_invoice_path(@event, submission_id: @submission.id, return_to: "bulk_payment_ticket"),
