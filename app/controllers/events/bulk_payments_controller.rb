@@ -1,6 +1,6 @@
 module Events
   class BulkPaymentsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create, :ticket ]
+    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket ]
     before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
 
@@ -56,13 +56,14 @@ module Events
       end
     end
 
-    # Canonical admin entry point (e.g. the staff FYI email). Redirects to the
-    # public slug ticket so there's a single page to maintain.
+    # Public view of the submitted bulk payment form, reached by the payer (the
+    # "View submission" link in their confirmation email and on the ticket) and by
+    # admins from the dashboard. Backs to the ticket. Mirrors PublicRegistrations#show.
     def show
-      @submission = FormSubmission.find(params[:submission_id])
-      authorize! @event, to: :dashboard?
+      authorize! :bulk_payment, to: :show?
 
-      redirect_to bulk_payment_ticket_path(@submission.slug)
+      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:reg], event_id: @event.id)
+      @event = @event.decorate
     end
 
     # Public, slug-based ticket for the payer. Shows the event details, the

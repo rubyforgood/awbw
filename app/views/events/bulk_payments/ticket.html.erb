@@ -147,23 +147,18 @@
         <% end %>
       </div>
 
-      <!-- View submission (collapsible full form responses) -->
-      <div data-controller="dropdown" class="rounded-xl border border-gray-200 bg-white">
-        <button type="button"
-                data-action="dropdown#toggle"
-                data-dropdown-payload-param='[{"submission-details":"hidden"}, {"submission-arrow":"rotate-180"}]'
-                class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
-          <span class="flex items-center gap-2 font-semibold text-gray-800">
-            <i class="fa-solid fa-file-lines text-gray-400"></i> View submission
-          </span>
-          <i id="submission-arrow" class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-200"></i>
-        </button>
-        <div id="submission-details"
-             class="hidden border-t border-gray-100 px-4 py-4"
-             data-dropdown-target="content">
-          <%= render "form_submissions/submission", submission: @submission %>
+      <!-- View submission (full form responses) -->
+      <%= link_to event_bulk_payment_path(@event, reg: @submission.slug),
+                    class: "flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
+        <i class="fa-solid fa-file-lines text-gray-400 text-xl shrink-0"></i>
+
+        <div class="flex-1 min-w-0 text-left">
+          <p class="font-semibold text-gray-800">View submission</p>
+          <p class="text-sm text-gray-500">The bulk payment form you submitted</p>
         </div>
-      </div>
+
+        <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
+      <% end %>
 
       <% if allowed_to?(:dashboard?, @event) %>
         <div class="admin-only rounded-lg border border-blue-200 bg-blue-50/50 px-4 py-4 space-y-3">

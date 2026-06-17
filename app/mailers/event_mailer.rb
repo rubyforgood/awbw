@@ -28,7 +28,10 @@ class EventMailer < ApplicationMailer
 
     @notification_type = "Bulk payment confirmation"
 
-    @submission_url = bulk_payment_ticket_url(@submission.slug) if @submission.slug.present?
+    # Like the registration confirmation, the payer is sent to their ticket (which
+    # carries the event details + a "View submission" link). Bulk payments always
+    # have an event; guard anyway so an event-less submission just omits the link.
+    @ticket_url = bulk_payment_ticket_url(@submission.slug) if @submission.event.present? && @submission.slug.present?
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
 
     mail(

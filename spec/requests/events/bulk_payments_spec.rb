@@ -158,31 +158,50 @@ RSpec.describe "Events::BulkPayments", type: :request do
   end
 
   describe "GET show" do
-    # The canonical admin entry point (id-based); it redirects to the public
-    # slug ticket so there's a single page to maintain.
+    # Public submitted-form view, reached by slug via ?reg= (mirrors public
+    # registration). Backs to the ticket by default.
     let(:event) { create(:event, :publicly_visible, cost_cents: 1000) }
     let(:payer) { create(:person) }
-    let!(:submission) { create(:form_submission, person: payer, form: form, role: "bulk_payment") }
-
-    def get_show
-      get event_bulk_payment_path(event, submission_id: submission.id)
+    let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
+    let!(:org_answer) do
+      submission.form_answers.create!(form_field: org_field, submitted_answer: "Northside Shelter",
+                                      question_name_when_answered: org_field.name)
     end
 
-    context "as an admin" do
-      it "redirects to the public ticket" do
-        get_show
-
-        expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
-      end
+    def get_show
+      get event_bulk_payment_path(event, reg: submission.slug)
     end
 
     context "as a signed-out viewer" do
       before { sign_out admin }
 
-      it "requires authentication" do
+      it "renders the submitted form publicly via the slug" do
         get_show
 
-        expect(response).to redirect_to(new_user_session_path)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Bulk payment submission")
+        expect(response.body).to include("Northside Shelter")
+      end
+
+      it "backs to the ticket by default" do
+        get_show
+
+        expect(response.body).to include(bulk_payment_ticket_path(submission.slug))
+        expect(response.body).to include("Back to ticket")
+      end
+
+      it "404s for an unknown slug" do
+        get event_bulk_payment_path(event, reg: "nope")
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context "as an admin arriving from the dashboard" do
+      it "backs to the bulk payments dashboard" do
+        get event_bulk_payment_path(event, reg: submission.slug, return_to: "bulk_payments")
+
+        expect(response.body).to include("Back to bulk payments")
       end
     end
   end
@@ -234,6 +253,12 @@ RSpec.describe "Events::BulkPayments", type: :request do
       get_ticket
 
       expect(response.body).to include("return_to=bulk_payment_ticket")
+    end
+
+    it "links 'View submission' to the public submission page" do
+      get_ticket
+
+      expect(response.body).to include(event_bulk_payment_path(event, reg: submission.slug))
     end
 
     it "returns 404 for an unknown slug" do

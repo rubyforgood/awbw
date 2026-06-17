@@ -1,0 +1,40 @@
+<% content_for(:page_bg_class, "public") %>
+<%
+  # Default back link is the payer's ticket; admins arriving from the bulk
+  # payments dashboard (return_to=bulk_payments) go back there with their row
+  # re-expanded.
+  if params[:return_to] == "bulk_payments"
+    back_path = bulk_payments_return_path(@event)
+    back_label = "Back to bulk payments"
+  else
+    back_path = bulk_payment_ticket_path(@submission.slug)
+    back_label = "Back to ticket"
+  end
+%>
+<div class="max-w-3xl mx-auto px-4 pt-4">
+  <div class="flex flex-wrap items-center gap-2">
+    <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
+    <% end %>
+  </div>
+</div>
+
+<div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
+  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
+    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+      <div class="flex items-center gap-5">
+        <div class="shrink-0">
+          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
+        </div>
+        <div class="flex-1">
+          <h1 class="text-xl font-semibold tracking-wide leading-tight">Bulk payment submission</h1>
+          <p class="text-sm text-blue-200"><%= @event.title %></p>
+        </div>
+      </div>
+      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+    </div>
+    <div class="px-6 sm:px-8 py-7">
+      <%= render "form_submissions/submission", submission: @submission %>
+    </div>
+  </div>
+</div>
