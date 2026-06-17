@@ -43,6 +43,18 @@ module TitleDisplayHelper
       fragments << content_tag(:span, safe_join(visibility_badges, " "), class: "inline-flex items-center gap-2 flex-nowrap")
     end
 
+    # --- Hidden from search badge (publicly accessible, but excluded from portal searches) ---
+    if current_user&.super_user? && !home_page &&
+       record.respond_to?(:hidden_from_search?) && record.hidden_from_search?
+      icon = content_tag(:span, content_tag(:i, "", class: "fa-solid fa-filter-circle-xmark"), class: "inline-flex justify-center w-5")
+      fragments << content_tag(
+        :span,
+        icon + content_tag(:span, "Hidden from search", class: "ml-1"),
+        class: "inline-flex items-center pl-2 pr-3 py-0.5 rounded-full
+              text-sm font-medium bg-amber-100 text-amber-800 whitespace-nowrap"
+      )
+    end
+
     # --- Publicly Featured badge ---
     if !home_page && record.respond_to?(:publicly_featured?) && record.publicly_featured?
       label = user_signed_in? ? "Public Featured" : "Featured"
