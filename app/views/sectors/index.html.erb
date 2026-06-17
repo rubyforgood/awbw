@@ -47,6 +47,10 @@
 
                     <td class="px-4 py-2 text-md text-gray-800 truncate font-bold">
                       <%= sector.name %>
+                      <% if sector.description.present? %>
+                        <i class="fa-solid fa-circle-info ml-1 text-sm font-normal text-gray-400 hover:text-blue-600 cursor-help"
+                           title="<%= sector.description %>"></i>
+                      <% end %>
                     </td>
 
                     <td class="px-4 py-2 text-center">

@@ -25,6 +25,13 @@
               </div>
 
           </div>
+
+          <% if @sector.description.present? %>
+            <div class="mb-3">
+              <p class="font-bold text-gray-700">Description:</p>
+              <p class="text-gray-900"><%= @sector.description %></p>
+            </div>
+          <% end %>
         </div>
       </div>
 </div>
