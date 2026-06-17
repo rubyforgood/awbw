@@ -268,6 +268,10 @@ Event.find_by(title: "AWBW Facilitator Training")&.update!(
 flagship = Event.find_by(title: "AWBW Facilitator Training")
 if flagship && flagship.event_details.blank?
   flagship.update!(event_details_label: "Art supplies & what to bring", event_details: <<~HTML.strip)
+    <p>Thank you for registering to join us for AWBW's Art Facilitator Training!</p>
+    <p>Below you'll find information about the art supplies used in each of the five hands-on workshops included in the training, along with optional printable workshop worksheets. We're sharing these materials in advance in case you'd like to gather supplies or print resources ahead of time.</p>
+    <p>You will receive additional training information as we get closer to the training dates.</p>
+    <p>Have a question? <a href="/contact_us">Reach out through our contact form</a> and we'll be happy to help.</p>
     <p>We will be facilitating five hands-on art workshops, all of which can be done with paper, writing utensils (crayons, colored pencils, markers, etc.) and scissors.</p>
     <ul>
       <li>You'll receive printable workshop worksheets once your training fees are paid — printing them is optional.</li>
