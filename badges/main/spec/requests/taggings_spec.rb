@@ -59,6 +59,38 @@ RSpec.describe "Taggings index", type: :request do
     end
   end
 
+  describe "admin edit buttons" do
+    let!(:admin) { create(:user, :admin) }
+
+    before { sign_in admin }
+
+    it "shows a single Edit sector button when filtering by one sector" do
+      get taggings_path(sector_names_all: sector_2.name)
+      expect(response.body).to include(edit_sector_path(sector_2))
+      expect(response.body).to include("Edit sector")
+      expect(response.body).not_to include("Edit sector (")
+    end
+
+    it "names each sector when filtering by more than one" do
+      get taggings_path(sector_names_all: "#{sector_1.name}--#{sector_2.name}")
+      expect(response.body).to include("Edit sector (#{sector_1.name})")
+      expect(response.body).to include("Edit sector (#{sector_2.name})")
+    end
+
+    it "shows an Edit category button when filtering by a category" do
+      get taggings_path(category_names_all: category.name)
+      expect(response.body).to include(edit_category_path(category))
+      expect(response.body).to include("Edit category")
+    end
+  end
+
+  describe "edit buttons for non-admins" do
+    it "does not show edit buttons to a regular signed-in user" do
+      get taggings_path(sector_names_all: sector_2.name)
+      expect(response.body).not_to include("Edit sector")
+    end
+  end
+
   describe "when no matching tags exist" do
     it "does not blow up and renders empty sections" do
       get taggings_path(sector_names_all: "Nonexistent")
