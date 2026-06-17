@@ -47,6 +47,20 @@ RSpec.describe "Events::Registrations", type: :request do
       end
     end
 
+    context "W-9 download link" do
+      it "shows the W-9 download link when w9_requested" do
+        registration.update!(w9_requested: true)
+        get registration_ticket_path(registration.slug)
+        expect(response.body).to include("/documents/awbw-w9.pdf")
+        expect(response.body).to include("Download W-9")
+      end
+
+      it "hides the W-9 download link when not requested" do
+        get registration_ticket_path(registration.slug)
+        expect(response.body).not_to include("/documents/awbw-w9.pdf")
+      end
+    end
+
     context "with an invalid slug" do
       it "returns 404" do
         get registration_ticket_path("nonexistent-slug")

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_17_180000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -451,12 +451,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_130000) do
     t.string "checkout_session_id"
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.boolean "invoice_requested", default: false, null: false
     t.boolean "payment_unresolved"
     t.bigint "registrant_id", null: false
     t.boolean "scholarship_requested", default: false, null: false
     t.string "slug"
     t.string "status", default: "registered", null: false
     t.datetime "updated_at", null: false
+    t.boolean "w9_requested", default: false, null: false
     t.index ["checkout_session_id"], name: "index_event_registrations_on_checkout_session_id"
     t.index ["event_id"], name: "index_event_registrations_on_event_id"
     t.index ["payment_unresolved"], name: "index_event_registrations_on_payment_unresolved"
