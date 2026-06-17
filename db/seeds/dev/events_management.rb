@@ -316,6 +316,46 @@ if flagship && flagship.event_details.blank?
   HTML
 end
 
+# Seed the "CE hours" details — the continuing-education requirements, payment,
+# and sign-in rules that used to live in a long CE confirmation email. Shown on its
+# own ticket-linked page (and via the prominent indigo call-out on the ticket) for
+# registrants who requested CE credit. A custom label demonstrates that the heading
+# is admin-editable. Only set when blank so admin edits survive a re-seed.
+if flagship && flagship.ce_hours_details.blank?
+  flagship.update!(ce_hours_details_label: "Continuing education", ce_hours_details: <<~HTML.strip)
+    <p>This training is approved by the California Association of Marriage and Family Therapists (CAMFT, provider #000000) for <strong>12 CE hours</strong>. AWBW is approved to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs.</p>
+    <h3>Before the training</h3>
+    <ul>
+      <li>Provide your license type and license number when you register — we cannot issue a CE certificate without it.</li>
+      <li>CE hours carry a separate $25 processing fee, payable with your registration.</li>
+    </ul>
+    <h3>During the training</h3>
+    <ul>
+      <li>You must sign in and out each day. CE hours are awarded only for full attendance — partial credit is not available.</li>
+      <li>Arrive on time; late arrivals or early departures may forfeit CE eligibility.</li>
+    </ul>
+    <h3>After the training</h3>
+    <ul>
+      <li>Complete the post-training evaluation within one week.</li>
+      <li>Your CE certificate will be emailed within three weeks of the training.</li>
+    </ul>
+    <p>Questions about continuing education? Reach out and our team will follow up with details.</p>
+  HTML
+end
+
+# The trauma-informed training also offers CE hours, with the default label.
+trauma = Event.find_by(title: "Facilitator Training: Trauma-Informed Art Practices")
+if trauma && trauma.ce_hours_details.blank?
+  trauma.update!(ce_hours_details: <<~HTML.strip)
+    <p>This training is approved by CAMFT (provider #000000) for <strong>18 CE hours</strong> across its three days.</p>
+    <ul>
+      <li>Provide your license type and number at registration; a $25 CE processing fee applies.</li>
+      <li>Daily sign-in/sign-out is required — CE hours are awarded for full attendance only.</li>
+      <li>Complete the post-training evaluation to receive your certificate within three weeks.</li>
+    </ul>
+  HTML
+end
+
 puts "Creating Event Registrations…"
 
 # Key people for named scenarios
@@ -384,9 +424,9 @@ registrations_data = []
 # Kim Davis: cancelled (has user)
 if facilitator_training
   [
-    { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true },
-    { person: maria_j, status: "registered", invoice_requested: true },
-    { person: anna_g, status: "attended" },
+    { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true, ce_credit_requested: true },
+    { person: maria_j, status: "registered", invoice_requested: true, ce_credit_requested: true },
+    { person: anna_g, status: "attended", ce_credit_requested: true },
     { person: mario_j, status: "registered" },
     { person: kim_d, status: "cancelled" }
   ].each do |data|
@@ -402,8 +442,8 @@ end
 # Linda Williams: no_show (no user)
 if trauma_training
   [
-    { person: sarah_s, status: "registered", invoice_requested: true },
-    { person: jessica_b, status: "registered", scholarship_requested: true },
+    { person: sarah_s, status: "registered", invoice_requested: true, ce_credit_requested: true },
+    { person: jessica_b, status: "registered", scholarship_requested: true, ce_credit_requested: true },
     { person: angel_g, status: "registered" },
     { person: linda_w, status: "no_show" }
   ].each do |data|
@@ -461,16 +501,16 @@ end
 # Create all registrations
 registrations_data.each do |data|
   next unless data[:event] && data[:person]
-  next if EventRegistration.exists?(event: data[:event], registrant: data[:person])
 
-  EventRegistration.create!(
-    event: data[:event],
-    registrant: data[:person],
-    status: data[:status] || "registered",
-    scholarship_requested: data[:scholarship_requested] || false,
-    w9_requested: data[:w9_requested] || false,
-    invoice_requested: data[:invoice_requested] || false
-  )
+  registration = EventRegistration.find_or_initialize_by(event: data[:event], registrant: data[:person])
+  registration.status = data[:status] || "registered" if registration.new_record?
+  registration.scholarship_requested ||= data[:scholarship_requested] || false
+  # Keep the request flags in sync on re-seed so the named scenarios survive an
+  # existing DB (find_or_initialize no longer recreates these registrations).
+  registration.w9_requested = data[:w9_requested] || false
+  registration.invoice_requested = data[:invoice_requested] || false
+  registration.ce_credit_requested = data[:ce_credit_requested] || false
+  registration.save!
 end
 
 # Give the flagship training its demo cohort: top up to 10 active registrants with

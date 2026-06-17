@@ -111,6 +111,23 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /ce_hours" do
+    let(:event) { create(:event, :published, :publicly_visible) }
+
+    it "renders the CE hours page when details are present" do
+      event.update!(ce_hours_details_label: "Continuing education", ce_hours_details: "<p>Email your license number</p>")
+      get ce_hours_event_path(event)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Continuing education")
+      expect(response.body).to include("Email your license number")
+    end
+
+    it "redirects to the event when details are blank" do
+      get ce_hours_event_path(event)
+      expect(response).to redirect_to(event_path(event))
+    end
+  end
+
   describe "GET /new" do
     context "as admin" do
       it "renders successfully" do
@@ -155,6 +172,13 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Before you attend")
       expect(response.body).to include("event[event_details_label]")
       expect(response.body).to include("event[event_details]")
+    end
+
+    it "renders the 'CE hours' toggle with the details fields" do
+      get edit_event_path(event)
+      expect(response.body).to include("CE hours")
+      expect(response.body).to include("event[ce_hours_details_label]")
+      expect(response.body).to include("event[ce_hours_details]")
     end
   end
 

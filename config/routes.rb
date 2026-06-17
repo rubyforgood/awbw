@@ -129,6 +129,7 @@ Rails.application.routes.draw do
       get :background
       get :registrants
       get :details
+      get :ce_hours
       get :staff
       get "staff/edit", action: :edit_staff, as: :edit_staff
       patch "staff", action: :update_staff
