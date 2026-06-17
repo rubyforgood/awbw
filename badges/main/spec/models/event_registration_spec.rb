@@ -380,6 +380,40 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "continuing education" do
+    let(:reg) { create(:event_registration) }
+
+    describe "#ce_amount_owed_cents" do
+      it "multiplies requested hours by the default hourly rate" do
+        reg.ce_hours_requested = 4
+        expect(reg.ce_amount_owed_cents).to eq(4 * EventRegistration::CE_HOURLY_RATE_DOLLARS * 100)
+      end
+
+      it "is zero when no hours are requested" do
+        reg.ce_hours_requested = nil
+        expect(reg.ce_amount_owed_cents).to eq(0)
+      end
+    end
+
+    describe "#ce_license_provided?" do
+      it "is true only when a license number is present" do
+        reg.ce_license_number = "LIC-123"
+        expect(reg).to be_ce_license_provided
+        reg.ce_license_number = ""
+        expect(reg).not_to be_ce_license_provided
+      end
+    end
+
+    describe "ce_hours_requested validation" do
+      it "rejects negative or non-integer hours but allows nil" do
+        reg.ce_hours_requested = nil
+        expect(reg).to be_valid
+        reg.ce_hours_requested = -1
+        expect(reg).not_to be_valid
+      end
+    end
+  end
+
   describe '.search_by_params' do
     let(:person_alice) { create(:person, first_name: 'Alice', last_name: 'Smith') }
     let(:person_bob) { create(:person, first_name: 'Bob', last_name: 'Jones') }

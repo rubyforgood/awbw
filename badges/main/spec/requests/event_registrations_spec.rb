@@ -223,6 +223,15 @@ RSpec.describe "EventRegistrations", type: :request do
 
         expect(existing_registration.reload.ce_credit_requested).to be(true)
       end
+
+      it "updates the CE hours and license number" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { ce_credit_requested: "1", ce_hours_requested: "5", ce_license_number: "LIC-987" } }
+
+        existing_registration.reload
+        expect(existing_registration.ce_hours_requested).to eq(5)
+        expect(existing_registration.ce_license_number).to eq("LIC-987")
+      end
     end
 
     describe "PATCH /event_registrations/:id scholarship handling" do
