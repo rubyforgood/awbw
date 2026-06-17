@@ -116,8 +116,11 @@
             class="<%= input_classes %>"
             <%= "required" if field.required %>>
       <option value="">Select one</option>
-      <% dropdown_options.each do |option_label, option_value| %>
-        <option value="<%= option_value %>" <%= "selected" if value == option_value %>><%= option_label %></option>
+      <%# A dropdown can't show subtext, so an option's description is folded into
+          the label as "Name (description)". %>
+      <% dropdown_options.each do |option_label, option_value, option_description| %>
+        <% display_label = option_description.present? ? "#{option_label} (#{option_description})" : option_label %>
+        <option value="<%= option_value %>" <%= "selected" if value == option_value %>><%= display_label %></option>
       <% end %>
     </select>
 
@@ -125,8 +128,8 @@
     <% checkbox_name = "public_registration[form_fields][#{field.id}][]" %>
     <% selected_values = Array(value) %>
     <%# Dynamic fields (e.g. primary_service_area) source options from Sector/Category
-        data; everything else uses the field's own stored answer options. Category
-        options carry an optional description, shown as subtext under the label. %>
+        data; everything else uses the field's own stored answer options. Sector and
+        Category options carry an optional description, shown as subtext under the label. %>
     <% checkbox_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
     <% has_specify = checkbox_options.any? { |option_label, _option_value| specify_placeholder(option_label).present? } %>

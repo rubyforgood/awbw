@@ -23,6 +23,15 @@
 
     </div>
 
+    <!-- Description -->
+    <div>
+      <%= f.input :description,
+                  as: :text,
+                  label: "Description",
+                  hint: "Optional. Shown under this sector on the public registration form to clarify its meaning when the name alone isn't enough.",
+                  input_html: { class: "form-control", rows: 2 } %>
+    </div>
+
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
         <%= link_to "Delete", @sector, class: "btn btn-danger-outline",

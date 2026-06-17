@@ -423,6 +423,16 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(labels).to include("Other")
     end
 
+    it "carries each sector's description as the third tuple element" do
+      create(:sector, :published, name: "Domestic Violence", description: "DV services")
+      create(:sector, :published, name: "Mental Health", description: nil)
+      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+
+      descriptions = helper.dynamic_form_field_options(field).to_h { |name, _id, desc| [ name, desc ] }
+      expect(descriptions["Domestic Violence"]).to eq("DV services")
+      expect(descriptions["Mental Health"]).to be_nil
+    end
+
     it "omits the Mixed-age groups category for the primary age group field" do
       type = create(:category_type, name: "AgeRange")
       create(:category, :published, category_type: type, name: "3-5")
