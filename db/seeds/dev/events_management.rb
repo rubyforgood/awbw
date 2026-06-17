@@ -129,6 +129,46 @@ if registration_form.form_fields.where(field_identifier: ce_identifier).none?
   end
 end
 
+# The "Additional forms" question: a multi-select whose checked options drive the
+# resulting registration's invoice_requested / w9_requested flags (see
+# EventRegistrationServices::PublicRegistration). The digital ticket reads those
+# flags to surface the matching downloads. Seeded onto its own section, like the
+# CE question above, so the form builder's add/remove-section logic leaves it
+# alone, and carrying the well-known field_identifier the service keys off. The
+# answer-option names must match the service's ADDITIONAL_FORMS_* constants.
+additional_forms_identifier = EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_IDENTIFIER
+if registration_form.form_fields.where(field_identifier: additional_forms_identifier).none?
+  next_position = (registration_form.form_fields.maximum(:position) || 0) + 1
+  registration_form.form_fields.create!(
+    name: "Additional forms",
+    answer_type: :group_header,
+    status: :active,
+    position: next_position,
+    required: false,
+    section: "additional_forms",
+    visibility: :always_ask
+  )
+  additional_forms_field = registration_form.form_fields.create!(
+    name: "Do you need either of the following?",
+    answer_type: :multi_select_checkbox,
+    status: :active,
+    position: next_position + 1,
+    required: false,
+    field_identifier: additional_forms_identifier,
+    section: "additional_forms",
+    visibility: :always_ask,
+    width: :full,
+    hint_text: "If selected, these will be available on your digital registration ticket."
+  )
+  [
+    EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_INVOICE,
+    EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_W9
+  ].each_with_index do |opt, idx|
+    ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
+    additional_forms_field.form_field_answer_options.create!(answer_option: ao)
+  end
+end
+
 # Each entry: [title, form_type, cost_cents, scholarship?, visibility, span_days]
 # form_type: :long, :short, or :none. span_days (optional) makes a multi-day event.
 dev_events = [

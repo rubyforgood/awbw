@@ -7,6 +7,14 @@ module EventRegistrationServices
     # ce_credit_requested flag. Kept here so the seed, service, and specs agree.
     CE_CREDIT_INTEREST_IDENTIFIER = "ce_credit_interest".freeze
 
+    # Well-known field_identifier of the "Additional forms" multi-select question.
+    # Checking "Invoice" / "W-9" toggles the registration's invoice_requested /
+    # w9_requested flags, which the digital ticket reads to surface those downloads.
+    # The option labels below must match the seeded answer options exactly.
+    ADDITIONAL_FORMS_IDENTIFIER = "additional_forms".freeze
+    ADDITIONAL_FORMS_INVOICE = "Invoice".freeze
+    ADDITIONAL_FORMS_W9 = "W-9".freeze
+
     def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil)
       new(event:, form:, form_params:, scholarship_requested:, person:).call
     end
@@ -37,6 +45,8 @@ module EventRegistrationServices
         if existing
           existing.update!(scholarship_requested: true) if @scholarship_requested
           existing.update!(ce_credit_requested: true) if ce_credit_requested?
+          existing.update!(w9_requested: true) if w9_requested?
+          existing.update!(invoice_requested: true) if invoice_requested?
           if existing.status == "cancelled"
             existing.update!(status: "registered")
             send_notifications(existing)
@@ -255,13 +265,29 @@ module EventRegistrationServices
       @event.event_registrations.create!(
         registrant: person,
         scholarship_requested: @scholarship_requested,
-        ce_credit_requested: ce_credit_requested?
+        ce_credit_requested: ce_credit_requested?,
+        w9_requested: w9_requested?,
+        invoice_requested: invoice_requested?
       )
     end
 
     # True when the registrant answered "Yes" to the seeded CE-interest question.
     def ce_credit_requested?
       field_value(CE_CREDIT_INTEREST_IDENTIFIER).to_s.strip.casecmp?("yes")
+    end
+
+    # The "Additional forms" question is a multi-select, so its submitted value is
+    # an array of the checked option labels (e.g. [ "Invoice", "W-9" ]).
+    def additional_forms_selections
+      Array(field_value(ADDITIONAL_FORMS_IDENTIFIER)).map { |value| value.to_s.strip }
+    end
+
+    def w9_requested?
+      additional_forms_selections.any? { |value| value.casecmp?(ADDITIONAL_FORMS_W9) }
+    end
+
+    def invoice_requested?
+      additional_forms_selections.any? { |value| value.casecmp?(ADDITIONAL_FORMS_INVOICE) }
     end
 
     def create_form_submission(person)
