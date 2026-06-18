@@ -124,6 +124,7 @@ class EventRegistration < ApplicationRecord
     case value
     when "paid" then paid_in_full
     when "unpaid" then not_paid_in_full
+    when "intends_to_pay" then where(intends_to_pay: true)
     else all
     end
   }
@@ -184,6 +185,29 @@ class EventRegistration < ApplicationRecord
     paid_in_full?
   end
 
+  # True when the registrant should be granted access to ticket materials
+  # (training links, etc.) even though they haven't paid in full yet. Admins
+  # flip the `intends_to_pay` flag when someone commits to paying after the
+  # deadline so they aren't locked out in the meantime. This does NOT mark the
+  # registration as paid — payment status still shows as due.
+  #
+  # This is the single seam for "may this registrant reach paid content?":
+  # any payment-gated resource (the videoconference join link today, recordings
+  # or downloads in the future) should gate on this, NOT on `paid?`. Reporting
+  # surfaces (rosters, CSV exports, dashboard metrics) must keep using `paid?` /
+  # `paid_in_full?` so they still reflect the real balance owed.
+  def access_granted?
+    paid? || intends_to_pay?
+  end
+
+  # Human-readable payment status for rosters and CSV exports. Assumes the event
+  # has a cost — callers show nothing for free events.
+  def payment_status_label
+    return "Paid" if paid_in_full?
+    return "Intends to pay" if intends_to_pay?
+    "Due"
+  end
+
   def scholarship?
     scholarships.exists?
   end
@@ -230,7 +254,7 @@ class EventRegistration < ApplicationRecord
   end
 
   def joinable?
-    active? && paid? && event.videoconference_window_open?
+    active? && access_granted? && event.videoconference_window_open?
   end
 
   def attendance_status_label

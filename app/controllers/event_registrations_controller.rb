@@ -262,6 +262,7 @@ class EventRegistrationsController < ApplicationController
     params.require(:event_registration).permit(
       :event_id, :registrant_id, :status,
       :scholarship_requested,
+      :intends_to_pay,
       :ce_credit_requested,
       :ce_hours_requested,
       :ce_license_number,
@@ -281,7 +282,7 @@ class EventRegistrationsController < ApplicationController
 
   def csv_export(registrations)
     CSV.generate(headers: true) do |csv|
-      csv << [ "First name", "Last name", "Email", "Phone", "Event", "Status", "Scholarship", "Scholarship completed", "Payment status", "Payment total" ]
+      csv << [ "First name", "Last name", "Email", "Phone", "Event", "Status", "Scholarship", "Scholarship completed", "Payment status", "Intends to pay", "Payment total" ]
       registrations.find_each do |er|
         r = er.registrant
         e = er.event
@@ -296,7 +297,8 @@ class EventRegistrationsController < ApplicationController
           er.attendance_status_label,
           er.scholarships.any? ? "Yes" : "No",
           er.scholarships.completed.any? ? "Yes" : "No",
-          cost_required ? (er.paid_in_full? ? "Paid" : "Due") : "",
+          cost_required ? er.payment_status_label : "",
+          er.intends_to_pay? ? "Yes" : "No",
           total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
         ]
       end

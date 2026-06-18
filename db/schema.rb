@@ -453,6 +453,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_020000) do
     t.string "checkout_session_id"
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.boolean "intends_to_pay", default: false, null: false
     t.boolean "invoice_requested", default: false, null: false
     t.boolean "payment_unresolved"
     t.bigint "registrant_id", null: false

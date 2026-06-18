@@ -410,7 +410,7 @@ class EventsController < ApplicationController
   def event_registrations_csv_string
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
-    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Payment total" ]
+    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Intends to pay", "Payment total" ]
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
         csv_out << event_registration_csv_row(registration, cost_required)
@@ -426,7 +426,7 @@ class EventsController < ApplicationController
     org_names = orgs.map(&:name).join("; ")
     total_cents = registration.allocations_sum
     payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
-    payment_status = cost_required ? (registration.paid_in_full? ? "Paid" : "Due") : ""
+    payment_status = cost_required ? registration.payment_status_label : ""
     [
       person.first_name,
       person.last_name,
@@ -436,6 +436,7 @@ class EventsController < ApplicationController
       registration.scholarships.any? ? "Yes" : "No",
       registration.scholarships.completed.any? ? "Yes" : "No",
       payment_status,
+      registration.intends_to_pay? ? "Yes" : "No",
       payment_total
     ]
   end
