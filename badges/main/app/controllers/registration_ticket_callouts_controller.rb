@@ -7,8 +7,8 @@ class RegistrationTicketCalloutsController < ApplicationController
   # pages). When the callout has no description there is nothing to read, so fall
   # back to the event page.
   def show
-    authorize! @event, to: :show?
     @callout = @event.registration_ticket_callouts.find(params[:id])
+    authorize! @callout, to: :show?
 
     if @callout.description.blank?
       redirect_to event_path(@event, reg: params[:reg].presence)
@@ -22,8 +22,8 @@ class RegistrationTicketCalloutsController < ApplicationController
   # new 1-based position for a single moved callout; the positioning gem reflows
   # the rest. Only event managers can reorder (matches editing the event).
   def update
-    authorize! @event, to: :manage?
     @callout = @event.registration_ticket_callouts.find(params[:id])
+    authorize! @callout, to: :update?
 
     if @callout.update(callout_params)
       head :ok
