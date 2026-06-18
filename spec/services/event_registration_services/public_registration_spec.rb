@@ -59,6 +59,28 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "age group tagging" do
+    let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+    let!(:young) { create(:category, :published, category_type: age_type, name: "3-5") }
+    let!(:teen) { create(:category, :published, category_type: age_type, name: "13-17") }
+
+    it "tags primary and additional age groups on the registrant" do
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Al", last_name: "Ng", email: "al@example.com").merge(
+          field_id("primary_age_group") => [ young.id.to_s ],
+          field_id("additional_age_group") => [ teen.id.to_s ]
+        )
+      )
+
+      expect(result.success?).to be true
+      person = result.event_registration.registrant
+      expect(person.primary_age_groups).to contain_exactly(young)
+      expect(person.additional_age_groups).to contain_exactly(teen)
+    end
+  end
+
   describe "CE credit interest (magic question)" do
     let!(:ce_field) do
       field = form.form_fields.create!(

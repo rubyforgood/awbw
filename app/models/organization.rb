@@ -1,5 +1,5 @@
 class Organization < ApplicationRecord
-  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable # Publishable
+  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
   belongs_to :organization_status
   belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
@@ -196,9 +196,32 @@ class Organization < ApplicationRecord
     (direct_sectors + affiliated_sectors).uniq
   end
 
+  # Age groups served across the organization — its own tags plus every
+  # affiliated person's — deduped so a category shared by several members shows
+  # once. A category that is primary anywhere wins over an additional tagging.
+  def all_primary_age_groups
+    collect_age_groups(:primary_age_groups)
+  end
+
+  def all_additional_age_groups
+    collect_age_groups(:additional_age_groups) - all_primary_age_groups
+  end
+
   remote_searchable_by :name
 
   private
+
+  # Union of the org's own age groups and its affiliated people's, deduped. The
+  # affiliated people (with their taggings) are loaded once and memoized so the
+  # several aggregation calls a page render makes don't re-query.
+  def collect_age_groups(kind)
+    ([ self ] + affiliated_people_with_age_data).flat_map { |record| record.public_send(kind) }.uniq
+  end
+
+  def affiliated_people_with_age_data
+    @affiliated_people_with_age_data ||=
+      people.includes(categorizable_items: { category: :category_type }).to_a
+  end
 
   def affiliation_dates_locked
     if start_date_changed?

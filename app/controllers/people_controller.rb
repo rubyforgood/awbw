@@ -11,7 +11,8 @@ class PeopleController < ApplicationController
         :avatar_attachment,
         :user,
         sectorable_items: :sector,
-        affiliations: :organization
+        affiliations: :organization,
+        categorizable_items: { category: :category_type }
       ).references(:user))
       filtered = base_scope.search_by_params(params.to_unsafe_h)
                            .order(:first_name, :last_name)
@@ -26,7 +27,8 @@ class PeopleController < ApplicationController
 
   def show
     authorize! @person
-    @person = Person.includes(:avatar_attachment, :contact_methods, :user).find(params[:id]).decorate
+    @person = Person.includes(:avatar_attachment, :contact_methods, :user,
+                              categorizable_items: { category: :category_type }).find(params[:id]).decorate
     track_view(@person)
 
     if params[:checkout] == "success"

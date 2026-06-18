@@ -1,5 +1,5 @@
 class Person < ApplicationRecord
-  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable
+  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable
 
   pay_customer default_payment_processor: :stripe
 
@@ -211,7 +211,7 @@ class Person < ApplicationRecord
   OTHER_SERVICE_AREA_IDENTIFIERS = %w[primary_service_area primary_service_area_single].freeze
   # Field identifiers whose "Other" free text maps onto the workshop-setting
   # categories shown on the edit page.
-  OTHER_WORKSHOP_SETTING_IDENTIFIERS = %w[workshop_environments client_life_experiences primary_age_group].freeze
+  OTHER_WORKSHOP_SETTING_IDENTIFIERS = %w[workshop_environments client_life_experiences primary_age_group additional_age_group].freeze
 
   # Free-text "Other" service areas the person typed on registration forms.
   # They can't be Sector records, so they're surfaced beside the sector tags.

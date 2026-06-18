@@ -31,13 +31,16 @@ class FormField < ApplicationRecord
   DYNAMIC_FIELD_CATEGORY_TYPES = {
     "workshop_environments" => "WorkshopEnvironment",
     "client_life_experiences" => "StoryPopulation",
-    "primary_age_group" => "AgeRange"
+    "primary_age_group" => "AgeRange",
+    "additional_age_group" => "AgeRange"
   }.freeze
 
-  # The "primary age group(s) served" field. Backed by AgeRange categories but
-  # omits the catch-all "Mixed-age groups" category — a respondent names the
-  # concrete age groups they serve, not the mixed bucket.
+  # The "primary" and "additional" age group fields. Both are backed by AgeRange
+  # categories but omit the catch-all "Mixed-age groups" category — a respondent
+  # names the concrete age groups they serve, not the mixed bucket.
   PRIMARY_AGE_GROUP_FIELD_IDENTIFIER = "primary_age_group"
+  ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIER = "additional_age_group"
+  AGE_GROUP_FIELD_IDENTIFIERS = [ PRIMARY_AGE_GROUP_FIELD_IDENTIFIER, ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIER ].freeze
 
   # The generic free-text option label that lets a respondent supply their own
   # value; a chosen "Other" answer is stored as "Other" or "Other: <text>".
@@ -304,16 +307,16 @@ class FormField < ApplicationRecord
   end
 
   # The published Category records a category-backed dynamic field offers, in
-  # position/name order. The "primary age group" field omits the catch-all
-  # "Mixed-age groups" AgeRange category — a respondent names the concrete age
-  # groups they serve. Empty when the backing CategoryType is missing. Source of
-  # truth shared by the public form's rendering and submission validation.
+  # position/name order. The age group fields omit the catch-all "Mixed-age
+  # groups" AgeRange category — a respondent names the concrete age groups they
+  # serve. Empty when the backing CategoryType is missing. Source of truth shared
+  # by the public form's rendering and submission validation.
   def dynamic_categories
     type = CategoryType.find_by(name: DYNAMIC_FIELD_CATEGORY_TYPES[field_identifier])
     return Category.none unless type
 
     scope = type.categories.published.order(:position, :name)
-    field_identifier == PRIMARY_AGE_GROUP_FIELD_IDENTIFIER ? scope.excluding_mixed_age : scope
+    AGE_GROUP_FIELD_IDENTIFIERS.include?(field_identifier) ? scope.excluding_mixed_age : scope
   end
 
   # The "please specify" placeholder for an option label, or nil when the option

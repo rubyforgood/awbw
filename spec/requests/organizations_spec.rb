@@ -37,6 +37,20 @@ RSpec.describe "/organizations", type: :request do
       get organizations_url
       expect(response).to be_successful
     end
+
+    it "renders the results frame with deduped age groups from affiliated people" do
+      organization = Organization.create!(valid_attributes)
+      age_type = create(:category_type, name: "AgeRange", published: true)
+      teen = create(:category, :published, category_type: age_type, name: "13-17")
+      person = create(:person)
+      create(:affiliation, organization: organization, person: person)
+      person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+
+      get organizations_url, headers: { "Turbo-Frame" => "organization_results" }
+
+      expect(response).to be_successful
+      expect(response.body).to include("13-17")
+    end
   end
 
   describe "GET /show" do

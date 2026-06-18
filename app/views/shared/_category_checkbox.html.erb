@@ -1,0 +1,31 @@
+<%# A profile-specific category checkbox shared by the person and organization
+    edit forms. param_key is "person" or "organization". For AgeRange categories
+    (is_age), it also renders a "Primary" toggle that submits
+    [param_key][primary_age_category_ids][] so the tagging is split into the
+    primary vs additional age groups served. The primary toggle sits outside the
+    membership label so the two checkboxes never toggle each other. %>
+<% id = "#{param_key}_category_ids_#{category.id}" %>
+<div class="flex items-center gap-2 p-3 w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+  <label for="<%= id %>" class="flex items-center gap-2 cursor-pointer">
+    <%= hidden_field_tag "#{param_key}[category_ids][]", "" %>
+    <%= check_box_tag "#{param_key}[category_ids][]",
+                      category.id,
+                      checked,
+                      id: id,
+                      class: "h-4 w-4 text-blue-600 rounded" %>
+    <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+  </label>
+  <% if is_age %>
+    <% primary_id = "#{param_key}_primary_age_#{category.id}" %>
+    <label for="<%= primary_id %>"
+           class="ml-auto flex items-center gap-1 text-xs text-gray-500 cursor-pointer"
+           title="Mark as a primary age group served">
+      <%= check_box_tag "#{param_key}[primary_age_category_ids][]",
+                        category.id,
+                        primary_checked,
+                        id: primary_id,
+                        class: "h-3.5 w-3.5 text-amber-600 rounded" %>
+      Primary
+    </label>
+  <% end %>
+</div>

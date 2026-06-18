@@ -330,6 +330,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_160031) do
     t.string "categorizable_type"
     t.integer "category_id"
     t.datetime "created_at", precision: nil, null: false
+    t.boolean "is_primary", default: false, null: false
     t.integer "legacy_id"
     t.datetime "updated_at", precision: nil, null: false
     t.index ["categorizable_type", "categorizable_id"], name: "idx_on_categorizable_type_categorizable_id_ccce65d80c"
@@ -1294,7 +1295,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_160031) do
     t.bigint "item_id", null: false
     t.string "item_type", null: false
     t.text "object", size: :long
-    t.text "object_changes"
+    t.text "object_changes", size: :long
     t.string "whodunnit"
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end
