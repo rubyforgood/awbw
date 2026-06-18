@@ -9,20 +9,21 @@
     <div>
       <label class="block font-medium mb-1 text-gray-700">Event title</label>
       <div class="border border-gray-200 rounded-lg p-4">
-        <%# Inputs and checkboxes are split into two parallel grid rows so each %>
-        <%# checkbox lines up with its sibling regardless of the Pre-title hint height %>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <%= f.input :title,
-                  label: "Title",
-                  required: true,
-                  as: :text,
-                  input_html: {
-                    rows: 1,
-                    value: f.object.title,
-                    class:
-                      "w-full rounded border-gray-300 shadow-sm px-3 py-2
-                                                focus:ring-blue-500 focus:border-blue-500",
-                  } %>
+          <div>
+            <%= f.input :title,
+                    label: "Title",
+                    required: true,
+                    as: :text,
+                    input_html: {
+                      rows: 1,
+                      value: f.object.title,
+                      class:
+                        "w-full rounded border-gray-300 shadow-sm px-3 py-2
+                                                  focus:ring-blue-500 focus:border-blue-500",
+                    } %>
+            <%= f.input :facilitator_training, as: :boolean, label: "Facilitator training event", wrapper_html: { class: "mb-0!" } %>
+          </div>
           <%= f.input :pre_title,
                   label: "Pre-title",
                   hint: "Displays above the title",
@@ -31,17 +32,13 @@
                     placeholder: "e.g. Facilitator Training Series"
                   } %>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page", wrapper_html: { class: "mb-0!" } %>
-          <%= f.input :facilitator_training, as: :boolean, label: "Facilitator training event", wrapper_html: { class: "mb-0!" } %>
-        </div>
       </div>
     </div>
 
     <% if allowed_to?(:manage?, @event) %>
-      <div class="admin-only mt-6 md:mt-0 flex flex-col">
+      <div class="admin-only mt-6 md:mt-0">
         <label id="display_settings" class="block font-medium mb-1 text-gray-700">Display settings</label>
-        <div class="bg-blue-50 border border-gray-200 rounded-lg grid grid-cols-2 content-start gap-y-0 p-3 flex-1 [&_.form-group]:mb-1">
+        <div class="bg-blue-50 border border-gray-200 rounded-lg grid grid-cols-2 content-start gap-y-0 p-3 [&_.form-group]:mb-1">
           <%= f.input :published, as: :boolean %>
           <%= f.input :featured, as: :boolean %>
           <%= f.input :publicly_visible, as: :boolean %>
@@ -399,11 +396,13 @@
           bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
         data-action="dropdown#toggle"
         data-dropdown-payload-param='[{"page_content":"hidden"}, {"page_content_arrow":"rotate-180"}, {"page_content_button":"rounded-md rounded-t-md"}]'>
-        Page content
+        Event show page
         <i id="page_content_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
       </button>
 
       <div id="page_content" class="hidden border border-gray-300 p-4 rounded-b-md">
+        <%= f.input :autoshow_title, as: :boolean, label: "Show title on event show page" %>
+
         <div class="form-group <%= 'has-error' if f.object.errors[:rhino_header].present? %>">
           <%= rhino_editor(f, :header, label: "Header content") %>
 
