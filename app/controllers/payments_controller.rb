@@ -97,7 +97,7 @@ class PaymentsController < ApplicationController
       return
     end
 
-    description = "Custom Stripe Payment"
+    description = params[:description].presence || "Custom Stripe Payment"
 
     checkout_session = Stripe::Checkout::Session.create(
       mode: "payment",
@@ -109,6 +109,9 @@ class PaymentsController < ApplicationController
         },
         quantity: 1
       } ],
+      payment_intent_data: {
+        description: description
+      },
       custom_fields: [
         {
           key: "first_name",

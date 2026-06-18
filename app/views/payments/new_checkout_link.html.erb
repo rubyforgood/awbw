@@ -35,6 +35,13 @@
 
       <%= form_tag create_checkout_link_payments_path, data: { turbo: false } do %>
         <div class="mb-6">
+          <%= label_tag :description, "Description", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <p class="text-xs text-gray-400 mb-1">Displays in checkout</p>
+          <%= text_field_tag :description, params[:description], placeholder: "e.g. AWBW Facilitator Training",
+               class: "bg-white w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
+        </div>
+
+        <div class="mb-6">
           <%= label_tag :amount_dollars, "Amount ($)", class: "block text-sm font-medium text-gray-700 mb-1" %>
           <%= number_field_tag :amount_dollars, nil,
                step: "0.01", min: "0.01", placeholder: "0.00", required: true,
