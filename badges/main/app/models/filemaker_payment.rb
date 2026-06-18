@@ -1,0 +1,2 @@
+class FilemakerPayment < Payment
+end

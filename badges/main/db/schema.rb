@@ -895,7 +895,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_104042) do
     t.string "check_number"
     t.datetime "created_at", null: false
     t.string "currency", default: "usd", null: false
+    t.text "description"
     t.boolean "external_origin", default: true, null: false
+    t.string "filemaker_code"
     t.bigint "form_submission_id"
     t.string "memo"
     t.json "metadata"
@@ -906,6 +908,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_104042) do
     t.string "stripe_charge_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
+    t.index ["filemaker_code"], name: "index_payments_on_filemaker_code"
     t.index ["form_submission_id"], name: "index_payments_on_form_submission_id"
     t.index ["organization_id"], name: "index_payments_on_organization_id"
     t.index ["person_id"], name: "index_payments_on_person_id"

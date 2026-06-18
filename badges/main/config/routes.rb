@@ -180,6 +180,8 @@ Rails.application.routes.draw do
   resources :payments, only: [ :new, :create, :show, :index ] do
     collection do
       post :allocation_form
+      get :new_checkout_link
+      post :create_checkout_link
     end
   end
   resources :allocations, only: [ :new, :create, :index ] do
