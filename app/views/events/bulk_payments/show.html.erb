@@ -1,11 +1,15 @@
 <% content_for(:page_bg_class, "public") %>
 <div class="max-w-3xl mx-auto px-4 pt-4">
-  <%# Primary back link is always the payer's ticket. Admins arriving from the
-      bulk payments dashboard (return_to=bulk_payments) also get a second link
-      back there, with their originating row re-expanded. %>
+  <%# Primary back link is the payer's ticket, available only for slug-based
+      submissions. Admins arriving from the bulk payments dashboard
+      (return_to=bulk_payments) also get a link back there, with their
+      originating row re-expanded — and it's the only eyebrow for legacy
+      slugless submissions, which have no public ticket. %>
   <div class="flex flex-col items-start gap-1">
-    <%= link_to bulk_payment_ticket_path(@submission.slug, return_to: params[:return_to], expand: params[:expand]), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
+    <% if @submission.slug.present? %>
+      <%= link_to bulk_payment_ticket_path(@submission.slug, return_to: params[:return_to], expand: params[:expand]), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
+      <% end %>
     <% end %>
     <% if params[:return_to] == "bulk_payments" %>
       <%= link_to bulk_payments_return_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
