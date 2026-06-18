@@ -290,6 +290,50 @@ RSpec.describe EventRegistration, type: :model do
       create(:allocation, source: payment, allocatable: reg, amount: 100)
       expect(reg).not_to be_joinable
     end
+
+    it "returns true for an unpaid registration flagged intends_to_pay" do
+      reg = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      expect(reg).not_to be_paid_in_full
+      expect(reg).to be_joinable
+    end
+
+    it "returns false for an unpaid, cancelled registration even when intends_to_pay" do
+      reg = create(:event_registration, event: event, registrant: user.person, status: "cancelled", intends_to_pay: true)
+      expect(reg).not_to be_joinable
+    end
+  end
+
+  describe "#access_granted?" do
+    let(:event) { create(:event, cost_cents: 1099) }
+    let(:user) { create(:user, :with_person) }
+
+    it "is true when paid in full" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      payment = create(:payment, person: user.person, amount_cents: 1099, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1099)
+      expect(reg.access_granted?).to be true
+    end
+
+    it "is true when unpaid but flagged intends_to_pay" do
+      reg = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      expect(reg.access_granted?).to be true
+    end
+
+    it "is false when unpaid and not flagged" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      expect(reg.access_granted?).to be false
+    end
+  end
+
+  describe ".payment_status scope" do
+    let(:event) { create(:event, cost_cents: 1099) }
+    let(:user) { create(:user, :with_person) }
+
+    it "filters to registrations flagged intends_to_pay" do
+      intends = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      create(:event_registration, event: event, registrant: create(:person))
+      expect(EventRegistration.payment_status("intends_to_pay")).to contain_exactly(intends)
+    end
   end
 
   describe "#paid_in_full?" do

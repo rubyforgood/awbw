@@ -11,7 +11,7 @@
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:payments, intensity: 100) %> <%= DomainTheme.text_class_for(:payments, intensity: 600) %>">
       <i class="fa-solid fa-dollar-sign"></i>
     </span>
-    <h2 class="text-sm font-semibold text-gray-700">Registration allocations</h2>
+    <h2 class="text-sm font-semibold text-gray-700">Registration payments and allocations</h2>
     <%= link_to allocations_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
                 class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline after:absolute after:inset-0 after:content-['']",
                 target: "_blank", rel: "noopener" do %>
@@ -45,6 +45,23 @@
           </dd>
         </div>
       </dl>
+
+      <%# Intends to pay — grants ticket/material access while the balance above is
+          still owed, for registrants who've committed to paying after the deadline.
+          Does not change the amount due or mark the registration as paid. %>
+      <label class="mt-4 flex items-start gap-2.5 border-t border-gray-100 pt-4 cursor-pointer">
+        <input type="hidden" name="event_registration[intends_to_pay]" value="0" autocomplete="off">
+        <input type="checkbox"
+               name="event_registration[intends_to_pay]"
+               value="1"
+               <%= "checked" if event_registration.intends_to_pay %>
+               class="sr-only peer">
+        <span class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
+        <span>
+          <span class="block text-sm font-medium text-gray-700">Intends to pay</span>
+          <span class="block text-xs text-gray-400">Grant access to training materials and join links while the balance is still due. Doesn't mark the registration as paid.</span>
+        </span>
+      </label>
     <% else %>
       <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-0.5 text-xs font-medium text-gray-500">
         <i class="fa-solid fa-gift"></i>
