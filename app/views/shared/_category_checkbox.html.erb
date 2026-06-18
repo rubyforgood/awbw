@@ -1,9 +1,10 @@
 <%# A profile-specific category checkbox shared by the person and organization
     edit forms. param_key is "person" or "organization". For AgeRange categories
-    (is_age), it also renders a "Primary" toggle that submits
-    [param_key][primary_age_category_ids][] so the tagging is split into the
-    primary vs additional age groups served. The primary toggle sits outside the
-    membership label so the two checkboxes never toggle each other. %>
+    (is_age), it also renders a single "Primary" toggle that submits
+    [param_key][primary_age_category_ids][] so the tagging is split into the one
+    primary vs the additional age ranges served. The primary toggle sits outside
+    the membership label so the two checkboxes never toggle each other; the
+    single-select-checkbox controller keeps only one primary checked at a time. %>
 <% id = "#{param_key}_category_ids_#{category.id}" %>
 <div class="flex items-center gap-2 p-3 w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
   <label for="<%= id %>" class="flex items-center gap-2 cursor-pointer">
@@ -24,7 +25,8 @@
                         category.id,
                         primary_checked,
                         id: primary_id,
-                        class: "h-3.5 w-3.5 text-amber-600 rounded" %>
+                        class: "h-3.5 w-3.5 text-amber-600 rounded",
+                        data: { single_select_checkbox_target: "option", action: "single-select-checkbox#select" } %>
       Primary
     </label>
   <% end %>

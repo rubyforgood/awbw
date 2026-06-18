@@ -800,19 +800,22 @@ class EventDashboard
   end
 
   # [ person_id, age_group_category_id ] for every AgeRange selection in active
-  # registrants' "primary_age_group" registration answers. The answer text is a
-  # ", "-joined list of category ids (the checkbox values); non-numeric tokens
-  # (legacy free text) are ignored. Deduped per [ person, category ].
+  # registrants' age-range registration answers — both the single "primary age
+  # range" and the multi "additional ages served" questions, so the breakdown
+  # reflects every age range served. The answer text is a ", "-joined list of
+  # category ids; non-numeric tokens (legacy free text) are ignored. Deduped per
+  # [ person, category ].
   def age_group_answer_rows
     @age_group_answer_rows ||= compute_age_group_answer_rows
   end
 
   def compute_age_group_answer_rows
-    field = registration_form_field("primary_age_group")
-    return [] unless field
+    field_ids = FormField::AGE_GROUP_FIELD_IDENTIFIERS
+      .filter_map { |identifier| registration_form_field(identifier)&.id }
+    return [] if field_ids.empty?
 
     FormAnswer
-      .where(form_field_id: field.id)
+      .where(form_field_id: field_ids)
       .joins(:form_submission)
       .where(form_submissions: { person_id: registrant_ids })
       .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)

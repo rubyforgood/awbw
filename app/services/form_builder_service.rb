@@ -86,7 +86,7 @@ class FormBuilderService
       "Agency Type", "Agency Website"
     ],
     person_background: [ "Racial / Ethnic Identity" ],
-    professional_info: [ "Primary sector", "Additional sectors", "Primary Age Group(s) Served", "Additional Age Group(s) Served" ],
+    professional_info: [ "Primary sector", "Additional sectors", "Primary age range", "Additional ages served" ],
     marketing: [
       "How did you hear about this training?",
       "What motivates you to attend this training?",
@@ -436,12 +436,12 @@ class FormBuilderService
     position = add_field(form, position, "Additional sectors", :multi_select_checkbox,
                          key: "primary_service_area", group: "professional", required: false,
                          subtitle: "Select all options that represent who you intend to serve through the art workshops (check all that apply)")
-    position = add_field(form, position, "Primary Age Group(s) Served", :multi_select_checkbox,
+    position = add_field(form, position, "Primary age range", :single_select_dropdown,
                          key: "primary_age_group", group: "professional", required: false,
-                         subtitle: "Select all age groups you primarily serve.")
-    position = add_field(form, position, "Additional Age Group(s) Served", :multi_select_checkbox,
+                         subtitle: "Select the age range you primarily serve.")
+    position = add_field(form, position, "Additional ages served", :multi_select_checkbox,
                          key: "additional_age_group", group: "professional", required: false,
-                         subtitle: "Select all that apply. These represent the other age groups you serve.")
+                         subtitle: "Select all that apply. These represent the other age ranges you serve.")
     position
   end
 

@@ -168,14 +168,16 @@
             </div>
           </div>
         <% end %>
-        <!-- Age groups served (deduped across the org and its affiliated people) -->
-        <% primary_age_groups = @organization.all_primary_age_groups %>
-        <% additional_age_groups = @organization.all_additional_age_groups %>
-        <% if primary_age_groups.any? || additional_age_groups.any? %>
-          <div class="md:col-span-2 p-3">
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Age groups served</h2>
-            <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
-          </div>
+        <!-- Age ranges served (deduped across the org and its affiliated people) -->
+        <% if @organization.profile_show_age_ranges? %>
+          <% primary_age_groups = @organization.all_primary_age_groups %>
+          <% additional_age_groups = @organization.all_additional_age_groups %>
+          <% if primary_age_groups.any? || additional_age_groups.any? %>
+            <div class="md:col-span-2 p-3">
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Age ranges served</h2>
+              <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
+            </div>
+          <% end %>
         <% end %>
       </div>
     <hr class="my-8 border-gray-200">

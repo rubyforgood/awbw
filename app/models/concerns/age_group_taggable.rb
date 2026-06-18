@@ -1,12 +1,16 @@
 # Shared age-group tagging for records that carry categorizable_items
 # (Person, Organization). AgeRange categories are tagged like any other
-# category; the categorizable_items.is_primary flag splits them into the
-# "primary" age groups a respondent serves and the "additional" ones — the same
-# primary/additional distinction sectors get via sectorable_items.is_primary.
+# category; the categorizable_items.is_primary flag marks the single "primary"
+# age range a respondent serves, with the rest "additional" — the same
+# one-primary distinction sectors get via sectorable_items.is_primary.
 module AgeGroupTaggable
   extend ActiveSupport::Concern
 
   AGE_RANGE_CATEGORY_TYPE = "AgeRange"
+
+  included do
+    validate :at_most_one_primary_age_group
+  end
 
   # AgeRange categories tagged on this record, split by the primary flag and
   # returned in display order. Filters the categorizable_items association in
@@ -27,31 +31,45 @@ module AgeGroupTaggable
     primary_age_groups.map(&:id)
   end
 
-  # Flip is_primary on the AgeRange categorizable_items to match the given set.
+  # Mark the single primary AgeRange categorizable_item, demoting the rest.
   # Runs after category membership has been assigned (the edit-form flow), so it
-  # only updates existing items rather than creating them.
+  # only updates existing items rather than creating them. At most one category
+  # is primary, mirroring sectors — only the first id given is honored.
   def apply_primary_age_groups!(primary_category_ids)
-    primary = sanitize_age_ids(primary_category_ids).to_set
+    primary = sanitize_age_ids(primary_category_ids).first
     age_range_categorizable_items.includes(:category).find_each do |item|
-      desired = primary.include?(item.category_id)
+      desired = item.category_id == primary
       item.update!(is_primary: desired) if item.is_primary? != desired
     end
     categorizable_items.reset
   end
 
-  # Additively tag AgeRange categories as primary/additional without disturbing
-  # other taggings — used by registration, where a respondent may add to age
-  # groups recorded on a prior submission. A category named in both lists is
-  # treated as primary.
+  # Additively tag AgeRange categories without disturbing other taggings — used
+  # by registration, where a respondent may add to age groups recorded on a
+  # prior submission. Only one category is primary (the single-select dropdown
+  # answer); choosing a new primary demotes any previous one.
   def tag_age_groups(primary_ids:, additional_ids:)
-    primary = sanitize_age_ids(primary_ids)
-    additional = sanitize_age_ids(additional_ids) - primary
-    upsert_age_items(primary, is_primary: true)
+    primary = sanitize_age_ids(primary_ids).first
+    additional = sanitize_age_ids(additional_ids) - [ primary ].compact
+    if primary
+      age_range_categorizable_items.where(is_primary: true)
+        .where.not(category_id: primary)
+        .find_each { |item| item.update!(is_primary: false) }
+      upsert_age_items([ primary ], is_primary: true)
+    end
     upsert_age_items(additional, is_primary: false)
     categorizable_items.reset
   end
 
   private
+
+  # Mirrors sectors: at most one age range may be primary. The edit and
+  # registration paths enforce this directly; this guards console/import writes.
+  def at_most_one_primary_age_group
+    return if age_range_categorizable_items.where(is_primary: true).count <= 1
+
+    errors.add(:base, "Only one age range can be marked as primary")
+  end
 
   def age_range_categories(primary:)
     categorizable_items

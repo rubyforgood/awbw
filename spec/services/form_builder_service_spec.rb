@@ -130,6 +130,15 @@ RSpec.describe FormBuilderService do
         expect(additional).to have_attributes(name: "Additional sectors", answer_type: "multi_select_checkbox")
         expect(primary.position).to be < additional.position
       end
+
+      it "asks for a single primary age range via a dropdown before the additional ages checkboxes" do
+        primary = form.form_fields.find_by(field_identifier: "primary_age_group")
+        additional = form.form_fields.find_by(field_identifier: "additional_age_group")
+
+        expect(primary).to have_attributes(name: "Primary age range", answer_type: "single_select_dropdown")
+        expect(additional).to have_attributes(name: "Additional ages served", answer_type: "multi_select_checkbox")
+        expect(primary.position).to be < additional.position
+      end
     end
 
     context "marketing section" do

@@ -212,7 +212,7 @@ class OrganizationsController < ApplicationController
       :name, :description, :start_date, :end_date, :mission_vision_values,
       :agency_type, :agency_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
       :organization_status_id, :location_id, :windows_type_id,
-      :profile_show_sectors, :profile_show_email, :profile_show_phone,
+      :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
       :profile_show_stories, :profile_show_events_registered, :profile_show_workshop_logs,
       category_ids: [],

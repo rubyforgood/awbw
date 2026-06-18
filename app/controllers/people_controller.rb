@@ -393,6 +393,7 @@ class PeopleController < ApplicationController
       :profile_show_phone,
       :profile_show_member_since,
       :profile_show_sectors,
+      :profile_show_age_ranges,
       :profile_show_affiliations,
       :profile_show_social_media,
       :profile_show_events_registered,

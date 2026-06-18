@@ -153,6 +153,9 @@ application.register("searchable-checkbox", SearchableCheckboxController)
 import SearchableSelectController from "./searchable_select_controller"
 application.register("searchable-select", SearchableSelectController)
 
+import SingleSelectCheckboxController from "./single_select_checkbox_controller"
+application.register("single-select-checkbox", SingleSelectCheckboxController)
+
 import SectionFilterController from "./section_filter_controller"
 application.register("section-filter", SectionFilterController)
 

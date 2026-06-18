@@ -993,13 +993,27 @@ record_professional_answers = ->(submission, i) do
   person = submission.person
   form = submission.form
 
-  age_field = form.form_fields.find_by(field_identifier: "primary_age_group")
   ages = pick_categories.call(age_range_categories, i, 2)
-  if age_field && ages.present? && submission.form_answers.where(form_field: age_field).none?
-    submission.form_answers.create!(form_field: age_field,
-                                    submitted_answer: ages.map(&:id).join(", "),
-                                    question_name_when_answered: age_field.name)
+  primary_age = ages.first
+  additional_ages = ages.drop(1)
+
+  primary_age_field = form.form_fields.find_by(field_identifier: "primary_age_group")
+  if primary_age_field && primary_age && submission.form_answers.where(form_field: primary_age_field).none?
+    submission.form_answers.create!(form_field: primary_age_field,
+                                    submitted_answer: primary_age.id.to_s,
+                                    question_name_when_answered: primary_age_field.name)
   end
+
+  additional_age_field = form.form_fields.find_by(field_identifier: "additional_age_group")
+  if additional_age_field && additional_ages.present? && submission.form_answers.where(form_field: additional_age_field).none?
+    submission.form_answers.create!(form_field: additional_age_field,
+                                    submitted_answer: additional_ages.map(&:id).join(", "),
+                                    question_name_when_answered: additional_age_field.name)
+  end
+
+  # Age chips read categorizable_items, mirroring registration's tag_age_groups:
+  # one primary (starred), the rest additional.
+  person.tag_age_groups(primary_ids: [ primary_age&.id ].compact, additional_ids: additional_ages.map(&:id))
 
   service_field = form.form_fields.find_by(field_identifier: "primary_service_area")
   sectors = service_area_sectors.empty? ? [] : [ service_area_sectors[i % service_area_sectors.size], service_area_sectors[(i + 4) % service_area_sectors.size] ].uniq

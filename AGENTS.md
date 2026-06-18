@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (71) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (74) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -124,7 +124,7 @@ This codebase (Rails 8.1)
 
 | Concern | Purpose |
 |---|---|
-| `AgeGroupTaggable` | Splits AgeRange category taggings into primary/additional via `categorizable_items.is_primary` (Person, Organization) |
+| `AgeGroupTaggable` | Marks one primary AgeRange tagging (the rest additional) via `categorizable_items.is_primary`, enforcing a single primary (Person, Organization) |
 | `AhoyTrackable` | Event tracking integration |
 | `AuthorCreditable` | Author attribution |
 | `Featureable` | `featured`, `publicly_featured` scopes |
