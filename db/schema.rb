@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_034355) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_18_104041) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -713,6 +713,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_034355) do
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "channel", default: "autoemail", null: false
     t.datetime "created_at", precision: nil, null: false
+    t.text "custom_message"
     t.datetime "delivered_at"
     t.text "email_body_html", size: :medium
     t.text "email_body_text", size: :medium

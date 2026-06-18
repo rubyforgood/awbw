@@ -293,6 +293,41 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#reminder_days_phrase" do
+    it "says today for 0 days" do
+      expect(helper.reminder_days_phrase(0)).to eq(" <strong>today</strong>")
+    end
+
+    it "says tomorrow for 1 day" do
+      expect(helper.reminder_days_phrase(1)).to eq(" <strong>tomorrow</strong>")
+    end
+
+    it "bolds the day count for more than one day out" do
+      expect(helper.reminder_days_phrase(60)).to eq(" in <strong>60 days</strong>")
+    end
+
+    it "is blank when the day count is unknown" do
+      expect(helper.reminder_days_phrase(nil)).to eq("")
+    end
+  end
+
+  describe "#default_reminder_message" do
+    before do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("ORGANIZATION_NAME", "AWBW").and_return("A Window Between Worlds")
+    end
+
+    it "names the organization and the bolded dynamic day count" do
+      expect(helper.default_reminder_message(60))
+        .to eq("This is a reminder that you're registered for the following A Window Between Worlds event in <strong>60 days</strong>.")
+    end
+
+    it "omits the day phrase when the count is unknown" do
+      expect(helper.default_reminder_message(nil))
+        .to eq("This is a reminder that you're registered for the following A Window Between Worlds event.")
+    end
+  end
+
   describe "#event_registration_close_date_label" do
     it "is the month and day, without year, ordinal, or time" do
       event = build(:event, registration_close_date: Time.zone.local(2026, 8, 7, 8, 45))

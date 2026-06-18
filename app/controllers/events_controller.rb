@@ -52,7 +52,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob } ])
+      .includes(:comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob }, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
@@ -263,10 +263,16 @@ class EventsController < ApplicationController
       .joins(:registrant)
       .select { |r| r.registrant.preferred_email.present? }
     @sample_registration = @event_registrations.first
-    @days_until_event = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
+    days_until_event = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
+    # Pre-fill the editable message with the standard reminder sentence (days
+    # resolved now). Absent param = first load → default; a present-but-blank
+    # param = the admin cleared it (e.g. bounced back here) → respect the blank.
+    @custom_message = params.key?(:custom_message) ? params[:custom_message].to_s : helpers.default_reminder_message(days_until_event)
 
     if @sample_registration
-      mail = EventMailer.event_registration_reminder(@sample_registration, days_until_event: @days_until_event)
+      # Render in preview mode so the custom-message container is always present
+      # in the markup for the live preview, even before any text is typed.
+      mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, preview: true)
       @reminder_preview_html = mail.html_part&.body&.decoded
     end
   end
@@ -274,20 +280,36 @@ class EventsController < ApplicationController
   def send_reminder
     authorize! @event, to: :send_reminder?
     allowed_ids = Array(params[:registration_ids]).map(&:to_i).reject(&:zero?)
+    custom_message = params[:custom_message].to_s
     registrations = @event.event_registrations
       .where(id: allowed_ids)
       .includes(registrant: [ :user, :contact_methods ])
       .select { |r| r.registrant.preferred_email.present? }
-    days_until = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
 
     if registrations.empty?
-      redirect_to preview_reminder_event_path(@event), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, custom_message: custom_message), alert: "Please select at least one recipient."
       return
     end
 
+    # Record an individual notification per recipient (delivered + persisted via
+    # NotificationMailerJob), so each reminder shows up in that person's
+    # communication history and can be resent — like confirmations/cancellations.
     registrations.each do |event_registration|
-      EventMailer.event_registration_reminder(event_registration, days_until_event: days_until).deliver_later
+      NotificationServices::CreateNotification.call(
+        noticeable: event_registration,
+        kind: "event_registration_reminder",
+        recipient_role: :person,
+        recipient_email: event_registration.registrant.preferred_email,
+        notification_type: 0,
+        custom_message: custom_message.presence
+      )
     end
+
+    # One admin summary for the whole batch: count, roster, and a copy of what
+    # was sent. Roster passed as plain "Name <email>" labels so the delivery job
+    # needs no record lookups.
+    recipient_labels = registrations.map { |r| "#{r.registrant.full_name} <#{r.registrant.preferred_email}>" }
+    EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence).deliver_later
 
     redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
   end

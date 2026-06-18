@@ -14,6 +14,36 @@ module ApplicationHelper
     sanitize(text.to_s, tags: FORM_LABEL_TAGS, attributes: FORM_LABEL_ATTRIBUTES)
   end
 
+  # Render an admin-authored custom message included in a reminder email with the
+  # same safe subset of HTML as form labels (bold, italics, links, lists, line
+  # breaks). Reuses form_label_html so the allowlist — and its XSS scrubbing —
+  # stays in one place. Available to mailer views via `helper ApplicationHelper`.
+  def reminder_message_html(text)
+    form_label_html(text)
+  end
+
+  # The day-relative phrase appended to the default reminder message: " today",
+  # " tomorrow", " in N days", or "" when the day count isn't known. Leads with a
+  # space so it can be concatenated directly after "...event". The day count is
+  # wrapped in <strong> (the message field renders sanitized HTML), so it lands
+  # bold in the email.
+  def reminder_days_phrase(days_until_event)
+    return "" unless days_until_event.is_a?(Integer)
+    case days_until_event
+    when 0 then " <strong>today</strong>"
+    when 1 then " <strong>tomorrow</strong>"
+    else " in <strong>#{days_until_event} days</strong>"
+    end
+  end
+
+  # Default text pre-filled into the editable reminder message on the bulk
+  # reminder page (admins can edit or clear it). The day count is resolved when
+  # the page renders — it's event-level, so the same for every recipient.
+  def default_reminder_message(days_until_event)
+    organization = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    "This is a reminder that you're registered for the following #{organization} event#{reminder_days_phrase(days_until_event)}."
+  end
+
   # Tokens an admin can drop into a form header; each is filled from the event the
   # form is rendered for (see form_header_html). A standalone registration form is
   # shared across events, so the header can't hard-code event specifics. Each entry:

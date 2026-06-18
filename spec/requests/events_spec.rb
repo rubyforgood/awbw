@@ -1712,4 +1712,77 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("already fully paid")
     end
   end
+
+  describe "POST /send_reminder" do
+    let!(:registration_one) { create(:event_registration, event: event) }
+    let!(:registration_two) { create(:event_registration, event: event) }
+
+    before { sign_in admin }
+
+    it "creates one reminder notification per selected registrant" do
+      expect {
+        post send_reminder_event_path(event), params: {
+          registration_ids: [ registration_one.id, registration_two.id ],
+          custom_message: "See you soon!"
+        }
+      }.to change { Notification.where(kind: "event_registration_reminder").count }.by(2)
+
+      expect(response).to redirect_to(registrants_event_path(event))
+    end
+
+    it "sends a single admin FYI summarizing the batch" do
+      expect {
+        post send_reminder_event_path(event), params: {
+          registration_ids: [ registration_one.id, registration_two.id ],
+          custom_message: "See you soon!"
+        }
+      }.to have_enqueued_mail(EventMailer, :event_registration_reminder_fyi).once
+    end
+
+    it "stores the custom message and recipient on each notification" do
+      post send_reminder_event_path(event), params: {
+        registration_ids: [ registration_one.id ],
+        custom_message: "See you soon!"
+      }
+
+      notification = Notification.find_by(kind: "event_registration_reminder", noticeable: registration_one)
+      expect(notification.custom_message).to eq("See you soon!")
+      expect(notification.recipient_role).to eq("person")
+      expect(notification.recipient_email).to eq(registration_one.registrant.preferred_email)
+    end
+
+    it "creates no notifications when nothing is selected" do
+      expect {
+        post send_reminder_event_path(event), params: { registration_ids: [] }
+      }.not_to change(Notification, :count)
+
+      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: ""))
+    end
+  end
+
+  describe "GET /registrants" do
+    let!(:registration) { create(:event_registration, event: event) }
+
+    before { sign_in admin }
+
+    it "shows the registrant's active facilitator affiliation organization names" do
+      create(:affiliation, person: registration.registrant,
+        organization: create(:organization, name: "Helping Hands Center"),
+        title: "Facilitator")
+
+      get registrants_event_path(event)
+
+      expect(response.body).to include("Helping Hands Center")
+    end
+
+    it "does not show organizations from non-facilitator affiliations" do
+      create(:affiliation, person: registration.registrant,
+        organization: create(:organization, name: "Board Only Org"),
+        title: "Board Member")
+
+      get registrants_event_path(event)
+
+      expect(response.body).not_to include("Board Only Org")
+    end
+  end
 end

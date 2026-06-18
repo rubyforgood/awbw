@@ -6,6 +6,7 @@ module NotificationServices
       recipient_email:,
       kind:,
       notification_type:,
+      custom_message: nil,
       deliver: true,
       persist_delivered_email: true
     )
@@ -15,7 +16,8 @@ module NotificationServices
         kind: kind.to_s,
         notification_type: notification_type,
         recipient_role: recipient_role.to_s,
-        recipient_email: recipient_email
+        recipient_email: recipient_email,
+        custom_message: custom_message
       )
       Rails.logger.info({
                           event: "notification.created",

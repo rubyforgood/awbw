@@ -123,6 +123,9 @@ application.register("prefetch-lazy", PrefetchLazyController)
 import PrintOptionsController from "./print_options_controller"
 application.register("print-options", PrintOptionsController)
 
+import ReminderPreviewController from "./reminder_preview_controller"
+application.register("reminder-preview", ReminderPreviewController)
+
 import RevealSectionController from "./reveal_section_controller"
 application.register("reveal-section", RevealSectionController)
 

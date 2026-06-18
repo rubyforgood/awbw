@@ -24,6 +24,13 @@ class Affiliation < ApplicationRecord
     title.to_s.downcase.include?("facilitator")
   end
 
+  # Current: not flagged inactive and not past its end date. Mirrors the `active`
+  # scope so already-loaded affiliations can be filtered in Ruby without another
+  # query (e.g. on list pages that preload affiliations).
+  def active?
+    !inactive? && (end_date.nil? || end_date >= Date.current)
+  end
+
   def name
     "#{person.name}" if person
   end

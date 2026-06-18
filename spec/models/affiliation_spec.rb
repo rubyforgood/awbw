@@ -14,6 +14,24 @@ RSpec.describe Affiliation do
     # it { should validate_presence_of(:person_id) } # we needed to not have this to support nested attrs
   end
 
+  describe '#active?' do
+    it 'is true when not inactive and has no end date' do
+      expect(build(:affiliation, inactive: false, end_date: nil).active?).to be true
+    end
+
+    it 'is true when not inactive and the end date is in the future' do
+      expect(build(:affiliation, inactive: false, end_date: 1.month.from_now).active?).to be true
+    end
+
+    it 'is false when flagged inactive' do
+      expect(build(:affiliation, inactive: true, end_date: nil).active?).to be false
+    end
+
+    it 'is false when the end date has passed' do
+      expect(build(:affiliation, inactive: false, end_date: 1.day.ago).active?).to be false
+    end
+  end
+
   describe '.active' do
     let!(:active_op) { create(:affiliation, inactive: false, end_date: nil) }
     let!(:active_with_future_end) { create(:affiliation, inactive: false, end_date: 1.month.from_now) }

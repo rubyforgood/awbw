@@ -84,8 +84,7 @@ RSpec.describe EventMailer, type: :mailer do
 
   describe "#event_registration_reminder" do
     let(:event_registration) { create(:event_registration) }
-    let(:mail) { described_class.event_registration_reminder(event_registration, days_until_event: days_until_event) }
-    let(:days_until_event) { 7 }
+    let(:mail) { described_class.event_registration_reminder(event_registration) }
 
     it "renders without raising" do
       expect { mail.deliver_now }.not_to raise_error
@@ -107,48 +106,98 @@ RSpec.describe EventMailer, type: :mailer do
       expect(mail.body.encoded).to include(event_registration.registrant.full_name)
     end
 
-    it "includes reminder wording in the body" do
-      expect(mail.body.encoded).to include("This is a reminder that you're registered for the following")
-    end
+    context "for a virtual event" do
+      let(:event) { create(:event, videoconference_url: "https://zoom.us/j/123", videoconference_label: "Zoom") }
+      let(:event_registration) { create(:event_registration, event: event) }
 
-    context "when days_until_event is 0" do
-      let(:days_until_event) { 0 }
+      it "shows the event's platform label as plain text" do
+        expect(mail.html_part.body.encoded).to include("Zoom")
+      end
 
-      it "includes today in the body" do
-        expect(mail.body.encoded).to include("today")
+      it "does not link to the videoconference URL" do
+        expect(mail.html_part.body.encoded).not_to include("https://zoom.us/j/123")
       end
     end
 
-    context "when days_until_event is 1" do
-      let(:days_until_event) { 1 }
+    context "for a multi-day event" do
+      let(:event) do
+        create(:event,
+          start_date: Time.zone.local(2026, 8, 16, 19, 0),
+          end_date: Time.zone.local(2026, 8, 17, 21, 0))
+      end
+      let(:event_registration) { create(:event_registration, event: event) }
 
-      it "includes tomorrow in the body" do
-        expect(mail.body.encoded).to include("tomorrow")
+      it "shows the dates as a single hyphenated range, not one line per day" do
+        expect(mail.html_part.body.encoded).to include("August 16-17")
       end
     end
 
-    context "when days_until_event is 7" do
-      let(:days_until_event) { 7 }
+    context "with a custom message" do
+      let(:mail) { described_class.event_registration_reminder(event_registration, custom_message: custom_message) }
+      let(:custom_message) { "Please bring <strong>your art supplies</strong>." }
 
-      it "includes the number of days in the body" do
-        expect(mail.body.encoded).to include("7 days")
+      it "includes the message in the HTML body" do
+        expect(mail.html_part.body.encoded).to include("Please bring <strong>your art supplies</strong>.")
+      end
+
+      it "includes the message text in the plain-text body" do
+        expect(mail.text_part.body.encoded).to include("Please bring your art supplies.")
+      end
+
+      it "strips disallowed HTML from the message" do
+        mail = described_class.event_registration_reminder(event_registration, custom_message: "Hi<script>alert(1)</script>")
+        expect(mail.html_part.body.encoded).to include("Hi")
+        expect(mail.html_part.body.encoded).not_to include("<script>")
       end
     end
 
-    context "when days_until_event is nil" do
-      let(:days_until_event) { nil }
-      let(:mail) { described_class.event_registration_reminder(event_registration) }
-
-      it "renders without raising" do
-        expect { mail.deliver_now }.not_to raise_error
+    context "without a custom message" do
+      it "does not render the custom-message container" do
+        expect(mail.html_part.body.encoded).not_to include("reminder-custom-message")
       end
+    end
 
-      it "does not include today, tomorrow, or in N days in the body" do
-        body = mail.body.encoded
-        expect(body).not_to include("today")
-        expect(body).not_to include("tomorrow")
-        expect(body).not_to match(/\bin \d+ days\b/)
+    context "in preview mode" do
+      let(:mail) { described_class.event_registration_reminder(event_registration, preview: true) }
+
+      it "renders the custom-message container even when blank" do
+        expect(mail.html_part.body.encoded).to include("reminder-custom-message")
       end
+    end
+  end
+
+  describe "#event_registration_reminder_fyi" do
+    let(:event) { create(:event, title: "Art Workshop") }
+    let(:recipient_labels) { [ "Alex Rivera <alex@example.org>", "Sam Lee <sam@example.org>" ] }
+    let(:mail) { described_class.event_registration_reminder_fyi(event, recipient_labels, custom_message: "See you soon!") }
+
+    it "renders without raising" do
+      expect { mail.deliver_now }.not_to raise_error
+    end
+
+    it "is sent to the admin reply-to address" do
+      expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+    end
+
+    it "summarizes the count and event in the subject" do
+      expect(mail.subject).to include("[FYI]")
+      expect(mail.subject).to include("2 registrants")
+      expect(mail.subject).to include("Art Workshop")
+    end
+
+    it "lists every recipient in the body" do
+      expect(mail.html_part.body.encoded).to include("Alex Rivera").and include("Sam Lee")
+      expect(mail.text_part.body.encoded).to include("Alex Rivera <alex@example.org>")
+    end
+
+    it "includes the custom message and event title" do
+      expect(mail.html_part.body.encoded).to include("See you soon!")
+      expect(mail.html_part.body.encoded).to include("Art Workshop")
+    end
+
+    it "uses the singular noun for a single recipient" do
+      mail = described_class.event_registration_reminder_fyi(event, [ "Alex Rivera <alex@example.org>" ])
+      expect(mail.subject).to include("1 registrant ")
     end
   end
 end
