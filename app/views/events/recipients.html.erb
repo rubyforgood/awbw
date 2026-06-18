@@ -79,6 +79,13 @@
               then the additional sectors alphabetically. %>
           <% sectorable_items = person.sectorable_items_primary_first %>
           <% has_sectors = sectorable_items.any? %>
+          <%# Primary age groups first (starred amber chips), then the additional
+              ones — matching the sector chips above. Falls back to the form
+              answer / profile text only when the person carries no tagged age
+              groups. %>
+          <% primary_age_groups = person.primary_age_groups.to_a %>
+          <% additional_age_groups = person.additional_age_groups.to_a %>
+          <% has_age_groups = primary_age_groups.any? || additional_age_groups.any? %>
           <div class="relative px-5 py-4 pr-12 <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:scholarships) %>">
             <button type="button" data-action="expandable-card#toggle"
                     aria-label="Toggle <%= person.name %> application"
@@ -117,7 +124,7 @@
                 </div>
 
                 <%# Serves / Ages — parallel with the name %>
-                <% if has_sectors || service_area_text.present? || age_group_text.present? %>
+                <% if has_sectors || service_area_text.present? || has_age_groups || age_group_text.present? %>
                   <div class="flex flex-wrap items-center gap-x-8 gap-y-2">
                     <% if has_sectors %>
                       <div class="flex flex-wrap items-center gap-2">
@@ -132,7 +139,12 @@
                         <%= service_area_text %>
                       </div>
                     <% end %>
-                    <% if age_group_text.present? %>
+                    <% if has_age_groups %>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Ages</span>
+                        <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
+                      </div>
+                    <% elsif age_group_text.present? %>
                       <div class="flex items-center gap-2">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Ages</span>
                         <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-medium text-gray-600"><%= age_group_text %></span>

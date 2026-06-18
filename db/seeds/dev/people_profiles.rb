@@ -211,3 +211,25 @@ Person.find_each.with_index do |person, i|
     end
   end
 end
+
+puts "Tagging seed users with primary/additional age groups…"
+# A person serves one core age group and sometimes a few others, so the profile
+# and recipients pages show a single starred primary chip plus any additional
+# ones. Give the three demo accounts that shape so the chip display has real data
+# to render. tag_age_groups marks exactly the named primary and treats the rest
+# as additional, and is idempotent on reseed.
+seed_user_age_groups = {
+  "umberto.user@example.com" => { primary: "13-17", additional: [ "18+" ] },
+  "amy.user@example.com" => { primary: "6-12", additional: [ "3-5", "13-17" ] },
+  "aisha.user@example.com" => { primary: "18+", additional: [] }
+}
+seed_user_age_groups.each do |email, groups|
+  person = User.find_by(email: email)&.person
+  next unless person
+
+  primary = Category.age_ranges.published.find_by(name: groups[:primary])
+  next unless primary
+
+  additional = Category.age_ranges.published.where(name: groups[:additional]).to_a
+  person.tag_age_groups(primary_ids: [ primary.id ], additional_ids: additional.map(&:id))
+end
