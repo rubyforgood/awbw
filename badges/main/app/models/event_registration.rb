@@ -196,7 +196,7 @@ class EventRegistration < ApplicationRecord
   # or downloads in the future) should gate on this, NOT on `paid?`. Reporting
   # surfaces (rosters, CSV exports, dashboard metrics) must keep using `paid?` /
   # `paid_in_full?` so they still reflect the real balance owed.
-  def access_granted?
+  def payment_access_granted?
     paid? || intends_to_pay?
   end
 
@@ -254,7 +254,7 @@ class EventRegistration < ApplicationRecord
   end
 
   def joinable?
-    active? && access_granted? && event.videoconference_window_open?
+    active? && payment_access_granted? && event.videoconference_window_open?
   end
 
   def attendance_status_label

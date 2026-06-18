@@ -303,7 +303,7 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
-  describe "#access_granted?" do
+  describe "#payment_access_granted?" do
     let(:event) { create(:event, cost_cents: 1099) }
     let(:user) { create(:user, :with_person) }
 
@@ -311,17 +311,17 @@ RSpec.describe EventRegistration, type: :model do
       reg = create(:event_registration, event: event, registrant: user.person)
       payment = create(:payment, person: user.person, amount_cents: 1099, amount_cents_remaining: nil)
       create(:allocation, source: payment, allocatable: reg, amount: 1099)
-      expect(reg.access_granted?).to be true
+      expect(reg.payment_access_granted?).to be true
     end
 
     it "is true when unpaid but flagged intends_to_pay" do
       reg = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
-      expect(reg.access_granted?).to be true
+      expect(reg.payment_access_granted?).to be true
     end
 
     it "is false when unpaid and not flagged" do
       reg = create(:event_registration, event: event, registrant: user.person)
-      expect(reg.access_granted?).to be false
+      expect(reg.payment_access_granted?).to be false
     end
   end
 

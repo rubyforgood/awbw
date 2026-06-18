@@ -164,9 +164,9 @@
       <% end %>
 
       <!-- Custom ticket callouts (admin-configured: actions & reference reading) -->
-      <% paid = event_registration.paid_in_full? || @checkout_payment_status == "paid" %>
+      <% payment_access = event_registration.payment_access_granted? || @checkout_payment_status == "paid" %>
       <% event_registration.event.registration_ticket_callouts.each do |callout| %>
-        <% next if callout.show_if_paid && !paid %>
+        <% next if callout.payment_access_gated && !payment_access %>
         <% theme = callout.theme %>
         <%= link_to event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug),
                       class: "flex items-center gap-3 rounded-xl border-2 #{theme[:border]} #{theme[:bg]} px-4 py-3 #{theme[:hover]} transition-colors" do %>
