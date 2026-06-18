@@ -178,7 +178,7 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create, :update ]
     resources :monthly_reports, only: :index
   end
-  resources :payments, only: [ :new, :create, :show, :index ] do
+  resources :payments, only: [ :new, :create, :show, :index, :edit, :update ] do
     collection do
       post :allocation_form
       get :new_checkout_link

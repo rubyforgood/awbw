@@ -1,4 +1,5 @@
 class Discount < ApplicationRecord
+  has_paper_trail
   has_many :allocations, as: :source, dependent: :destroy
 
   validates :amount_cents, numericality: { greater_than: 0 }
