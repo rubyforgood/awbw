@@ -19,7 +19,7 @@ module Awbw
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
 
-    config.active_record.yaml_column_permitted_classes = [Symbol, Date, Time, ActiveSupport::TimeWithZone, ActiveSupport::TimeZone]
+    config.active_record.yaml_column_permitted_classes = [ Symbol, Date, Time, ActiveSupport::TimeWithZone, ActiveSupport::TimeZone ]
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
