@@ -623,7 +623,7 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include("fa-circle-exclamation")
-        expect(response.body).to include("$10.00 due")
+        expect(response.body).to include("$10 due")
         expect(response.body).not_to include("Partial")
       end
 
@@ -635,7 +635,7 @@ RSpec.describe "Events", type: :request do
 
         expect(response.body).to include("fa-circle-half-stroke")
         expect(response.body).to include("Partial payment")
-        expect(response.body).to include("$6.00 due")
+        expect(response.body).to include("$6 due")
       end
 
       it "does not show the partial badge when only a scholarship covers part of the cost" do
@@ -645,7 +645,7 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include("fa-circle-exclamation")
-        expect(response.body).to include("$6.00 due")
+        expect(response.body).to include("$6 due")
         expect(response.body).not_to include("Partial")
       end
 
@@ -667,7 +667,7 @@ RSpec.describe "Events", type: :request do
 
         expect(response.body).to include("fa-tag")
         expect(response.body).to include(">Discounted<")
-        expect(response.body).to include("$6.00 due")
+        expect(response.body).to include("$6 due")
       end
 
       it "shows Paid when a discount fully covers the cost" do
