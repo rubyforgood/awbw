@@ -190,6 +190,12 @@ class EventRegistration < ApplicationRecord
   # flip the `intends_to_pay` flag when someone commits to paying after the
   # deadline so they aren't locked out in the meantime. This does NOT mark the
   # registration as paid — payment status still shows as due.
+  #
+  # This is the single seam for "may this registrant reach paid content?":
+  # any payment-gated resource (the videoconference join link today, recordings
+  # or downloads in the future) should gate on this, NOT on `paid?`. Reporting
+  # surfaces (rosters, CSV exports, dashboard metrics) must keep using `paid?` /
+  # `paid_in_full?` so they still reflect the real balance owed.
   def access_granted?
     paid? || intends_to_pay?
   end
