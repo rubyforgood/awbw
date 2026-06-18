@@ -77,7 +77,7 @@ module AdminCardsHelper
       disabled_card("Discounts", icon: "💲"),
       disabled_card("Refunds", icon: "↩️"),
       disabled_card("Event staff", icon: "🧑‍💼")
-    ].sort_by { |card| card[:title].downcase }
+    ].sort_by { |card| card[:title].downcase.gsub(" ", "~") }
   end
 
   # ============================================================
