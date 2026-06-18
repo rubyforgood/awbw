@@ -1,0 +1,44 @@
+<% if record.respond_to?(:versions) && record.versions.any? %>
+  <div data-controller="dropdown" class="relative">
+    <button type="button"
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"<%= dom_id(record, :versions) %>":"hidden"}]'
+            class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 cursor-pointer">
+      Versions (<%= record.versions.size %>)
+      <i class="fa-solid fa-chevron-down w-3 h-3 text-gray-400"></i>
+    </button>
+    <div id="<%= dom_id(record, :versions) %>"
+         data-dropdown-target="content"
+         class="hidden mt-2 space-y-2">
+      <% record.versions.order(created_at: :desc).each do |version| %>
+        <div class="border border-gray-200 rounded-lg p-3 <%= version.event == 'create' ? 'bg-green-50' : version.event == 'destroy' ? 'bg-red-50' : 'bg-gray-50' %>">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 text-xs font-medium rounded-full
+              <%= version.event == 'create' ? 'bg-green-100 text-green-700' :
+                 version.event == 'update' ? 'bg-blue-100 text-blue-700' :
+                 'bg-red-100 text-red-700' %>">
+              <%= version.event.titleize %>
+            </span>
+            <span class="text-xs text-gray-500"><%= version.created_at.strftime("%B %d, %Y at %I:%M %p") %></span>
+            <span class="text-xs text-gray-400">
+              by <%= User.find_by(id: version.whodunnit)&.email || "Unknown" %>
+            </span>
+          </div>
+          <% if version.changeset.present? && version.event != 'destroy' %>
+            <div class="mt-1 font-mono text-xs text-gray-700 space-y-0.5">
+              <% version.changeset.each do |attr, (old_val, new_val)| %>
+                <% next if %w[id created_at updated_at].include?(attr) %>
+                <div>
+                  <span class="text-gray-500"><%= attr %>:</span>
+                  <span class="text-gray-400"><%= old_val.inspect %></span>
+                  <span class="text-gray-300 mx-1">→</span>
+                  <span class="text-gray-900"><%= new_val.inspect %></span>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

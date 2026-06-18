@@ -85,6 +85,9 @@
         </div>
       </div>
     <% end %>
+    <div class="sm:col-span-2">
+      <%= render "papertrail_versions", record: @payment %>
+    </div>
   </dl>
   <% if @allocations.any? %>
     <div class="mt-8">
