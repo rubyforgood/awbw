@@ -893,7 +893,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_034355) do
     t.string "check_number"
     t.datetime "created_at", null: false
     t.string "currency", default: "usd", null: false
+    t.text "description"
     t.boolean "external_origin", default: true, null: false
+    t.string "filemaker_code"
     t.bigint "form_submission_id"
     t.string "memo"
     t.json "metadata"
@@ -904,6 +906,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_034355) do
     t.string "stripe_charge_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
+    t.index ["filemaker_code"], name: "index_payments_on_filemaker_code"
     t.index ["form_submission_id"], name: "index_payments_on_form_submission_id"
     t.index ["organization_id"], name: "index_payments_on_organization_id"
     t.index ["person_id"], name: "index_payments_on_person_id"
@@ -923,6 +926,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_034355) do
     t.string "email_2_type"
     t.string "email_type"
     t.string "facebook_url"
+    t.string "filemaker_code"
     t.string "first_name", null: false
     t.string "instagram_url"
     t.string "last_name", null: false
@@ -955,6 +959,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_034355) do
     t.integer "updated_by_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_people_on_created_by_id"
+    t.index ["filemaker_code"], name: "index_people_on_filemaker_code"
     t.index ["updated_by_id"], name: "index_people_on_updated_by_id"
   end
 
