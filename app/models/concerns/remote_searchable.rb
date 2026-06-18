@@ -46,4 +46,15 @@ module RemoteSearchable
       label: public_send(self.class.remote_search_columns.first)
     }
   end
+
+  # Label for dropdowns that search across more than one model at once (e.g. the
+  # combined people + organizations payer picker). The value is a signed global
+  # id so the consumer can resolve it back to the right record/type, and the
+  # label is suffixed with the model name to disambiguate same-named records.
+  def compound_search_label
+    {
+      id: to_sgid.to_s,
+      label: "#{remote_search_label[:label]} · #{self.class.model_name.human}"
+    }
+  end
 end

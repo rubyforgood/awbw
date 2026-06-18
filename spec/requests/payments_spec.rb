@@ -84,13 +84,23 @@ RSpec.describe "Payments", type: :request do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:registration) { create(:event_registration, event:) }
 
-    it "defaults the payer type to Organization" do
+    it "renders compound payer and additional designation pickers" do
       post allocation_form_payments_path,
         params: { type: "CashPayment", allocatable_sgid: registration.to_sgid.to_s },
         as: :turbo_stream
 
-      expect(response.body).to match(%r{<option[^>]*selected[^>]*>Organization</option>})
-      expect(response.body).not_to match(%r{<option[^>]*selected[^>]*>Person</option>})
+      expect(response.body).to include("Whose account is the money coming from?")
+      expect(response.body).to include("payment[payer_sgid]")
+      expect(response.body).to include("payment[additional_designation_sgid]")
+      expect(response.body).to include("Additional designation")
+    end
+
+    it "preselects the registrant in a compound picker" do
+      post allocation_form_payments_path,
+        params: { type: "CashPayment", allocatable_sgid: registration.to_sgid.to_s },
+        as: :turbo_stream
+
+      expect(response.body).to match(%r{<option[^>]*selected[^>]*>#{Regexp.escape(registration.registrant.full_name)}[^<]*Person</option>})
     end
   end
 
@@ -127,6 +137,47 @@ RSpec.describe "Payments", type: :request do
       }
 
       expect(Payment.last.payer_type).to eq("Person")
+    end
+  end
+
+  describe "payer/additional designation via sgids" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:registration) { create(:event_registration, event:) }
+    let(:organization) { create(:organization) }
+
+    it "creates a payment from an organization payer and a person designation" do
+      post payments_path, params: {
+        payment: {
+          type: "CheckPayment",
+          check_number: "1234",
+          payer_sgid: organization.to_sgid.to_s,
+          additional_designation_sgid: registration.registrant.to_sgid.to_s,
+          amount_dollars: "50.00",
+          allocatable_sgid: registration.to_sgid.to_s
+        }
+      }
+
+      payment = Payment.last
+      expect(payment.payer_type).to eq("Organization")
+      expect(payment.organization).to eq(organization)
+      expect(payment.person).to eq(registration.registrant)
+    end
+
+    it "creates a payment from a person payer with no additional designation" do
+      post payments_path, params: {
+        payment: {
+          type: "CashPayment",
+          payer_sgid: registration.registrant.to_sgid.to_s,
+          additional_designation_sgid: "",
+          amount_dollars: "50.00",
+          allocatable_sgid: registration.to_sgid.to_s
+        }
+      }
+
+      payment = Payment.last
+      expect(payment.payer_type).to eq("Person")
+      expect(payment.person).to eq(registration.registrant)
+      expect(payment.organization).to be_nil
     end
   end
 end

@@ -1,7 +1,13 @@
 class SearchController < ApplicationController
   skip_before_action :preload_current_user_associations, raise: false
 
+  # Virtual "model" that searches people and organizations together, used by the
+  # compound payer / additional-designation pickers on the payment form.
+  COMPOUND_PAYER_MODEL = "person_or_organization".freeze
+
   def index
+    return render json: compound_payer_results if params[:model] == COMPOUND_PAYER_MODEL
+
     model_class = allowed_model(params[:model])
     unless model_class
       skip_verify_authorized!
@@ -32,6 +38,19 @@ class SearchController < ApplicationController
   end
 
   private
+
+  def compound_payer_results
+    authorize! Person, to: :search?
+    authorize! Organization, to: :search?
+
+    query = params[:q].to_s.strip
+    return [] if query.blank?
+
+    records = authorized_scope(Person.remote_search(query)).limit(25).to_a +
+      authorized_scope(Organization.remote_search(query)).limit(25).to_a
+
+    records.map(&:compound_search_label)
+  end
 
   def allowed_model(model_param)
     {
