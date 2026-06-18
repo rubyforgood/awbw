@@ -1751,12 +1751,22 @@ RSpec.describe "Events", type: :request do
       expect(notification.recipient_email).to eq(registration_one.registrant.preferred_email)
     end
 
+    it "stores the custom subject on each notification" do
+      post send_reminder_event_path(event), params: {
+        registration_ids: [ registration_one.id ],
+        custom_subject: "Don't miss our event!"
+      }
+
+      notification = Notification.find_by(kind: "event_registration_reminder", noticeable: registration_one)
+      expect(notification.custom_subject).to eq("Don't miss our event!")
+    end
+
     it "creates no notifications when nothing is selected" do
       expect {
         post send_reminder_event_path(event), params: { registration_ids: [] }
       }.not_to change(Notification, :count)
 
-      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: ""))
+      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: ""))
     end
   end
 

@@ -106,6 +106,22 @@ RSpec.describe EventMailer, type: :mailer do
       expect(mail.body.encoded).to include(event_registration.registrant.full_name)
     end
 
+    context "with a custom subject" do
+      let(:mail) { described_class.event_registration_reminder(event_registration, custom_subject: "Don't forget us tomorrow!") }
+
+      it "uses the custom subject verbatim" do
+        expect(mail.subject).to eq("Don't forget us tomorrow!")
+      end
+    end
+
+    context "with a blank custom subject" do
+      let(:mail) { described_class.event_registration_reminder(event_registration, custom_subject: " ") }
+
+      it "falls back to the default portal subject" do
+        expect(mail.subject).to include("Reminder: #{event_registration.event.title}")
+      end
+    end
+
     context "for a virtual event" do
       let(:event) { create(:event, videoconference_url: "https://zoom.us/j/123", videoconference_label: "Zoom") }
       let(:event_registration) { create(:event_registration, event: event) }

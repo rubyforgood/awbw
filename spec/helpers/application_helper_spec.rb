@@ -328,6 +328,25 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#default_reminder_subject" do
+    before do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("ORGANIZATION_NAME", "AWBW").and_return("A Window Between Worlds")
+    end
+
+    it "names the organization, event title, and formatted start date" do
+      event = build(:event, title: "Healing Workshop", start_date: Time.zone.local(2026, 8, 7, 18, 0))
+      expect(helper.default_reminder_subject(event))
+        .to eq("A Window Between Worlds Portal: Reminder: Healing Workshop – August 7, 2026")
+    end
+
+    it "omits the date suffix when the event has no start date" do
+      event = build(:event, title: "Healing Workshop", start_date: nil)
+      expect(helper.default_reminder_subject(event))
+        .to eq("A Window Between Worlds Portal: Reminder: Healing Workshop")
+    end
+  end
+
   describe "#event_registration_close_date_label" do
     it "is the month and day, without year, ordinal, or time" do
       event = build(:event, registration_close_date: Time.zone.local(2026, 8, 7, 8, 45))

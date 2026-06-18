@@ -42,11 +42,12 @@ class EventMailer < ApplicationMailer
     )
   end
 
-  def event_registration_reminder(event_registration, custom_message: nil, preview: false)
+  def event_registration_reminder(event_registration, custom_message: nil, custom_subject: nil, preview: false)
     @event_registration = event_registration
     @event = event_registration.event.decorate
     @person = event_registration.registrant
     @custom_message = custom_message.presence
+    @custom_subject = custom_subject.presence
     # When true, the HTML body always renders the custom-message container (even
     # when blank) with hooks the on-page preview's Stimulus controller fills in
     # live. Never set on a real send.
@@ -58,12 +59,15 @@ class EventMailer < ApplicationMailer
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
     @organization_website = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
-    subject = "Reminder: #{@event.title} – #{@event.start_date.in_time_zone(@time_zone).strftime('%B %-d, %Y')}"
+    # Admins can override the subject from the bulk-reminder page; fall back to
+    # the standard portal subject (e.g. on a resend that carries no custom value).
+    date_suffix = @event.start_date.present? ? " – #{@event.start_date.in_time_zone(@time_zone).strftime('%B %-d, %Y')}" : ""
+    default_subject = "#{@organization_name} Portal: Reminder: #{@event.title}#{date_suffix}"
     mail(
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW Portal: #{subject}"
+      subject: @custom_subject || default_subject
     )
   end
 

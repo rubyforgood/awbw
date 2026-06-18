@@ -268,11 +268,15 @@ class EventsController < ApplicationController
     # resolved now). Absent param = first load → default; a present-but-blank
     # param = the admin cleared it (e.g. bounced back here) → respect the blank.
     @custom_message = params.key?(:custom_message) ? params[:custom_message].to_s : helpers.default_reminder_message(days_until_event)
+    # Pre-fill the editable subject with the standard portal subject. Same
+    # absent-vs-present logic as the message, so a bounce-back keeps the admin's
+    # edit; a blank subject falls back to the default at send time.
+    @custom_subject = params.key?(:custom_subject) ? params[:custom_subject].to_s : helpers.default_reminder_subject(@event)
 
     if @sample_registration
       # Render in preview mode so the custom-message container is always present
       # in the markup for the live preview, even before any text is typed.
-      mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, preview: true)
+      mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, custom_subject: @custom_subject, preview: true)
       @reminder_preview_html = mail.html_part&.body&.decoded
     end
   end
@@ -281,13 +285,14 @@ class EventsController < ApplicationController
     authorize! @event, to: :send_reminder?
     allowed_ids = Array(params[:registration_ids]).map(&:to_i).reject(&:zero?)
     custom_message = params[:custom_message].to_s
+    custom_subject = params[:custom_subject].to_s
     registrations = @event.event_registrations
       .where(id: allowed_ids)
       .includes(registrant: [ :user, :contact_methods ])
       .select { |r| r.registrant.preferred_email.present? }
 
     if registrations.empty?
-      redirect_to preview_reminder_event_path(@event, custom_message: custom_message), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, custom_message: custom_message, custom_subject: custom_subject), alert: "Please select at least one recipient."
       return
     end
 
@@ -301,7 +306,8 @@ class EventsController < ApplicationController
         recipient_role: :person,
         recipient_email: event_registration.registrant.preferred_email,
         notification_type: 0,
-        custom_message: custom_message.presence
+        custom_message: custom_message.presence,
+        custom_subject: custom_subject.presence
       )
     end
 

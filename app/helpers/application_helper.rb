@@ -44,6 +44,15 @@ module ApplicationHelper
     "This is a reminder that you're registered for the following #{organization} event#{reminder_days_phrase(days_until_event)}."
   end
 
+  # Default subject line pre-filled into the editable subject field on the bulk
+  # reminder page (admins can edit it). Mirrors the mailer's fallback subject; the
+  # event date is event-level, resolved here in the app default time zone.
+  def default_reminder_subject(event)
+    organization = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    date_suffix = event.start_date.present? ? " – #{event.start_date.in_time_zone.strftime('%B %-d, %Y')}" : ""
+    "#{organization} Portal: Reminder: #{event.title}#{date_suffix}"
+  end
+
   # Tokens an admin can drop into a form header; each is filled from the event the
   # form is rendered for (see form_header_html). A standalone registration form is
   # shared across events, so the header can't hard-code event specifics. Each entry:

@@ -53,7 +53,8 @@ RSpec.describe NotificationMailerJob, type: :job do
           noticeable: event_registration,
           recipient_role: "person",
           recipient_email: event_registration.registrant.preferred_email,
-          custom_message: "Bring <strong>your supplies</strong>.")
+          custom_message: "Bring <strong>your supplies</strong>.",
+          custom_subject: "Don't forget us tomorrow!")
       end
 
       it "delivers the reminder and persists the body with the custom message" do
@@ -64,6 +65,12 @@ RSpec.describe NotificationMailerJob, type: :job do
         notification.reload
         expect(notification.delivered_at).to be_present
         expect(notification.email_body_html).to include("Bring <strong>your supplies</strong>.")
+      end
+
+      it "delivers with the notification's custom subject" do
+        described_class.new.perform(notification.id)
+
+        expect(ActionMailer::Base.deliveries.last.subject).to eq("Don't forget us tomorrow!")
       end
     end
   end

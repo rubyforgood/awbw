@@ -8,7 +8,8 @@ class EventMailerPreview < ActionMailer::Preview
     event_registration = sample_event_registration
     EventMailer.event_registration_reminder(
       event_registration,
-      custom_message: "This is a reminder that you're registered for the following A Window Between Worlds event <strong>tomorrow</strong>."
+      custom_message: "This is a reminder that you're registered for the following A Window Between Worlds event <strong>tomorrow</strong>.",
+      custom_subject: "A Window Between Worlds Portal: Reminder: see you tomorrow!"
     )
   end
 
