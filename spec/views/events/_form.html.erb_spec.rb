@@ -35,10 +35,10 @@ RSpec.describe "events/_form", type: :view do
     render
 
     expect(rendered).to have_selector("label", text: "Event title")
-    expect(rendered).to have_selector("label", text: "Event Cost")
+    expect(rendered).to have_selector("label", text: "Event cost")
     expect(rendered).to have_selector("h3", text: "Start")
     expect(rendered).to have_selector("h3", text: "End")
-    expect(rendered).to have_selector("h3", text: "Registration closed")
+    expect(rendered).to have_selector("h3", text: "Registration close")
     expect(rendered).to have_selector("label", text: "Published")
   end
 
