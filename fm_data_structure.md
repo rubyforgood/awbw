@@ -230,8 +230,8 @@ prj_FND__FundingviaTempID (grants/funding sources, 1,391 rows)
 
 prj_PTC__Participants (event participants/registrations, 68,497 rows)
   └─ EventID → prj_EVT__Events (event they registered for)
-  └─ PersonID → prj_RDX__Rolodex (individual person)
-  └─ PaymentID → prj_PMT__Payment (payment/link to payment record)
+  └─ ParticipantID → prj_RDX__Rolodex (individual person)
+  └─ PaymentID → prj_PMT__Payment (payment for this registration)
   └─ AllocRecID → prj_ALC__Allocations (funding allocation covering their participation)
 
 prj_PMT__Payment (donations and payments, 27,146 rows)
@@ -240,6 +240,14 @@ prj_PMT__Payment (donations and payments, 27,146 rows)
   └─ OrgID → prj_ORG__Organization (org linked to payment)
   └─ ProjectID → PRJ__Projects (project linked to payment)
 ```
+
+**Payments ↔ Participants bidirectional link:**
+The `PaymentID` (on Participants) and `ParticRecID` (on Payments) represent the same relationship — a payment **for** a participant's event registration. All `ParticRecID` values are unique (1-to-1). However, the data is inconsistent:
+- **3,618** payments have `ParticRecID` set → links to a participant
+- **3,139** participants have `PaymentID` set → backlink from participant to payment
+- Difference of **479** — those participant records were never backfilled with the `PaymentID`
+
+**Key finding: this link was redundant.** In every case where a payment has `ParticRecID`, the linked participant's `ParticipantID` matches the payment's `RolodexID` — the payer and the registered person are the same. And every linked participant has an `EventID` (no orphans). So the `ParticRecID`/`PaymentID` link adds no information beyond what `Payment.RolodexID = Participant.ParticipantID` already tells you.
 
 ### Notes
 - The `prj_psp_FND__Funding` table is an alias for `prj_FND__FundingviaTempID` (same data, same count 1,391).
