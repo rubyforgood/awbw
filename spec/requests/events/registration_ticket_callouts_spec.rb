@@ -24,6 +24,17 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response).to redirect_to(event_path(event))
     end
 
+    it "is publicly readable even when the event is not public" do
+      private_event = create(:event, :unpublished, :ended)
+      callout = create(:registration_ticket_callout, event: private_event,
+        title: "Parking", description: "<p>Use the north lot.</p>")
+
+      get event_registration_ticket_callout_path(private_event, callout)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Parking")
+    end
+
     it "does not find a callout belonging to a different event" do
       other_callout = create(:registration_ticket_callout, description: "<p>Hi.</p>")
 
