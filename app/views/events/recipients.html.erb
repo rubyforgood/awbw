@@ -174,7 +174,7 @@
               <dl class="space-y-4">
                 <% answers.each do |answer| %>
                   <div>
-                    <dt class="text-sm font-semibold text-gray-800"><%= answer.question_name_when_answered.presence || answer.form_field&.name %></dt>
+                    <dt class="text-sm font-semibold text-gray-800"><%= display_question_label(answer.form_field, answer) %></dt>
                     <dd class="mt-1 text-sm text-gray-700 whitespace-pre-line"><%= resolve_answer_text(answer.form_field, answer.submitted_answer) %></dd>
                   </div>
                 <% end %>

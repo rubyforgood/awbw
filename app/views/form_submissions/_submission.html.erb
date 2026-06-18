@@ -18,7 +18,7 @@
       </div>
     <% else %>
       <div class="py-2">
-        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide"><%= field.name %></dt>
+        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide"><%= display_question_label(field, response) %></dt>
         <dd class="mt-1 text-sm text-gray-900">
           <%= response&.submitted_answer.presence || tag.span("—", class: "text-gray-400") %>
         </dd>
