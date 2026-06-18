@@ -118,6 +118,23 @@ RSpec.describe "EventRegistrations", type: :request do
         registration = EventRegistration.last
         expect(response).to redirect_to(confirm_event_registration_path(registration, return_to: "registrants"))
       end
+
+      it "handles a concurrent duplicate insert without raising" do
+        # Simulate the race where two requests both pass the uniqueness
+        # validation before either inserts, so the DB unique index rejects the
+        # second insert. The controller must rescue this and not 500.
+        allow_any_instance_of(EventRegistration).to receive(:save).and_raise(
+          ActiveRecord::RecordNotUnique.new("Duplicate entry")
+        )
+
+        expect {
+          post event_registrations_path,
+               params: { return_to: "registrants", event_registration: { event_id: event.id, registrant_id: regular_user.person.id } }
+        }.not_to change(EventRegistration, :count)
+
+        expect(response).to redirect_to(registrants_event_path(event))
+        expect(flash[:alert]).to be_present
+      end
     end
 
     describe "GET /event_registrations/:id/confirm" do
@@ -232,6 +249,17 @@ RSpec.describe "EventRegistrations", type: :request do
         existing_registration.reload
         expect(existing_registration.ce_hours_requested).to eq(5)
         expect(existing_registration.ce_license_number).to eq("LIC-987")
+      end
+
+      it "sets the shout-out flag and stores the shout-out text on the registrant" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: {
+                shoutout: "1",
+                registrant_attributes: { id: existing_registration.registrant_id, shoutout_text: "Grateful to bring art to survivors." }
+              } }
+
+        expect(existing_registration.reload.shoutout).to be(true)
+        expect(existing_registration.registrant.reload.shoutout_text).to eq("Grateful to bring art to survivors.")
       end
     end
 

@@ -66,15 +66,14 @@ class EventRegistrationsController < ApplicationController
         }
       end
     else
-      respond_to do |format|
-        format.html {
-          case params[:return_to]
-          when "registrants" then redirect_to registrants_event_path(@event_registration.event), alert: @event_registration.errors.full_messages.to_sentence
-          else redirect_to event_registrations_path, alert: @event_registration.errors.full_messages.to_sentence
-          end
-        }
-      end
+      redirect_after_failed_create(@event_registration.errors.full_messages.to_sentence)
     end
+  rescue ActiveRecord::RecordNotUnique
+    # The uniqueness validation isn't atomic with the insert, so a concurrent
+    # request or double-submit can slip past it and hit the DB unique index on
+    # (registrant_id, event_id). Treat it the same as a duplicate validation
+    # failure instead of surfacing a 500.
+    redirect_after_failed_create("This person is already registered for this event.")
   end
 
   def update
@@ -254,6 +253,13 @@ class EventRegistrationsController < ApplicationController
 
   private
 
+  def redirect_after_failed_create(alert)
+    case params[:return_to]
+    when "registrants" then redirect_to registrants_event_path(@event_registration.event), alert: alert
+    else redirect_to event_registrations_path, alert: alert
+    end
+  end
+
   def set_event_registration
     @event_registration = EventRegistration.includes({ registrant: [ :user, { affiliations: :organization } ] }, { event: [ :location, :event_forms ] }, :organizations, comments: [ :created_by, :updated_by ]).find(params[:id])
   end
@@ -263,11 +269,13 @@ class EventRegistrationsController < ApplicationController
     params.require(:event_registration).permit(
       :event_id, :registrant_id, :status,
       :scholarship_requested,
+      :shoutout,
       :intends_to_pay,
       :ce_credit_requested,
       :ce_hours_requested,
       :ce_license_number,
       organization_ids: [],
+      registrant_attributes: [ :id, :shoutout_text ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: [ :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id ]
     )
