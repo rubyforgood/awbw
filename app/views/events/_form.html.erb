@@ -21,7 +21,8 @@
                       "w-full rounded border-gray-300 shadow-sm px-3 py-2
                                                 focus:ring-blue-500 focus:border-blue-500",
                   } %>
-          <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page", wrapper_html: { class: "mb-0!" } %>
+          <%# mt-6 offsets the Pre-title hint on the right so this checkbox lines up with "Facilitator training event" %>
+          <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page", wrapper_html: { class: "mb-0! mt-6" } %>
         </div>
         <div>
           <%= f.input :pre_title,
