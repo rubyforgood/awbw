@@ -154,6 +154,39 @@ class Organization < ApplicationRecord
     [ organization_locality, first_active&.state ].compact_blank.join(", ")
   end
 
+  # Actual "City, State" of the program, from the first active address — the
+  # location column on the scholarship index. (Distinct from #city_state, which
+  # reports the broader locality bucket rather than the literal city.)
+  def program_location
+    first_active = if addresses.loaded?
+      addresses.find { |a| !a.inactive? }
+    else
+      addresses.active.first
+    end
+    return unless first_active
+
+    [ first_active.city, first_active.state ].compact_blank.join(", ").presence
+  end
+
+  # Status of this organization as an AWBW "program," relative to a scholarship
+  # recipient — the New/Ongoing/Reinstate column on the scholarship index:
+  #   * "Reinstate" — the org has facilitator affiliations but none are currently
+  #     active (it is returning after a lapse);
+  #   * "Ongoing"   — the org has facilitator affiliations beyond this recipient
+  #     (an established program);
+  #   * "New"       — no prior facilitator affiliations (this recipient is the
+  #     program's first).
+  # Heuristic based on affiliations (computed in memory to reuse a preloaded
+  # association); confirm the exact business rule with the team.
+  def program_status(recipient = nil)
+    facilitators = affiliations.select(&:facilitator?)
+    return "New" if facilitators.empty?
+    return "Reinstate" if facilitators.none?(&:active?)
+
+    prior = recipient ? facilitators.reject { |a| a.person_id == recipient.id } : facilitators
+    prior.any? ? "Ongoing" : "New"
+  end
+
   def type_name
     "#{name} #{ " (#{windows_type.short_name})" if windows_type}"
   end

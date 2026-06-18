@@ -117,7 +117,7 @@ Rails.application.routes.draw do
   end
   resources :form_submissions, only: [ :show ]
   resources :grants
-  resources :scholarships, only: [ :new, :create, :show, :edit, :update, :destroy ] do
+  resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
     member { patch :toggle_tasks }
   end
   resources :discounts, only: [ :create, :show, :destroy ] do

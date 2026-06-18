@@ -1,0 +1,18 @@
+<%# Top-level disclosure: one funder, with its grants nested inside. The chevron
+    rotates with this details' own open state (group/card → group-open/card). %>
+<details class="group/card rounded-xl border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> bg-white shadow-sm overflow-hidden" open>
+  <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden <%= DomainTheme.bg_class_for(:scholarships) %> px-5 py-4">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0 text-gray-900">
+        <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
+        <span class="text-lg font-semibold truncate"><%= funder_badge(funder_group) %></span>
+        <span class="inline-flex items-center rounded-full <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> bg-white px-2 py-0.5 text-xs font-semibold tabular-nums"><%= funder_group.count %></span>
+      </div>
+      <div class="shrink-0 text-sm font-semibold text-gray-700 tabular-nums"><%= number_to_currency(funder_group.total_cents / 100.0) %></div>
+    </div>
+  </summary>
+
+  <div class="px-3 sm:px-5 py-4 space-y-3 border-t <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %>">
+    <%= render partial: "grant_group", collection: funder_group.grant_groups, as: :grant_group %>
+  </div>
+</details>

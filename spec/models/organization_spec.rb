@@ -235,3 +235,46 @@ RSpec.describe Organization do
     end
   end
 end
+
+RSpec.describe Organization, "scholarship index helpers" do
+  describe "#program_location" do
+    it "returns the City, State of the first active address" do
+      org = create(:organization)
+      create(:address, addressable: org, city: "Stockton", state: "CA")
+
+      expect(org.program_location).to eq("Stockton, CA")
+    end
+
+    it "is nil without an active address" do
+      expect(create(:organization).program_location).to be_nil
+    end
+  end
+
+  describe "#program_status" do
+    let(:org) { create(:organization) }
+    let(:recipient) { create(:person) }
+
+    it "is New when the recipient is the org's only facilitator" do
+      create(:affiliation, person: recipient, organization: org, title: "Facilitator")
+
+      expect(org.reload.program_status(recipient)).to eq("New")
+    end
+
+    it "is Ongoing when another facilitator already serves the org" do
+      create(:affiliation, person: recipient, organization: org, title: "Facilitator")
+      create(:affiliation, person: create(:person), organization: org, title: "Facilitator")
+
+      expect(org.reload.program_status(recipient)).to eq("Ongoing")
+    end
+
+    it "is Reinstate when the org's facilitator affiliations have all lapsed" do
+      create(:affiliation, person: recipient, organization: org, title: "Facilitator", end_date: 1.year.ago.to_date)
+
+      expect(org.reload.program_status(recipient)).to eq("Reinstate")
+    end
+
+    it "is New when the org has no facilitator affiliations" do
+      expect(org.program_status(recipient)).to eq("New")
+    end
+  end
+end

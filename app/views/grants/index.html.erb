@@ -22,7 +22,13 @@
         </div>
       </div>
 
-      <div class="shrink-0 text-right text-end">
+      <div class="shrink-0 flex items-center gap-2 text-right text-end">
+        <% if allowed_to?(:index?, Scholarship) %>
+          <%= link_to scholarships_path, class: "btn btn-primary-outline" do %>
+            <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+            <%= Scholarship.model_name.human.pluralize %>
+          <% end %>
+        <% end %>
         <% if allowed_to?(:new?, Grant) %>
           <%= link_to new_grant_path, class: "admin-only bg-blue-100 btn btn-primary-outline" do %>
             <i class="fa-solid fa-plus" aria-hidden="true"></i>

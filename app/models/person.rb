@@ -192,6 +192,27 @@ class Person < ApplicationRecord
       .first&.organization
   end
 
+  # The organization a person facilitates for — the org on their (active, most
+  # recent) facilitator affiliation. This is the "program" a scholarship serves.
+  # Falls back to any facilitator affiliation when none is currently active.
+  # Selects in memory so a preloaded affiliations association (the scholarship
+  # index eager-loads it) is reused rather than re-queried per recipient.
+  def program_organization
+    facilitator_affiliations = affiliations.select(&:facilitator?)
+    active = facilitator_affiliations.select(&:active?).max_by(&:updated_at)
+    (active || facilitator_affiliations.max_by(&:updated_at))&.organization
+  end
+
+  # Facilitator-training events ("TACs") this person registered for and
+  # completed (attended). Drives the training column on the scholarship index.
+  # Filters in memory to reuse a preloaded event_registrations → event chain.
+  def completed_facilitator_trainings
+    event_registrations
+      .select { |r| r.status == "attended" && r.event&.facilitator_training? }
+      .filter_map(&:event)
+      .uniq
+  end
+
   def preferred_email
     user&.email.presence || email.presence || email_2.presence
   end
