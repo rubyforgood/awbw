@@ -2,6 +2,21 @@ class ScholarshipsController < ApplicationController
   before_action :set_scholarship, only: [ :show, :edit, :update, :destroy, :toggle_tasks ]
   before_action :set_grant, only: [ :new, :create ]
 
+  def index
+    authorize! Scholarship
+    # Eager-load everything the grid derives so each row's funder, program,
+    # location, training, and status cells add no per-row queries:
+    #   * grant → donor for the funder grouping;
+    #   * recipient → affiliations → organization → addresses for program/location/status;
+    #   * recipient → event_registrations → event for the attended-training column.
+    scholarships = authorized_scope(Scholarship.all).includes(
+      { grant: :donor },
+      { recipient: [ { affiliations: { organization: :addresses } }, { event_registrations: :event } ] }
+    )
+    @funder_groups = ScholarshipsGrouping.new(scholarships).funder_groups
+    @scholarships_count = scholarships.size
+  end
+
   def show
     @scholarship = Scholarship.find(params[:id])
     authorize! @scholarship
