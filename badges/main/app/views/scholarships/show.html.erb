@@ -12,7 +12,7 @@
   <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
     <div>
       <dt class="text-sm font-medium text-gray-500">Amount</dt>
-      <dd class="mt-1 text-sm text-gray-900"><%= number_to_currency(@scholarship.amount_dollars) %></dd>
+      <dd class="mt-1 text-sm text-gray-900"><%= dollars_from_cents(@scholarship.amount_cents) %></dd>
     </div>
     <div>
       <dt class="text-sm font-medium text-gray-500">Tasks Completed</dt>

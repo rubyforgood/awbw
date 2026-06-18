@@ -34,7 +34,7 @@ RSpec.describe "Event registration edit page", type: :system do
         expect(page).to have_text(/amount allocated/i)
         expect(page).to have_text(/amount due/i)
         expect(page).to have_text("$10.99")
-        expect(page).to have_text("$0.00")
+        expect(page).to have_text("$0")
       end
     end
 
@@ -47,7 +47,7 @@ RSpec.describe "Event registration edit page", type: :system do
 
       within("section", text: "Registration payments and allocations") do
         expect(page).to have_text(/amount allocated/i)
-        expect(page).to have_text("$10.00")
+        expect(page).to have_text("$10")
         expect(page).to have_no_text("Source")
       end
     end

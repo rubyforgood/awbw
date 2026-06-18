@@ -108,6 +108,30 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - Avoid `.titleize` for user-facing labels — it produces title case
 - **Exception:** when a category type name prefixes a category name (e.g., "Age Range: 3-5"), use `.titleize` for the prefix
 
+## Currency display
+
+**Always display money with the `dollars_from_cents(cents)` helper** (`app/helpers/application_helper.rb`),
+which delegates to the **`MoneyFormatter`** PORO (`app/services/money_formatter.rb`).
+It takes an integer **cents** amount and renders `$1,500.50` when there are cents and `$1,500`
+(no trailing `.00`) when the amount is a whole number of dollars. The helper is display-only — keep
+storing and calculating in integer cents. For an abbreviated figure in tight UI (e.g. the grant
+picker), use `MoneyFormatter.compact_from_cents(cents)` (`$12.5k`, `$1.2m`) — also cents-based.
+
+- **Pass cents, not dollars.** Use the `*_cents` column/accessor (`amount_cents`,
+  `amount_cents_remaining`, `allocation.amount`, etc.), not `amount_dollars`. Don't prepend a literal
+  `$` — the helper includes it.
+- **Do NOT use** `number_to_currency`, `format("%.2f", …)`, or the naked `"%.2f" % x` operator to show
+  money. They always print `.00` and reintroduce the inconsistency this helper exists to remove.
+  (`number_to_currency` is fine only inside the helper definition itself.)
+- **In decorators**, call it via `h.dollars_from_cents(...)`; **in controllers**, via
+  `helpers.dollars_from_cents(...)`. In a **model** or other PORO (no view-helper access), call
+  `MoneyFormatter.dollars_from_cents(cents)` directly (e.g. validation messages) — don't fall back to
+  `format("%.2f", …)`, which reprints `.00`.
+- **Mirror the same rule in JavaScript** when a Stimulus controller renders a live money figure: drop
+  the cents for whole-dollar amounts, keep two decimals otherwise (see `formatDollars` in
+  `scholarship_preview_controller.js`). Keep the server-rendered initial value and the JS-updated value
+  formatted identically.
+
 ## HTML/ERB Formatting
 
 ### Tag Attributes

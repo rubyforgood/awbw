@@ -46,6 +46,9 @@ export default class extends Controller {
 
     const hours = Math.max(0, parseInt(this.hoursTarget.value, 10) || 0)
     const owed = hours * this.rateValue
-    this.amountTarget.textContent = `$${owed.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    // Mirror the dollars_from_cents helper: drop the cents when the amount is a
+    // whole number of dollars, keep two decimals otherwise.
+    const fractionDigits = Number.isInteger(owed) ? 0 : 2
+    this.amountTarget.textContent = `$${owed.toLocaleString("en-US", { minimumFractionDigits: fractionDigits, maximumFractionDigits: 2 })}`
   }
 }

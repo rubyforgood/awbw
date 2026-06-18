@@ -856,7 +856,7 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Registration fees")
         expect(response.body).to include("CE fees")
         expect(response.body).to include("Paid")
-        expect(response.body).to include("$60.00")
+        expect(response.body).to include("$60")
       end
 
       it "shows unallocated bulk payments in the equation, linking to the bulk payments page" do
@@ -1182,7 +1182,7 @@ RSpec.describe "Events", type: :request do
         get recipients_event_path(event)
 
         expect(response.body).to include('data-scholarship-status-toggle-target="status"')
-        expect(response.body).to include("$500.00")
+        expect(response.body).to include("$500")
         expect(response.body).to include("Tasks completed")
       end
 
@@ -1216,7 +1216,7 @@ RSpec.describe "Events", type: :request do
 
         get recipients_event_path(event)
 
-        expect(response.body).to include("$10.00")
+        expect(response.body).to include("$10")
         expect(response.body).to include("Tasks outstanding")
       end
 
