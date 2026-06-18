@@ -110,7 +110,7 @@
                         <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
                                     title: "View #{reg.registrant.name}'s registration for #{@event.title}",
                                     class: "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
-                          <i class="fa-solid fa-pen-to-square text-gray-400"></i>
+                          <i class="fa-solid fa-clipboard-list text-gray-400"></i>
                           <% if remaining_cents.zero? %>
                             <span class="font-semibold text-gray-500 whitespace-nowrap">Paid</span>
                           <% else %>
