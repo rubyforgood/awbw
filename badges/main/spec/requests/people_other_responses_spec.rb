@@ -40,11 +40,11 @@ RSpec.describe "Person Other form responses", type: :request do
     it "shows the Other workshop setting near the category checkboxes" do
       category_type = create(:category_type, :published, profile_specific: true)
       create(:category, :published, category_type: category_type)
-      answer("workshop_environments", "Other: Equine center")
+      answer("primary_age_group", "Other: Toddlers")
 
       get edit_person_path(person)
 
-      expect(response.body).to include("Equine center")
+      expect(response.body).to include("Toddlers")
     end
   end
 end

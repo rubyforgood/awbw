@@ -29,8 +29,6 @@ class FormField < ApplicationRecord
   # CategoryType's published categories. The submitted value is a Category id
   # (as a string). Maps the field identifier to its backing CategoryType name.
   DYNAMIC_FIELD_CATEGORY_TYPES = {
-    "workshop_environments" => "WorkshopEnvironment",
-    "client_life_experiences" => "StoryPopulation",
     "primary_age_group" => "AgeRange",
     "additional_age_group" => "AgeRange"
   }.freeze

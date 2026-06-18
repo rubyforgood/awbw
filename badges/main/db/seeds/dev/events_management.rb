@@ -801,11 +801,15 @@ end
 
 puts "Tagging registrants with life experiences and workshop settings…"
 # The background page charts registrants' StoryPopulation (life experiences) and
-# WorkshopEnvironment (settings) tags — the same tags public registration writes
-# from the "Client life experiences" and "Workshop environments" checkboxes (see
-# PublicRegistration#assign_tags). The seed form submissions above only fill text
-# fields, so without this the data-rich trainings' background charts are empty.
-# Tag each active registrant with a deterministic spread so re-seeding is idempotent.
+# WorkshopEnvironment (settings) tags. Public registration no longer collects these
+# (the "Workshop settings" and "Client life experiences" questions were removed), but
+# the charts are retained for historical data and admin-applied tags, so seed a
+# deterministic spread here so older trainings' background charts aren't empty.
+#
+# These tags live on the Person, not per-registration, so anyone registered for the
+# flagship "AWBW Facilitator Training" (event #1) would surface on its charts too.
+# Keep event #1 clean by never tagging its registrants, and by stripping any such
+# tags a prior seed left on them.
 life_experience_categories = Category.joins(:category_type)
   .where(category_types: { name: "StoryPopulation" })
   .order(:name).to_a
@@ -820,10 +824,17 @@ pick_categories = ->(categories, i, offset) do
   [ categories[i % categories.size], categories[(i + offset) % categories.size] ]
 end
 
-[ facilitator_training, trauma_training ].compact.each do |evt|
+flagship_registrant_ids = facilitator_training&.event_registrations&.active&.pluck(:registrant_id) || []
+CategorizableItem.joins(category: :category_type)
+  .where(categorizable_type: "Person", categorizable_id: flagship_registrant_ids)
+  .where(category_types: { name: [ "WorkshopEnvironment", "StoryPopulation" ] })
+  .destroy_all
+
+[ trauma_training, wellness_day, youth_day, mindful_art, virtual_session, roundtable, family_day ].compact.each do |evt|
   evt.event_registrations.active.includes(:registrant).each_with_index do |registration, i|
     person = registration.registrant
     next unless person
+    next if flagship_registrant_ids.include?(person.id)
 
     # Each registrant gets two life experiences and two settings, offset by their
     # position so the charts show a realistic spread across categories.
@@ -942,20 +953,18 @@ form_submissions.each do |data|
   end
 end
 
-puts "Giving Amy free-text \"Other\" answers on her Facilitator Training submission…"
-# Demo data for the "Other" chips on the person profile + edit pages: a registrant
+puts "Giving Amy a free-text \"Other\" answer on her Facilitator Training submission…"
+# Demo data for the "Other" chip on the person profile + edit pages: a registrant
 # who picked the "Other" option (folded into "Other: <text>") on a sector-backed
-# field (Additional sectors) and a category-backed field (Workshop Settings).
-# These free-text values can't be Sector/Category records, so they only surface
-# via Person#other_service_area_responses / #other_workshop_setting_responses.
+# field (Additional sectors). The free-text value can't be a Sector record, so it
+# only surfaces via Person#other_service_area_responses.
 # Seeded before the professional-answer enrichment below so the primary_service_area
 # value survives its "skip if already answered" guard. Idempotent.
 if facilitator_training && amy_person
   amy_submission = FormSubmission.find_by(person: amy_person, form: facilitator_training.registration_form)
   if amy_submission
     {
-      "primary_service_area" => "Other: Equine-assisted therapy",
-      "workshop_environments" => "Other: Mobile art van"
+      "primary_service_area" => "Other: Equine-assisted therapy"
     }.each do |identifier, value|
       field = amy_submission.form.form_fields.find_by(field_identifier: identifier)
       next unless field
@@ -1136,31 +1145,27 @@ if facilitator_training
   end
 end
 
-puts "Adding shout-out bios to scholarship recipients' organizations…"
-# The recipients page "Shout out scholarship programs" section pairs each
-# scholarship recipient with their affiliated organization and that org's bio
-# (description). Seed orgs ship without a description, so the section renders
-# empty. Back-fill a realistic, hard-coded bio onto each scholarship recipient's
-# program — only when blank, so any real data is preserved. update_columns skips
-# validations/callbacks, which is fine for seed back-fill.
-shoutout_bios = [
-  "Provides trauma-informed art workshops and wraparound support to survivors of domestic violence and their children.",
-  "Offers emergency shelter, counseling, and economic-empowerment programs that help families rebuild after abuse.",
-  "Runs community-based healing circles and advocacy services for survivors across historically underserved neighborhoods.",
-  "Delivers culturally responsive crisis intervention, legal advocacy, and long-term recovery programming.",
-  "Supports survivors through safe housing, peer support, and creative-expression programming for all ages.",
-  "Champions prevention education and survivor-led programming to break cycles of violence in the community."
+puts "Featuring scholarship recipients with shout-outs…"
+# The recipients page "Shout outs" block features registrants the admin opted in
+# (EventRegistration#shoutout) whose profile carries shout-out text
+# (Person#shoutout_text). Seed people ship without either, so the block renders
+# empty. Opt in each scholarship recipient on the data-rich trainings and give
+# them realistic shout-out text — only filling blank text, so real data is
+# preserved. update_columns skips validations/callbacks, fine for seed back-fill.
+shoutout_texts = [
+  "Grateful for the chance to bring trauma-informed art workshops to the survivors and children we serve.",
+  "This training helps me give emergency-shelter families a creative way to begin rebuilding after abuse.",
+  "Proud to run community healing circles for survivors across our historically underserved neighborhoods.",
+  "Honored to deliver culturally responsive crisis intervention and long-term recovery programming.",
+  "Art has become our community's safest room — thank you for helping us hold that space for all ages.",
+  "Determined to keep survivor-led prevention work breaking cycles of violence where I live."
 ]
 
-recipient_orgs = [ facilitator_training, trauma_training ].compact
-  .flat_map { |evt| EventDashboard.new(evt).scholarship_applicants }
-  .uniq
-  .filter_map { |person| person.affiliations.reject(&:inactive?).filter_map(&:organization).first }
-  .uniq(&:id)
-
-recipient_orgs.each_with_index do |org, i|
-  next if org.description.present?
-  org.update_columns(description: shoutout_bios[i % shoutout_bios.size])
+[ facilitator_training, trauma_training ].compact.each do |evt|
+  EventDashboard.new(evt).scholarship_applicants.each_with_index do |person, i|
+    person.update_columns(shoutout_text: shoutout_texts[i % shoutout_texts.size]) if person.shoutout_text.blank?
+    evt.event_registrations.active.find_by(registrant: person)&.update_columns(shoutout: true)
+  end
 end
 
 puts "Recording school districts on registrant addresses…"

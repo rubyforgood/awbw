@@ -269,11 +269,13 @@ class EventRegistrationsController < ApplicationController
     params.require(:event_registration).permit(
       :event_id, :registrant_id, :status,
       :scholarship_requested,
+      :shoutout,
       :intends_to_pay,
       :ce_credit_requested,
       :ce_hours_requested,
       :ce_license_number,
       organization_ids: [],
+      registrant_attributes: [ :id, :shoutout_text ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: [ :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id ]
     )

@@ -75,13 +75,13 @@ RSpec.describe EventHelper, type: :helper do
 
   describe "#resolve_answer_text" do
     it "maps category ids to names while preserving an 'Other: <text>' token" do
-      category_type = create(:category_type, name: "StoryPopulation")
-      veterans = create(:category, :published, category_type: category_type, name: "Veterans")
-      field = build_stubbed(:form_field, field_identifier: "client_life_experiences")
+      category_type = create(:category_type, name: "AgeRange")
+      age_group = create(:category, :published, category_type: category_type, name: "3-5")
+      field = build_stubbed(:form_field, field_identifier: "primary_age_group")
 
-      result = helper.resolve_answer_text(field, "#{veterans.id}, Other: refugees")
+      result = helper.resolve_answer_text(field, "#{age_group.id}, Other: toddlers")
 
-      expect(result).to eq("Veterans, Other: refugees")
+      expect(result).to eq("3-5, Other: toddlers")
     end
   end
 

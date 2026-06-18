@@ -228,12 +228,12 @@ RSpec.describe "Forms", type: :request do
     end
 
     it "warns when a dynamic (category-backed) dropdown sources an Other option" do
-      category_type = create(:category_type, name: "StoryPopulation")
-      create(:category, :published, category_type: category_type, name: "Veterans")
+      category_type = create(:category_type, name: "AgeRange")
+      create(:category, :published, category_type: category_type, name: "3-5")
       create(:category, :published, category_type: category_type, name: "Other")
       form = create(:form, :standalone)
       create(:form_field, form: form, answer_type: :single_select_dropdown,
-             field_identifier: "client_life_experiences", name: "Populations")
+             field_identifier: "primary_age_group", name: "Primary Age Group(s) Served")
 
       get edit_form_path(form)
 
