@@ -62,7 +62,7 @@ class EventMailer < ApplicationMailer
     # Admins can override the subject from the bulk-reminder page; fall back to
     # the standard portal subject (e.g. on a resend that carries no custom value).
     date_suffix = @event.start_date.present? ? " – #{@event.start_date.in_time_zone(@time_zone).strftime('%B %-d, %Y')}" : ""
-    default_subject = "#{@organization_name} Portal: Reminder: #{@event.title}#{date_suffix}"
+    default_subject = "AWBW Portal: Reminder: #{@event.title}#{date_suffix}"
     mail(
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),

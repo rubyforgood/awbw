@@ -48,9 +48,8 @@ module ApplicationHelper
   # reminder page (admins can edit it). Mirrors the mailer's fallback subject; the
   # event date is event-level, resolved here in the app default time zone.
   def default_reminder_subject(event)
-    organization = ENV.fetch("ORGANIZATION_NAME", "AWBW")
     date_suffix = event.start_date.present? ? " – #{event.start_date.in_time_zone.strftime('%B %-d, %Y')}" : ""
-    "#{organization} Portal: Reminder: #{event.title}#{date_suffix}"
+    "AWBW Portal: Reminder: #{event.title}#{date_suffix}"
   end
 
   # Tokens an admin can drop into a form header; each is filled from the event the

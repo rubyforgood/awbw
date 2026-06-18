@@ -596,4 +596,30 @@ RSpec.describe EventRegistration, type: :model do
       expect(slugs.uniq.size).to eq(10)
     end
   end
+
+  describe "#account_status" do
+    def registration_for(person)
+      create(:event_registration, registrant: person)
+    end
+
+    it "is none when the registrant has no user account" do
+      expect(registration_for(create(:person, user: nil)).account_status).to eq("none")
+    end
+
+    it "is has_access for a confirmed, unlocked, active account" do
+      expect(registration_for(create(:person)).account_status).to eq("has_access")
+    end
+
+    it "is invited when the account is pending but was sent a welcome" do
+      person = create(:person)
+      person.user.update!(confirmed_at: nil, welcome_instructions_sent_at: Time.current)
+      expect(registration_for(person).account_status).to eq("invited")
+    end
+
+    it "is no_access when the account cannot sign in and has no pending invite" do
+      person = create(:person)
+      person.user.update!(confirmed_at: nil, welcome_instructions_sent_at: nil)
+      expect(registration_for(person).account_status).to eq("no_access")
+    end
+  end
 end
