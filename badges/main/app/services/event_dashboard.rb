@@ -53,7 +53,9 @@ class EventDashboard
   def scholarship_applicants
     @scholarship_applicants ||= Person
       .where(id: scholarship_applicant_ids)
-      .includes(:sectors, { categories: :category_type }, { affiliations: :organization })
+      .includes(:sectors, { categories: :category_type },
+                { categorizable_items: { category: :category_type } },
+                { affiliations: :organization })
       .sort_by(&:name)
   end
 

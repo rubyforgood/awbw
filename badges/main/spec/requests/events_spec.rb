@@ -1255,6 +1255,21 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Pat Plain")
       end
 
+      it "renders each recipient's tagged age groups as chips, primary ones starred" do
+        age_type = create(:category_type, name: "AgeRange", published: true)
+        teens = create(:category, :published, category_type: age_type, name: "13-17")
+        adults = create(:category, :published, category_type: age_type, name: "18+")
+        applicant.tag_age_groups(primary_ids: [ teens.id ], additional_ids: [ adults.id ])
+
+        get recipients_event_path(event)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_content("13-17")
+        expect(page).to have_content("18+")
+        # The primary group leads with the starred amber chip from the shared partial.
+        expect(page).to have_css("span.text-amber-800 i.fa-star")
+      end
+
       it "shows the org linked to its website on the left and the bold recipient name linked to their profile on the right" do
         applicant.update!(shoutout_text: "Grateful to bring art to the survivors we serve.")
         event.event_registrations.find_by(registrant: applicant).update!(shoutout: true)
