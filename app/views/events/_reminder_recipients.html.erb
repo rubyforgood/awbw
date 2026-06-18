@@ -50,8 +50,10 @@
               <% end %>
             </td>
             <td class="px-4 py-2 text-right">
-              <%= link_to edit_event_registration_path(reg, return_to: "preview_reminder", reminder_filters: reminder_filter_params(params)),
-                          title: "View #{person.full_name}'s registration for #{@event.title}",
+              <%# Opens in a new tab so the in-progress subject/message draft on this page isn't lost. %>
+              <%= link_to edit_event_registration_path(reg, return_to: "preview_reminder"),
+                          title: "View #{person.full_name}'s registration for #{@event.title} (opens in a new tab)",
+                          target: "_blank", rel: "noopener",
                           class: "inline-flex items-center shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                 <i class="fa-solid fa-clipboard-list text-gray-400"></i>
               <% end %>

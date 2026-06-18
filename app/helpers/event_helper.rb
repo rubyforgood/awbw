@@ -71,21 +71,6 @@ module EventHelper
     )
   end
 
-  # Recipient filters the send-reminders page had active, sliced to the known
-  # filter keys so we only ever echo recognized params. Used to carry the filters
-  # into a registration edit (nested under `reminder_filters`) and to re-apply
-  # them when returning. See ReminderRecipientFilter and app/views/events/_reminder_recipients.html.erb.
-  def reminder_filter_params(source = params[:reminder_filters])
-    return {} if source.blank?
-    source.permit(*ReminderRecipientFilter::FILTER_KEYS).to_h.compact_blank
-  end
-
-  # Back link to the send-reminders page, re-applying whatever recipient filters
-  # were active when the admin opened a registration from it.
-  def preview_reminder_return_path(event)
-    preview_reminder_event_path(event, reminder_filter_params)
-  end
-
   def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil)
     bg = DomainTheme.bg_class_for(:events, intensity: 100)
     hover_bg = DomainTheme.bg_class_for(:events, intensity: 100, hover: true)

@@ -1,9 +1,5 @@
 <%= simple_form_for(event_registration, data: { turbo: false }) do |f| %>
   <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
-  <%# Carry the send-reminders recipient filters so the page re-applies them on return. %>
-  <% reminder_filter_params.each do |key, value| %>
-    <%= hidden_field_tag "reminder_filters[#{key}]", value %>
-  <% end %>
   <%= render "shared/errors", resource: event_registration if event_registration.errors.any? %>
 
   <div data-controller="org-toggle" data-org-toggle-remote-select-outlet="#org-search" class="space-y-6">
@@ -407,7 +403,7 @@
       <% cancel_path = case params[:return_to]
                        when "registrants" then registrants_event_path(event_registration.event)
                        when "index" then event_registrations_path
-                       when "preview_reminder" then preview_reminder_return_path(event_registration.event)
+                       when "preview_reminder" then preview_reminder_event_path(event_registration.event)
                        else allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
                        end %>
 
