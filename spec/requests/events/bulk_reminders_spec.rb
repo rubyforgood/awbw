@@ -61,6 +61,27 @@ RSpec.describe "Events::BulkReminders", type: :request do
     end
   end
 
+  describe "editing a registration from the picker" do
+    it "links each registration edit back to the picker carrying the active filters" do
+      get preview_reminder_event_path(event, name: "jane"),
+          headers: { "Turbo-Frame" => "reminder_recipients" }
+
+      link = Nokogiri::HTML(response.body)
+        .at_css("a[href*='#{edit_event_registration_path(jane)}']")
+      expect(link).to be_present
+      expect(link["href"]).to include("return_to=preview_reminder")
+      expect(link["href"]).to include("reminder_filters%5Bname%5D=jane")
+    end
+
+    it "redirects back to the picker re-applying the filters after save" do
+      patch event_registration_path(jane),
+            params: { return_to: "preview_reminder", reminder_filters: { name: "jane" },
+                      event_registration: { ce_credit_requested: "1" } }
+
+      expect(response).to redirect_to(preview_reminder_event_path(event, name: "jane"))
+    end
+  end
+
   describe "sending" do
     it "creates one reminder notification per selected registrant and one admin FYI" do
       expect {
