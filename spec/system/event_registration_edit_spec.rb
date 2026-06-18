@@ -29,7 +29,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Registration allocations") do
+      within("section", text: "Registration payments and allocations") do
         expect(page).to have_text(/registration cost/i)
         expect(page).to have_text(/amount allocated/i)
         expect(page).to have_text(/amount due/i)
@@ -45,7 +45,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Registration allocations") do
+      within("section", text: "Registration payments and allocations") do
         expect(page).to have_text(/amount allocated/i)
         expect(page).to have_text("$10.00")
         expect(page).to have_no_text("Source")
@@ -59,7 +59,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Registration allocations") do
+      within("section", text: "Registration payments and allocations") do
         expect(page).to have_text("Nothing")
       end
     end
