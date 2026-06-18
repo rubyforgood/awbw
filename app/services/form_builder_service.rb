@@ -316,7 +316,7 @@ class FormBuilderService
     position
   end
 
-  def add_field(form, position, field_name, answer_type, key:, group:, required: true, hint: nil, options: nil, datatype: nil, visibility: nil, width: :full)
+  def add_field(form, position, field_name, answer_type, key:, group:, required: true, subtitle: nil, options: nil, datatype: nil, visibility: nil, width: :full)
     position += 1
     field = form.form_fields.create!(
       name: field_name,
@@ -325,7 +325,7 @@ class FormBuilderService
       status: :active,
       position: position,
       required: required,
-      hint_text: hint,
+      subtitle: subtitle,
       field_identifier: key,
       section: group,
       visibility: visibility || SECTION_VISIBILITY.fetch(group, :always_ask),
@@ -423,7 +423,7 @@ class FormBuilderService
 
     position = add_field(form, position, "Racial / Ethnic Identity", :free_form_input_one_line,
                          key: "racial_ethnic_identity", group: "background", required: false,
-                         hint: "This information helps us understand the diversity of our community.")
+                         subtitle: "This information helps us understand the diversity of our community.")
     position
   end
 
@@ -432,13 +432,13 @@ class FormBuilderService
 
     position = add_field(form, position, "Primary service area", :single_select_dropdown,
                          key: "primary_service_area_single", group: "professional", required: false,
-                         hint: "Select the sector you primarily serve.")
+                         subtitle: "Select the sector you primarily serve.")
     position = add_field(form, position, "Additional service areas", :multi_select_checkbox,
                          key: "primary_service_area", group: "professional", required: false,
-                         hint: "Select all that apply. These represent the other sectors you serve.")
+                         subtitle: "Select all that apply. These represent the other sectors you serve.")
     position = add_field(form, position, "Workshop Settings", :multi_select_checkbox,
                          key: "workshop_environments", group: "professional", required: false,
-                         hint: "Select all settings where you facilitate or plan to facilitate workshops.",
+                         subtitle: "Select all settings where you facilitate or plan to facilitate workshops.",
                          options: [
                            "Clinical setting", "Educational setting", "Events and conferences",
                            "Faith-based setting", "Home visits", "Hospitals",
@@ -448,10 +448,10 @@ class FormBuilderService
                          ])
     position = add_field(form, position, "Client Life Experiences", :multi_select_checkbox,
                          key: "client_life_experiences", group: "professional", required: false,
-                         hint: "Select all that describe the populations you work with.")
+                         subtitle: "Select all that describe the populations you work with.")
     position = add_field(form, position, "Primary Age Group(s) Served", :multi_select_checkbox,
                          key: "primary_age_group", group: "professional", required: false,
-                         hint: "Select all age groups you primarily serve.")
+                         subtitle: "Select all age groups you primarily serve.")
     position
   end
 
@@ -481,12 +481,12 @@ class FormBuilderService
                          "How will what you gain from this training directly impact the people you serve?",
                          :free_form_input_paragraph,
                          key: "impact_description", group: "scholarship", required: true,
-                         hint: "Please describe in 3-5+ sentences.")
+                         subtitle: "Please describe in 3-5+ sentences.")
     position = add_field(form, position,
                          "Please describe one way in which you plan to use art workshops and how you envision it will help.",
                          :free_form_input_paragraph,
                          key: "implementation_plan", group: "scholarship", required: true,
-                         hint: "Please describe in 3-5+ sentences.")
+                         subtitle: "Please describe in 3-5+ sentences.")
     position = add_field(form, position, "Anything else you'd like to share with us?", :free_form_input_paragraph,
                          key: "additional_comments", group: "scholarship", required: false)
     position
@@ -507,7 +507,7 @@ class FormBuilderService
                          "I agree to receive email communications from A Window Between Worlds.",
                          :multi_select_checkbox,
                          key: "communication_consent", group: "consent", required: true,
-                         hint: "By submitting this form, I consent to receive updates from A Window Between Worlds, " \
+                         subtitle: "By submitting this form, I consent to receive updates from A Window Between Worlds, " \
                                "including information about this event as well as upcoming events, training opportunities, resources, " \
                                "impact stories, and ways to support our mission. I understand I can unsubscribe at any time.",
                          options: [ "Yes" ])

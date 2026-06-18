@@ -121,7 +121,7 @@ if registration_form.form_fields.where(field_identifier: ce_identifier).none?
     section: "continuing_education",
     visibility: :always_ask,
     width: :full,
-    hint_text: "CE hours are available for select trainings. Let us know and our team will follow up with details."
+    subtitle: "CE hours are available for select trainings. Let us know and our team will follow up with details."
   )
   %w[Yes No].each_with_index do |opt, idx|
     ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
@@ -158,7 +158,7 @@ if registration_form.form_fields.where(field_identifier: additional_forms_identi
     section: "additional_forms",
     visibility: :always_ask,
     width: :full,
-    hint_text: "If selected, these will be available on your digital registration ticket."
+    subtitle: "If selected, these will be available on your digital registration ticket."
   )
   [
     EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_INVOICE,

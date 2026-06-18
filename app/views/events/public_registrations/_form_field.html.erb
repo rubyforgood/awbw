@@ -18,8 +18,8 @@
     <% end %>
   </div>
 
-  <% if field.hint_text.present? %>
-    <p class="text-xs text-gray-500 mb-1.5"><%= field.hint_text %></p>
+  <% if field.subtitle.present? %>
+    <p class="rich-label text-xs text-gray-500 mb-1.5"><%= form_label_html(field.subtitle) %></p>
   <% end %>
 
   <% field_name = "public_registration[form_fields][#{field.id}]" %>
@@ -164,6 +164,10 @@
       <% end %>
     <% end %>
 
+  <% end %>
+
+  <% if field.hint_text.present? %>
+    <p class="rich-label text-xs text-gray-500 mt-1.5"><%= form_label_html(field.hint_text) %></p>
   <% end %>
 
   <% if field.free_form_text? && field.min_words.to_i.positive? %>

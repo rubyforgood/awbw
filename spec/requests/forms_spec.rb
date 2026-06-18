@@ -211,7 +211,7 @@ RSpec.describe "Forms", type: :request do
 
       get edit_form_path(form)
 
-      expect(response.body).to include("[hint_text]")
+      expect(response.body).to include("[subtitle]")
     end
 
     it "warns that the Other option is hidden on a dropdown field" do
@@ -315,12 +315,32 @@ RSpec.describe "Forms", type: :request do
 
     it "renders a section header's subtext under the heading" do
       form = create(:form, :standalone)
-      create(:form_field, form: form, answer_type: :group_header, name: "Contact info", hint_text: "Tell us how to reach you")
+      create(:form_field, form: form, answer_type: :group_header, name: "Contact info", subtitle: "Tell us how to reach you")
 
       get form_path(form)
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Tell us how to reach you")
+    end
+
+    it "renders a field's subtitle as sanitized HTML under the label" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, name: "Email", subtitle: %(We'll <strong>never</strong> share it))
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("We'll <strong>never</strong> share it")
+    end
+
+    it "renders a field's hint text as sanitized HTML below the input" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, name: "Phone", hint_text: %(Include your <em>area code</em>))
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Include your <em>area code</em>")
     end
 
     it "renders the form header HTML under the title" do
@@ -380,9 +400,19 @@ RSpec.describe "Forms", type: :request do
       form = create(:form, :standalone)
       header = create(:form_field, form: form, answer_type: :group_header, name: "Contact info")
       patch form_path(form), params: {
-        form: { form_fields_attributes: { "0" => { id: header.id, hint_text: "Tell us how to reach you" } } }
+        form: { form_fields_attributes: { "0" => { id: header.id, subtitle: "Tell us how to reach you" } } }
       }
-      expect(header.reload.hint_text).to eq("Tell us how to reach you")
+      expect(header.reload.subtitle).to eq("Tell us how to reach you")
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "saves the hint text for a field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, name: "Phone")
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { id: field.id, hint_text: "Include your area code" } } }
+      }
+      expect(field.reload.hint_text).to eq("Include your area code")
       expect(response).to redirect_to(edit_form_path(form))
     end
 
