@@ -15,11 +15,9 @@ module AdminCardsHelper
       model_card(:workshops, icon: "🎨"),
       model_card(:workshop_variations, icon: "🔀"),
       model_card(:video_recordings, icon: "🎬", title: "Video Gallery"),
-      model_card(:allocations, icon: "📤"),
       model_card(:banners, icon: "📣"),
       model_card(:community_news, icon: "📰"),
-      model_card(:faqs, icon: "❔", title: "FAQs"),
-      model_card(:forms, icon: "📋")
+      model_card(:faqs, icon: "❔", title: "FAQs")
     ]
   end
 
@@ -32,7 +30,7 @@ module AdminCardsHelper
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:quotes, icon: "💬", intensity: 100),
       model_card(:payments, icon: "💳"),
-      custom_card("Scholarships", grants_path, icon: "🎓", color: :fuchsia),
+      disabled_card("Scholarships", icon: "🎓"),
       model_card(:notifications, icon: "🔔"),
       model_card(:story_ideas, icon: "✍🏾️", intensity: 100),
       custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
@@ -60,6 +58,28 @@ module AdminCardsHelper
     ]
   end
 
+  # -----------------------------
+  # ADDITIONAL DATA CARDS
+  # -----------------------------
+  def additional_data_cards
+    [
+      custom_card("Allocations", allocations_path, icon: "📤", color: :sky, intensity: 100),
+      disabled_card("Bulk payments", icon: "💳"),
+      custom_card("Event registrations", event_registrations_path, icon: "🎟️", color: :sky, intensity: 100),
+      custom_card("Forms", forms_path, icon: "📋", color: :sky, intensity: 100),
+      disabled_card("Form submissions", icon: "📨"),
+      disabled_card("Form answers", icon: "✅"),
+      custom_card("Monthly reports", monthly_reports_path, icon: "📈", color: :sky, intensity: 100),
+      custom_card("Story shares", story_shares_path, icon: "🔗", color: :sky, intensity: 100),
+      custom_card("Bookmarks", bookmarks_path, icon: "🔖", color: :sky, intensity: 100),
+      disabled_card("Affiliations", icon: "🤝"),
+      disabled_card("Reports", icon: "📄"),
+      disabled_card("Discounts", icon: "💲"),
+      disabled_card("Refunds", icon: "↩️"),
+      disabled_card("Event staff", icon: "🧑‍💼")
+    ].sort_by { |card| card[:title].downcase.gsub(" ", "~") }
+  end
+
   # ============================================================
   # CARD BUILDERS
   # ============================================================
@@ -82,6 +102,16 @@ module AdminCardsHelper
       bg_color: "bg-#{color}-#{intensity}",
       hover_bg_color: "hover:bg-#{color}-#{intensity == 50 ? 100 : intensity + 100}",
       text_color: "text-gray-800"
+    }
+  end
+
+  def disabled_card(title, icon:)
+    {
+      title: title,
+      icon: icon,
+      disabled: true,
+      bg_color: "bg-gray-100",
+      text_color: "text-gray-400"
     }
   end
 end

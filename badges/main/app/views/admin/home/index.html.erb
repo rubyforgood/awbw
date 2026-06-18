@@ -8,20 +8,20 @@
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
       <div class="flex flex-col gap-6 md:flex-row">
         <!-- Column 1 -->
-        <div class="flex flex-col gap-4 flex-1">
+        <div class="flex flex-col gap-2 flex-1">
           Admin-generated
           <% @system_cards.each do |card| %>
             <a href="<%= card[:path] %>"
                class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
                       <%= card[:bg_color] %> <%= card[:text_color] %>
-                      <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
-              <div class="text-5xl text-gray-700 flex-shrink-0">
+                      <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 px-4 py-1">
+              <div class="text-2xl text-gray-700 flex-shrink-0">
                 <!--            <i class="fa-solid <%#= card[:icon] %>" aria-hidden="true"></i>-->
                 <%= card[:icon] %>
               </div>
 
               <div class="flex-1">
-                <h3 class="text-xl font-bold text-gray-800 break-words">
+                <h3 class="text-lg font-bold text-gray-800 break-words">
                   <%= card[:title] %>
                 </h3>
               </div>
@@ -31,22 +31,37 @@
         </div>
 
         <!-- Column 2 -->
-        <div class="flex flex-col gap-4 flex-1">
+        <div class="flex flex-col gap-2 flex-1">
           User-generated
           <% @user_content_cards.each do |card| %>
-            <a href="<%= card[:path] %>"
-               class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
+            <% if card[:disabled] %>
+              <div class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
                       <%= card[:bg_color] %> <%= card[:text_color] %>
-                      <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 p-4">
-              <div class="text-5xl text-gray-700 flex-shrink-0">
-                <%= card[:icon] %>
-              </div>
+                      px-4 py-1 cursor-not-allowed opacity-60"
+                   title="Not built yet"
+                   aria-disabled="true">
+                <div class="text-2xl flex-shrink-0">
+                  <%= card[:icon] %>
+                </div>
 
-              <div class="flex-1">
-                <h3 class="text-xl font-bold text-gray-800 break-words"><%= card[:title] %></h3>
+                <div class="flex-1">
+                  <h3 class="text-lg font-bold break-words"><%= card[:title] %></h3>
+                </div>
               </div>
+            <% else %>
+              <a href="<%= card[:path] %>"
+                 class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
+                        <%= card[:bg_color] %> <%= card[:text_color] %>
+                        <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 px-4 py-1">
+                <div class="text-2xl text-gray-700 flex-shrink-0">
+                  <%= card[:icon] %>
+                </div>
 
-            </a>
+                <div class="flex-1">
+                  <h3 class="text-lg font-bold text-gray-800 break-words"><%= card[:title] %></h3>
+                </div>
+              </a>
+            <% end %>
           <% end %>
         </div>
       </div>
@@ -60,17 +75,55 @@
              class="flex items-center gap-3 rounded-lg shadow-lg border border-gray-200
               <%= card[:bg_color] %> <%= card[:text_color] %>
               <%= card[:hover_bg_color] %>
-              transition-colors transition-shadow duration-300 px-4 py-3 flex-1">
+              transition-colors transition-shadow duration-300 px-4 py-1 flex-1">
 
-              <div class="text-3xl text-gray-700 flex-shrink-0">
+              <div class="text-lg text-gray-700 flex-shrink-0">
                 <%= card[:icon] %>
               </div>
 
               <div>
-                <h3 class="text-base font-bold text-gray-800 whitespace-nowrap"><%= card[:title] %></h3>
+                <h3 class="text-sm font-bold text-gray-800 whitespace-nowrap"><%= card[:title] %></h3>
               </div>
 
             </a>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mt-6">
+        Additional data
+       <div class="columns-1 sm:columns-2 md:columns-3 gap-2 mt-3">
+          <% @additional_data_cards.each do |card| %>
+            <% if card[:disabled] %>
+              <div class="flex items-center gap-3 rounded-lg shadow-lg border border-gray-200 mb-2 break-inside-avoid
+                <%= card[:bg_color] %> <%= card[:text_color] %>
+                px-4 py-1 cursor-not-allowed opacity-60"
+                   title="Not built yet"
+                   aria-disabled="true">
+                <div class="text-lg flex-shrink-0">
+                  <%= card[:icon] %>
+                </div>
+
+                <div>
+                  <h3 class="text-sm font-bold whitespace-nowrap"><%= card[:title] %></h3>
+                </div>
+              </div>
+            <% else %>
+              <a href="<%= card[:path] %>"
+               class="flex items-center gap-3 rounded-lg shadow-lg border border-gray-200 mb-2 break-inside-avoid
+                <%= card[:bg_color] %> <%= card[:text_color] %>
+                <%= card[:hover_bg_color] %>
+                transition-colors transition-shadow duration-300 px-4 py-1">
+
+                <div class="text-lg text-gray-700 flex-shrink-0">
+                  <%= card[:icon] %>
+                </div>
+
+                <div>
+                  <h3 class="text-sm font-bold text-gray-800 whitespace-nowrap"><%= card[:title] %></h3>
+                </div>
+              </a>
+            <% end %>
           <% end %>
         </div>
       </div>
@@ -83,6 +136,7 @@
     bg-gray-50 bg-gray-100 bg-gray-200 bg-gray-500
 
     bg-red-800
+    bg-sky-100 bg-sky-200 hover:bg-sky-200
     bg-cyan-50 bg-cyan-100 bg-cyan-200 bg-cyan-500
     bg-pink-50 bg-pink-100 bg-pink-200 bg-pink-500
     bg-yellow-50 bg-yellow-100 bg-yellow-200
