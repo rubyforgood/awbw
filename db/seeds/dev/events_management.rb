@@ -374,6 +374,7 @@ rosa_dlc = Person.find_by(first_name: "Rosa", last_name: "De La Cruz")
 mario_j = Person.find_by(first_name: "Mario", last_name: "Johnson") # no user
 angel_g = Person.find_by(first_name: "Angel", last_name: "Garcia") # no user
 linda_w = Person.find_by(first_name: "Linda", last_name: "Williams") # no user
+aisha_person = User.find_by(email: "aisha.user@example.com")&.person
 
 # Events by name for clarity
 facilitator_training = Event.find_by(title: "AWBW Facilitator Training")
@@ -426,13 +427,17 @@ registrations_data = []
 # Anna Garcia: attended, with form submission (has user)
 # Mario Johnson: registered, no form submission (no user)
 # Kim Davis: cancelled (has user)
+# Aisha: registered, intends to pay — no payment recorded, but access is granted
+#   so she can reach her training materials (the intends_to_pay scenario). Pairs
+#   with Amy on this same event, who DOES have payments, for side-by-side review.
 if facilitator_training
   [
     { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true, ce_credit_requested: true },
     { person: maria_j, status: "registered", invoice_requested: true, ce_credit_requested: true },
     { person: anna_g, status: "attended", ce_credit_requested: true },
     { person: mario_j, status: "registered" },
-    { person: kim_d, status: "cancelled" }
+    { person: kim_d, status: "cancelled" },
+    { person: aisha_person, status: "registered", intends_to_pay: true }
   ].each do |data|
     next unless data[:person]
     registrations_data << data.merge(event: facilitator_training)
@@ -514,6 +519,7 @@ registrations_data.each do |data|
   registration.w9_requested = data[:w9_requested] || false
   registration.invoice_requested = data[:invoice_requested] || false
   registration.ce_credit_requested = data[:ce_credit_requested] || false
+  registration.intends_to_pay = data[:intends_to_pay] || false
   registration.save!
 end
 
@@ -605,7 +611,7 @@ if facilitator_training
   reg_form = facilitator_training.registration_form
   if reg_form
     # People with users who filled out the form
-    [ amy_person, maria_j, anna_g ].compact.each do |person|
+    [ amy_person, maria_j, anna_g, aisha_person ].compact.each do |person|
       form_submissions << { person: person, form: reg_form, event: facilitator_training }
     end
     # Mario Johnson (no user) did NOT fill out the form — registration without form submission
