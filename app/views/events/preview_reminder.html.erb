@@ -18,7 +18,7 @@
     <p class="text-gray-600 mb-4">There are no registrants with an email address to send a reminder to.</p>
     <%= link_to "Back to registrants", registrants_event_path(@event), class: "btn btn-secondary-outline" %>
   <% else %>
-    <%= form_with url: send_reminder_event_path(@event), method: :post, local: true do |f| %>
+    <%= form_with url: send_reminder_event_path(@event), method: :post, local: true, data: { controller: "reminder-preview" } do |f| %>
       <h2 class="text-lg font-semibold text-gray-800 mb-2 pb-2 border-b border-gray-200">Recipients</h2>
       <p class="text-gray-600 mb-3">
         Choose who will receive this reminder:
@@ -61,10 +61,36 @@
           </tbody>
         </table>
       </div>
+      <div class="mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2 pb-2 border-b border-gray-200">Subject</h2>
+        <p class="text-gray-600 mb-2">
+          The subject line recipients will see. Edit it as you like — leave it as is to use the default.
+        </p>
+        <%= text_field_tag :custom_subject, @custom_subject,
+              class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm",
+              data: { reminder_preview_target: "subjectInput", action: "input->reminder-preview#updateSubject" } %>
+      </div>
+      <div class="mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2 pb-2 border-b border-gray-200">Message</h2>
+        <p class="text-gray-600 mb-2">
+          The intro shown near the top of the reminder, above the event details. Edit it or clear it as you like — the event details and the "View ticket" / "View event" buttons are always included.
+        </p>
+        <p class="text-xs text-gray-500 mb-2">
+          Accepts basic HTML — bold, italics, links, lists, and line breaks.
+        </p>
+        <%= text_area_tag :custom_message, @custom_message,
+              rows: 4,
+              class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono",
+              data: { reminder_preview_target: "input", action: "input->reminder-preview#update" } %>
+      </div>
       <% if @reminder_preview_html.present? %>
         <div class="mb-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">Preview (sample registrant)</h2>
           <div class="border border-gray-200 rounded-lg bg-white overflow-hidden">
+            <div class="border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700">
+              <span class="font-semibold text-gray-500">Subject:</span>
+              <span data-reminder-preview-target="subjectPreview"><%= @custom_subject %></span>
+            </div>
             <div class="email-preview overflow-auto max-h-[70vh] p-4" style="font-family: Lato, sans-serif;">
               <%= raw @reminder_preview_html %>
             </div>
