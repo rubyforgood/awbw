@@ -202,4 +202,36 @@ RSpec.describe Organization do
       end
     end
   end
+
+  describe "age groups served" do
+    let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+    let!(:young) { create(:category, :published, category_type: age_type, name: "3-5") }
+    let!(:teen) { create(:category, :published, category_type: age_type, name: "13-17") }
+    let!(:adult) { create(:category, :published, category_type: age_type, name: "18+") }
+    let(:organization) { create(:organization) }
+    let(:person_a) { create(:person) }
+    let(:person_b) { create(:person) }
+
+    before do
+      create(:affiliation, organization: organization, person: person_a)
+      create(:affiliation, organization: organization, person: person_b)
+    end
+
+    it "aggregates and dedupes age groups across affiliated people and the org itself" do
+      organization.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [])
+      person_a.tag_age_groups(primary_ids: [ young.id ], additional_ids: [ teen.id ])
+      person_b.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
+
+      expect(organization.all_primary_age_groups).to contain_exactly(young, adult)
+      expect(organization.all_additional_age_groups).to contain_exactly(teen)
+    end
+
+    it "treats a group that is primary for any member as primary, never additional" do
+      person_a.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      person_b.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
+
+      expect(organization.all_primary_age_groups).to contain_exactly(teen)
+      expect(organization.all_additional_age_groups).to be_empty
+    end
+  end
 end

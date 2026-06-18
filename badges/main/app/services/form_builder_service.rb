@@ -49,7 +49,7 @@ class FormBuilderService
       agency_state agency_zip agency_type agency_website
     ],
     person_background: %w[racial_ethnic_identity],
-    professional_info: %w[primary_service_area_single primary_service_area workshop_environments client_life_experiences primary_age_group],
+    professional_info: %w[primary_service_area_single primary_service_area workshop_environments client_life_experiences primary_age_group additional_age_group],
     marketing: %w[referral_source training_motivation interested_in_more],
     scholarship: %w[scholarship_eligibility impact_description implementation_plan additional_comments],
     payment: %w[payment_method],
@@ -86,7 +86,7 @@ class FormBuilderService
       "Agency Type", "Agency Website"
     ],
     person_background: [ "Racial / Ethnic Identity" ],
-    professional_info: [ "Primary service area", "Additional service areas", "Workshop Settings", "Client Life Experiences", "Primary Age Group(s) Served" ],
+    professional_info: [ "Primary service area", "Additional service areas", "Workshop Settings", "Client Life Experiences", "Primary Age Group(s) Served", "Additional Age Group(s) Served" ],
     marketing: [
       "How did you hear about this training?",
       "What motivates you to attend this training?",
@@ -452,6 +452,9 @@ class FormBuilderService
     position = add_field(form, position, "Primary Age Group(s) Served", :multi_select_checkbox,
                          key: "primary_age_group", group: "professional", required: false,
                          subtitle: "Select all age groups you primarily serve.")
+    position = add_field(form, position, "Additional Age Group(s) Served", :multi_select_checkbox,
+                         key: "additional_age_group", group: "professional", required: false,
+                         subtitle: "Select all that apply. These represent the other age groups you serve.")
     position
   end
 

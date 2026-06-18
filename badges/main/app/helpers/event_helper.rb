@@ -135,7 +135,7 @@ module EventHelper
     case field&.field_identifier
     when "primary_service_area", "primary_service_area_single"
       resolve.call(Sector)
-    when "workshop_environments", "client_life_experiences", "primary_age_group"
+    when "workshop_environments", "client_life_experiences", "primary_age_group", "additional_age_group"
       resolve.call(Category)
     else
       submitted_answer
