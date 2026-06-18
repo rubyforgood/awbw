@@ -396,6 +396,22 @@ RSpec.describe "Forms", type: :request do
       expect(form.hide_answered_form_questions).to be true
     end
 
+    it "appends a newly added field to the bottom of the list, not the top" do
+      form = create(:form, :standalone)
+      first = create(:form_field, form: form, name: "First", position: 1)
+      second = create(:form_field, form: form, name: "Second", position: 2)
+
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { name: "Brand new", answer_type: "free_form_input_one_line" } } }
+      }
+      expect(response).to redirect_to(edit_form_path(form))
+
+      new_field = form.form_fields.find_by(name: "Brand new")
+      expect(new_field.position).to be > second.position
+      ordered = form.form_fields.reorder(position: :asc).pluck(:name)
+      expect(ordered).to eq([ first.name, second.name, "Brand new" ])
+    end
+
     it "saves a long, multi-sentence question name" do
       form = create(:form, :standalone)
       long_name = "AWBW workshops are used in a variety of ways. " * 8
