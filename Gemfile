@@ -69,6 +69,7 @@ gem "solid_cache"
 # Payments
 gem "pay", "~> 11.4"
 gem "stripe", "~> 18.0"
+gem "paper_trail", "~> 17.0"
 
 group :development do
   gem "rubocop-rails-omakase", require: false

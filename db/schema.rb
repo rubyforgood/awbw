@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_104042) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_18_141021) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1284,6 +1284,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_104042) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
     t.index ["updated_by_id"], name: "index_users_on_updated_by_id"
     t.index ["welcome_instructions_token"], name: "index_users_on_welcome_instructions_token", unique: true
+  end
+
+  create_table "versions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at"
+    t.string "event", null: false
+    t.bigint "item_id", null: false
+    t.string "item_type", null: false
+    t.text "object", size: :long
+    t.string "whodunnit"
+    t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end
 
   create_table "video_recordings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

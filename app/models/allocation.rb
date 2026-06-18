@@ -1,4 +1,5 @@
 class Allocation < ApplicationRecord
+  has_paper_trail
   belongs_to :source, polymorphic: true
   belongs_to :allocatable, polymorphic: true
   belongs_to :reverted, class_name: "Allocation", optional: true
