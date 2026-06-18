@@ -1,0 +1,213 @@
+require "rails_helper"
+
+RSpec.describe ReminderRecipientFilter do
+  let(:event) { create(:event, cost_cents: 10_000) }
+
+  def registration(first_name: "Jane", last_name: "Doe", **person_attrs)
+    person = create(:person, first_name: first_name, last_name: last_name, **person_attrs)
+    create(:event_registration, event: event, registrant: person)
+  end
+
+  def award_scholarship(reg, grant: nil, tasks_completed: false)
+    scholarship = create(:scholarship, recipient: reg.registrant, grant: grant, tasks_completed: tasks_completed)
+    create(:allocation, allocatable: reg, source: scholarship, amount: scholarship.amount_cents)
+    scholarship
+  end
+
+  def matched(params, registrations)
+    described_class.new(registrations, ActionController::Parameters.new(params)).matched_ids
+  end
+
+  describe "#filtering?" do
+    it "is false with no filter params and true once any filter is set" do
+      expect(described_class.new([], ActionController::Parameters.new({})).filtering?).to be(false)
+      expect(described_class.new([], ActionController::Parameters.new(name: "x")).filtering?).to be(true)
+    end
+  end
+
+  describe "#matched_ids" do
+    it "matches everyone when no filters are applied" do
+      regs = [ registration, registration(first_name: "Sam") ]
+      expect(matched({}, regs)).to eq(regs.map(&:id).to_set)
+    end
+
+    it "filters by registrant name" do
+      jane = registration(first_name: "Jane")
+      sam = registration(first_name: "Samuel")
+      expect(matched({ name: "jane" }, [ jane, sam ])).to eq([ jane.id ].to_set)
+    end
+
+    it "matches any of several names separated by --" do
+      amy = registration(first_name: "Amy")
+      aisha = registration(first_name: "Aisha")
+      sam = registration(first_name: "Sam")
+      expect(matched({ name: "amy--aisha" }, [ amy, aisha, sam ])).to eq([ amy.id, aisha.id ].to_set)
+    end
+
+    it "preserves single hyphens inside a name term" do
+      hyphen = registration(first_name: "Mary", last_name: "Jane-Wells")
+      other = registration(first_name: "Sam")
+      expect(matched({ name: "jane-wells" }, [ hyphen, other ])).to eq([ hyphen.id ].to_set)
+    end
+
+    it "matches any of several organization names separated by --" do
+      hope = registration(first_name: "Hope").tap { |r| r.organizations << create(:organization, name: "Hope Center") }
+      unity = registration(first_name: "Unity").tap { |r| r.organizations << create(:organization, name: "Unity House") }
+      other = registration(first_name: "Sam").tap { |r| r.organizations << create(:organization, name: "Elsewhere") }
+      expect(matched({ reg_org: "hope--unity" }, [ hope, unity, other ])).to eq([ hope.id, unity.id ].to_set)
+    end
+
+    it "filters by registration organization name" do
+      reg = registration
+      reg.organizations << create(:organization, name: "Hope Center")
+      other = registration(first_name: "Sam")
+      expect(matched({ reg_org: "hope" }, [ reg, other ])).to eq([ reg.id ].to_set)
+    end
+
+    it "filters by grantor name of an associated grant" do
+      donor = create(:organization, name: "Acme Foundation")
+      grant = create(:grant, donor: donor)
+      reg = registration
+      award_scholarship(reg, grant: grant)
+      ungranted = registration(first_name: "Sam")
+      award_scholarship(ungranted) # scholarship with no grant
+      expect(matched({ grantor: "acme" }, [ reg, ungranted ])).to eq([ reg.id ].to_set)
+    end
+
+    it "filters by email address" do
+      amy = registration(first_name: "Amy", email: "amy@example.com", user: nil)
+      sam = registration(first_name: "Sam", email: "sam@example.com", user: nil)
+      expect(matched({ email: "amy@example" }, [ amy, sam ])).to eq([ amy.id ].to_set)
+    end
+
+    it "matches any of several emails separated by --" do
+      amy = registration(first_name: "Amy", email: "amy@example.com", user: nil)
+      aisha = registration(first_name: "Aisha", email: "aisha@example.com", user: nil)
+      sam = registration(first_name: "Sam", email: "sam@other.com", user: nil)
+      expect(matched({ email: "amy@--aisha@" }, [ amy, aisha, sam ])).to eq([ amy.id, aisha.id ].to_set)
+    end
+
+    it "filters by registration comment text" do
+      reg = registration
+      create(:comment, :for_event_registration, commentable: reg, body: "Needs a payment plan")
+      other = registration(first_name: "Sam")
+      expect(matched({ comment: "payment plan" }, [ reg, other ])).to eq([ reg.id ].to_set)
+    end
+
+    context "payment status" do
+      let!(:paid) { registration.tap { |r| create(:allocation, allocatable: r, amount: 10_000) } }
+      let!(:due) { registration(first_name: "Due") }
+      let!(:intends) { registration(first_name: "Intends").tap { |r| r.update!(intends_to_pay: true) } }
+
+      it "filters paid registrants" do
+        expect(matched({ payment_status: "paid" }, [ paid, due, intends ])).to eq([ paid.id ].to_set)
+      end
+
+      it "filters due registrants" do
+        expect(matched({ payment_status: "unpaid" }, [ paid, due, intends ])).to eq([ due.id, intends.id ].to_set)
+      end
+
+      it "filters intends-to-pay registrants" do
+        expect(matched({ payment_status: "intends_to_pay" }, [ paid, due, intends ])).to eq([ intends.id ].to_set)
+      end
+
+      it "filters paid + intends registrants" do
+        expect(matched({ payment_status: "paid_or_intends" }, [ paid, due, intends ])).to eq([ paid.id, intends.id ].to_set)
+      end
+    end
+
+    context "scholarship status" do
+      let!(:requested) { registration.tap { |r| r.update!(scholarship_requested: true) } }
+      let!(:allocated) { registration(first_name: "Alloc").tap { |r| award_scholarship(r) } }
+      let!(:completed) { registration(first_name: "Done").tap { |r| award_scholarship(r, tasks_completed: true) } }
+
+      it "filters requested" do
+        expect(matched({ scholarship_status: "requested" }, [ requested, allocated, completed ]))
+          .to eq([ requested.id ].to_set)
+      end
+
+      it "filters allocated" do
+        expect(matched({ scholarship_status: "allocated" }, [ requested, allocated, completed ]))
+          .to eq([ allocated.id, completed.id ].to_set)
+      end
+
+      it "filters tasks completed" do
+        expect(matched({ scholarship_status: "tasks_completed" }, [ requested, allocated, completed ]))
+          .to eq([ completed.id ].to_set)
+      end
+    end
+
+    context "account status" do
+      let!(:no_account) { registration(first_name: "None", user: nil) }
+      let!(:has_access) { registration(first_name: "Open") }
+      let!(:invited) do
+        registration(first_name: "Invited").tap do |r|
+          r.registrant.user.update!(confirmed_at: nil, welcome_instructions_sent_at: Time.current)
+        end
+      end
+      let!(:no_access) do
+        registration(first_name: "Locked").tap do |r|
+          r.registrant.user.update!(confirmed_at: nil, welcome_instructions_sent_at: nil)
+        end
+      end
+      let(:regs) { [ no_account, has_access, invited, no_access ] }
+
+      it "filters no account" do
+        expect(matched({ account_status: "none" }, regs)).to eq([ no_account.id ].to_set)
+      end
+
+      it "filters has access" do
+        expect(matched({ account_status: "has_access" }, regs)).to eq([ has_access.id ].to_set)
+      end
+
+      it "filters invited" do
+        expect(matched({ account_status: "invited" }, regs)).to eq([ invited.id ].to_set)
+      end
+
+      it "filters no access" do
+        expect(matched({ account_status: "no_access" }, regs)).to eq([ no_access.id ].to_set)
+      end
+    end
+
+    context "CE status" do
+      # Requested CE, supplied both license and hours, and paid in full.
+      let!(:complete) do
+        registration(first_name: "Complete").tap do |r|
+          r.update!(ce_credit_requested: true, ce_license_number: "ABC123", ce_hours_requested: 3)
+          create(:allocation, allocatable: r, amount: 10_000)
+        end
+      end
+      # Requested CE but missing license and hours, unpaid.
+      let!(:missing) { registration(first_name: "Missing").tap { |r| r.update!(ce_credit_requested: true) } }
+      # Did not request CE at all.
+      let!(:no_ce) { registration(first_name: "None").tap { |r| r.update!(ce_license_number: nil, ce_hours_requested: nil) } }
+      let(:regs) { [ complete, missing, no_ce ] }
+
+      it "filters CE requested" do
+        expect(matched({ ce_status: "requested" }, regs)).to eq([ complete.id, missing.id ].to_set)
+      end
+
+      it "filters CE license not provided (only among CE requesters)" do
+        expect(matched({ ce_status: "license_not_provided" }, regs)).to eq([ missing.id ].to_set)
+      end
+
+      it "filters CE hours not provided (only among CE requesters)" do
+        expect(matched({ ce_status: "hours_not_provided" }, regs)).to eq([ missing.id ].to_set)
+      end
+
+      it "filters CE paid (requested CE and paid in full)" do
+        expect(matched({ ce_status: "paid" }, regs)).to eq([ complete.id ].to_set)
+      end
+    end
+
+    it "combines filters with AND" do
+      donor = create(:organization, name: "Acme Foundation")
+      grant = create(:grant, donor: donor)
+      match = registration(first_name: "Jane", last_name: "Adams").tap { |r| award_scholarship(r, grant: grant) }
+      name_only = registration(first_name: "Jane", last_name: "Brooks")
+      grantor_only = registration(first_name: "Sam", last_name: "Cole").tap { |r| award_scholarship(r, grant: grant) }
+      expect(matched({ name: "jane", grantor: "acme" }, [ match, name_only, grantor_only ]))
+        .to eq([ match.id ].to_set)
+    end
+  end
+end

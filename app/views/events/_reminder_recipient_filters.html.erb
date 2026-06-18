@@ -1,0 +1,82 @@
+<%# Filters for the bulk reminder recipient list. They do not remove rows — the
+    list stays whole and only the matching registrants stay checked. The form
+    auto-submits into the reminder_recipients turbo frame via the collection
+    controller, mirroring the workshops and registrants filters. %>
+<% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+<%# Grey the dropdown text only while the include_blank placeholder (the first
+    option) is the one selected, so a chosen value still reads in dark text. %>
+<% select_class = "#{field_class} has-[option:first-child:checked]:text-gray-400" %>
+<% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
+<%= form_with url: preview_reminder_event_path(@event), method: :get,
+  data: { controller: "collection", turbo_frame: "reminder_recipients" },
+  autocomplete: "off",
+  class: "bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-6" do %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4 items-end">
+    <div>
+      <%= label_tag :name, "Name", class: label_class %>
+      <%= text_field_tag :name, params[:name], class: field_class, placeholder: "Registrant name" %>
+    </div>
+    <div>
+      <%= label_tag :reg_org, "Organization", class: label_class %>
+      <%= text_field_tag :reg_org, params[:reg_org], class: field_class, placeholder: "Organization name" %>
+    </div>
+    <div>
+      <%= label_tag :grantor, "Grantor", class: label_class %>
+      <%= text_field_tag :grantor, params[:grantor], class: field_class, placeholder: "Grantor name" %>
+    </div>
+    <div>
+      <%= label_tag :comment, "Comment", class: label_class %>
+      <%= text_field_tag :comment, params[:comment], class: field_class, placeholder: "Comment text" %>
+    </div>
+    <div>
+      <%= label_tag :email, "Email", class: label_class %>
+      <%= text_field_tag :email, params[:email], class: field_class, placeholder: "Email address" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
+    <% if @event.cost_cents.to_i > 0 %>
+      <div>
+        <%= label_tag :payment_status, "Payment", class: label_class %>
+        <%= select_tag :payment_status,
+              options_for_select(
+                [ [ "Paid", "paid" ], [ "Due", "unpaid" ], [ "Intends to pay", "intends_to_pay" ], [ "Paid + intends", "paid_or_intends" ] ],
+                params[:payment_status]
+              ),
+              include_blank: "Any payment status", class: select_class %>
+      </div>
+    <% end %>
+    <div>
+      <%= label_tag :scholarship_status, "Scholarship", class: label_class %>
+      <%= select_tag :scholarship_status,
+            options_for_select(
+              [ [ "Requested", "requested" ], [ "Allocated", "allocated" ], [ "Tasks completed", "tasks_completed" ] ],
+              params[:scholarship_status]
+            ),
+            include_blank: "Any scholarship status", class: select_class %>
+    </div>
+    <div>
+      <%= label_tag :ce_status, "CE", class: label_class %>
+      <%= select_tag :ce_status,
+            options_for_select(
+              [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
+              params[:ce_status]
+            ),
+            include_blank: "Any CE status", class: select_class %>
+    </div>
+    <div>
+      <%= label_tag :account_status, "User account", class: label_class %>
+      <%= select_tag :account_status,
+            options_for_select(
+              [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
+              params[:account_status]
+            ),
+            include_blank: "Any account status", class: select_class %>
+    </div>
+    <div class="flex items-end">
+      <%= link_to "Clear filters", preview_reminder_event_path(@event),
+            class: "btn btn-utility-outline",
+            data: { action: "collection#clearAndSubmit" } %>
+    </div>
+  </div>
+<% end %>

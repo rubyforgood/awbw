@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff, :details, :ce_hours ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder confirm_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
 
   def index
     authorize!
@@ -259,9 +259,23 @@ class EventsController < ApplicationController
     authorize! @event
     @event = @event.decorate
     @event_registrations = @event.event_registrations
-      .includes(registrant: [ :user, :contact_methods ])
+      .includes(
+        :event, :organizations, :comments,
+        { scholarships: { grant: :donor } },
+        registrant: [ :user, :contact_methods ]
+      )
       .joins(:registrant)
       .select { |r| r.registrant.preferred_email.present? }
+
+    # Filters keep every registrant in the list and only flag who still matches,
+    # so the recipient checkboxes pre-check the matched set rather than removing
+    # rows. See app/views/events/_reminder_recipients.html.erb.
+    recipient_filter = ReminderRecipientFilter.new(@event_registrations, params)
+    @matched_ids = recipient_filter.matched_ids
+    @filtering = recipient_filter.filtering?
+
+    return render partial: "events/reminder_recipients" if turbo_frame_request?
+
     @sample_registration = @event_registrations.first
     days_until_event = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
     # Pre-fill the editable message with the standard reminder sentence (days
@@ -281,15 +295,31 @@ class EventsController < ApplicationController
     end
   end
 
+  # Interstitial between picking recipients and actually sending: it lists exactly
+  # who will be emailed and shows the static subject + body composed on the picker,
+  # so the admin confirms against a real preview instead of a browser dialog.
+  def confirm_reminder
+    authorize! @event, to: :send_reminder?
+    @event = @event.decorate
+    @event_registrations = selected_reminder_registrations
+    @custom_message = params[:custom_message].to_s
+    @custom_subject = params[:custom_subject].to_s
+
+    if @event_registrations.empty?
+      redirect_to preview_reminder_event_path(@event, custom_message: @custom_message, custom_subject: @custom_subject), alert: "Please select at least one recipient."
+      return
+    end
+
+    mail = EventMailer.event_registration_reminder(@event_registrations.first, custom_message: @custom_message, custom_subject: @custom_subject)
+    @reminder_subject = mail.subject
+    @reminder_preview_html = mail.html_part&.body&.decoded
+  end
+
   def send_reminder
     authorize! @event, to: :send_reminder?
-    allowed_ids = Array(params[:registration_ids]).map(&:to_i).reject(&:zero?)
     custom_message = params[:custom_message].to_s
     custom_subject = params[:custom_subject].to_s
-    registrations = @event.event_registrations
-      .where(id: allowed_ids)
-      .includes(registrant: [ :user, :contact_methods ])
-      .select { |r| r.registrant.preferred_email.present? }
+    registrations = selected_reminder_registrations
 
     if registrations.empty?
       redirect_to preview_reminder_event_path(@event, custom_message: custom_message, custom_subject: custom_subject), alert: "Please select at least one recipient."
@@ -415,6 +445,17 @@ class EventsController < ApplicationController
   end
 
   private
+
+  # The registrations the admin checked on the recipient picker, narrowed to those
+  # we can actually email. Shared by the confirm interstitial and the send action
+  # so both operate on exactly the same set.
+  def selected_reminder_registrations
+    allowed_ids = Array(params[:registration_ids]).map(&:to_i).reject(&:zero?)
+    @event.event_registrations
+      .where(id: allowed_ids)
+      .includes(registrant: [ :user, :contact_methods ])
+      .select { |r| r.registrant.preferred_email.present? }
+  end
 
   # Reloads the payment and the data its bulk payment card needs, so the
   # allocate turbo stream can re-render the whole card with fresh due/allocated

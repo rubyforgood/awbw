@@ -140,6 +140,7 @@ Rails.application.routes.draw do
       get :preview_reminder
       patch :preview
       post :copy_registration_form
+      post :confirm_reminder
       post :send_reminder
       post :allocate_bulk_payment
       post :create_bulk_payment

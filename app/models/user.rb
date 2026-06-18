@@ -121,6 +121,12 @@ class User < ApplicationRecord
     super && !inactive?
   end
 
+  # Instance-level mirror of the `has_access` scope: the account can sign in —
+  # confirmed, not locked, not deactivated.
+  def has_access?
+    locked_at.nil? && !inactive? && confirmed_at.present?
+  end
+
   def bookmark_for(record)
     if bookmarks.loaded?
       bookmarks.detect { |b| b.bookmarkable_type == record.class.name && b.bookmarkable_id == record.id && !b.destroyed? }
