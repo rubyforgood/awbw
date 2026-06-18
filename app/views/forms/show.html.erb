@@ -99,12 +99,11 @@
                       <span class="text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
                       <%= render "forms/option_source_link", field: field %>
                     </div>
-                    <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier] %>
+                    <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier], show_dropdown_warning: true %>
                   </div>
                 <% else %>
-                  <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier], show_option_source: true %>
+                  <%= render "events/public_registrations/form_field", field: field, value: nil, label: email_label_overrides[field.field_identifier], show_option_source: true, show_dropdown_warning: true %>
                 <% end %>
-                <%= render "forms/dropdown_other_warning", field: field %>
               </div>
             <% end %>
           <% end %>

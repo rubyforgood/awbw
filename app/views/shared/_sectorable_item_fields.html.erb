@@ -22,7 +22,7 @@
                 } %>
   <% end %>
   <% if show_admin_flags && allowed_to?(:manage?, Person) %>
-    <label class="admin-only cursor-pointer leading-none" title="Mark as primary service area">
+    <label class="admin-only cursor-pointer leading-none" title="Mark as primary sector">
       <%= f.check_box :is_primary,
                       class: "peer sr-only",
                       data: { primary_sector_target: "primary", action: "primary-sector#selectPrimary" } %>

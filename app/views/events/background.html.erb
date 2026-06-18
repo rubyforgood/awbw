@@ -212,15 +212,15 @@
   <% org_paths = @dashboard.organizations.to_h { |o| [ o.name, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-")) ] } %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
     <% if primary_sector_data.any? %>
-      <%= render "breakdown_card", title: "Primary service area", data: primary_sector_data, chart: :pie, palette: palette, row_paths: primary_sector_paths %>
+      <%= render "breakdown_card", title: "Primary sector", data: primary_sector_data, chart: :pie, palette: palette, row_paths: primary_sector_paths %>
     <% end %>
     <% if sector_data.any? %>
-      <%= render "breakdown_card", title: "All service areas", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
+      <%= render "breakdown_card", title: "All sectors", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
     <% end %>
     <%# States and countries use the addresses theme color (slate) for their map ramps. %>
     <% addresses_color = "#475569" %>
     <%# Age group and Countries are both short; stack them in one column so the pair
-        fits within the height of the taller Primary service area pie card. %>
+        fits within the height of the taller Primary sector pie card. %>
     <div class="flex flex-col gap-6">
       <%# Primary age group comes from the registration "ages served" answers;
           always show the card (with a no-data box when empty). %>

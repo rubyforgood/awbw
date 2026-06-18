@@ -457,7 +457,7 @@ RSpec.describe EventDashboard do
     end
 
     it "gathers header (service area / age group) answers keyed by applicant and identifier" do
-      service_field = create(:form_field, form: registration_form, name: "Primary service area", field_identifier: "primary_service_area")
+      service_field = create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
       reg_submission = FormSubmission.find_by(person: embedded_applicant, form: registration_form)
       create(:form_answer, form_submission: reg_submission, form_field: service_field, submitted_answer: "5")
 
