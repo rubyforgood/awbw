@@ -69,6 +69,34 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
   end
 
+  describe "POST create error presentation" do
+    it "wires the error flash band to auto-scroll into view on failure" do
+      post_registration("too few")
+
+      expect(response).to have_http_status(:unprocessable_content)
+      # The form-errors Stimulus controller rides on the error flash band so it
+      # scrolls itself into view on connect.
+      expect(response.body).to match(/role="alert"[^>]*data-controller="form-errors"/)
+    end
+
+    it "shows no error band on a successful submission" do
+      first = create(:form_field, form: form, field_identifier: "first_name", name: "First name", required: false)
+      last = create(:form_field, form: form, field_identifier: "last_name", name: "Last name", required: false)
+      email = create(:form_field, form: form, field_identifier: "primary_email", name: "Email", required: false)
+
+      post event_public_registration_path(event),
+           params: { public_registration: { form_fields: {
+             essay_field.id.to_s => "this answer has plenty of words",
+             first.id.to_s => "Pat",
+             last.id.to_s => "Lee",
+             email.id.to_s => "pat@example.com"
+           } } }
+
+      expect(response).to have_http_status(:redirect)
+      expect(response.body).not_to include('data-controller="form-errors"')
+    end
+  end
+
   describe "POST create with a maximum character count" do
     let!(:bio_field) do
       create(:form_field, form: form, answer_type: :free_form_input_one_line,
