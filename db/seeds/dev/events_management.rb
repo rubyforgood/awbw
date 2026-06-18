@@ -266,6 +266,11 @@ Event.find_by(title: "AWBW Facilitator Training")&.update!(
 # A custom label demonstrates that the heading is admin-editable. Only set when
 # blank so admin edits survive a re-seed.
 flagship = Event.find_by(title: "AWBW Facilitator Training")
+
+# Make the flagship training the admin's favorite event so the admin dashboard
+# has a sensible default highlighted event after seeding.
+admin_user.update!(favorite_event: flagship) if admin_user && flagship
+
 if flagship && flagship.event_details.blank?
   flagship.update!(event_details_label: "Art supplies & what to bring", event_details: <<~HTML.strip)
     <p>Thank you for registering to join us for AWBW's Art Facilitator Training!</p>
