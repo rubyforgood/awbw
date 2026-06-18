@@ -321,6 +321,11 @@ RSpec.describe "Events", type: :request do
         expect(event.reload.autoshow_registration_details).to be(true)
       end
 
+      it "persists the facilitator training flag" do
+        patch event_path(event), params: { event: { facilitator_training: "1" } }
+        expect(event.reload.facilitator_training).to be(true)
+      end
+
       it "persists the registration detail hints" do
         patch event_path(event), params: { event: {
           hint_dates: "must attend both days",
