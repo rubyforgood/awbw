@@ -27,6 +27,9 @@ application.register("asset-picker", AssetPickerController)
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
 
+import CalloutPreviewController from "./callout_preview_controller"
+application.register("callout-preview", CalloutPreviewController)
+
 import CarouselController from "./carousel_controller"
 application.register("carousel", CarouselController)
 
