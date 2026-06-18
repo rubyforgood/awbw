@@ -60,6 +60,20 @@ module AdminCardsHelper
     ]
   end
 
+  # -----------------------------
+  # ADDITIONAL DATA CARDS
+  # -----------------------------
+  def additional_data_cards
+    [
+      custom_card("Allocations", allocations_path, icon: "📤", color: :sky, intensity: 100),
+      disabled_card("Bulk payments", icon: "💳"),
+      custom_card("Event registrations", event_registrations_path, icon: "🎟️", color: :sky, intensity: 100),
+      custom_card("Forms", forms_path, icon: "📋", color: :sky, intensity: 100),
+      disabled_card("Form submissions", icon: "📨"),
+      disabled_card("Form answers", icon: "✅")
+    ]
+  end
+
   # ============================================================
   # CARD BUILDERS
   # ============================================================
@@ -82,6 +96,16 @@ module AdminCardsHelper
       bg_color: "bg-#{color}-#{intensity}",
       hover_bg_color: "hover:bg-#{color}-#{intensity == 50 ? 100 : intensity + 100}",
       text_color: "text-gray-800"
+    }
+  end
+
+  def disabled_card(title, icon:)
+    {
+      title: title,
+      icon: icon,
+      disabled: true,
+      bg_color: "bg-gray-100",
+      text_color: "text-gray-400"
     }
   end
 end
