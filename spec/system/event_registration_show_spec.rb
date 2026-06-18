@@ -89,8 +89,8 @@ RSpec.describe "Event registration show page", type: :system do
       expect(page).to have_text("Where to park")
     end
 
-    it "hides a paid-only callout until the registration is paid in full" do
-      paid_only = create(:registration_ticket_callout, :paid_only, event: event, title: "Your workbook")
+    it "hides a payment-gated callout until the registration is paid in full" do
+      gated_callout = create(:registration_ticket_callout, :payment_access_gated, event: event, title: "Your workbook")
 
       sign_in(user)
       visit registration_ticket_path(registration.slug)
@@ -101,7 +101,7 @@ RSpec.describe "Event registration show page", type: :system do
       visit registration_ticket_path(registration.slug)
 
       expect(page).to have_link("Your workbook",
-        href: event_registration_ticket_callout_path(event, paid_only, reg: registration.slug))
+        href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
     end
   end
 

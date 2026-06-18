@@ -403,7 +403,7 @@ if art_workshop && art_workshop.registration_ticket_callouts.none?
         callout_type: "action",
         color_class: "blue",
         icon_class: "fa-solid fa-file-pdf",
-        show_if_paid: true,
+        payment_access_gated: true,
         position: 3,
         description: <<~HTML.strip
           <p>Thanks for completing your payment! Your printable workbook is ready.</p>
@@ -418,7 +418,7 @@ end
 # facilitator-training emails. Each entry is one callout; events pick the subset
 # they need from COMPONENT_CALLOUTS below. The flagship training shows all of
 # them (so the ticket exercises every colour, icon, type, and the paid-only gate);
-# other trainings mix and match a generic subset. `show_if_paid` callouts stay
+# other trainings mix and match a generic subset. `payment_access_gated` callouts stay
 # hidden until the registration is paid. Idempotent: an event is only seeded when
 # it has no callouts yet, so admin edits survive a re-seed.
 component_callouts = {
@@ -446,7 +446,7 @@ component_callouts = {
     title: "Training workshop worksheets",
     subtitle: "Print these before the training (optional)",
     callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-file-lines",
-    show_if_paid: true,
+    payment_access_gated: true,
     description: <<~HTML.strip
       <p>You're welcome to print the 2-day training workshop worksheets to use as you create — printing is optional.</p>
       <p>Your worksheets are available now that your training fee is paid.</p>
@@ -495,7 +495,7 @@ component_callouts = {
     title: "Facilitator Portal access",
     subtitle: "Available once attendance & payment are complete",
     callout_type: "reference", color_class: "rose", icon_class: "fa-solid fa-right-to-bracket",
-    show_if_paid: true,
+    payment_access_gated: true,
     description: <<~HTML.strip
       <p>Access to the Facilitator Portal is provided once your attendance requirements are met and your training fee is paid.</p>
       <p>You're all set — watch for your portal invitation.</p>
@@ -526,7 +526,7 @@ component_callouts = {
     title: "All training handouts",
     subtitle: "Agenda, worksheets, and resources in one place",
     callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-folder-open",
-    show_if_paid: true,
+    payment_access_gated: true,
     description: <<~HTML.strip
       <p>All of the handouts for the training — including the agenda for both days and the art workshop worksheets — are available in one place.</p>
     HTML
@@ -552,7 +552,7 @@ component_callouts = {
     title: "Zoom connection info",
     subtitle: "Join link, meeting ID, and passcode",
     callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-video",
-    show_if_paid: true,
+    payment_access_gated: true,
     description: <<~HTML.strip
       <p>Join us on Zoom for both training days. You'll find the join link in this ticket's videoconference section.</p>
       <ul>
