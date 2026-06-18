@@ -91,6 +91,12 @@ class FormField < ApplicationRecord
   validate :max_characters_allows_min_words
   validate :non_input_types_cannot_be_required
 
+  # New fields submitted without a position (e.g. added in the form editor and
+  # not dragged) would otherwise save with a nil position and sort to the top of
+  # the list. Append them to the bottom instead. Dragged fields arrive with an
+  # explicit position and are left untouched.
+  before_validation :append_to_bottom, on: :create, if: -> { position.blank? }
+
   # Enum
   enum :status, [ :inactive, :active ]
   enum :visibility, [ :always_ask, :scholarship_only, :logged_out_only, :answers_on_file ]
@@ -235,6 +241,12 @@ class FormField < ApplicationRecord
     return unless required?
 
     errors.add(:required, "is not available for #{answer_type_label.downcase} fields")
+  end
+
+  # Places a positionless new field after the current last field on its form, so
+  # newly added fields land at the bottom of the editor list rather than the top.
+  def append_to_bottom
+    self.position = (form&.form_fields&.maximum(:position) || 0) + 1
   end
 
   # The character ceiling actually enforced for this field: the explicit
