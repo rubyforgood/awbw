@@ -1,4 +1,7 @@
 class PaymentsController < ApplicationController
+  # authorize! calls use with: PaymentPolicy explicitly because @payment uses STI
+  # (CashPayment, CheckPayment, ExternalProcessorPayment), and ActionPolicy would
+  # otherwise look up a policy by the subclass name (e.g. ExternalProcessorPaymentPolicy).
   PERMITTED_PAYMENT_TYPES = %w[CashPayment CheckPayment ExternalProcessorPayment].freeze
   def index
     authorize!
