@@ -26,36 +26,72 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
   describe "primary service area tagging" do
     let!(:primary_sector) { create(:sector, name: "Healthcare") }
-    let!(:other_sector) { create(:sector, name: "Education") }
+    let!(:additional_sector) { create(:sector, name: "Education") }
 
-    it "tags the selected primary service area sectors as primary on the person" do
+    it "tags only the single-select dropdown sector as primary and the checkbox sectors as additional" do
       result = described_class.call(
         event: event,
         form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+          field_id("primary_service_area_single") => [ primary_sector.id.to_s ],
+          field_id("primary_service_area") => [ additional_sector.id.to_s ]
         )
       )
 
       expect(result.success?).to be true
       person = result.event_registration.registrant
-      primary_item = person.sectorable_items.find_by(sector: primary_sector)
-      expect(primary_item.is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: additional_sector).is_primary).to be false
     end
 
-    it "marks an existing additional sector as primary when later selected" do
+    it "leaves the person with exactly one primary sector regardless of how many additional are chosen" do
+      extra_sector = create(:sector, name: "Housing")
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+          field_id("primary_service_area_single") => [ primary_sector.id.to_s ],
+          field_id("primary_service_area") => [ additional_sector.id.to_s, extra_sector.id.to_s ]
+        )
+      )
+
+      person = result.event_registration.registrant
+      expect(person.sectorable_items.where(is_primary: true).count).to eq(1)
+      expect(person.sectorable_items.find_by(is_primary: true).sector).to eq(primary_sector)
+    end
+
+    it "does not duplicate a sector named as both primary and additional" do
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+          field_id("primary_service_area_single") => [ primary_sector.id.to_s ],
+          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+        )
+      )
+
+      person = result.event_registration.registrant
+      items = person.sectorable_items.where(sector: primary_sector)
+      expect(items.count).to eq(1)
+      expect(items.first.is_primary).to be true
+    end
+
+    it "demotes a previously primary sector when a new primary is named" do
       person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
-      person.sectorable_items.create!(sector: primary_sector, is_primary: false)
+      old_primary = create(:sector, name: "Legal")
+      person.sectorable_items.create!(sector: old_primary, is_primary: true)
 
       described_class.call(
         event: event,
         form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+          field_id("primary_service_area_single") => [ primary_sector.id.to_s ]
         )
       )
 
+      expect(person.sectorable_items.find_by(sector: old_primary).is_primary).to be false
       expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+      expect(person.sectorable_items.where(is_primary: true).count).to eq(1)
     end
   end
 

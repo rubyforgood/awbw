@@ -227,15 +227,18 @@ module EventRegistrationServices
     end
 
     def assign_tags(person, organization)
-      sector_ids = collect_ids_from_checkboxes("primary_service_area_single") +
-                   collect_ids_from_checkboxes("primary_service_area")
+      # The single-select dropdown names the ONE primary service area; the
+      # checkbox field collects ADDITIONAL areas. A sector named in both is
+      # primary, never duplicated.
+      primary_sector_id = collect_ids_from_checkboxes("primary_service_area_single").first
+      sector_ids = (Array(primary_sector_id) + collect_ids_from_checkboxes("primary_service_area")).uniq
       category_ids = collect_ids_from_checkboxes("workshop_environments") +
                      collect_ids_from_checkboxes("client_life_experiences") +
                      collect_ids_from_checkboxes("primary_age_group")
 
       if sector_ids.any?
         sectors = Sector.where(id: sector_ids)
-        assign_primary_sectors(person, sectors)
+        assign_sectors(person, sectors, primary_sector_id: primary_sector_id)
         organization.sectors = (organization.sectors + sectors).uniq if organization
       end
 
@@ -246,11 +249,20 @@ module EventRegistrationServices
       end
     end
 
-    def assign_primary_sectors(person, sectors)
+    # Tags the person with their submitted service areas — exactly one primary
+    # (the dropdown selection) and the rest additional — without ever leaving two
+    # primaries behind. Each (sector, person) is a single row, so a sector can't
+    # be both primary and additional.
+    def assign_sectors(person, sectors, primary_sector_id:)
       sectors.each do |sector|
         item = person.sectorable_items.find_or_initialize_by(sector: sector)
-        item.update!(is_primary: true)
+        item.update!(is_primary: sector.id == primary_sector_id)
       end
+      return unless primary_sector_id
+
+      person.sectorable_items.where(is_primary: true)
+            .where.not(sector_id: primary_sector_id)
+            .update_all(is_primary: false)
     end
 
     def collect_ids_from_checkboxes(identifier)
