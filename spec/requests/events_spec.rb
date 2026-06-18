@@ -1124,7 +1124,7 @@ RSpec.describe "Events", type: :request do
                           field_identifier: "impact_description")
     end
     let(:service_area_field) do
-      create(:form_field, form: registration_form, name: "Primary service area", field_identifier: "primary_service_area")
+      create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
     end
 
     before do

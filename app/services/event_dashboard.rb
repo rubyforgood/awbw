@@ -338,19 +338,19 @@ class EventDashboard
   end
 
   # Every sector tagged on registrants (primary + additional), backing the
-  # "All service areas" chart. The "Primary service area" chart instead uses
+  # "All sectors" chart. The "Primary sector" chart instead uses
   # #primary_sectors / #primary_sector_counts, which read only the dropdown.
   def sectors
     @sectors ||= Sector.where(id: registrant_sector_ids).order(:name)
   end
 
-  # Sectors registrants named as their single primary service area (the
-  # registration dropdown), ordered for the "Primary service area" chart.
+  # Sectors registrants named as their single primary sector (the
+  # registration dropdown), ordered for the "Primary sector" chart.
   def primary_sectors
     @primary_sectors ||= Sector.where(id: primary_sector_counts.keys).order(:name)
   end
 
-  # Distinct-registrant count per sector named as the primary service area.
+  # Distinct-registrant count per sector named as the primary sector.
   def primary_sector_counts
     @primary_sector_counts ||= primary_sector_registrant_ids_by_sector.transform_values(&:size)
   end
@@ -380,7 +380,7 @@ class EventDashboard
       .pluck(:sectorable_id)
   end
 
-  # Distinct sectors registrants named as their primary service area, and distinct
+  # Distinct sectors registrants named as their primary sector, and distinct
   # sectors that appear as an additional (non-primary) tag. These OVERLAP — a
   # sector can be primary for one registrant and additional for another, so the
   # two counts can each be up to the sectors total and may sum to more than it.
@@ -790,14 +790,14 @@ class EventDashboard
       .uniq
   end
 
-  # Distinct sector ids registrants named as their primary service area, limited
+  # Distinct sector ids registrants named as their primary sector, limited
   # to sectors actually represented among registrants.
   def primary_sector_ids
     @primary_sector_ids ||= primary_service_area_rows.map(&:last).uniq & registrant_sector_ids
   end
 
   # Distinct sectors a registrant has as a tag without having named that sector as
-  # their own primary service area. Overlaps primary_sector_ids when a sector is
+  # their own primary sector. Overlaps primary_sector_ids when a sector is
   # primary for one registrant and additional for another.
   def additional_sector_ids
     @additional_sector_ids ||= begin
@@ -814,9 +814,9 @@ class EventDashboard
       .pluck(:sectorable_id, :sector_id)
   end
 
-  # [ person_id, sector_id ] pairs from registrants' primary service area answers.
+  # [ person_id, sector_id ] pairs from registrants' primary sector answers.
   # Read from the single-select dropdown ("primary_service_area_single"); the
-  # checkbox "primary_service_area" field collects ADDITIONAL service areas.
+  # checkbox "primary_service_area" field collects the Additional sectors.
   def primary_service_area_rows
     field = registration_form_field("primary_service_area_single")
     return [] unless field

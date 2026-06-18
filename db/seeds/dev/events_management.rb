@@ -945,7 +945,7 @@ end
 puts "Giving Amy free-text \"Other\" answers on her Facilitator Training submission…"
 # Demo data for the "Other" chips on the person profile + edit pages: a registrant
 # who picked the "Other" option (folded into "Other: <text>") on a sector-backed
-# field (Primary service area) and a category-backed field (Workshop Settings).
+# field (Additional sectors) and a category-backed field (Workshop Settings).
 # These free-text values can't be Sector/Category records, so they only surface
 # via Person#other_service_area_responses / #other_workshop_setting_responses.
 # Seeded before the professional-answer enrichment below so the primary_service_area

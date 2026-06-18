@@ -280,7 +280,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       sector_a = create(:sector, :published, name: "Healthcare")
       sector_b = create(:sector, :published, name: "Education")
       create(:form_field, form: form, answer_type: :single_select_radio,
-             field_identifier: "primary_service_area", name: "Primary service area",
+             field_identifier: "primary_service_area", name: "Primary sector",
              required: false)
 
       get new_event_public_registration_path(event)
@@ -294,7 +294,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     it "still renders a dynamic-option field as checkboxes" do
       create(:sector, :published, name: "Healthcare")
       create(:form_field, form: form, answer_type: :multi_select_checkbox,
-             field_identifier: "primary_service_area", name: "Primary service area",
+             field_identifier: "primary_service_area", name: "Primary sector",
              required: false)
 
       get new_event_public_registration_path(event)
