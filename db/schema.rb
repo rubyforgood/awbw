@@ -926,7 +926,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_034355) do
     t.string "email_2_type"
     t.string "email_type"
     t.string "facebook_url"
-    t.string "filemaker_code"
     t.string "first_name", null: false
     t.string "instagram_url"
     t.string "last_name", null: false
@@ -959,7 +958,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_034355) do
     t.integer "updated_by_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_people_on_created_by_id"
-    t.index ["filemaker_code"], name: "index_people_on_filemaker_code"
     t.index ["updated_by_id"], name: "index_people_on_updated_by_id"
   end
 
