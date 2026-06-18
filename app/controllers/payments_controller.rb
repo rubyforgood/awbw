@@ -83,6 +83,63 @@ class PaymentsController < ApplicationController
     authorize! @payment, with: PaymentPolicy
   end
 
+  def new_checkout_link
+    authorize!
+  end
+
+  def create_checkout_link
+    authorize!
+    amount_cents = (params[:amount_dollars].to_d * 100).to_i
+
+    if amount_cents <= 0
+      flash.now[:alert] = "Amount must be greater than $0.00"
+      render :new_checkout_link, status: :unprocessable_content
+      return
+    end
+
+    description = params[:description].presence || "Custom Stripe Payment"
+
+    checkout_session = Stripe::Checkout::Session.create(
+      mode: "payment",
+      line_items: [ {
+        price_data: {
+          currency: "usd",
+          product_data: { name: description },
+          unit_amount: amount_cents
+        },
+        quantity: 1
+      } ],
+      payment_intent_data: {
+        description: description
+      },
+      custom_fields: [
+        {
+          key: "first_name",
+          label: { type: "custom", custom: "First name" },
+          type: "text",
+          optional: false
+        },
+        {
+          key: "last_name",
+          label: { type: "custom", custom: "Last name" },
+          type: "text",
+          optional: false
+        },
+        {
+          key: "organization",
+          label: { type: "custom", custom: "Organization" },
+          type: "text",
+          optional: true
+        }
+      ],
+      success_url: root_url,
+      cancel_url: root_url
+    )
+
+    @checkout_url = checkout_session.url
+    render :new_checkout_link
+  end
+
   def allocation_form
     authorize!
     payment_type = params[:type].presence
