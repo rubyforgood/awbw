@@ -13,19 +13,25 @@
     </div>
   <% end %>
 
-  <i class="hidden self-center shrink-0 text-xl" data-callout-preview-target="leadingIcon" aria-hidden="true"></i>
-
   <div class="flex-1 min-w-0 space-y-3">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <div>
-        <%= f.label :title, "Title", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-        <%= f.text_field :title, required: true, placeholder: "e.g. Parking & directions",
-              class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+    <div class="flex items-center gap-3">
+      <i class="hidden shrink-0 text-xl" data-callout-preview-target="leadingIcon" aria-hidden="true"></i>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-w-0">
+        <div>
+          <%= f.label :title, "Title", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+          <%= f.text_field :title, required: true, placeholder: "e.g. Parking & directions",
+                class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+        </div>
+        <div>
+          <%= f.label :subtitle, "Subtitle", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+          <%= f.text_field :subtitle, placeholder: "Short line shown under the title on the ticket",
+                class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+        </div>
       </div>
-      <div>
-        <%= f.label :subtitle, "Subtitle", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-        <%= f.text_field :subtitle, placeholder: "Short line shown under the title on the ticket",
-              class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+
+      <div class="shrink-0 text-gray-300" data-callout-preview-target="arrow" aria-hidden="true" title="Links to its own page on the ticket">
+        <i class="fa-solid fa-arrow-right"></i>
       </div>
     </div>
 
@@ -56,7 +62,7 @@
 
     <div>
       <%= f.label :description, "Content", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-      <p class="text-xs text-gray-500 mb-1">Shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Leave blank to keep the call-out from linking anywhere.</p>
+      <p class="text-xs text-gray-500 mb-1">Shown on its own page. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Leave blank to keep the call-out from linking anywhere.</p>
       <%= f.text_area :description, rows: 4,
             placeholder: "e.g. <p>Enter through the north lot…</p>",
             class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
@@ -70,9 +76,5 @@
       <%= link_to_remove_association "Remove", f,
             class: "text-sm text-gray-400 hover:text-red-600 underline" %>
     </div>
-  </div>
-
-  <div class="self-center shrink-0 text-gray-300" data-callout-preview-target="arrow" aria-hidden="true" title="Links to its own page on the ticket">
-    <i class="fa-solid fa-arrow-right"></i>
   </div>
 </div>

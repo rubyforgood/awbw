@@ -38,7 +38,7 @@ export default class extends Controller {
     if (!this.hasLeadingIconTarget || !this.hasIconInputTarget) return
     const glyph = this.iconInputTarget.value.trim()
     this.leadingIconTarget.className = glyph
-      ? `${glyph} ${theme.icon} self-center shrink-0 text-xl`
+      ? `${glyph} ${theme.icon} shrink-0 text-xl`
       : "hidden"
   }
 
