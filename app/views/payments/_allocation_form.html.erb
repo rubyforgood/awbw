@@ -21,7 +21,7 @@
         designation fills the other person/organization slot. %>
     <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
       <%= f.input :payer_sgid,
-        collection: party_select_options(@payment.form_payer, @payment.payer_sgid),
+        collection: party_select_options(@payment.selected_payer, @payment.payer_sgid),
         required: true,
         input_html: {
           class: "bg-white",
@@ -34,7 +34,7 @@
         label: "Payer",
         hint: "Whose account is the money coming from?" %>
       <%= f.input :additional_designation_sgid,
-        collection: party_select_options(@payment.form_additional_designation, @payment.additional_designation_sgid),
+        collection: party_select_options(@payment.selected_additional_designation, @payment.additional_designation_sgid),
         include_blank: true,
         input_html: {
           class: "bg-white",

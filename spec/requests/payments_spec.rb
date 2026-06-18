@@ -163,6 +163,25 @@ RSpec.describe "Payments", type: :request do
       expect(payment.person).to eq(registration.registrant)
     end
 
+    it "rejects two people without creating a payment" do
+      other_person = create(:person)
+
+      expect {
+        post payments_path, params: {
+          payment: {
+            type: "CashPayment",
+            payer_sgid: registration.registrant.to_sgid.to_s,
+            additional_designation_sgid: other_person.to_sgid.to_s,
+            amount_dollars: "50.00",
+            allocatable_sgid: registration.to_sgid.to_s
+          }
+        }
+      }.to change(Payment, :count).by(0)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("must be different kinds")
+    end
+
     it "creates a payment from a person payer with no additional designation" do
       post payments_path, params: {
         payment: {

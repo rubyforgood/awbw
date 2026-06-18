@@ -13,6 +13,7 @@ class Payment < ApplicationRecord
   validates :payer_type, presence: true, inclusion: { in: PAYER_TYPES }
 
   validate :at_least_one_payer
+  validate :payer_and_designation_distinct_kinds, if: :sgid_assigned?
 
   before_create :set_external_origin
   before_validation :set_amount_cents_remaining, if: :new_record?
@@ -67,6 +68,17 @@ class Payment < ApplicationRecord
   # The other party — whichever of person/organization isn't the payer.
   def form_additional_designation
     [ organization, person ].compact.find { |record| record != form_payer }
+  end
+
+  # The record a submitted sgid resolves to, falling back to the saved/default
+  # selection. Used to set the columns and to re-render the form (with the user's
+  # picks intact) after a validation failure.
+  def selected_payer
+    defined?(@payer_sgid) ? locate_party(@payer_sgid) : form_payer
+  end
+
+  def selected_additional_designation
+    defined?(@additional_designation_sgid) ? locate_party(@additional_designation_sgid) : form_additional_designation
   end
 
   # Memoize the computed default so repeated reads in a single render return the
@@ -129,8 +141,8 @@ class Payment < ApplicationRecord
   end
 
   def assign_parties_from_sgids
-    payer_record = defined?(@payer_sgid) ? locate_party(@payer_sgid) : form_payer
-    other_record = defined?(@additional_designation_sgid) ? locate_party(@additional_designation_sgid) : form_additional_designation
+    payer_record = selected_payer
+    other_record = selected_additional_designation
 
     self.person_id = nil
     self.organization_id = nil
@@ -172,5 +184,21 @@ class Payment < ApplicationRecord
     if person_id.blank? && organization_id.blank?
       errors.add(:base, "At least one payer (person or organization) must be present")
     end
+  end
+
+  # A payment holds one person and one organization, so the payer and the
+  # additional designation can't be the same kind. Reject the submission rather
+  # than silently dropping the designation (fill_party_slot's no-op).
+  def payer_and_designation_distinct_kinds
+    payer_record = selected_payer
+    designation = selected_additional_designation
+    return if payer_record.blank? || designation.blank?
+
+    same_kind = [ Person, Organization ].any? do |klass|
+      payer_record.is_a?(klass) && designation.is_a?(klass)
+    end
+    return unless same_kind
+
+    errors.add(:base, "The payer and additional designation must be different kinds — a payment records one person and one organization, not two of the same.")
   end
 end

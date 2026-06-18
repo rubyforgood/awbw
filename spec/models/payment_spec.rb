@@ -109,15 +109,32 @@ RSpec.describe Payment, type: :model do
       expect(payment.person).to be_nil
     end
 
-    it "drops a same-kind designation the single column can't hold" do
+    it "is invalid when the payer and designation are both people" do
       other_person = create(:person)
       payment = build(:payment, person: nil, organization: nil, payer_type: nil)
       payment.payer_sgid = person.to_sgid.to_s
       payment.additional_designation_sgid = other_person.to_sgid.to_s
-      payment.valid?
 
-      expect(payment.payer_type).to eq("Person")
-      expect(payment.person).to eq(person)
+      expect(payment).not_to be_valid
+      expect(payment.errors[:base]).to include(a_string_including("must be different kinds"))
+    end
+
+    it "is invalid when the payer and designation are both organizations" do
+      other_org = create(:organization)
+      payment = build(:payment, person: nil, organization: nil, payer_type: nil)
+      payment.payer_sgid = org.to_sgid.to_s
+      payment.additional_designation_sgid = other_org.to_sgid.to_s
+
+      expect(payment).not_to be_valid
+      expect(payment.errors[:base]).to include(a_string_including("must be different kinds"))
+    end
+
+    it "is valid when the payer and designation are different kinds" do
+      payment = build(:payment, person: nil, organization: nil, payer_type: nil)
+      payment.payer_sgid = person.to_sgid.to_s
+      payment.additional_designation_sgid = org.to_sgid.to_s
+
+      expect(payment).to be_valid
     end
 
     it "exposes the current payer/designation as sgids for the form" do
