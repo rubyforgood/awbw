@@ -83,6 +83,22 @@ class PaymentsController < ApplicationController
     authorize! @payment, with: PaymentPolicy
   end
 
+  def edit
+    @payment = Payment.find(params[:id])
+    authorize! @payment, with: PaymentPolicy
+  end
+
+  def update
+    @payment = Payment.find(params[:id])
+    authorize! @payment, with: PaymentPolicy
+
+    if @payment.update(edit_payment_params)
+      redirect_to payment_path(@payment), notice: "Payment was successfully updated."
+    else
+      render :edit, status: :unprocessable_content
+    end
+  end
+
   def new_checkout_link
     authorize!
   end
@@ -229,6 +245,10 @@ class PaymentsController < ApplicationController
     else
       payment_amount
     end
+  end
+
+  def edit_payment_params
+    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id)
   end
 
   def redirect_path_for(allocatable)
