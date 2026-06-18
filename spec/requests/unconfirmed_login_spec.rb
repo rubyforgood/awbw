@@ -39,7 +39,7 @@ RSpec.describe "Unconfirmed user login", type: :request do
       expect(session[:unconfirmed_email]).to be_nil
     end
 
-    it "creates a system notification" do
+    it "creates a notification" do
       post user_session_path, params: { user: { email: user.email, password: "password123" } }
 
       expect {

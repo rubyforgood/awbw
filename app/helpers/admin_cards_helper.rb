@@ -33,7 +33,7 @@ module AdminCardsHelper
       model_card(:quotes, icon: "💬", intensity: 100),
       model_card(:payments, icon: "💳"),
       custom_card("Scholarships", grants_path, icon: "🎓", color: :fuchsia),
-      custom_card("System notifications", notifications_path, icon: "🔔"),
+      model_card(:notifications, icon: "🔔"),
       model_card(:story_ideas, icon: "✍🏾️", intensity: 100),
       custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
       model_card(:workshop_ideas, icon: "💡", intensity: 100),
