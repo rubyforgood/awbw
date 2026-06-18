@@ -155,7 +155,7 @@
           paid/completed + outstanding sub-rows that expand to the registrants behind the figure. %>
       <div class="flex flex-col md:flex-row md:flex-wrap md:items-stretch gap-3 md:gap-4">
         <%# Payments = Paid + Outstanding %>
-        <details class="flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:payments, intensity: 200) %> bg-white p-4 shadow-sm">
+        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:payments, intensity: 200) %> bg-white p-4 shadow-sm">
           <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:payments, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
@@ -174,7 +174,7 @@
                 <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:payments, intensity: 700) %> tabular-nums"><%= number_to_currency(@dashboard.registration_subtotal_cents / 100.0) %></span>
                 <span class="text-xs text-gray-500">including due</span>
               </p>
-              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
             </div>
           </summary>
 
@@ -195,7 +195,7 @@
         </details>
 
         <%# Scholarships = Completed + Outstanding %>
-        <details class="flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> bg-white p-4 shadow-sm">
+        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> bg-white p-4 shadow-sm">
           <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
@@ -213,7 +213,7 @@
               <p class="break-words">
                 <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> tabular-nums"><%= number_to_currency(@dashboard.scholarship_total_cents / 100.0) %></span>
               </p>
-              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
             </div>
           </summary>
 
@@ -227,7 +227,7 @@
         </details>
 
         <%# Continuing education fees = Paid + Outstanding %>
-        <details class="flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:continuing_education, intensity: 200) %> bg-white p-4 shadow-sm">
+        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:continuing_education, intensity: 200) %> bg-white p-4 shadow-sm">
           <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
@@ -246,7 +246,7 @@
                 <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:continuing_education, intensity: 700) %> tabular-nums"><%= number_to_currency(@dashboard.cont_ed_total_cents / 100.0) %></span>
                 <span class="text-xs text-gray-500">including due</span>
               </p>
-              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+              <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
             </div>
           </summary>
 
@@ -269,7 +269,7 @@
 
   <%# Headcount cards — each expands to reveal its full list %>
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
@@ -279,7 +279,7 @@
             </span>
             <span class="truncate">Registrants</span>
           </h3>
-          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
         <p class="text-xs text-gray-500 mt-1">Active registrations<% if @dashboard.inactive_registration_count.positive? %> · <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.inactive_registrant_ids.join("-")), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.inactive_registration_count %> inactive <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% end %></p>
       </summary>
@@ -300,7 +300,7 @@
       </div>
     </details>
 
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:organizations, intensity: 700) %>">
@@ -310,7 +310,7 @@
             </span>
             <span class="truncate">Organizations</span>
           </h3>
-          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
         <p class="text-xs text-gray-500 mt-1">Via registrants</p>
       </summary>
@@ -335,7 +335,7 @@
       </div>
     </details>
 
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:sectors, intensity: 700) %>">
@@ -345,7 +345,7 @@
             </span>
             <span class="truncate">Sectors</span>
           </h3>
-          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
         <p class="text-xs text-gray-500 mt-1">Via registrants</p>
       </summary>
@@ -367,7 +367,7 @@
       </div>
     </details>
 
-    <details class="bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:addresses, intensity: 700) %>">
@@ -377,7 +377,7 @@
             </span>
             <span class="truncate">States</span>
           </h3>
-          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
         <p class="text-xs text-gray-500 mt-1">Via registrants</p>
       </summary>
