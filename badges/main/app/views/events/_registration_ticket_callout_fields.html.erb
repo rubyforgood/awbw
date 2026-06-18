@@ -1,6 +1,6 @@
 <div class="nested-fields registration-ticket-callout-fields flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors"
      data-controller="callout-preview"
-     data-callout-preview-themes-value="<%= RegistrationTicketCallout::COLOR_THEMES.to_json %>"
+     data-callout-preview-themes-value="<%= DomainTheme.swatches.to_json %>"
      data-callout-preview-defaults-value="<%= RegistrationTicketCallout::DEFAULT_COLORS.to_json %>"
      <% if f.object.persisted? %>data-sortable-id="<%= f.object.id %>"<% end %>>
   <% if f.object.persisted? %>
@@ -53,7 +53,7 @@
       <div>
         <%= f.label :color_class, "Colour", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
         <%= f.select :color_class,
-              RegistrationTicketCallout::COLOR_THEMES.keys.map { |c| [ c.humanize, c ] },
+              DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
               { include_blank: "Default (by type)" },
               class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
               data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>
