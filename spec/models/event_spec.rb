@@ -8,6 +8,40 @@ RSpec.describe Event, type: :model do
     it { should validate_numericality_of(:cost_cents).is_greater_than_or_equal_to(0).allow_nil }
   end
 
+  describe "#all_day?" do
+    it "is true when the start time is midnight (no time entered)" do
+      event = build(:event, start_date: Time.zone.now.beginning_of_day)
+      expect(event.all_day?).to be(true)
+    end
+
+    it "is false when the start has a specific time" do
+      event = build(:event, start_date: Time.zone.now.change(hour: 9, min: 30))
+      expect(event.all_day?).to be(false)
+    end
+
+    it "is false when there is no start date" do
+      event = build(:event, start_date: nil)
+      expect(event.all_day?).to be(false)
+    end
+  end
+
+  describe "optional time inputs" do
+    it "leaves the time field blank for an all-day event so it isn't shown as 00:00" do
+      event = build(:event, start_date: Time.zone.now.beginning_of_day,
+                            end_date: Time.zone.now.beginning_of_day)
+      expect(event.start_date_time).to be_nil
+      expect(event.end_date_time).to be_nil
+    end
+
+    it "persists a blank time as midnight and stays valid as an all-day event" do
+      event = create(:event)
+      event.update!(start_date_date: "2026-07-23", start_date_time: "")
+      event.reload
+      expect(event.start_date.in_time_zone.strftime("%H:%M")).to eq("00:00")
+      expect(event.all_day?).to be(true)
+    end
+  end
+
   describe "destroying with form submissions" do
     it "is blocked and keeps the submission when the event has one" do
       event = create(:event)

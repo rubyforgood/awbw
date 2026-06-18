@@ -218,6 +218,21 @@ RSpec.describe EventDecorator do
       expect(apple["href"]).not_to include("Meeting ID")
       expect(apple["href"]).not_to include("secret123")
     end
+
+    it "emits all-day calendar entries when the event has no time" do
+      event = build(:event,
+                    start_date: Time.zone.local(2026, 7, 23).beginning_of_day,
+                    end_date: Time.zone.local(2026, 7, 23).beginning_of_day).decorate
+      doc = Nokogiri::HTML.fragment(event.calendar_links)
+      hrefs = doc.css("a").to_h { |a| [ a.text, a["href"] ] }
+
+      # End date is exclusive, so a single all-day day spans 07-23 to 07-24.
+      expect(hrefs["Google"]).to include("dates=20260723/20260724")
+      expect(hrefs["Apple"]).to include("DTSTART;VALUE=DATE:20260723")
+      expect(hrefs["Apple"]).to include("DTEND;VALUE=DATE:20260724")
+      expect(hrefs["Outlook"]).to include("startdt=2026-07-23&enddt=2026-07-24&allday=true")
+      expect(hrefs["Yahoo"]).to include("st=20260723&dur=allday")
+    end
   end
 
   describe "#times" do
@@ -231,6 +246,29 @@ RSpec.describe EventDecorator do
       event = build(:event, start_date: Time.zone.local(2026, 4, 30, 9), end_date: Time.zone.local(2026, 5, 2, 16, 30)).decorate
       tz = Time.zone.local(2026, 4, 30, 9).strftime("%Z")
       expect(event.times(display_day: true, display_date: true)).to eq("Thu-Sat, Apr 30 - May 2 @ 9 am - 4:30 pm #{tz}")
+    end
+  end
+
+  describe "#times for all-day events" do
+    it "renders only the date when no time is set" do
+      event = build(:event,
+                    start_date: Time.zone.local(2026, 7, 23).beginning_of_day,
+                    end_date: Time.zone.local(2026, 7, 23).beginning_of_day).decorate
+      expect(event.times(display_day: true, display_date: true)).to eq("Thu, Jul 23")
+    end
+
+    it "renders only the date range for a multi-day all-day event" do
+      event = build(:event,
+                    start_date: Time.zone.local(2026, 7, 23).beginning_of_day,
+                    end_date: Time.zone.local(2026, 7, 24).beginning_of_day).decorate
+      expect(event.times(display_day: true, display_date: true)).to eq("Thu, Jul 23 - Fri, Jul 24")
+    end
+
+    it "omits the time line in the styled layout" do
+      event = build(:event,
+                    start_date: Time.zone.local(2026, 7, 23).beginning_of_day,
+                    end_date: Time.zone.local(2026, 7, 23).beginning_of_day).decorate
+      expect(event.times(styled: true)).to eq("Thursday, July 23")
     end
   end
 end

@@ -85,10 +85,9 @@
                          type: "date",
                          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                          required: true %></div>
-              <div><label class="block text-xs text-gray-600 mb-0.5">Time</label><%= f.text_field :start_date_time,
+              <div><label class="block text-xs text-gray-600 mb-0.5">Time (optional)</label><%= f.text_field :start_date_time,
                          type: "time",
-                         class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                         required: true %></div>
+                         class: "w-full rounded border-gray-300 bg-gray-100 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %></div>
 
               <% if f.object.errors[:start_date].any? %>
                 <p class="text-red-500 text-sm mt-1">Start date <%= f.object.errors[:start_date].join(", ") %></p>
@@ -102,18 +101,17 @@
                          type: "date",
                          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                          required: true %></div>
-              <div><label class="block text-xs text-gray-600 mb-0.5">Time</label><%= f.text_field :end_date_time,
+              <div><label class="block text-xs text-gray-600 mb-0.5">Time (optional)</label><%= f.text_field :end_date_time,
                          type: "time",
-                         class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                         required: true %></div>
+                         class: "w-full rounded border-gray-300 bg-gray-100 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %></div>
 
               <% if f.object.errors[:end_date].any? %>
                 <p class="text-red-500 text-sm mt-1">End date <%= f.object.errors[:end_date].join(", ") %></p>
               <% end %>
             </div>
 
-            <div class="bg-white border border-gray-200 rounded-lg p-3">
-              <h3 class="font-medium mb-2">Registration closed</h3>
+            <div class="bg-gray-100 border border-gray-300 rounded-lg p-3">
+              <h3 class="font-medium mb-2">Registration close <span class="text-xs font-normal text-gray-500">(optional)</span></h3>
               <% rc_default = @event.registration_close_date || event_registration_close_default(@event) %>
 
               <div class="mb-2">
@@ -125,7 +123,7 @@
                          value: rc_default.strftime("%Y-%m-%d") %>
               </div>
 
-              <div><label class="block text-xs text-gray-600 mb-0.5">Time</label><%= f.text_field :registration_close_date_time,
+              <div><label class="block text-xs text-gray-600 mb-0.5">Time (optional)</label><%= f.text_field :registration_close_date_time,
                          type: "time",
                          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                          value: rc_default.strftime("%H:%M") %></div>
@@ -136,9 +134,16 @@
             </div>
           </div>
 
+          <p class="-mt-1 text-sm text-gray-500">
+            <i class="fa-solid fa-circle-info text-gray-400"></i>
+            Leave a start or end time blank to show the event as all-day — no time
+            will appear anywhere the event is displayed. A blank time is saved as
+            12:00 AM, so an event can't be set to start exactly at midnight.
+          </p>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <div class="flex items-center justify-between gap-2 mb-1"><%= f.label :cost, "Event Cost", class: "block font-medium" %><span class="text-sm text-gray-600">Enter $0 if the event is free</span></div>
+              <%= f.label :cost, class: "block font-medium mb-1" do %>Event cost <span class="text-xs font-normal text-gray-500">Enter $0 if the event is free</span><% end %>
 
               <div class="relative">
                 <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>

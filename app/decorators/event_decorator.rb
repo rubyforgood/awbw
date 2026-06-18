@@ -74,8 +74,13 @@ class EventDecorator < ApplicationDecorator
   # registrant's gate (date + paid/intends); the default falls back to the
   # event-level date gate for registration-less contexts.
   def calendar_links(show_videoconference_details: object.videoconference_details_visible?)
+    all_day      = object.all_day?
     start_time   = object.start_date.utc.strftime("%Y%m%dT%H%M%SZ")
     end_time     = object.end_date.utc.strftime("%Y%m%dT%H%M%SZ")
+    # All-day calendar entries use bare dates; DTEND/end date is exclusive, so
+    # add a day to the last day the event runs.
+    start_day    = object.start_date.in_time_zone.to_date
+    end_day_excl = object.end_date.in_time_zone.to_date + 1
     title_encoded = ERB::Util.url_encode(object.title)
 
     # The join URL doubles as the calendar location, so withhold it from there
@@ -115,9 +120,20 @@ class EventDecorator < ApplicationDecorator
     desc_encoded     = ERB::Util.url_encode(description)
     location_encoded = ERB::Util.url_encode(cal_location.to_s)
 
+    ymd      = ->(date) { date.strftime("%Y%m%d") }
+    ymd_dash = ->(date) { date.strftime("%Y-%m-%d") }
+
+    google_dates   = all_day ? "#{ymd.call(start_day)}/#{ymd.call(end_day_excl)}" : "#{start_time}/#{end_time}"
+    apple_dtstart  = all_day ? "DTSTART;VALUE=DATE:#{ymd.call(start_day)}\n" : "DTSTART:#{start_time}\n"
+    apple_dtend    = all_day ? "DTEND;VALUE=DATE:#{ymd.call(end_day_excl)}\n" : "DTEND:#{end_time}\n"
+    outlook_start  = all_day ? ymd_dash.call(start_day) : start_time
+    outlook_end    = all_day ? ymd_dash.call(end_day_excl) : end_time
+    outlook_allday = all_day ? "&allday=true" : ""
+    yahoo_dates    = all_day ? "&st=#{ymd.call(start_day)}&dur=allday" : "&st=#{start_time}&et=#{end_time}"
+
     google_link =
       "https://calendar.google.com/calendar/render?action=TEMPLATE" \
-        "&text=#{title_encoded}&dates=#{start_time}/#{end_time}" \
+        "&text=#{title_encoded}&dates=#{google_dates}" \
         "&details=#{desc_encoded}&location=#{location_encoded}"
 
     apple_link =
@@ -125,8 +141,8 @@ class EventDecorator < ApplicationDecorator
         "VERSION:2.0\n" \
         "BEGIN:VEVENT\n" \
         "SUMMARY:#{object.title}\n" \
-        "DTSTART:#{start_time}\n" \
-        "DTEND:#{end_time}\n" \
+        "#{apple_dtstart}" \
+        "#{apple_dtend}" \
         "DESCRIPTION:#{description}\n" \
         "#{"LOCATION:#{cal_location}\n" if cal_location}" \
         "END:VEVENT\n" \
@@ -134,18 +150,18 @@ class EventDecorator < ApplicationDecorator
 
     outlook_link =
       "https://outlook.live.com/owa/?rru=addevent" \
-        "&startdt=#{start_time}&enddt=#{end_time}" \
+        "&startdt=#{outlook_start}&enddt=#{outlook_end}#{outlook_allday}" \
         "&subject=#{title_encoded}&body=#{desc_encoded}&location=#{location_encoded}"
 
     office365_link =
       "https://outlook.office.com/owa/?rru=addevent" \
-        "&startdt=#{start_time}&enddt=#{end_time}" \
+        "&startdt=#{outlook_start}&enddt=#{outlook_end}#{outlook_allday}" \
         "&subject=#{title_encoded}&body=#{desc_encoded}&location=#{location_encoded}"
 
     yahoo_link =
       "https://calendar.yahoo.com/?v=60" \
-        "&title=#{title_encoded}&st=#{start_time}" \
-        "&et=#{end_time}&desc=#{desc_encoded}&in_loc=#{location_encoded}"
+        "&title=#{title_encoded}#{yahoo_dates}" \
+        "&desc=#{desc_encoded}&in_loc=#{location_encoded}"
 
     h.safe_join(
       [
@@ -186,6 +202,24 @@ class EventDecorator < ApplicationDecorator
     full_day  = ->(d) { d.strftime("%A") }
     full_date = ->(d) { d.strftime("%B %-d") }
     wrap = ->(text, css) { css ? h.content_tag(:span, text, class: css) : text }
+
+    # All-day (no time entered) → render only the date / date range, no times.
+    if all_day?
+      if styled
+        return s.to_date == e.to_date ?
+          "#{full_day.call(s)}, #{full_date.call(s)}" :
+          all_day_date_range(s, e)
+      end
+
+      day_date = lambda do |d|
+        parts = []
+        parts << "#{day.call(d)}, " if display_day
+        parts << date.call(d)
+        h.safe_join(parts)
+      end
+      return day_date.call(s) if s.to_date == e.to_date
+      return h.safe_join([ day_date.call(s), day_date.call(e) ], " - ")
+    end
 
     format_time = lambda do |d|
       hour = d.strftime("%-l")
@@ -355,6 +389,18 @@ class EventDecorator < ApplicationDecorator
     when 11 then id.sub(/\A(\d{3})(\d{4})(\d{4})\z/, '\1 \2 \3')
     when 10 then id.sub(/\A(\d{3})(\d{3})(\d{4})\z/, '\1 \2 \3')
     else id
+    end
+  end
+
+  # Full-month date range for the styled (two-row) layout when an all-day event
+  # spans multiple days; collapses the month/year where they're shared.
+  def all_day_date_range(s, e)
+    if s.month == e.month && s.year == e.year
+      "#{s.strftime('%B')} #{s.strftime('%-d')}-#{e.strftime('%-d')}, #{s.strftime('%Y')}"
+    elsif s.year == e.year
+      "#{s.strftime('%B %-d')} - #{e.strftime('%B %-d')}, #{s.strftime('%Y')}"
+    else
+      "#{s.strftime('%B %-d, %Y')} - #{e.strftime('%B %-d, %Y')}"
     end
   end
 

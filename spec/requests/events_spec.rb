@@ -443,6 +443,26 @@ RSpec.describe "Events", type: :request do
         expect(created.start_date.utc).to eq(Time.utc(2025, 6, 15, 19, 0, 0))
         expect(created.end_date.utc).to eq(Time.utc(2025, 6, 15, 20, 0, 0))
       end
+
+      it "creates an all-day event when the date is given but the time is left blank" do
+        admin_pt = create(:user, :admin, time_zone: "Pacific Time (US & Canada)")
+        sign_in admin_pt
+        post events_url, params: { event: {
+          title: "All-day event",
+          description: "desc",
+          start_date_date: "2026-07-23",
+          start_date_time: "",
+          end_date_date: "2026-07-23",
+          end_date_time: "",
+          registration_close_date: 1.day.ago,
+          public: true
+        } }
+
+        created = Event.order(created_at: :desc).first
+        expect(response).to redirect_to(event_url(created))
+        # Viewed in the zone it was authored in (PT), the blank time reads as all-day.
+        Time.use_zone("Pacific Time (US & Canada)") { expect(created.all_day?).to be(true) }
+      end
     end
 
     context "as non-admin" do

@@ -227,7 +227,7 @@ class Event < ApplicationRecord
   end
 
   def start_date_time
-    @start_date_time || start_date&.strftime("%H:%M")
+    @start_date_time || time_field_value(start_date)
   end
 
   def end_date_date
@@ -235,7 +235,7 @@ class Event < ApplicationRecord
   end
 
   def end_date_time
-    @end_date_time || end_date&.strftime("%H:%M")
+    @end_date_time || time_field_value(end_date)
   end
 
   def registration_close_date_date
@@ -244,6 +244,15 @@ class Event < ApplicationRecord
 
   def registration_close_date_time
     @registration_close_date_time || registration_close_date&.strftime("%H:%M")
+  end
+
+  # True when the event has a date but no specific clock time. The time inputs
+  # are optional; a blank time is persisted as midnight (00:00) and treated as
+  # "no time" everywhere dates/times render. Evaluated in the current Time.zone,
+  # so it reads correctly when viewed in the zone the event was authored in.
+  def all_day?
+    return false unless start_date
+    start_date.in_time_zone.strftime("%H:%M") == "00:00"
   end
 
   # Virtual attribute for cost in dollars (converts to/from cost_cents)
@@ -305,6 +314,15 @@ class Event < ApplicationRecord
   end
 
   private
+
+  # Time-input value for a stored datetime, blank when the time is midnight so
+  # an all-day event (no time entered) shows an empty time field instead of
+  # "00:00" — keeping it editable as "no time" rather than re-saving midnight.
+  def time_field_value(datetime)
+    return if datetime.blank?
+    formatted = datetime.in_time_zone.strftime("%H:%M")
+    formatted unless formatted == "00:00"
+  end
 
   def merge_date_time_fields
     merge_date_time(:start_date)

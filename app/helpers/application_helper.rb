@@ -151,6 +151,7 @@ module ApplicationHelper
   # event show page's time formatting (minutes hidden when :00), or nil with no start.
   def event_times_label(event)
     return unless event&.start_date
+    return if event.all_day?
     s = event.start_date.in_time_zone(Time.zone)
     e = (event.end_date || event.start_date).in_time_zone(Time.zone)
     format = ->(d) do

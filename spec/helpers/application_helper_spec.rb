@@ -350,6 +350,19 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#event_times_label" do
+    it "shows the time range for an event with a time" do
+      event = build(:event, start_date: Time.zone.local(2026, 8, 12, 9), end_date: Time.zone.local(2026, 8, 12, 16, 30))
+      expect(helper.event_times_label(event)).to eq("9 am - 4:30 pm #{Time.zone.local(2026, 8, 12, 9).strftime("%Z")}")
+    end
+
+    it "is nil for an all-day event so the time row is hidden" do
+      event = build(:event, start_date: Time.zone.local(2026, 8, 12).beginning_of_day,
+                            end_date: Time.zone.local(2026, 8, 12).beginning_of_day)
+      expect(helper.event_times_label(event)).to be_nil
+    end
+  end
+
   describe "#event_platform_label" do
     it "is nil for in-person events with no videoconference link" do
       expect(helper.event_platform_label(build(:event, videoconference_url: nil))).to be_nil
