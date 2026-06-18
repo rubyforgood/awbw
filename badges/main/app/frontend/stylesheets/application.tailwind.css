@@ -94,6 +94,34 @@
   @apply bg-gray-100;
 }
 
+/* Tom Select "flat" variant: the wrapper inherits the field's bordered box,
+   so the inner control is transparent and borderless — no box-within-a-box.
+   Used for optional searchable-selects (e.g. the event location) so the field
+   reads as not-required. */
+.ts-wrapper.ts-flat {
+  @apply bg-transparent;
+}
+
+.ts-wrapper.ts-flat .ts-control,
+.ts-wrapper.ts-flat.focus .ts-control {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  min-height: 1.5rem;
+}
+
+/* Match the height of sibling text inputs (py-2 + 1.5rem line-height) */
+.ts-wrapper.ts-flat .ts-control,
+.ts-wrapper.ts-flat .ts-control input {
+  line-height: 1.5rem;
+  font-size: 1rem;
+}
+
+.ts-wrapper.ts-flat.focus {
+  @apply ring-1 ring-blue-500 border-blue-500;
+}
+
 .readonly {
   @apply bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300;
 }
