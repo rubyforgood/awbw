@@ -76,6 +76,35 @@ RSpec.describe "Event registration show page", type: :system do
     end
   end
 
+  describe "registration ticket callouts" do
+    it "shows a call-out linking to the callout's detail page" do
+      callout = create(:registration_ticket_callout, event: event,
+        title: "Parking", subtitle: "Where to park", description: "<p>North lot</p>")
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_link("Parking",
+        href: event_registration_ticket_callout_path(event, callout, reg: registration.slug))
+      expect(page).to have_text("Where to park")
+    end
+
+    it "hides a paid-only callout until the registration is paid in full" do
+      paid_only = create(:registration_ticket_callout, :paid_only, event: event, title: "Your workbook")
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_no_link("Your workbook")
+
+      create(:allocation, source: create(:payment), allocatable: registration, amount: event.cost_cents)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_link("Your workbook",
+        href: event_registration_ticket_callout_path(event, paid_only, reg: registration.slug))
+    end
+  end
+
   describe "view registration form link" do
     it "links to form show with slug param" do
       FormBuilderService.new(

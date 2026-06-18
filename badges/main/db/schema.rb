@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_014554) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_18_020000) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1005,6 +1005,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_014554) do
     t.index ["stripe_refund_id"], name: "index_refunds_on_stripe_refund_id", unique: true
   end
 
+  create_table "registration_ticket_callouts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "callout_type", default: "reference", null: false
+    t.string "color_class"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.bigint "event_id", null: false
+    t.string "icon_class"
+    t.integer "position", null: false
+    t.boolean "show_if_paid", default: false, null: false
+    t.string "subtitle"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "position"], name: "index_registration_ticket_callouts_on_event_id_and_position"
+    t.index ["event_id"], name: "index_registration_ticket_callouts_on_event_id"
+  end
+
   create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "answer", size: :long
     t.integer "answer_option_id"
@@ -1622,6 +1638,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_014554) do
   add_foreign_key "people", "users", column: "updated_by_id"
   add_foreign_key "quotable_item_quotes", "quotes"
   add_foreign_key "quotes", "workshops"
+  add_foreign_key "registration_ticket_callouts", "events"
   add_foreign_key "report_form_field_answers", "answer_options"
   add_foreign_key "report_form_field_answers", "form_fields"
   add_foreign_key "report_form_field_answers", "reports"

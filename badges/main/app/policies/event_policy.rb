@@ -142,7 +142,8 @@ class EventPolicy < ApplicationPolicy
                   category_ids: [],
                   sector_ids: [],
                   primary_asset_attributes: [ :id, :file, :_destroy ],
-                  gallery_assets_attributes: [ :id, :file, :_destroy ]
+                  gallery_assets_attributes: [ :id, :file, :_destroy ],
+                  registration_ticket_callouts_attributes: [ :id, :title, :subtitle, :description, :callout_type, :icon_class, :color_class, :show_if_paid, :_destroy ]
         ]
 
     permitted.prepend(:ga4_snippet, :gtm_head_snippet, :gtm_body_snippet) if admin?

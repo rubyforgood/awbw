@@ -96,6 +96,7 @@ This codebase (Rails 8.1)
 | `Workshop` | Core content: rich text fields, categories, sectors, bookmarks, variations |
 | `Event` | Events with registrations, featured/published states |
 | `EventStaff` | Join model connecting `Person` to `Event` as staff (title, `expected_to_attend`); drives the "Meet the staff" roster and "My events" |
+| `RegistrationTicketCallout` | Admin-configured call-outs shown on an event's registration ticket (title, subtitle, HTML description, `callout_type` action/reference, icon/colour, `show_if_paid`, draggable `position` via the positioning gem); each links to its own public detail page |
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
@@ -141,7 +142,7 @@ This codebase (Rails 8.1)
 
 ### Namespaces
 
-- **Root level** (~51 controllers): Workshops, stories, resources, events, people, organizations, etc.
+- **Root level** (~52 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
@@ -289,7 +290,7 @@ end
 - `searchable_checkbox` — TomSelect checkbox-style multi-select
 - `searchable_select` — Tom Select autocomplete
 - `share_url` — URL sharing/copying
-- `sortable` — Drag-drop sorting (SortableJS)
+- `sortable` — Drag-drop sorting (SortableJS); persists order via a per-row PUT (used by categories index and the registration ticket callouts editor)
 - `submit_once` — Disables a form's submit button after submit to block duplicate submissions; re-enables on Back/bfcache/Turbo restore
 - `tabs` — Tab panel navigation
 - `tag_link_loading` — Loading state for tag links

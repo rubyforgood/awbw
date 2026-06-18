@@ -16,6 +16,7 @@ class Event < ApplicationRecord
   has_many :event_registrations, dependent: :destroy
   has_many :event_staffs, dependent: :destroy
   has_many :event_forms, dependent: :destroy
+  has_many :registration_ticket_callouts, -> { ordered }, dependent: :destroy, inverse_of: :event
   # Block destroying an event that has submissions (registrations, scholarship
   # applications, payments). Submissions that were never tied to an event are
   # unaffected. Destroying instead would orphan the payments that hang off a
@@ -39,6 +40,8 @@ class Event < ApplicationRecord
 
   accepts_nested_attributes_for :event_staffs, allow_destroy: true,
     reject_if: proc { |attrs| attrs["person_id"].blank? }
+  accepts_nested_attributes_for :registration_ticket_callouts, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["title"].blank? }
 
   # Callbacks
   after_commit :build_public_registration_form, if: :public_registration_just_enabled?
