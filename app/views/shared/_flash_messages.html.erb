@@ -31,8 +31,8 @@
          end %>
 
     <%# === Detect reset-password–style messages === %>
-    <% persistent = msg.to_s.match?(/reset your password|password instructions|set your password/i) %>
-    <% timeout = persistent ? 12000 : 4000 %>
+    <% persistent = msg.to_s.match?(/reset your password|password instructions|set your password|registration is not complete/i) %>
+    <% timeout = persistent ? 30000 : 4000 %>
     <% disable_outside_click = ["alert", "error"].include?(type.to_s) %>
 
     <div
