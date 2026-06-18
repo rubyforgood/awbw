@@ -72,8 +72,8 @@ module AdminCardsHelper
       custom_card("Monthly reports", monthly_reports_path, icon: "📈", color: :sky, intensity: 100),
       custom_card("Story shares", story_shares_path, icon: "🔗", color: :sky, intensity: 100),
       custom_card("Bookmarks", bookmarks_path, icon: "🔖", color: :sky, intensity: 100),
-      custom_card("Affiliations", affiliations_path, icon: "🤝", color: :sky, intensity: 100),
-      custom_card("Reports", reports_path, icon: "📄", color: :sky, intensity: 100),
+      disabled_card("Affiliations", icon: "🤝"),
+      disabled_card("Reports", icon: "📄"),
       disabled_card("Discounts", icon: "💲"),
       disabled_card("Refunds", icon: "↩️"),
       disabled_card("Event staff", icon: "🧑‍💼")
