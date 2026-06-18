@@ -193,23 +193,28 @@
     </div>
   <% end %>
 
-  <%# ---- Shout outs: recipients' organizations and their bios ---- %>
-  <% if @dashboard.scholarship_shoutouts.any? %>
+  <%# ---- Shout outs: registrants who opted in, with their shout-out text ---- %>
+  <% if @dashboard.shoutouts.any? %>
     <div class="mt-10 break-inside-avoid">
       <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
         <i class="fa-solid fa-bullhorn"></i>
-        Shout out scholarship programs
+        Shout outs
       </h2>
       <div class="bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm divide-y divide-gray-100">
-        <% @dashboard.scholarship_shoutouts.each do |shoutout| %>
+        <% @dashboard.shoutouts.each do |shoutout| %>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 px-5 py-4 break-inside-avoid">
             <div class="sm:col-span-1">
-              <%= link_to shoutout.organization.name, organization_path(shoutout.organization),
+              <%= link_to shoutout.recipient.name, person_path(shoutout.recipient),
                           class: "text-sm font-semibold #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:#{DomainTheme.text_class_for(:scholarships)} hover:underline" %>
+              <% if shoutout.organization %>
+                <div class="text-xs text-gray-500 mt-0.5">
+                  <%= link_to shoutout.organization.name, organization_path(shoutout.organization),
+                              class: "hover:text-gray-700 hover:underline" %>
+                </div>
+              <% end %>
             </div>
             <div class="sm:col-span-2 text-sm text-gray-700">
-              <span class="font-semibold text-gray-900"><%= shoutout.recipient.name %></span>
-              — <%= shoutout.bio %>
+              <%= shoutout.text %>
             </div>
           </div>
         <% end %>

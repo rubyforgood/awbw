@@ -76,23 +76,22 @@ class EventDashboard
       .transform_values { |answers| answers.index_by { |answer| answer.form_field&.field_identifier } }
   end
 
-  # A scholarship "shout out": a recipient paired with their affiliated
-  # organization and that organization's bio, for the recognition block on the
+  # A "shout out": a registrant the admin opted in (shoutout on their
+  # registration) paired with the shout-out text from their profile and their
+  # affiliated organization (if any), for the recognition block on the
   # recipients page.
-  Shoutout = Struct.new(:recipient, :organization, :bio, keyword_init: true)
+  Shoutout = Struct.new(:recipient, :organization, :text, keyword_init: true)
 
-  # Shout outs for the recipients page: each scholarship recipient whose
-  # affiliated organization has a bio on file, paired with that organization and
-  # its description. Affiliations and organizations are already preloaded on
-  # scholarship_applicants. Recipients without an affiliated org, or whose org
-  # has no bio, are omitted.
-  def scholarship_shoutouts
-    @scholarship_shoutouts ||= scholarship_applicants.filter_map do |person|
+  # Shout outs for the recipients page: each active registrant the admin flagged
+  # for a shout-out who also has shout-out text on their profile, paired with that
+  # text and their first active affiliated organization (if any). Flagged
+  # registrants with blank shout-out text are omitted; the organization is optional.
+  def shoutouts
+    @shoutouts ||= shoutout_registrants.filter_map do |person|
+      text = person.shoutout_text.to_s.strip.presence
+      next unless text
       organization = person.affiliations.reject(&:inactive?).filter_map(&:organization).first
-      next unless organization
-      bio = organization.description.to_s.strip.presence
-      next unless bio
-      Shoutout.new(recipient: person, organization: organization, bio: bio)
+      Shoutout.new(recipient: person, organization: organization, text: text)
     end
   end
 
@@ -645,6 +644,21 @@ class EventDashboard
 
   def scholarship_applicant_ids
     @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
+  end
+
+  # Registrant (Person) ids behind active registrations that opted into a
+  # shout-out — the candidates for the recipients page shout-out block.
+  def shoutout_registrant_ids
+    @shoutout_registrant_ids ||= active_registrations.where(shoutout: true).pluck(:registrant_id)
+  end
+
+  # People who opted into a shout-out, sorted by display name, with affiliations
+  # and organizations preloaded for the shout-out block.
+  def shoutout_registrants
+    @shoutout_registrants ||= Person
+      .where(id: shoutout_registrant_ids)
+      .includes(affiliations: :organization)
+      .sort_by(&:name)
   end
 
   # Ids of every form submission the applicants made for this event's forms —

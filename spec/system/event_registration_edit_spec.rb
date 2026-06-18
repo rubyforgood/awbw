@@ -108,6 +108,24 @@ RSpec.describe "Event registration edit page", type: :system do
     end
   end
 
+  describe "shout out box" do
+    it "stores the shout-out text on the registrant and flags the registration when saved" do
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Shout out") do
+        fill_in "Shout-out text", with: "Grateful to bring art to the survivors we serve."
+        check "Feature on the recipients page", allow_label_click: true
+      end
+
+      click_on "Save changes"
+
+      expect(page).to have_current_path(registrants_event_path(event))
+      expect(registration.reload.shoutout).to be(true)
+      expect(registration.registrant.reload.shoutout_text).to eq("Grateful to bring art to the survivors we serve.")
+    end
+  end
+
   describe "registration status box" do
     it "flags the status as unsaved when changed until the form is saved" do
       sign_in(admin)

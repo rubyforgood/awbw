@@ -380,7 +380,7 @@ class PeopleController < ApplicationController
       :date_of_birth,
       :license_number,
       :license_type,
-      :bio, :notes,
+      :bio, :shoutout_text, :notes,
       :display_name_preference,
       :pronouns,
       :profile_show_name_preference,

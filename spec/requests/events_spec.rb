@@ -1255,16 +1255,28 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Pat Plain")
       end
 
-      it "shouts out each recipient's organization with its linked profile and bio" do
-        org = create(:organization, name: "New Economics for Women", description: "Fights for economic justice for women.")
+      it "shouts out each opted-in registrant's text, linked profile, and organization" do
+        applicant.update!(shoutout_text: "Grateful to bring art to the survivors we serve.")
+        event.event_registrations.find_by(registrant: applicant).update!(shoutout: true)
+        org = create(:organization, name: "New Economics for Women")
         create(:affiliation, person: applicant, organization: org)
 
         get recipients_event_path(event)
 
-        expect(response.body).to include("Shout out scholarship programs")
+        expect(response.body).to include("Shout outs")
+        expect(response.body).to include("Tara Gallagher")
+        expect(response.body).to include(person_path(applicant))
         expect(response.body).to include("New Economics for Women")
         expect(response.body).to include(organization_path(org))
-        expect(response.body).to include("Fights for economic justice for women.")
+        expect(response.body).to include("Grateful to bring art to the survivors we serve.")
+      end
+
+      it "omits the shout-out block for registrants who did not opt in" do
+        applicant.update!(shoutout_text: "I have text but did not opt in.")
+
+        get recipients_event_path(event)
+
+        expect(response.body).not_to include("Shout outs")
       end
     end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_160031) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -458,6 +458,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_160031) do
     t.boolean "payment_unresolved"
     t.bigint "registrant_id", null: false
     t.boolean "scholarship_requested", default: false, null: false
+    t.boolean "shoutout", default: false, null: false
     t.string "slug"
     t.string "status", default: "registered", null: false
     t.datetime "updated_at", null: false
@@ -957,6 +958,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_160031) do
     t.boolean "profile_show_workshop_variations", default: true, null: false
     t.boolean "profile_show_workshops", default: true, null: false
     t.string "pronouns"
+    t.text "shoutout_text"
     t.string "twitter_url"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"

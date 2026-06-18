@@ -468,25 +468,46 @@ RSpec.describe EventDashboard do
     end
 
     describe "shout outs" do
-      let(:org_with_bio) { create(:organization, name: "New Economics for Women", description: "Fights for economic justice for women.") }
-      let(:org_without_bio) { create(:organization, name: "Quiet Org", description: "") }
+      let(:org) { create(:organization, name: "New Economics for Women") }
 
-      it "pairs each recipient who has an affiliated org with a bio to that org and its description" do
-        create(:affiliation, person: embedded_applicant, organization: org_with_bio)
-
-        shoutout = dashboard.scholarship_shoutouts.find { |s| s.recipient == embedded_applicant }
-        expect(shoutout.organization).to eq(org_with_bio)
-        expect(shoutout.bio).to eq("Fights for economic justice for women.")
+      def opt_in(person, text:)
+        person.update!(shoutout_text: text)
+        EventRegistration.find_by(event: event, registrant: person).update!(shoutout: true)
       end
 
-      it "omits recipients with no affiliated organization" do
-        expect(dashboard.scholarship_shoutouts.map(&:recipient)).not_to include(separate_applicant)
+      it "pairs each opted-in registrant's shout-out text with their affiliated organization" do
+        opt_in(embedded_applicant, text: "Grateful to bring art to the survivors we serve.")
+        create(:affiliation, person: embedded_applicant, organization: org)
+
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == embedded_applicant }
+        expect(shoutout.text).to eq("Grateful to bring art to the survivors we serve.")
+        expect(shoutout.organization).to eq(org)
       end
 
-      it "omits recipients whose organization has no bio on file" do
-        create(:affiliation, person: separate_applicant, organization: org_without_bio)
+      it "includes an opted-in registrant with no affiliated organization (org is optional)" do
+        opt_in(separate_applicant, text: "Art has been my way through.")
 
-        expect(dashboard.scholarship_shoutouts.map(&:recipient)).not_to include(separate_applicant)
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == separate_applicant }
+        expect(shoutout.text).to eq("Art has been my way through.")
+        expect(shoutout.organization).to be_nil
+      end
+
+      it "is independent of scholarships — a non-scholarship registrant can opt in" do
+        opt_in(non_applicant, text: "Proud to support this work.")
+
+        expect(dashboard.shoutouts.map(&:recipient)).to include(non_applicant)
+      end
+
+      it "omits registrants who opted in but left their shout-out text blank" do
+        opt_in(embedded_applicant, text: "")
+
+        expect(dashboard.shoutouts.map(&:recipient)).not_to include(embedded_applicant)
+      end
+
+      it "omits registrants with shout-out text who did not opt in" do
+        separate_applicant.update!(shoutout_text: "I have text but did not opt in.")
+
+        expect(dashboard.shoutouts.map(&:recipient)).not_to include(separate_applicant)
       end
     end
   end
