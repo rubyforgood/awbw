@@ -80,18 +80,25 @@ class EventDashboard
   # registration) paired with the shout-out text from their profile and their
   # affiliated organization (if any), for the recognition block on the
   # recipients page.
-  Shoutout = Struct.new(:recipient, :organization, :text, keyword_init: true)
+  Shoutout = Struct.new(:recipient, :organization, :text, :sector, :age_group, keyword_init: true)
 
   # Shout outs for the recipients page: each active registrant the admin flagged
   # for a shout-out who also has shout-out text on their profile, paired with that
-  # text and their first active affiliated organization (if any). Flagged
-  # registrants with blank shout-out text are omitted; the organization is optional.
+  # text, their first active affiliated organization (if any), and their primary
+  # sector / age group (from their profile) for the parenthetical after their name.
+  # Flagged registrants with blank shout-out text are omitted; org/sector/age are optional.
   def shoutouts
     @shoutouts ||= shoutout_registrants.filter_map do |person|
       text = person.shoutout_text.to_s.strip.presence
       next unless text
       organization = person.affiliations.reject(&:inactive?).filter_map(&:organization).first
-      Shoutout.new(recipient: person, organization: organization, text: text)
+      Shoutout.new(
+        recipient: person,
+        organization: organization,
+        text: text,
+        sector: primary_sector_name_for(person),
+        age_group: age_group_text_for(person)
+      )
     end
   end
 
@@ -652,13 +659,26 @@ class EventDashboard
     @shoutout_registrant_ids ||= active_registrations.where(shoutout: true).pluck(:registrant_id)
   end
 
-  # People who opted into a shout-out, sorted by display name, with affiliations
-  # and organizations preloaded for the shout-out block.
+  # People who opted into a shout-out, sorted by display name, with affiliations,
+  # organizations, sectors, and age-range categories preloaded for the shout-out
+  # block (org link + the primary sector / age-group parenthetical).
   def shoutout_registrants
     @shoutout_registrants ||= Person
       .where(id: shoutout_registrant_ids)
-      .includes(affiliations: :organization)
+      .includes({ affiliations: :organization }, { sectorable_items: :sector }, { categories: :category_type })
       .sort_by(&:name)
+  end
+
+  # The person's primary service area: the sector they marked primary, falling
+  # back to their first sector alphabetically. Nil when they have none.
+  def primary_sector_name_for(person)
+    person.sectorable_items_primary_first.first&.sector&.name
+  end
+
+  # The person's age group(s) served, from their AgeRange profile tags, ", "-joined.
+  # Nil when they have none.
+  def age_group_text_for(person)
+    person.categories.select { |category| category.category_type&.name == "AgeRange" }.map(&:name).join(", ").presence
   end
 
   # Ids of every form submission the applicants made for this event's forms —

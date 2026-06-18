@@ -1255,20 +1255,43 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Pat Plain")
       end
 
-      it "shouts out each opted-in registrant's text, linked profile, and organization" do
+      it "shows the org linked to its website on the left and the bold recipient name linked to their profile on the right" do
         applicant.update!(shoutout_text: "Grateful to bring art to the survivors we serve.")
         event.event_registrations.find_by(registrant: applicant).update!(shoutout: true)
-        org = create(:organization, name: "New Economics for Women")
+        org = create(:organization, name: "New Economics for Women", website_url: "https://newecon.example.org")
         create(:affiliation, person: applicant, organization: org)
 
         get recipients_event_path(event)
 
         expect(response.body).to include("Shout outs")
+        expect(response.body).to include("New Economics for Women")
+        expect(response.body).to include("https://newecon.example.org")
         expect(response.body).to include("Tara Gallagher")
         expect(response.body).to include(person_path(applicant))
-        expect(response.body).to include("New Economics for Women")
-        expect(response.body).to include(organization_path(org))
         expect(response.body).to include("Grateful to bring art to the survivors we serve.")
+      end
+
+      it "links the org to its profile page when it has no website" do
+        applicant.update!(shoutout_text: "Art is how we heal.")
+        event.event_registrations.find_by(registrant: applicant).update!(shoutout: true)
+        org = create(:organization, name: "Quiet Org", website_url: nil)
+        create(:affiliation, person: applicant, organization: org)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include(organization_path(org))
+      end
+
+      it "shows the recipient's primary sector and age group in parentheses after their name" do
+        age_range = create(:category_type, name: "AgeRange")
+        applicant.sectorable_items.create!(sector: create(:sector, name: "Domestic Violence"), is_primary: true)
+        create(:categorizable_item, category: create(:category, name: "Teens", category_type: age_range), categorizable: applicant)
+        applicant.update!(shoutout_text: "Here to help.")
+        event.event_registrations.find_by(registrant: applicant).update!(shoutout: true)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("(Domestic Violence, Teens)")
       end
 
       it "omits the shout-out block for registrants who did not opt in" do

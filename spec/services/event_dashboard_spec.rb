@@ -484,6 +484,17 @@ RSpec.describe EventDashboard do
         expect(shoutout.organization).to eq(org)
       end
 
+      it "exposes the registrant's primary sector and age group" do
+        age_range = create(:category_type, name: "AgeRange")
+        embedded_applicant.sectorable_items.create!(sector: create(:sector, name: "Sexual Assault"), is_primary: true)
+        create(:categorizable_item, category: create(:category, name: "Teens", category_type: age_range), categorizable: embedded_applicant)
+        opt_in(embedded_applicant, text: "Here to help.")
+
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == embedded_applicant }
+        expect(shoutout.sector).to eq("Sexual Assault")
+        expect(shoutout.age_group).to eq("Teens")
+      end
+
       it "includes an opted-in registrant with no affiliated organization (org is optional)" do
         opt_in(separate_applicant, text: "Art has been my way through.")
 

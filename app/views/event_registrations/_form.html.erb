@@ -276,44 +276,6 @@
         </section>
       </div>
 
-      <%# ---- Shout out — admin opts this registrant into the recipients page
-          shout-out block and edits the text shown there. That text lives on the
-          registrant's profile (Person#shoutout_text); editing it here updates
-          their profile via nested attributes. ---- %>
-      <section class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
-            <i class="fa-solid fa-bullhorn"></i>
-          </span>
-          <h2 class="text-sm font-semibold text-gray-700">Shout out</h2>
-        </div>
-
-        <div class="space-y-3 p-4">
-          <label class="flex items-center gap-2.5 cursor-pointer">
-            <input type="hidden" name="event_registration[shoutout]" value="0" autocomplete="off">
-            <input type="checkbox"
-                   name="event_registration[shoutout]"
-                   value="1"
-                   <%= "checked" if f.object.shoutout? %>
-                   class="sr-only peer">
-            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-300"></span>
-            <span class="text-sm font-medium text-gray-700">Feature on the recipients page</span>
-          </label>
-
-          <%= f.simple_fields_for :registrant do |rf| %>
-            <%= rf.input :shoutout_text,
-                  label: "Shout-out text",
-                  as: :text,
-                  input_html: {
-                    rows: 3,
-                    maxlength: 1650,
-                    class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:outline-none"
-                  },
-                  hint: "Shown beneath this registrant's name on the event's recipients page" %>
-          <% end %>
-        </div>
-      </section>
-
       <% if f.object.payment_unresolved? %>
         <div class="mt-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
           <i class="fa-solid fa-circle-exclamation"></i>
@@ -330,6 +292,47 @@
         </div>
       <% end %>
       <%= render "payment_history", event_registration: f.object %>
+
+      <%# ---- Shout out — admin opts this registrant into the recipients page
+          shout-out block and edits the text shown there. The text lives on the
+          registrant's profile (Person#shoutout_text); editing it here updates
+          their profile via nested attributes. ---- %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
+            <i class="fa-solid fa-bullhorn"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">Shout out</h2>
+        </div>
+
+        <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+          <label class="flex shrink-0 items-center gap-2.5 cursor-pointer">
+            <input type="hidden" name="event_registration[shoutout]" value="0" autocomplete="off">
+            <input type="checkbox"
+                   name="event_registration[shoutout]"
+                   value="1"
+                   <%= "checked" if f.object.shoutout? %>
+                   class="sr-only peer">
+            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-300"></span>
+            <span class="text-sm font-medium text-gray-700">Feature on the recipients page</span>
+          </label>
+
+          <div class="flex-1">
+            <%= f.simple_fields_for :registrant do |rf| %>
+              <%= rf.input :shoutout_text,
+                    label: "Shout-out text",
+                    label_html: { class: "sr-only" },
+                    as: :string,
+                    placeholder: "Shown beneath their name on the recipients page",
+                    wrapper_html: { class: "mb-0" },
+                    input_html: {
+                      maxlength: 1650,
+                      class: "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:outline-none"
+                    } %>
+            <% end %>
+          </div>
+        </div>
+      </section>
 
       <% if allowed_to?(:index?, with: NotificationPolicy) %>
         <%= render "notifications", f: f %>
