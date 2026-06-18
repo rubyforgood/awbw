@@ -8,15 +8,18 @@ module AdminCardsHelper
       model_card(:users, icon: "👥",  title: "User accounts"),
       model_card(:organizations, icon: "🏫"),
       model_card(:events, icon: "📆"),
+      model_card(:grants, icon: "💰"),
       model_card(:resources, icon: "📚"),
       model_card(:stories, icon: "🗣️"),
       custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :lime),
       model_card(:workshops, icon: "🎨"),
       model_card(:workshop_variations, icon: "🔀"),
       model_card(:video_recordings, icon: "🎬", title: "Video Gallery"),
+      model_card(:allocations, icon: "📤"),
       model_card(:banners, icon: "📣"),
       model_card(:community_news, icon: "📰"),
-      model_card(:faqs, icon: "❔", title: "FAQs")
+      model_card(:faqs, icon: "❔", title: "FAQs"),
+      model_card(:forms, icon: "📋")
     ]
   end
 
@@ -28,15 +31,14 @@ module AdminCardsHelper
       custom_card("Portal activity", admin_activities_counts_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:quotes, icon: "💬", intensity: 100),
-      model_card(:event_registrations, icon: "🎟️", intensity: 100),
+      model_card(:payments, icon: "💳"),
+      custom_card("Scholarships", grants_path, icon: "🎓", color: :fuchsia),
       custom_card("System notifications", notifications_path, icon: "🔔"),
       model_card(:story_ideas, icon: "✍🏾️", intensity: 100),
       custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
       model_card(:workshop_ideas, icon: "💡", intensity: 100),
       model_card(:workshop_variation_ideas, icon: "🔀", intensity: 100),
-      model_card(:workshop_logs, icon: "📝", intensity: 100),
-      model_card(:payments, icon: "💳"),
-      model_card(:allocations, icon: "📤")
+      model_card(:workshop_logs, icon: "📝", intensity: 100)
     ]
   end
 
