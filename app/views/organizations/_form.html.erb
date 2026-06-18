@@ -70,23 +70,24 @@
 
   <!-- Profile-specific Categories (e.g. Workshop Settings) -->
   <% if @org_categories_grouped.present? %>
+    <% primary_age_ids = @organization.primary_age_category_ids %>
     <div class="form-group space-y-4 mb-8">
+      <%# Ensures the primary-age param is always submitted so unchecking every
+          toggle clears the primary flags. %>
+      <%= hidden_field_tag "organization[primary_age_category_ids][]", "" %>
       <% @org_categories_grouped.each do |type, cats| %>
+        <% is_age = type.name == "AgeRange" %>
         <div class="font-semibold text-gray-700 mb-2"><%= type.display_label %></div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+          <% if is_age %>
+            <p class="text-sm text-gray-500 mb-3">Check every age group served, then mark the primary ones.</p>
+          <% end %>
           <div class="flex flex-wrap gap-3">
             <% cats.each do |category| %>
-              <% id = "organization_category_ids_#{category.id}" %>
-              <label for="<%= id %>"
-                     class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                <%= hidden_field_tag "organization[category_ids][]", "" %>
-                <%= check_box_tag "organization[category_ids][]",
-                                  category.id,
-                                  @organization.category_ids.include?(category.id),
-                                  id: id,
-                                  class: "h-4 w-4 text-blue-600 rounded" %>
-                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
-              </label>
+              <%= render "shared/category_checkbox", param_key: "organization", category: category,
+                         checked: @organization.category_ids.include?(category.id),
+                         is_age: is_age,
+                         primary_checked: is_age && primary_age_ids.include?(category.id) %>
             <% end %>
           </div>
         </div>

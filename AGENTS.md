@@ -51,7 +51,7 @@ This codebase (Rails 8.1)
 | `app/models/` | ActiveRecord models | ~75 files |
 | `app/services/` | Service objects for complex logic | ~25 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
-| `app/models/concerns/` | Shared model modules | 14 concerns |
+| `app/models/concerns/` | Shared model modules | 15 concerns |
 
 ### Presentation
 
@@ -124,6 +124,7 @@ This codebase (Rails 8.1)
 
 | Concern | Purpose |
 |---|---|
+| `AgeGroupTaggable` | Splits AgeRange category taggings into primary/additional via `categorizable_items.is_primary` (Person, Organization) |
 | `AhoyTrackable` | Event tracking integration |
 | `AuthorCreditable` | Author attribution |
 | `Featureable` | `featured`, `publicly_featured` scopes |

@@ -15,5 +15,12 @@ module TagAssignable
     end
 
     record.save!
+
+    # Once category membership is set, split the AgeRange taggings into primary
+    # and additional from the form's "Primary" toggles. Read raw (not via strong
+    # params) like category_ids above, since it isn't a record attribute.
+    if params[key].key?(:primary_age_category_ids) && record.respond_to?(:apply_primary_age_groups!)
+      record.apply_primary_age_groups!(Array(params[key][:primary_age_category_ids]))
+    end
   end
 end
