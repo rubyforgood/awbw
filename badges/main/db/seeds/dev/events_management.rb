@@ -1136,27 +1136,31 @@ if facilitator_training
   end
 end
 
-puts "Featuring scholarship recipients with shout-outs…"
-# The recipients page "Shout outs" block features registrants the admin opted in
-# (EventRegistration#shoutout) whose profile carries shout-out text
-# (Person#shoutout_text). Seed people ship without either, so the block renders
-# empty. Opt in each scholarship recipient on the data-rich trainings and give
-# them realistic shout-out text — only filling blank text, so real data is
-# preserved. update_columns skips validations/callbacks, fine for seed back-fill.
-shoutout_texts = [
-  "Grateful for the chance to bring trauma-informed art workshops to the survivors and children we serve.",
-  "This training helps me give emergency-shelter families a creative way to begin rebuilding after abuse.",
-  "Proud to run community healing circles for survivors across our historically underserved neighborhoods.",
-  "Honored to deliver culturally responsive crisis intervention and long-term recovery programming.",
-  "Art has become our community's safest room — thank you for helping us hold that space for all ages.",
-  "Determined to keep survivor-led prevention work breaking cycles of violence where I live."
+puts "Adding shout-out bios to scholarship recipients' organizations…"
+# The recipients page "Shout out scholarship programs" section pairs each
+# scholarship recipient with their affiliated organization and that org's bio
+# (description). Seed orgs ship without a description, so the section renders
+# empty. Back-fill a realistic, hard-coded bio onto each scholarship recipient's
+# program — only when blank, so any real data is preserved. update_columns skips
+# validations/callbacks, which is fine for seed back-fill.
+shoutout_bios = [
+  "Provides trauma-informed art workshops and wraparound support to survivors of domestic violence and their children.",
+  "Offers emergency shelter, counseling, and economic-empowerment programs that help families rebuild after abuse.",
+  "Runs community-based healing circles and advocacy services for survivors across historically underserved neighborhoods.",
+  "Delivers culturally responsive crisis intervention, legal advocacy, and long-term recovery programming.",
+  "Supports survivors through safe housing, peer support, and creative-expression programming for all ages.",
+  "Champions prevention education and survivor-led programming to break cycles of violence in the community."
 ]
 
-[ facilitator_training, trauma_training ].compact.each do |evt|
-  EventDashboard.new(evt).scholarship_applicants.each_with_index do |person, i|
-    person.update_columns(shoutout_text: shoutout_texts[i % shoutout_texts.size]) if person.shoutout_text.blank?
-    evt.event_registrations.active.find_by(registrant: person)&.update_columns(shoutout: true)
-  end
+recipient_orgs = [ facilitator_training, trauma_training ].compact
+  .flat_map { |evt| EventDashboard.new(evt).scholarship_applicants }
+  .uniq
+  .filter_map { |person| person.affiliations.reject(&:inactive?).filter_map(&:organization).first }
+  .uniq(&:id)
+
+recipient_orgs.each_with_index do |org, i|
+  next if org.description.present?
+  org.update_columns(description: shoutout_bios[i % shoutout_bios.size])
 end
 
 puts "Recording school districts on registrant addresses…"

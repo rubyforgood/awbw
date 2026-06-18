@@ -193,37 +193,23 @@
     </div>
   <% end %>
 
-  <%# ---- Shout outs: registrants who opted in, with their shout-out text ---- %>
-  <% if @dashboard.shoutouts.any? %>
+  <%# ---- Shout outs: recipients' organizations and their bios ---- %>
+  <% if @dashboard.scholarship_shoutouts.any? %>
     <div class="mt-10 break-inside-avoid">
       <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
         <i class="fa-solid fa-bullhorn"></i>
-        Shout outs
+        Shout out scholarship programs
       </h2>
       <div class="bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm divide-y divide-gray-100">
-        <% @dashboard.shoutouts.each do |shoutout| %>
-          <% org_link_class = "text-sm font-semibold #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:#{DomainTheme.text_class_for(:scholarships)} hover:underline" %>
+        <% @dashboard.scholarship_shoutouts.each do |shoutout| %>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 px-5 py-4 break-inside-avoid">
-            <%# Organization on the left, linked to its website when it has one,
-                otherwise to its profile page. %>
             <div class="sm:col-span-1">
-              <% if (organization = shoutout.organization) %>
-                <% website = organization.website_url.presence && (URI.parse(organization.website_url).to_s rescue nil) %>
-                <% if website %>
-                  <%= link_to organization.name, website, target: "_blank", rel: "noopener noreferrer", class: org_link_class %>
-                <% else %>
-                  <%= link_to organization.name, organization_path(organization), class: org_link_class %>
-                <% end %>
-              <% end %>
+              <%= link_to shoutout.organization.name, organization_path(shoutout.organization),
+                          class: "text-sm font-semibold #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:#{DomainTheme.text_class_for(:scholarships)} hover:underline" %>
             </div>
-            <%# Recipient name on the right, bold and linked to their profile, with
-                their primary sector and age group in parens, then their shout-out text. %>
             <div class="sm:col-span-2 text-sm text-gray-700">
-              <%= link_to shoutout.recipient.name, person_path(shoutout.recipient),
-                          class: "font-semibold text-gray-900 hover:underline" %>
-              <% meta = [ shoutout.sector, shoutout.age_group ].compact_blank %>
-              <% if meta.any? %><span class="text-gray-500">(<%= meta.join(", ") %>)</span><% end %>
-              — <%= shoutout.text %>
+              <span class="font-semibold text-gray-900"><%= shoutout.recipient.name %></span>
+              — <%= shoutout.bio %>
             </div>
           </div>
         <% end %>
