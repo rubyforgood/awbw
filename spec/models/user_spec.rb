@@ -121,6 +121,24 @@ RSpec.describe User do
     end
   end
 
+  describe "#has_access?" do
+    it "is true for a confirmed, unlocked, active account" do
+      expect(build(:user, confirmed_at: Time.current, locked_at: nil, inactive: false).has_access?).to be(true)
+    end
+
+    it "is false when unconfirmed" do
+      expect(build(:user, confirmed_at: nil).has_access?).to be(false)
+    end
+
+    it "is false when locked" do
+      expect(build(:user, confirmed_at: Time.current, locked_at: Time.current).has_access?).to be(false)
+    end
+
+    it "is false when deactivated" do
+      expect(build(:user, confirmed_at: Time.current, inactive: true).has_access?).to be(false)
+    end
+  end
+
   describe '#bookmark_for' do
     let(:user) { create(:user) }
     let(:workshop) { create(:workshop) }
