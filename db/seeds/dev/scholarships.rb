@@ -29,6 +29,12 @@ facilitator_training = Event.find_by(title: "AWBW Facilitator Training")
 # Reused below to surface non-flagship applicants and print the per-event summary.
 scholarship_events = Event.joins(:event_forms).where(event_forms: { role: "scholarship" }).distinct.to_a
 
+# These are AWBW facilitator trainings (the "TAC" a recipient attends). Flag them
+# so the scholarship index's training column has data to show.
+(scholarship_events + [ facilitator_training ]).compact.uniq.each do |event|
+  event.update!(facilitator_training: true) unless event.facilitator_training?
+end
+
 # --- Grants (funding sources) ----------------------------------------------
 # Create the grants up front so the event-allocated scholarships below can be
 # drawn from them (recipients page → donor name). Grants cap the total
@@ -259,6 +265,37 @@ ensure_recipient_affiliation = ->(person, event, set, org) do
   person.affiliations.create!(organization: org, title: set["title"], start_date: start_date)
 end
 
+# Rotating real-ish City/State pairs so program orgs have a location to show on
+# the scholarship index (the "Program Location" column reads the org's address).
+address_samples = [
+  [ "Los Angeles", "CA" ], [ "Stockton", "CA" ], [ "Portland", "OR" ], [ "Newport", "VT" ],
+  [ "Bangor", "ME" ], [ "Austin", "TX" ], [ "Chicago", "IL" ], [ "Brooklyn", "NY" ]
+]
+
+# Give an org a primary active address when it has none, so its facilitators'
+# scholarships show a location. Idempotent: skips orgs that already have one.
+ensure_org_address = ->(org) do
+  return unless org
+  return if org.addresses.active.exists?
+
+  city, state = address_samples[org.id % address_samples.length]
+  org.addresses.create!(locality: "Unknown", city: city, state: state,
+                        street_address: "#{100 + (org.id % 900)} Main St", zip_code: "90001", primary: true)
+end
+
+# Also give the recipient a facilitator affiliation at the same org — this is the
+# "program" the scholarship index reports (Person#program_organization), distinct
+# from the agency role above — and make sure that org carries an address so the
+# location column has data. Skips anyone who already facilitates somewhere.
+ensure_facilitator_affiliation = ->(person, event, org) do
+  return unless org
+  ensure_org_address.(org)
+  return if person.affiliations.any?(&:facilitator?)
+
+  start_date = (event.start_date || Time.current).to_date - 1.year
+  person.affiliations.create!(organization: org, title: "Facilitator", start_date: start_date)
+end
+
 # Ensure the recipient has a registration submission (no recipient should have
 # only a scholarship submission), creating a minimal one with their identity
 # fields when missing — most cohort registrants were generated without a form.
@@ -311,7 +348,15 @@ setup_recipient = ->(registration, second_form:) do
 
   reg_submission = ensure_registration_submission.(person, event)
   attach_header_answers.(reg_submission, set) if reg_submission
-  ensure_recipient_affiliation.(person, event, set, recipient_orgs[application_index % recipient_orgs.length]) if recipient_orgs.any?
+  if recipient_orgs.any?
+    org = recipient_orgs[application_index % recipient_orgs.length]
+    ensure_recipient_affiliation.(person, event, set, org)
+    ensure_facilitator_affiliation.(person, event, org)
+  end
+
+  # Mark attendance so the scholarship index shows the recipient completed the
+  # facilitator training ("TAC"). The award amount/allocation is unaffected.
+  registration.update!(status: "attended") unless registration.status == "attended"
 
   if second_form && scholarship_form
     separate = FormSubmission.find_or_create_by!(person: person, form: scholarship_form, role: "scholarship") do |fs|
@@ -420,6 +465,49 @@ grant_plans.each do |(name, _donor_type, _donor_name, _amount_cents, awards, _el
   end
 
   puts "  #{grant.name}: #{grant.scholarships.count} scholarships, remaining #{grant.remaining_dollars}"
+end
+
+# --- Index demo states: multi-grant funder + Reinstate ---------------------
+# The awards above leave three of the index's distinctive states unexercised:
+# a funder holding more than one grant (the reason for the funder → grant
+# nesting), and the "Reinstate" program status. Seed a second grant under an
+# existing funder, with two recipients whose program orgs carry addresses — the
+# second's facilitator affiliation is lapsed, so its org reads as "Reinstate".
+# Idempotent: keyed on the sibling grant's name and its having no awards yet.
+puts "Seeding scholarship index demo states (multi-grant funder, Reinstate)…"
+
+anchor_grant = grants.first
+if anchor_grant && recipient_orgs.any?
+  sibling = Grant.find_or_create_by!(name: "#{anchor_grant.name} (2026)") do |g|
+    g.donor = anchor_grant.donor
+    g.amount_cents = 600_000
+    g.application_deadline = Date.current + 60
+    g.funds_received_on = Date.current - 10
+    g.eligibility_criteria = anchor_grant.eligibility_criteria
+    g.tasks = anchor_grant.tasks
+  end
+
+  if sibling.scholarships.none?
+    # People and orgs with no facilitator yet, so each program's status is
+    # deterministic rather than depending on who else was seeded against the org.
+    demo_people = grant_recipient_pool.reject { |p| p.affiliations.any?(&:facilitator?) }.first(2)
+    demo_orgs = recipient_orgs.select { |o| o.affiliations.none?(&:facilitator?) }.first(2)
+
+    demo_people.each_with_index do |person, i|
+      amount = i.zero? ? 150_000 : 100_000
+      next if sibling.remaining_cents < amount
+
+      org = demo_orgs[i] || recipient_orgs[i % recipient_orgs.length]
+      ensure_org_address.(org)
+      lapsed = i.odd? # the second recipient's affiliation has ended → "Reinstate"
+      attrs = { organization: org, title: "Facilitator", start_date: Date.current - 2.years }
+      attrs[:end_date] = Date.current - 2.months if lapsed
+      person.affiliations.create!(**attrs)
+      Scholarship.create!(recipient: person, grant: sibling, amount_cents: amount, tasks_completed: i.even?)
+    end
+  end
+
+  puts "  #{sibling.funder_name}: now funds #{Grant.where(donor: anchor_grant.donor).count} grants"
 end
 
 puts "  Scholarship seeds complete!"

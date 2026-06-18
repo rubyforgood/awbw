@@ -433,3 +433,44 @@ RSpec.describe Person, type: :model do
     end
   end
 end
+
+RSpec.describe Person, "scholarship index helpers" do
+  let(:person) { create(:person) }
+
+  describe "#program_organization" do
+    it "returns the organization on the recipient's facilitator affiliation" do
+      org = create(:organization, name: "Prevail")
+      create(:affiliation, person: person, organization: org, title: "Lead Facilitator")
+
+      expect(person.program_organization).to eq(org)
+    end
+
+    it "prefers an active facilitator affiliation over a lapsed one" do
+      lapsed_org = create(:organization, name: "Old Program")
+      active_org = create(:organization, name: "Current Program")
+      create(:affiliation, person: person, organization: lapsed_org, title: "Facilitator", end_date: 1.year.ago.to_date)
+      create(:affiliation, person: person, organization: active_org, title: "Facilitator")
+
+      expect(person.program_organization).to eq(active_org)
+    end
+
+    it "ignores non-facilitator affiliations" do
+      create(:affiliation, person: person, organization: create(:organization), title: "Board Member")
+
+      expect(person.program_organization).to be_nil
+    end
+  end
+
+  describe "#completed_facilitator_trainings" do
+    it "returns only attended facilitator-training events" do
+      training = create(:event, title: "TAC251", facilitator_training: true)
+      other_training = create(:event, title: "TAC252", facilitator_training: true)
+      non_training = create(:event, title: "Webinar", facilitator_training: false)
+      create(:event_registration, registrant: person, event: training, status: "attended")
+      create(:event_registration, registrant: person, event: other_training, status: "registered")
+      create(:event_registration, registrant: person, event: non_training, status: "attended")
+
+      expect(person.completed_facilitator_trainings).to contain_exactly(training)
+    end
+  end
+end

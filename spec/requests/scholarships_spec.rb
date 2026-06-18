@@ -231,6 +231,64 @@ RSpec.describe "Scholarships", type: :request do
   end
 end
 
+RSpec.describe "GET /scholarships (index)", type: :request do
+  let(:admin) { create(:user, :admin) }
+
+  describe "authorization" do
+    it "redirects non-admins away from the index" do
+      sign_in create(:user)
+      get scholarships_path
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
+  context "as an admin" do
+    before { sign_in admin }
+
+    it "renders a grid grouped by funder and grant, with each derived column" do
+      org = create(:organization, name: "Prevail")
+      create(:address, addressable: org, city: "Stockton", state: "CA")
+      recipient = create(:person, first_name: "Carmen", last_name: "Gomez")
+      create(:affiliation, person: recipient, organization: org, title: "Facilitator")
+      training = create(:event, title: "TAC251", facilitator_training: true)
+      create(:event_registration, registrant: recipient, event: training, status: "attended")
+
+      donor = create(:organization, name: "JDI Foundation")
+      grant = create(:grant, name: "JDI", donor: donor, amount_cents: 1_000_000)
+      create(:scholarship, grant: grant, recipient: recipient, amount_cents: 150_000)
+
+      get scholarships_path
+
+      expect(response).to be_successful
+      expect(response.body).to include("JDI Foundation")  # funder group
+      expect(response.body).to include("JDI")             # grant group
+      expect(response.body).to include("Carmen Gomez")    # recipient
+      expect(response.body).to include("Prevail")         # program (org via facilitator affiliation)
+      expect(response.body).to include("Stockton, CA")    # program location
+      expect(response.body).to include("TAC251")          # attended facilitator training
+      expect(response.body).to include("New")             # program status — first facilitator for the org
+    end
+
+    it "collects grant-free scholarships under an Unfunded group" do
+      create(:scholarship, grant: nil, recipient: create(:person, first_name: "Jane", last_name: "Doe"))
+
+      get scholarships_path
+
+      expect(response.body).to include("Unfunded")
+      expect(response.body).to include("Jane Doe")
+    end
+
+    it "links a grant group's grant back to the scholarship index via from_scholarships" do
+      grant = create(:grant, name: "Marisla")
+      create(:scholarship, grant: grant)
+
+      get scholarships_path
+
+      expect(response.body).to include(grant_path(grant, from_scholarships: true))
+    end
+  end
+end
+
 RSpec.describe "/scholarships (grant-funded flow)", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:donor) { create(:organization, name: "Helping Hands") }

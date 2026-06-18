@@ -1,0 +1,49 @@
+<%# Second-level disclosure: one grant under its funder, with the recipient grid
+    inside. A grant-free ("Unfunded") group has no grant, so it shows a plain
+    label and no grant budget figures. %>
+<% grant = grant_group.grant&.decorate %>
+<details class="group/card rounded-lg border border-gray-200 bg-white" open>
+  <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden px-4 py-3 hover:bg-gray-50 rounded-lg">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <i class="fa-solid fa-chevron-down text-gray-400 text-xs transition-transform group-open/card:rotate-180"></i>
+        <% if grant %>
+          <%= link_to grant.name, grant_path(grant, from_scholarships: true), class: "font-medium text-gray-900 hover:underline truncate" %>
+        <% else %>
+          <span class="font-medium text-gray-500 italic">No grant</span>
+        <% end %>
+        <span class="inline-flex items-center rounded-full bg-gray-100 text-gray-600 px-2 py-0.5 text-xs font-semibold tabular-nums"><%= grant_group.count %></span>
+      </div>
+      <div class="shrink-0 text-xs text-gray-500 tabular-nums">
+        <% if grant %>
+          <span class="font-semibold text-gray-700"><%= number_to_currency(grant_group.total_cents / 100.0) %></span>
+          awarded · <%= grant.remaining %> left of <%= grant.amount %>
+        <% else %>
+          <span class="font-semibold text-gray-700"><%= number_to_currency(grant_group.total_cents / 100.0) %></span> awarded
+        <% end %>
+      </div>
+    </div>
+    <% if grant && grant.eligibility_criteria_list.any? %>
+      <p class="mt-1.5 ml-6 text-xs text-gray-500 truncate"><%= grant.eligibility_criteria_list.join(" · ") %></p>
+    <% end %>
+  </summary>
+
+  <div class="overflow-x-auto border-t border-gray-100">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Program</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Training</th>
+          <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+          <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+          <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tasks</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-100">
+        <%= render partial: "recipient_row", collection: grant_group.scholarships, as: :scholarship %>
+      </tbody>
+    </table>
+  </div>
+</details>
