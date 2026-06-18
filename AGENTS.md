@@ -96,7 +96,7 @@ This codebase (Rails 8.1)
 | `Workshop` | Core content: rich text fields, categories, sectors, bookmarks, variations |
 | `Event` | Events with registrations, featured/published states |
 | `EventStaff` | Join model connecting `Person` to `Event` as staff (title, `expected_to_attend`); drives the "Meet the staff" roster and "My events" |
-| `RegistrationTicketCallout` | Admin-configured call-outs shown on an event's registration ticket (title, subtitle, HTML description, `callout_type` action/reference, icon/colour, `show_if_paid`, draggable `position` via the positioning gem); each links to its own public detail page |
+| `RegistrationTicketCallout` | Admin-configured call-outs shown on an event's registration ticket (title, subtitle, HTML description, `callout_type` action/reference, icon/colour, `payment_access_gated` — only shown once the registrant has `payment_access_granted?` (paid or intends to pay), draggable `position` via the positioning gem); each links to its own public detail page |
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
