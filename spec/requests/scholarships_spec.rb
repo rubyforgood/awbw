@@ -24,10 +24,10 @@ RSpec.describe "Scholarships", type: :request do
 
       expect(response.body).to include("scholarship-preview")
       expect(response.body).to include("scholarship-preview-target=\"amountBox\"")
-      # Tasks completed → the $50.00 amount is allocated to the registration.
-      expect(response.body).to include("$50.00 allocated to registration")
-      # Event cost $100.00 with $50.00 allocated leaves $50.00 owed.
-      expect(response.body).to include("$50.00")
+      # Tasks completed → the $50 amount is allocated to the registration.
+      expect(response.body).to include("$50 allocated to registration")
+      # Event cost $100 with $50 allocated leaves $50 owed.
+      expect(response.body).to include("$50")
     end
 
     it "renders the scholarship amount field with a non-negative minimum" do

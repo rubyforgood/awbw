@@ -9,7 +9,7 @@ RSpec.describe "discounts/show", type: :view do
   end
 
   it "shows discount amount" do
-    expect(rendered).to have_content("$10.00")
+    expect(rendered).to have_content("$10")
   end
 
   it "links to allocations" do

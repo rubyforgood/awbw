@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~75 files |
-| `app/services/` | Service objects for complex logic | ~25 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~26 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
 | `app/models/concerns/` | Shared model modules | 15 concerns |
 

@@ -51,7 +51,7 @@ class PaymentsController < ApplicationController
 
         process_allocation!(@payment, allocatable)
 
-        flash[:notice] = "Allocation created. $#{'%.2f' % @payment.reload.remaining_dollars} remaining on payment."
+        flash[:notice] = "Allocation created. #{helpers.dollars_from_cents(@payment.reload.amount_cents_remaining)} remaining on payment."
         redirect_path = allocations_path(allocatable_sgid: allocatable.to_sgid.to_s)
       else
         @payment = payment_class.new(payment_params.except(:allocatable_sgid, :type))

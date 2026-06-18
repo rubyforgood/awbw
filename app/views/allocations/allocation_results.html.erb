@@ -6,7 +6,7 @@
         <p class="text-sm text-gray-500"><%= total %> allocation<%= "s" if total != 1 %></p>
         <% if @allocations_total_cents %>
           <p class="text-sm text-gray-500">
-            Total <span class="font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (@allocations_total_cents.to_i / 100.0) %></span>
+            Total <span class="font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@allocations_total_cents) %></span>
           </p>
         <% end %>
       </div>
@@ -45,7 +45,7 @@
                     name = allocation.source.payer&.name || "Unknown"
                     remaining = allocation.source.amount_cents_remaining
                     if remaining.present? && remaining > 0
-                      "#{name} ($#{'%.2f' % (remaining / 100.0)} remaining)"
+                      "#{name} (#{dollars_from_cents(remaining)} remaining)"
                     else
                       name
                     end
@@ -61,7 +61,7 @@
                   </td>
                 <% end %>
 
-                <td class="px-4 py-2 text-sm font-medium text-gray-900 tabular-nums">$<%= "%.2f" % allocation.amount_dollars %></td>
+                <td class="px-4 py-2 text-sm font-medium text-gray-900 tabular-nums"><%= dollars_from_cents(allocation.amount) %></td>
 
                 <td class="px-4 py-2 text-sm text-gray-500">
                   <% ref_id = allocation.amount.to_i < 0 ? Allocation.find_by(reverted_id: allocation.id)&.id : allocation.reverted_id %>

@@ -448,9 +448,7 @@ module ApplicationHelper
   # Currency for an amount given in cents, dropping the cents when the amount is
   # a whole number of dollars: 150000 → "$1,500", 75050 → "$750.50".
   def dollars_from_cents(cents)
-    cents = cents.to_i
-    precision = (cents % 100).zero? ? 0 : 2
-    number_to_currency(cents / 100.0, precision: precision)
+    MoneyFormatter.dollars_from_cents(cents)
   end
 
   def navbar_bg_class

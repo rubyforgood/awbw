@@ -66,7 +66,7 @@
             <% if allocated_cents > 0 %>
               <span class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-100 px-2 py-0.5 text-[0.65rem] font-medium text-fuchsia-700">
                 <i class="fa-solid fa-circle-check text-[0.55rem]"></i>
-                $<%= "%.2f" % (allocated_cents.to_f / 100) %> allocated to registration
+                <%= dollars_from_cents(allocated_cents) %> allocated to registration
               </span>
             <% else %>
               <span class="text-xs text-gray-500">$0 allocated to registration</span>

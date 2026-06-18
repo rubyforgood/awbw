@@ -47,7 +47,7 @@ export default class extends Controller {
       if (!allocated) {
         this.allocatedHintTarget.innerHTML = `<span class="text-xs text-gray-500">$0 allocated to registration</span>`
       } else {
-        const amount = `$${(allocatedCents / 100).toFixed(2)}`
+        const amount = this.formatDollars(allocatedCents)
         this.allocatedHintTarget.innerHTML = `<span class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-100 px-2 py-0.5 text-[0.65rem] font-medium text-fuchsia-700"><i class="fa-solid fa-circle-check text-[0.55rem]"></i>${amount} allocated to registration</span>`
       }
     }
