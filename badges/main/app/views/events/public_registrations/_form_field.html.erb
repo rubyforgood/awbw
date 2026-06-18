@@ -1,4 +1,4 @@
-<%# locals: (field:, value: nil, label: nil, show_option_source: false) %>
+<%# locals: (field:, value: nil, label: nil, show_option_source: false, show_dropdown_warning: false) %>
 <% return if field.group_header? %>
 
 <% error = @field_errors&.dig(field.id) %>
@@ -20,6 +20,12 @@
 
   <% if field.subtitle.present? %>
     <p class="rich-label text-xs text-gray-500 mb-1.5"><%= form_label_html(field.subtitle) %></p>
+  <% end %>
+
+  <%# Author-only guidance, shown as part of the dropdown's hint area so it sits
+      inside this field's bottom margin rather than butting against the next one. %>
+  <% if show_dropdown_warning %>
+    <%= render "forms/dropdown_other_warning", field: field %>
   <% end %>
 
   <% field_name = "public_registration[form_fields][#{field.id}]" %>

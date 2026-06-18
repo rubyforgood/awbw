@@ -86,7 +86,7 @@ class FormBuilderService
       "Agency Type", "Agency Website"
     ],
     person_background: [ "Racial / Ethnic Identity" ],
-    professional_info: [ "Primary service area", "Additional service areas", "Workshop Settings", "Client Life Experiences", "Primary Age Group(s) Served", "Additional Age Group(s) Served" ],
+    professional_info: [ "Primary sector", "Additional sectors", "Workshop Settings", "Client Life Experiences", "Primary Age Group(s) Served", "Additional Age Group(s) Served" ],
     marketing: [
       "How did you hear about this training?",
       "What motivates you to attend this training?",
@@ -430,12 +430,12 @@ class FormBuilderService
   def build_professional_info_fields(form, position)
     position = add_header(form, position, "Professional Information", group: "professional")
 
-    position = add_field(form, position, "Primary service area", :single_select_dropdown,
+    position = add_field(form, position, "Primary sector", :single_select_dropdown,
                          key: "primary_service_area_single", group: "professional", required: false,
-                         subtitle: "Select the sector you primarily serve.")
-    position = add_field(form, position, "Additional service areas", :multi_select_checkbox,
+                         subtitle: "Select the option that best represents those you primarily intend to serve through the art workshops")
+    position = add_field(form, position, "Additional sectors", :multi_select_checkbox,
                          key: "primary_service_area", group: "professional", required: false,
-                         subtitle: "Select all that apply. These represent the other sectors you serve.")
+                         subtitle: "Select all options that represent who you intend to serve through the art workshops (check all that apply)")
     position = add_field(form, position, "Workshop Settings", :multi_select_checkbox,
                          key: "workshop_environments", group: "professional", required: false,
                          subtitle: "Select all settings where you facilitate or plan to facilitate workshops.",
