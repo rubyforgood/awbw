@@ -153,6 +153,24 @@ reachable from several origins, the eyebrow must adapt to whichever one the user
   `EventHelper#bulk_payments_return_path` centralizes the expand + anchor logic for the bulk
   payments flow).
 
+## Page background class (`page_bg_class`)
+
+Every page view sets `<% content_for(:page_bg_class, "...") %>` at the top — the layout
+(`app/views/layouts/application.html.erb`) renders it on the main content wrapper. The class
+string is a **semantic policy marker** matching the page's authorization level (e.g. `"public"`,
+`"admin-or-auth"`, `"admin-or-owner"`, `"admin-only bg-blue-100"`), not just a Tailwind class.
+
+**Whenever you add a new page (a new `*.html.erb` view rendered as a full page), check whether
+it needs a `page_bg_class` and register it:**
+
+- **Set `content_for(:page_bg_class, "...")`** at the top of the new view, choosing the marker
+  that matches the controller action's policy (compare against the relevant `*_policy.rb`).
+- **Add the view path → expected value to `EXPECTED_MAPPINGS`** in
+  `spec/views/page_bg_class_alignment_spec.rb`. A test asserts every view that sets
+  `page_bg_class` is listed there (and matches its policy), so the suite fails if you skip this.
+- **Match neighboring pages.** Use the same marker as sibling views with the same authorization
+  level rather than inventing a new value.
+
 ## JavaScript
 
 - ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
