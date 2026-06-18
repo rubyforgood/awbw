@@ -250,6 +250,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(existing_registration.ce_hours_requested).to eq(5)
         expect(existing_registration.ce_license_number).to eq("LIC-987")
       end
+
+      it "sets the shout-out flag and stores the shout-out text on the registrant" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: {
+                shoutout: "1",
+                registrant_attributes: { id: existing_registration.registrant_id, shoutout_text: "Grateful to bring art to survivors." }
+              } }
+
+        expect(existing_registration.reload.shoutout).to be(true)
+        expect(existing_registration.registrant.reload.shoutout_text).to eq("Grateful to bring art to survivors.")
+      end
     end
 
     describe "PATCH /event_registrations/:id scholarship handling" do

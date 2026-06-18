@@ -13,6 +13,9 @@ class EventRegistration < ApplicationRecord
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, reject_if: proc { |attrs| attrs["email_subject"].blank? }
+  # Lets the registration edit form edit the registrant's shout-out text (which
+  # lives on the Person) inline, alongside the registration's own shout-out flag.
+  accepts_nested_attributes_for :registrant
 
   before_create :generate_slug
   after_create :snapshot_registrant_organizations
