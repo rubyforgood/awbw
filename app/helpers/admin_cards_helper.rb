@@ -68,7 +68,15 @@ module AdminCardsHelper
       custom_card("Event registrations", event_registrations_path, icon: "🎟️", color: :sky, intensity: 100),
       custom_card("Forms", forms_path, icon: "📋", color: :sky, intensity: 100),
       disabled_card("Form submissions", icon: "📨"),
-      disabled_card("Form answers", icon: "✅")
+      disabled_card("Form answers", icon: "✅"),
+      custom_card("Monthly reports", monthly_reports_path, icon: "📈", color: :sky, intensity: 100),
+      custom_card("Story shares", story_shares_path, icon: "🔗", color: :sky, intensity: 100),
+      custom_card("Bookmarks", bookmarks_path, icon: "🔖", color: :sky, intensity: 100),
+      custom_card("Affiliations", affiliations_path, icon: "🤝", color: :sky, intensity: 100),
+      custom_card("Reports", reports_path, icon: "📄", color: :sky, intensity: 100),
+      disabled_card("Discounts", icon: "💲"),
+      disabled_card("Refunds", icon: "↩️"),
+      disabled_card("Event staff", icon: "🧑‍💼")
     ]
   end
 
