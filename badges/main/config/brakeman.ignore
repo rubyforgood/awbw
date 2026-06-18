@@ -204,6 +204,40 @@
         79
       ],
       "note": "sdf"
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "31dde319e6775c7f5f4428a32a45835966a2afa4dad760f17400b9115a863809",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped parameter value",
+      "file": "app/views/events/preview_reminder.html.erb",
+      "line": 95,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "EventMailer.event_registration_reminder(Event.find(params[:id]).decorate.event_registrations.includes(:registrant => ([:user, :contact_methods])).joins(:registrant).select do\n r.registrant.preferred_email.present?\n end.first, :custom_message => ((params[:custom_message].to_s or helpers.default_reminder_message(((Event.find(params[:id]).decorate.start_date.to_date - Date.current).to_i or nil)))), :custom_subject => ((params[:custom_subject].to_s or helpers.default_reminder_subject(Event.find(params[:id]).decorate))), :preview => true).html_part.body.decoded",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "EventsController",
+          "method": "preview_reminder",
+          "line": 277,
+          "file": "app/controllers/events_controller.rb",
+          "rendered": {
+            "name": "events/preview_reminder",
+            "file": "app/views/events/preview_reminder.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "events/preview_reminder"
+      },
+      "user_input": "params[:custom_message].to_s",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "Admin-only reminder preview. The raw value is the server-rendered email HTML; the custom message it embeds is sanitized via reminder_message_html (SafeListSanitizer) and the custom subject is shown escaped, separately, so no unsanitized user input reaches the page."
     }
   ],
   "brakeman_version": "8.0.4"

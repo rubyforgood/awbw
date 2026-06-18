@@ -6,7 +6,20 @@ class EventMailerPreview < ActionMailer::Preview
 
   def event_registration_reminder
     event_registration = sample_event_registration
-    EventMailer.event_registration_reminder(event_registration, days_until_event: 1)
+    EventMailer.event_registration_reminder(
+      event_registration,
+      custom_message: "This is a reminder that you're registered for the following A Window Between Worlds event <strong>tomorrow</strong>.",
+      custom_subject: "A Window Between Worlds Portal: Reminder: see you tomorrow!"
+    )
+  end
+
+  def event_registration_reminder_fyi
+    event = Event.first || create_event
+    EventMailer.event_registration_reminder_fyi(
+      event,
+      [ "Alex Rivera <alex@example.org>", "Sam Lee <sam@example.org>" ],
+      custom_message: "This is a reminder that you're registered for the following A Window Between Worlds event <strong>tomorrow</strong>."
+    )
   end
 
   def event_registration_cancelled

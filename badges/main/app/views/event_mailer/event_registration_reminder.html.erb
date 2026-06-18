@@ -5,55 +5,30 @@
     Hello <strong><%= @person.full_name %></strong>,
   </p>
 
-  <p>
-    This is a reminder that you're registered for the following <%= @organization_name %> event<%= raw(" " + (@days_until_event == 0 ? "<strong>today</strong>" : @days_until_event == 1 ? "<strong>tomorrow</strong>" : "in <strong>#{@days_until_event} days</strong>")) if @days_until_event.is_a?(Integer) %>:
-  </p>
+  <%# Editable intro the admin sets on the bulk-reminder page (defaults to the
+      standard reminder sentence). In preview mode the container always renders
+      (hidden when empty) with hooks the reminder-preview Stimulus controller
+      fills in live; a real send only renders it when a message is present. %>
+  <% if @custom_message.present? || @preview %>
+    <%= content_tag :div,
+          reminder_message_html(@custom_message),
+          id: ("reminder-custom-message" if @preview),
+          data: ({ reminder_preview_target: "message" } if @preview),
+          style: "margin: 8px 0; font-size: 14px; line-height: 1.5;#{' display: none;' if @preview && @custom_message.blank?}" %>
+  <% end %>
 
-  <div style="text-align: center; background-color: #f3f4f6; border-radius: 6px; padding: 24px; margin: 16px 0;">
-    <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
-      <p style="font-size: 14px; font-weight: 600; color: #374151; margin: 0 0 4px; font-family: 'Telefon Bold', sans-serif;">
-        <%= @event.pre_title %>
-      </p>
-    <% end %>
-
-    <h2 style="font-size: 28px; font-weight: bold; color: #166534; margin: 0 0 16px; font-family: Lato, sans-serif;">
-      <%= @event.title %>
-    </h2>
-
-    <p style="font-size: 22px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
-      <% Time.use_zone(@time_zone) { %><%= @event.times(display_day: true, display_date: true) %><% } %>
-    </p>
-
-    <% if @event.labelled_cost.present? %>
-      <p style="font-size: 18px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
-        <%= @event.labelled_cost %>
-      </p>
-    <% end %>
-
-    <% if @event.location.present? %>
-      <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
-        <%= @event.location.name %>
-      </p>
-    <% end %>
-
-    <% if @event.videoconference_url.present? %>
-      <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
-        <a href="<%= @event.videoconference_url %>" style="color: #374151; text-decoration: underline;">Join us on <%= @event.decorate.videoconference_domain %></a>
-      </p>
-    <% end %>
-  </div>
+  <%= render "event_details_card", event: @event, time_zone: @time_zone %>
 </div>
 
-<p>
-  Visit the event page for updates, directions, or calendar links:
-</p>
+<% if @event_registration.persisted? && @event_registration.slug.present? %>
+  <p>
+    View your ticket for event details, directions, and calendar links:
+  </p>
 
-<p>
-  <% if @event_registration.persisted? && @event_registration.slug.present? %>
+  <p>
     <a href="<%= registration_ticket_url(@event_registration.slug) %>" class="button">View ticket</a>
-  <% end %>
-  <a href="<%= @event_url %>" class="button">View event</a>
-</p>
+  </p>
+<% end %>
 
 <p style="margin-top: 24px; font-size: 12px; color: #6b7280;">
   This is an automated reminder from <%= @organization_name %>.
