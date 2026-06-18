@@ -132,6 +132,7 @@ class EventPolicy < ApplicationPolicy
                   :hint_registration_cost,
                   :pre_title,
                   :pre_date_text,
+                  :facilitator_training,
                   :featured,
                   :start_date, :start_date_date, :start_date_time,
                   :end_date, :end_date_date, :end_date_time,

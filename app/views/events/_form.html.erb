@@ -8,7 +8,7 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
     <div>
       <label class="block font-medium mb-1 text-gray-700">Event title</label>
-      <div class="border border-gray-200 rounded-lg p-4">
+      <div class="border border-gray-200 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
         <div>
           <%= f.input :title,
                   label: "Title",
@@ -21,8 +21,8 @@
                       "w-full rounded border-gray-300 shadow-sm px-3 py-2
                                                 focus:ring-blue-500 focus:border-blue-500",
                   } %>
+          <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page", wrapper_html: { class: "mb-0!" } %>
         </div>
-        <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page" %>
         <div>
           <%= f.input :pre_title,
                   label: "Pre-title",
@@ -64,6 +64,14 @@
     </button>
 
     <div id="event_details" class="bg-gray-50 border border-gray-300 rounded-b-md p-6">
+      <div class="form-group mb-6">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <%= f.check_box :facilitator_training %>
+          <span class="text-sm font-medium text-gray-700">This event is a facilitator training (TAC)</span>
+        </label>
+        <p class="text-xs text-gray-500 mt-1">Marks the event as a facilitator training. Drives the training column on the scholarship index.</p>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <%# LEFT: Date/time, cost + pre-date text, videoconference + location %>
       <div class="md:col-span-2 space-y-6">
