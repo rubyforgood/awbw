@@ -360,6 +360,60 @@ if trauma && trauma.ce_hours_details.blank?
   HTML
 end
 
+# Seed example registration ticket callouts on the art workshop — admin-configured
+# call-outs that show on the registration ticket and each link to their own page.
+# Demonstrates both types (reference reading + an action), custom colours/icons, a
+# subtitle, and a paid-only callout that stays hidden until the registration is paid.
+# Idempotent: only seeded when the workshop has no callouts yet, so admin edits survive.
+art_workshop = Event.find_by(title: "Mindful Art for Survivors Workshop")
+if art_workshop && art_workshop.registration_ticket_callouts.none?
+  art_workshop.registration_ticket_callouts.create!(
+    [
+      {
+        title: "What to bring",
+        subtitle: "A short list of optional supplies",
+        callout_type: "reference",
+        color_class: "green",
+        icon_class: "fa-solid fa-palette",
+        position: 1,
+        description: <<~HTML.strip
+          <p>Everything is provided, but you're welcome to bring your own supplies if you'd like.</p>
+          <ul>
+            <li>A journal or sketchbook</li>
+            <li>Your favourite pens, markers, or colored pencils</li>
+            <li>A water bottle and anything that helps you feel comfortable</li>
+          </ul>
+        HTML
+      },
+      {
+        title: "Studio location & parking",
+        subtitle: "Getting here on the day",
+        callout_type: "reference",
+        color_class: "amber",
+        icon_class: "fa-solid fa-location-dot",
+        position: 2,
+        description: <<~HTML.strip
+          <p>The studio is on the second floor — take the elevator near the main entrance.</p>
+          <p>Street parking is free after 10am. There is also a paid lot directly across the street.</p>
+        HTML
+      },
+      {
+        title: "Download your workbook",
+        subtitle: "Available once your spot is paid",
+        callout_type: "action",
+        color_class: "blue",
+        icon_class: "fa-solid fa-file-pdf",
+        show_if_paid: true,
+        position: 3,
+        description: <<~HTML.strip
+          <p>Thanks for completing your payment! Your printable workbook is ready.</p>
+          <p>Printing it is optional — we'll have copies available at the studio too.</p>
+        HTML
+      }
+    ]
+  )
+end
+
 puts "Creating Event Registrations…"
 
 # Key people for named scenarios
