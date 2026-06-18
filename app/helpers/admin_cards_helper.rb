@@ -76,7 +76,8 @@ module AdminCardsHelper
       custom_card("Reports", reports_path, icon: "📄", color: :sky, intensity: 100),
       disabled_card("Discounts", icon: "💲"),
       disabled_card("Refunds", icon: "↩️"),
-      disabled_card("Event staff", icon: "🧑‍💼")
+      disabled_card("Event staff", icon: "🧑‍💼"),
+      disabled_card("Scholarships", icon: "🎓")
     ]
   end
 
