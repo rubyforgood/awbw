@@ -223,7 +223,7 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
   # find_or_create_by! only sets these on create, so without this an existing DB
   # keeps stale dates/cost and neither the index ordering, the multi-day span, nor
   # the registration fee would update.
-  event.update!(start_date: start_date, end_date: end_date, registration_close_date: registration_close, cost_cents: cost_cents)
+  event.update!(start_date: start_date, end_date: end_date, registration_close_date: registration_close, cost_cents: cost_cents, facilitator_training: title.match?(/training/i))
 
   if registerable
     EventForm.find_or_create_by!(event: event, role: "registration") do |ef|
