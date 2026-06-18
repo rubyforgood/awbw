@@ -47,6 +47,7 @@ module Events
       if @field_errors.any?
         @form_fields = visible_form_fields
         @event = @event.decorate
+        flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
         render :new, status: :unprocessable_content
         return
       end
@@ -74,7 +75,8 @@ module Events
       else
         @form_fields = visible_form_fields
         @event = @event.decorate
-        flash.now[:alert] = result.errors.join(", ")
+        flash.now[:error] = result.errors.join(", ")
+        flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
         render :new, status: :unprocessable_content
       end
     end
