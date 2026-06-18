@@ -155,6 +155,26 @@
         <% end %>
       <% end %>
 
+      <!-- Custom ticket callouts (admin-configured: actions & reference reading) -->
+      <% paid = event_registration.paid_in_full? || @checkout_payment_status == "paid" %>
+      <% event_registration.event.registration_ticket_callouts.each do |callout| %>
+        <% next if callout.show_if_paid && !paid %>
+        <% theme = callout.theme %>
+        <%= link_to event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug),
+                      class: "flex items-center gap-3 rounded-xl border-2 #{theme[:border]} #{theme[:bg]} px-4 py-3 #{theme[:hover]} transition-colors" do %>
+          <i class="<%= callout.display_icon_class %> <%= theme[:icon] %> text-xl shrink-0"></i>
+
+          <div class="flex-1 min-w-0 text-left">
+            <p class="font-semibold <%= theme[:title] %>"><%= callout.title %></p>
+            <% if callout.subtitle.present? %>
+              <p class="text-sm <%= theme[:subtitle] %>"><%= callout.subtitle %></p>
+            <% end %>
+          </div>
+
+          <i class="fa-solid <%= callout.action? ? "fa-arrow-right" : "fa-circle-info" %> <%= theme[:icon] %> shrink-0"></i>
+        <% end %>
+      <% end %>
+
       <!-- Divider -->
       <div class="border-t border-gray-200"></div>
 
