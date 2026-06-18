@@ -51,6 +51,28 @@ RSpec.describe EventHelper, type: :helper do
     end
   end
 
+  describe "#display_question_label" do
+    it "uses the question wording captured at submission time" do
+      field = build_stubbed(:form_field, name: "Current wording")
+      response = build_stubbed(:form_answer, question_name_when_answered: "Wording when answered")
+
+      expect(helper.display_question_label(field, response)).to eq("Wording when answered")
+    end
+
+    it "falls back to the field's current name when no answer is on file" do
+      field = build_stubbed(:form_field, name: "Current wording")
+
+      expect(helper.display_question_label(field, nil)).to eq("Current wording")
+    end
+
+    it "falls back to the field's current name when the snapshot is blank" do
+      field = build_stubbed(:form_field, name: "Current wording")
+      response = build_stubbed(:form_answer, question_name_when_answered: "")
+
+      expect(helper.display_question_label(field, response)).to eq("Current wording")
+    end
+  end
+
   describe "#resolve_answer_text" do
     it "maps category ids to names while preserving an 'Other: <text>' token" do
       category_type = create(:category_type, name: "StoryPopulation")

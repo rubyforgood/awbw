@@ -489,5 +489,17 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("<strong>Your details</strong>")
       expect(response.body).to include("<em>Name</em>")
     end
+
+    it "shows the question wording captured at submission time, not the reworded label" do
+      submission = FormSubmission.find_by(person: person, form: form)
+      submission.form_answers.create!(form_field: essay_field, submitted_answer: "my reasons",
+                                      question_name_when_answered: "Why do you want to attend?")
+      essay_field.update!(name: "Reworded after submission")
+
+      get event_public_registration_path(event, person_id: person.id)
+
+      expect(response.body).to include("Why do you want to attend?")
+      expect(response.body).not_to include("Reworded after submission")
+    end
   end
 end
