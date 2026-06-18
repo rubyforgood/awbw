@@ -34,19 +34,34 @@
         <div class="flex flex-col gap-2 flex-1">
           User-generated
           <% @user_content_cards.each do |card| %>
-            <a href="<%= card[:path] %>"
-               class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
+            <% if card[:disabled] %>
+              <div class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
                       <%= card[:bg_color] %> <%= card[:text_color] %>
-                      <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 px-4 py-1">
-              <div class="text-2xl text-gray-700 flex-shrink-0">
-                <%= card[:icon] %>
-              </div>
+                      px-4 py-1 cursor-not-allowed opacity-60"
+                   title="Not built yet"
+                   aria-disabled="true">
+                <div class="text-2xl flex-shrink-0">
+                  <%= card[:icon] %>
+                </div>
 
-              <div class="flex-1">
-                <h3 class="text-lg font-bold text-gray-800 break-words"><%= card[:title] %></h3>
+                <div class="flex-1">
+                  <h3 class="text-lg font-bold break-words"><%= card[:title] %></h3>
+                </div>
               </div>
+            <% else %>
+              <a href="<%= card[:path] %>"
+                 class="flex items-center gap-6 rounded-lg shadow-lg border border-gray-200
+                        <%= card[:bg_color] %> <%= card[:text_color] %>
+                        <%= card[:hover_bg_color] %> transition-colors transition-shadow duration-300 px-4 py-1">
+                <div class="text-2xl text-gray-700 flex-shrink-0">
+                  <%= card[:icon] %>
+                </div>
 
-            </a>
+                <div class="flex-1">
+                  <h3 class="text-lg font-bold text-gray-800 break-words"><%= card[:title] %></h3>
+                </div>
+              </a>
+            <% end %>
           <% end %>
         </div>
       </div>

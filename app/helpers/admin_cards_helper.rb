@@ -30,7 +30,7 @@ module AdminCardsHelper
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:quotes, icon: "💬", intensity: 100),
       model_card(:payments, icon: "💳"),
-      custom_card("Scholarships", grants_path, icon: "🎓", color: :fuchsia),
+      disabled_card("Scholarships", icon: "🎓"),
       model_card(:notifications, icon: "🔔"),
       model_card(:story_ideas, icon: "✍🏾️", intensity: 100),
       custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
@@ -76,8 +76,7 @@ module AdminCardsHelper
       custom_card("Reports", reports_path, icon: "📄", color: :sky, intensity: 100),
       disabled_card("Discounts", icon: "💲"),
       disabled_card("Refunds", icon: "↩️"),
-      disabled_card("Event staff", icon: "🧑‍💼"),
-      disabled_card("Scholarships", icon: "🎓")
+      disabled_card("Event staff", icon: "🧑‍💼")
     ]
   end
 
