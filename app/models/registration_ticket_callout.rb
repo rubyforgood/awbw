@@ -5,21 +5,9 @@ class RegistrationTicketCallout < ApplicationRecord
   # group them on the ticket later.
   CALLOUT_TYPES = %w[ action reference ].freeze
 
-  # Colour themes keyed by a short name stored in `color_class`. Every utility is
-  # spelled out as a literal class so Tailwind's JIT scan picks it up — never
-  # interpolate the colour into a class name. Used for the icon today; the border
-  # and background are here so we can tint the whole box later without a migration.
-  COLOR_THEMES = {
-    "amber" => { icon: "text-amber-500", border: "border-amber-300", bg: "bg-amber-50", hover: "hover:bg-amber-100", title: "text-amber-900", subtitle: "text-amber-700" },
-    "orange" => { icon: "text-orange-500", border: "border-orange-300", bg: "bg-orange-50", hover: "hover:bg-orange-100", title: "text-orange-900", subtitle: "text-orange-700" },
-    "indigo" => { icon: "text-indigo-500", border: "border-indigo-300", bg: "bg-indigo-50", hover: "hover:bg-indigo-100", title: "text-indigo-900", subtitle: "text-indigo-700" },
-    "blue" => { icon: "text-blue-500", border: "border-blue-200", bg: "bg-blue-50", hover: "hover:bg-blue-100", title: "text-blue-900", subtitle: "text-blue-700" },
-    "green" => { icon: "text-green-500", border: "border-green-300", bg: "bg-green-50", hover: "hover:bg-green-100", title: "text-green-900", subtitle: "text-green-700" },
-    "purple" => { icon: "text-purple-500", border: "border-purple-300", bg: "bg-purple-50", hover: "hover:bg-purple-100", title: "text-purple-900", subtitle: "text-purple-700" },
-    "rose" => { icon: "text-rose-500", border: "border-rose-300", bg: "bg-rose-50", hover: "hover:bg-rose-100", title: "text-rose-900", subtitle: "text-rose-700" },
-    "gray" => { icon: "text-gray-500", border: "border-gray-200", bg: "bg-gray-50", hover: "hover:bg-gray-100", title: "text-gray-900", subtitle: "text-gray-600" }
-  }.freeze
-
+  # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
+  # the generic colour swatches and palette, which live in DomainTheme so the whole
+  # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
   DEFAULT_ICONS = { "action" => "fa-solid fa-arrow-right", "reference" => "fa-solid fa-circle-info" }.freeze
   DEFAULT_COLORS = { "action" => "orange", "reference" => "indigo" }.freeze
 
@@ -33,7 +21,7 @@ class RegistrationTicketCallout < ApplicationRecord
 
   validates :title, presence: true
   validates :callout_type, inclusion: { in: CALLOUT_TYPES }
-  validates :color_class, inclusion: { in: COLOR_THEMES.keys }, allow_blank: true
+  validates :color_class, inclusion: { in: DomainTheme::SWATCH_COLORS.map(&:to_s) }, allow_blank: true
   validates :position, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
 
   scope :ordered, -> { order(:position, :id) }
@@ -48,10 +36,11 @@ class RegistrationTicketCallout < ApplicationRecord
     icon_class.presence || DEFAULT_ICONS.fetch(callout_type, DEFAULT_ICONS["reference"])
   end
 
-  # The colour theme hash for this callout, falling back to the per-type default.
+  # The colour swatch (icon/border/bg/hover/title/subtitle classes) for this
+  # callout, falling back to the per-type default colour.
   def theme
-    key = color_class.presence || DEFAULT_COLORS.fetch(callout_type, "indigo")
-    COLOR_THEMES.fetch(key, COLOR_THEMES["indigo"])
+    color = color_class.presence || DEFAULT_COLORS.fetch(callout_type, "indigo")
+    DomainTheme.swatch(color)
   end
 
   def to_s

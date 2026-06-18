@@ -50,4 +50,39 @@ RSpec.describe DomainTheme do
       expect(DomainTheme.color_for(:missing)).to eq(:gray)
     end
   end
+
+  describe ".swatch" do
+    it "builds the full set of role classes from one base colour" do
+      expect(DomainTheme.swatch(:amber)).to eq(
+        icon: "text-amber-500",
+        border: "border-amber-300",
+        bg: "bg-amber-50",
+        hover: "hover:bg-amber-100",
+        title: "text-amber-900",
+        subtitle: "text-amber-700"
+      )
+    end
+
+    it "accepts a string colour" do
+      expect(DomainTheme.swatch("blue")).to eq(DomainTheme.swatch(:blue))
+    end
+  end
+
+  describe ".swatch_for" do
+    it "resolves a domain key to its colour swatch" do
+      expect(DomainTheme.swatch_for(:scholarships))
+        .to eq(DomainTheme.swatch(DomainTheme.color_for(:scholarships)))
+    end
+
+    it "falls back to gray for unknown keys" do
+      expect(DomainTheme.swatch_for(:missing)).to eq(DomainTheme.swatch(:gray))
+    end
+  end
+
+  describe ".swatches" do
+    it "returns every pickable colour keyed by name" do
+      expect(DomainTheme.swatches.keys).to eq(DomainTheme::SWATCH_COLORS)
+      expect(DomainTheme.swatches[:amber]).to eq(DomainTheme.swatch(:amber))
+    end
+  end
 end

@@ -52,8 +52,45 @@ module DomainTheme
     affiliated_person:        :slate
   }
 
+  # Ordered palette of colours offered as user-pickable swatches (e.g. the
+  # callout colour dropdown). A curated subset of the full theme palette that
+  # reads well as tinted boxes — add a colour here once and every picker updates.
+  SWATCH_COLORS = %i[ amber orange indigo blue green purple rose gray ].freeze
+
+  # Semantic roles for a colour "swatch" — the full set of Tailwind utilities for
+  # tinting a boxed UI element (callout cards today; the amount-due / scholarship
+  # boxes, etc. tomorrow). Each role is a single intensity off one base colour, so
+  # the app's box-theming lives here rather than scattered across models and views.
+  # The literal classes these produce are safelisted via the @source inline(...)
+  # block in application.tailwind.css — change an intensity here and update it there.
+  SWATCH_ROLES = {
+    icon:     "text-%<color>s-500",
+    border:   "border-%<color>s-300",
+    bg:       "bg-%<color>s-50",
+    hover:    "hover:bg-%<color>s-100",
+    title:    "text-%<color>s-900",
+    subtitle: "text-%<color>s-700"
+  }.freeze
+
   def self.color_for(key)
     COLORS[key.to_sym] || :gray
+  end
+
+  # Full colour swatch (role => Tailwind class) for a raw base colour.
+  def self.swatch(color)
+    SWATCH_ROLES.transform_values { |template| format(template, color:) }
+  end
+
+  # Full colour swatch for a domain key, resolving the key to its theme colour
+  # first (e.g. swatch_for(:scholarships) tints a box with the scholarships colour).
+  def self.swatch_for(key)
+    swatch(color_for(key))
+  end
+
+  # Every pickable swatch keyed by colour name — handy for serialising the whole
+  # palette to JS (e.g. the callout editor's live colour preview).
+  def self.swatches
+    SWATCH_COLORS.index_with { |color| swatch(color) }
   end
 
   def self.bg_class_for(key, intensity: 50, hover: false)

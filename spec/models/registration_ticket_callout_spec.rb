@@ -65,16 +65,16 @@ RSpec.describe RegistrationTicketCallout, type: :model do
   end
 
   describe "#theme" do
-    it "returns the configured colour theme" do
+    it "returns the configured colour swatch" do
       callout.color_class = "amber"
-      expect(callout.theme).to eq(RegistrationTicketCallout::COLOR_THEMES["amber"])
+      expect(callout.theme).to eq(DomainTheme.swatch("amber"))
     end
 
     it "falls back to the per-type default colour when blank" do
       callout.color_class = ""
       callout.callout_type = "reference"
-      default_key = RegistrationTicketCallout::DEFAULT_COLORS["reference"]
-      expect(callout.theme).to eq(RegistrationTicketCallout::COLOR_THEMES[default_key])
+      default_color = RegistrationTicketCallout::DEFAULT_COLORS["reference"]
+      expect(callout.theme).to eq(DomainTheme.swatch(default_color))
     end
   end
 end
