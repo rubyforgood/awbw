@@ -8,8 +8,10 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
     <div>
       <label class="block font-medium mb-1 text-gray-700">Event title</label>
-      <div class="border border-gray-200 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-        <div>
+      <div class="border border-gray-200 rounded-lg p-4">
+        <%# Inputs and checkboxes are split into two parallel grid rows so each %>
+        <%# checkbox lines up with its sibling regardless of the Pre-title hint height %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <%= f.input :title,
                   label: "Title",
                   required: true,
@@ -21,9 +23,6 @@
                       "w-full rounded border-gray-300 shadow-sm px-3 py-2
                                                 focus:ring-blue-500 focus:border-blue-500",
                   } %>
-          <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page", wrapper_html: { class: "mb-0!" } %>
-        </div>
-        <div>
           <%= f.input :pre_title,
                   label: "Pre-title",
                   hint: "Displays above the title",
@@ -31,6 +30,10 @@
                     class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                     placeholder: "e.g. Facilitator Training Series"
                   } %>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <%= f.input :autoshow_title, as: :boolean, label: "Show title on event page", wrapper_html: { class: "mb-0!" } %>
+          <%= f.input :facilitator_training, as: :boolean, label: "Facilitator training event", wrapper_html: { class: "mb-0!" } %>
         </div>
       </div>
     </div>
@@ -190,7 +193,6 @@
                         placeholder: "Virtual event",
                         class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                       } %>
-          <%= f.input :facilitator_training, as: :boolean, label: "Facilitator training event", wrapper_html: { class: "mb-0!" } %>
         </div>
 
         <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
