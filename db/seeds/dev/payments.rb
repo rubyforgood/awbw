@@ -250,12 +250,12 @@ end
 fund_registration.(facilitator_training, amy_person,
   scholarship: { amount_cents: 10_000, tasks_completed: false },
   payments: [ { payer: amy_person, amount_cents: 5_000, kind: :cash } ])
-# Maria: paid in full by cash
+# Maria: partial cash → still owes, intends to pay the rest
 fund_registration.(facilitator_training, maria_j,
-  payments: [ { payer: maria_j, amount_cents: 15_000, kind: :cash } ])
-# Anna: paid in full by check from her organization (org-payer scenario)
+  payments: [ { payer: maria_j, amount_cents: 5_000, kind: :cash } ])
+# Anna: partial check from her organization → still owes, intends to pay the rest (org-payer scenario)
 fund_registration.(facilitator_training, anna_g,
-  payments: [ { payer: org_payer || anna_g, amount_cents: 15_000, kind: :check } ])
+  payments: [ { payer: org_payer || anna_g, amount_cents: 5_000, kind: :check } ])
 # Mario: partial cash → still owes
 fund_registration.(facilitator_training, mario_j,
   payments: [ { payer: mario_j, amount_cents: 5_000, kind: :cash } ])

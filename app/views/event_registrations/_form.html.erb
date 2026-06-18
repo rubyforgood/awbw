@@ -403,6 +403,7 @@
       <% cancel_path = case params[:return_to]
                        when "registrants" then registrants_event_path(event_registration.event)
                        when "index" then event_registrations_path
+                       when "preview_reminder" then preview_reminder_event_path(event_registration.event)
                        else allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
                        end %>
 
