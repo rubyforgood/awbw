@@ -11,6 +11,7 @@ class RegistrationTicketCallout < ApplicationRecord
   # and background are here so we can tint the whole box later without a migration.
   COLOR_THEMES = {
     "amber" => { icon: "text-amber-500", border: "border-amber-300", bg: "bg-amber-50", hover: "hover:bg-amber-100", title: "text-amber-900", subtitle: "text-amber-700" },
+    "orange" => { icon: "text-orange-500", border: "border-orange-300", bg: "bg-orange-50", hover: "hover:bg-orange-100", title: "text-orange-900", subtitle: "text-orange-700" },
     "indigo" => { icon: "text-indigo-500", border: "border-indigo-300", bg: "bg-indigo-50", hover: "hover:bg-indigo-100", title: "text-indigo-900", subtitle: "text-indigo-700" },
     "blue" => { icon: "text-blue-500", border: "border-blue-200", bg: "bg-blue-50", hover: "hover:bg-blue-100", title: "text-blue-900", subtitle: "text-blue-700" },
     "green" => { icon: "text-green-500", border: "border-green-300", bg: "bg-green-50", hover: "hover:bg-green-100", title: "text-green-900", subtitle: "text-green-700" },
@@ -20,7 +21,7 @@ class RegistrationTicketCallout < ApplicationRecord
   }.freeze
 
   DEFAULT_ICONS = { "action" => "fa-solid fa-arrow-right", "reference" => "fa-solid fa-circle-info" }.freeze
-  DEFAULT_COLORS = { "action" => "blue", "reference" => "indigo" }.freeze
+  DEFAULT_COLORS = { "action" => "orange", "reference" => "indigo" }.freeze
 
   belongs_to :event
 
