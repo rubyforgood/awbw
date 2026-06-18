@@ -403,10 +403,10 @@ RSpec.describe FormField do
       end
 
       it "accepts a published Category id from the backing type for a category field" do
-        type = create(:category_type, name: "WorkshopEnvironment")
-        offered = create(:category, :published, category_type: type)
+        type = create(:category_type, name: "AgeRange")
+        offered = create(:category, :published, category_type: type, name: "3-5")
         other_type_category = create(:category, :published)
-        field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "workshop_environments")
+        field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_age_group")
 
         expect(field.answer_inclusion_error([ offered.id.to_s ])).to be_nil
         expect(field.answer_inclusion_error([ other_type_category.id.to_s ])).to eq("has an invalid selection")

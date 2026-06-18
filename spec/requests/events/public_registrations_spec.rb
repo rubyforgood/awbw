@@ -333,16 +333,16 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("<strong>Please complete all fields below.</strong>")
     end
 
-    it "renders a workshop setting option's description under its checkbox" do
-      category_type = create(:category_type, name: "WorkshopEnvironment")
+    it "renders a category option's description under its checkbox" do
+      category_type = create(:category_type, name: "AgeRange")
       create(:category, :published, category_type: category_type,
-             name: "Clinical setting", description: "Community mental health, outpatient, etc")
+             name: "3-5", description: "Preschool and kindergarten")
       create(:form_field, form: form, answer_type: :multi_select_checkbox,
-             field_identifier: "workshop_environments", name: "Workshop Settings", required: false)
+             field_identifier: "primary_age_group", name: "Primary Age Group(s) Served", required: false)
 
       get new_event_public_registration_path(event)
 
-      expect(response.body).to include("Community mental health, outpatient, etc")
+      expect(response.body).to include("Preschool and kindergarten")
     end
 
     it "reveals a 'please specify' text input for a radio field's Other option" do
@@ -379,11 +379,11 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     it "reveals the text input for a category-backed dynamic field's Other option" do
       # Dynamic fields source options from Category and use the category id as the
       # option value, so the Other option must be detected by its label, not value.
-      category_type = create(:category_type, name: "StoryPopulation")
-      create(:category, :published, category_type: category_type, name: "Veterans")
+      category_type = create(:category_type, name: "AgeRange")
+      create(:category, :published, category_type: category_type, name: "3-5")
       create(:category, :published, category_type: category_type, name: "Other")
       create(:form_field, form: form, answer_type: :multi_select_checkbox,
-             field_identifier: "client_life_experiences", name: "Populations", required: false)
+             field_identifier: "primary_age_group", name: "Primary Age Group(s) Served", required: false)
 
       get new_event_public_registration_path(event)
 

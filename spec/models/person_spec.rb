@@ -409,7 +409,7 @@ RSpec.describe Person, type: :model do
       end
 
       it "does not pull from unrelated fields" do
-        answer("workshop_environments", "Other: School")
+        answer("primary_age_group", "Other: School")
 
         expect(person.other_service_area_responses).to be_empty
       end
@@ -417,12 +417,10 @@ RSpec.describe Person, type: :model do
 
     describe "#other_workshop_setting_responses" do
       it "returns free-text Other values from the category-backed fields" do
-        answer("workshop_environments", "3, Other: Equine center")
-        answer("client_life_experiences", "Other: Refugees")
-        answer("primary_age_group", "Other: Toddlers")
+        answer("primary_age_group", "3, Other: Toddlers")
 
         expect(person.other_workshop_setting_responses)
-          .to contain_exactly("Equine center", "Refugees", "Toddlers")
+          .to contain_exactly("Toddlers")
       end
 
       it "does not pull from the service area fields" do
