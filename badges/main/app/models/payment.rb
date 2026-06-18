@@ -1,4 +1,5 @@
 class Payment < ApplicationRecord
+  has_paper_trail
   PAYER_TYPES = %w[Person Organization].freeze
 
   has_many :allocations, as: :source

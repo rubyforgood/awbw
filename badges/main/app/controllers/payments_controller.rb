@@ -1,4 +1,7 @@
 class PaymentsController < ApplicationController
+  # authorize! calls use with: PaymentPolicy explicitly because @payment uses STI
+  # (CashPayment, CheckPayment, ExternalProcessorPayment), and ActionPolicy would
+  # otherwise look up a policy by the subclass name (e.g. ExternalProcessorPaymentPolicy).
   PERMITTED_PAYMENT_TYPES = %w[CashPayment CheckPayment ExternalProcessorPayment].freeze
   def index
     authorize!
@@ -81,6 +84,22 @@ class PaymentsController < ApplicationController
     @allocations = @payment.allocations.order(created_at: :desc)
     @refunds = @payment.refunds.order(created_at: :desc)
     authorize! @payment, with: PaymentPolicy
+  end
+
+  def edit
+    @payment = Payment.find(params[:id])
+    authorize! @payment, with: PaymentPolicy
+  end
+
+  def update
+    @payment = Payment.find(params[:id])
+    authorize! @payment, with: PaymentPolicy
+
+    if @payment.update(edit_payment_params)
+      redirect_to payment_path(@payment), notice: "Payment was successfully updated."
+    else
+      render :edit, status: :unprocessable_content
+    end
   end
 
   def new_checkout_link
@@ -229,6 +248,10 @@ class PaymentsController < ApplicationController
     else
       payment_amount
     end
+  end
+
+  def edit_payment_params
+    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id)
   end
 
   def redirect_path_for(allocatable)

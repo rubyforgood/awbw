@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user! # ensures only logged-in users can access pages
   before_action :track_user_with_ahoy, unless: :devise_controller?
   before_action :set_current_user # for AhoyTrackable in models
+  before_action :set_paper_trail_whodunnit
   before_action :preload_current_user_associations
 
   before_action do
