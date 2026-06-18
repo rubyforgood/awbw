@@ -13,9 +13,9 @@
             <input type="checkbox" id="recipients_select_all" class="rounded border-gray-300" <%= "checked" if all_matched %> aria-label="Select all" onclick="document.querySelectorAll('.recipient-checkbox').forEach(function(c){ c.checked = document.getElementById('recipients_select_all').checked })">
           </th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
           <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payment status</th>
+          <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700 w-10"><span class="sr-only">Registration</span></th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200 bg-white">
@@ -26,22 +26,34 @@
             <td class="px-4 py-2">
               <%= check_box_tag "registration_ids[]", reg.id, matched, class: "recipient-checkbox rounded border-gray-300", id: "registration_ids_#{reg.id}" %>
             </td>
-            <td class="px-4 py-2 text-sm"><%= person.full_name %></td>
-            <td class="px-4 py-2 text-sm"><%= person.preferred_email %></td>
+            <td class="px-4 py-2 text-sm">
+              <%= person.full_name %>
+              <span class="text-xs text-gray-500">(<%= person.preferred_email %>)</span>
+            </td>
             <td class="px-4 py-2 text-sm">
               <% org_names = reg.organizations.map(&:name).compact_blank %>
               <%= org_names.any? ? org_names.join(", ") : content_tag(:span, "—", class: "text-gray-400") %>
             </td>
-            <td class="px-4 py-2 text-sm">
+            <td class="px-4 py-2 text-sm whitespace-nowrap">
               <% if @event.object.cost_cents.to_i > 0 %>
                 <% if reg.paid_in_full? %>
                   <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-green-50 text-green-700 border-green-200">Paid</span>
                 <% else %>
                   <% due_cents = @event.object.cost_cents - reg.allocations_sum %>
-                  <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-amber-50 text-amber-700 border-amber-200">$<%= "%.2f" % (due_cents / 100.0) %> due</span>
+                  <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-amber-50 text-amber-700 border-amber-200"><%= dollars_from_cents(due_cents) %> due</span>
+                  <% if reg.intends_to_pay? %>
+                    <span class="inline-flex items-center rounded-full text-xs font-medium border px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200" title="Intends to pay"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+                  <% end %>
                 <% end %>
               <% else %>
                 <span class="text-gray-400">—</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <%= link_to edit_event_registration_path(reg, return_to: "preview_reminder"),
+                          title: "View #{person.full_name}'s registration for #{@event.title}",
+                          class: "inline-flex items-center shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
+                <i class="fa-solid fa-clipboard-list text-gray-400"></i>
               <% end %>
             </td>
           </tr>

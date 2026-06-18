@@ -240,15 +240,15 @@
                       <% elsif is_discounted %>
                         <span class="flex flex-col leading-tight text-left">
                           <span>Discounted</span>
-                          <span><%= "$%.2f due" % (due_cents / 100.0) %></span>
+                          <span><%= dollars_from_cents(due_cents) %> due</span>
                         </span>
                       <% elsif is_partial %>
                         <span class="flex flex-col leading-tight text-left">
                           <span>Partial payment</span>
-                          <span><%= "$%.2f due" % (due_cents / 100.0) %></span>
+                          <span><%= dollars_from_cents(due_cents) %> due</span>
                         </span>
                       <% else %>
-                        <span><%= "$%.2f due" % (due_cents / 100.0) %></span>
+                        <span><%= dollars_from_cents(due_cents) %> due</span>
                       <% end %>
                       <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                     <% end %>

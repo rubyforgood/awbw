@@ -668,8 +668,8 @@ registrations_data = []
 if facilitator_training
   [
     { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true, ce_credit_requested: true },
-    { person: maria_j, status: "registered", invoice_requested: true, ce_credit_requested: true },
-    { person: anna_g, status: "attended", ce_credit_requested: true },
+    { person: maria_j, status: "registered", invoice_requested: true, ce_credit_requested: true, intends_to_pay: true },
+    { person: anna_g, status: "attended", ce_credit_requested: true, intends_to_pay: true },
     { person: mario_j, status: "registered" },
     { person: kim_d, status: "cancelled" },
     { person: aisha_person, status: "registered", intends_to_pay: true }
