@@ -62,7 +62,10 @@ module Events
     def show
       authorize! :bulk_payment, to: :show?
 
-      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:reg], event_id: @event.id)
+      # where.not(slug: nil) guards against a blank reg matching a legacy
+      # slugless bulk payment, which would then crash building its ticket link.
+      @submission = FormSubmission.bulk_payment.where.not(slug: nil)
+                                  .find_by!(slug: params[:reg], event_id: @event.id)
       @event = @event.decorate
     end
 

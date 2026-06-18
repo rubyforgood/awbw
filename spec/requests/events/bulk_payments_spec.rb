@@ -195,6 +195,14 @@ RSpec.describe "Events::BulkPayments", type: :request do
 
         expect(response).to have_http_status(:not_found)
       end
+
+      it "404s for a blank reg, even when a slugless bulk payment exists" do
+        submission.update_columns(slug: nil)
+
+        get event_bulk_payment_path(event)
+
+        expect(response).to have_http_status(:not_found)
+      end
     end
 
     context "as an admin arriving from the dashboard" do
