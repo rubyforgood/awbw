@@ -56,13 +56,21 @@ module Events
       end
     end
 
-    # Public view of the submitted bulk payment form, reached by the payer (the
-    # "View submission" link in their confirmation email and on the ticket) and by
-    # admins from the dashboard. Backs to the ticket. Mirrors PublicRegistrations#show.
+    # View of the submitted bulk payment form, rendering the same partial either
+    # way. Mirrors PublicRegistrations#show: the payer reaches it publicly by slug
+    # (?reg=), while admins (e.g. from the dashboard, including legacy submissions
+    # with no slug) reach it by id (?submission_id=).
     def show
-      authorize! :bulk_payment, to: :show?
+      if params[:reg].present?
+        authorize! :bulk_payment, to: :show?
+        # where.not(slug: nil) keeps a blank reg from matching a slugless record.
+        @submission = FormSubmission.bulk_payment.where.not(slug: nil)
+                                    .find_by!(slug: params[:reg], event_id: @event.id)
+      else
+        @submission = FormSubmission.bulk_payment.find_by!(id: params[:submission_id], event_id: @event.id)
+        authorize! @submission, to: :show?
+      end
 
-      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:reg], event_id: @event.id)
       @event = @event.decorate
     end
 

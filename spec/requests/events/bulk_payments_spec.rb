@@ -195,6 +195,34 @@ RSpec.describe "Events::BulkPayments", type: :request do
 
         expect(response).to have_http_status(:not_found)
       end
+
+      it "404s for a blank reg, even when a slugless bulk payment exists" do
+        submission.update_columns(slug: nil)
+
+        get event_bulk_payment_path(event)
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "does not let a signed-out viewer reach a submission by id" do
+        get event_bulk_payment_path(event, submission_id: submission.id)
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "as an admin viewing a slugless submission by id" do
+      before { submission.update_columns(slug: nil) }
+
+      it "renders the same submission partial without a ticket back link" do
+        get event_bulk_payment_path(event, submission_id: submission.id, return_to: "bulk_payments")
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Bulk payment submission")
+        expect(response.body).to include("Northside Shelter")
+        expect(response.body).not_to include("Back to ticket")
+        expect(response.body).to include("Back to bulk payments")
+      end
     end
 
     context "as an admin arriving from the dashboard" do
