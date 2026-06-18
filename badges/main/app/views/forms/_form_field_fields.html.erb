@@ -55,7 +55,7 @@
       </div>
 
       <div class="hidden mt-2 pb-2 flex flex-col gap-2" data-field-options-target="panel">
-        <%= f.text_area :hint_text, rows: 2,
+        <%= f.text_area :subtitle, rows: 2,
               class: "w-full text-sm text-gray-600 rounded border-gray-300 shadow-sm px-2 py-1",
               placeholder: "Subtitle" %>
         <%= link_to_remove_association "Remove", f,
@@ -130,9 +130,12 @@
               [ "Quarter width", "quarter" ]
             ]
           %>
-          <%= f.text_area :hint_text, rows: 1, placeholder: "Subtitle",
+          <%= f.text_area :subtitle, rows: 1, placeholder: "Subtitle",
                 class: "min-w-0 flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
                 title: "Optional subtitle shown under the field label" %>
+          <%= f.text_area :hint_text, rows: 1, placeholder: "Hint",
+                class: "min-w-0 flex-[2_1_9rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                title: "Optional hint shown below the field input" %>
           <%= f.select :width, width_options,
                 {},
                 class: "ml-auto shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
