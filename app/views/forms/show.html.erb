@@ -87,8 +87,8 @@
                     <span class="text-xs rounded-full border px-2 py-0.5 <%= visibility_badge_styles[field.visibility] %>"><%= field.visibility_label %></span>
                   <% end %>
                 </div>
-                <% if field.hint_text.present? %>
-                  <p class="mt-1.5 text-sm text-gray-500"><%= field.hint_text %></p>
+                <% if field.subtitle.present? %>
+                  <p class="rich-label mt-1.5 text-sm text-gray-500"><%= form_label_html(field.subtitle) %></p>
                 <% end %>
               </div>
             <% else %>
