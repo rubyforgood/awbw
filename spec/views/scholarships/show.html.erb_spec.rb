@@ -12,7 +12,7 @@ RSpec.describe "scholarships/show", type: :view do
   end
 
   it "shows scholarship details" do
-    expect(rendered).to have_content("$10.00")
+    expect(rendered).to have_content("$10")
     expect(rendered).to have_content("No")
     expect(rendered).to have_content(scholarship.recipient.full_name)
     expect(rendered).to have_content(allocatable.event.title)

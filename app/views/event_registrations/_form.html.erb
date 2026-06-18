@@ -269,7 +269,7 @@
                   Amount owed
                   <span class="text-xs text-gray-400">($<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>/hr)</span>
                 </span>
-                <span data-ce-credit-requested-target="amount" class="text-sm font-semibold text-gray-900 tabular-nums"><%= number_to_currency(f.object.ce_amount_owed_cents / 100.0) %></span>
+                <span data-ce-credit-requested-target="amount" class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(f.object.ce_amount_owed_cents) %></span>
               </div>
             </div>
           </div>

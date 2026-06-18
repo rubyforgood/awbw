@@ -25,11 +25,11 @@
       <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div class="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
           <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Registration cost</dt>
-          <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (cost_cents / 100.0) %></dd>
+          <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(cost_cents) %></dd>
         </div>
         <div class="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
           <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount allocated</dt>
-          <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (paid_cents / 100.0) %></dd>
+          <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(paid_cents) %></dd>
         </div>
         <% amount_due = due_cents > 0 %>
         <div class="rounded-lg border px-4 py-3 <%= amount_due ? "border-amber-300 bg-amber-50" : "border-gray-300 bg-gray-50" %>">
@@ -37,7 +37,7 @@
           <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= amount_due ? "text-amber-700" : "text-gray-500" %>">
             <% if amount_due %>
               <i class="fa-solid fa-circle-exclamation"></i>
-              $<%= "%.2f" % (due_cents / 100.0) %>
+              <%= dollars_from_cents(due_cents) %>
             <% else %>
               <i class="fa-solid fa-thumbs-up"></i>
               Nothing

@@ -5,12 +5,12 @@ RSpec.describe GrantDecorator, type: :decorator do
     let(:grant) { create(:grant, amount_cents: 100_000).decorate }
 
     it "formats the donation amount" do
-      expect(grant.amount).to eq("$1,000.00")
+      expect(grant.amount).to eq("$1,000")
     end
 
     it "formats the remaining balance" do
       create(:scholarship, grant: grant.object, amount_cents: 40_000)
-      expect(grant.remaining).to eq("$600.00")
+      expect(grant.remaining).to eq("$600")
     end
   end
 

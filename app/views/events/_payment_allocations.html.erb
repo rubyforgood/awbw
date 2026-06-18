@@ -23,7 +23,7 @@
             <td class="px-3 py-2 text-gray-800">
               <%= render "allocations/allocatable_link", allocation: allocation, return_params: local_assigns.fetch(:return_params, {}) %>
             </td>
-            <td class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap tabular-nums">$<%= "%.2f" % allocation.amount_dollars %></td>
+            <td class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap tabular-nums"><%= dollars_from_cents(allocation.amount) %></td>
             <td class="px-3 py-2 text-gray-500 whitespace-nowrap"><%= allocation.created_at.strftime("%b %-d, %Y") %></td>
             <td class="px-3 py-2 text-right whitespace-nowrap">
               <% unless allocation.reverted? || allocation.amount.to_i < 0 %>
@@ -41,8 +41,8 @@
     </table>
   </div>
   <div class="text-sm text-gray-500 font-medium text-right">
-    $<%= format("%.2f", payment.remaining_dollars) %> remaining
+    <%= dollars_from_cents(payment.amount_cents_remaining) %> remaining
   </div>
 <% else %>
-  <p class="text-sm text-gray-400 italic">No allocations yet. $<%= format("%.2f", payment.remaining_dollars) %> remaining.</p>
+  <p class="text-sm text-gray-400 italic">No allocations yet. <%= dollars_from_cents(payment.amount_cents_remaining) %> remaining.</p>
 <% end %>

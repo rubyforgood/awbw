@@ -104,7 +104,7 @@ class Allocation < ApplicationRecord
         errors.add(:base, "Event registration is already fully paid.")
       elsif other_total + amount > cost_cents
         remaining = cost_cents - other_total
-        errors.add(:base, "Cannot allocate more than remaining event cost. Remaining: $#{'%.2f' % (remaining / 100.0)}")
+        errors.add(:base, "Cannot allocate more than remaining event cost. Remaining: #{MoneyFormatter.dollars_from_cents(remaining)}")
       end
     end
   end
