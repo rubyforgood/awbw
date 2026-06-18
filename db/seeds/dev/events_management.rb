@@ -801,11 +801,15 @@ end
 
 puts "Tagging registrants with life experiences and workshop settings…"
 # The background page charts registrants' StoryPopulation (life experiences) and
-# WorkshopEnvironment (settings) tags — the same tags public registration writes
-# from the "Client life experiences" and "Workshop environments" checkboxes (see
-# PublicRegistration#assign_tags). The seed form submissions above only fill text
-# fields, so without this the data-rich trainings' background charts are empty.
-# Tag each active registrant with a deterministic spread so re-seeding is idempotent.
+# WorkshopEnvironment (settings) tags. Public registration no longer collects these
+# (the "Workshop settings" and "Client life experiences" questions were removed), but
+# the charts are retained for historical data and admin-applied tags, so seed a
+# deterministic spread here so older trainings' background charts aren't empty.
+#
+# These tags live on the Person, not per-registration, so anyone registered for the
+# flagship "AWBW Facilitator Training" (event #1) would surface on its charts too.
+# Keep event #1 clean by never tagging its registrants, and by stripping any such
+# tags a prior seed left on them.
 life_experience_categories = Category.joins(:category_type)
   .where(category_types: { name: "StoryPopulation" })
   .order(:name).to_a
@@ -820,10 +824,17 @@ pick_categories = ->(categories, i, offset) do
   [ categories[i % categories.size], categories[(i + offset) % categories.size] ]
 end
 
-[ facilitator_training, trauma_training ].compact.each do |evt|
+flagship_registrant_ids = facilitator_training&.event_registrations&.active&.pluck(:registrant_id) || []
+CategorizableItem.joins(category: :category_type)
+  .where(categorizable_type: "Person", categorizable_id: flagship_registrant_ids)
+  .where(category_types: { name: [ "WorkshopEnvironment", "StoryPopulation" ] })
+  .destroy_all
+
+[ trauma_training, wellness_day, youth_day, mindful_art, virtual_session, roundtable, family_day ].compact.each do |evt|
   evt.event_registrations.active.includes(:registrant).each_with_index do |registration, i|
     person = registration.registrant
     next unless person
+    next if flagship_registrant_ids.include?(person.id)
 
     # Each registrant gets two life experiences and two settings, offset by their
     # position so the charts show a realistic spread across categories.
@@ -942,20 +953,18 @@ form_submissions.each do |data|
   end
 end
 
-puts "Giving Amy free-text \"Other\" answers on her Facilitator Training submission…"
-# Demo data for the "Other" chips on the person profile + edit pages: a registrant
+puts "Giving Amy a free-text \"Other\" answer on her Facilitator Training submission…"
+# Demo data for the "Other" chip on the person profile + edit pages: a registrant
 # who picked the "Other" option (folded into "Other: <text>") on a sector-backed
-# field (Additional sectors) and a category-backed field (Workshop Settings).
-# These free-text values can't be Sector/Category records, so they only surface
-# via Person#other_service_area_responses / #other_workshop_setting_responses.
+# field (Additional sectors). The free-text value can't be a Sector record, so it
+# only surfaces via Person#other_service_area_responses.
 # Seeded before the professional-answer enrichment below so the primary_service_area
 # value survives its "skip if already answered" guard. Idempotent.
 if facilitator_training && amy_person
   amy_submission = FormSubmission.find_by(person: amy_person, form: facilitator_training.registration_form)
   if amy_submission
     {
-      "primary_service_area" => "Other: Equine-assisted therapy",
-      "workshop_environments" => "Other: Mobile art van"
+      "primary_service_area" => "Other: Equine-assisted therapy"
     }.each do |identifier, value|
       field = amy_submission.form.form_fields.find_by(field_identifier: identifier)
       next unless field

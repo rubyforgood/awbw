@@ -49,7 +49,7 @@ class FormBuilderService
       agency_state agency_zip agency_type agency_website
     ],
     person_background: %w[racial_ethnic_identity],
-    professional_info: %w[primary_service_area_single primary_service_area workshop_environments client_life_experiences primary_age_group additional_age_group],
+    professional_info: %w[primary_service_area_single primary_service_area primary_age_group additional_age_group],
     marketing: %w[referral_source training_motivation interested_in_more],
     scholarship: %w[scholarship_eligibility impact_description implementation_plan additional_comments],
     payment: %w[payment_method],
@@ -86,7 +86,7 @@ class FormBuilderService
       "Agency Type", "Agency Website"
     ],
     person_background: [ "Racial / Ethnic Identity" ],
-    professional_info: [ "Primary sector", "Additional sectors", "Workshop Settings", "Client Life Experiences", "Primary Age Group(s) Served", "Additional Age Group(s) Served" ],
+    professional_info: [ "Primary sector", "Additional sectors", "Primary Age Group(s) Served", "Additional Age Group(s) Served" ],
     marketing: [
       "How did you hear about this training?",
       "What motivates you to attend this training?",
@@ -436,19 +436,6 @@ class FormBuilderService
     position = add_field(form, position, "Additional sectors", :multi_select_checkbox,
                          key: "primary_service_area", group: "professional", required: false,
                          subtitle: "Select all options that represent who you intend to serve through the art workshops (check all that apply)")
-    position = add_field(form, position, "Workshop Settings", :multi_select_checkbox,
-                         key: "workshop_environments", group: "professional", required: false,
-                         subtitle: "Select all settings where you facilitate or plan to facilitate workshops.",
-                         options: [
-                           "Clinical setting", "Educational setting", "Events and conferences",
-                           "Faith-based setting", "Home visits", "Hospitals",
-                           "Law enforcement/court/legal", "Outreach program",
-                           "Prisons/jails", "Private practice", "Residential program",
-                           "Virtually", "With staff", "Other"
-                         ])
-    position = add_field(form, position, "Client Life Experiences", :multi_select_checkbox,
-                         key: "client_life_experiences", group: "professional", required: false,
-                         subtitle: "Select all that describe the populations you work with.")
     position = add_field(form, position, "Primary Age Group(s) Served", :multi_select_checkbox,
                          key: "primary_age_group", group: "professional", required: false,
                          subtitle: "Select all age groups you primarily serve.")

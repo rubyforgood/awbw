@@ -229,8 +229,6 @@ module EventRegistrationServices
     def assign_tags(person, organization)
       sector_ids = collect_ids_from_checkboxes("primary_service_area_single") +
                    collect_ids_from_checkboxes("primary_service_area")
-      category_ids = collect_ids_from_checkboxes("workshop_environments") +
-                     collect_ids_from_checkboxes("client_life_experiences")
       primary_age_ids = collect_ids_from_checkboxes("primary_age_group")
       additional_age_ids = collect_ids_from_checkboxes("additional_age_group")
 
@@ -238,12 +236,6 @@ module EventRegistrationServices
         sectors = Sector.where(id: sector_ids)
         assign_primary_sectors(person, sectors)
         organization.sectors = (organization.sectors + sectors).uniq if organization
-      end
-
-      if category_ids.any?
-        categories = Category.where(id: category_ids)
-        person.categories = (person.categories + categories).uniq
-        organization.categories = (organization.categories + categories).uniq if organization
       end
 
       if primary_age_ids.any? || additional_age_ids.any?
