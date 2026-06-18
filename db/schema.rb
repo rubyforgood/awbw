@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_030000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_18_034355) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1013,8 +1013,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_030000) do
     t.text "description"
     t.bigint "event_id", null: false
     t.string "icon_class"
+    t.boolean "payment_access_gated", default: false, null: false
     t.integer "position", null: false
-    t.boolean "show_if_paid", default: false, null: false
     t.string "subtitle"
     t.string "title", null: false
     t.datetime "updated_at", null: false

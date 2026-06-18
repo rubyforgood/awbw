@@ -5,15 +5,15 @@ FactoryBot.define do
     subtitle { "A short supporting line" }
     description { "<p>Details for this callout.</p>" }
     callout_type { "reference" }
-    show_if_paid { false }
+    payment_access_gated { false }
     # position is assigned by the positioning gem on save (appended within the event)
 
     trait :action do
       callout_type { "action" }
     end
 
-    trait :paid_only do
-      show_if_paid { true }
+    trait :payment_access_gated do
+      payment_access_gated { true }
     end
   end
 end
