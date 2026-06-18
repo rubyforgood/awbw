@@ -257,6 +257,19 @@ class EventRegistration < ApplicationRecord
     active? && payment_access_granted? && event.videoconference_window_open?
   end
 
+  # Bucket the registrant's login account into one of four states for the bulk
+  # reminder filters. Precedence matters: a confirmed, unlocked, active account
+  # has access regardless of when it was invited; a still-pending account counts
+  # as "invited" only while it hasn't gained access. Returns one of
+  # "none", "has_access", "invited", "no_access".
+  def account_status
+    account = registrant&.user
+    return "none" if account.nil?
+    return "has_access" if account.has_access?
+    return "invited" if account.welcome_instructions_sent_at.present?
+    "no_access"
+  end
+
   def attendance_status_label
     return "—" if status.blank?
     case status

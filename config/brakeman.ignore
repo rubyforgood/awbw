@@ -238,6 +238,40 @@
         79
       ],
       "note": "Admin-only reminder preview. The raw value is the server-rendered email HTML; the custom message it embeds is sanitized via reminder_message_html (SafeListSanitizer) and the custom subject is shown escaped, separately, so no unsanitized user input reaches the page."
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "343336d81aa87ab12862c5f9ca2b0f9ac4155488c053c1ce9c7ed27c456e3dba",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped parameter value",
+      "file": "app/views/events/confirm_reminder.html.erb",
+      "line": 53,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "EventMailer.event_registration_reminder(selected_reminder_registrations.first, :custom_message => params[:custom_message].to_s, :custom_subject => params[:custom_subject].to_s).html_part.body.decoded",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "EventsController",
+          "method": "confirm_reminder",
+          "line": 316,
+          "file": "app/controllers/events_controller.rb",
+          "rendered": {
+            "name": "events/confirm_reminder",
+            "file": "app/views/events/confirm_reminder.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "events/confirm_reminder"
+      },
+      "user_input": "params[:custom_message].to_s",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "Admin-only reminder confirmation. Same as preview_reminder: the raw value is the server-rendered email HTML; the embedded custom message is sanitized via reminder_message_html (SafeListSanitizer) and the custom subject is shown escaped, separately, so no unsanitized user input reaches the page."
     }
   ],
   "brakeman_version": "8.0.4"

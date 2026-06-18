@@ -83,7 +83,7 @@ Rails.application.routes.draw do
     collection do
       get :dedupe_index
       get :dedupe_preview
-      post :dedupe_execute
+      post :dedupe_perform
       patch :dedupe_update_keep
     end
   end
@@ -140,6 +140,7 @@ Rails.application.routes.draw do
       get :preview_reminder
       patch :preview
       post :copy_registration_form
+      post :confirm_reminder
       post :send_reminder
       post :allocate_bulk_payment
       post :create_bulk_payment
@@ -209,7 +210,7 @@ Rails.application.routes.draw do
     collection do
       get :dedupe_index
       get :dedupe_preview
-      post :dedupe_execute
+      post :dedupe_perform
       patch :dedupe_update_keep
     end
   end
