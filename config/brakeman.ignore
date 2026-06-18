@@ -203,7 +203,7 @@
       "cwe_id": [
         79
       ],
-      "note": "sdf"
+      "note": "email_body_html is the server-rendered HTML of a notification email, generated from trusted mailer templates rather than user-supplied free text. It is rendered intentionally as a preview on notifications/show, which is gated to admin-or-owner (NotificationPolicy#show?), so no untrusted input reaches the page."
     },
     {
       "warning_type": "Cross-Site Scripting",
