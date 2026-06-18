@@ -414,6 +414,182 @@ if art_workshop && art_workshop.registration_ticket_callouts.none?
   )
 end
 
+# Reusable registration-ticket callout "components" drawn from the real AWBW
+# facilitator-training emails. Each entry is one callout; events pick the subset
+# they need from COMPONENT_CALLOUTS below. The flagship training shows all of
+# them (so the ticket exercises every colour, icon, type, and the paid-only gate);
+# other trainings mix and match a generic subset. `show_if_paid` callouts stay
+# hidden until the registration is paid. Idempotent: an event is only seeded when
+# it has no callouts yet, so admin edits survive a re-seed.
+component_callouts = {
+  art_supply_info: {
+    title: "Art supply info",
+    subtitle: "Optional supplies for the five hands-on workshops",
+    callout_type: "reference", color_class: "amber", icon_class: "fa-solid fa-palette",
+    description: <<~HTML.strip
+      <p>We'll facilitate five hands-on art workshops, all of which can be done with paper, writing utensils (crayons, colored pencils, markers, etc.) and scissors.</p>
+      <ul>
+        <li>Use any art supplies you like — oil/chalk pastels, paints, watercolors, collage materials, etc.</li>
+        <li>You may want a journal or lined paper for writing.</li>
+      </ul>
+      <p>The list below, grouped by workshop, is <strong>optional</strong> — we'll demonstrate how to use everything at the training.</p>
+      <ul>
+        <li><strong>Workshop 1:</strong> clear glass stones; cabochon settings and swivel hooks; a 1" circle punch; white/colored cardstock or printmaking paper; Aleene's Clear Gel Tacky Glue; packing tape; scissors.</li>
+        <li><strong>Workshop 2:</strong> Rough &amp; Ready Shrinky Dink paper; permanent markers; Prismacolor colored pencils; a hole punch; thin ribbon or wire; an oven (a toaster oven, not a toaster).</li>
+        <li><strong>Workshop 3:</strong> a glue stick; scotch tape; two copies of the dice handout printed on cardstock.</li>
+        <li><strong>Workshop 4:</strong> Cray-Pas oil pastels; card/heavy stock or watercolor paper; Prang watercolors; cups for water; a paintbrush; painter's tape.</li>
+        <li><strong>Workshop 5:</strong> card/heavy stock paper; collage materials; tissue paper.</li>
+      </ul>
+    HTML
+  },
+  training_workshop_worksheets: {
+    title: "Training workshop worksheets",
+    subtitle: "Print these before the training (optional)",
+    callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-file-lines",
+    show_if_paid: true,
+    description: <<~HTML.strip
+      <p>You're welcome to print the 2-day training workshop worksheets to use as you create — printing is optional.</p>
+      <p>Your worksheets are available now that your training fee is paid.</p>
+    HTML
+  },
+  aha_moments_worksheet: {
+    title: "AHA Moments worksheet",
+    subtitle: "Capture your reflections as you create",
+    callout_type: "action", color_class: "green", icon_class: "fa-solid fa-lightbulb",
+    description: <<~HTML.strip
+      <p>We encourage you to print the AHA Moments worksheet to capture your thoughts about how the art workshops may shift things for you personally — and how you might use them to serve others.</p>
+    HTML
+  },
+  participation_requirements: {
+    title: "Participation requirements",
+    subtitle: "Both full days are required for certification",
+    callout_type: "reference", color_class: "purple", icon_class: "fa-solid fa-certificate",
+    description: <<~HTML.strip
+      <p>Participating in <strong>both full training days</strong> (9am–4:30pm Pacific Time each day) is required to receive certification as an AWBW facilitator.</p>
+      <p>If you're unable to attend both full days, please <a href="/contact_us">let us know</a> as soon as possible.</p>
+    HTML
+  },
+  letter_to_supervisors: {
+    title: "Letter to supervisors",
+    subtitle: "Share to request release time",
+    callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-file-arrow-down",
+    description: <<~HTML.strip
+      <p>We recommend sharing a letter with your supervisor (if applicable) to request relief from other duties during the two training days — being fully relieved helps you stay present.</p>
+      <p>The letter is available to download and share.</p>
+    HTML
+  },
+  ce_hours: {
+    title: "Continuing education (CE) hours",
+    subtitle: "Requirements, fee, and sign-in rules",
+    callout_type: "reference", color_class: "indigo", icon_class: "fa-solid fa-graduation-cap",
+    description: <<~HTML.strip
+      <p>Licensed LMFTs, LCSWs, LPCCs, and LEPs can earn up to <strong>12 Continuing Education hours</strong> for the training.</p>
+      <ul>
+        <li>Let us know by Monday, July 20 so we can send the required materials.</li>
+        <li>CE hour fee: $120 ($10 per hour).</li>
+        <li>You must be on time each day; payment is due by 9:00 AM PT on July 22.</li>
+      </ul>
+    HTML
+  },
+  facilitator_portal: {
+    title: "Facilitator Portal access",
+    subtitle: "Available once attendance & payment are complete",
+    callout_type: "reference", color_class: "rose", icon_class: "fa-solid fa-right-to-bracket",
+    show_if_paid: true,
+    description: <<~HTML.strip
+      <p>Access to the Facilitator Portal is provided once your attendance requirements are met and your training fee is paid.</p>
+      <p>You're all set — watch for your portal invitation.</p>
+    HTML
+  },
+  add_to_calendar: {
+    title: "Add to your calendar",
+    subtitle: "Save both training days",
+    callout_type: "action", color_class: "green", icon_class: "fa-solid fa-calendar-plus",
+    description: <<~HTML.strip
+      <p>Save both training days to your calendar so you don't miss a moment — you'll find an add-to-calendar link at the bottom of this ticket too.</p>
+    HTML
+  },
+  self_care_engagement: {
+    title: "Self-care & engagement",
+    subtitle: "Be on your own device and care for yourself",
+    callout_type: "reference", color_class: "rose", icon_class: "fa-solid fa-heart",
+    description: <<~HTML.strip
+      <p>Please log on at 8:50am Pacific Time so we can start promptly at 9am.</p>
+      <ul>
+        <li>This training is interactive — come ready to participate and connect.</li>
+        <li>If possible, <strong>be on your own individual device</strong> and keep your camera on; you're welcome to turn it off for personal needs.</li>
+        <li>It's important to <strong>practice self-care</strong> — have water, snacks, and whatever helps you feel comfortable nearby.</li>
+      </ul>
+    HTML
+  },
+  all_training_handouts: {
+    title: "All training handouts",
+    subtitle: "Agenda, worksheets, and resources in one place",
+    callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-folder-open",
+    show_if_paid: true,
+    description: <<~HTML.strip
+      <p>All of the handouts for the training — including the agenda for both days and the art workshop worksheets — are available in one place.</p>
+    HTML
+  },
+  inviting_responding_sharing: {
+    title: "Inviting & responding to sharing",
+    subtitle: "Holding space in breakout rooms",
+    callout_type: "reference", color_class: "purple", icon_class: "fa-solid fa-comments",
+    description: <<~HTML.strip
+      <p>Throughout the training you'll be invited to hold space, share, and witness others. This resource offers guidance on doing so with openness and care during breakout rooms.</p>
+      <p>Sharing is part of the art — together we co-create a space where everyone feels supported.</p>
+    HTML
+  },
+  training_agenda: {
+    title: "Training agenda",
+    subtitle: "What to expect across the two days",
+    callout_type: "reference", color_class: "amber", icon_class: "fa-solid fa-calendar-days",
+    description: <<~HTML.strip
+      <p>Our agenda covers both training days, including an hour-long food break around 12:00pm PT each day.</p>
+    HTML
+  },
+  zoom_connection_info: {
+    title: "Zoom connection info",
+    subtitle: "Join link, meeting ID, and passcode",
+    callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-video",
+    show_if_paid: true,
+    description: <<~HTML.strip
+      <p>Join us on Zoom for both training days. You'll find the join link in this ticket's videoconference section.</p>
+      <ul>
+        <li><strong>Meeting ID:</strong> 882 8541 1273</li>
+        <li><strong>Passcode:</strong> awbwmarch</li>
+      </ul>
+      <p>Please update Zoom to the latest version beforehand to avoid delays getting in.</p>
+    HTML
+  },
+  questions_next_steps: {
+    title: "Questions & next steps",
+    subtitle: "More details are on the way",
+    callout_type: "reference", color_class: "gray", icon_class: "fa-solid fa-envelope",
+    description: <<~HTML.strip
+      <p>You'll receive more details as we get closer to the training dates.</p>
+      <p>In the meantime, please <a href="/contact_us">reach out</a> with any questions — we're always happy to help. We look forward to creating and connecting with you!</p>
+    HTML
+  }
+}
+
+# The flagship training (event 1) gets every component; the trauma-informed
+# training gets a generic subset that doesn't assume the five-workshop supplies.
+callouts_by_event = {
+  "AWBW Facilitator Training" => component_callouts.keys,
+  "Facilitator Training: Trauma-Informed Art Practices" =>
+    %i[participation_requirements letter_to_supervisors add_to_calendar self_care_engagement questions_next_steps]
+}
+
+callouts_by_event.each do |event_title, component_keys|
+  event = Event.find_by(title: event_title)
+  next unless event && event.registration_ticket_callouts.none?
+
+  component_keys.each_with_index do |key, i|
+    event.registration_ticket_callouts.create!(component_callouts.fetch(key).merge(position: i + 1))
+  end
+end
+
 puts "Creating Event Registrations…"
 
 # Key people for named scenarios
