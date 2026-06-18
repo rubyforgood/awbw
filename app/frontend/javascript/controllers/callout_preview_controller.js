@@ -32,14 +32,14 @@ export default class extends Controller {
     this.updateLeadingIcon(theme)
   }
 
-  // Mirror the call-out's leading icon on the left of the card — shown only when
-  // the admin has entered a Font Awesome class — tinted to match the theme.
+  // Mirror the call-out's leading icon in the card's left gutter — drawn only
+  // when the admin has entered a Font Awesome class, tinted to match the theme.
+  // The gutter keeps its width either way so the fields below stay aligned.
   updateLeadingIcon(theme) {
     if (!this.hasLeadingIconTarget || !this.hasIconInputTarget) return
     const glyph = this.iconInputTarget.value.trim()
-    this.leadingIconTarget.className = glyph
-      ? `${glyph} ${theme.icon} shrink-0 text-xl`
-      : "hidden"
+    const base = "w-6 shrink-0 text-center text-xl"
+    this.leadingIconTarget.className = glyph ? `${glyph} ${theme.icon} ${base}` : base
   }
 
   themeKey() {

@@ -15,7 +15,7 @@
 
   <div class="flex-1 min-w-0 space-y-3">
     <div class="flex items-center gap-3">
-      <i class="hidden shrink-0 text-xl" data-callout-preview-target="leadingIcon" aria-hidden="true"></i>
+      <i class="w-6 shrink-0 text-center text-xl" data-callout-preview-target="leadingIcon" aria-hidden="true"></i>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-w-0">
         <div>
@@ -30,12 +30,12 @@
         </div>
       </div>
 
-      <div class="shrink-0 text-gray-300" data-callout-preview-target="arrow" aria-hidden="true" title="Links to its own page on the ticket">
+      <div class="w-6 shrink-0 text-center text-gray-300" data-callout-preview-target="arrow" aria-hidden="true" title="Links to its own page on the ticket">
         <i class="fa-solid fa-arrow-right"></i>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pl-9 pr-9">
       <div>
         <%= f.label :callout_type, "Type", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
         <%= f.select :callout_type,
@@ -60,7 +60,7 @@
       </div>
     </div>
 
-    <div>
+    <div class="pl-9 pr-9">
       <%= f.label :description, "Content", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
       <p class="text-xs text-gray-500 mb-1">Shown on its own page. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Leave blank to keep the call-out from linking anywhere.</p>
       <%= f.text_area :description, rows: 4,
@@ -68,7 +68,7 @@
             class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
     </div>
 
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between pl-9 pr-9">
       <label class="flex items-center gap-2 text-sm text-gray-600">
         <%= f.check_box :show_if_paid, class: "rounded border-gray-300 text-purple-600" %>
         Only show once the registration is paid
