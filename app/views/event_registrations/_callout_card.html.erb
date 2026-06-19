@@ -1,8 +1,10 @@
 <%# Renders one registration ticket callout card. Used for both admin-configured
-    callouts and hard-coded defaults (e.g. RegistrationTicketCallout.view_invoice).
-    locals: callout (RegistrationTicketCallout), href (String), target (String, optional) %>
+    RegistrationTicketCallouts and code-defined MagicTicketCallouts::Card objects.
+    locals: callout (responds to #theme, #display_icon_class, #title, #subtitle),
+            href (String), target (String, optional), trailing_icon (String, optional) %>
 <% theme = callout.theme %>
 <% opens_new_tab = local_assigns[:target].present? %>
+<% trailing = local_assigns[:trailing_icon].presence || (callout.action? ? "fa-solid fa-arrow-right" : "fa-solid fa-circle-info") %>
 <%= link_to href, target: local_assigns[:target], rel: (opens_new_tab ? "noopener" : nil),
               class: "flex items-center gap-3 rounded-xl border-2 #{theme[:border]} #{theme[:bg]} px-4 py-3 #{theme[:hover]} transition-colors" do %>
   <i class="<%= callout.display_icon_class %> <%= theme[:icon] %> text-xl shrink-0"></i>
@@ -14,5 +16,5 @@
     <% end %>
   </div>
 
-  <i class="fa-solid <%= callout.action? ? "fa-arrow-right" : "fa-circle-info" %> <%= theme[:icon] %> shrink-0"></i>
+  <i class="<%= trailing %> <%= theme[:icon] %> shrink-0"></i>
 <% end %>

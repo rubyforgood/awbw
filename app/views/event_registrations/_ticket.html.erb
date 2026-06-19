@@ -102,57 +102,12 @@
         <% end %>
       <% end %>
 
-      <!-- Before you attend (materials / supplies / what to bring) -->
-      <% if event_registration.event.event_details.present? %>
-        <%= link_to details_event_path(event_registration.event, reg: event_registration.slug),
-                      class: "flex items-center gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 hover:bg-amber-100 transition-colors" do %>
-          <i class="fa-solid fa-circle-info text-amber-500 text-xl shrink-0"></i>
-
-          <div class="flex-1 min-w-0 text-left">
-            <p class="font-semibold text-amber-900"><%= event_registration.event.event_details_label %></p>
-            <p class="text-sm text-amber-700">Important info for this event — please read</p>
-          </div>
-
-          <i class="fa-solid fa-arrow-right text-amber-500 shrink-0"></i>
-        <% end %>
+      <!-- Magic callouts: code-defined cards the app controls (event details, CE
+           hours, requested W-9/invoice). Each knows its own visibility rule. -->
+      <% MagicTicketCallouts.new(event_registration).cards.each do |card| %>
+        <%= render "event_registrations/callout_card",
+                   callout: card, href: card.href, target: card.target, trailing_icon: card.trailing_icon %>
       <% end %>
-
-      <!-- CE hours (continuing education requirements, payment, sign-in rules) -->
-      <% if event_registration.event.ce_hours_details.present? %>
-        <%= link_to ce_hours_event_path(event_registration.event, reg: event_registration.slug),
-                      class: "flex items-center gap-3 rounded-xl border-2 border-indigo-300 bg-indigo-50 px-4 py-3 hover:bg-indigo-100 transition-colors" do %>
-          <i class="fa-solid fa-graduation-cap text-indigo-500 text-xl shrink-0"></i>
-
-          <div class="flex-1 min-w-0 text-left">
-            <p class="font-semibold text-indigo-900"><%= event_registration.event.ce_hours_details_label %></p>
-            <p class="text-sm text-indigo-700">Continuing education hours — requirements &amp; next steps</p>
-          </div>
-
-          <i class="fa-solid fa-arrow-right text-indigo-500 shrink-0"></i>
-        <% end %>
-      <% end %>
-
-      <!-- Additional forms the registrant asked for during registration -->
-      <% if event_registration.w9_requested? %>
-        <%= link_to "/documents/awbw-w9.pdf",
-                      target: "_blank", rel: "noopener",
-                      class: "flex items-center gap-3 rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors" do %>
-          <i class="fa-solid fa-file-pdf text-blue-500 text-xl shrink-0"></i>
-
-          <div class="flex-1 min-w-0 text-left">
-            <p class="font-semibold text-blue-900">Download W-9</p>
-            <p class="text-sm text-blue-700">AWBW's W-9 tax form for your records</p>
-          </div>
-
-          <i class="fa-solid fa-download text-blue-500 shrink-0"></i>
-        <% end %>
-      <% end %>
-
-      <!-- View invoice (hard-coded default reference callout, shown on every registration) -->
-      <%= render "event_registrations/callout_card",
-                 callout: RegistrationTicketCallout.view_invoice,
-                 href: registration_invoice_path(event_registration.slug),
-                 target: "_blank" %>
 
       <!-- Custom ticket callouts (admin-configured: actions & reference reading) -->
       <% payment_access = event_registration.payment_access_granted? || @checkout_payment_status == "paid" %>

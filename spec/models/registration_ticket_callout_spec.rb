@@ -51,21 +51,6 @@ RSpec.describe RegistrationTicketCallout, type: :model do
     end
   end
 
-  describe ".view_invoice" do
-    subject(:invoice_callout) { described_class.view_invoice }
-
-    it "is an unpersisted reference callout for the invoice link" do
-      expect(invoice_callout).not_to be_persisted
-      expect(invoice_callout.callout_type).to eq("reference")
-      expect(invoice_callout.title).to eq("View invoice")
-      expect(invoice_callout.display_icon_class).to eq("fa-solid fa-file-invoice-dollar")
-    end
-
-    it "themes as a reference callout (the per-type default colour)" do
-      expect(invoice_callout.theme).to eq(DomainTheme.swatch(RegistrationTicketCallout::DEFAULT_COLORS["reference"]))
-    end
-  end
-
   describe "#display_icon_class" do
     it "uses the configured icon when present" do
       callout.icon_class = "fa-solid fa-car"

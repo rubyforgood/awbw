@@ -26,16 +26,6 @@ class RegistrationTicketCallout < ApplicationRecord
 
   scope :ordered, -> { order(:position, :id) }
 
-  # A hard-coded default reference callout shown on every registration ticket,
-  # linking to the registrant's itemized invoice. Not persisted — rendered
-  # through the same card partial as admin-configured callouts.
-  def self.view_invoice
-    new(callout_type: "reference",
-        icon_class: "fa-solid fa-file-invoice-dollar",
-        title: "View invoice",
-        subtitle: "Itemized invoice for this registration")
-  end
-
   def action?
     callout_type == "action"
   end
