@@ -25,6 +25,7 @@ class OrganizationsController < ApplicationController
                                                 .group(:organization_id)
                                                 .distinct
                                                 .count(:person_id)
+      @program_statuses = Organization.program_statuses_by_id(org_ids)
 
       render :organization_results
     else

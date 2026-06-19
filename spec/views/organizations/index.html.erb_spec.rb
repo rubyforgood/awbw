@@ -16,6 +16,7 @@ RSpec.describe "organizations/index", type: :view do
     assign(:organization_statuses, [ organization_status1, organization_status2, organization_status3 ])
     assign(:affiliated_since, {})
     assign(:active_people_counts, {})
+    assign(:program_statuses, {})
     assign(:active_people_count, 0)
     assign(:organizations_count, 2)
     allow(view).to receive(:current_user).and_return(user)

@@ -846,6 +846,14 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Overview Org")
       end
 
+      it "shows a program status badge next to each organization" do
+        get dashboard_event_path(event)
+
+        # The org list lives inside a collapsed <details>, so match hidden nodes too.
+        page = Capybara.string(response.body)
+        expect(page).to have_css("span[title='New']", text: "N", visible: :all)
+      end
+
       it "renders the payments section with totals for a paid event" do
         create(:allocation, source: create(:payment, amount_cents: 6_000, amount_cents_remaining: 6_000),
                             allocatable: registration, amount: 6_000)
