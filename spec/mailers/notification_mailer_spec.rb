@@ -41,9 +41,9 @@ RSpec.describe NotificationMailer, type: :mailer do
     context "when a scholarship was requested" do
       let(:event_registration) { create(:event_registration, scholarship_requested: true) }
 
-      it "labels the subject as an event registration scholarship" do
+      it "labels the subject as an event scholarship registration" do
         subject = described_class.event_registration_confirmation_fyi(notification).subject
-        expect(subject).to include("New event registration scholarship by")
+        expect(subject).to include("New event scholarship registration by")
       end
     end
   end

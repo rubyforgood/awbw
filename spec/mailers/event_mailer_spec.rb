@@ -29,8 +29,8 @@ RSpec.describe EventMailer, type: :mailer do
     context "when a scholarship was requested" do
       let(:event_registration) { create(:event_registration, scholarship_requested: true) }
 
-      it "labels the subject as an event registration scholarship" do
-        expect(mail.subject).to include("Event registration scholarship received")
+      it "labels the subject as an event scholarship registration" do
+        expect(mail.subject).to include("Event scholarship registration received")
       end
     end
 

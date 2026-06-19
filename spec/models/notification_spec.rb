@@ -285,15 +285,15 @@ RSpec.describe Notification do
 
       it 'separates scholarship event registrations from plain ones' do
         plain_confirmed = create(:notification, email_subject: "AWBW Portal: Event registration received for Art Show")
-        scholarship_confirmed = create(:notification, email_subject: "AWBW Portal: Event registration scholarship received for Art Show")
+        scholarship_confirmed = create(:notification, email_subject: "AWBW Portal: Event scholarship registration received for Art Show")
         fyi_plain = create(:notification, email_subject: "AWBW Portal: [FYI] New event registration by Jane to Art Show")
-        fyi_scholarship = create(:notification, email_subject: "AWBW Portal: [FYI] New event registration scholarship by Jane to Art Show")
+        fyi_scholarship = create(:notification, email_subject: "AWBW Portal: [FYI] New event scholarship registration by Jane to Art Show")
 
-        plain_results = Notification.search_by_params(email_topic: "Event: event registration received")
+        plain_results = Notification.search_by_params(email_topic: "Event registration received")
         expect(plain_results).to include(plain_confirmed)
         expect(plain_results).not_to include(scholarship_confirmed)
 
-        scholarship_results = Notification.search_by_params(email_topic: "Event: event registration scholarship received")
+        scholarship_results = Notification.search_by_params(email_topic: "Event scholarship registration received")
         expect(scholarship_results).to include(scholarship_confirmed)
         expect(scholarship_results).not_to include(plain_confirmed)
 
@@ -301,7 +301,7 @@ RSpec.describe Notification do
         expect(fyi_plain_results).to include(fyi_plain)
         expect(fyi_plain_results).not_to include(fyi_scholarship)
 
-        fyi_scholarship_results = Notification.search_by_params(email_topic: "Admin FYI: event registration scholarship confirmed")
+        fyi_scholarship_results = Notification.search_by_params(email_topic: "Admin FYI: event scholarship registration confirmed")
         expect(fyi_scholarship_results).to include(fyi_scholarship)
         expect(fyi_scholarship_results).not_to include(fyi_plain)
       end
@@ -315,11 +315,11 @@ RSpec.describe Notification do
         expect(results).not_to include(welcome_notification)
       end
 
-      it 'Event: event registration received does not return cancelled emails' do
+      it 'Event registration received does not return cancelled emails' do
         confirmed = create(:notification, email_subject: "AWBW Portal: Event registration received for Art Show")
         cancelled = create(:notification, email_subject: "AWBW Portal: Event registration cancelled for Art Show")
 
-        results = Notification.search_by_params(email_topic: "Event: event registration received")
+        results = Notification.search_by_params(email_topic: "Event registration received")
         expect(results).to include(confirmed)
         expect(results).not_to include(cancelled)
       end
