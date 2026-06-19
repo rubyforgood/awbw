@@ -172,7 +172,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      badge = "[data-attendance-status-target='dirty']"
+      badge = "[data-icon-select-target='dirty']"
       expect(page).to have_no_css(badge, visible: true)
 
       find("select[name='event_registration[status]']")
