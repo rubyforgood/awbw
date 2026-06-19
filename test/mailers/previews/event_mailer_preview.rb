@@ -41,14 +41,13 @@ class EventMailerPreview < ActionMailer::Preview
   end
 
   def sample_event_registration
-    # Try to reuse existing records to avoid duplication
+    # Try to reuse existing records to avoid duplication. Persist the registration
+    # so it has a slug and the confirmation email's "View ticket" link renders
+    # (the link is gated on a persisted registration).
     event = Event.first || create_event
     person = Person.first || create_person
 
-    EventRegistration.new(
-      event: event,
-      registrant: person
-    )
+    EventRegistration.find_or_create_by!(event: event, registrant: person)
   end
 
   def create_event

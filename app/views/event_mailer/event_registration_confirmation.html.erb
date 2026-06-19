@@ -60,12 +60,11 @@
 </div>
 
 <p>
-  Visit the event page for updates, directions, or calendar links:
+  Your ticket has everything you need — event details, calendar links, and options to manage your registration:
 </p>
 
 <p>
   <% if @event_registration.persisted? %>
     <a href="<%= registration_ticket_url(@event_registration.slug) %>" class="button">View ticket</a>
   <% end %>
-  <a href="<%= @event_url %>" class="button">View event</a>
 </p>
