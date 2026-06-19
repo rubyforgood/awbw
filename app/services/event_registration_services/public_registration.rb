@@ -69,6 +69,8 @@ module EventRegistrationServices
 
         Result.new(success?: true, event_registration: event_registration, form_submission: submission, errors: [])
       end
+    rescue ActiveRecord::ValueTooLong => e
+      Result.new(success?: false, event_registration: nil, errors: [ too_long_message(e) ])
     rescue ActiveRecord::RecordInvalid => e
       Result.new(success?: false, event_registration: nil, errors: [ e.message ])
     rescue ActiveRecord::RecordNotUnique => e
@@ -81,6 +83,17 @@ module EventRegistrationServices
     end
 
     private
+
+    # Turn a database "Data too long for column 'city'" failure into a friendly,
+    # form-level message. We can't always map the column back to a single form
+    # field (both the mailing and agency address write `city`), so we name the
+    # column generically and ask the registrant to shorten that answer.
+    def too_long_message(error)
+      column = error.message[/column '([^']+)'/, 1]
+      return "One of your answers is too long. Please shorten it and try again." if column.blank?
+
+      "Your #{column.humanize.downcase} is too long. Please shorten it and try again."
+    end
 
     def field_value(key)
       field = @form.form_fields.find_by(field_identifier: key)
