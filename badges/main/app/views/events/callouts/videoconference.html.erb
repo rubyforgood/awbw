@@ -1,0 +1,21 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Videoconference — #{@event.title}") %>
+<%= render layout: "events/callouts/callout_page", locals: { title: "Videoconference" } do %>
+  <div class="space-y-6">
+    <% if @event.videoconference_url.present? %>
+      <div>
+        <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Join link</p>
+        <%= link_to @event.videoconference_url, target: "_blank", rel: "noopener",
+                    class: "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700" do %>
+          <i class="fa-solid fa-video"></i> Join on <%= @event.videoconference_domain %>
+        <% end %>
+        <p class="mt-2 text-xs text-gray-500 break-all"><%= @event.videoconference_url %></p>
+      </div>
+    <% end %>
+
+    <div class="border-t border-gray-100 pt-5">
+      <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Add to your calendar</p>
+      <div class="flex flex-wrap gap-1 items-center text-sm text-blue-600 font-medium"><%= @event.calendar_links %></div>
+    </div>
+  </div>
+<% end %>
