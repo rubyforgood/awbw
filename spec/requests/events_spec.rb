@@ -1645,6 +1645,25 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("text-gray-500 whitespace-nowrap\">Paid<")
       expect(response.body).not_to include("$0.00")
     end
+
+    it "lists only registrants who are not yet fully paid in the new-allocation dropdown" do
+      # The dropdown only renders when the payment still has an unallocated balance.
+      create(:payment, person: payer, form_submission: submission,
+             amount_cents: 5000, amount_cents_remaining: 5000)
+      unpaid = create(:person, first_name: "Owes", last_name: "Money", email: "owes.money@example.com")
+      create(:event_registration, event: event, registrant: unpaid, status: "registered")
+      paid = create(:person, first_name: "All", last_name: "Square", email: "all.square@example.com")
+      paid_registration = create(:event_registration, event: event, registrant: paid, status: "registered")
+      # Fully cover the $25 registration fee so this registrant drops off the list.
+      create(:allocation, source: create(:payment, amount_cents: 2500, amount_cents_remaining: 2500),
+             allocatable: paid_registration, amount: 2500)
+
+      get bulk_payments_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Owes Money — owes.money@example.com")
+      expect(response.body).not_to include("All Square — all.square@example.com")
+    end
   end
 
   describe "POST /events/:id/allocate_bulk_payment" do
