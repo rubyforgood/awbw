@@ -42,6 +42,17 @@ RSpec.describe EventMailer, type: :mailer do
       expect(mail.body.encoded).to include(event_registration.registrant.full_name)
     end
 
+    it "links to the registrant's ticket" do
+      expect(mail.body.encoded).to include("/registration/#{event_registration.slug}")
+    end
+
+    it "offers only the ticket call to action, not a separate event link" do
+      body = mail.body.encoded
+
+      expect(body).to include("View ticket")
+      expect(body).not_to include("View event")
+    end
+
     context "when the event has a rhino_description" do
       let(:event) { create(:event, rhino_description: "Join us for an art healing workshop") }
       let(:event_registration) { create(:event_registration, event: event) }
