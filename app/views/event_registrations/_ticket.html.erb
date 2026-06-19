@@ -86,17 +86,21 @@
             </div>
           <% end %>
 
-          <div>
-            <% if preview %>
-              <button type="button" disabled
-                      class="btn btn-accent px-6 py-2 text-sm uppercase font-telefon opacity-60 cursor-not-allowed">Pay with Credit Card</button>
-            <% else %>
-              <%= button_to "Pay with Credit Card",
-                            registration_pay_path(event_registration.slug),
-                            data: { turbo: false },
-                            class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
-            <% end %>
-          </div>
+          <% if event_registration.pays_by_check? %>
+            <div class="text-sm text-gray-600">Pay by mailed check, as selected during registration.</div>
+          <% else %>
+            <div>
+              <% if preview %>
+                <button type="button" disabled
+                        class="btn btn-accent px-6 py-2 text-sm uppercase font-telefon opacity-60 cursor-not-allowed">Pay with Credit Card</button>
+              <% else %>
+                <%= button_to "Pay with Credit Card",
+                              registration_pay_path(event_registration.slug),
+                              data: { turbo: false },
+                              class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       <% end %>
 

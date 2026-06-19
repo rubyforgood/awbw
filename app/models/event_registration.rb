@@ -227,6 +227,12 @@ class EventRegistration < ApplicationRecord
     "Due"
   end
 
+  # True when the registrant opted to pay by mailed check. The digital ticket
+  # reads this to hide the "Pay with Credit Card" button.
+  def pays_by_check?
+    payment_method == FormBuilderService::PAYMENT_METHOD_CHECK
+  end
+
   def scholarship?
     scholarships.exists?
   end

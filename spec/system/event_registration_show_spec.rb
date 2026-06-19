@@ -57,6 +57,19 @@ RSpec.describe "Event registration show page", type: :system do
       expect(page).to have_text("due")
       expect(page).to have_button("Pay with Credit Card")
     end
+
+    it "hides the pay button when the registrant chose to pay by check" do
+      registration.update!(payment_method: "Check")
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      # The balance callout still shows (a check payer still owes), but the
+      # credit-card action button is replaced by the mailed-check note.
+      expect(page).to have_text("Make your payment")
+      expect(page).to have_no_button("Pay with Credit Card")
+      expect(page).to have_text("Pay by mailed check")
+    end
   end
 
   describe "before-you-attend call-out" do

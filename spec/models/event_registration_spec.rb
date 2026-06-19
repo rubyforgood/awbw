@@ -209,6 +209,23 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#pays_by_check?" do
+    it "returns true when the payment method is Check" do
+      reg = build(:event_registration, payment_method: FormBuilderService::PAYMENT_METHOD_CHECK)
+      expect(reg).to be_pays_by_check
+    end
+
+    it "returns false for a credit-card method" do
+      reg = build(:event_registration, payment_method: FormBuilderService::PAYMENT_METHOD_PAY_NOW)
+      expect(reg).not_to be_pays_by_check
+    end
+
+    it "returns false when no payment method is set" do
+      reg = build(:event_registration, payment_method: nil)
+      expect(reg).not_to be_pays_by_check
+    end
+  end
+
   describe "#scholarship_tasks_met?" do
     it "returns true when no scholarship exists" do
       reg = create(:event_registration)
