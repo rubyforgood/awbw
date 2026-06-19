@@ -1,6 +1,6 @@
 class OrganizationDecorator < ApplicationDecorator
   # Canonical program status => DomainTheme colour key. Keeping these as theme
-  # keys means the palette lives in DomainTheme::COLORS (green / blue / yellow —
+  # keys means the palette lives in DomainTheme::COLORS (green / blue / purple —
   # amber is reserved for warnings) rather than hard-coded utilities here.
   PROGRAM_STATUS_THEME_KEYS = {
     new: :program_new,

@@ -46,7 +46,7 @@ module DomainTheme
     # Organization program status badges (amber is reserved for warnings)
     program_new:              :green,
     program_ongoing:          :blue,
-    program_reinstated:       :yellow,
+    program_reinstated:       :purple,
 
     # Badges (non-model-specific)
     legacy_facilitator:       :yellow,

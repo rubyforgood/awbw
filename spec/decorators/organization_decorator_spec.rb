@@ -5,14 +5,14 @@ RSpec.describe OrganizationDecorator do
     it "maps each status to its pill classes, accepting symbols or model strings" do
       expect(described_class.program_status_classes(:new)).to include("green")
       expect(described_class.program_status_classes(:ongoing)).to include("blue")
-      expect(described_class.program_status_classes(:reinstated)).to include("yellow")
+      expect(described_class.program_status_classes(:reinstated)).to include("purple")
       # Organization#program_status returns "Reinstate" (no trailing d).
-      expect(described_class.program_status_classes("Reinstate")).to include("yellow")
+      expect(described_class.program_status_classes("Reinstate")).to include("purple")
     end
 
-    it "uses yellow, not amber, for reinstated" do
+    it "uses purple, not amber, for reinstated" do
       classes = described_class.program_status_classes(:reinstated)
-      expect(classes).to include("yellow")
+      expect(classes).to include("purple")
       expect(classes).not_to include("amber")
     end
 
