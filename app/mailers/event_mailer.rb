@@ -25,6 +25,9 @@ class EventMailer < ApplicationMailer
     @event = form_submission.event&.decorate
     @answers = form_submission.answers_by_identifier
     @attendees = form_submission.bulk_payment_attendees
+    # Expected total (event cost × attendee count), shown even before a payment
+    # record lands. Mirrors the ticket page; omitted when there's no event/cost.
+    @total_cents = form_submission.event && form_submission.bulk_payment_amount_cents(form_submission.event)
 
     @notification_type = "Bulk payment confirmation"
 
