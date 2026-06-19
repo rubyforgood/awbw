@@ -22,6 +22,26 @@ RSpec.describe Organization do
     it { should allow_value("").for(:email) }
     it { should allow_value(nil).for(:email) }
     it { should_not allow_value("not-an-email").for(:email).with_message("must be a valid email address") }
+
+    it { should allow_value("https://awbw.org").for(:website_url) }
+    it { should allow_value("http://awbw.org").for(:website_url) }
+    it { should allow_value("awbw.org").for(:website_url) }
+    it { should allow_value("www.awbw.org").for(:website_url) }
+    it { should allow_value("").for(:website_url) }
+    it { should allow_value(nil).for(:website_url) }
+    it { should_not allow_value("not a url").for(:website_url) }
+
+    it "prepends https:// to a website without a scheme" do
+      org = build(:organization, website_url: "awbw.org")
+      org.valid?
+      expect(org.website_url).to eq("https://awbw.org")
+    end
+
+    it "leaves a website with a scheme unchanged" do
+      org = build(:organization, website_url: "http://awbw.org")
+      org.valid?
+      expect(org.website_url).to eq("http://awbw.org")
+    end
   end
 
   it 'is valid with valid attributes' do
