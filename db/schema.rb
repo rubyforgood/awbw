@@ -476,6 +476,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_213947) do
     t.text "fee_note"
     t.boolean "intends_to_pay", default: false, null: false
     t.boolean "invoice_requested", default: false, null: false
+    t.string "payment_method"
     t.boolean "payment_unresolved"
     t.bigint "registrant_id", null: false
     t.boolean "scholarship_requested", default: false, null: false

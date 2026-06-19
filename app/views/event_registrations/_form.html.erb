@@ -74,13 +74,13 @@
           <% end %>
 
           <div class="sm:w-64"
-               data-controller="attendance-status"
-               data-attendance-status-colors-value="<%= status_icon_colors.to_json %>"
-               data-attendance-status-icons-value="<%= status_icons.to_json %>"
-               data-attendance-status-initial-value="<%= f.object.status %>">
+               data-controller="icon-select"
+               data-icon-select-colors-value="<%= status_icon_colors.to_json %>"
+               data-icon-select-icons-value="<%= status_icons.to_json %>"
+               data-icon-select-initial-value="<%= f.object.status %>">
             <div class="mb-1 flex items-center justify-between gap-2">
               <span class="text-xs font-medium text-gray-400">Registration status</span>
-              <span data-attendance-status-target="dirty"
+              <span data-icon-select-target="dirty"
                     class="hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[0.65rem] font-medium text-amber-700"
                     title="Save the form to apply this change">
                 <i class="fa-solid fa-pen text-[0.55rem]"></i>
@@ -89,12 +89,12 @@
             </div>
 
             <div class="relative">
-              <i data-attendance-status-target="icon" class="fas <%= current_icon %> <%= current_icon_color %> pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm"></i>
+              <i data-icon-select-target="icon" class="fas <%= current_icon %> <%= current_icon_color %> pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm"></i>
               <%= f.select :status,
                     EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
                     { selected: f.object.status },
                     class: "w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none cursor-pointer",
-                    data: { "attendance-status-target": "select", action: "attendance-status#update" },
+                    data: { "icon-select-target": "select", action: "icon-select#update" },
                     "aria-label": "Registration status" %>
             </div>
           </div>

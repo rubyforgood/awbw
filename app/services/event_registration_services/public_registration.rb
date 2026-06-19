@@ -60,6 +60,7 @@ module EventRegistrationServices
           existing.update!(ce_credit_requested: true, ce_hours_requested: ce_hours_requested) if ce_credit_requested?
           existing.update!(w9_requested: true) if w9_requested?
           existing.update!(invoice_requested: true) if invoice_requested?
+          existing.update!(payment_method: payment_method) if payment_method.present?
           if existing.status == "cancelled"
             existing.update!(status: "registered")
             send_notifications(existing)
@@ -311,7 +312,8 @@ module EventRegistrationServices
         ce_credit_requested: ce_credit_requested?,
         ce_hours_requested: ce_hours_requested,
         w9_requested: w9_requested?,
-        invoice_requested: invoice_requested?
+        invoice_requested: invoice_requested?,
+        payment_method: payment_method
       )
     end
 
@@ -348,6 +350,14 @@ module EventRegistrationServices
 
     def invoice_requested?
       additional_forms_selections.any? { |value| value.casecmp?(ADDITIONAL_FORMS_INVOICE) }
+    end
+
+    # The payment method the registrant chose (one of
+    # FormBuilderService::PAYMENT_METHOD_OPTIONS), persisted on the registration
+    # so admins can see/change it and the ticket can hide the credit-card button
+    # for check payers. nil when the form omits the question.
+    def payment_method
+      field_value("payment_method").presence
     end
 
     def create_form_submission(person)

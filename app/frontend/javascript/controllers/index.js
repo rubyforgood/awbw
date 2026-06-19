@@ -18,8 +18,8 @@ application.register("anchor-highlight", AnchorHighlightController)
 import AnswerOptionsController from "./answer_options_controller"
 application.register("answer-options", AnswerOptionsController)
 
-import AttendanceStatusController from "./attendance_status_controller"
-application.register("attendance-status", AttendanceStatusController)
+import IconSelectController from "./icon_select_controller"
+application.register("icon-select", IconSelectController)
 
 import AssetPickerController from "./asset_picker_controller"
 application.register("asset-picker", AssetPickerController)

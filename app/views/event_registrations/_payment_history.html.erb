@@ -46,22 +46,73 @@
         </div>
       </dl>
 
-      <%# Intends to pay — grants ticket/material access while the balance above is
-          still owed, for registrants who've committed to paying after the deadline.
-          Does not change the amount due or mark the registration as paid. %>
-      <label class="mt-4 flex items-start gap-2.5 border-t border-gray-100 pt-4 cursor-pointer">
-        <input type="hidden" name="event_registration[intends_to_pay]" value="0" autocomplete="off">
-        <input type="checkbox"
-               name="event_registration[intends_to_pay]"
-               value="1"
-               <%= "checked" if event_registration.intends_to_pay %>
-               class="sr-only peer">
-        <span class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
-        <span>
-          <span class="block text-sm font-medium text-gray-700">Intends to pay</span>
-          <span class="block text-xs text-gray-400">Grant access to training materials and join links while the balance is still due. Doesn't mark the registration as paid.</span>
-        </span>
-      </label>
+      <%# Two columns: "Intends to pay" toggle on the left, the editable payment
+          method dropdown on the right. %>
+      <% payment_method_icons = {
+           ""                     => "fa-circle-question",
+           "Credit card (now)"    => "fa-credit-card",
+           "Credit card (later)"  => "fa-credit-card",
+           "Check"                => "fa-money-check-dollar"
+         } %>
+      <% payment_method_colors = {
+           ""                     => "text-gray-400",
+           "Credit card (now)"    => "text-blue-600",
+           "Credit card (later)"  => "text-indigo-600",
+           "Check"                => "text-green-600"
+         } %>
+      <% current_method = event_registration.payment_method.to_s %>
+      <% current_method_icon = payment_method_icons[current_method] || "fa-circle-question" %>
+      <% current_method_color = payment_method_colors[current_method] || "text-gray-400" %>
+      <% payment_method_options = [ [ "Not specified", "" ] ].concat(FormBuilderService::PAYMENT_METHOD_OPTIONS.map { |option| [ option, option ] }) %>
+      <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <%# Intends to pay — grants ticket/material access while the balance above
+            is still owed, for registrants who've committed to paying after the
+            deadline. Does not change the amount due or mark the registration as paid. %>
+        <label class="flex items-start gap-2.5 cursor-pointer">
+          <input type="hidden" name="event_registration[intends_to_pay]" value="0" autocomplete="off">
+          <input type="checkbox"
+                 name="event_registration[intends_to_pay]"
+                 value="1"
+                 <%= "checked" if event_registration.intends_to_pay %>
+                 class="sr-only peer">
+          <span class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
+          <span>
+            <span class="block text-sm font-medium text-gray-700">Intends to pay</span>
+            <span class="block text-xs text-gray-400">Grant access to training materials and join links while the balance is still due. Doesn't mark the registration as paid.</span>
+          </span>
+        </label>
+
+        <%# Payment method — the registrant's choice from the registration form,
+            editable here via an icon dropdown mirroring the registration-status
+            select. %>
+        <div data-controller="icon-select"
+             data-icon-select-colors-value="<%= payment_method_colors.to_json %>"
+             data-icon-select-icons-value="<%= payment_method_icons.to_json %>"
+             data-icon-select-initial-value="<%= current_method %>">
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <span class="text-sm font-medium text-gray-700">Payment method</span>
+            <span data-icon-select-target="dirty"
+                  class="hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[0.65rem] font-medium text-amber-700"
+                  title="Save the form to apply this change">
+              <i class="fa-solid fa-pen text-[0.55rem]"></i>
+              Unsaved
+            </span>
+          </div>
+
+          <div class="relative">
+            <i data-icon-select-target="icon" class="fas <%= current_method_icon %> <%= current_method_color %> pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm"></i>
+            <select name="event_registration[payment_method]"
+                    class="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none cursor-pointer"
+                    data-icon-select-target="select"
+                    data-action="icon-select#update"
+                    aria-label="Payment method">
+              <% payment_method_options.each do |option_label, option_value| %>
+                <option value="<%= option_value %>" <%= "selected" if current_method == option_value %>><%= option_label %></option>
+              <% end %>
+            </select>
+          </div>
+        </div>
+      </div>
     <% else %>
       <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-0.5 text-xs font-medium text-gray-500">
         <i class="fa-solid fa-gift"></i>

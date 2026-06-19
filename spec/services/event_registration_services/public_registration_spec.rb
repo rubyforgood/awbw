@@ -341,6 +341,34 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "payment method" do
+    def register_with_payment_method(method, first_name: "Pam", last_name: "Beesly", email: "pam@example.com")
+      params = base_form_params(first_name: first_name, last_name: last_name, email: email)
+      params = params.merge(field_id("payment_method") => method) unless method.nil?
+      described_class.call(event: event, form: form, form_params: params)
+    end
+
+    it "stores the chosen payment method on the registration" do
+      registration = register_with_payment_method(FormBuilderService::PAYMENT_METHOD_CHECK).event_registration
+      expect(registration.payment_method).to eq(FormBuilderService::PAYMENT_METHOD_CHECK)
+    end
+
+    it "stores a credit-card choice" do
+      registration = register_with_payment_method(FormBuilderService::PAYMENT_METHOD_PAY_NOW).event_registration
+      expect(registration.payment_method).to eq(FormBuilderService::PAYMENT_METHOD_PAY_NOW)
+    end
+
+    it "updates the payment method on an existing registration that re-registers" do
+      person = create(:person, first_name: "Pam", last_name: "Beesly", email: "pam@example.com")
+      existing = create(:event_registration, event: event, registrant: person,
+                                             payment_method: FormBuilderService::PAYMENT_METHOD_CHECK)
+
+      register_with_payment_method("Credit card (later)")
+
+      expect(existing.reload.payment_method).to eq("Credit card (later)")
+    end
+  end
+
   describe "re-registration after cancellation" do
     let(:person) { create(:person, first_name: "Jane", last_name: "Doe", email: "jane@example.com") }
     let!(:cancelled_registration) do

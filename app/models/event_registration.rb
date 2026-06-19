@@ -49,6 +49,7 @@ class EventRegistration < ApplicationRecord
   validates :status, inclusion: { in: ATTENDANCE_STATUSES }, allow_nil: false
   validates :slug, uniqueness: true, allow_nil: true
   validates :ce_hours_requested, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :payment_method, inclusion: { in: FormBuilderService::PAYMENT_METHOD_OPTIONS }, allow_blank: true
 
   # Scopes
   scope :registrant_name, ->(registrant_name) { joins(:registrant).where(

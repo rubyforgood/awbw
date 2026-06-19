@@ -224,6 +224,15 @@ RSpec.describe "EventRegistrations", type: :request do
       end
     end
 
+    describe "GET /event_registrations/:id/edit" do
+      it "renders the editable payment-method control" do
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Payment method")
+        expect(response.body).to include('name="event_registration[payment_method]"')
+      end
+    end
+
     describe "PATCH /event_registrations/:id" do
       it "can update registration" do
         patch event_registration_path(existing_registration),
@@ -249,6 +258,22 @@ RSpec.describe "EventRegistrations", type: :request do
         existing_registration.reload
         expect(existing_registration.ce_hours_requested).to eq(5)
         expect(existing_registration.ce_license_number).to eq("LIC-987")
+      end
+
+      it "updates the payment method" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { payment_method: "Check" } }
+
+        expect(existing_registration.reload.payment_method).to eq("Check")
+      end
+
+      it "clears the payment method when set to not specified" do
+        existing_registration.update!(payment_method: "Check")
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { payment_method: "" } }
+
+        expect(existing_registration.reload.payment_method).to be_blank
       end
 
       it "sets the shout-out flag and stores the shout-out text on the registrant" do
