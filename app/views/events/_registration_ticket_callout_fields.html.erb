@@ -68,6 +68,14 @@
             class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
     </div>
 
+    <div class="pl-9 pr-9">
+      <%= f.label :resource_id, "Linked resource", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+      <p class="text-xs text-gray-500 mb-1">Optional. Shows the resource below the content on the call-out's page (PDF first-page preview, etc.), with a download button when the resource has a downloadable file.</p>
+      <%= f.collection_select :resource_id, Resource.order(:title), :id, :title,
+            { include_blank: "None" },
+            class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+    </div>
+
     <div class="flex items-center justify-between pl-9 pr-9">
       <label class="flex items-center gap-2 text-sm text-gray-600">
         <%= f.check_box :payment_access_gated, class: "rounded border-gray-300 text-purple-600" %>

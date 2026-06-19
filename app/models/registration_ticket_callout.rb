@@ -13,6 +13,11 @@ class RegistrationTicketCallout < ApplicationRecord
 
   belongs_to :event
 
+  # Optionally links the callout to a Resource. When present, the callout's
+  # detail page renders the resource's display (PDF first-page preview, etc.)
+  # and a download button beneath the callout's own title/subtitle/content.
+  belongs_to :resource, optional: true
+
   # Per-event ordering, drag-reordered after save via the shared `sortable`
   # Stimulus controller (a per-row PUT to #update). The gem reflows the other
   # callouts' positions on each move, exactly like Category. It assigns position

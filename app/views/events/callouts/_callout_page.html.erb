@@ -1,9 +1,11 @@
 <%# Shared chrome for registrant callout show pages: back-to-ticket eyebrow +
     branded header, with the body supplied as a block via render(layout:). Callers
-    set their own page_bg_class / page_title and pass a `title` local. Uses
-    @event_registration and @event. %>
+    set their own page_bg_class / page_title and pass a `title` local. Uses @event.
+    The eyebrow defaults to the registrant's ticket (uses @event_registration);
+    callers without a registration can override it with a `back_path` local. %>
+<% back_path = local_assigns.fetch(:back_path) { registration_ticket_path(@event_registration.slug) } %>
 <div class="max-w-3xl mx-auto px-4 pt-4">
-  <%= link_to registration_ticket_path(@event_registration.slug),
+  <%= link_to back_path,
               class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
     <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
   <% end %>
