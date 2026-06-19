@@ -15,7 +15,7 @@ class EventMailer < ApplicationMailer
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW Portal: Event registration confirmed for #{@event.title}"
+      subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} received for #{@event.title}"
     )
   end
 
@@ -108,7 +108,7 @@ class EventMailer < ApplicationMailer
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW Portal: Event registration cancelled for #{@event.title}"
+      subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} cancelled for #{@event.title}"
     )
   end
 end

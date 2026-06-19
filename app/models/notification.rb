@@ -71,8 +71,12 @@ class Notification < ApplicationRecord
 
   EMAIL_TOPICS = [
     [ "Admin FYI (all)", "[FYI]" ],
-    [ "Admin FYI: event registration confirmed", "[FYI] New event registration" ],
+    # "by" keeps this from also matching the scholarship subject
+    # ("[FYI] New event registration scholarship by …"), which has its own topic.
+    [ "Admin FYI: event registration confirmed", "[FYI] New event registration by" ],
+    [ "Admin FYI: event registration scholarship confirmed", "[FYI] New event registration scholarship by" ],
     [ "Admin FYI: event registration cancelled", "[FYI] Event registration cancelled" ],
+    [ "Admin FYI: event registration scholarship cancelled", "[FYI] Event registration scholarship cancelled" ],
     [ "Admin FYI: bulk payment", "[FYI] New bulk payment" ],
     [ "Admin FYI: idea submitted", "submission by" ],
     [ "Admin FYI: password reset", "[FYI] New password reset" ],
@@ -80,7 +84,9 @@ class Notification < ApplicationRecord
     [ "Admin FYI: contact form submission", "contact form submission" ],
     [ "Contact: form confirmation", "We received your message" ],
     [ "Event: event registration cancelled", "Event registration cancelled" ],
-    [ "Event: event registration confirmed", "Event registration confirmed" ],
+    [ "Event: event registration scholarship cancelled", "Event registration scholarship cancelled" ],
+    [ "Event: event registration confirmed", "Event registration received" ],
+    [ "Event: event registration scholarship confirmed", "Event registration scholarship received" ],
     [ "Bulk payment: confirmation", "Bulk payment received" ],
     [ "Idea: confirmation (all)", "has been received" ],
     [ "Idea: confirmation: workshop log", "workshop log has been received" ],

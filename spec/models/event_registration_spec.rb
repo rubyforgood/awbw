@@ -197,6 +197,18 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#registration_subject_noun" do
+    it "returns the scholarship phrase when a scholarship was requested" do
+      reg = create(:event_registration, scholarship_requested: true)
+      expect(reg.registration_subject_noun).to eq("event registration scholarship")
+    end
+
+    it "returns the plain phrase when no scholarship was requested" do
+      reg = create(:event_registration, scholarship_requested: false)
+      expect(reg.registration_subject_noun).to eq("event registration")
+    end
+  end
+
   describe "#scholarship_tasks_met?" do
     it "returns true when no scholarship exists" do
       reg = create(:event_registration)
