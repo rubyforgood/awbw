@@ -322,4 +322,46 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(answer.submitted_answer).to eq("Healing, Other: poetry therapy")
     end
   end
+
+  describe "separate scholarship form submission" do
+    let(:scholarship_form) do
+      f = create(:form, role: "scholarship")
+      event.event_forms.create!(form: f, role: "scholarship")
+      f
+    end
+    let!(:scholarship_field) do
+      create(:form_field, form: scholarship_form, answer_type: :free_form_input_paragraph,
+             name: "Describe your need", required: false)
+    end
+
+    it "persists the scholarship answers as a scholarship-role submission tied to the event" do
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Sky", last_name: "Need", email: "sky@example.com"),
+        scholarship_requested: true,
+        scholarship_form: scholarship_form,
+        scholarship_params: { scholarship_field.id.to_s => "Our training budget was cut this year." }
+      )
+
+      expect(result.success?).to be true
+      person = result.event_registration.registrant
+      submission = FormSubmission.find_by(person: person, form: scholarship_form, role: "scholarship")
+      expect(submission).to be_present
+      expect(submission.event).to eq(event)
+      expect(submission.form_answers.find_by(form_field: scholarship_field).submitted_answer)
+        .to eq("Our training budget was cut this year.")
+    end
+
+    it "does not create a scholarship submission when no scholarship was requested" do
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Plain", last_name: "Reg", email: "plain@example.com")
+      )
+
+      person = result.event_registration.registrant
+      expect(FormSubmission.where(person: person, role: "scholarship")).to be_empty
+    end
+  end
 end
