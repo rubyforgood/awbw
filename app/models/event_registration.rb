@@ -10,6 +10,7 @@ class EventRegistration < ApplicationRecord
   has_many :allocations, as: :allocatable
   has_many :scholarships, -> { distinct },
     through: :allocations, source: :source, source_type: "Scholarship"
+  has_many :checklist_completions, class_name: "EventRegistrationChecklistCompletion", dependent: :destroy
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, reject_if: proc { |attrs| attrs["email_subject"].blank? }
@@ -24,6 +25,24 @@ class EventRegistration < ApplicationRecord
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
+
+  # Manual onboarding checklist steps shown on the event's Onboarding tab. Each is
+  # an audited boolean (stored as a row in event_registration_checklist_completions,
+  # capturing who completed it and when). The keys double as the param/column keys
+  # the toggle endpoint accepts. Adding/removing a step here needs no migration.
+  CHECKLIST_STEPS = {
+    "sent_art_supply_info" => "Sent art supply info",
+    "sent_zoom_info" => "Sent Zoom info",
+    "sent_portal_invite_email" => "Sent portal invite email",
+    "sent_certificate" => "Sent certificate",
+    "set_up_in_filemaker" => "Set up in FileMaker",
+    "set_up_in_mailchimp" => "Set up in Mailchimp",
+    "set_up_in_cms" => "Set up in CMS"
+  }.freeze
+
+  # Per-day attendance booleans on event_registrations. Plain (un-audited) columns,
+  # only the first event.day_count of them are shown on the Onboarding tab.
+  DAY_FIELDS = (1..5).map { |day| "completed_day_#{day}" }.freeze
 
   # Default price the registrant owes per requested continuing-education hour.
   # The CE summary on the registration form multiplies it by ce_hours_requested.
@@ -151,6 +170,28 @@ class EventRegistration < ApplicationRecord
         term: sanitized
       )
       .distinct
+  }
+
+  # Registrations that have (or are missing) a completed checklist step — drives
+  # the Onboarding tab's "show everyone missing X" filter.
+  scope :with_checklist_step, ->(step) {
+    where(id: EventRegistrationChecklistCompletion.where(step: step).select(:event_registration_id))
+  }
+  scope :without_checklist_step, ->(step) {
+    where.not(id: EventRegistrationChecklistCompletion.where(step: step).select(:event_registration_id))
+  }
+  # Filter by any onboarding column (a checklist step or a completed_day_* field),
+  # by whether it's done ("has") or not ("missing"). Unknown keys are a no-op.
+  scope :onboarding_step, ->(step, state) {
+    next all if step.blank?
+
+    if DAY_FIELDS.include?(step)
+      state == "has" ? where(step => true) : where(step => false)
+    elsif CHECKLIST_STEPS.key?(step)
+      state == "has" ? with_checklist_step(step) : without_checklist_step(step)
+    else
+      all
+    end
   }
 
   def self.search_by_params(params)
@@ -311,6 +352,33 @@ class EventRegistration < ApplicationRecord
     when "no_show" then "No show"
     else status.humanize
     end
+  end
+
+  # The completion record for a checklist step, or nil. Reads from the loaded
+  # association so the Onboarding matrix can preload completions and avoid N+1.
+  def checklist_completion_for(step)
+    checklist_completions.detect { |completion| completion.step == step.to_s }
+  end
+
+  def checklist_step_completed?(step)
+    checklist_completion_for(step).present?
+  end
+
+  def day_completed?(day)
+    DAY_FIELDS.include?("completed_day_#{day}") && public_send("completed_day_#{day}")
+  end
+
+  # Completed vs. total actionable onboarding steps for this registrant — the
+  # seven manual checklist steps plus the event's in-range attendance days. Drives
+  # the per-person "X/Y done" progress bar.
+  def onboarding_completed_count(day_count)
+    checklist_done = CHECKLIST_STEPS.keys.count { |step| checklist_step_completed?(step) }
+    days_done = (1..day_count).count { |day| day_completed?(day) }
+    checklist_done + days_done
+  end
+
+  def onboarding_total_count(day_count)
+    CHECKLIST_STEPS.size + day_count
   end
 
   remote_searchable_by :registrant,

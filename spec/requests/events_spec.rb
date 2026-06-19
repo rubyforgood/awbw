@@ -872,6 +872,99 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /events/:id/onboarding" do
+    let(:person) { create(:person, first_name: "Onboard", last_name: "Ready") }
+    let!(:registration) { create(:event_registration, event: event, registrant: person) }
+
+    before { sign_in admin }
+
+    it "renders the onboarding matrix with the checklist columns" do
+      get onboarding_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Onboarding")
+      expect(response.body).to include("Sent Zoom info")
+      expect(response.body).to include("Set up in FileMaker")
+      expect(response.body).to include("Onboard")
+    end
+
+    it "filters to registrants missing a step" do
+      done_person = create(:person, first_name: "Allset", last_name: "Done")
+      done = create(:event_registration, event: event, registrant: done_person)
+      create(:event_registration_checklist_completion, event_registration: done, step: "sent_zoom_info")
+
+      get onboarding_event_path(event, params: { step: "sent_zoom_info", step_state: "missing" })
+
+      expect(response.body).to include("Onboard")
+      expect(response.body).not_to include("Allset")
+    end
+
+    it "does not crash on an unknown step filter" do
+      get onboarding_event_path(event, params: { step: "bogus", step_state: "missing" })
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "redirects a non-admin" do
+      sign_in user
+      get onboarding_event_path(event)
+
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
+  describe "PATCH /event_registrations/:id/update_onboarding" do
+    let(:registration) { create(:event_registration, event: event) }
+
+    before { sign_in admin }
+
+    it "creates an audited completion row when a checklist step is checked" do
+      expect {
+        patch update_onboarding_event_registration_path(registration),
+              params: { field: "sent_zoom_info", value: "1" },
+              as: :turbo_stream
+      }.to change { registration.checklist_completions.where(step: "sent_zoom_info").count }.by(1)
+
+      completion = registration.checklist_completions.find_by(step: "sent_zoom_info")
+      expect(completion.completed_by).to eq(admin)
+      expect(completion.completed_at).to be_present
+    end
+
+    it "removes the completion row when a checklist step is unchecked" do
+      create(:event_registration_checklist_completion, event_registration: registration, step: "sent_zoom_info")
+
+      expect {
+        patch update_onboarding_event_registration_path(registration),
+              params: { field: "sent_zoom_info", value: "0" },
+              as: :turbo_stream
+      }.to change { registration.checklist_completions.where(step: "sent_zoom_info").count }.by(-1)
+    end
+
+    it "toggles a day-attendance boolean" do
+      patch update_onboarding_event_registration_path(registration),
+            params: { field: "completed_day_1", value: "1" },
+            as: :turbo_stream
+
+      expect(registration.reload.completed_day_1).to be(true)
+    end
+
+    it "saves a fee note" do
+      patch update_onboarding_event_registration_path(registration),
+            params: { field: "fee_note", value: "PAID FOR TAC261" },
+            as: :turbo_stream
+
+      expect(registration.reload.fee_note).to eq("PAID FOR TAC261")
+    end
+
+    it "rejects an unknown field" do
+      patch update_onboarding_event_registration_path(registration),
+            params: { field: "drop_table", value: "1" },
+            as: :turbo_stream
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
   describe "GET /events/:id/dashboard" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:person) { create(:person) }

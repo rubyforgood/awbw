@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff, :details, :ce_hours ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder confirm_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants onboarding details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder confirm_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
 
   def index
     authorize!
@@ -118,6 +118,28 @@ class EventsController < ApplicationController
           disposition: "attachment"
       end
     end
+  end
+
+  # Admin onboarding tracker: a per-registrant checklist matrix (system setup,
+  # info-sent milestones, attendance days) over derived data (program type,
+  # scholarship, payment). Mirrors the registrants roster's filters/active toggle.
+  def onboarding
+    authorize! @event, to: :registrants?
+    @event = @event.decorate
+    scope = @event.event_registrations
+      .includes(:checklist_completions, :organizations, :allocations, { scholarships: :grant }, registrant: [ :user, { affiliations: :organization } ])
+      .joins(:registrant)
+    scope = scope.keyword(params[:keyword]) if params[:keyword].present?
+    scope = scope.onboarding_step(params[:step], params[:step_state]) if params[:step].present?
+
+    @active_count = scope.active.count
+    @inactive_count = scope.inactive.count
+    @status_filter = params[:status_filter].presence || "active"
+    scope = @status_filter == "inactive" ? scope.inactive : scope.active
+
+    @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
+    @dashboard = EventDashboard.new(@event)
+    @program_statuses_by_registrant = @dashboard.program_statuses_by_registrant
   end
 
   # Public "Before you attend" page (materials, supplies, policies). Linked from

@@ -114,6 +114,7 @@ Rails.application.routes.draw do
       post :select_organization
       post :create_organization
       delete :unlink_organization
+      patch :update_onboarding
     end
     resources :comments, only: [ :index, :create, :update ]
   end
@@ -141,6 +142,7 @@ Rails.application.routes.draw do
       get :sample_ticket
       get :background
       get :registrants
+      get :onboarding
       get :details
       get :ce_hours
       get :staff

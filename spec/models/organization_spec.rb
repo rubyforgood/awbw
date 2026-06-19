@@ -80,6 +80,33 @@ RSpec.describe Organization do
     end
   end
 
+  describe '#facilitator_status_on' do
+    let(:organization) { create(:organization) }
+    let(:reference_date) { Date.new(2026, 1, 1) }
+
+    it 'is :new when the org has no facilitator affiliation before the date' do
+      expect(organization.facilitator_status_on(reference_date)).to eq(:new)
+    end
+
+    it 'is :ongoing when an earlier facilitator affiliation is still active on the date' do
+      create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2024, 1, 1), end_date: nil)
+      expect(organization.facilitator_status_on(reference_date)).to eq(:ongoing)
+    end
+
+    it 'is :reinstated when all earlier facilitator affiliations ended before the date' do
+      create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2022, 1, 1), end_date: Date.new(2023, 1, 1))
+      expect(organization.facilitator_status_on(reference_date)).to eq(:reinstated)
+    end
+
+    it 'can exclude a specific affiliation from the classification' do
+      own = create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2020, 1, 1), end_date: nil)
+      expect(organization.facilitator_status_on(reference_date, excluding_affiliation_id: own.id)).to eq(:new)
+    end
+  end
+
   describe '.address' do
     let!(:status) { create(:organization_status, name: "Active") }
 

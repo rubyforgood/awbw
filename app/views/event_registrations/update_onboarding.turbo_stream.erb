@@ -1,0 +1,8 @@
+<%# Replace just the edited cell and the registrant's progress bar — avoids
+    recomputing the whole matrix (and the dashboard) on every checkbox toggle. %>
+<%= turbo_stream.replace dom_id(@event_registration, @field) do %>
+  <%= render "events/onboarding_cell", registration: @event_registration, field: @field %>
+<% end %>
+<%= turbo_stream.replace dom_id(@event_registration, :onboarding_progress) do %>
+  <%= render "events/onboarding_progress", registration: @event_registration, day_count: @day_count %>
+<% end %>

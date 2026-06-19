@@ -437,6 +437,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.index ["form_id"], name: "index_event_forms_on_form_id"
   end
 
+  create_table "event_registration_checklist_completions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.integer "completed_by_id"
+    t.datetime "created_at", null: false
+    t.bigint "event_registration_id", null: false
+    t.string "step", null: false
+    t.datetime "updated_at", null: false
+    t.index ["completed_by_id"], name: "idx_on_completed_by_id_047522ef9d"
+    t.index ["event_registration_id", "step"], name: "index_checklist_completions_on_registration_and_step", unique: true
+    t.index ["event_registration_id"], name: "idx_on_event_registration_id_e5177f655c"
+  end
+
   create_table "event_registration_organizations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "event_registration_id", null: false
@@ -452,8 +464,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.integer "ce_hours_requested"
     t.string "ce_license_number"
     t.string "checkout_session_id"
+    t.boolean "completed_day_1", default: false, null: false
+    t.boolean "completed_day_2", default: false, null: false
+    t.boolean "completed_day_3", default: false, null: false
+    t.boolean "completed_day_4", default: false, null: false
+    t.boolean "completed_day_5", default: false, null: false
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.text "fee_note"
     t.boolean "intends_to_pay", default: false, null: false
     t.boolean "invoice_requested", default: false, null: false
     t.boolean "payment_unresolved"
@@ -1628,6 +1646,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
   add_foreign_key "contact_methods", "addresses"
   add_foreign_key "event_forms", "events"
   add_foreign_key "event_forms", "forms"
+  add_foreign_key "event_registration_checklist_completions", "event_registrations"
+  add_foreign_key "event_registration_checklist_completions", "users", column: "completed_by_id"
   add_foreign_key "event_registration_organizations", "event_registrations"
   add_foreign_key "event_registration_organizations", "organizations"
   add_foreign_key "event_registrations", "events"

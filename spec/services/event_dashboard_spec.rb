@@ -756,6 +756,44 @@ RSpec.describe EventDashboard do
     end
   end
 
+  # Admins create facilitator affiliations manually after registration, so a
+  # registrant frequently has none yet. The org must still be classified by its
+  # own history as of today rather than defaulting to :new.
+  context "program-status when the registrant has no facilitator affiliation yet" do
+    let(:event) { create(:event) }
+    let(:person) { create(:person) }
+
+    before do
+      create(:event_registration_organization, event_registration: registration, organization: org)
+    end
+
+    let(:registration) { create(:event_registration, event: event, registrant: person, status: "registered") }
+
+    context "an org that already has an active facilitator" do
+      let(:org) { create(:organization, name: "Established Agency") }
+
+      before do
+        create(:affiliation, organization: org, title: "Facilitator", start_date: 2.years.ago, end_date: nil)
+      end
+
+      it "classifies the org as ongoing, not new" do
+        expect(dashboard.program_statuses_by_registrant[person.id]).to eq([ :ongoing ])
+      end
+    end
+
+    context "an org whose only facilitator affiliation has lapsed" do
+      let(:org) { create(:organization, name: "Lapsed Agency") }
+
+      before do
+        create(:affiliation, organization: org, title: "Facilitator", start_date: 5.years.ago, end_date: 4.years.ago)
+      end
+
+      it "classifies the org as reinstated" do
+        expect(dashboard.program_statuses_by_registrant[person.id]).to eq([ :reinstated ])
+      end
+    end
+  end
+
   describe "unallocated bulk payments" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:bulk_form) { create(:form) }
