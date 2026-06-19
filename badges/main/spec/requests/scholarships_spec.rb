@@ -101,6 +101,15 @@ RSpec.describe "Scholarships", type: :request do
     end
   end
 
+  describe "PATCH /scholarships/:id from the recipients page Edit link" do
+    it "returns to the recipients page, scrolled to the participant card" do
+      patch scholarship_path(scholarship, return_to: "recipients", participant: registration.slug),
+            params: { scholarship: { amount_dollars: "40" } }
+
+      expect(response).to redirect_to(recipients_event_path(event, anchor: "participant-#{registration.slug}"))
+    end
+  end
+
   describe "POST /scholarships from the registration Add link" do
     it "returns to the event registration edit page on create (symmetric with View)" do
       expect {
@@ -136,6 +145,12 @@ RSpec.describe "Scholarships", type: :request do
       get edit_scholarship_path(scholarship, return_to: "registration")
 
       expect(response.body).to include("href=\"#{edit_event_registration_path(registration)}\"")
+    end
+
+    it "links the edit page back to the recipients page when return_to=recipients" do
+      get edit_scholarship_path(scholarship, return_to: "recipients", participant: registration.slug)
+
+      expect(response.body).to include("href=\"#{recipients_event_path(event, anchor: "participant-#{registration.slug}")}\"")
     end
   end
 
@@ -179,6 +194,12 @@ RSpec.describe "Scholarships", type: :request do
 
       expect(response).to redirect_to(registrants_event_path(event))
       expect(flash[:notice]).to eq("Scholarship removed.")
+    end
+
+    it "returns to the recipients page when deleted from there" do
+      delete scholarship_path(scholarship, return_to: "recipients", participant: registration.slug)
+
+      expect(response).to redirect_to(recipients_event_path(event, anchor: "participant-#{registration.slug}"))
     end
   end
 
