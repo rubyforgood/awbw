@@ -47,32 +47,13 @@ RSpec.describe "Events::Registrations", type: :request do
       end
     end
 
-    context "W-9 download link" do
-      it "shows the W-9 download link when w9_requested" do
-        registration.update!(w9_requested: true)
+    context "magic callouts" do
+      it "renders the consolidated magic callout cards" do
         get registration_ticket_path(registration.slug)
-        expect(response.body).to include("/documents/awbw-w9.pdf")
-        expect(response.body).to include("Download W-9")
-      end
-
-      it "hides the W-9 download link when not requested" do
-        get registration_ticket_path(registration.slug)
-        expect(response.body).not_to include("/documents/awbw-w9.pdf")
-      end
-    end
-
-    context "invoice link" do
-      it "shows the invoice link when invoice_requested" do
-        registration.update!(invoice_requested: true)
-        get registration_ticket_path(registration.slug)
-        expect(response.body).to include(registration_invoice_path(registration.slug))
-        expect(response.body).to include("View invoice")
-      end
-
-      it "hides the invoice link when not requested" do
-        registration.update!(invoice_requested: false)
-        get registration_ticket_path(registration.slug)
-        expect(response.body).not_to include(registration_invoice_path(registration.slug))
+        expect(response.body).to include("view your balance")
+        expect(response.body).to include("W-9, invoice, and letter to supervisors")
+        expect(response.body).to include("Worksheets and resources for the training")
+        expect(response.body).to include("Frequently asked questions")
       end
     end
 
@@ -148,22 +129,126 @@ RSpec.describe "Events::Registrations", type: :request do
   describe "GET /registration/:slug/faq" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "renders the training FAQ" do
+    it "renders the training FAQ with the folded-in contact link" do
       get registration_faq_path(registration.slug)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Frequently asked questions")
       expect(response.body).to include("Is the training trauma-informed?")
+      expect(response.body).to include("Still have questions?")
+      expect(response.body).to include(contact_us_path)
     end
   end
 
-  describe "GET /registration/:slug/questions" do
+  describe "GET /registration/:slug/payment" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "renders the closing-details page with a contact link" do
-      get registration_questions_path(registration.slug)
+    it "shows the allocation ledger, balance due, and check instructions" do
+      create(:allocation, allocatable: registration, amount: 500)
+      get registration_payment_path(registration.slug)
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("Questions &amp; next steps")
-      expect(response.body).to include(contact_us_path)
+      expect(response.body).to include("Payment history")
+      expect(response.body).to include("Amount due")
+      expect(response.body).to include("Paying by check?")
+      expect(response.body).to include("A Window Between Worlds")
+    end
+
+    it "hides the check instructions once paid in full" do
+      create(:allocation, allocatable: registration, amount: event.cost_cents)
+      get registration_payment_path(registration.slug)
+      expect(response.body).not_to include("Paying by check?")
+    end
+  end
+
+  describe "GET /registration/:slug/certificate" do
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "redirects to the ticket when the certificate is not yet available" do
+      get registration_certificate_path(registration.slug)
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+
+    it "renders the certificate once the training is complete and attended" do
+      event.update!(start_date: 3.days.ago, end_date: 2.days.ago)
+      registration.update!(status: "attended")
+      get registration_certificate_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Certificate of completion")
+      expect(response.body).to include(registration.registrant.full_name)
+    end
+  end
+
+  describe "GET /registration/:slug/ce" do
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "shows requested hours, amount due, and license number" do
+      registration.update!(ce_credit_requested: true, ce_hours_requested: 6, ce_license_number: "LIC123")
+      get registration_ce_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Hours requested")
+      expect(response.body).to include("LIC123")
+      expect(response.body).to include("$150")
+    end
+  end
+
+  describe "GET /registration/:slug/forms" do
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "links to the W-9 and invoice only when requested" do
+      registration.update!(w9_requested: true, invoice_requested: true)
+      get registration_forms_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("/documents/awbw-w9.pdf")
+      expect(response.body).to include(registration_invoice_path(registration.slug))
+    end
+
+    it "omits the W-9 link when not requested" do
+      get registration_forms_path(registration.slug)
+      expect(response.body).not_to include("/documents/awbw-w9.pdf")
+    end
+
+    it "links to the letter-to-supervisors resource when present" do
+      letter = create(:resource, title: "Letter to Supervisors", kind: "Form")
+      get registration_forms_path(registration.slug)
+      expect(response.body).to include(resource_path(letter))
+    end
+  end
+
+  describe "GET /registration/:slug/handouts" do
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "links to seeded handout resources" do
+      handout = create(:resource, title: "AHA Moments", kind: "Handout")
+      get registration_handouts_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include(resource_path(handout))
+    end
+
+    it "shows a placeholder when no handouts are present" do
+      get registration_handouts_path(registration.slug)
+      expect(response.body).to include("Training handouts will be available here soon.")
+    end
+  end
+
+  describe "GET /registration/:slug/portal" do
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "renders portal info with a link to the home screen" do
+      get registration_portal_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Facilitator Portal access")
+      expect(response.body).to include(root_path)
+    end
+  end
+
+  describe "GET /registration/:slug/videoconference" do
+    let(:event) { create(:event, videoconference_url: "https://awbw.zoom.us/j/123", videoconference_label: "Zoom") }
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "shows the join link and add-to-calendar options" do
+      get registration_videoconference_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("https://awbw.zoom.us/j/123")
+      expect(response.body).to include("Add to your calendar")
     end
   end
 

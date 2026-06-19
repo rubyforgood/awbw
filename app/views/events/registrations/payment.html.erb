@@ -1,0 +1,38 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Payment — #{@event.title}") %>
+<%= render layout: "events/registrations/callout_page", locals: { title: "Payment" } do %>
+  <% if @allocations.any? %>
+    <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Payment history</p>
+    <div class="divide-y divide-gray-100">
+      <% @allocations.each do |allocation| %>
+        <div class="flex items-center justify-between gap-3 py-2.5">
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-gray-900"><%= allocation.source_type.titleize %></p>
+            <p class="text-xs text-gray-500"><%= allocation.created_at.strftime("%b %-d, %Y · %-l:%M %p") %></p>
+          </div>
+          <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(allocation.amount) %></span>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-sm text-gray-500">No payments recorded yet.</p>
+  <% end %>
+
+  <div class="mt-5 flex items-end justify-end border-t border-gray-200 pt-4">
+    <div class="text-right">
+      <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</p>
+      <p class="mt-1 text-2xl font-semibold tabular-nums <%= @event_registration.remaining_cost.positive? ? "text-amber-700" : "text-green-700" %>"><%= dollars_from_cents(@event_registration.remaining_cost) %></p>
+    </div>
+  </div>
+
+  <% if @event_registration.remaining_cost.positive? %>
+    <div class="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 leading-relaxed space-y-2">
+      <p class="font-semibold text-gray-900">Paying by check?</p>
+      <p>Write the check out to <strong>A Window Between Worlds</strong> and mail it to:</p>
+      <p class="font-medium text-gray-900">1210 Fernside Dr.<br>La Cañada, CA 91011</p>
+      <p>Please send us an email letting us know the date the check will be mailed. If that date changes, please let us know.</p>
+      <p><strong>Note:</strong> AWBW had an address change in recent years. Please be sure your accounting department has this current address — mail sent to the old address will not be received.</p>
+      <p>Payment is due no later than 5:00 PM PT on April 9th. We'll send more information after your payment is received, so we encourage you to submit it as soon as possible.</p>
+    </div>
+  <% end %>
+<% end %>

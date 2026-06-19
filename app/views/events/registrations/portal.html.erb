@@ -1,0 +1,12 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Facilitator Portal access — #{@event.title}") %>
+<%= render layout: "events/registrations/callout_page", locals: { title: "Facilitator Portal access" } do %>
+  <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
+    <p>Access to the Facilitator Portal is provided once you've completed both training days and your training fee is paid.</p>
+    <p>You're all set — watch for your portal invitation. Once you have access, you can sign in from the home screen.</p>
+    <%= link_to root_path, target: "_blank", rel: "noopener",
+                class: "inline-flex items-center gap-2 rounded-lg border-2 border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100" do %>
+      <i class="fa-solid fa-right-to-bracket"></i> Go to the home screen
+    <% end %>
+  </div>
+<% end %>

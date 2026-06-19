@@ -1,6 +1,7 @@
-<% content_for(:page_bg_class, "public") %>
-<% content_for(:page_title, "Questions & next steps — #{@event.title}") %>
-
+<%# Shared chrome for registrant callout show pages: back-to-ticket eyebrow +
+    branded header, with the body supplied as a block via render(layout:). Callers
+    set their own page_bg_class / page_title and pass a `title` local. Uses
+    @event_registration and @event. %>
 <div class="max-w-3xl mx-auto px-4 pt-4">
   <%= link_to registration_ticket_path(@event_registration.slug),
               class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
@@ -16,16 +17,15 @@
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
         </div>
         <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight">Questions &amp; next steps</h1>
+          <h1 class="text-xl font-semibold tracking-wide leading-tight"><%= title %></h1>
           <p class="text-sm text-blue-200"><%= @event.title %></p>
         </div>
       </div>
       <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
 
-    <div class="px-6 sm:px-8 py-7 space-y-4 text-gray-700 leading-relaxed">
-      <p>You'll receive more details as we get closer to the training dates.</p>
-      <p>In the meantime, please <%= link_to "reach out", contact_us_path, class: "text-blue-700 underline hover:text-blue-900" %> with any questions — we're always happy to help. We look forward to creating and connecting with you!</p>
+    <div class="px-6 sm:px-8 py-7">
+      <%= yield %>
     </div>
   </div>
 </div>

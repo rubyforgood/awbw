@@ -105,8 +105,7 @@
       <!-- Magic callouts: code-defined cards the app controls (event details, CE
            hours, requested W-9/invoice). Each knows its own visibility rule. -->
       <% MagicTicketCallouts.new(event_registration).cards.each do |card| %>
-        <%= render "event_registrations/callout_card",
-                   callout: card, href: card.href, target: card.target, trailing_icon: card.trailing_icon %>
+        <%= render "event_registrations/callout_card", callout: card %>
       <% end %>
 
       <!-- Custom ticket callouts (admin-configured: actions & reference reading) -->

@@ -221,6 +221,16 @@ class EventRegistration < ApplicationRecord
     scholarships.all?(&:tasks_completed?)
   end
 
+  def attended?
+    status == "attended"
+  end
+
+  # The certificate of completion unlocks once the training has happened, the
+  # registrant attended, and any scholarship tasks are complete.
+  def certificate_available?
+    event.end_date.present? && event.end_date.past? && attended? && scholarship_tasks_met?
+  end
+
   def allocations_sum
     allocations.sum(:amount)
   end

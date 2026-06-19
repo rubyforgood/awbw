@@ -1,0 +1,13 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Forms — #{@event.title}") %>
+<%= render layout: "events/registrations/callout_page", locals: { title: "Forms" } do %>
+  <% if @form_cards.any? %>
+    <div class="space-y-3">
+      <% @form_cards.each do |card| %>
+        <%= render "event_registrations/callout_card", callout: card %>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-sm text-gray-500">No forms are available for your registration yet.</p>
+  <% end %>
+<% end %>

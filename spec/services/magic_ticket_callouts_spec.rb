@@ -8,82 +8,86 @@ RSpec.describe MagicTicketCallouts do
     described_class.new(reg).cards.map(&:title)
   end
 
-  describe "#cards" do
-    it "includes the invoice card only when an invoice was requested" do
-      registration.update!(invoice_requested: false)
-      expect(card_titles(registration)).not_to include("View invoice")
-
-      registration.update!(invoice_requested: true)
-      expect(card_titles(registration)).to include("View invoice")
-    end
-
-    it "includes the W-9 card only when a W-9 was requested" do
-      registration.update!(w9_requested: false)
-      expect(card_titles(registration)).not_to include("Download W-9")
-
-      registration.update!(w9_requested: true)
-      expect(card_titles(registration)).to include("Download W-9")
-    end
-
-    it "includes the event-details and CE-hours cards only when the event has them" do
-      event.update!(event_details: "Bring supplies", ce_hours_details: "6 hours")
-      titles = card_titles(registration)
-      expect(titles).to include(event.event_details_label, event.ce_hours_details_label)
-    end
-
-    it "includes the scholarship card when requested but not yet awarded" do
-      registration.update!(scholarship_requested: true)
-      card = described_class.new(registration).cards.find { |c| c.title == "Scholarship" }
-      expect(card).to be_present
-      expect(card.subtitle).to eq("Your scholarship request status")
-    end
-
-    it "includes the scholarship card when awarded, even without the requested flag" do
-      registration.update!(scholarship_requested: false)
-      scholarship = create(:scholarship, amount_cents: 1000)
-      create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
-      card = described_class.new(registration).cards.find { |c| c.title == "Scholarship" }
-      expect(card).to be_present
-      expect(card.subtitle).to eq("Your award — amount, funder, and tasks")
-    end
-
-    it "omits the scholarship card when neither requested nor awarded" do
-      registration.update!(scholarship_requested: false)
-      expect(card_titles(registration)).not_to include("Scholarship")
-    end
-
-    it "always ends with the reference FAQ and 'Questions & next steps' cards" do
-      event.update!(event_details: nil, ce_hours_details: nil)
-      registration.update!(w9_requested: false, invoice_requested: false, scholarship_requested: false)
-      cards = described_class.new(registration).cards
-      expect(cards.map(&:title)).to eq([ "Frequently asked questions", "Questions & next steps" ])
-      expect(cards.map(&:trailing_icon).uniq).to eq([ "fa-solid fa-circle-info" ])
-    end
-
-    it "orders cards: event details, CE hours, scholarship, W-9, invoice, FAQ, questions" do
-      event.update!(event_details: "Bring supplies", ce_hours_details: "6 hours")
-      registration.update!(w9_requested: true, invoice_requested: true, scholarship_requested: true)
-      expect(card_titles(registration)).to eq([
-        event.event_details_label,
-        event.ce_hours_details_label,
-        "Scholarship",
-        "Download W-9",
-        "View invoice",
-        "Frequently asked questions",
-        "Questions & next steps"
-      ])
-    end
+  def card(reg, title)
+    described_class.new(reg).cards.find { |c| c.title == title }
   end
 
-  describe "a card" do
-    it "exposes the link, target, and presentation the partial needs" do
-      registration.update!(invoice_requested: true)
-      card = described_class.new(registration).cards.find { |c| c.title == "View invoice" }
+  describe "#cards" do
+    it "shows the always-present cards for a bare paid-cost registration" do
+      expect(card_titles(registration)).to eq([
+        "Payment", "Forms", "Handouts", "Facilitator Portal access", "Frequently asked questions"
+      ])
+    end
 
-      expect(card.href).to eq(Rails.application.routes.url_helpers.registration_invoice_path(registration.slug))
-      expect(card.target).to eq("_blank")
-      expect(card.display_icon_class).to eq("fa-solid fa-file-invoice-dollar")
-      expect(card.theme).to eq(DomainTheme.swatch("indigo"))
+    it "omits the payment card for a free event" do
+      event.update!(cost_cents: 0)
+      expect(card_titles(registration)).not_to include("Payment")
+    end
+
+    it "makes the payment card an action card while a balance is due, reference once paid" do
+      due = card(registration, "Payment")
+      expect(due.theme).to eq(DomainTheme.swatch("orange"))
+      expect(due.trailing_icon).to eq("fa-solid fa-arrow-right")
+
+      create(:allocation, source: create(:payment), allocatable: registration, amount: event.cost_cents)
+      paid = card(registration, "Payment")
+      expect(paid.theme).to eq(DomainTheme.swatch("green"))
+      expect(paid.trailing_icon).to eq("fa-solid fa-circle-info")
+    end
+
+    it "shows the certificate card only once it is available" do
+      expect(card_titles(registration)).not_to include("Certificate of completion")
+
+      event.update!(start_date: 3.days.ago, end_date: 2.days.ago)
+      registration.update!(status: "attended")
+      expect(card_titles(registration)).to include("Certificate of completion")
+    end
+
+    it "shows the videoconference card only when the event has a link" do
+      expect(card_titles(registration)).not_to include("Videoconference")
+      event.update!(videoconference_url: "https://example.zoom.us/j/123")
+      expect(card_titles(registration)).to include("Videoconference")
+    end
+
+    it "shows the CE card when the event offers CE or the registrant requested it" do
+      expect(card_titles(registration)).not_to include(event.ce_hours_details_label)
+      registration.update!(ce_credit_requested: true)
+      expect(card_titles(registration)).to include(event.ce_hours_details_label)
+    end
+
+    it "themes the CE card as action until requested with hours and a license, then reference" do
+      registration.update!(ce_credit_requested: true, ce_hours_requested: nil, ce_license_number: nil)
+      expect(card(registration, event.ce_hours_details_label).theme).to eq(DomainTheme.swatch("orange"))
+
+      registration.update!(ce_hours_requested: 6, ce_license_number: "LIC123")
+      complete = card(registration, event.ce_hours_details_label)
+      expect(complete.theme).to eq(DomainTheme.swatch("indigo"))
+      expect(complete.subtitle).to eq("6 hours · $150 due")
+    end
+
+    it "shows the scholarship card when requested or awarded" do
+      expect(card_titles(registration)).not_to include("Scholarship")
+      registration.update!(scholarship_requested: true)
+      expect(card(registration, "Scholarship").subtitle).to eq("Your scholarship request status")
+    end
+
+    it "places payment first and FAQ last in the full ordering" do
+      event.update!(event_details: "Bring supplies", ce_hours_details: "6 hours",
+                    videoconference_url: "https://example.zoom.us/j/123",
+                    start_date: 3.days.ago, end_date: 2.days.ago)
+      registration.update!(status: "attended", scholarship_requested: true)
+      expect(card_titles(registration)).to eq([
+        "Payment",
+        "Certificate of completion",
+        "Scholarship",
+        event.ce_hours_details_label,
+        event.event_details_label,
+        "Forms",
+        "Handouts",
+        "Facilitator Portal access",
+        "Videoconference",
+        "Frequently asked questions"
+      ])
     end
   end
 end

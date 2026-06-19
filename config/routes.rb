@@ -94,7 +94,13 @@ Rails.application.routes.draw do
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
   get "registration/:slug/scholarship", to: "events/registrations#scholarship", as: :registration_scholarship
   get "registration/:slug/faq", to: "events/registrations#faq", as: :registration_faq
-  get "registration/:slug/questions", to: "events/registrations#questions", as: :registration_questions
+  get "registration/:slug/payment", to: "events/registrations#payment", as: :registration_payment
+  get "registration/:slug/certificate", to: "events/registrations#certificate", as: :registration_certificate
+  get "registration/:slug/ce", to: "events/registrations#ce", as: :registration_ce
+  get "registration/:slug/forms", to: "events/registrations#forms", as: :registration_forms
+  get "registration/:slug/handouts", to: "events/registrations#handouts", as: :registration_handouts
+  get "registration/:slug/portal", to: "events/registrations#portal", as: :registration_portal
+  get "registration/:slug/videoconference", to: "events/registrations#videoconference", as: :registration_videoconference
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
