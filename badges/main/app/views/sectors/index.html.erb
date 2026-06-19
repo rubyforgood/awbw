@@ -70,7 +70,7 @@
                       <%= link_to "Edit",
                                   edit_sector_path(sector),
                                   class: "btn btn-secondary-outline whitespace-nowrap" %>
-                      <%= link_to "Taggings",
+                      <%= link_to "Taggings (#{@taggings_counts[sector.id].to_i})",
                                   taggings_path(sector_names_all: sector.name),
                                   class: "btn btn-secondary-outline whitespace-nowrap" %>
                     </td>
