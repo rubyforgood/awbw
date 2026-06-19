@@ -20,7 +20,12 @@
     </div>
     <div>
       <dt class="text-sm font-medium text-gray-500">Agreement signed</dt>
-      <dd class="mt-1 text-sm text-gray-900"><%= @scholarship.agreement_signed? ? "Yes" : "No" %></dd>
+      <dd class="mt-1 text-sm text-gray-900">
+        <%= @scholarship.agreement_signed? ? "Yes" : "No" %>
+        <% if @scholarship.agreement_signed_at %>
+          <span class="text-gray-500">· <%= @scholarship.agreement_signed_at.strftime("%B %d, %Y") %></span>
+        <% end %>
+      </dd>
     </div>
     <% if @scholarship.grant.present? %>
       <div>

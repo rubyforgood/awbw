@@ -12,6 +12,7 @@ class Scholarship < ApplicationRecord
   validate :recipient_must_match_allocation_registrant
   validate :within_grant_budget, if: :grant
 
+  before_save :stamp_agreement_signed_at, if: :will_save_change_to_agreement_signed?
   after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? }
   after_create_commit :flag_event_registration_scholarship_requested
 
@@ -48,6 +49,14 @@ class Scholarship < ApplicationRecord
     if recipient != allocation.allocatable.registrant
       errors.add(:recipient, "must be the same person as the event registration's registrant")
     end
+  end
+
+  # Keep the signed-at timestamp in step with the flag however it's flipped — the
+  # admin toggle on the form or the recipient agreeing on their callout page.
+  # Stamp the moment it turns true (preserving an existing time), clear it when
+  # turned back off.
+  def stamp_agreement_signed_at
+    self.agreement_signed_at = agreement_signed? ? (agreement_signed_at || Time.current) : nil
   end
 
   def sync_allocation_amount

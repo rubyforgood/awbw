@@ -64,6 +64,23 @@ module Events
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
     end
 
+    # Records the recipient agreeing, from their scholarship page, to complete the
+    # scholarship's tasks. Only "Yes" signs it; the model stamps agreement_signed_at.
+    def sign_agreement
+      scholarship = @event_registration.scholarships.first
+      unless scholarship
+        redirect_to registration_scholarship_path(@event_registration.slug)
+        return
+      end
+
+      if params[:agreement] == "yes"
+        scholarship.update!(agreement_signed: true) unless scholarship.agreement_signed?
+        redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks — your agreement has been recorded."
+      else
+        redirect_to registration_scholarship_path(@event_registration.slug), alert: "Please select Yes to agree to complete the tasks."
+      end
+    end
+
     # CE hours status: hours, amount owed, and license number.
     def ce
       case params[:checkout]
