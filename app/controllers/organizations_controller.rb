@@ -25,7 +25,7 @@ class OrganizationsController < ApplicationController
                                                 .group(:organization_id)
                                                 .distinct
                                                 .count(:person_id)
-      @program_statuses = organization_program_statuses(org_ids)
+      @program_statuses = Organization.program_statuses_by_id(org_ids)
 
       render :organization_results
     else
@@ -196,21 +196,6 @@ class OrganizationsController < ApplicationController
   end
 
   private
-
-  # Bulk program status (:new / :ongoing / :reinstated) for the listed orgs,
-  # keyed by id — mirrors Organization#program_status (no recipient context) but
-  # avoids per-row affiliation loads. An org with no facilitator affiliations is
-  # :new; with facilitators but none currently active it is :reinstated;
-  # otherwise :ongoing.
-  def organization_program_statuses(org_ids)
-    facilitator_scope = Affiliation.facilitators.where(organization_id: org_ids)
-    with_facilitators = facilitator_scope.distinct.pluck(:organization_id).to_set
-    with_active = facilitator_scope.active.distinct.pluck(:organization_id).to_set
-    org_ids.index_with do |id|
-      next :new if with_facilitators.exclude?(id)
-      with_active.include?(id) ? :ongoing : :reinstated
-    end
-  end
 
   def set_organization
     @organization = Organization.includes(
