@@ -61,7 +61,7 @@ class FormBuilderService
   # Header questions created by each section's builder method
   SECTION_HEADERS = {
     person_identifier: [],
-    person_contact_info: [ "Contact Information", "Mailing Address", "Agency / Organization Information" ],
+    person_contact_info: [ "Contact Information", "Mailing Address", "Organization Information" ],
     person_background: [ "Background Information" ],
     professional_info: [ "Professional Information" ],
     marketing: [ "Marketing" ],
@@ -81,9 +81,9 @@ class FormBuilderService
     person_contact_info: [
       "Primary Email Type", "Preferred Nickname", "Pronouns", "Secondary Email", "Secondary Email Type",
       "Street Address", "Address Type", "City", "State / Province", "Zip / Postal Code",
-      "Phone", "Phone Type", "Agency / Organization Name", "Position / Title",
-      "Agency Street Address", "Agency City", "Agency State / Province", "Agency Zip / Postal Code",
-      "Agency Type", "Agency Website"
+      "Phone", "Phone Type", "Organization Name", "Position / Title",
+      "Organization Street Address", "Organization City", "Organization State / Province", "Organization Zip / Postal Code",
+      "Organization Type", "Organization Website"
     ],
     person_background: [ "Racial / Ethnic Identity" ],
     professional_info: [ "Primary sector", "Additional sectors", "Primary Age Group(s) Served", "Additional Age Group(s) Served" ],
@@ -394,26 +394,26 @@ class FormBuilderService
                         key: "phone_type", group: "person_contact_info", required: true,
                         width: :half, options: %w[Work Personal])
 
-    position = add_header(form, position, "Agency / Organization Information", group: "person_contact_info")
-    position = add_field(form, position, "Agency / Organization Name", :free_form_input_one_line,
+    position = add_header(form, position, "Organization Information", group: "person_contact_info")
+    position = add_field(form, position, "Organization Name", :free_form_input_one_line,
                          key: "agency_name", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Position / Title", :free_form_input_one_line,
                          key: "agency_position", group: "person_contact_info", required: false, width: :half)
-    position = add_field(form, position, "Agency Street Address", :free_form_input_one_line,
+    position = add_field(form, position, "Organization Street Address", :free_form_input_one_line,
                          key: "agency_street", group: "person_contact_info", required: false)
-    position = add_field(form, position, "Agency City", :free_form_input_one_line,
+    position = add_field(form, position, "Organization City", :free_form_input_one_line,
                          key: "agency_city", group: "person_contact_info", required: false, width: :third)
-    position = add_field(form, position, "Agency State / Province", :free_form_input_one_line,
+    position = add_field(form, position, "Organization State / Province", :free_form_input_one_line,
                          key: "agency_state", group: "person_contact_info", required: false, width: :third)
-    position = add_field(form, position, "Agency Zip / Postal Code", :free_form_input_one_line,
+    position = add_field(form, position, "Organization Zip / Postal Code", :free_form_input_one_line,
                          key: "agency_zip", group: "person_contact_info", required: false, width: :third)
-    position = add_field(form, position, "Agency Type", :single_select_radio,
+    position = add_field(form, position, "Organization Type", :single_select_radio,
                          key: "agency_type", group: "person_contact_info", required: false,
                          options: [
                            "501c3/nonprofit", "For-profit", "Government agency",
                            "Other (please specify below)"
                          ])
-    position = add_field(form, position, "Agency Website", :free_form_input_one_line,
+    position = add_field(form, position, "Organization Website", :free_form_input_one_line,
                          key: "agency_website", group: "person_contact_info", required: false)
     position
   end

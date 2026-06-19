@@ -1197,7 +1197,7 @@ puts "Creating organization-link demo registrants on the flagship training…"
 # the earlier affiliation backfill / form-fill passes leave these registrants
 # exactly as configured here.
 if facilitator_training && registration_form
-  # "Pending" only exists when the form has the Agency / Organization Name field,
+  # "Pending" only exists when the form has the Organization Name field,
   # which lives in the person_contact_info section the dev form otherwise omits.
   unless registration_form.form_fields.exists?(field_identifier: "agency_name")
     FormBuilderService.update_sections!(
