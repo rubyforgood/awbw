@@ -145,6 +145,17 @@ RSpec.describe "Events::Registrations", type: :request do
     end
   end
 
+  describe "GET /registration/:slug/questions" do
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "renders the closing-details page with a contact link" do
+      get registration_questions_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Questions &amp; next steps")
+      expect(response.body).to include(contact_us_path)
+    end
+  end
+
   describe "POST /registration/:slug/resend_confirmation" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 

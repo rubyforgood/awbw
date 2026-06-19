@@ -9,12 +9,6 @@ RSpec.describe MagicTicketCallouts do
   end
 
   describe "#cards" do
-    it "is empty when nothing applies" do
-      event.update!(event_details: nil, ce_hours_details: nil)
-      registration.update!(w9_requested: false, invoice_requested: false)
-      expect(described_class.new(registration).cards).to be_empty
-    end
-
     it "includes the invoice card only when an invoice was requested" do
       registration.update!(invoice_requested: false)
       expect(card_titles(registration)).not_to include("View invoice")
@@ -58,7 +52,15 @@ RSpec.describe MagicTicketCallouts do
       expect(card_titles(registration)).not_to include("Scholarship")
     end
 
-    it "orders cards: event details, CE hours, scholarship, W-9, invoice" do
+    it "always ends with the reference 'Questions & next steps' card" do
+      event.update!(event_details: nil, ce_hours_details: nil)
+      registration.update!(w9_requested: false, invoice_requested: false, scholarship_requested: false)
+      cards = described_class.new(registration).cards
+      expect(cards.map(&:title)).to eq([ "Questions & next steps" ])
+      expect(cards.last.trailing_icon).to eq("fa-solid fa-circle-info")
+    end
+
+    it "orders cards: event details, CE hours, scholarship, W-9, invoice, questions" do
       event.update!(event_details: "Bring supplies", ce_hours_details: "6 hours")
       registration.update!(w9_requested: true, invoice_requested: true, scholarship_requested: true)
       expect(card_titles(registration)).to eq([
@@ -66,7 +68,8 @@ RSpec.describe MagicTicketCallouts do
         event.ce_hours_details_label,
         "Scholarship",
         "Download W-9",
-        "View invoice"
+        "View invoice",
+        "Questions & next steps"
       ])
     end
   end
