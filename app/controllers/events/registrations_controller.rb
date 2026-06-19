@@ -20,6 +20,8 @@ module Events
       when "cancelled"
         flash.now[:alert] = "Payment was cancelled. You are registered for this event but payment may still be due."
       end
+
+      @just_registered = params[:registered].present? || params[:checkout] == "success"
     end
 
     def invoice

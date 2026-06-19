@@ -69,7 +69,7 @@ module Events
           checkout_session = create_stripe_checkout_session(registration, result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
         else
-          redirect_to registration_ticket_path(registration.slug),
+          redirect_to registration_ticket_path(registration.slug, registered: true),
                       notice: "You have been successfully registered!"
         end
       else

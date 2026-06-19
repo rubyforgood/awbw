@@ -81,6 +81,23 @@ RSpec.describe "Events::Registrations", type: :request do
         expect(response).to have_http_status(:not_found)
       end
     end
+
+    context "just-registered banner" do
+      it "shows a 'You're registered!' banner when arriving from a fresh registration" do
+        get registration_ticket_path(registration.slug, registered: true)
+        expect(response.body).to include("You're registered!")
+      end
+
+      it "shows the banner after a successful Stripe checkout" do
+        get registration_ticket_path(registration.slug, checkout: "success")
+        expect(response.body).to include("You're registered!")
+      end
+
+      it "omits the banner on a plain ticket view" do
+        get registration_ticket_path(registration.slug)
+        expect(response.body).not_to include("You're registered!")
+      end
+    end
   end
 
   describe "GET /registration/:slug/invoice" do
