@@ -40,6 +40,12 @@ class FormField < ApplicationRecord
   ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIER = "additional_age_group"
   AGE_GROUP_FIELD_IDENTIFIERS = [ PRIMARY_AGE_GROUP_FIELD_IDENTIFIER, ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIER ].freeze
 
+  # The payment-method field. Its answer options ("Credit card (now)", etc.) are
+  # wired to Stripe charge logic in the controllers, so they must not be edited
+  # casually from the form builder — the editor shows them read-only unless the
+  # admin override is present.
+  PAYMENT_METHOD_FIELD_IDENTIFIER = "payment_method"
+
   # The generic free-text option label that lets a respondent supply their own
   # value; a chosen "Other" answer is stored as "Other" or "Other: <text>".
   OTHER_OPTION_PREFIX = "Other"
@@ -161,6 +167,13 @@ class FormField < ApplicationRecord
 
   def selectable?
     answer_type.in?(SELECTABLE_ANSWER_TYPES)
+  end
+
+  # True for fields whose answer options are tied to backend logic (currently the
+  # payment-method field's Stripe wiring) and so should be shown read-only in the
+  # form builder rather than freely edited.
+  def fixed_options?
+    field_identifier == PAYMENT_METHOD_FIELD_IDENTIFIER
   end
 
   def html_id
