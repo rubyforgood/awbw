@@ -164,4 +164,27 @@ RSpec.describe "Events::Callouts", type: :request do
       end
     end
   end
+
+  describe "GET /registration/:slug/scholarship" do
+    let(:event)        { create(:event, cost_cents: 10_000) }
+    let(:registration) { create(:event_registration, event: event, scholarship_requested: true) }
+    let(:scholarship)  { create(:scholarship, recipient: registration.registrant, amount_cents: 5_000) }
+    let!(:allocation)  { create(:allocation, source: scholarship, allocatable: registration, amount: 5_000) }
+
+    it "shows the agreement as needed until it is signed" do
+      get registration_scholarship_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Agreement needed")
+      expect(response.body).not_to include("Agreement signed")
+    end
+
+    it "shows the agreement as signed once the flag is set" do
+      scholarship.update!(agreement_signed: true)
+      get registration_scholarship_path(registration.slug)
+
+      expect(response.body).to include("Agreement signed")
+      expect(response.body).not_to include("Agreement needed")
+    end
+  end
 end

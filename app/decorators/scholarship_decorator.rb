@@ -52,4 +52,8 @@ class ScholarshipDecorator < ApplicationDecorator
   def tasks_completed?
     object.tasks_completed?
   end
+
+  def agreement_signed?
+    object.agreement_signed?
+  end
 end

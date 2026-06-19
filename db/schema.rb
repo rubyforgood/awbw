@@ -834,6 +834,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_113355) do
     t.index ["windows_type_id"], name: "index_organizations_on_windows_type_id"
   end
 
+  create_table "other_responses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "kind", null: false
+    t.string "normalized_text", null: false
+    t.bigint "person_id", null: false
+    t.bigint "promotable_id"
+    t.string "promotable_type"
+    t.bigint "source_form_answer_id"
+    t.string "status", default: "pending", null: false
+    t.string "text", null: false
+    t.datetime "updated_at", null: false
+    t.index ["person_id", "kind", "normalized_text"], name: "index_other_responses_on_person_kind_text", unique: true
+    t.index ["person_id"], name: "index_other_responses_on_person_id"
+    t.index ["promotable_type", "promotable_id"], name: "index_other_responses_on_promotable"
+    t.index ["source_form_answer_id"], name: "index_other_responses_on_source_form_answer_id"
+  end
+
   create_table "pay_charges", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount", null: false
     t.integer "amount_refunded"
@@ -1189,6 +1206,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_113355) do
   end
 
   create_table "scholarships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.boolean "agreement_signed", default: false, null: false
     t.integer "amount_cents", default: 0, null: false
     t.datetime "created_at", null: false
     t.bigint "grant_id"
@@ -1738,6 +1756,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_113355) do
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"
+  add_foreign_key "other_responses", "form_answers", column: "source_form_answer_id"
+  add_foreign_key "other_responses", "people"
   add_foreign_key "pay_charges", "pay_customers", column: "customer_id"
   add_foreign_key "pay_charges", "pay_subscriptions", column: "subscription_id"
   add_foreign_key "pay_payment_methods", "pay_customers", column: "customer_id"

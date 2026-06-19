@@ -159,6 +159,30 @@ RSpec.describe "Scholarships", type: :request do
     end
   end
 
+  describe "scholarship agreement toggle" do
+    it "renders the agreement toggle on the edit form" do
+      get edit_scholarship_path(scholarship)
+
+      expect(response.body).to include("Scholarship agreement")
+      expect(response.body).to match(/name="scholarship\[agreement_signed\]"/)
+    end
+
+    it "persists the agreement_signed flag through update" do
+      expect(scholarship.agreement_signed?).to be(false)
+
+      patch scholarship_path(scholarship), params: { scholarship: { agreement_signed: "1" } }
+
+      expect(scholarship.reload.agreement_signed?).to be(true)
+    end
+
+    it "shows the agreement status on the show page" do
+      scholarship.update!(agreement_signed: true)
+      get scholarship_path(scholarship)
+
+      expect(response.body).to include("Agreement signed")
+    end
+  end
+
   describe "POST /scholarships from the registration Add link" do
     it "returns to the event registration edit page on create (symmetric with View)" do
       expect {

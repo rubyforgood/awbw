@@ -55,15 +55,26 @@
             <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount awarded</p>
             <p class="mt-1 text-3xl font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@scholarship.amount_cents) %></p>
           </div>
-          <% if @scholarship.tasks_completed? %>
-            <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-3 py-1 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
-              <i class="fa-solid fa-circle-check"></i> Tasks completed
-            </span>
-          <% else %>
-            <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
-              <i class="fa-solid fa-clock"></i> Tasks outstanding
-            </span>
-          <% end %>
+          <div class="flex flex-wrap items-center gap-2">
+            <% if @scholarship.tasks_completed? %>
+              <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-3 py-1 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
+                <i class="fa-solid fa-circle-check"></i> Tasks completed
+              </span>
+            <% else %>
+              <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
+                <i class="fa-solid fa-clock"></i> Tasks outstanding
+              </span>
+            <% end %>
+            <% if @scholarship.agreement_signed? %>
+              <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-3 py-1 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
+                <i class="fa-solid fa-file-signature"></i> Agreement signed
+              </span>
+            <% else %>
+              <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
+                <i class="fa-solid fa-file-signature"></i> Agreement needed
+              </span>
+            <% end %>
+          </div>
         </div>
 
         <% if grant %>

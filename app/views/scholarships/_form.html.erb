@@ -111,6 +111,22 @@
         </div>
       </div>
     <% end %>
+
+    <%# Scholarship agreement: an informational toggle shown in either layout,
+        recording whether the recipient has signed their scholarship agreement.
+        It surfaces back to the recipient on their scholarship callout page. %>
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+      <div>
+        <p class="text-xs font-medium text-gray-600">Scholarship agreement</p>
+        <p class="text-xs text-gray-400">Signed agreement on file from the recipient</p>
+      </div>
+      <label class="flex items-center gap-2.5 cursor-pointer">
+        <%= f.check_box :agreement_signed, class: "sr-only peer" %>
+        <span class="text-sm text-gray-400 peer-checked:hidden">Not signed</span>
+        <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Signed</span>
+        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+      </label>
+    </div>
   </div>
 </section>
 
