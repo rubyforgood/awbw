@@ -149,13 +149,13 @@ class EventRegistration < ApplicationRecord
       ), 0)
     SQL
   }
-  scope :transferred, -> { where.not(transferred_from_id: nil) }
+  scope :paid_via_previous_registration, -> { where.not(transferred_from_id: nil) }
   scope :payment_status, ->(value) {
     case value
     when "paid" then paid_in_full
     when "unpaid" then not_paid_in_full
     when "intends_to_pay" then where(intends_to_pay: true)
-    when "previous_registration" then transferred
+    when "previous_registration" then paid_via_previous_registration
     else all
     end
   }
@@ -228,20 +228,30 @@ class EventRegistration < ApplicationRecord
   # surfaces (rosters, CSV exports, dashboard metrics) must keep using `paid?` /
   # `paid_in_full?` so they still reflect the real balance owed.
   def payment_access_granted?
-    paid? || intends_to_pay? || transferred?
+    # A registrant transferred OUT to another event isn't attending this one, so
+    # they get no access here even though the original payment still lives on it.
+    return false if transferred_out?
+    paid? || intends_to_pay?
+  end
+
+  # True when this registration's registrant was transferred to a different
+  # event (its inactive attendance status). It's the event they're NOT attending.
+  def transferred_out?
+    status == "transferred"
   end
 
   # True when this registration was created by transferring the registrant from
-  # an earlier event, so its fee is considered covered by that prior payment.
-  def transferred?
+  # an earlier event, so its fee is covered by that prior payment. This is the
+  # event they ARE attending; its payment status reads "Previous reg".
+  def paid_via_previous_registration?
     transferred_from_id.present?
   end
 
   # Human-readable payment status for rosters and CSV exports. Assumes the event
-  # has a cost — callers show nothing for free events. A transferred registration
-  # reports "Previous registration" since the fee was paid on the original event.
+  # has a cost — callers show nothing for free events. A registration created by
+  # a transfer reports "Previous reg" since the fee was paid on the original event.
   def payment_status_label
-    return "Previous registration" if transferred?
+    return "Previous reg" if paid_via_previous_registration?
     return "Paid" if paid_in_full?
     return "Intends to pay" if intends_to_pay?
     "Due"

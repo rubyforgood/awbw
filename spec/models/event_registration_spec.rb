@@ -373,25 +373,38 @@ RSpec.describe EventRegistration, type: :model do
       expect(source.reload.transferred_to).to eq(transferred)
     end
 
-    it "knows it was transferred" do
-      expect(transferred).to be_transferred
-      expect(source).not_to be_transferred
+    it "distinguishes the event being left from the one being attended" do
+      # The new registration is "paid via previous registration" (attending);
+      # the source becomes "transferred out" (not attending).
+      source.update!(status: "transferred")
+      expect(transferred).to be_paid_via_previous_registration
+      expect(transferred).not_to be_transferred_out
+      expect(source).to be_transferred_out
+      expect(source).not_to be_paid_via_previous_registration
     end
 
     describe "#payment_status_label" do
-      it "is 'Previous registration' for a transferred registration" do
-        expect(transferred.payment_status_label).to eq("Previous registration")
+      it "is 'Previous reg' for a registration created by a transfer" do
+        expect(transferred.payment_status_label).to eq("Previous reg")
       end
 
-      it "falls back to the usual labels when not transferred" do
+      it "falls back to the usual labels otherwise" do
         expect(source.payment_status_label).to eq("Due").or eq("Paid")
       end
     end
 
     describe "#payment_access_granted?" do
-      it "is true for a transferred registration even with no allocations" do
+      it "is denied for a registration whose registrant was transferred out, even when paid" do
+        event = create(:event, cost_cents: 1099)
+        reg = create(:event_registration, event: event, status: "transferred")
+        payment = create(:payment, person: reg.registrant, amount_cents: 1099, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: reg, amount: 1099)
+        expect(reg.payment_access_granted?).to be false
+      end
+
+      it "is not granted by the transfer alone on the attended event (no allocations)" do
         reg = create(:event_registration, event: create(:event, cost_cents: 1099), transferred_from: source)
-        expect(reg.payment_access_granted?).to be true
+        expect(reg.payment_access_granted?).to be false
       end
     end
   end

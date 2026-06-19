@@ -21,7 +21,7 @@
   </div>
 
   <div class="p-4">
-    <% if event_registration.transferred? %>
+    <% if event_registration.paid_via_previous_registration? %>
       <% source = event_registration.transferred_from %>
       <div class="mb-4 flex items-start gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-700">
         <i class="fa-solid fa-right-left mt-0.5"></i>
@@ -45,7 +45,7 @@
           <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount allocated</dt>
           <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(paid_cents) %></dd>
         </div>
-        <% amount_due = due_cents > 0 && !event_registration.transferred? %>
+        <% amount_due = due_cents > 0 && !event_registration.paid_via_previous_registration? %>
         <div class="rounded-lg border px-4 py-3 <%= amount_due ? "border-amber-300 bg-amber-50" : "border-gray-300 bg-gray-50" %>">
           <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</dt>
           <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= amount_due ? "text-amber-700" : "text-gray-500" %>">

@@ -2,7 +2,7 @@ module EventRegistrationServices
   # Moves a registrant from one event to another by creating a new registration
   # on the destination event linked back to the original, and marking the
   # original as "transferred". The payment/allocations stay on the original; the
-  # new registration shows a "Previous registration" payment status (fee covered
+  # new registration shows a "Previous reg" payment status (fee covered
   # by the prior payment), so nothing is owed on the destination event.
   class Transfer
     Result = Struct.new(:registration, :error, keyword_init: true) do
