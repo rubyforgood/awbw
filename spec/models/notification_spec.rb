@@ -289,11 +289,11 @@ RSpec.describe Notification do
         fyi_plain = create(:notification, email_subject: "AWBW Portal: [FYI] New event registration by Jane to Art Show")
         fyi_scholarship = create(:notification, email_subject: "AWBW Portal: [FYI] New event registration scholarship by Jane to Art Show")
 
-        plain_results = Notification.search_by_params(email_topic: "Event: event registration confirmed")
+        plain_results = Notification.search_by_params(email_topic: "Event: event registration received")
         expect(plain_results).to include(plain_confirmed)
         expect(plain_results).not_to include(scholarship_confirmed)
 
-        scholarship_results = Notification.search_by_params(email_topic: "Event: event registration scholarship confirmed")
+        scholarship_results = Notification.search_by_params(email_topic: "Event: event registration scholarship received")
         expect(scholarship_results).to include(scholarship_confirmed)
         expect(scholarship_results).not_to include(plain_confirmed)
 
@@ -315,11 +315,11 @@ RSpec.describe Notification do
         expect(results).not_to include(welcome_notification)
       end
 
-      it 'Event: event registration confirmed does not return cancelled emails' do
+      it 'Event: event registration received does not return cancelled emails' do
         confirmed = create(:notification, email_subject: "AWBW Portal: Event registration received for Art Show")
         cancelled = create(:notification, email_subject: "AWBW Portal: Event registration cancelled for Art Show")
 
-        results = Notification.search_by_params(email_topic: "Event: event registration confirmed")
+        results = Notification.search_by_params(email_topic: "Event: event registration received")
         expect(results).to include(confirmed)
         expect(results).not_to include(cancelled)
       end
