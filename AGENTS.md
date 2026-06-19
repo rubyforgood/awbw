@@ -57,7 +57,7 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~69 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~70 files |
 | `app/views/` | ERB templates | ~504 files |
 | `app/decorators/` | Draper decorators for view logic | ~38 files |
 | `app/policies/` | ActionPolicy authorization rules | ~49 files |
@@ -197,7 +197,7 @@ end
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
 - `ReminderRecipientFilter` — Decides which event registrations stay checked on the bulk reminder page given the admin's filters (matches in memory, returns matching ids)
-- `MagicTicketCallouts` — Code-defined ("magic") ticket callout cards (event details, CE hours, requested W-9/invoice), each with its own visibility rule; rendered through the same `_callout_card` partial as admin-configured `RegistrationTicketCallout`s
+- `MagicTicketCallouts` — Code-defined ("magic") ticket callout cards (payment, certificate, scholarship, CE hours, art supplies, forms, handouts, portal, videoconference, FAQ), each with its own visibility rule; rendered through the same `_callout_card` partial as admin-configured `RegistrationTicketCallout`s. Their public show pages live under `app/views/events/callouts/` and are served by `Events::CalloutsController` (slug-authorized, no login)
 
 ### Notifications
 

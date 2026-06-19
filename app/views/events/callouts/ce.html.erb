@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "#{@event.ce_hours_details_label} — #{@event.title}") %>
-<%= render layout: "events/registrations/callout_page", locals: { title: @event.ce_hours_details_label } do %>
+<%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_details_label } do %>
   <% if @event_registration.ce_credit_requested? %>
     <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div>

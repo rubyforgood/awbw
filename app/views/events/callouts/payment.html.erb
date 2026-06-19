@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "Payment — #{@event.title}") %>
-<%= render layout: "events/registrations/callout_page", locals: { title: "Payment" } do %>
+<%= render layout: "events/callouts/callout_page", locals: { title: "Payment" } do %>
   <% if @allocations.any? %>
     <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Payment history</p>
     <div class="divide-y divide-gray-100">

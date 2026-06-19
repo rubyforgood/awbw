@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "Handouts — #{@event.title}") %>
-<%= render layout: "events/registrations/callout_page", locals: { title: "Handouts" } do %>
+<%= render layout: "events/callouts/callout_page", locals: { title: "Handouts" } do %>
   <% if @handout_cards.any? %>
     <div class="space-y-3">
       <% @handout_cards.each do |card| %>

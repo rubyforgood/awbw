@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "Videoconference — #{@event.title}") %>
-<%= render layout: "events/registrations/callout_page", locals: { title: "Videoconference" } do %>
+<%= render layout: "events/callouts/callout_page", locals: { title: "Videoconference" } do %>
   <div class="space-y-6">
     <% if @event.videoconference_url.present? %>
       <div>
