@@ -93,6 +93,13 @@ RSpec.describe EventDashboard do
       create(:categorizable_item, category: setting2, categorizable: person2)
       create(:categorizable_item, category: setting_excluded, categorizable: cancelled_person)
 
+      # Age groups (AgeRange categories) tagged on registrant profiles, backing the
+      # "All age groups" breakdown; the excluded one belongs to the cancelled person.
+      create(:categorizable_item, category: age_group1, categorizable: person1)
+      create(:categorizable_item, category: age_group1, categorizable: person2)
+      create(:categorizable_item, category: age_group2, categorizable: person2)
+      create(:categorizable_item, category: age_group_excluded, categorizable: cancelled_person)
+
       # Primary age group(s) served, captured as "primary_age_group" answers on
       # each registrant's registration submission (", "-joined AgeRange ids).
       # person1 → Adults; person2 → Adults + Teens; cancelled → Children (ignored).
@@ -325,6 +332,26 @@ RSpec.describe EventDashboard do
 
       it "maps each age group to its registrant ids" do
         map = dashboard.age_group_registrant_ids_by_category
+        expect(map[age_group1.id]).to contain_exactly(person1.id, person2.id)
+        expect(map[age_group2.id]).to contain_exactly(person2.id)
+      end
+    end
+
+    describe "all age groups (from profile tags)" do
+      it "returns unique AgeRange categories tagged across active registrants" do
+        expect(dashboard.all_age_groups).to contain_exactly(age_group1, age_group2)
+      end
+
+      it "counts distinct registrants per tagged age group" do
+        expect(dashboard.all_age_group_counts).to eq(age_group1.id => 2, age_group2.id => 1)
+      end
+
+      it "returns the registrant ids tagged with an age group" do
+        expect(dashboard.all_age_group_registrant_ids).to contain_exactly(person1.id, person2.id)
+      end
+
+      it "maps each tagged age group to its registrant ids" do
+        map = dashboard.all_age_group_registrant_ids_by_category
         expect(map[age_group1.id]).to contain_exactly(person1.id, person2.id)
         expect(map[age_group2.id]).to contain_exactly(person2.id)
       end

@@ -3,6 +3,7 @@
 <% primary_sector_data = @dashboard.primary_sectors.map { |s| [ s.name, @dashboard.primary_sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>
 <% sector_data = @dashboard.sectors.map { |s| [ s.name, @dashboard.sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>
 <% age_group_data = @dashboard.age_groups.map { |c| [ c.name, @dashboard.age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
+<% all_age_group_data = @dashboard.all_age_groups.map { |c| [ c.name, @dashboard.all_age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 <% state_data = @dashboard.state_counts.sort_by { |_, count| -count } %>
 <% country_data = @dashboard.country_counts.sort_by { |_, count| -count } %>
 <% school_district_data = @dashboard.school_district_counts.sort_by { |_, count| -count } %>
@@ -199,6 +200,7 @@
   <% primary_sector_paths = @dashboard.primary_sectors.to_h { |s| [ s.name, registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids_by_sector.fetch(s.id, []).join("-")) ] } %>
   <% sector_paths = @dashboard.sectors.to_h { |s| [ s.name, registrants_event_path(@event, sector: s.id) ] } %>
   <% age_group_paths = @dashboard.age_groups.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
+  <% all_age_group_paths = @dashboard.all_age_groups.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.all_age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% state_paths = @dashboard.states.index_with { |state| registrants_event_path(@event, state: state) } %>
   <% country_paths = @dashboard.country_registrant_ids_by_country.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
   <% school_district_paths = @dashboard.school_district_registrant_ids_by_district.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
@@ -214,17 +216,17 @@
     <% end %>
     <%# States and countries use the addresses theme color (slate) for their map ramps. %>
     <% addresses_color = "#475569" %>
-    <%# Age group and Countries are both short; stack them in one column so the pair
-        fits within the height of the taller Primary sector pie card. %>
-    <div class="flex flex-col gap-6">
-      <%# Primary age group comes from the registration "ages served" answers;
-          always show the card (with a no-data box when empty). %>
-      <%= render "breakdown_card", title: "Primary age group", data: age_group_data, chart: :pie, palette: palette,
-                                   empty_message: "No age group responses from registration answers yet.", row_paths: age_group_paths %>
-      <% if country_data.any? %>
-        <%= render "breakdown_card", title: "Countries", data: country_data, chart: :world_map, palette: palette, map_color: addresses_color, row_paths: country_paths %>
-      <% end %>
-    </div>
+    <%# Primary age group comes from the registration "ages served" answers; All
+        age groups comes from registrants' AgeRange profile tags (primary +
+        additional), mirroring the Primary sector / All sectors pair. Always show
+        both cards (with a no-data box when empty). %>
+    <%= render "breakdown_card", title: "Primary age group", data: age_group_data, chart: :pie, palette: palette,
+                                 empty_message: "No age group responses from registration answers yet.", row_paths: age_group_paths %>
+    <%= render "breakdown_card", title: "All age groups", data: all_age_group_data, chart: :pie, palette: palette,
+                                 empty_message: "No age groups tagged on registrants yet.", row_paths: all_age_group_paths %>
+    <% if country_data.any? %>
+      <%= render "breakdown_card", title: "Countries", data: country_data, chart: :world_map, palette: palette, map_color: addresses_color, row_paths: country_paths %>
+    <% end %>
     <% if state_data.any? %>
       <%= render "breakdown_card", title: "States", data: state_data, chart: :map, palette: palette, map_color: addresses_color, row_paths: state_paths %>
     <% end %>

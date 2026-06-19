@@ -1278,6 +1278,24 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("100.0%")
       end
 
+      it "shows an all age groups breakdown from registrants' AgeRange profile tags" do
+        age_range = create(:category_type, name: "AgeRange")
+        teens = create(:category, name: "Teens", category_type: age_range)
+        create(:categorizable_item, category: teens, categorizable: person)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("All age groups")
+        expect(response.body).to include("Teens")
+      end
+
+      it "shows a no-data box for all age groups when registrants have no AgeRange tags" do
+        get background_event_path(event)
+
+        expect(response.body).to include("All age groups")
+        expect(response.body).to include("No age groups tagged on registrants yet.")
+      end
+
       it "shows a life experiences breakdown from registrants' StoryPopulation tags" do
         story_population = create(:category_type, name: "StoryPopulation")
         experience = create(:category, name: "Veterans", category_type: story_population)

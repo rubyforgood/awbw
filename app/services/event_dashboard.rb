@@ -444,6 +444,39 @@ class EventDashboard
       .transform_values { |rows| rows.map(&:first).uniq }
   end
 
+  # Every age group tagged on registrants (primary + additional AgeRange profile
+  # tags), backing the "All age groups" chart. The "Primary age group" chart
+  # instead reads from the registration "primary_age_group" answers (#age_groups).
+  def all_age_groups
+    @all_age_groups ||= Category.age_ranges
+      .where(id: all_age_group_counts.keys)
+      .ordered_by_position_and_name
+  end
+
+  # Distinct registrant count per age-group category, from profile AgeRange tags.
+  # Keyed by Category id, so it pairs with all_age_groups for the view.
+  def all_age_group_counts
+    @all_age_group_counts ||= age_range_items
+      .distinct
+      .group(:category_id)
+      .count(:categorizable_id)
+  end
+
+  # Registrant ids tagged with at least one age group.
+  def all_age_group_registrant_ids
+    @all_age_group_registrant_ids ||= age_range_items.distinct.pluck(:categorizable_id)
+  end
+
+  # Registrant ids per age-group category, keyed by Category id — the people
+  # behind each row, for drilling into the matching registrant list.
+  def all_age_group_registrant_ids_by_category
+    @all_age_group_registrant_ids_by_category ||= age_range_items
+      .distinct
+      .pluck(:category_id, :categorizable_id)
+      .group_by(&:first)
+      .transform_values { |rows| rows.map(&:last).uniq }
+  end
+
   # US states only — international registrants' regions (e.g. provinces) are
   # excluded so the States breakdown reflects domestic residents.
   def states
@@ -804,6 +837,15 @@ class EventDashboard
 
   def registrant_life_experience_ids
     @registrant_life_experience_ids ||= life_experience_items.distinct.pluck(:category_id)
+  end
+
+  # CategorizableItem rows tying registrants to AgeRange categories (primary +
+  # additional age-group tags) — the source for the "All age groups" breakdown.
+  def age_range_items
+    CategorizableItem
+      .joins(category: :category_type)
+      .where(categorizable_type: "Person", categorizable_id: registrant_ids)
+      .where(category_types: { name: "AgeRange" })
   end
 
   # CategorizableItem rows tying registrants to WorkshopEnvironment (workshop
