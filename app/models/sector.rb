@@ -70,6 +70,13 @@ class Sector < ApplicationRecord
   end
   scope :excluding_other, -> { where.not(name: OTHER_SECTOR_NAME) }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
+  scope :taggings_presence, ->(value) do
+    case value
+    when "with" then has_taggings
+    when "without" then where.missing(:sectorable_items)
+    else all
+    end
+  end
   scope :has_published_taggings, -> {
     subqueries = Tag::TAGGABLE_META.map do |_key, data|
       klass = data[:klass]
@@ -89,6 +96,7 @@ class Sector < ApplicationRecord
     filtered = filtered.sector_ids(params[:sector_ids]) if params[:sector_ids].present?
     filtered = filtered.published if params[:published] == "true"
     filtered = filtered.where(published: false) if params[:published] == "false"
+    filtered = filtered.taggings_presence(params[:has_taggings])
     filtered
   end
 
