@@ -151,10 +151,17 @@ class ScholarshipsController < ApplicationController
 
     if @allocatable.respond_to?(:event)
       return edit_event_registration_path(@allocatable) if params[:return_to] == "registration"
+      return recipients_return_path(@allocatable.event) if params[:return_to] == "recipients"
       return registrants_event_path(@allocatable.event)
     end
 
     edit_scholarship_path(@scholarship)
+  end
+
+  # Return to the recipients roster, scrolling back to the participant card the
+  # Edit link was opened from (its slug rides along in the participant param).
+  def recipients_return_path(event)
+    recipients_event_path(event, anchor: ("participant-#{params[:participant]}" if params[:participant].present?))
   end
 
   # After destroying, leave the scholarship entirely: back to the grant when that
@@ -163,7 +170,10 @@ class ScholarshipsController < ApplicationController
     return grant_return_path(grant) if grant_context?(grant)
 
     event = @allocatable.try(:event)
-    return registrants_event_path(event) if event
+    if event
+      return recipients_return_path(event) if params[:return_to] == "recipients"
+      return registrants_event_path(event)
+    end
     return grant_path(grant) if grant
 
     root_path

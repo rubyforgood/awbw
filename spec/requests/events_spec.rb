@@ -1186,6 +1186,17 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Tasks completed")
       end
 
+      it "links each scholarship to its edit page, returning to this recipients page" do
+        event.update!(cost_cents: 50_000)
+        registration = event.event_registrations.find_by(registrant: applicant)
+        scholarship = create(:scholarship, recipient: applicant, amount_cents: 50_000, tasks_completed: true)
+        create(:allocation, source: scholarship, allocatable: registration, amount: 50_000)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include(CGI.escapeHTML(edit_scholarship_path(scholarship, return_to: "recipients", participant: registration.slug)))
+      end
+
       it "names the funding donor when the scholarship is drawn from a grant" do
         registration = event.event_registrations.find_by(registrant: applicant)
         org = create(:organization, name: "Joyful Heart Foundation")
