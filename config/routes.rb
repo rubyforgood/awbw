@@ -128,6 +128,7 @@ Rails.application.routes.draw do
   resources :events do
     member do
       get :dashboard
+      get :sample_ticket
       get :background
       get :registrants
       get :details

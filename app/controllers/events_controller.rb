@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff, :details, :ce_hours ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder confirm_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder confirm_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
 
   def index
     authorize!
@@ -40,6 +40,32 @@ class EventsController < ApplicationController
     authorize! @event
     @event = @event.decorate
     @dashboard = EventDashboard.new(@event)
+  end
+
+  # Admin preview of the registration ticket. Builds an in-memory sample
+  # registration — never saved — with every registrant-chosen option turned on,
+  # so admins can see what their event's ticket looks like with all sections
+  # present. The ticket partial renders in `preview: true` mode, which disables
+  # the slug-dependent buttons (pay, resend, cancel) and points the invoice card
+  # at the event's blank invoice template, since the sample has no slug and
+  # isn't persisted.
+  def sample_ticket
+    authorize! @event, to: :dashboard?
+
+    registrant = Person.new(first_name: "Sample", last_name: "Registrant")
+    @event_registration = @event.event_registrations.new(
+      registrant: registrant,
+      status: "registered",
+      intends_to_pay: true,
+      w9_requested: true,
+      invoice_requested: true,
+      scholarship_requested: true,
+      shoutout: true,
+      ce_credit_requested: true,
+      ce_hours_requested: 6,
+      ce_license_number: "SAMPLE-12345",
+      created_at: Time.current
+    )
   end
 
   def background
