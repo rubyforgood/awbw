@@ -80,6 +80,11 @@ RSpec.describe EventMailer, type: :mailer do
       expect(body).to include("4")
       expect(body).to include("Check")
     end
+
+    it "includes the submitted payment total in the body" do
+      # Event cost (1099¢) × 4 attendees = $43.96
+      expect(mail.body.encoded).to include("$43.96")
+    end
   end
 
   describe "#event_registration_reminder" do
