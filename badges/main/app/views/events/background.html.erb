@@ -96,11 +96,6 @@
   </div>
 
   <%# ---- Registrant roster (full width) ---- %>
-  <% program_status_styles = {
-       new: "bg-green-100 text-green-700 border-green-200",
-       ongoing: "bg-blue-100 text-blue-700 border-blue-200",
-       reinstated: "bg-amber-100 text-amber-700 border-amber-200"
-     } %>
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mt-6">
     <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
       <h2 class="text-sm font-semibold text-gray-700">Registrants</h2>
@@ -155,7 +150,7 @@
                   <% if statuses.any? %>
                     <span class="flex flex-wrap gap-1">
                       <% statuses.each do |status| %>
-                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= program_status_styles[status] %>"><%= status.to_s.titleize %></span>
+                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
                       <% end %>
                     </span>
                   <% else %>
