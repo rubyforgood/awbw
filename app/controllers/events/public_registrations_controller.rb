@@ -59,7 +59,9 @@ module Events
         form: @form,
         form_params: registration_params,
         scholarship_requested: @scholarship,
-        person: current_user&.person
+        person: current_user&.person,
+        scholarship_form: @scholarship_form,
+        scholarship_params: scholarship_params
       )
 
       if result.success?
@@ -193,28 +195,6 @@ module Events
       end
 
       [ registration, scholarship ]
-    end
-
-    def create_or_update_scholarship_submission(person, scholarship_params)
-      scholarship_form = @event.scholarship_form
-      return unless scholarship_form
-
-      submission = FormSubmission.find_or_create_by!(
-        person: person, form: scholarship_form, role: "scholarship"
-      ) do |record|
-        record.event = @event
-      end
-
-      scholarship_params.each do |field_id, raw_value|
-        field = scholarship_form.form_fields.find_by(id: field_id)
-        next unless field
-        next if field.group_header?
-
-        text = raw_value.is_a?(Array) ? raw_value.reject(&:blank?).join(", ") : raw_value.to_s
-
-        record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(submitted_answer: text, question_name_when_answered: field.name)
-      end
     end
 
     def visible_form_fields

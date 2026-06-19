@@ -15,16 +15,21 @@ module EventRegistrationServices
     ADDITIONAL_FORMS_INVOICE = "Invoice".freeze
     ADDITIONAL_FORMS_W9 = "W-9".freeze
 
-    def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil)
-      new(event:, form:, form_params:, scholarship_requested:, person:).call
+    def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil,
+                  scholarship_form: nil, scholarship_params: {})
+      new(event:, form:, form_params:, scholarship_requested:, person:,
+          scholarship_form:, scholarship_params:).call
     end
 
-    def initialize(event:, form:, form_params:, scholarship_requested: false, person: nil)
+    def initialize(event:, form:, form_params:, scholarship_requested: false, person: nil,
+                   scholarship_form: nil, scholarship_params: {})
       @event = event
       @form = form
       @form_params = form_params
       @scholarship_requested = scholarship_requested
       @person = person
+      @scholarship_form = scholarship_form
+      @scholarship_params = scholarship_params || {}
       @errors = []
     end
 
@@ -52,11 +57,13 @@ module EventRegistrationServices
             send_notifications(existing)
           end
           submission = update_form_submission(person)
+          save_scholarship_submission(person)
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
         event_registration = create_event_registration(person)
         submission = create_form_submission(person)
+        save_scholarship_submission(person)
 
         send_notifications(event_registration)
 
@@ -324,6 +331,34 @@ module EventRegistrationServices
         field = @form.form_fields.find_by(id: field_id)
         next unless field
         next if field.group_header? || field.field_identifier == "confirm_email"
+
+        text = if raw_value.is_a?(Array)
+          raw_value.reject(&:blank?).join(", ")
+        else
+          raw_value.to_s
+        end
+
+        record = submission.form_answers.find_or_initialize_by(form_field: field)
+        record.update!(submitted_answer: text, question_name_when_answered: field.name)
+      end
+    end
+
+    # Persist the answers to the separate scholarship form (when one is asked and a
+    # scholarship was requested) as its own role: "scholarship" submission tied to
+    # the event, mirroring how the registration submission is saved above.
+    def save_scholarship_submission(person)
+      return unless @scholarship_requested && @scholarship_form && @scholarship_params.present?
+
+      submission = FormSubmission.find_or_create_by!(
+        person: person, form: @scholarship_form, role: "scholarship"
+      ) do |record|
+        record.event = @event
+      end
+
+      @scholarship_params.each do |field_id, raw_value|
+        field = @scholarship_form.form_fields.find_by(id: field_id)
+        next unless field
+        next if field.group_header?
 
         text = if raw_value.is_a?(Array)
           raw_value.reject(&:blank?).join(", ")
