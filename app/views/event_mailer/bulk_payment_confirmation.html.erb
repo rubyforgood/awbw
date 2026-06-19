@@ -1,4 +1,4 @@
-<h1>Bulk payment received</h1>
+<h1>Payment received</h1>
 
 <div style="margin-top: 36px; text-align: left;">
   <p>
@@ -6,7 +6,7 @@
   </p>
 
   <p>
-    We've received your bulk payment submission<%= " for the following #{@organization_name} event" if @event %>:
+    We've received your payment submission<%= " for the following #{@organization_name} event" if @event %>:
   </p>
 
   <% if @event %>
@@ -83,6 +83,6 @@
 
 <% if @ticket_url %>
   <p>
-    <a href="<%= @ticket_url %>" class="button">View bulk payment</a>
+    <a href="<%= @ticket_url %>" class="button">View payment</a>
   </p>
 <% end %>

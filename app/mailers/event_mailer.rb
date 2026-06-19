@@ -38,7 +38,7 @@ class EventMailer < ApplicationMailer
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW Portal: Bulk payment received for #{@event&.title}"
+      subject: "AWBW Portal: Payment received for #{@event&.title}"
     )
   end
 

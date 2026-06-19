@@ -1,8 +1,8 @@
-Bulk payment received
+Payment received
 
 Hello <%= @person.full_name %>,
 
-We've received your bulk payment submission<%= " for the following event" if @event %>:
+We've received your payment submission<%= " for the following event" if @event %>:
 
 <% if @event %><% if @event.respond_to?(:pre_title) && @event.pre_title.present? %><%= @event.pre_title %>
 <% end %><%= @event.title %>
@@ -17,7 +17,7 @@ We've received your bulk payment submission<%= " for the following event" if @ev
 <% if @attendees.any? %>Attendees:
 <% @attendees.each do |attendee| %>- <%= [ attendee["first_name"], attendee["last_name"] ].compact_blank.join(" ") %><%= " <#{attendee['email']}>" if attendee["email"].present? %>
 <% end %><% end %>
-<% if @ticket_url %>View bulk payment:
+<% if @ticket_url %>View payment:
 <%= @ticket_url %>
 <% end %>
 --
