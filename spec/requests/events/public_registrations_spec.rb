@@ -34,6 +34,41 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
   end
 
+  describe "POST create with an answer longer than its database column" do
+    # A real registration form maps answers onto person/address columns; `city`
+    # and friends are varchar(255). An over-length answer used to 500 with
+    # ActiveRecord::ValueTooLong — it should re-render the form with an error.
+    # These optional fields carry the identifiers the service maps to columns.
+    %w[first_name last_name primary_email mailing_street mailing_city mailing_state mailing_zip].each do |identifier|
+      let!("#{identifier}_field".to_sym) do
+        create(:form_field, form: form, field_identifier: identifier, name: identifier.humanize, required: false)
+      end
+    end
+
+    def fid(key)
+      form.form_fields.find_by!(field_identifier: key).id.to_s
+    end
+
+    it "re-renders the form with an error instead of raising" do
+      expect {
+        post event_public_registration_path(event),
+             params: { public_registration: { form_fields: {
+               essay_field.id.to_s => "this answer has plenty of words",
+               fid("first_name") => "Pat",
+               fid("last_name") => "Lee",
+               fid("primary_email") => "pat@example.com",
+               fid("mailing_street") => "1 Main St",
+               fid("mailing_city") => "a" * 256,
+               fid("mailing_state") => "CA",
+               fid("mailing_zip") => "90001"
+             } } }
+      }.not_to change(EventRegistration, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to match(/city is too long/i)
+    end
+  end
+
   describe "POST create with a maximum character count" do
     let!(:bio_field) do
       create(:form_field, form: form, answer_type: :free_form_input_one_line,

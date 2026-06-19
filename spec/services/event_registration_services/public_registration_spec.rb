@@ -24,6 +24,36 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
+  describe "an answer longer than its database column" do
+    # `city` (like the other mapped person/address columns) is a varchar(255).
+    # A longer answer must surface as a form error, not an ActiveRecord::ValueTooLong
+    # 500 that escapes the registration flow.
+    let(:params) do
+      base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+        field_id("mailing_street") => "1 Main St",
+        field_id("mailing_city") => "a" * 256,
+        field_id("mailing_state") => "CA",
+        field_id("mailing_zip") => "90001"
+      )
+    end
+
+    it "returns a failed result instead of raising" do
+      result = nil
+      expect {
+        result = described_class.call(event: event, form: form, form_params: params)
+      }.not_to raise_error
+
+      expect(result.success?).to be false
+      expect(result.errors.join).to match(/city.*too long/i)
+    end
+
+    it "does not create a registration" do
+      expect {
+        described_class.call(event: event, form: form, form_params: params)
+      }.not_to change(EventRegistration, :count)
+    end
+  end
+
   describe "primary service area tagging" do
     let!(:primary_sector) { create(:sector, name: "Healthcare") }
     let!(:other_sector) { create(:sector, name: "Education") }
