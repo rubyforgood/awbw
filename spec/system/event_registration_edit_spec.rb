@@ -106,6 +106,47 @@ RSpec.describe "Event registration edit page", type: :system do
         expect(page).to have_no_css("span", text: "Tasks completed")
       end
     end
+
+    it "links the grant's organization funder to its profile" do
+      organization = create(:organization, name: "Acme Foundation")
+      grant = create(:grant, donor: organization)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000, grant: grant)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Scholarship") do
+        expect(page).to have_text("Funded by")
+        expect(page).to have_link("Acme Foundation", href: organization_path(organization))
+      end
+    end
+
+    it "links the grant's person funder to its profile" do
+      funder = create(:person, first_name: "Dana", last_name: "Donor")
+      grant = create(:grant, :donated_by_person, donor: funder)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000, grant: grant)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Scholarship") do
+        expect(page).to have_link(funder.full_name, href: person_path(funder))
+      end
+    end
+
+    it "omits the funder line when the scholarship has no grant" do
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Scholarship") do
+        expect(page).to have_no_text("Funded by")
+      end
+    end
   end
 
   describe "shout out box" do
