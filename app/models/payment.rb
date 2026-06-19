@@ -20,12 +20,7 @@ class Payment < ApplicationRecord
   before_validation :assign_parties_from_sgids, if: :sgid_assigned?
   before_validation :auto_set_payer_type
 
-  # Virtual attributes backing the compound "Payer" and "Additional designation"
-  # dropdowns, which each search across both people and organizations. The
-  # selected value is a signed global id; on submit we resolve it back to a
-  # person/organization, set payer_type from the payer's kind, and fill the
-  # person_id / organization_id slots accordingly.
-  attr_writer :payer_sgid, :additional_designation_sgid
+  attr_accessor :payer_sgid, :additional_designation_sgid
 
   scope :by_type, ->(types) {
     return if types.blank?
@@ -81,18 +76,7 @@ class Payment < ApplicationRecord
     defined?(@additional_designation_sgid) ? locate_party(@additional_designation_sgid) : form_additional_designation
   end
 
-  # Memoize the computed default so repeated reads in a single render return the
-  # same string — to_sgid embeds an expiry timestamp and varies per call, which
-  # would otherwise stop the preselected option from matching the field value.
-  def payer_sgid
-    return @payer_sgid if defined?(@payer_sgid)
-    @computed_payer_sgid ||= form_payer&.to_sgid&.to_s
-  end
 
-  def additional_designation_sgid
-    return @additional_designation_sgid if defined?(@additional_designation_sgid)
-    @computed_additional_designation_sgid ||= form_additional_designation&.to_sgid&.to_s
-  end
 
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents

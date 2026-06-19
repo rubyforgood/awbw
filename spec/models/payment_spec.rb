@@ -139,8 +139,8 @@ RSpec.describe Payment, type: :model do
 
     it "exposes the current payer/designation as sgids for the form" do
       payment = build(:payment, person: person, organization: org, payer_type: "Organization")
-      expect(GlobalID::Locator.locate_signed(payment.payer_sgid)).to eq(org)
-      expect(GlobalID::Locator.locate_signed(payment.additional_designation_sgid)).to eq(person)
+      expect(GlobalID::Locator.locate_signed(payment.selected_payer.to_sgid.to_s)).to eq(org)
+      expect(GlobalID::Locator.locate_signed(payment.selected_additional_designation.to_sgid.to_s)).to eq(person)
     end
   end
 
