@@ -88,5 +88,32 @@ RSpec.describe EventInvoice do
       expect(item.unit_price_cents).to eq(150_000)
       expect(invoice.total_cents).to eq(1_200_000)
     end
+
+    context "with attendee names and emails submitted" do
+      before do
+        attendees = [
+          { first_name: "Ada", last_name: "Lovelace", email: "ada@example.com" },
+          { first_name: "Grace", last_name: "Hopper", email: "grace@example.com" }
+        ]
+        add_answer("bulk_payment_attendees", attendees.to_json)
+      end
+
+      it "lists each attendee's name and email under the line item" do
+        invoice = described_class.from_bulk_payment(submission)
+
+        item = invoice.line_items.first
+        expect(item.description).to eq("AWBW 2-Day Art Facilitator Training")
+        expect(item.details).to eq([
+          "Ada Lovelace — ada@example.com",
+          "Grace Hopper — grace@example.com"
+        ])
+      end
+    end
+
+    it "leaves attendee details empty when none were submitted" do
+      invoice = described_class.from_bulk_payment(submission)
+
+      expect(invoice.line_items.first.details).to eq([])
+    end
   end
 end
