@@ -1,0 +1,18 @@
+<%# Renders one registration ticket callout card. Used for both admin-configured
+    callouts and hard-coded defaults (e.g. RegistrationTicketCallout.view_invoice).
+    locals: callout (RegistrationTicketCallout), href (String), target (String, optional) %>
+<% theme = callout.theme %>
+<% opens_new_tab = local_assigns[:target].present? %>
+<%= link_to href, target: local_assigns[:target], rel: (opens_new_tab ? "noopener" : nil),
+              class: "flex items-center gap-3 rounded-xl border-2 #{theme[:border]} #{theme[:bg]} px-4 py-3 #{theme[:hover]} transition-colors" do %>
+  <i class="<%= callout.display_icon_class %> <%= theme[:icon] %> text-xl shrink-0"></i>
+
+  <div class="flex-1 min-w-0 text-left">
+    <p class="font-semibold <%= theme[:title] %>"><%= callout.title %></p>
+    <% if callout.subtitle.present? %>
+      <p class="text-sm <%= theme[:subtitle] %>"><%= callout.subtitle %></p>
+    <% end %>
+  </div>
+
+  <i class="fa-solid <%= callout.action? ? "fa-arrow-right" : "fa-circle-info" %> <%= theme[:icon] %> shrink-0"></i>
+<% end %>

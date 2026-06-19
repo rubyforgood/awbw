@@ -148,39 +148,19 @@
         <% end %>
       <% end %>
 
-      <% if event_registration.invoice_requested? %>
-        <%= link_to registration_invoice_path(event_registration.slug),
-                      target: "_blank", rel: "noopener",
-                      class: "flex items-center gap-3 rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors" do %>
-          <i class="fa-solid fa-file-invoice-dollar text-blue-500 text-xl shrink-0"></i>
-
-          <div class="flex-1 min-w-0 text-left">
-            <p class="font-semibold text-blue-900">View invoice</p>
-            <p class="text-sm text-blue-700">Itemized invoice for this registration</p>
-          </div>
-
-          <i class="fa-solid fa-arrow-right text-blue-500 shrink-0"></i>
-        <% end %>
-      <% end %>
+      <!-- View invoice (hard-coded default reference callout, shown on every registration) -->
+      <%= render "event_registrations/callout_card",
+                 callout: RegistrationTicketCallout.view_invoice,
+                 href: registration_invoice_path(event_registration.slug),
+                 target: "_blank" %>
 
       <!-- Custom ticket callouts (admin-configured: actions & reference reading) -->
       <% payment_access = event_registration.payment_access_granted? || @checkout_payment_status == "paid" %>
       <% event_registration.event.registration_ticket_callouts.each do |callout| %>
         <% next if callout.payment_access_gated && !payment_access %>
-        <% theme = callout.theme %>
-        <%= link_to event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug),
-                      class: "flex items-center gap-3 rounded-xl border-2 #{theme[:border]} #{theme[:bg]} px-4 py-3 #{theme[:hover]} transition-colors" do %>
-          <i class="<%= callout.display_icon_class %> <%= theme[:icon] %> text-xl shrink-0"></i>
-
-          <div class="flex-1 min-w-0 text-left">
-            <p class="font-semibold <%= theme[:title] %>"><%= callout.title %></p>
-            <% if callout.subtitle.present? %>
-              <p class="text-sm <%= theme[:subtitle] %>"><%= callout.subtitle %></p>
-            <% end %>
-          </div>
-
-          <i class="fa-solid <%= callout.action? ? "fa-arrow-right" : "fa-circle-info" %> <%= theme[:icon] %> shrink-0"></i>
-        <% end %>
+        <%= render "event_registrations/callout_card",
+                   callout: callout,
+                   href: event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug) %>
       <% end %>
 
       <!-- Divider -->
