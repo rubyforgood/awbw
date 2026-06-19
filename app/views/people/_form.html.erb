@@ -356,6 +356,13 @@
                       input_html: { class: "w-full" },
                       wrapper_html: { class: "w-full" } %>
         </div>
+
+        <div class="w-full sm:w-36">
+          <%= f.input :credentials,
+                      label: "Credentials",
+                      input_html: { class: "w-full" },
+                      wrapper_html: { class: "w-full" } %>
+        </div>
       </div>
     </div>
   </div>
@@ -400,6 +407,8 @@
                     selected: f.object.display_name_preference || "full_name" %>
 
           <%= f.input :profile_show_pronouns, label: "Show pronouns" %>
+
+          <%= f.input :profile_show_credentials, label: "Show credentials" %>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3"><%= f.input :profile_show_email, label: "Show email" %><%= f.input :profile_show_phone, label: "Show phone" %><%= f.input :profile_show_social_media, label: "Show social media" %></div>

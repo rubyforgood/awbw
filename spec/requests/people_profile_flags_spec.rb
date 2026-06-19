@@ -63,6 +63,36 @@ RSpec.describe "Person profile flag visibility", type: :request do
     end
   end
 
+  describe "#profile_show_credentials" do
+    before { person.update!(credentials: "LCSW") }
+
+    context "when false" do
+      before { person.update!(profile_show_credentials: false) }
+
+      it "hides credentials on own profile" do
+        sign_in owner_user
+        get person_path(person)
+        expect(response.body).not_to include("LCSW")
+      end
+    end
+
+    context "when true" do
+      before { person.update!(profile_show_credentials: true) }
+
+      it "shows credentials as a suffix on own profile" do
+        sign_in owner_user
+        get person_path(person)
+        expect(response.body).to include("LCSW")
+      end
+
+      it "shows credentials when admin views profile" do
+        sign_in admin
+        get person_path(person)
+        expect(response.body).to include("LCSW")
+      end
+    end
+  end
+
   describe "#profile_show_social_media" do
     context "when false" do
       before { person.update!(profile_show_social_media: false) }
