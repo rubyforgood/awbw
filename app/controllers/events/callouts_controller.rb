@@ -92,21 +92,17 @@ module Events
       @event = @event_registration.event
     end
 
-    # Builds the callout-card links shown on the forms page. W-9 and invoice only
-    # appear when the registrant requested them; the letter to supervisors is a
-    # shared resource shown whenever it has been seeded.
+    # Builds the callout-card links shown on the forms page. The W-9 and invoice
+    # are always available; the letter to supervisors follows when seeded.
     def build_form_cards
-      cards = []
-      if @event_registration.w9_requested?
-        cards << resource_card(icon: "fa-solid fa-file-pdf", title: "Download W-9",
-                               subtitle: "AWBW's W-9 tax form for your records",
-                               href: "/documents/awbw-w9.pdf", trailing_icon: "fa-solid fa-download")
-      end
-      if @event_registration.invoice_requested?
-        cards << resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
-                               subtitle: "Itemized invoice for this registration",
-                               href: registration_invoice_path(@event_registration.slug))
-      end
+      cards = [
+        resource_card(icon: "fa-solid fa-file-pdf", title: "Download W-9",
+                      subtitle: "AWBW's W-9 tax form for your records",
+                      href: "/documents/awbw-w9.pdf"),
+        resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
+                      subtitle: "Itemized invoice for this registration",
+                      href: registration_invoice_path(@event_registration.slug))
+      ]
       letter = Resource.find_by(title: "Letter to Supervisors")
       if letter
         cards << resource_card(icon: "fa-solid fa-file-arrow-down", title: "Letter to supervisors",
@@ -116,7 +112,7 @@ module Events
     end
 
     # A blue, new-tab callout card linking to an external/resource document.
-    def resource_card(icon:, title:, subtitle:, href:, trailing_icon: "fa-solid fa-arrow-up-right-from-square")
+    def resource_card(icon:, title:, subtitle:, href:, trailing_icon: "fa-solid fa-arrow-right")
       MagicTicketCallouts::Card.new(icon_class: icon, color: "blue", title: title, subtitle: subtitle,
                                     href: href, target: "_blank", trailing_icon: trailing_icon)
     end

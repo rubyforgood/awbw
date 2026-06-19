@@ -23,8 +23,8 @@ class MagicTicketCallouts
   # The visible cards for this registration, in display order.
   def cards
     [ payment_card, certificate_card, scholarship_status_card, ce_hours_card,
-      event_details_card, forms_card, handouts_card, portal_card,
-      videoconference_card, faq_card ].compact
+      event_details_card, videoconference_card, forms_card, handouts_card,
+      portal_card, faq_card ].compact
   end
 
   private
@@ -40,7 +40,7 @@ class MagicTicketCallouts
              title: "Payment",
              subtitle: due ? "#{MoneyFormatter.dollars_from_cents(registration.remaining_cost)} due — view your balance" : "Paid in full — view your payment history",
              href: registration_payment_path(registration.slug),
-             target: nil, trailing_icon: due ? "fa-solid fa-arrow-right" : "fa-solid fa-circle-info")
+             target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
   # Shown only once the certificate of completion is unlocked (training over,
@@ -76,7 +76,7 @@ class MagicTicketCallouts
              title: event.ce_hours_details_label,
              subtitle: ce_hours_subtitle(complete),
              href: registration_ce_path(registration.slug),
-             target: nil, trailing_icon: complete ? "fa-solid fa-circle-info" : "fa-solid fa-arrow-right")
+             target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
   def ce_hours_subtitle(complete)
@@ -114,14 +114,15 @@ class MagicTicketCallouts
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
-  # Always-present reference card. Its page explains Facilitator Portal access and
-  # links to the home screen.
+  # Always-present. Greyed out until the registrant has an account that can reach
+  # the portal, at which point it turns active (rose).
   def portal_card
-    Card.new(icon_class: "fa-solid fa-right-to-bracket", color: "rose",
+    access = registration.portal_access?
+    Card.new(icon_class: "fa-solid fa-right-to-bracket", color: access ? "rose" : "gray",
              title: "Facilitator Portal access",
-             subtitle: "Available once you complete both training days",
+             subtitle: access ? "Sign in to the Facilitator Portal" : "Available once you complete both training days",
              href: registration_portal_path(registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-circle-info")
+             target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
   # Shown when the event has a videoconference link. Its page has the join link
@@ -137,10 +138,10 @@ class MagicTicketCallouts
 
   # Always-present reference card linking to the training FAQ page.
   def faq_card
-    Card.new(icon_class: "fa-solid fa-circle-question", color: "purple",
+    Card.new(icon_class: "fa-solid fa-circle-question", color: "blue",
              title: "Frequently asked questions",
              subtitle: "Common questions about the 2-day training",
              href: registration_faq_path(registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-circle-info")
+             target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 end

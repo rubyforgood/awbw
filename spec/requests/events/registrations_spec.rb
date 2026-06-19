@@ -180,36 +180,37 @@ RSpec.describe "Events::Registrations", type: :request do
   describe "GET /registration/:slug/ce" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "shows requested hours, amount due, and license number" do
+    it "shows status, cost, and the license number on file" do
       registration.update!(ce_credit_requested: true, ce_hours_requested: 6, ce_license_number: "LIC123")
       get registration_ce_path(registration.slug)
       expect(response).to have_http_status(:success)
+      expect(response.body).to include("Requested")
       expect(response.body).to include("Hours requested")
-      expect(response.body).to include("LIC123")
       expect(response.body).to include("$150")
+      expect(response.body).to include("LIC123")
+    end
+
+    it "notes when the license number is not yet on file" do
+      registration.update!(ce_credit_requested: true, ce_hours_requested: 6, ce_license_number: nil)
+      get registration_ce_path(registration.slug)
+      expect(response.body).to include("We don't have your license number on file yet.")
     end
   end
 
   describe "GET /registration/:slug/forms" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "links to the W-9 and invoice only when requested" do
-      registration.update!(w9_requested: true, invoice_requested: true)
+    it "always links to the W-9 and invoice" do
       get registration_forms_path(registration.slug)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("/documents/awbw-w9.pdf")
       expect(response.body).to include(registration_invoice_path(registration.slug))
     end
 
-    it "omits the W-9 link when not requested" do
-      get registration_forms_path(registration.slug)
-      expect(response.body).not_to include("/documents/awbw-w9.pdf")
-    end
-
-    it "links to the letter-to-supervisors resource when present" do
+    it "links to the letter-to-supervisors resource below them when present" do
       letter = create(:resource, title: "Letter to Supervisors", kind: "Form")
       get registration_forms_path(registration.slug)
-      expect(response.body).to include(resource_path(letter))
+      expect(response.body.index("/documents/awbw-w9.pdf")).to be < response.body.index(resource_path(letter))
     end
   end
 

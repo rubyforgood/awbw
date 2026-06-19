@@ -32,7 +32,21 @@ RSpec.describe MagicTicketCallouts do
       create(:allocation, source: create(:payment), allocatable: registration, amount: event.cost_cents)
       paid = card(registration, "Payment")
       expect(paid.theme).to eq(DomainTheme.swatch("green"))
-      expect(paid.trailing_icon).to eq("fa-solid fa-circle-info")
+      expect(paid.trailing_icon).to eq("fa-solid fa-arrow-right")
+    end
+
+    it "uses the arrow trailing icon for every card" do
+      event.update!(ce_hours_details: "6 hours", videoconference_url: "https://example.zoom.us/j/1")
+      trailing = described_class.new(registration).cards.map(&:trailing_icon).uniq
+      expect(trailing).to eq([ "fa-solid fa-arrow-right" ])
+    end
+
+    it "greys the portal card until the registrant has an account with access" do
+      registration.registrant.user.update!(confirmed_at: nil)
+      expect(card(registration, "Facilitator Portal access").theme).to eq(DomainTheme.swatch("gray"))
+
+      registration.registrant.user.update!(confirmed_at: Time.current)
+      expect(card(registration, "Facilitator Portal access").theme).to eq(DomainTheme.swatch("rose"))
     end
 
     it "shows the certificate card only once it is available" do
@@ -82,10 +96,10 @@ RSpec.describe MagicTicketCallouts do
         "Scholarship",
         event.ce_hours_details_label,
         event.event_details_label,
+        "Videoconference",
         "Forms",
         "Handouts",
         "Facilitator Portal access",
-        "Videoconference",
         "Frequently asked questions"
       ])
     end

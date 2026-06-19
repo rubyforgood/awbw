@@ -2,18 +2,35 @@
 <% content_for(:page_title, "#{@event.ce_hours_details_label} — #{@event.title}") %>
 <%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_details_label } do %>
   <% if @event_registration.ce_credit_requested? %>
-    <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</p>
+      <% if @event_registration.paid_in_full? %>
+        <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
+          <i class="fa-solid fa-circle-check"></i> Paid
+        </span>
+      <% else %>
+        <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
+          <i class="fa-solid fa-clock"></i> Requested
+        </span>
+      <% end %>
+    </div>
+
+    <dl class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div>
         <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Hours requested</dt>
         <dd class="mt-1 text-lg font-semibold text-gray-900 tabular-nums"><%= @event_registration.ce_hours_requested || "—" %></dd>
       </div>
       <div>
-        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</dt>
+        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Cost (<%= @event_registration.ce_hours_requested.to_i %> &times; $<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>)</dt>
         <dd class="mt-1 text-lg font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@event_registration.ce_amount_owed_cents) %></dd>
       </div>
       <div>
         <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License number</dt>
-        <dd class="mt-1 text-lg font-semibold text-gray-900"><%= @event_registration.ce_license_number.presence || "—" %></dd>
+        <% if @event_registration.ce_license_provided? %>
+          <dd class="mt-1 text-lg font-semibold text-gray-900"><%= @event_registration.ce_license_number %></dd>
+        <% else %>
+          <dd class="mt-1 text-sm text-amber-700">We don't have your license number on file yet.</dd>
+        <% end %>
       </div>
     </dl>
   <% else %>
