@@ -54,10 +54,10 @@ class MagicTicketCallouts
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
-  # Action card shown once the registrant has requested or received a
-  # scholarship. Its page surfaces the award amount, funder, and tasks.
+  # Shown only when the registrant requested a scholarship. Its page surfaces the
+  # award amount, funder, and tasks once awarded.
   def scholarship_status_card
-    return unless registration.scholarship_requested? || registration.scholarship?
+    return unless registration.scholarship_requested?
     awarded = registration.scholarship?
     Card.new(icon_class: "fa-solid fa-award", color: DomainTheme.color_for(:scholarships).to_s,
              title: "Scholarship",
@@ -70,9 +70,9 @@ class MagicTicketCallouts
   # they have, becoming a reference card once requested with hours and a license
   # number on file. Shown when the event offers CE or the registrant asked for it.
   def ce_hours_card
-    return unless event.ce_hours_details.present? || registration.ce_credit_requested?
+    return unless registration.ce_credit_requested?
     complete = registration.ce_credit_requested? && registration.ce_hours_requested.present? && registration.ce_license_provided?
-    Card.new(icon_class: "fa-solid fa-graduation-cap", color: complete ? "indigo" : "orange",
+    Card.new(icon_class: "fa-solid fa-graduation-cap", color: "teal",
              title: event.ce_hours_details_label,
              subtitle: ce_hours_subtitle(complete),
              href: registration_ce_path(registration.slug),
@@ -88,7 +88,7 @@ class MagicTicketCallouts
   # "Art supplies & what to bring" — the event's own details page.
   def event_details_card
     return if event.event_details.blank?
-    Card.new(icon_class: "fa-solid fa-circle-info", color: "amber",
+    Card.new(icon_class: "fa-solid fa-palette", color: "blue",
              title: event.event_details_label,
              subtitle: "Important info for this event — please read",
              href: details_event_path(event, reg: registration.slug),
@@ -120,7 +120,7 @@ class MagicTicketCallouts
     access = registration.portal_access?
     Card.new(icon_class: "fa-solid fa-right-to-bracket", color: access ? "green" : "gray",
              title: "Facilitator Portal access",
-             subtitle: access ? "Sign in to the Facilitator Portal" : "Available once you complete both training days",
+             subtitle: access ? "Sign in to the Facilitator Portal" : "Complete both training days and pay your training fee to be granted access",
              href: registration_portal_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end

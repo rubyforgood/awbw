@@ -235,11 +235,19 @@ RSpec.describe "Events::Registrations", type: :request do
   describe "GET /registration/:slug/portal" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "renders portal info with a link to the home screen" do
+    it "shows the attendance and payment requirements, no home link until granted" do
       get registration_portal_path(registration.slug)
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("Facilitator Portal access")
-      expect(response.body).to include(root_path)
+      expect(response.body).to include("Attended both training days")
+      expect(response.body).to include("Training fee paid")
+      expect(response.body).not_to include("Go to the home screen")
+    end
+
+    it "shows the home-screen link once attendance and payment are met" do
+      registration.update!(status: "attended")
+      create(:allocation, allocatable: registration, amount: event.cost_cents)
+      get registration_portal_path(registration.slug)
+      expect(response.body).to include("Go to the home screen")
     end
   end
 

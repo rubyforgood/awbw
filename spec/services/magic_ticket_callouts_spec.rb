@@ -41,10 +41,11 @@ RSpec.describe MagicTicketCallouts do
       expect(trailing).to eq([ "fa-solid fa-arrow-right" ])
     end
 
-    it "greys the portal card until the registrant completes the training with an account" do
+    it "greys the portal card until the registrant attends and pays" do
       expect(card(registration, "Facilitator Portal access").theme).to eq(DomainTheme.swatch("gray"))
 
       registration.update!(status: "attended")
+      create(:allocation, allocatable: registration, amount: event.cost_cents)
       expect(card(registration, "Facilitator Portal access").theme).to eq(DomainTheme.swatch("green"))
     end
 
@@ -62,23 +63,26 @@ RSpec.describe MagicTicketCallouts do
       expect(card_titles(registration)).to include("Videoconference")
     end
 
-    it "shows the CE card when the event offers CE or the registrant requested it" do
+    it "shows the CE card only when the registrant requested CE credit" do
+      event.update!(ce_hours_details: "6 hours")
       expect(card_titles(registration)).not_to include(event.ce_hours_details_label)
       registration.update!(ce_credit_requested: true)
       expect(card_titles(registration)).to include(event.ce_hours_details_label)
     end
 
-    it "themes the CE card as action until requested with hours and a license, then reference" do
+    it "themes the CE card teal and reflects requested-vs-complete in the subtitle" do
       registration.update!(ce_credit_requested: true, ce_hours_requested: nil, ce_license_number: nil)
-      expect(card(registration, event.ce_hours_details_label).theme).to eq(DomainTheme.swatch("orange"))
+      incomplete = card(registration, event.ce_hours_details_label)
+      expect(incomplete.theme).to eq(DomainTheme.swatch("teal"))
+      expect(incomplete.subtitle).to eq("Add your CE hours and license number")
 
       registration.update!(ce_hours_requested: 6, ce_license_number: "LIC123")
       complete = card(registration, event.ce_hours_details_label)
-      expect(complete.theme).to eq(DomainTheme.swatch("indigo"))
+      expect(complete.theme).to eq(DomainTheme.swatch("teal"))
       expect(complete.subtitle).to eq("6 hours · $150 due")
     end
 
-    it "shows the scholarship card when requested or awarded" do
+    it "shows the scholarship card only when requested" do
       expect(card_titles(registration)).not_to include("Scholarship")
       registration.update!(scholarship_requested: true)
       expect(card(registration, "Scholarship").subtitle).to eq("Your scholarship request status")
@@ -88,7 +92,7 @@ RSpec.describe MagicTicketCallouts do
       event.update!(event_details: "Bring supplies", ce_hours_details: "6 hours",
                     videoconference_url: "https://example.zoom.us/j/123",
                     start_date: 3.days.ago, end_date: 2.days.ago)
-      registration.update!(status: "attended", scholarship_requested: true)
+      registration.update!(status: "attended", scholarship_requested: true, ce_credit_requested: true)
       expect(card_titles(registration)).to eq([
         "Payment",
         "Certificate of completion",
