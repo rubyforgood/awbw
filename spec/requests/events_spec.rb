@@ -94,6 +94,36 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /sample_ticket" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders a preview ticket for an unsaved sample registration" do
+        create(:registration_ticket_callout, event: event)
+        get sample_ticket_event_path(event)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Sample ticket preview")
+        expect(response.body).to include("Sample Registrant")
+        # Magic callout cards render (always-present "Forms" card) without raising
+        # on the unsaved sample's sentinel slug.
+        expect(response.body).to include("Forms")
+      end
+
+      it "does not create a registration" do
+        expect { get sample_ticket_event_path(event) }
+          .not_to change(EventRegistration, :count)
+      end
+    end
+
+    context "as non-admin" do
+      it "redirects" do
+        sign_in user
+        get sample_ticket_event_path(event)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "GET /details" do
     let(:event) { create(:event, :published, :publicly_visible) }
 
