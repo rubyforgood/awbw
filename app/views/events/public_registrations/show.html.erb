@@ -66,4 +66,56 @@
       </div>
     </div>
   </div>
+
+  <%# ---- SCHOLARSHIP APPLICATION CARD — only when the registrant filled out the
+      separate scholarship form (its own role: "scholarship" submission). ---- %>
+  <% if @scholarship_submission %>
+    <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden mt-8">
+
+      <%# Card Header %>
+      <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-hand-holding-heart text-accent text-xl"></i>
+          <div class="flex-1">
+            <h2 class="text-xl font-semibold tracking-wide leading-tight">Scholarship application</h2>
+            <p class="text-sm text-blue-200"><%= @scholarship_form.display_name %></p>
+          </div>
+        </div>
+        <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+      </div>
+
+      <%# Card Body %>
+      <div class="px-6 sm:px-8 py-7">
+        <%= render "forms/header", form: @scholarship_form, event: @event %>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+          <% @scholarship_fields.each do |field| %>
+            <% next if field.name.to_s.strip.casecmp?(@scholarship_form.display_name.to_s.strip) %>
+
+            <% if field.group_header? %>
+              <div class="md:col-span-12 pt-6 pb-2 border-b border-gray-200 mb-4">
+                <h3 class="rich-label flex items-center gap-2.5 text-lg font-semibold text-gray-800">
+                  <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
+                </h3>
+              </div>
+            <% else %>
+              <% response = @scholarship_responses[field.id] %>
+              <div class="<%= field.grid_span_class %> py-2">
+                <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(display_question_label(field, response)) %></dt>
+                <dd class="mt-1 text-sm text-gray-900 whitespace-pre-line">
+                  <%= display_response_text(field, response) %>
+                </dd>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+
+        <div class="pt-4 border-t border-gray-200 mt-4">
+          <p class="text-xs text-gray-500">
+            Submitted on <%= @scholarship_submission.created_at.strftime("%B %d, %Y at %l:%M %P") %>
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </div>

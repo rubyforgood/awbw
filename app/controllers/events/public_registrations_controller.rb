@@ -109,6 +109,9 @@ module Events
 
       @form_fields = visible_form_fields
       @responses = @form_submission.form_answers.index_by(&:form_field_id)
+
+      load_scholarship_submission(person)
+
       @event = @event.decorate
     end
 
@@ -156,6 +159,23 @@ module Events
 
     def registration_form
       @event.registration_form
+    end
+
+    # Surface the separate scholarship-form application (its own role: "scholarship"
+    # submission) on the view-submission page when the registrant filled it out.
+    # Only set when answers are actually on file so the view renders nothing for
+    # plain registrations.
+    def load_scholarship_submission(person)
+      scholarship_form = @event.scholarship_form
+      return unless scholarship_form
+
+      submission = scholarship_form.form_submissions.find_by(person: person, role: "scholarship")
+      return unless submission&.form_answers&.exists?
+
+      @scholarship_submission = submission
+      @scholarship_form = scholarship_form
+      @scholarship_fields = scholarship_form.form_fields.reorder(position: :asc)
+      @scholarship_responses = submission.form_answers.index_by(&:form_field_id)
     end
 
     def scholarship_mode?
