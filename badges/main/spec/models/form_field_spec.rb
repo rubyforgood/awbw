@@ -464,6 +464,20 @@ RSpec.describe FormField do
     end
   end
 
+  describe "#fixed_options?" do
+    let(:form) { create(:form) }
+
+    it "returns true for the payment-method field" do
+      field = build(:form_field, form: form, field_identifier: "payment_method")
+      expect(field.fixed_options?).to be true
+    end
+
+    it "returns false for an ordinary field" do
+      field = build(:form_field, form: form, field_identifier: "how_did_you_hear")
+      expect(field.fixed_options?).to be false
+    end
+  end
+
   describe "#html_input_type" do
     let(:form) { create(:form) }
 

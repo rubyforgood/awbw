@@ -98,6 +98,24 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       expect(response.body).not_to include("must be at least 8 words")
     end
+
+    context "when the registrant is signed in" do
+      let(:user) { create(:user, :with_person) }
+
+      before { sign_in user }
+
+      it "persists the scholarship answers as a scholarship-role submission" do
+        expect {
+          post_with_scholarship("this scholarship answer clearly has more than eight words total")
+        }.to change { FormSubmission.where(role: "scholarship").count }.by(1)
+
+        submission = FormSubmission.where(role: "scholarship").last
+        expect(submission.person).to eq(user.person)
+        expect(submission.event).to eq(event)
+        expect(submission.form_answers.find_by(form_field: scholarship_essay).submitted_answer)
+          .to eq("this scholarship answer clearly has more than eight words total")
+      end
+    end
   end
 
   describe "POST create with credit card payment" do
