@@ -1,102 +1,104 @@
-<%# One registrant row on the Onboarding matrix.
-    Locals: registration, event, day_count, program_statuses (array of symbols), payment_col. %>
+<%# One registrant row on the Onboarding matrix. Iterates the shared column list
+    so cell positions line up with the sortable header.
+    Locals: registration, event, columns, day_count, program_statuses (array of symbols). %>
 <% person = registration.registrant %>
-<% program_status_styles = {
-     new: [ "New", "bg-blue-50 text-blue-700 border-blue-200" ],
-     ongoing: [ "Ongoing", "bg-green-50 text-green-700 border-green-200" ],
-     reinstated: [ "Reinstate", "bg-amber-50 text-amber-700 border-amber-200" ]
-   } %>
+<% align_class = { "left" => "text-left", "center" => "text-center", "right" => "text-right" } %>
 <tr id="<%= dom_id(registration, :onboarding_row) %>" class="hover:bg-gray-50 transition-colors duration-150">
-  <td class="px-4 py-2 sticky left-0 bg-white">
-    <div class="w-48 min-w-0">
-      <%= person_profile_button(person, data: { turbo_frame: "_top" }) %>
-    </div>
-  </td>
+  <% columns.each do |column| %>
+    <% td_classes = [ "px-4 py-2 text-sm", align_class[column[:align]] ]
+       td_classes << "sticky left-0 bg-white" if column[:sticky] %>
+    <% sort_data = {} %>
+    <% case column[:kind]
+       when :name %>
+      <td class="<%= td_classes.join(" ") %>" data-sort-first="<%= person.first_name.to_s.downcase %>" data-sort-last="<%= person.last_name.to_s.downcase %>">
+        <div class="w-48 min-w-0">
+          <%= person_profile_button(person, data: { turbo_frame: "_top" }) %>
+        </div>
+      </td>
 
-  <td class="px-3 py-2 text-center">
-    <%= render "events/onboarding_progress", registration: registration, day_count: day_count %>
-  </td>
+    <% when :progress %>
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= registration.onboarding_completed_count(day_count) %>">
+        <%= render "events/onboarding_progress", registration: registration, day_count: day_count %>
+      </td>
 
-  <td class="px-4 py-2 text-sm text-gray-700" data-onboarding-col="program">
-    <% org_names = registration.organizations.map(&:name) %>
-    <%= org_names.any? ? truncate(org_names.join(", "), length: 40) : content_tag(:span, "—", class: "text-gray-400") %>
-  </td>
+    <% when :program %>
+      <% org_names = registration.organizations.map(&:name) %>
+      <td class="<%= td_classes.join(" ") %> text-gray-700" data-onboarding-col="program" data-sort-value="<%= org_names.join(", ").downcase %>">
+        <%= org_names.any? ? truncate(org_names.join(", "), length: 40) : content_tag(:span, "—", class: "text-gray-400") %>
+      </td>
 
-  <td class="px-4 py-2 text-center" data-onboarding-col="program_type">
-    <% statuses = Array(program_statuses) %>
-    <% if statuses.any? %>
-      <div class="flex flex-col items-center gap-1">
-        <% statuses.each do |status| %>
-          <% label, classes = program_status_styles[status] %>
-          <% if label %>
-            <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 <%= classes %>"><%= label %></span>
-          <% end %>
+    <% when :program_type %>
+      <% statuses = Array(program_statuses) %>
+      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="program_type" data-sort-value="<%= statuses.map(&:to_s).sort.join %>">
+        <% if statuses.any? %>
+          <div class="flex flex-col items-center gap-1">
+            <% statuses.each do |status| %>
+              <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
+            <% end %>
+          </div>
+        <% else %>
+          <span class="text-gray-400">—</span>
         <% end %>
-      </div>
-    <% else %>
-      <span class="text-gray-400">—</span>
-    <% end %>
-  </td>
+      </td>
 
-  <% if payment_col %>
-    <td class="px-4 py-2 text-sm text-center" data-onboarding-col="payment">
+    <% when :payment %>
       <% paid_cents = registration.allocations_sum %>
       <% due_cents = event.cost_cents.to_i - paid_cents %>
-      <% if registration.paid_in_full? %>
-        <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-green-50 text-green-700 border-green-200"><i class="fas fa-circle-check"></i> Paid</span>
-      <% elsif registration.discounted? %>
-        <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-purple-50 text-purple-700 border-purple-200"><i class="fas fa-tag"></i> Discounted</span>
-      <% elsif registration.partially_paid? %>
-        <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200">Partial · <%= number_to_currency(due_cents / 100.0) %> due</span>
-      <% else %>
-        <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-amber-50 text-amber-700 border-amber-200"><%= number_to_currency(due_cents / 100.0) %> due</span>
-      <% end %>
-      <% if !registration.paid_in_full? && registration.intends_to_pay? %>
-        <div class="mt-1 text-[0.65rem] font-medium text-blue-600"><i class="fa-solid fa-hand-holding-dollar"></i> Intends to pay</div>
-      <% end %>
-    </td>
-  <% end %>
-
-  <td class="px-4 py-2 text-sm text-center" data-onboarding-col="scholarship">
-    <% scholarship = registration.scholarships.first %>
-    <% if scholarship %>
-      <div class="flex flex-col items-center gap-0.5">
-        <span class="font-medium text-gray-800"><%= number_to_currency(scholarship.amount_cents / 100.0) %></span>
-        <span class="text-xs text-gray-500"><%= scholarship.grant&.name.presence || "Unfunded" %></span>
-        <% if scholarship.tasks_completed? %>
-          <span class="inline-flex items-center gap-1 text-xs text-green-700"><i class="fas fa-circle-check"></i> Requirements met</span>
+      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="payment" data-sort-value="<%= due_cents %>">
+        <% if registration.paid_in_full? %>
+          <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-green-50 text-green-700 border-green-200"><i class="fas fa-circle-check"></i> Paid</span>
+        <% elsif registration.discounted? %>
+          <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-purple-50 text-purple-700 border-purple-200"><i class="fas fa-tag"></i> Discounted</span>
+        <% elsif registration.partially_paid? %>
+          <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200">Partial · <%= dollars_from_cents(due_cents) %> due</span>
         <% else %>
-          <span class="inline-flex items-center gap-1 text-xs text-amber-700"><i class="fas fa-clock"></i> Pending</span>
+          <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-amber-50 text-amber-700 border-amber-200"><%= dollars_from_cents(due_cents) %> due</span>
         <% end %>
-      </div>
-    <% elsif registration.scholarship_requested? %>
-      <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 bg-amber-50 text-amber-700 border-amber-200">Requested</span>
-    <% else %>
-      <span class="text-gray-400">—</span>
+        <% if !registration.paid_in_full? && registration.intends_to_pay? %>
+          <div class="mt-1 text-[0.65rem] font-medium text-blue-600"><i class="fa-solid fa-hand-holding-dollar"></i> Intends to pay</div>
+        <% end %>
+      </td>
+
+    <% when :scholarship %>
+      <% scholarship = registration.scholarships.first %>
+      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="scholarship" data-sort-value="<%= scholarship&.amount_cents.to_i %>">
+        <% if scholarship %>
+          <div class="flex flex-col items-center gap-0.5">
+            <span class="font-medium text-gray-800"><%= dollars_from_cents(scholarship.amount_cents) %></span>
+            <span class="text-xs text-gray-500"><%= scholarship.grant&.name.presence || "Unfunded" %></span>
+            <% if scholarship.tasks_completed? %>
+              <span class="inline-flex items-center gap-1 text-xs text-green-700"><i class="fas fa-circle-check"></i> Requirements met</span>
+            <% else %>
+              <span class="inline-flex items-center gap-1 text-xs text-amber-700"><i class="fas fa-clock"></i> Pending</span>
+            <% end %>
+          </div>
+        <% elsif registration.scholarship_requested? %>
+          <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 bg-amber-50 text-amber-700 border-amber-200">Requested</span>
+        <% else %>
+          <span class="text-gray-400">—</span>
+        <% end %>
+      </td>
+
+    <% when :fee_note %>
+      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="fee_note">
+        <%= render "events/onboarding_cell", registration: registration, field: "fee_note" %>
+      </td>
+
+    <% when :checkbox %>
+      <% done = EventRegistration::CHECKLIST_STEPS.key?(column[:field]) ? registration.checklist_step_completed?(column[:field]) : registration.public_send(column[:field]) %>
+      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="<%= column[:toggle] %>" data-sort-value="<%= done ? 1 : 0 %>">
+        <%= render "events/onboarding_cell", registration: registration, field: column[:field] %>
+      </td>
+
+    <% when :attendance %>
+      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="attendance" data-sort-value="<%= registration.status %>">
+        <%= render "event_registrations/attendance_status_badge", registration: registration %>
+      </td>
+
+    <% when :edit %>
+      <td class="<%= td_classes.join(" ") %>">
+        <%= link_to "Edit", edit_event_registration_path(registration, return_to: "onboarding"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %>
+      </td>
     <% end %>
-  </td>
-
-  <td class="px-4 py-2 text-center" data-onboarding-col="fee_note">
-    <%= render "events/onboarding_cell", registration: registration, field: "fee_note" %>
-  </td>
-
-  <% EventRegistration::CHECKLIST_STEPS.each_key do |step| %>
-    <td class="px-3 py-2 text-center" data-onboarding-col="<%= step %>">
-      <%= render "events/onboarding_cell", registration: registration, field: step %>
-    </td>
   <% end %>
-
-  <td class="px-4 py-2 text-center" data-onboarding-col="attendance">
-    <%= render "event_registrations/attendance_status_badge", registration: registration %>
-  </td>
-
-  <% (1..day_count).each do |day| %>
-    <td class="px-3 py-2 text-center" data-onboarding-col="days">
-      <%= render "events/onboarding_cell", registration: registration, field: "completed_day_#{day}" %>
-    </td>
-  <% end %>
-
-  <td class="px-4 py-2 text-right text-sm">
-    <%= link_to "Edit", edit_event_registration_path(registration, return_to: "onboarding"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %>
-  </td>
 </tr>

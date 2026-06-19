@@ -1,12 +1,8 @@
 <%= turbo_frame_tag :onboarding_results do %>
   <% day_count = @event.day_count %>
-  <% payment_col = @event.cost_cents.to_i > 0 %>
+  <% columns = onboarding_columns(@event) %>
+  <% align_class = { "left" => "text-left", "center" => "text-center", "right" => "text-right" } %>
   <% current_filter = params[:status_filter].presence || "active" %>
-  <% toggleable = [ [ "program", "Organization" ], [ "program_type", "Program type" ] ]
-     toggleable << [ "payment", "Payment" ] if payment_col
-     toggleable += [ [ "scholarship", "Scholarship" ], [ "fee_note", "Fee note" ] ]
-     toggleable += EventRegistration::CHECKLIST_STEPS.to_a
-     toggleable += [ [ "attendance", "Attendance status" ], [ "days", "Attendance days" ] ] %>
 
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-controller="column-visibility">
     <div class="flex items-center justify-between gap-4 px-6 py-4 border-b border-gray-100">
@@ -29,7 +25,7 @@
         </summary>
         <div class="absolute right-0 z-20 mt-2 w-56 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Show columns</p>
-          <% toggleable.each do |key, label| %>
+          <% onboarding_toggle_entries(@event).each do |key, label| %>
             <label class="flex items-center gap-2 py-1 text-sm text-gray-700 cursor-pointer">
               <input type="checkbox" checked
                      data-action="column-visibility#toggle"
@@ -44,38 +40,39 @@
 
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
-        <table class="w-full border-collapse">
+        <table class="w-full border-collapse" data-controller="table-sort">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 sticky left-0 bg-gray-100">Name</th>
-              <th class="px-3 py-2 text-center text-sm font-semibold text-gray-700">Progress</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700" data-onboarding-col="program">Organization</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" data-onboarding-col="program_type">Program type</th>
-              <% if payment_col %>
-                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" data-onboarding-col="payment">Payment</th>
-              <% end %>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" data-onboarding-col="scholarship">Scholarship</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" data-onboarding-col="fee_note">Fee note</th>
-              <% EventRegistration::CHECKLIST_STEPS.each do |step, label| %>
-                <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 align-bottom" data-onboarding-col="<%= step %>">
-                  <span class="inline-block whitespace-nowrap"><%= label %></span>
+              <% columns.each_with_index do |column, index| %>
+                <% th_classes = [ "px-4 py-2 text-xs font-semibold text-gray-700", align_class[column[:align]] ]
+                   th_classes << "sticky left-0 bg-gray-100" if column[:sticky] %>
+                <th class="<%= th_classes.join(" ") %>"
+                    <%= "data-onboarding-col=#{column[:toggle]}".html_safe if column[:toggle] %>
+                    <%= 'aria-sort="none"'.html_safe if column[:sortable] %>>
+                  <% if column[:kind] == :name %>
+                    <span class="inline-flex items-center gap-1.5">
+                      <%= render "shared/sortable_header", label: "First", index: index, key: "first" %>
+                      <span class="text-gray-300" aria-hidden="true">/</span>
+                      <%= render "shared/sortable_header", label: "Last", index: index, key: "last" %>
+                    </span>
+                  <% elsif column[:sortable] %>
+                    <%= render "shared/sortable_header", label: column[:label], index: index %>
+                  <% else %>
+                    <%= column[:label] %>
+                  <% end %>
                 </th>
               <% end %>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" data-onboarding-col="attendance">Attendance</th>
-              <% (1..day_count).each do |day| %>
-                <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700" data-onboarding-col="days">Day <%= day %></th>
-              <% end %>
-              <th class="px-4 py-2"></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200">
+
+          <tbody class="divide-y divide-gray-200" data-table-sort-target="body">
             <% @event_registrations.each do |registration| %>
               <%= render "events/onboarding_row",
                     registration: registration,
                     event: @event,
+                    columns: columns,
                     day_count: day_count,
-                    program_statuses: @program_statuses_by_registrant[registration.registrant_id],
-                    payment_col: payment_col %>
+                    program_statuses: @program_statuses_by_registrant[registration.registrant_id] %>
             <% end %>
           </tbody>
         </table>

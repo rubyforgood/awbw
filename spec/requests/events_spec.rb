@@ -888,6 +888,14 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Onboard")
     end
 
+    it "wires up click-to-sort on the matrix" do
+      get onboarding_event_path(event)
+
+      expect(response.body).to include('data-controller="table-sort"')
+      expect(response.body).to include('data-table-sort-target="body"')
+      expect(response.body).to include('data-table-sort-target="header"')
+    end
+
     it "filters to registrants missing a step" do
       done_person = create(:person, first_name: "Allset", last_name: "Done")
       done = create(:event_registration, event: event, registrant: done_person)

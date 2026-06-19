@@ -289,7 +289,11 @@ class EventRegistration < ApplicationRecord
     event.end_date.present? && event.end_date.past? && attended? && scholarship_tasks_met?
   end
 
+  # These read from the loaded `allocations` association so callers that preload
+  # it (e.g. the registrants roster and onboarding matrix) pay no per-row queries;
+  # callers that don't load the association once and reuse it across these methods.
   def allocations_sum
+    return allocations.to_a.sum(&:amount) if allocations.loaded?
     allocations.sum(:amount)
   end
 
@@ -303,6 +307,7 @@ class EventRegistration < ApplicationRecord
   end
 
   def payments_sum
+    return allocations.to_a.select { |a| a.source_type == Payment.polymorphic_name }.sum(&:amount) if allocations.loaded?
     allocations.where(source_type: Payment.polymorphic_name).sum(:amount)
   end
 
@@ -311,6 +316,7 @@ class EventRegistration < ApplicationRecord
   end
 
   def discounted?
+    return allocations.to_a.any? { |a| a.source_type == "Discount" } if allocations.loaded?
     allocations.where(source_type: "Discount").exists?
   end
 

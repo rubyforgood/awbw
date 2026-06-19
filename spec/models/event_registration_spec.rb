@@ -690,4 +690,28 @@ RSpec.describe EventRegistration, type: :model do
       end
     end
   end
+
+  describe "payment reads from a preloaded allocations association" do
+    it "issues no per-row queries when allocations are preloaded" do
+      event = create(:event, cost_cents: 1_000)
+      reg = create(:event_registration, event: event)
+      payment = create(:payment, amount_cents: 1_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1_000)
+
+      preloaded = EventRegistration.includes(:allocations, :event).find(reg.id)
+
+      queries = []
+      subscriber = ->(*, payload) { queries << payload[:sql] unless payload[:name] == "SCHEMA" }
+      ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
+        preloaded.allocations_sum
+        preloaded.payments_sum
+        preloaded.discounted?
+        preloaded.paid_in_full?
+        preloaded.partially_paid?
+      end
+
+      expect(queries).to be_empty
+      expect(preloaded.paid_in_full?).to be(true)
+    end
+  end
 end
