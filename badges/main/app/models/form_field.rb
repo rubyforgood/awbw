@@ -205,8 +205,13 @@ class FormField < ApplicationRecord
     field_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
   end
 
+  # Counts whitespace-separated tokens. Uses the Unicode-aware [[:space:]] class
+  # rather than \S, which is ASCII-only — pasted answers (Word, Google Docs, web
+  # pages) routinely carry non-breaking (U+00A0) and other Unicode spaces that \S
+  # treats as word characters, collapsing a real answer into one "word" and
+  # wrongly tripping the minimum.
   def word_count(value)
-    value.to_s.scan(/\S+/).size
+    value.to_s.scan(/[^[:space:]]+/).size
   end
 
   # Returns a validation error string when a submitted value falls short of the
