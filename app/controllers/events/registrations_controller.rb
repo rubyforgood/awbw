@@ -3,7 +3,7 @@ module Events
     before_action :authenticate_user!, only: [ :create, :destroy ]
     before_action :set_event, only: [ :create, :destroy ]
     before_action :set_registrant, only: [ :create, :destroy ]
-    before_action :set_event_registration, only: [ :show, :invoice, :resend_confirmation, :cancel, :reactivate, :pay ]
+    before_action :set_event_registration, only: [ :show, :invoice, :scholarship, :resend_confirmation, :cancel, :reactivate, :pay ]
 
     def show
       authorize! @event_registration, to: :show_public?
@@ -26,6 +26,22 @@ module Events
       authorize! @event_registration, to: :show_public?
       @event = @event_registration.event
       @invoice = EventInvoice.from_registration(@event_registration)
+    end
+
+    # Public status page for the registrant's scholarship, linked from the magic
+    # ticket callout. Shows the award (amount, funder, criteria, tasks) once a
+    # scholarship exists, or a pending state while it is only requested. When the
+    # registrant has neither requested nor received one there is nothing to show.
+    def scholarship
+      authorize! @event_registration, to: :show_public?
+
+      unless @event_registration.scholarship_requested? || @event_registration.scholarship?
+        redirect_to registration_ticket_path(@event_registration.slug)
+        return
+      end
+
+      @event = @event_registration.event
+      @scholarship = @event_registration.scholarships.first
     end
 
     def resend_confirmation

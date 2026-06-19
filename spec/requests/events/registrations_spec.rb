@@ -114,6 +114,37 @@ RSpec.describe "Events::Registrations", type: :request do
     end
   end
 
+  describe "GET /registration/:slug/scholarship" do
+    let(:event) { create(:event, cost_cents: 150_000) }
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "redirects to the ticket when nothing was requested or awarded" do
+      get registration_scholarship_path(registration.slug)
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+
+    it "shows a pending state when a scholarship was requested but not awarded" do
+      registration.update!(scholarship_requested: true)
+      get registration_scholarship_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Scholarship requested")
+    end
+
+    it "shows the award amount, funder, criteria, and tasks when awarded via a grant" do
+      grant = create(:grant)
+      scholarship = create(:scholarship, grant: grant, amount_cents: 75_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 75_000)
+
+      get registration_scholarship_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("$750")
+      expect(response.body).to include(grant.funder_name)
+      expect(response.body).to include("Eligibility criteria")
+      expect(response.body).to include("Tasks to complete")
+    end
+  end
+
   describe "POST /registration/:slug/resend_confirmation" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 

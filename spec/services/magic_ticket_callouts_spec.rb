@@ -37,12 +37,34 @@ RSpec.describe MagicTicketCallouts do
       expect(titles).to include(event.event_details_label, event.ce_hours_details_label)
     end
 
-    it "orders cards: event details, CE hours, W-9, invoice" do
+    it "includes the scholarship card when requested but not yet awarded" do
+      registration.update!(scholarship_requested: true)
+      card = described_class.new(registration).cards.find { |c| c.title == "Scholarship" }
+      expect(card).to be_present
+      expect(card.subtitle).to eq("Your scholarship request status")
+    end
+
+    it "includes the scholarship card when awarded, even without the requested flag" do
+      registration.update!(scholarship_requested: false)
+      scholarship = create(:scholarship, amount_cents: 1000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
+      card = described_class.new(registration).cards.find { |c| c.title == "Scholarship" }
+      expect(card).to be_present
+      expect(card.subtitle).to eq("Your award — amount, funder, and tasks")
+    end
+
+    it "omits the scholarship card when neither requested nor awarded" do
+      registration.update!(scholarship_requested: false)
+      expect(card_titles(registration)).not_to include("Scholarship")
+    end
+
+    it "orders cards: event details, CE hours, scholarship, W-9, invoice" do
       event.update!(event_details: "Bring supplies", ce_hours_details: "6 hours")
-      registration.update!(w9_requested: true, invoice_requested: true)
+      registration.update!(w9_requested: true, invoice_requested: true, scholarship_requested: true)
       expect(card_titles(registration)).to eq([
         event.event_details_label,
         event.ce_hours_details_label,
+        "Scholarship",
         "Download W-9",
         "View invoice"
       ])

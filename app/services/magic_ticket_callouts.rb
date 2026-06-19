@@ -22,7 +22,7 @@ class MagicTicketCallouts
 
   # The visible cards for this registration, in display order.
   def cards
-    [ event_details_card, ce_hours_card, w9_card, invoice_card ].compact
+    [ event_details_card, ce_hours_card, scholarship_status_card, w9_card, invoice_card ].compact
   end
 
   private
@@ -44,6 +44,19 @@ class MagicTicketCallouts
              title: event.ce_hours_details_label,
              subtitle: "Continuing education hours — requirements & next steps",
              href: ce_hours_event_path(event, reg: registration.slug),
+             target: nil, trailing_icon: "fa-solid fa-arrow-right")
+  end
+
+  # An action card (not reference) shown once the registrant has requested or
+  # received a scholarship. Its show page surfaces the award amount, funder, and
+  # tasks. Themed in the scholarships colour to match the rest of that UI.
+  def scholarship_status_card
+    return unless registration.scholarship_requested? || registration.scholarship?
+    awarded = registration.scholarship?
+    Card.new(icon_class: "fa-solid fa-award", color: DomainTheme.color_for(:scholarships).to_s,
+             title: "Scholarship",
+             subtitle: awarded ? "Your award — amount, funder, and tasks" : "Your scholarship request status",
+             href: registration_scholarship_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
