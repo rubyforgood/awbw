@@ -3,14 +3,17 @@
     locals: callout (responds to #theme, #display_icon_class, #title, #subtitle).
             href / target / trailing_icon may be passed explicitly (admin callouts
             compute href from a route) or read off the callout when it carries them
-            (MagicTicketCallouts::Card). %>
+            (MagicTicketCallouts::Card).
+            linked (default true): when false the card renders as a non-navigating
+            div — the sample-ticket preview has no real per-registration pages. %>
 <% theme = callout.theme %>
+<% linked = local_assigns.fetch(:linked, true) %>
 <% href = local_assigns.fetch(:href) { callout.href } %>
 <% target = local_assigns.fetch(:target) { callout.try(:target) } %>
 <% trailing = local_assigns.fetch(:trailing_icon) { callout.try(:trailing_icon) }.presence ||
               (callout.action? ? "fa-solid fa-arrow-right" : "fa-solid fa-circle-info") %>
-<%= link_to href, target: target, rel: (target.present? ? "noopener" : nil),
-              class: "flex items-center gap-3 rounded-xl border-2 #{theme[:border]} #{theme[:bg]} px-4 py-3 #{theme[:hover]} transition-colors" do %>
+<% card_class = "flex items-center gap-3 rounded-xl border-2 #{theme[:border]} #{theme[:bg]} px-4 py-3 #{theme[:hover]} transition-colors" %>
+<% card_body = capture do %>
   <i class="<%= callout.display_icon_class %> <%= theme[:icon] %> text-xl shrink-0"></i>
 
   <div class="flex-1 min-w-0 text-left">
@@ -21,4 +24,9 @@
   </div>
 
   <i class="<%= trailing %> <%= theme[:icon] %> shrink-0"></i>
+<% end %>
+<% if linked %>
+  <%= link_to href, target: target, rel: (target.present? ? "noopener" : nil), class: card_class do %><%= card_body %><% end %>
+<% else %>
+  <div class="<%= card_class %>"><%= card_body %></div>
 <% end %>

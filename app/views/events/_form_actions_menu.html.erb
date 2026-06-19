@@ -27,5 +27,7 @@
     <% else %>
       <%= link_to "Enable forms", edit_event_path(@event, anchor: "registration_form_section"), class: item_class %>
     <% end %>
+    <div class="my-1 border-t border-gray-100"></div>
+    <%= link_to "Sample ticket", sample_ticket_event_path(@event, return_to: "registrants"), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
   </div>
 </div>

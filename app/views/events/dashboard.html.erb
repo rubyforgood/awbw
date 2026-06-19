@@ -55,6 +55,14 @@
         <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
       <% end %>
     <% end %>
+
+    <%# Admin-only preview of the registration ticket with every option enabled. %>
+    <%= link_to sample_ticket_event_path(@event), target: "_blank", rel: "noopener noreferrer",
+          class: "#{link_base} border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50" do %>
+      <i class="fa-solid fa-ticket text-gray-500"></i>
+      Sample ticket
+      <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
+    <% end %>
   </div>
 
   <%# Money cards (paid events only) — shown first %>
