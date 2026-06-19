@@ -1,12 +1,11 @@
 class OrganizationDecorator < ApplicationDecorator
-  # Tailwind classes for an organization's AWBW program status, keyed by the
-  # canonical :new/:ongoing/:reinstated symbol. Single source of truth for these
-  # colors — the badge below and the event background dashboard both read it.
-  # Yellow (not amber) for reinstated, since amber signals a warning in our UI.
-  PROGRAM_STATUS_CLASSES = {
-    new: "bg-green-100 text-green-700 border-green-200",
-    ongoing: "bg-blue-100 text-blue-700 border-blue-200",
-    reinstated: "bg-yellow-100 text-yellow-700 border-yellow-200"
+  # Canonical program status => DomainTheme colour key. Keeping these as theme
+  # keys means the palette lives in DomainTheme::COLORS (green / blue / yellow —
+  # amber is reserved for warnings) rather than hard-coded utilities here.
+  PROGRAM_STATUS_THEME_KEYS = {
+    new: :program_new,
+    ongoing: :program_ongoing,
+    reinstated: :program_reinstated
   }.freeze
 
   # Normalize either the :new/:ongoing/:reinstated symbol (EventDashboard / index
@@ -16,11 +15,21 @@ class OrganizationDecorator < ApplicationDecorator
     return if status.blank?
 
     key = status.to_s.downcase.start_with?("reinstat") ? :reinstated : status.to_s.downcase.to_sym
-    key if PROGRAM_STATUS_CLASSES.key?(key)
+    key if PROGRAM_STATUS_THEME_KEYS.key?(key)
   end
 
+  # Pill bg/text/border classes for a program status, built from the DomainTheme
+  # swatch so the colours stay consistent with the rest of the app.
   def self.program_status_classes(status)
-    PROGRAM_STATUS_CLASSES[program_status_key(status)]
+    key = program_status_key(status)
+    return unless key
+
+    theme_key = PROGRAM_STATUS_THEME_KEYS[key]
+    [
+      DomainTheme.bg_class_for(theme_key, intensity: 100),
+      DomainTheme.text_class_for(theme_key, intensity: 700),
+      DomainTheme.border_class_for(theme_key, intensity: 200)
+    ].join(" ")
   end
 
   # Compact single-letter program-status badge (N / O / R) with the full label as
@@ -32,7 +41,7 @@ class OrganizationDecorator < ApplicationDecorator
 
     h.content_tag(:span, key.to_s.first.upcase,
                   title: key.to_s.titleize,
-                  class: "inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full border text-xs font-semibold #{PROGRAM_STATUS_CLASSES[key]}")
+                  class: "inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full border text-xs font-semibold #{self.class.program_status_classes(status)}")
   end
 
   def detail(length: nil)
