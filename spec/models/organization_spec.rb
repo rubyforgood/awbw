@@ -23,24 +23,37 @@ RSpec.describe Organization do
     it { should allow_value(nil).for(:email) }
     it { should_not allow_value("not-an-email").for(:email).with_message("must be a valid email address") }
 
-    it { should allow_value("https://awbw.org").for(:website_url) }
-    it { should allow_value("http://awbw.org").for(:website_url) }
-    it { should allow_value("awbw.org").for(:website_url) }
-    it { should allow_value("www.awbw.org").for(:website_url) }
-    it { should allow_value("").for(:website_url) }
-    it { should allow_value(nil).for(:website_url) }
-    it { should_not allow_value("not a url").for(:website_url) }
-
-    it "prepends https:// to a website without a scheme" do
+    it "stores the website_url verbatim without requiring a scheme" do
       org = build(:organization, website_url: "awbw.org")
       org.valid?
-      expect(org.website_url).to eq("https://awbw.org")
+      expect(org.errors[:website_url]).to be_empty
+      expect(org.website_url).to eq("awbw.org")
+    end
+  end
+
+  describe "#website_link_url" do
+    it "prepends https:// to a bare domain" do
+      org = build(:organization, website_url: "awbw.org")
+      expect(org.website_link_url).to eq("https://awbw.org")
     end
 
-    it "leaves a website with a scheme unchanged" do
+    it "leaves an existing scheme unchanged" do
       org = build(:organization, website_url: "http://awbw.org")
-      org.valid?
-      expect(org.website_url).to eq("http://awbw.org")
+      expect(org.website_link_url).to eq("http://awbw.org")
+    end
+
+    it "trims surrounding whitespace" do
+      org = build(:organization, website_url: "  awbw.org  ")
+      expect(org.website_link_url).to eq("https://awbw.org")
+    end
+
+    it "is nil when blank" do
+      expect(build(:organization, website_url: "").website_link_url).to be_nil
+      expect(build(:organization, website_url: nil).website_link_url).to be_nil
+    end
+
+    it "is nil when the value can't form a usable web address" do
+      expect(build(:organization, website_url: "not a url").website_link_url).to be_nil
     end
   end
 

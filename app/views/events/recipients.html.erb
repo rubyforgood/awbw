@@ -220,7 +220,7 @@
                 otherwise to its profile page. %>
             <div class="sm:col-span-1">
               <% if (organization = shoutout.organization) %>
-                <% website = organization.website_url.presence && (URI.parse(organization.website_url).to_s rescue nil) %>
+                <% website = organization.website_link_url %>
                 <% if website %>
                   <%= link_to organization.name, website, target: "_blank", rel: "noopener noreferrer", class: org_link_class %>
                 <% else %>

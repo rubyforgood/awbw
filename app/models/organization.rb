@@ -38,8 +38,6 @@ class Organization < ApplicationRecord
   validates :name, presence: true
   validates :organization_status_id, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
-  validates :website_url, format: { with: /\Ahttps?:\/\/\S+\z/i, message: "must be a valid web address" }, allow_blank: true
-  before_validation :normalize_website_url
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
 
   # Nested attributes
@@ -243,16 +241,19 @@ class Organization < ApplicationRecord
 
   remote_searchable_by :name
 
-  private
-
-  # Lets users enter a bare domain (e.g. "awbw.org") by defaulting to https://
-  # when no scheme is present, so the value passes URL validation and renders as
-  # a working link.
-  def normalize_website_url
+  # Returns the website as a clickable, scheme-qualified URL — prepending
+  # https:// to a bare domain like "awbw.org" — or nil when the value is blank or
+  # not a usable web address. Drives the external links on the org profile and
+  # recipients pages without forcing users to type a scheme.
+  def website_link_url
     return if website_url.blank?
-    stripped = website_url.strip
-    self.website_url = stripped.match?(/\Ahttps?:\/\//i) ? stripped : "https://#{stripped}"
+    candidate = website_url.strip
+    candidate = "https://#{candidate}" unless candidate.match?(/\Ahttps?:\/\//i)
+    uri = URI.parse(candidate) rescue nil
+    candidate if uri.is_a?(URI::HTTP) && uri.host.present?
   end
+
+  private
 
   # Union of the org's own age groups and its affiliated people's, deduped. The
   # affiliated people (with their taggings) are loaded once and memoized so the
