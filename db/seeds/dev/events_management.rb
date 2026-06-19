@@ -426,6 +426,12 @@ end
 # other trainings mix and match a generic subset. `payment_access_gated` callouts stay
 # hidden until the registration is paid. Idempotent: an event is only seeded when
 # it has no callouts yet, so admin edits survive a re-seed.
+# NOTE: These seeded admin RegistrationTicketCallouts are superseded by the
+# code-defined MagicTicketCallouts (payment, CE, scholarship, art supplies, forms,
+# handouts, portal, videoconference, FAQ, certificate), which now render on every
+# ticket. The block below is kept for reference but disabled — remove the
+# =begin/=end to re-enable seeded admin callouts.
+=begin
 component_callouts = {
   art_supply_info: {
     title: "Art supply info",
@@ -594,6 +600,7 @@ callouts_by_event.each do |event_title, component_keys|
     event.registration_ticket_callouts.create!(component_callouts.fetch(key).merge(position: i + 1))
   end
 end
+=end
 
 puts "Creating Event Registrations…"
 

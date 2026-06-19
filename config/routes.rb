@@ -92,6 +92,15 @@ Rails.application.routes.draw do
   post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payments#resend_confirmation", as: :bulk_payment_resend_confirmation
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
+  get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
+  get "registration/:slug/faq", to: "events/callouts#faq", as: :registration_faq
+  get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment
+  get "registration/:slug/certificate", to: "events/callouts#certificate", as: :registration_certificate
+  get "registration/:slug/ce", to: "events/callouts#ce", as: :registration_ce
+  get "registration/:slug/forms", to: "events/callouts#forms", as: :registration_forms
+  get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
+  get "registration/:slug/portal", to: "events/callouts#portal", as: :registration_portal
+  get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate

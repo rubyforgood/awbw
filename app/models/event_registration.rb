@@ -231,6 +231,23 @@ class EventRegistration < ApplicationRecord
     scholarships.all?(&:tasks_completed?)
   end
 
+  def attended?
+    status == "attended"
+  end
+
+  # True once the registrant has earned Facilitator Portal access: they completed
+  # both training days (attended) and paid their training fee. Stays false (greying
+  # the portal callout) until then.
+  def portal_access?
+    attended? && paid_in_full?
+  end
+
+  # The certificate of completion unlocks once the training has happened, the
+  # registrant attended, and any scholarship tasks are complete.
+  def certificate_available?
+    event.end_date.present? && event.end_date.past? && attended? && scholarship_tasks_met?
+  end
+
   def allocations_sum
     allocations.sum(:amount)
   end

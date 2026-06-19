@@ -1,0 +1,13 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Certificate of completion — #{@event.title}") %>
+<%= render layout: "events/callouts/callout_page", locals: { title: "Certificate of completion" } do %>
+  <div class="rounded-xl border-2 border-purple-200 bg-purple-50/40 px-6 py-10 text-center space-y-4">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-purple-700">Certificate of completion</p>
+    <p class="text-sm text-gray-500">This certifies that</p>
+    <p class="text-2xl font-semibold text-gray-900"><%= @event_registration.registrant.full_name %></p>
+    <p class="text-sm text-gray-500">has completed</p>
+    <p class="text-lg font-medium text-gray-800"><%= @event.title %></p>
+    <p class="text-sm text-gray-500"><%= @event.decorate.date_range %></p>
+  </div>
+  <p class="mt-4 text-center text-xs text-gray-400">A starter template — final certificate design to follow.</p>
+<% end %>
