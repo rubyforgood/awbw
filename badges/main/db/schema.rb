@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_19_120508) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -925,6 +925,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.boolean "blog_contributor", default: false, null: false
     t.datetime "created_at", null: false
     t.integer "created_by_id"
+    t.string "credentials"
     t.date "date_of_birth"
     t.string "display_name_preference"
     t.string "email"
@@ -944,6 +945,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.boolean "profile_is_searchable", default: true, null: false
     t.boolean "profile_show_affiliations", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
+    t.boolean "profile_show_credentials", default: true, null: false
     t.boolean "profile_show_email", default: true, null: false
     t.boolean "profile_show_events_registered", default: true, null: false
     t.boolean "profile_show_member_since", default: true, null: false

@@ -356,6 +356,13 @@
                       input_html: { class: "w-full" },
                       wrapper_html: { class: "w-full" } %>
         </div>
+
+        <div class="w-full sm:w-36">
+          <%= f.input :credentials,
+                      label: "Credentials",
+                      input_html: { class: "w-full" },
+                      wrapper_html: { class: "w-full" } %>
+        </div>
       </div>
     </div>
   </div>
@@ -398,6 +405,8 @@
                       ["Last Name Only", "last_name_only"]
                     ],
                     selected: f.object.display_name_preference || "full_name" %>
+
+          <%= f.input :profile_show_credentials, label: "Show credentials" %>
 
           <%= f.input :profile_show_pronouns, label: "Show pronouns" %>
         </div>
