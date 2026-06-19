@@ -98,7 +98,7 @@ module Events
       cards = [
         resource_card(icon: "fa-solid fa-file-pdf", title: "Download W-9",
                       subtitle: "AWBW's W-9 tax form for your records",
-                      href: "/documents/awbw-w9.pdf"),
+                      href: "/documents/awbw-w9.pdf", trailing_icon: "fa-solid fa-download"),
         resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
                       subtitle: "Itemized invoice for this registration",
                       href: registration_invoice_path(@event_registration.slug))
@@ -106,7 +106,8 @@ module Events
       letter = Resource.find_by(title: "Letter to Supervisors")
       if letter
         cards << resource_card(icon: "fa-solid fa-file-arrow-down", title: "Letter to supervisors",
-                               subtitle: "Share to request release time", href: resource_path(letter))
+                               subtitle: "Share to request release time",
+                               href: resource_download_path(letter), trailing_icon: "fa-solid fa-download")
       end
       cards
     end

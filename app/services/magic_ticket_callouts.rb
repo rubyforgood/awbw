@@ -24,7 +24,7 @@ class MagicTicketCallouts
   def cards
     [ payment_card, certificate_card, scholarship_status_card, ce_hours_card,
       event_details_card, videoconference_card, forms_card, handouts_card,
-      portal_card, faq_card ].compact
+      faq_card, portal_card ].compact
   end
 
   private
@@ -36,7 +36,7 @@ class MagicTicketCallouts
   def payment_card
     return if event.cost_cents.to_i <= 0
     due = registration.remaining_cost.to_i.positive?
-    Card.new(icon_class: "fa-solid fa-credit-card", color: due ? "orange" : "green",
+    Card.new(icon_class: "fa-solid fa-credit-card", color: due ? "orange" : "blue",
              title: "Payment",
              subtitle: due ? "#{MoneyFormatter.dollars_from_cents(registration.remaining_cost)} due — view your balance" : "Paid in full — view your payment history",
              href: registration_payment_path(registration.slug),
@@ -114,11 +114,11 @@ class MagicTicketCallouts
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
-  # Always-present. Greyed out until the registrant has an account that can reach
-  # the portal, at which point it turns active (rose).
+  # Always-present, shown last. Greyed out until the registrant can reach the
+  # portal (completed the training with a usable account), then turns active (green).
   def portal_card
     access = registration.portal_access?
-    Card.new(icon_class: "fa-solid fa-right-to-bracket", color: access ? "rose" : "gray",
+    Card.new(icon_class: "fa-solid fa-right-to-bracket", color: access ? "green" : "gray",
              title: "Facilitator Portal access",
              subtitle: access ? "Sign in to the Facilitator Portal" : "Available once you complete both training days",
              href: registration_portal_path(registration.slug),

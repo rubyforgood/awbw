@@ -225,10 +225,11 @@ class EventRegistration < ApplicationRecord
     status == "attended"
   end
 
-  # True once the registrant has a usable account that can reach the portal —
-  # confirmed, not locked, not deactivated.
+  # True once the registrant can reach the Facilitator Portal: they've completed
+  # the training (attended) and have a usable account (confirmed, not locked, not
+  # deactivated). Stays false for a not-yet-attended registration.
   def portal_access?
-    registrant.user&.has_access? || false
+    attended? && (registrant.user&.has_access? || false)
   end
 
   # The certificate of completion unlocks once the training has happened, the

@@ -148,13 +148,15 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Payment history")
       expect(response.body).to include("Amount due")
+      expect(response.body).to include("Pay with Credit Card")
       expect(response.body).to include("Paying by check?")
       expect(response.body).to include("A Window Between Worlds")
     end
 
-    it "hides the check instructions once paid in full" do
+    it "hides the pay button and check instructions once paid in full" do
       create(:allocation, allocatable: registration, amount: event.cost_cents)
       get registration_payment_path(registration.slug)
+      expect(response.body).not_to include("Pay with Credit Card")
       expect(response.body).not_to include("Paying by check?")
     end
   end
@@ -207,10 +209,10 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include(registration_invoice_path(registration.slug))
     end
 
-    it "links to the letter-to-supervisors resource below them when present" do
+    it "links to the letter-to-supervisors PDF below them when present" do
       letter = create(:resource, title: "Letter to Supervisors", kind: "Form")
       get registration_forms_path(registration.slug)
-      expect(response.body.index("/documents/awbw-w9.pdf")).to be < response.body.index(resource_path(letter))
+      expect(response.body.index("/documents/awbw-w9.pdf")).to be < response.body.index(resource_download_path(letter))
     end
   end
 

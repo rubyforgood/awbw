@@ -15,7 +15,7 @@ RSpec.describe MagicTicketCallouts do
   describe "#cards" do
     it "shows the always-present cards for a bare paid-cost registration" do
       expect(card_titles(registration)).to eq([
-        "Payment", "Forms", "Handouts", "Facilitator Portal access", "Frequently asked questions"
+        "Payment", "Forms", "Handouts", "Frequently asked questions", "Facilitator Portal access"
       ])
     end
 
@@ -31,7 +31,7 @@ RSpec.describe MagicTicketCallouts do
 
       create(:allocation, source: create(:payment), allocatable: registration, amount: event.cost_cents)
       paid = card(registration, "Payment")
-      expect(paid.theme).to eq(DomainTheme.swatch("green"))
+      expect(paid.theme).to eq(DomainTheme.swatch("blue"))
       expect(paid.trailing_icon).to eq("fa-solid fa-arrow-right")
     end
 
@@ -41,12 +41,11 @@ RSpec.describe MagicTicketCallouts do
       expect(trailing).to eq([ "fa-solid fa-arrow-right" ])
     end
 
-    it "greys the portal card until the registrant has an account with access" do
-      registration.registrant.user.update!(confirmed_at: nil)
+    it "greys the portal card until the registrant completes the training with an account" do
       expect(card(registration, "Facilitator Portal access").theme).to eq(DomainTheme.swatch("gray"))
 
-      registration.registrant.user.update!(confirmed_at: Time.current)
-      expect(card(registration, "Facilitator Portal access").theme).to eq(DomainTheme.swatch("rose"))
+      registration.update!(status: "attended")
+      expect(card(registration, "Facilitator Portal access").theme).to eq(DomainTheme.swatch("green"))
     end
 
     it "shows the certificate card only once it is available" do
@@ -99,8 +98,8 @@ RSpec.describe MagicTicketCallouts do
         "Videoconference",
         "Forms",
         "Handouts",
-        "Facilitator Portal access",
-        "Frequently asked questions"
+        "Frequently asked questions",
+        "Facilitator Portal access"
       ])
     end
   end

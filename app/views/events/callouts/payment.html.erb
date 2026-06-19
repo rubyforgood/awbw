@@ -26,6 +26,14 @@
   </div>
 
   <% if @event_registration.remaining_cost.positive? %>
+    <div class="mt-6 flex justify-center">
+      <%= button_to "Pay with Credit Card",
+                    registration_pay_path(@event_registration.slug),
+                    data: { turbo: false },
+                    class: "btn px-6 py-2 text-sm uppercase font-telefon text-white hover:bg-white",
+                    style: "background-color: rgb(170, 46, 0); border: 2px solid rgb(170, 46, 0);" %>
+    </div>
+
     <div class="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 leading-relaxed space-y-2">
       <p class="font-semibold text-gray-900">Paying by check?</p>
       <p>Write the check out to <strong>A Window Between Worlds</strong> and mail it to:</p>
