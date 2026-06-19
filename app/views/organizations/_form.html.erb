@@ -320,9 +320,8 @@
             <p><span class="font-medium">New</span> — no facilitator affiliations yet. <span class="font-medium">Ongoing</span> — has an active facilitator. <span class="font-medium">Reinstate</span> — had facilitators but all have ended.</p>
           </div>
           <div class="pt-1 flex items-center gap-2">
-            <% org_program_status = f.object.program_status %>
-            <%= program_status_badge(org_program_status) %>
-            <span class="text-gray-900 font-medium"><%= org_program_status %></span>
+            <%= org_decorated.program_status_badge %>
+            <span class="text-gray-900 font-medium"><%= f.object.program_status %></span>
           </div>
         </div>
       </div>
