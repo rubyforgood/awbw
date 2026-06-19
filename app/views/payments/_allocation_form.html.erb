@@ -1,5 +1,6 @@
 <div class="bg-green-200 border-2 border-green-400 rounded-lg p-4 mb-4">
   <h3 class="text-lg font-medium mb-4">New <%= @payment.type.to_s.underscore.humanize(capitalize: false) %></h3>
+
   <%= simple_form_for @payment, as: :payment, url: payments_path do |f| %>
     <%= hidden_field_tag "payment[allocatable_sgid]", @allocatable&.to_sgid&.to_s || params[:allocatable_sgid] %>
     <%= f.input :type, as: :hidden, input_html: { value: @payment.type } %>
@@ -16,12 +17,13 @@
       <% end %>
     </div>
 
-    <%# Two compound pickers that each search people and organizations. The kind
-        of record chosen for "Payer" sets payer_type on submit; the additional
-        designation fills the other person/organization slot. %>
+    <% payer_label_data = @payment.selected_payer&.compound_search_label %>
+    <% designation_label_data = @payment.selected_additional_designation&.compound_search_label %>
+
     <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
       <%= f.input :payer_sgid,
-        collection: party_select_options(@payment.selected_payer, @payment.payer_sgid),
+        collection: payer_label_data ? [[payer_label_data[:label], payer_label_data[:id]]] : [],
+        selected: payer_label_data&.dig(:id),
         required: true,
         input_html: {
           class: "bg-white",
@@ -33,8 +35,10 @@
         prompt: "Search people and organizations",
         label: "Payer",
         hint: "Whose account is the money coming from?" %>
+
       <%= f.input :additional_designation_sgid,
-        collection: party_select_options(@payment.selected_additional_designation, @payment.additional_designation_sgid),
+        collection: designation_label_data ? [[designation_label_data[:label], designation_label_data[:id]]] : [],
+        selected: designation_label_data&.dig(:id),
         include_blank: true,
         input_html: {
           class: "bg-white",
@@ -52,6 +56,7 @@
         <i class="fa-solid fa-plus text-xs"></i>
         Create payment
       <% end %>
+
       <%= link_to "Cancel", allocations_path(allocatable_sgid: @allocatable&.to_sgid&.to_s || params[:allocatable_sgid]), class: "btn btn-secondary-outline" %>
     </div>
   <% end %>

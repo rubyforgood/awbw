@@ -53,8 +53,8 @@ module RemoteSearchable
   # label is suffixed with the model name to disambiguate same-named records.
   def compound_search_label
     {
-      id: to_sgid.to_s,
-      label: "#{remote_search_label[:label]} · #{self.class.model_name.human}"
+      label: "#{remote_search_label[:label]} · #{self.class.model_name.human}",
+      id: to_sgid.to_s
     }
   end
 end
