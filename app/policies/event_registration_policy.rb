@@ -18,6 +18,8 @@ class EventRegistrationPolicy < ApplicationPolicy
   # Editing the onboarding matrix is an admin management action; event owners
   # (the event's creator) manage their own events' onboarding too.
   def update_onboarding? = admin? || event_owner?
+  def transfer? = admin?
+  def create_transfer? = admin?
 
 
   relation_scope do |relation|

@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~78 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~28 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~29 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
 | `app/models/concerns/` | Shared model modules | 15 concerns |
 
@@ -197,6 +197,7 @@ end
 
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
+- `EventRegistrationServices::Transfer` — Moves a registrant to another event: creates a new registration linked via `transferred_from` and marks the original "transferred"
 - `ReminderRecipientFilter` — Decides which event registrations stay checked on the bulk reminder page given the admin's filters (matches in memory, returns matching ids)
 - `MagicTicketCallouts` — Code-defined ("magic") ticket callout cards (payment, certificate, scholarship, CE hours, art supplies, forms, handouts, portal, videoconference, FAQ), each with its own visibility rule; rendered through the same `_callout_card` partial as admin-configured `RegistrationTicketCallout`s. Their public show pages live under `app/views/events/callouts/` and are served by `Events::CalloutsController` (slug-authorized, no login)
 

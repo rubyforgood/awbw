@@ -3,6 +3,13 @@ class EventRegistration < ApplicationRecord
 
   belongs_to :registrant, class_name: "Person"
   belongs_to :event
+  # A registration created by transferring this registrant from another event.
+  # `transferred_from` is the original (where the payment still lives);
+  # `transferred_to` is the new registration created on the destination event.
+  belongs_to :transferred_from, class_name: "EventRegistration", optional: true,
+    inverse_of: :transferred_to
+  has_one :transferred_to, class_name: "EventRegistration",
+    foreign_key: :transferred_from_id, dependent: :nullify, inverse_of: :transferred_from
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :event_registration_organizations, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
@@ -23,7 +30,11 @@ class EventRegistration < ApplicationRecord
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
-  INACTIVE_STATUSES = %w[ cancelled no_show ].freeze
+  # "transferred" marks a registration whose registrant was moved to another
+  # event via the Transfer action. It's inactive so transferred registrants drop
+  # out of active rosters; the matching new registration links back via
+  # `transferred_from`.
+  INACTIVE_STATUSES = %w[ cancelled no_show transferred ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
 
   # Manual onboarding checklist steps shown on the event's Onboarding tab. Each is
@@ -138,11 +149,13 @@ class EventRegistration < ApplicationRecord
       ), 0)
     SQL
   }
+  scope :transferred, -> { where.not(transferred_from_id: nil) }
   scope :payment_status, ->(value) {
     case value
     when "paid" then paid_in_full
     when "unpaid" then not_paid_in_full
     when "intends_to_pay" then where(intends_to_pay: true)
+    when "previous_registration" then transferred
     else all
     end
   }
@@ -215,12 +228,20 @@ class EventRegistration < ApplicationRecord
   # surfaces (rosters, CSV exports, dashboard metrics) must keep using `paid?` /
   # `paid_in_full?` so they still reflect the real balance owed.
   def payment_access_granted?
-    paid? || intends_to_pay?
+    paid? || intends_to_pay? || transferred?
+  end
+
+  # True when this registration was created by transferring the registrant from
+  # an earlier event, so its fee is considered covered by that prior payment.
+  def transferred?
+    transferred_from_id.present?
   end
 
   # Human-readable payment status for rosters and CSV exports. Assumes the event
-  # has a cost — callers show nothing for free events.
+  # has a cost — callers show nothing for free events. A transferred registration
+  # reports "Previous registration" since the fee was paid on the original event.
   def payment_status_label
+    return "Previous registration" if transferred?
     return "Paid" if paid_in_full?
     return "Intends to pay" if intends_to_pay?
     "Due"
@@ -335,6 +356,7 @@ class EventRegistration < ApplicationRecord
     when "incomplete_attendance" then "Incomplete attendance"
     when "cancelled" then "Cancelled"
     when "no_show" then "No show"
+    when "transferred" then "Transferred"
     else status.humanize
     end
   end

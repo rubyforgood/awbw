@@ -221,6 +221,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     # ─── admin-only confirm/interstitial ───
     "app/views/event_registrations/confirm.html.erb"     => "admin-only bg-blue-100",
     "app/views/event_registrations/link_organization.html.erb" => "admin-only bg-blue-100",
+    "app/views/event_registrations/transfer.html.erb"    => "admin-only bg-blue-100",
     "app/views/users/confirm_email_change.html.erb"      => "admin-only bg-blue-100",
     "app/views/users/confirm_email_manual.html.erb"      => "admin-only bg-blue-100"
   }.freeze

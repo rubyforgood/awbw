@@ -115,6 +115,8 @@ Rails.application.routes.draw do
       post :create_organization
       delete :unlink_organization
       patch :update_onboarding
+      get :transfer
+      post :create_transfer
     end
     resources :comments, only: [ :index, :create, :update ]
   end

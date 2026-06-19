@@ -270,6 +270,36 @@ class EventRegistrationsController < ApplicationController
     redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} unlinked from this registration."
   end
 
+  def transfer
+    @event_registration = EventRegistration.includes(:event, :registrant).find(params[:id])
+    authorize! @event_registration, to: :transfer?
+    # Pick a published event the registrant isn't already on (and not the current
+    # one) — the uniqueness index forbids registering the same person twice.
+    registered_event_ids = @event_registration.registrant.event_registrations.pluck(:event_id)
+    @events = Event.where(published: true)
+                   .where.not(id: registered_event_ids)
+                   .order(start_date: :desc)
+  end
+
+  def create_transfer
+    @event_registration = EventRegistration.includes(:event, :registrant).find(params[:id])
+    authorize! @event_registration, to: :create_transfer?
+
+    result = EventRegistrationServices::Transfer.call(
+      source: @event_registration,
+      target_event_id: params[:target_event_id],
+      current_user: current_user
+    )
+
+    if result.success?
+      redirect_to edit_event_registration_path(result.registration, return_to: params[:return_to].presence),
+                  notice: "#{@event_registration.registrant.full_name} transferred to #{result.registration.event.title}."
+    else
+      redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+                  alert: result.error
+    end
+  end
+
   def destroy
     authorize! @event_registration
     event = @event_registration.event

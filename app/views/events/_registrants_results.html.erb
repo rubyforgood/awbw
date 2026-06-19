@@ -198,10 +198,13 @@
                   <% paid_cents = registration.allocations_sum %>
                   <% due_cents = @event.cost_cents - paid_cents %>
                   <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= due_cents %>">
-                    <% is_paid = registration.paid_in_full? %>
-                    <% is_discounted = !is_paid && registration.discounted? %>
-                    <% is_partial = !is_discounted && registration.partially_paid? %>
-                    <% badge_classes = if is_paid
+                    <% is_transferred = registration.transferred? %>
+                    <% is_paid = !is_transferred && registration.paid_in_full? %>
+                    <% is_discounted = !is_transferred && !is_paid && registration.discounted? %>
+                    <% is_partial = !is_transferred && !is_discounted && registration.partially_paid? %>
+                    <% badge_classes = if is_transferred
+                         "bg-indigo-50 text-indigo-700 border-indigo-200"
+                       elsif is_paid
                          "bg-green-50 text-green-700 border-green-200"
                        elsif is_discounted
                          "bg-purple-50 text-purple-700 border-purple-200"
@@ -210,7 +213,9 @@
                        else
                          "bg-amber-50 text-amber-700 border-amber-200"
                        end %>
-                    <% badge_icon = if is_paid
+                    <% badge_icon = if is_transferred
+                         "fa-right-left"
+                       elsif is_paid
                          "fa-circle-check"
                        elsif is_discounted
                          "fa-tag"
@@ -232,7 +237,9 @@
 
                     <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"), title: badge_title, class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 #{badge_classes} transition hover:opacity-80 hover:shadow-sm", data: { turbo_frame: "_top" } do %>
                       <i class="fas <%= badge_icon %>"></i>
-                      <% if is_paid %>
+                      <% if is_transferred %>
+                        <span>Previous registration</span>
+                      <% elsif is_paid %>
                         <span>Paid</span>
                       <% else %>
                         <span><%= dollars_from_cents(due_cents) %> due</span>
@@ -240,7 +247,7 @@
                       <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                     <% end %>
 
-                    <% if !is_paid && registration.intends_to_pay? %>
+                    <% if !is_transferred && !is_paid && registration.intends_to_pay? %>
                       <div class="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-[0.65rem] font-medium text-blue-600">
                         <i class="fa-solid fa-hand-holding-dollar"></i>
                         <span>Intends to pay</span>

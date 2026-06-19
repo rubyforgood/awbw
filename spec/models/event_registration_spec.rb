@@ -346,6 +346,54 @@ RSpec.describe EventRegistration, type: :model do
       create(:event_registration, event: event, registrant: create(:person))
       expect(EventRegistration.payment_status("intends_to_pay")).to contain_exactly(intends)
     end
+
+    it "filters to transferred registrations for 'previous_registration'" do
+      source = create(:event_registration, event: event, registrant: user.person)
+      transferred = create(:event_registration, event: create(:event), registrant: create(:person), transferred_from: source)
+      create(:event_registration, event: event, registrant: create(:person))
+      expect(EventRegistration.payment_status("previous_registration")).to contain_exactly(transferred)
+    end
+  end
+
+  describe "transfer" do
+    let(:source) { create(:event_registration) }
+    let(:transferred) { create(:event_registration, transferred_from: source) }
+
+    it "treats 'transferred' as an inactive status" do
+      expect(EventRegistration::INACTIVE_STATUSES).to include("transferred")
+      expect(EventRegistration::ACTIVE_STATUSES).not_to include("transferred")
+    end
+
+    it "labels the 'transferred' status" do
+      expect(create(:event_registration, status: "transferred").attendance_status_label).to eq("Transferred")
+    end
+
+    it "links transferred_to back from the source" do
+      expect(transferred.transferred_from).to eq(source)
+      expect(source.reload.transferred_to).to eq(transferred)
+    end
+
+    it "knows it was transferred" do
+      expect(transferred).to be_transferred
+      expect(source).not_to be_transferred
+    end
+
+    describe "#payment_status_label" do
+      it "is 'Previous registration' for a transferred registration" do
+        expect(transferred.payment_status_label).to eq("Previous registration")
+      end
+
+      it "falls back to the usual labels when not transferred" do
+        expect(source.payment_status_label).to eq("Due").or eq("Paid")
+      end
+    end
+
+    describe "#payment_access_granted?" do
+      it "is true for a transferred registration even with no allocations" do
+        reg = create(:event_registration, event: create(:event, cost_cents: 1099), transferred_from: source)
+        expect(reg.payment_access_granted?).to be true
+      end
+    end
   end
 
   describe "#paid_in_full?" do

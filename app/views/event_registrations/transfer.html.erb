@@ -1,0 +1,56 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <%# Back to the registration we're transferring from. %>
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+    <%= link_to edit_event_registration_path(@event_registration, return_to: params[:return_to].presence), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Edit registration
+    <% end %>
+    <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <%= render "shared/event_page_header",
+             title: "Transfer registrant",
+             icon: "fa-solid fa-right-left",
+             color: :event_registrations,
+             event: @event_registration.event,
+             event_url: dashboard_event_path(@event_registration.event) %>
+
+  <div class="mt-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <p class="text-sm text-gray-600">
+      Move <span class="font-semibold text-gray-900"><%= @event_registration.registrant.full_name %></span>
+      to another event. Their current registration on
+      <span class="font-semibold text-gray-900"><%= @event_registration.event.title %></span>
+      will be marked <span class="font-medium">Transferred</span> (its payment history stays put), and a new
+      registration is created on the event you pick — shown as paid via this
+      <span class="font-medium">previous registration</span>, so nothing is owed there.
+    </p>
+
+    <% if @events.any? %>
+      <%= form_with url: create_transfer_event_registration_path(@event_registration), method: :post, data: { turbo: false }, class: "mt-5 space-y-4" do |f| %>
+        <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
+
+        <div>
+          <label for="target_event_id" class="mb-1 block text-sm font-medium text-gray-700">Transfer to event</label>
+          <%= select_tag :target_event_id,
+                options_from_collection_for_select(@events, :id, :time_title),
+                include_blank: "Select an event…",
+                required: true,
+                id: "target_event_id",
+                class: "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+        </div>
+
+        <div class="flex items-center gap-3 border-t border-gray-200 pt-4">
+          <div class="ml-auto flex items-center gap-3">
+            <%= link_to "Cancel", edit_event_registration_path(@event_registration, return_to: params[:return_to].presence), class: "btn btn-secondary-outline" %>
+            <%= f.submit "Transfer registrant", class: "btn btn-primary" %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        No other published events are available to transfer this registrant to.
+      </p>
+    <% end %>
+  </div>
+</div>

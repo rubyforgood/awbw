@@ -330,6 +330,44 @@ RSpec.describe "EventRegistrations", type: :request do
       end
     end
 
+    describe "GET /event_registrations/:id/transfer" do
+      it "renders the transfer form excluding the current and already-registered events" do
+        available = create(:event, title: "Available destination", published: true)
+        already_on = create(:event, title: "Already registered", published: true)
+        create(:event_registration, event: already_on, registrant: regular_user.person)
+
+        get transfer_event_registration_path(existing_registration)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(available.title)
+        expect(response.body).not_to include(already_on.title)
+      end
+    end
+
+    describe "POST /event_registrations/:id/create_transfer" do
+      let!(:target) { create(:event, title: "Destination event", published: true) }
+
+      it "transfers the registrant to the chosen event" do
+        expect {
+          post create_transfer_event_registration_path(existing_registration), params: { target_event_id: target.id }
+        }.to change(EventRegistration, :count).by(1)
+
+        existing_registration.reload
+        expect(existing_registration.status).to eq("transferred")
+        new_registration = existing_registration.transferred_to
+        expect(new_registration.event).to eq(target)
+        expect(response).to redirect_to(edit_event_registration_path(new_registration))
+      end
+
+      it "redirects back with an alert when the target is invalid" do
+        post create_transfer_event_registration_path(existing_registration), params: { target_event_id: existing_registration.event_id }
+
+        expect(response).to redirect_to(transfer_event_registration_path(existing_registration))
+        expect(flash[:alert]).to match(/different event/i)
+        expect(existing_registration.reload.status).to eq("registered")
+      end
+    end
+
     describe "organization linking" do
       let(:organization) { create(:organization, name: "Helping Hands") }
 
@@ -843,6 +881,16 @@ RSpec.describe "EventRegistrations", type: :request do
               params: { event_registration: { event_id: new_event.id } }
 
         expect(existing_registration.reload.event_id).to eq(original_event_id)
+      end
+    end
+
+    describe "POST /event_registrations/:id/create_transfer" do
+      it "is not authorized for a regular user" do
+        target = create(:event, published: true)
+        expect {
+          post create_transfer_event_registration_path(existing_registration), params: { target_event_id: target.id }
+        }.not_to change(EventRegistration, :count)
+        expect(response).to redirect_to(root_path)
       end
     end
 
