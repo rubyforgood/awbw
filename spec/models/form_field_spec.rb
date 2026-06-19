@@ -153,6 +153,16 @@ RSpec.describe FormField do
       expect(field.min_words_error("  one\ntwo   three  ")).to be_nil
     end
 
+    it "treats non-breaking and other Unicode spaces as word separators" do
+      field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 5)
+      # These spaces sneak in when answers are pasted from Word, Google Docs, or
+      # a web page. Ruby's \S is ASCII-only, so with every separator a Unicode
+      # space a genuine five-word answer counts as one and is wrongly rejected.
+      # Written as \u escapes since the characters are invisible in source.
+      pasted = "this\u00A0answer\u202Fhas\u3000plenty words"
+      expect(field.min_words_error(pasted)).to be_nil
+    end
+
     it "returns an error when the value has too few words" do
       field = build(:form_field, form: form, answer_type: :free_form_input_paragraph, min_words: 5)
       expect(field.min_words_error("only three words")).to eq("must be at least 5 words")
