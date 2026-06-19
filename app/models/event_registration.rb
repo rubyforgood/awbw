@@ -216,6 +216,16 @@ class EventRegistration < ApplicationRecord
     scholarships.exists?
   end
 
+  # Noun phrase distinguishing a scholarship-requested registration from a
+  # standard one in email subjects and notification labels (e.g.
+  # "event scholarship registration" vs "event registration"). Driven by the
+  # `scholarship_requested` flag, which is set at registration time, so it's
+  # reliable when the confirmation email goes out (before any Scholarship
+  # record exists).
+  def registration_subject_noun
+    scholarship_requested? ? "event scholarship registration" : "event registration"
+  end
+
   def scholarship_tasks_met?
     return true if scholarships.empty?
     scholarships.all?(&:tasks_completed?)

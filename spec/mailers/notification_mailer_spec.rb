@@ -25,6 +25,29 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#event_registration_confirmation_fyi" do
+    let(:notification) { create(:notification, kind: "event_registration_confirmation_fyi", noticeable: event_registration) }
+
+    context "when a scholarship was not requested" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: false) }
+
+      it "labels the subject as a plain event registration" do
+        subject = described_class.event_registration_confirmation_fyi(notification).subject
+        expect(subject).to include("New event registration by")
+        expect(subject).not_to include("scholarship")
+      end
+    end
+
+    context "when a scholarship was requested" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: true) }
+
+      it "labels the subject as an event scholarship registration" do
+        subject = described_class.event_registration_confirmation_fyi(notification).subject
+        expect(subject).to include("New event scholarship registration by")
+      end
+    end
+  end
+
   describe "#report_submitted_fyi" do
     let(:notification) { create(:notification, kind: :report_submitted_fyi) }
 
