@@ -23,7 +23,7 @@ class MagicTicketCallouts
   # The visible cards for this registration, in display order.
   def cards
     [ event_details_card, ce_hours_card, scholarship_status_card, w9_card, invoice_card,
-      questions_next_steps_card ].compact
+      faq_card, questions_next_steps_card ].compact
   end
 
   private
@@ -68,6 +68,15 @@ class MagicTicketCallouts
              subtitle: "AWBW's W-9 tax form for your records",
              href: "/documents/awbw-w9.pdf",
              target: "_blank", trailing_icon: "fa-solid fa-download")
+  end
+
+  # Always-present reference card linking to the training FAQ page.
+  def faq_card
+    Card.new(icon_class: "fa-solid fa-circle-question", color: "purple",
+             title: "Frequently asked questions",
+             subtitle: "Common questions about the 2-day training",
+             href: registration_faq_path(registration.slug),
+             target: nil, trailing_icon: "fa-solid fa-circle-info")
   end
 
   # Always-present informational card, shown last. Its page has closing details

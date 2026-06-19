@@ -3,7 +3,7 @@ module Events
     before_action :authenticate_user!, only: [ :create, :destroy ]
     before_action :set_event, only: [ :create, :destroy ]
     before_action :set_registrant, only: [ :create, :destroy ]
-    before_action :set_event_registration, only: [ :show, :invoice, :scholarship, :questions, :resend_confirmation, :cancel, :reactivate, :pay ]
+    before_action :set_event_registration, only: [ :show, :invoice, :scholarship, :faq, :questions, :resend_confirmation, :cancel, :reactivate, :pay ]
 
     def show
       authorize! @event_registration, to: :show_public?
@@ -42,6 +42,13 @@ module Events
 
       @event = @event_registration.event
       @scholarship = @event_registration.scholarships.first
+    end
+
+    # Public FAQ page for the training, linked from the always-present "Frequently
+    # asked questions" magic callout.
+    def faq
+      authorize! @event_registration, to: :show_public?
+      @event = @event_registration.event
     end
 
     # Public closing-details page for the registrant's ticket, linked from the

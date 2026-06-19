@@ -145,6 +145,17 @@ RSpec.describe "Events::Registrations", type: :request do
     end
   end
 
+  describe "GET /registration/:slug/faq" do
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "renders the training FAQ" do
+      get registration_faq_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Frequently asked questions")
+      expect(response.body).to include("Is the training trauma-informed?")
+    end
+  end
+
   describe "GET /registration/:slug/questions" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 

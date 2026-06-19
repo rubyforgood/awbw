@@ -1,0 +1,126 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Frequently asked questions — #{@event.title}") %>
+
+<div class="max-w-3xl mx-auto px-4 pt-4">
+  <%= link_to registration_ticket_path(@event_registration.slug),
+              class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
+  <% end %>
+</div>
+
+<div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
+  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
+    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+      <div class="flex items-center gap-5">
+        <div class="shrink-0">
+          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
+        </div>
+        <div class="flex-1">
+          <h1 class="text-xl font-semibold tracking-wide leading-tight">Frequently asked questions</h1>
+          <p class="text-sm text-blue-200"><%= @event.title %></p>
+        </div>
+      </div>
+      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+    </div>
+
+    <div class="px-6 sm:px-8 py-7">
+      <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">2-day training — general questions</h2>
+      <div class="space-y-2">
+        <% faqs = [
+          {
+            q: "Who is this training designed for?",
+            a: [ "This training is designed for anyone interested in incorporating healing arts into the work they do with individuals, groups, or communities. Participants come from a wide range of backgrounds, including education, mental health, social services, healthcare, community organizing, advocacy, and nonprofit work." ]
+          },
+          {
+            q: "Do I need to be an artist or have art experience to participate?",
+            a: [ "No prior art experience or artistic background is required to participate in the training. The AWBW approach is centered on the creative process rather than artistic skill or technique." ]
+          },
+          {
+            q: "Is the training trauma-informed?",
+            a: [ "Yes. The AWBW model, philosophy, and facilitation approach are rooted in trauma-informed practices. The training includes dedicated content focused on trauma-informed facilitation and creating supportive, inclusive environments for participants." ]
+          },
+          {
+            q: "Do I need to work for an organization to participate in the training or become a facilitator?",
+            a: [ "No. You do not need to be affiliated with an organization or agency to participate in the training or become an AWBW Facilitator. While many facilitators implement the workshops within organizations, schools, or community programs, others use the workshops in private practice, community spaces, support groups, creative gatherings, or personal healing work. The workshops are designed to be flexible and adaptable across a variety of settings and populations." ]
+          },
+          {
+            q: "Can I use the workshops with youth? Adults? Families?",
+            a: [
+              "Yes. AWBW workshops are designed to be flexible and adaptable for individuals of all ages, including youth, adults, families, and intergenerational groups.",
+              "Within the facilitator portal, workshops can be searched and filtered by focus area, population, theme, and other categories to help facilitators find workshops that best fit the communities they serve."
+            ]
+          },
+          {
+            q: "How many workshops are included in the curriculum library?",
+            a: [ "The AWBW facilitator portal includes access to a library of more than 600 art workshops and facilitation resources." ]
+          },
+          {
+            q: "Are workshops available in Spanish or other languages?",
+            a: [
+              "Yes. A number of workshops have been translated into Spanish. Within the facilitator portal, facilitators can use the search filters to locate workshops that include Spanish translations.",
+              "AWBW continues to work toward increasing language accessibility and expanding translated resources over time."
+            ]
+          },
+          {
+            q: "What materials do I need for the art workshops?",
+            a: [
+              "There are no required art materials for participation. Workshops can be completed using any materials you already have available, such as paper, pencils, pens, crayons, markers, colored pencils, paint, collage materials, or other creative supplies. The focus of the AWBW approach is on the creative process rather than the materials themselves.",
+              "Prior to the training, we will also send participants a list of optional art supplies that may be helpful to have on hand, as well as printable worksheets for each of the art workshops that will be facilitated during the training. While neither the supplies nor the worksheets are required, many participants find them helpful for engaging more fully in the workshop experience.",
+              "We will walk through the art supplies suggested for each workshop so that, if trainees choose to use those materials in their own facilitation, they feel familiar and comfortable incorporating those materials into their own facilitation practice."
+            ]
+          },
+          {
+            q: "What ongoing support does AWBW provide after completing the on-demand training?",
+            a: [
+              "Once you complete the On-Demand Training and receive your certification, you become part of a thriving community of over 1,500 Windows Facilitators across the country and abroad, all learning from and supporting one another.",
+              "As a certified facilitator, you'll gain access to:"
+            ],
+            list: [
+              "The AWBW Facilitator Portal, which houses a curriculum of over 600 art workshops, downloadable resources, toolkits, handouts, the Facilitator Manual, and tools for tracking attendance and gathering feedback",
+              "Ongoing professional development, including live art workshops, Q&As, and recorded presentations by subject matter experts",
+              "Virtual Community of Practice events, where you can connect with fellow facilitators and experience new workshops",
+              "AWBW staff support for workshop selection, facilitation questions, art supply tips, and more",
+              "A bi-monthly newsletter with new workshops, stories, and resources"
+            ]
+          },
+          {
+            q: "Can multiple staff members from one organization participate?",
+            a: [
+              "Yes. Multiple staff members from the same organization are welcome and encouraged to participate in the training.",
+              "Many organizations choose to train teams of staff members in order to integrate trauma-informed healing arts practices more broadly across their programs, services, and communities."
+            ]
+          },
+          {
+            q: "Are there any fees, other than the training fee, associated with becoming a facilitator?",
+            a: [
+              "AWBW has an annual membership fee of $100 per program to support the sustainability of the organization and continued facilitator resources and support.",
+              "The membership fee covers all facilitators connected to the same program or organization for the calendar year, regardless of the number of facilitators participating. Only one membership fee payment is required per program annually."
+            ]
+          }
+        ] %>
+        <% faqs.each do |faq| %>
+          <details class="group/card rounded-lg border border-gray-200 bg-white">
+            <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden px-4 py-3 hover:bg-gray-50 rounded-lg">
+              <div class="flex items-center justify-between gap-3">
+                <span class="font-medium text-gray-900"><%= faq[:q] %></span>
+                <i class="fa-solid fa-chevron-down text-gray-400 text-xs shrink-0 transition-transform group-open/card:rotate-180"></i>
+              </div>
+            </summary>
+            <div class="px-4 pb-4 pt-1 space-y-3 text-sm text-gray-600 leading-relaxed">
+              <% faq[:a].each do |paragraph| %>
+                <p><%= paragraph %></p>
+              <% end %>
+              <% if faq[:list] %>
+                <ul class="list-disc space-y-1 pl-5">
+                  <% faq[:list].each do |item| %>
+                    <li><%= item %></li>
+                  <% end %>
+                </ul>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
