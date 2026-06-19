@@ -1,4 +1,30 @@
 module OrganizationHelper
+  # Color mapping for an organization's AWBW program status, mirroring the event
+  # background dashboard (app/views/events/background.html.erb).
+  PROGRAM_STATUS_STYLES = {
+    new: "bg-green-100 text-green-700 border-green-200",
+    ongoing: "bg-blue-100 text-blue-700 border-blue-200",
+    reinstated: "bg-amber-100 text-amber-700 border-amber-200"
+  }.freeze
+
+  # Compact single-letter badge (N / O / R) for an organization's program
+  # status, with the full label as a tooltip. Accepts either a :new/:ongoing/
+  # :reinstated symbol (EventDashboard / index controller) or the "New"/"Ongoing"/
+  # "Reinstate" string from Organization#program_status. Returns nil when blank or
+  # unrecognized.
+  def program_status_badge(status)
+    return if status.blank?
+
+    normalized = status.to_s.downcase
+    key = normalized.start_with?("reinstat") ? :reinstated : normalized.to_sym
+    classes = PROGRAM_STATUS_STYLES[key]
+    return unless classes
+
+    content_tag(:span, normalized.first.upcase,
+                title: key.to_s.titleize,
+                class: "inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full border text-xs font-semibold #{classes}")
+  end
+
   def organization_profile_button(organization, truncate_at: nil, subtitle: nil, label: nil, data: {}, inactive: false)
     if inactive
       bg = "bg-gray-100"

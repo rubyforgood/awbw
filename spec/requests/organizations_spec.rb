@@ -38,6 +38,24 @@ RSpec.describe "/organizations", type: :request do
       expect(response).to be_successful
     end
 
+    it "shows single-letter program status badges per organization" do
+      create(:organization, name: "Brand New Org", organization_status: organization_status)
+
+      ongoing_org = create(:organization, name: "Ongoing Org", organization_status: organization_status)
+      create(:affiliation, organization: ongoing_org, person: create(:person), title: "Facilitator")
+
+      reinstate_org = create(:organization, name: "Reinstate Org", organization_status: organization_status)
+      create(:affiliation, organization: reinstate_org, person: create(:person), title: "Facilitator", end_date: 1.year.ago.to_date)
+
+      get organizations_url, headers: { "Turbo-Frame" => "organization_results" }
+
+      expect(response).to be_successful
+      page = Capybara.string(response.body)
+      expect(page).to have_css("span[title='New']", text: "N")
+      expect(page).to have_css("span[title='Ongoing']", text: "O")
+      expect(page).to have_css("span[title='Reinstated']", text: "R")
+    end
+
     it "renders the results frame with deduped age groups from affiliated people" do
       organization = Organization.create!(valid_attributes)
       age_type = create(:category_type, name: "AgeRange", published: true)
@@ -157,6 +175,17 @@ RSpec.describe "/organizations", type: :request do
       create(:monthly_report, organization: organization)
       get edit_organization_url(organization)
       expect(response.body).to include("Monthly reports")
+    end
+
+    it "shows the program status in the affiliations section" do
+      organization = Organization.create!(valid_attributes)
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator")
+
+      get edit_organization_url(organization)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_content("Program status")
+      expect(page).to have_css("span[title='Ongoing']", text: "O")
     end
   end
 

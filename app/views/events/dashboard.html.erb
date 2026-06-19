@@ -323,7 +323,10 @@
                   <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
                 <% end %>
                 <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "flex items-center justify-between gap-2 flex-1 min-w-0 rounded px-1 py-0.5 hover:bg-gray-50", title: "Registrants from #{organization.name}" do %>
-                  <span class="truncate min-w-0"><%= organization.name %></span>
+                  <span class="flex items-center gap-1.5 min-w-0">
+                    <span class="truncate min-w-0"><%= organization.name %></span>
+                    <%= program_status_badge(@dashboard.program_status_by_organization[organization.id]) %>
+                  </span>
                   <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.organization_counts.fetch(organization.id, 0) %></span>
                 <% end %>
               </li>
