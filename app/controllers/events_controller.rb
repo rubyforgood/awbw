@@ -43,28 +43,31 @@ class EventsController < ApplicationController
   end
 
   # Admin preview of the registration ticket. Builds an in-memory sample
-  # registration — never saved — with every registrant-chosen option turned on,
-  # so admins can see what their event's ticket looks like with all sections
-  # present. The ticket partial renders in `preview: true` mode, which disables
-  # the state-changing buttons (pay, resend, cancel) and renders the callout
-  # cards non-navigating. A sentinel slug lets the callout route helpers build
-  # without raising, since the sample isn't persisted.
+  # registration — never saved. By default it models a typical registrant (no
+  # scholarship, no continuing education, no extra requests) so the preview is
+  # indicative of what most tickets look like. The "Show all options" toggle
+  # (?options=all) turns on every registrant-chosen option at once so admins can
+  # see every section present. The ticket partial renders in `preview: true`
+  # mode, which disables the state-changing buttons (pay, resend, cancel) and
+  # renders the callout cards non-navigating. A sentinel slug lets the callout
+  # route helpers build without raising, since the sample isn't persisted.
   def sample_ticket
     authorize! @event, to: :dashboard?
 
+    @show_all_options = params[:options] == "all"
     registrant = Person.new(first_name: "Sample", last_name: "Registrant")
     @event_registration = @event.event_registrations.new(
       registrant: registrant,
       slug: "sample",
       status: "registered",
       intends_to_pay: true,
-      w9_requested: true,
-      invoice_requested: true,
-      scholarship_requested: true,
-      shoutout: true,
-      ce_credit_requested: true,
-      ce_hours_requested: 6,
-      ce_license_number: "SAMPLE-12345",
+      w9_requested: @show_all_options,
+      invoice_requested: @show_all_options,
+      scholarship_requested: @show_all_options,
+      shoutout: @show_all_options,
+      ce_credit_requested: @show_all_options,
+      ce_hours_requested: @show_all_options ? 6 : nil,
+      ce_license_number: @show_all_options ? "SAMPLE-12345" : nil,
       created_at: Time.current
     )
   end
