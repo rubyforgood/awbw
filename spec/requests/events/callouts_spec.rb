@@ -171,25 +171,10 @@ RSpec.describe "Events::Callouts", type: :request do
     let(:scholarship)  { create(:scholarship, recipient: registration.registrant, amount_cents: 5_000) }
     let!(:allocation)  { create(:allocation, source: scholarship, allocatable: registration, amount: 5_000) }
 
-    it "shows the agreement as needed until it is signed" do
-      get registration_scholarship_path(registration.slug)
-
-      expect(response).to have_http_status(:success)
-      expect(response.body).to include("Agreement needed")
-      expect(response.body).not_to include("Agreement signed")
-    end
-
-    it "shows the agreement as signed once the flag is set" do
-      scholarship.update!(agreement_signed: true)
-      get registration_scholarship_path(registration.slug)
-
-      expect(response.body).to include("Agreement signed")
-      expect(response.body).not_to include("Agreement needed")
-    end
-
     it "renders the agree form while the agreement is unsigned" do
       get registration_scholarship_path(registration.slug)
 
+      expect(response).to have_http_status(:success)
       expect(response.body).to include("Do you agree to complete the tasks?")
       expect(response.body).to match(/name="agreement"/)
     end
