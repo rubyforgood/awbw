@@ -104,6 +104,72 @@ RSpec.describe "Payments", type: :request do
     end
   end
 
+  describe "PATCH /payments/:id" do
+    let(:organization) { create(:organization) }
+
+    it "updates payer and designation via sgids" do
+      payment = create(:payment, person:, organization: nil)
+
+      patch payment_path(payment), params: {
+        payment: {
+          payer_sgid: organization.to_sgid.to_s,
+          additional_designation_sgid: person.to_sgid.to_s
+        }
+      }
+
+      payment.reload
+      expect(payment.payer_type).to eq("Organization")
+      expect(payment.organization).to eq(organization)
+      expect(payment.person).to eq(person)
+    end
+
+    it "switches the payer from a person to an organization" do
+      payment = create(:payment, person:, organization: nil)
+
+      patch payment_path(payment), params: {
+        payment: {
+          payer_sgid: organization.to_sgid.to_s,
+          additional_designation_sgid: ""
+        }
+      }
+
+      payment.reload
+      expect(payment.payer_type).to eq("Organization")
+      expect(payment.organization).to eq(organization)
+      expect(payment.person).to be_nil
+    end
+
+    it "clears the additional designation when blank is sent" do
+      payment = create(:payment, person:, organization:, payer_type: "Organization")
+
+      patch payment_path(payment), params: {
+        payment: {
+          payer_sgid: organization.to_sgid.to_s,
+          additional_designation_sgid: ""
+        }
+      }
+
+      payment.reload
+      expect(payment.organization).to eq(organization)
+      expect(payment.person).to be_nil
+    end
+
+    it "shows a flash alert when validation fails" do
+      payment = create(:payment, person:, organization: nil)
+      other_person = create(:person)
+
+      patch payment_path(payment), params: {
+        payment: {
+          payer_sgid: person.to_sgid.to_s,
+          additional_designation_sgid: other_person.to_sgid.to_s
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(flash[:alert]).to include("must be different kinds")
+    end
+  end
+
   describe "payer type on create" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:registration) { create(:event_registration, event:) }
@@ -197,6 +263,25 @@ RSpec.describe "Payments", type: :request do
       expect(payment.payer_type).to eq("Person")
       expect(payment.person).to eq(registration.registrant)
       expect(payment.organization).to be_nil
+    end
+
+    it "creates a standalone payment from sgids without an allocatable" do
+      organization = create(:organization)
+
+      post payments_path, params: {
+        payment: {
+          type: "CashPayment",
+          payer_sgid: organization.to_sgid.to_s,
+          additional_designation_sgid: registration.registrant.to_sgid.to_s,
+          amount_dollars: "25.00"
+        }
+      }
+
+      payment = Payment.last
+      expect(payment.payer_type).to eq("Organization")
+      expect(payment.organization).to eq(organization)
+      expect(payment.person).to eq(registration.registrant)
+      expect(payment.allocations).to be_empty
     end
   end
 end
