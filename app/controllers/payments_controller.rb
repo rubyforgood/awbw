@@ -98,6 +98,7 @@ class PaymentsController < ApplicationController
     if @payment.update(edit_payment_params)
       redirect_to payment_path(@payment), notice: "Payment was successfully updated."
     else
+      flash.now[:alert] = @payment.errors.full_messages.join(", ")
       render :edit, status: :unprocessable_content
     end
   end
