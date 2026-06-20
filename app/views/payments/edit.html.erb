@@ -4,29 +4,39 @@
   <h1 class="text-2xl font-bold mb-6">Edit Payment</h1>
   <div class="bg-white rounded border border-gray-200 p-6">
     <%= simple_form_for @payment, as: :payment, url: payment_path(@payment), method: :patch do |f| %>
+      <% payer_label_data = @payment.selected_payer&.compound_search_label %>
+      <% designation_label_data = @payment.selected_additional_designation&.compound_search_label %>
+
       <div class="space-y-4">
-        <%= f.input :person_id,
-          collection: @payment.person.present? ? [[@payment.person.full_name, @payment.person.id]] : [],
-          include_blank: true,
+        <%= f.input :payer_sgid,
+          collection: payer_label_data ? [[payer_label_data[:label], payer_label_data[:id]]] : [],
+          selected: payer_label_data&.dig(:id),
+          required: true,
           input_html: {
+            class: "bg-white",
             data: {
               controller: "remote-select",
-              remote_select_model_value: "person"
+              remote_select_model_value: "person_or_organization"
             }
           },
-          prompt: "Search for a person",
-          label: "Person" %>
-        <%= f.input :organization_id,
-          collection: @payment.organization.present? ? [[@payment.organization.name, @payment.organization.id]] : [],
+          prompt: "Search people and organizations",
+          label: "Payer",
+          hint: "Whose account is the money coming from?" %>
+
+        <%= f.input :additional_designation_sgid,
+          collection: designation_label_data ? [[designation_label_data[:label], designation_label_data[:id]]] : [],
+          selected: designation_label_data&.dig(:id),
           include_blank: true,
           input_html: {
+            class: "bg-white",
             data: {
               controller: "remote-select",
-              remote_select_model_value: "organization"
+              remote_select_model_value: "person_or_organization"
             }
           },
-          prompt: "Search for an organization",
-          label: "Organization" %>
+          prompt: "Search people and organizations",
+          label: "Additional designation" %>
+
         <%= f.input :form_submission_id,
           input_html: { class: "bg-white" },
           label: "Form Submission ID" %>
