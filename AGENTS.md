@@ -62,7 +62,7 @@ This codebase (Rails 8.1)
 | `app/decorators/` | Draper decorators for view logic | ~38 files |
 | `app/policies/` | ActionPolicy authorization rules | ~49 files |
 | `app/presenters/` | Presentation objects | 3 files |
-| `app/helpers/` | View helpers | ~20 files |
+| `app/helpers/` | View helpers | ~24 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
