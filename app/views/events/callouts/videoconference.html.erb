@@ -10,6 +10,7 @@
           <i class="fa-solid fa-video"></i> Join on <%= @event.videoconference_domain %>
         <% end %>
         <p class="mt-2 text-xs text-gray-500 break-all"><%= @event.videoconference_url %></p>
+        <%= render "events/videoconference_connection", event: @event %>
       </div>
     <% end %>
 

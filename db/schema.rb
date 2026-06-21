@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_19_120508) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -528,6 +528,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_19_120508) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.string "videoconference_label", default: "Virtual event"
+    t.string "videoconference_passcode"
     t.string "videoconference_url"
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
     t.index ["facilitator_training"], name: "index_events_on_facilitator_training"
