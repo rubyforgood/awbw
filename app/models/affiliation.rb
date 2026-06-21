@@ -21,6 +21,14 @@ class Affiliation < ApplicationRecord
 
   # Methods
   def facilitator?
+    title.to_s.downcase.include?("facilitator")
+  end
+
+  # Stricter than #facilitator? / the .facilitators scope: the title is *exactly*
+  # "Facilitator" (trimmed, case-sensitive). Reserved for the editor-row highlight
+  # so variants like "Lead Facilitator" stay un-highlighted while still counting
+  # as facilitators everywhere else.
+  def exact_facilitator?
     title.to_s.strip == "Facilitator"
   end
 

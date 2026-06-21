@@ -6,13 +6,16 @@
 <% manage_subject = person_side ? Organization : Person %>
 <% if allowed_to?(:manage?, manage_subject) %>
   <% expired = f.object.inactive? || (f.object.end_date.present? && f.object.end_date < Date.current) %>
-  <% facilitator = f.object.facilitator? %>
-  <% active_bg = facilitator ? "bg-purple-100 border-purple-300" : "bg-white border-gray-200" %>
+  <% exact_facilitator = f.object.exact_facilitator? %>
+  <% active_bg = exact_facilitator ? "bg-purple-100 border-purple-300" : "bg-white border-gray-200" %>
   <% record = person_side ? f.object.person : f.object.organization %>
   <% label = person_side ? "Person" : "Organization" %>
-  <div data-controller="inactive-toggle">
-    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start mb-4 rounded-lg border p-3 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : active_bg %>"
-         style="border-left: 4px solid <%= facilitator ? '#a855f7' : '#d1d5db' %>"
+  <div data-controller="inactive-toggle" class="relative mb-4">
+    <%# Left accent rendered outside the row so it keeps full color even when an expired row is dimmed by opacity-60. %>
+    <span class="absolute inset-y-0 left-0 w-1 rounded-l-lg"
+          style="background-color: <%= exact_facilitator ? '#a855f7' : '#d1d5db' %>"
+          data-inactive-toggle-target="stripe"></span>
+    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start rounded-lg border p-3 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : active_bg %>"
          <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>
          data-inactive-toggle-target="row">
       <div style="width: 280px; min-width: 280px; flex-shrink: 0;" data-inactive-toggle-target="profileButton">
