@@ -634,4 +634,100 @@ RSpec.describe EventRegistration, type: :model do
       expect(registration_for(person).account_status).to eq("no_access")
     end
   end
+
+  describe "#program_statuses" do
+    let(:registration) { create(:event_registration) }
+    let(:linked_org) { create(:organization, name: "Registration Org") }
+    let(:other_org) { create(:organization, name: "Other Org") }
+
+    it "classifies only the organization linked to the registration" do
+      create(:event_registration_organization, event_registration: registration, organization: linked_org)
+      # An unrelated facilitator affiliation to a different org must be ignored.
+      create(:affiliation, organization: other_org, person: registration.registrant,
+             title: "Facilitator", start_date: Date.current)
+
+      expect(registration.reload.program_statuses).to eq([ :new ])
+    end
+
+    it "is ongoing when the linked org already had an active facilitator, excluding the registrant's own" do
+      create(:event_registration_organization, event_registration: registration, organization: linked_org)
+      create(:affiliation, organization: linked_org, title: "Facilitator",
+             start_date: 2.years.ago, end_date: nil)
+      create(:affiliation, organization: linked_org, person: registration.registrant,
+             title: "Facilitator", start_date: Date.current)
+
+      expect(registration.reload.program_statuses).to eq([ :ongoing ])
+    end
+  end
+
+  describe "onboarding checklist" do
+    let(:registration) { create(:event_registration) }
+    let(:step) { EventRegistration::CHECKLIST_STEPS.keys.first }
+
+    it "reports a step as completed once a completion row exists" do
+      expect(registration.checklist_step_completed?(step)).to be(false)
+      create(:event_registration_checklist_completion, event_registration: registration, step: step)
+      registration.reload
+      expect(registration.checklist_step_completed?(step)).to be(true)
+    end
+
+    it "exposes the completion record for a step" do
+      completion = create(:event_registration_checklist_completion, event_registration: registration, step: step)
+      expect(registration.reload.checklist_completion_for(step)).to eq(completion)
+    end
+  end
+
+  describe "#payments_sum" do
+    it "counts only payment allocations, excluding scholarship" do
+      event = create(:event, cost_cents: 3_000)
+      reg = create(:event_registration, event: event)
+      payment = create(:payment, amount_cents: 1_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1_000)
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1_500)
+
+      reg.reload
+      expect(reg.payments_sum).to eq(1_000)        # payment only
+      expect(reg.allocations_sum).to eq(2_500)     # payment + scholarship
+    end
+  end
+
+  describe "#discount_sum" do
+    it "counts only discount allocations, excluding payment and scholarship" do
+      event = create(:event, cost_cents: 3_000)
+      reg = create(:event_registration, event: event)
+      payment = create(:payment, amount_cents: 1_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1_000)
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 1_000)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1_000)
+      create(:allocation, source: create(:discount, amount_cents: 800), allocatable: reg, amount: 800)
+
+      reg.reload
+      expect(reg.discount_sum).to eq(800)
+    end
+  end
+
+  describe "payment reads from a preloaded allocations association" do
+    it "issues no per-row queries when allocations are preloaded" do
+      event = create(:event, cost_cents: 1_000)
+      reg = create(:event_registration, event: event)
+      payment = create(:payment, amount_cents: 1_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1_000)
+
+      preloaded = EventRegistration.includes(:allocations, :event).find(reg.id)
+
+      queries = []
+      subscriber = ->(*, payload) { queries << payload[:sql] unless payload[:name] == "SCHEMA" }
+      ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
+        preloaded.allocations_sum
+        preloaded.payments_sum
+        preloaded.discounted?
+        preloaded.paid_in_full?
+        preloaded.partially_paid?
+      end
+
+      expect(queries).to be_empty
+      expect(preloaded.paid_in_full?).to be(true)
+    end
+  end
 end

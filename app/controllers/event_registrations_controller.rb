@@ -2,7 +2,7 @@ class EventRegistrationsController < ApplicationController
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
-  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding ]
 
   def index
     authorize!
@@ -95,6 +95,7 @@ class EventRegistrationsController < ApplicationController
           when "index" then redirect_to event_registrations_path, notice: "Registration was successfully updated.", status: :see_other
           when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
           when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
+          when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: "Registration was successfully updated.", status: :see_other
           else
             # No explicit origin: keep admins in the management context (the
             # roster) rather than dropping them on the public registration show.
@@ -114,6 +115,32 @@ class EventRegistrationsController < ApplicationController
           render :edit, status: :unprocessable_content
         end
       end
+    end
+  end
+
+  # Inline toggle/edit of a single onboarding column from the event's Onboarding
+  # matrix. `field` is one of EventRegistration::CHECKLIST_STEPS (audited row),
+  # EventRegistration::DAY_FIELDS (plain boolean), or "fee_note" (free text).
+  def update_onboarding
+    authorize! @event_registration, to: :update_onboarding?
+    @field = params[:field].to_s
+    @day_count = @event_registration.event.day_count
+    completed = ActiveModel::Type::Boolean.new.cast(params[:value])
+
+    if @field == "fee_note"
+      @event_registration.update(fee_note: params[:value])
+    elsif EventRegistration::DAY_FIELDS.include?(@field)
+      @event_registration.update(@field => completed)
+    elsif EventRegistration::CHECKLIST_STEPS.key?(@field)
+      toggle_checklist_step(@field, completed)
+      @event_registration.checklist_completions.reload
+    else
+      return head :unprocessable_content
+    end
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id) }
     end
   end
 
@@ -244,6 +271,7 @@ class EventRegistrationsController < ApplicationController
 
     case params[:return_to]
     when "registrants" then redirect_to registrants_event_path(event)
+    when "onboarding" then redirect_to onboarding_event_path(event)
     else redirect_to event_registrations_path
     end
   end
@@ -274,6 +302,17 @@ class EventRegistrationsController < ApplicationController
     @event_registration = EventRegistration.includes({ registrant: [ :user, { affiliations: :organization } ] }, { event: [ :location, :event_forms ] }, :organizations, comments: [ :created_by, :updated_by ]).find(params[:id])
   end
 
+  # Creates the audited completion row for a checklist step (recording who/when),
+  # or removes it — so an unchecked step leaves no trace.
+  def toggle_checklist_step(step, completed)
+    completion = @event_registration.checklist_completions.find_by(step: step)
+    if completed && completion.nil?
+      @event_registration.checklist_completions.create(step: step, completed_by: current_user, completed_at: Time.current)
+    elsif !completed && completion
+      completion.destroy
+    end
+  end
+
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
@@ -284,6 +323,8 @@ class EventRegistrationsController < ApplicationController
       :ce_credit_requested,
       :ce_hours_requested,
       :ce_license_number,
+      :fee_note,
+      *EventRegistration::DAY_FIELDS,
       organization_ids: [],
       registrant_attributes: [ :id, :shoutout_text ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],

@@ -121,12 +121,23 @@ class Organization < ApplicationRecord
   #   :reinstated — the organization had facilitator affiliation(s) before, but
   #                 they all ended before the reference one started (a lapse)
   def facilitator_status(current_affiliation)
-    reference_start = current_affiliation.start_date || Date.current
+    facilitator_status_on(current_affiliation.start_date, excluding_affiliation_id: current_affiliation.id)
+  end
+
+  # Classifies this organization relative to a reference DATE rather than a
+  # reference affiliation — used when a registrant has no facilitator affiliation
+  # yet (admins create those manually), so we ask "if they got one today, would
+  # this org be new/ongoing/reinstated?":
+  #   :new        — the org has no facilitator affiliation starting before the date
+  #   :ongoing    — an earlier facilitator affiliation is still active on the date
+  #   :reinstated — earlier facilitator affiliation(s) existed but all ended first
+  def facilitator_status_on(reference_date, excluding_affiliation_id: nil)
+    reference_start = reference_date || Date.current
 
     earlier = affiliations.facilitators
-      .where.not(id: current_affiliation.id)
       .where.not(start_date: nil)
       .where("affiliations.start_date < ?", reference_start)
+    earlier = earlier.where.not(id: excluding_affiliation_id) if excluding_affiliation_id
 
     return :new unless earlier.exists?
 

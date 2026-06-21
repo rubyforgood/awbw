@@ -877,6 +877,201 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /events/:id/onboarding" do
+    let(:person) { create(:person, first_name: "Onboard", last_name: "Ready") }
+    let!(:registration) { create(:event_registration, event: event, registrant: person) }
+
+    before { sign_in admin }
+
+    it "renders the onboarding matrix with the checklist columns" do
+      get onboarding_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Onboarding")
+      expect(response.body).to include("Mailchimp")
+      expect(response.body).to include("CMS")
+      expect(response.body).to include("Portal invite")
+      expect(response.body).to include("CE requested")
+      expect(response.body).to include("License #")
+      expect(response.body).to include("Event attendance")
+      expect(response.body).to include("Onboard")
+    end
+
+    it "offers a Create scholarship link when the registrant has none" do
+      get onboarding_event_path(event)
+
+      expect(response.body).to include("Create")
+      # SGID carries an expiry, so assert the stable parts of the new-scholarship link.
+      expect(response.body).to include("/scholarships/new?allocatable_sgid=")
+      expect(response.body).to include("return_to=onboarding")
+    end
+
+    it "shows separately sortable first name, last name, and email columns" do
+      get onboarding_event_path(event)
+
+      # Three distinct sortable headers plus the registrant's split name + email.
+      expect(response.body).to match(/First\s*<span data-sort-indicator/)
+      expect(response.body).to match(/Last\s*<span data-sort-indicator/)
+      expect(response.body).to match(/Email\s*<span data-sort-indicator/)
+      expect(response.body).to include("Ready")
+      expect(response.body).to include(person.preferred_email)
+    end
+
+    it "wires up click-to-sort on the matrix" do
+      get onboarding_event_path(event)
+
+      expect(response.body).to include('data-controller="table-sort"')
+      expect(response.body).to include('data-table-sort-target="body"')
+      expect(response.body).to include('data-table-sort-target="header"')
+    end
+
+    it "gives each row a stable anchor id and highlights the requested one" do
+      get onboarding_event_path(event, highlight: registration.id)
+
+      expect(response.body).to include("id=\"onboarding-row-#{registration.id}\"")
+      expect(response.body).to include("ring-amber-300")
+    end
+
+    it "shows an Onboarding back-link to the row on registration edit" do
+      get edit_event_registration_path(registration, return_to: "onboarding")
+
+      expect(response.body).to include("onboarding-row-#{registration.id}")
+      expect(response.body).to include("highlight=#{registration.id}")
+    end
+
+    it "exports the matrix as CSV" do
+      get onboarding_event_path(event, format: :csv)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/csv")
+      expect(response.body).to include("First name,Last name,Email")
+      expect(response.body).to include("Mailchimp")
+      expect(response.body).to include("CE requested,CE hours,CE amount,CE license")
+      expect(response.body).to include("Portal user status,Portal access")
+      expect(response.body).to include("Comments,Flagged comments")
+      expect(response.body).to include("Ready")
+
+      # Header and data rows must have matching column counts (no misalignment).
+      rows = CSV.parse(response.body)
+      expect(rows.length).to be > 1
+      rows[1..].each { |data_row| expect(data_row.length).to eq(rows.first.length) }
+    end
+
+    it "shows registration comments joined by ::: linked to the comments section" do
+      create(:comment, commentable: registration, body: "First note")
+      create(:comment, commentable: registration, body: "Second note")
+
+      get onboarding_event_path(event)
+
+      expect(response.body).to include("Second note ::: First note").or include("First note ::: Second note")
+      expect(response.body).to include("#comments-section")
+    end
+
+    it "renders registrants with payment and grant-funded scholarship allocations" do
+      paid_event = create(:event, cost_cents: 2_000)
+      paid_reg = create(:event_registration, event: paid_event, registrant: person)
+      payment = create(:payment, amount_cents: 500, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: paid_reg, amount: 500)
+      grant = create(:grant, name: "Helping Fund")
+      scholarship = create(:scholarship, recipient: person, grant: grant, amount_cents: 1_500)
+      create(:allocation, source: scholarship, allocatable: paid_reg, amount: 1_500)
+
+      get onboarding_event_path(paid_event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Helping Fund")
+    end
+
+    it "reports Paid amount as payments only, not scholarship coverage" do
+      paid_event = create(:event, cost_cents: 2_000)
+      paid_reg = create(:event_registration, event: paid_event, registrant: person)
+      payment = create(:payment, amount_cents: 500, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: paid_reg, amount: 500)
+      scholarship = create(:scholarship, recipient: person, amount_cents: 1_500)
+      create(:allocation, source: scholarship, allocatable: paid_reg, amount: 1_500)
+
+      get onboarding_event_path(paid_event, format: :csv)
+
+      row = CSV.parse(response.body).find { |r| r[1] == person.last_name }
+      headers = CSV.parse(response.body).first
+      paid_amount = row[headers.index("Paid amount")]
+      scholarship_amount = row[headers.index("Scholarship amount")]
+
+      expect(paid_amount).to eq("$5")        # the $5 payment, NOT the $15 scholarship
+      expect(scholarship_amount).to eq("$15")
+    end
+
+    it "redirects a non-admin" do
+      sign_in user
+      get onboarding_event_path(event)
+
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
+  describe "PATCH /event_registrations/:id/update_onboarding" do
+    let(:registration) { create(:event_registration, event: event) }
+
+    before { sign_in admin }
+
+    it "creates an audited completion row when a checklist step is checked" do
+      expect {
+        patch update_onboarding_event_registration_path(registration),
+              params: { field: "set_up_in_mailchimp", value: "1" },
+              as: :turbo_stream
+      }.to change { registration.checklist_completions.where(step: "set_up_in_mailchimp").count }.by(1)
+
+      completion = registration.checklist_completions.find_by(step: "set_up_in_mailchimp")
+      expect(completion.completed_by).to eq(admin)
+      expect(completion.completed_at).to be_present
+    end
+
+    it "removes the completion row when a checklist step is unchecked" do
+      create(:event_registration_checklist_completion, event_registration: registration, step: "set_up_in_mailchimp")
+
+      expect {
+        patch update_onboarding_event_registration_path(registration),
+              params: { field: "set_up_in_mailchimp", value: "0" },
+              as: :turbo_stream
+      }.to change { registration.checklist_completions.where(step: "set_up_in_mailchimp").count }.by(-1)
+    end
+
+    it "toggles a day-attendance boolean" do
+      patch update_onboarding_event_registration_path(registration),
+            params: { field: "completed_day_1", value: "1" },
+            as: :turbo_stream
+
+      expect(registration.reload.completed_day_1).to be(true)
+    end
+
+    it "saves a fee note" do
+      patch update_onboarding_event_registration_path(registration),
+            params: { field: "fee_note", value: "PAID FOR TAC261" },
+            as: :turbo_stream
+
+      expect(registration.reload.fee_note).to eq("PAID FOR TAC261")
+    end
+
+
+    it "rejects an unknown field" do
+      patch update_onboarding_event_registration_path(registration),
+            params: { field: "drop_table", value: "1" },
+            as: :turbo_stream
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "redirects a non-admin without changing anything" do
+      sign_in user
+      expect {
+        patch update_onboarding_event_registration_path(registration),
+              params: { field: "set_up_in_mailchimp", value: "1" }
+      }.not_to change(EventRegistrationChecklistCompletion, :count)
+
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
   describe "GET /events/:id/dashboard" do
     let(:event) { create(:event, cost_cents: 10_000) }
     let(:person) { create(:person) }

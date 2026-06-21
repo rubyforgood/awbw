@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
   skip_before_action :authenticate_user!, only: [ :index, :show, :staff, :details, :ce_hours ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder confirm_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants onboarding details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder confirm_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
 
   def index
     authorize!
@@ -114,6 +114,47 @@ class EventsController < ApplicationController
       format.csv do
         send_data event_registrations_csv_string,
           filename: "event-#{@event.id}-registrations-#{Date.current.iso8601}.csv",
+          type: "text/csv",
+          disposition: "attachment"
+      end
+    end
+  end
+
+  # Admin onboarding tracker: a per-registrant checklist matrix (system setup,
+  # info-sent milestones, attendance days) over derived data (program type,
+  # scholarship, payment). Mirrors the registrants roster's filters/active toggle.
+  def onboarding
+    authorize! @event, to: :registrants?
+    @event = @event.decorate
+    scope = @event.event_registrations
+      .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, registrant: [ :user, { affiliations: :organization } ])
+      .joins(:registrant)
+    scope = scope.keyword(params[:keyword]) if params[:keyword].present?
+
+    @active_count = scope.active.count
+    @inactive_count = scope.inactive.count
+    @status_filter = params[:status_filter].presence || "active"
+    scope = @status_filter == "inactive" ? scope.inactive : scope.active
+
+    @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name")).to_a
+    # `scholarships` reaches the grant through the polymorphic `allocations.source`,
+    # which Rails can't eager-load with a nested `:grant` (it tries `grant` on every
+    # source type, e.g. CashPayment). Preload grants on the loaded scholarships in a
+    # second pass so the matrix's scholarship column stays query-free.
+    ActiveRecord::Associations::Preloader.new(
+      records: @event_registrations.flat_map(&:scholarships),
+      associations: :grant
+    ).call
+
+    # Column show/hide is server-side: `hide` is a comma-separated list of column
+    # toggle keys the admin has hidden, threaded through the filters and tab links.
+    @hidden_columns = params[:hide].to_s.split(",").map(&:strip).reject(&:blank?)
+
+    respond_to do |format|
+      format.html
+      format.csv do
+        send_data onboarding_csv_string,
+          filename: "event-#{@event.id}-onboarding-#{Date.current.iso8601}.csv",
           type: "text/csv",
           disposition: "attachment"
       end
@@ -538,6 +579,77 @@ class EventsController < ApplicationController
       registration.intends_to_pay? ? "Yes" : "No",
       payment_total
     ]
+  end
+
+  def onboarding_csv_string
+    require "csv"
+    cost_required = @event.cost_cents.to_i > 0
+    day_count = @event.day_count
+    headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
+    headers += [ "Payment status", "Fees due", "Paid amount" ] if cost_required
+    headers << "Fee note"
+    headers += [ "Discounted amount", "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
+    headers += [ "CE requested", "CE hours", "CE amount", "CE license" ]
+    headers += EventRegistration::CHECKLIST_STEPS.values
+    headers += [ "Portal user status", "Portal access" ]
+    headers += (1..day_count).map { |day| "Day #{day}" }
+    headers << "Attendance status"
+    headers += [ "Comments", "Flagged comments" ]
+
+    CSV.generate(headers: headers, write_headers: true) do |csv_out|
+      @event_registrations.each do |registration|
+        csv_out << onboarding_csv_row(registration, cost_required, day_count)
+      end
+    end
+  end
+
+  def onboarding_csv_row(registration, cost_required, day_count)
+    person = registration.registrant
+    scholarship = registration.scholarships.first
+    statuses = registration.program_statuses.map { |status| status.to_s.titleize }.join(", ")
+
+    row = [
+      person.first_name,
+      person.last_name,
+      person.preferred_email.presence || "",
+      registration.organizations.map(&:name).join("; ").presence || "",
+      statuses
+    ]
+    if cost_required
+      due_cents = [ @event.cost_cents.to_i - registration.allocations_sum, 0 ].max
+      row << registration.payment_status_label
+      row << helpers.dollars_from_cents(due_cents)
+      row << helpers.dollars_from_cents(registration.payments_sum)
+    end
+    row << registration.fee_note.to_s
+    row << (registration.discount_sum.positive? ? helpers.dollars_from_cents(registration.discount_sum) : "")
+    row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
+    row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
+    row << onboarding_scholarship_tasks_csv(registration)
+    ce_hours = registration.ce_hours_requested.to_i
+    row << (registration.ce_credit_requested? ? "Yes" : "No")
+    row << (ce_hours.positive? ? ce_hours : "")
+    row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
+    row << registration.ce_license_number.to_s
+    EventRegistration::CHECKLIST_STEPS.each_key do |step|
+      row << (registration.checklist_step_completed?(step) ? "Yes" : "No")
+    end
+    account_status = registration.account_status
+    row << { "none" => "No account", "has_access" => "Has access", "invited" => "Invited", "no_access" => "No access" }.fetch(account_status, account_status.to_s.humanize)
+    row << (account_status == "has_access" ? "Yes" : "No")
+    (1..day_count).each do |day|
+      row << (registration.public_send("completed_day_#{day}") ? "Yes" : "No")
+    end
+    row << registration.attendance_status_label
+    row << registration.comments.map { |comment| comment.body.to_s.strip }.reject(&:blank?).join(" ::: ")
+    row << (registration.comments.any?(&:flagged?) ? "Yes" : "No")
+    row
+  end
+
+  def onboarding_scholarship_tasks_csv(registration)
+    scholarships = registration.scholarships
+    return "" if scholarships.none?
+    scholarships.all?(&:tasks_completed?) ? "Yes" : "No"
   end
 
   def assign_event_forms(event)

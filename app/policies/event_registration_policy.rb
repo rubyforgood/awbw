@@ -15,6 +15,9 @@ class EventRegistrationPolicy < ApplicationPolicy
   def select_organization? = admin?
   def create_organization? = admin?
   def unlink_organization? = admin?
+  # Editing the onboarding matrix is an admin management action; event owners
+  # (the event's creator) manage their own events' onboarding too.
+  def update_onboarding? = admin? || event_owner?
 
 
   relation_scope do |relation|
@@ -28,5 +31,10 @@ class EventRegistrationPolicy < ApplicationPolicy
   def owner?
     return false unless user
     record.registrant_id == user.person_id
+  end
+
+  def event_owner?
+    return false unless user
+    record.event&.created_by_id == user.id
   end
 end

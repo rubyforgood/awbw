@@ -140,6 +140,16 @@ class Event < ApplicationRecord
     !ended? && (registration_close_date.nil? || registration_close_date >= Time.current)
   end
 
+  # How many calendar days the event spans (inclusive), clamped to 1..5 — drives
+  # how many per-day attendance columns the Onboarding tab shows.
+  def day_count
+    return 1 if start_date.blank?
+
+    last_day = (end_date.presence || start_date).to_date
+    span = (last_day - start_date.to_date).to_i + 1
+    span.clamp(1, 5)
+  end
+
   def time_title
     "(#{ start_text }) #{ name }"
   end
