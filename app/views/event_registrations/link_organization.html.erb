@@ -75,10 +75,7 @@
           <% @linked_organizations.each do |org| %>
             <li class="flex items-start justify-between gap-3 <%= org_swatch[:bg] %> border <%= org_swatch[:border] %> rounded-lg p-3">
               <div class="min-w-0">
-                <p class="font-medium text-gray-800"><%= org.name %></p>
-                <% if org.city_state.present? %>
-                  <p class="text-xs text-gray-500"><%= org.city_state %></p>
-                <% end %>
+                <p class="font-medium text-gray-800"><%= org.name %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
                 <%= render "org_affiliation_pills", org: org, affiliations: (@affiliations_by_org[org.id] || []),
                                                     submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
               </div>
@@ -136,11 +133,8 @@
                             class: "flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3" do %>
                 <%= hidden_field_tag :organization_id, org.id %>
                 <%= hidden_field_tag :return_to, params[:return_to] %>
-                <div>
-                  <p class="font-medium text-gray-800"><%= org.name %></p>
-                  <% if org.city_state.present? %>
-                    <p class="text-xs text-gray-500"><%= org.city_state %></p>
-                  <% end %>
+                <div class="min-w-0">
+                  <p class="font-medium text-gray-800"><%= org.name %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
                 </div>
                 <%= submit_tag "Link organization", class: "rounded-md bg-blue-900 px-4 py-1.5 text-white text-sm font-medium hover:bg-blue-800 transition cursor-pointer" %>
               <% end %>
