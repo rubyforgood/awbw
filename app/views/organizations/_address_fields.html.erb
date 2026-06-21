@@ -17,7 +17,7 @@
                   value: f.object.address_type,
                   class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                 } %>
-    <div class="flex items-center">
+    <div class="flex items-center gap-6">
       <%= f.input :primary,
                   as: :boolean,
                   label: "Primary",
@@ -25,8 +25,6 @@
                     checked: f.object.new_record? || f.object.primary?,
                     class: "mr-2 rounded focus:ring-blue-500 text-blue-600"
                   } %>
-    </div>
-    <div class="flex items-center">
       <%= f.input :inactive,
                   as: :boolean,
                   label: "Inactive",
