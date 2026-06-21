@@ -1218,6 +1218,10 @@ if facilitator_training && registration_form
   # Real, existing orgs to link against / match on (skip the AWBW house org).
   demo_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
   matched_org = demo_orgs.first
+  # A partial of the matched org's name (its words minus the first) shares words
+  # with it but isn't an exact match — drives the fuzzy "Suggested matches" list
+  # (case 9). Nil when the org name is a single word (no partial to take).
+  fuzzy_agency = matched_org&.name.to_s.split.length.to_i > 1 ? matched_org.name.split.drop(1).join(" ") : nil
 
   link_org = ->(registration, organization) do
     Affiliation.find_or_create_by!(person: registration.registrant, organization: organization) do |aff|
@@ -1256,6 +1260,9 @@ if facilitator_training && registration_form
     { last: "7 None nothing typed" },
     { last: "8 Pending matches existing org", agency: matched_org&.name }
   ]
+  # Case 9: a partial of an existing org's name — not an exact match, so it shows
+  # BOTH a "Create and link" row and the existing org under fuzzy "Suggested matches".
+  scenarios << { last: "9 Fuzzy match suggestions", agency: fuzzy_agency } if fuzzy_agency.present?
 
   scenarios.each_with_index do |scenario, i|
     person = Person.create!(
@@ -1269,6 +1276,24 @@ if facilitator_training && registration_form
 
     Array(scenario[:orgs]).each { |org| link_org.call(registration, org) }
     submit_agency_name.call(registration, scenario[:agency]) if scenario.key?(:agency)
+  end
+
+  # Demo 10: a registrant with more than one registration-form submission, each
+  # naming a different org we don't have — exercises the per-submission "View
+  # submission #N" links and one "Create and link" row per distinct submitted org.
+  if agency_field
+    demo_multi = Person.create!(
+      email: "orgchip.demo.10@seed.example.com",
+      first_name: "Org Demo",
+      last_name: "10 Multiple submissions"
+    )
+    EventRegistration.find_or_create_by!(event: facilitator_training, registrant: demo_multi) do |reg|
+      reg.status = "registered"
+    end
+    [ "Greenfield Survivor Services", "Harbor Light Counseling" ].each do |org_name|
+      submission = FormSubmission.create!(person: demo_multi, form: registration_form, event: facilitator_training)
+      submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
+    end
   end
 
   # --- Affiliation-status demo: two affiliations per org (a real job title plus the

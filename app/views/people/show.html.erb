@@ -1,4 +1,13 @@
 <% content_for(:page_bg_class, "admin-or-owner-or-authsearchable") %>
+<%# Returned from a registrant's profile link on the event registrants page. Shown
+    above the profile topper; needs event_id since the profile isn't event-scoped. %>
+<% if params[:return_to] == "registrants" && params[:event_id].present? %>
+  <div class="mb-3">
+    <%= link_to registrants_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to registrants
+    <% end %>
+  </div>
+<% end %>
 <div class="admin-or-owner <%#= DomainTheme.bg_class_for(:people) %> border border-gray-200 rounded-xl shadow overflow-hidden">
   <!-- Person header banner -->
   <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people, intensity: 300) %> px-8 py-3">

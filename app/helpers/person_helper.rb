@@ -1,5 +1,5 @@
 module PersonHelper
-  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false)
+  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false, path_params: {})
     if inactive
       bg = "bg-gray-100"
       hover_bg = "hover:bg-gray-200"
@@ -15,7 +15,7 @@ module PersonHelper
     full_name = display_name || person.try(:name) || person.to_s
     hover_title = [ full_name, subtitle ].compact_blank.join(" — ")
 
-    link_to person_path(person),
+    link_to person_path(person, **path_params),
             data: { turbo_prefetch: false }.merge(data),
             title: hover_title,
             class: "group relative flex items-center gap-2
