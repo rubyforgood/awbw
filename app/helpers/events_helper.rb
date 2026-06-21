@@ -1,4 +1,17 @@
 module EventsHelper
+  # Stable anchor id for a registrant's row on the Onboarding matrix, so back-links
+  # from detail pages can scroll to (and highlight) the row they came from.
+  def onboarding_row_id(record_or_id)
+    id = record_or_id.respond_to?(:id) ? record_or_id.id : record_or_id
+    "onboarding-row-#{id}"
+  end
+
+  # Path back to a specific registrant's row on the Onboarding matrix (scrolls to
+  # and highlights it). Accepts an Event or event id, and a registration id.
+  def onboarding_event_row_path(event_or_id, registration_id)
+    onboarding_event_path(event_or_id, anchor: onboarding_row_id(registration_id), highlight: registration_id)
+  end
+
   # Ordered column descriptors for the event Onboarding matrix. The array index
   # is the table-sort column index, so the header row and every body row iterate
   # this same list — keeping header buttons and cell positions aligned no matter

@@ -2,30 +2,34 @@
     so cell positions line up with the sortable header.
     Locals: registration, event, columns, day_count. %>
 <% person = registration.registrant %>
+<%# Carried to non-event-scoped destinations (person/org/user) so their eyebrow can
+    link back to this exact row. Event-scoped pages derive it from the record. %>
+<% onboarding_back = { return_to: "onboarding", event_id: event.id, highlight: registration.id } %>
 <% new_scholarship_link = new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "onboarding") %>
 <% align_class = { "left" => "text-left", "center" => "text-center", "right" => "text-right" } %>
-<tr id="<%= dom_id(registration, :onboarding_row) %>" class="hover:bg-gray-50 transition-colors duration-150">
+<% highlighted = params[:highlight].to_s == registration.id.to_s %>
+<tr id="<%= onboarding_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-amber-50 ring-2 ring-inset ring-amber-300" : "hover:bg-gray-50" %>">
   <% columns.each do |column| %>
     <% td_classes = [ "px-4 py-2 text-sm", align_class[column[:align]] ]
        td_classes << "sticky left-0 bg-white" if column[:sticky] %>
     <% case column[:kind]
        when :first_name %>
       <td class="<%= td_classes.join(" ") %> text-gray-800" data-sort-value="<%= person.first_name.to_s.downcase %>">
-        <%= link_to person.first_name.presence || "—", edit_person_path(person), class: "font-medium text-gray-800 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %>
+        <%= link_to person.first_name.presence || "—", edit_person_path(person, **onboarding_back), class: "font-medium text-gray-800 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %>
       </td>
 
     <% when :last_name %>
       <td class="<%= td_classes.join(" ") %> text-gray-800" data-sort-value="<%= person.last_name.to_s.downcase %>">
-        <%= link_to person.last_name.presence || "—", edit_person_path(person), class: "text-gray-800 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %>
+        <%= link_to person.last_name.presence || "—", edit_person_path(person, **onboarding_back), class: "text-gray-800 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %>
       </td>
 
     <% when :email %>
       <% email = person.preferred_email %>
       <td class="<%= td_classes.join(" ") %> text-gray-600" data-sort-value="<%= email.to_s.downcase %>">
         <% if email.present? %>
-          <!--email_off--><%= link_to email, edit_person_path(person), class: "text-gray-600 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %><!--email_on-->
+          <!--email_off--><%= link_to email, edit_person_path(person, **onboarding_back), class: "text-gray-600 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %><!--email_on-->
         <% else %>
-          <%= link_to "—", edit_person_path(person), class: "text-gray-400 hover:underline", data: { turbo_frame: "_top" } %>
+          <%= link_to "—", edit_person_path(person, **onboarding_back), class: "text-gray-400 hover:underline", data: { turbo_frame: "_top" } %>
         <% end %>
       </td>
 
@@ -46,7 +50,7 @@
       <% org = registration.organizations.first %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= statuses.map(&:to_s).sort.join %>">
         <% if statuses.any? && org %>
-          <%= link_to edit_organization_path(org, anchor: "affiliations"), class: "inline-flex flex-col items-center gap-1 hover:opacity-80", title: "Edit #{org.name} affiliations", data: { turbo_frame: "_top" } do %>
+          <%= link_to edit_organization_path(org, anchor: "affiliations", **onboarding_back), class: "inline-flex flex-col items-center gap-1 hover:opacity-80", title: "Edit #{org.name} affiliations", data: { turbo_frame: "_top" } do %>
             <% statuses.each do |status| %>
               <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
             <% end %>
@@ -221,9 +225,9 @@
     <% when :portal_invite %>
       <td class="<%= td_classes.join(" ") %> align-top" data-sort-value="<%= registration.account_status %>">
         <% if person.user.present? %>
-          <%= render "users/confirmed_status", user: person.user, invite_params: {} %>
+          <%= render "users/confirmed_status", user: person.user, invite_params: onboarding_back, return_params: onboarding_back %>
         <% else %>
-          <%= link_to "+User", new_user_path(person_id: person.id), class: "btn btn-secondary-outline", data: { turbo_frame: "_top" } %>
+          <%= link_to "+User", new_user_path(person_id: person.id, **onboarding_back), class: "btn btn-secondary-outline", data: { turbo_frame: "_top" } %>
         <% end %>
       </td>
 

@@ -920,6 +920,20 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include('data-table-sort-target="header"')
     end
 
+    it "gives each row a stable anchor id and highlights the requested one" do
+      get onboarding_event_path(event, highlight: registration.id)
+
+      expect(response.body).to include("id=\"onboarding-row-#{registration.id}\"")
+      expect(response.body).to include("ring-amber-300")
+    end
+
+    it "shows an Onboarding back-link to the row on registration edit" do
+      get edit_event_registration_path(registration, return_to: "onboarding")
+
+      expect(response.body).to include("onboarding-row-#{registration.id}")
+      expect(response.body).to include("highlight=#{registration.id}")
+    end
+
     it "exports the matrix as CSV" do
       get onboarding_event_path(event, format: :csv)
 
