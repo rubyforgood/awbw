@@ -6,7 +6,7 @@
 <% due_cents = cost_cents - paid_cents %>
 <%# Free event with nothing allocated — nothing to manage, so hide the section. %>
 <% return if cost_cents <= 0 && event_registration.allocations.empty? %>
-<section class="relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 hover:shadow-md">
+<section id="allocations-card" class="relative scroll-mt-20 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 hover:shadow-md">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:payments, intensity: 100) %> <%= DomainTheme.text_class_for(:payments, intensity: 600) %>">
       <i class="fa-solid fa-dollar-sign"></i>

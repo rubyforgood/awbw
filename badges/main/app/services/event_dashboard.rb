@@ -636,10 +636,15 @@ class EventDashboard
   # new.
   def program_status_for(organization)
     reference = registrant_affiliations_by_org[organization.id]
+      &.select(&:facilitator?)
       &.min_by { |affiliation| affiliation.start_date || Date.current }
-    reference ||= organization.affiliations.facilitators.where.not(start_date: nil).order(:start_date).first
-    return :new unless reference
-    organization.facilitator_status(reference)
+    return organization.facilitator_status(reference) if reference
+
+    # The registrant has no facilitator affiliation to this org yet (admins create
+    # those manually after the fact). Classify the org as of today rather than
+    # treating it as new by default, so an org that already has an active
+    # facilitator reads as :ongoing and a lapsed one as :reinstated.
+    organization.facilitator_status_on(Date.current)
   end
 
   # This event's active registrants' active affiliations, grouped by organization

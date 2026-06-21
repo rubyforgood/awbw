@@ -48,7 +48,7 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~75 files |
+| `app/models/` | ActiveRecord models | ~78 files |
 | `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~27 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
 | `app/models/concerns/` | Shared model modules | 15 concerns |
@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (70) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (72) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -96,6 +96,7 @@ This codebase (Rails 8.1)
 | `Workshop` | Core content: rich text fields, categories, sectors, bookmarks, variations |
 | `Event` | Events with registrations, featured/published states |
 | `EventStaff` | Join model connecting `Person` to `Event` as staff (title, `expected_to_attend`); drives the "Meet the staff" roster and "My events" |
+| `EventRegistrationChecklistCompletion` | Audited completion row for one manual onboarding step on an `EventRegistration` (`step` from `EventRegistration::CHECKLIST_STEPS`, `completed_by` User, `completed_at`); row-exists = done. Powers the event Onboarding tab's checkbox matrix |
 | `RegistrationTicketCallout` | Admin-configured call-outs shown on an event's registration ticket (title, subtitle, HTML description, `callout_type` action/reference, icon/colour, `payment_access_gated` — only shown once the registrant has `payment_access_granted?` (paid or intends to pay), draggable `position` via the positioning gem); each links to its own public detail page |
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |

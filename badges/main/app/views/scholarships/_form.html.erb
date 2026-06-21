@@ -244,6 +244,8 @@
      params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)
    elsif @allocatable.respond_to?(:event) && params[:return_to] == "recipients"
      recipients_event_path(@allocatable.event, anchor: ("participant-#{params[:participant]}" if params[:participant].present?))
+   elsif @allocatable.respond_to?(:event) && params[:return_to] == "onboarding"
+     onboarding_event_row_path(@allocatable.event, @allocatable.id)
    elsif @allocatable.respond_to?(:event)
      params[:return_to] == "registration" ? edit_event_registration_path(@allocatable) : registrants_event_path(@allocatable.event)
    elsif grant.present?
