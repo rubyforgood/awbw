@@ -148,10 +148,10 @@
     <% when :edit %>
       <td class="<%= td_classes.join(" ") %>">
         <%= link_to edit_event_registration_path(registration, return_to: "onboarding"),
-              class: "inline-flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50",
-              title: "Edit registration",
+              title: "View #{person.full_name}'s registration for #{event.title}",
+              class: "inline-flex items-center shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors",
               data: { turbo_frame: "_top" } do %>
-          <i class="fa-solid fa-pen"></i><span class="sr-only">Edit registration</span>
+          <i class="fa-solid fa-clipboard-list text-gray-400"></i>
         <% end %>
       </td>
     <% end %>
