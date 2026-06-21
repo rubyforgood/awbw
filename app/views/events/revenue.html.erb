@@ -35,7 +35,7 @@
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,1.5fr)_minmax(0,1.2fr)] gap-3">
           <%= render "revenue_kpi", label: "Fees collected", value: dollars_from_cents(featured.fees_cents),
-                value_class: "text-gray-900", card_class: "border-blue-100 bg-blue-50", note: "reg + CE paid", cents: featured.fees_cents,
+                value_class: "text-gray-900", card_class: "border-blue-300 bg-blue-200", note: "reg + CE paid", cents: featured.fees_cents,
                 prior_cents: prior&.fees_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Scholarships", value: dollars_from_cents(featured.funded_scholarship_cents),
                 value_class: "text-gray-900", card_class: "border-fuchsia-100 bg-fuchsia-50", note: "grant-funded only", cents: featured.funded_scholarship_cents,
