@@ -252,8 +252,9 @@ end
 # so the seeded data demonstrates those grey parentheticals on its registration
 # page. force-set on re-seed, mirroring the date/cost refresh above.
 Event.find_by(title: "AWBW Facilitator Training")&.update!(
-  videoconference_url: "https://awbw-org.zoom.us/j/0000000000",
+  videoconference_url: "https://awbw-org.zoom.us/j/88285411273",
   videoconference_label: "Zoom",
+  videoconference_passcode: "awbwmarch",
   autoshow_registration_details: true,
   hint_dates: "must attend both days",
   hint_times: "both days",
