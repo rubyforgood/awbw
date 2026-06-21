@@ -33,6 +33,8 @@
 # Person/User — or a model starts referencing them (person_id, user_id,
 # created_by_id, updated_by_id, polymorphic *able) — wire it in here so purges
 # keep cascading/clearing it instead of orphaning or blocking.
+# spec/services/people_remover_association_coverage_spec.rb fails when a new
+# Person/User association isn't accounted for.
 class PeopleRemover
   Skip = Data.define(:person, :reasons)
 

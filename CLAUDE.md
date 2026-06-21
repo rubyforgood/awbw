@@ -40,7 +40,7 @@ When changing a model or controller, check whether these related files need upda
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | AGENTS.md |
-| Add an association to `Person`/`User`, or a model referencing them (`person_id`, `user_id`, `created_by_id`, `updated_by_id`, polymorphic `*able`) | `PeopleRemover` (`app/services/people_remover.rb`) + its spec — wire the new data into the deletion graph so a purge cascades it, tears it down explicitly if it doesn't cascade, or surfaces it as a blocker; otherwise purges will orphan rows or fail |
+| Add an association to `Person`/`User`, or a new model referencing them (`person_id`, `user_id`, `created_by_id`, `updated_by_id`, polymorphic `*able`) | Wire it into `PeopleRemover` (`app/services/people_remover.rb`) so a purge cascades/clears it (or deliberately blocks). `spec/services/people_remover_association_coverage_spec.rb` is the source of truth — it fails on new **associations** until they're handled and allowlisted there; it can't catch a new model that only *references* Person/User, so check that case by hand |
 
 ## Code Style
 
