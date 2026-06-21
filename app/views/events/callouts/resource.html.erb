@@ -1,0 +1,5 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "#{@resource.title} — #{@event.title}") %>
+<%= render layout: "events/callouts/callout_page", locals: { title: @resource.title } do %>
+  <%= render "events/callouts/resource_body", resource: @resource %>
+<% end %>

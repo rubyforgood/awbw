@@ -2,7 +2,7 @@
 <% content_for(:page_title, "Invoice — #{@event.title}") %>
 <%= render "events/invoices/actions",
       back_path: registration_ticket_path(@event_registration.slug),
-      back_label: "Back to registration" %>
+      back_label: "Back to ticket" %>
 <div class="px-4 sm:px-8 py-6 print:p-0">
   <%= render "events/invoices/invoice", invoice: @invoice %>
 </div>

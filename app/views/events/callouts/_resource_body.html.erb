@@ -1,0 +1,16 @@
+<%# Renders a resource inside a callout page: a top-right download button (when a
+    downloadable file is attached) plus the resource display (PDF first-page preview
+    etc., via the same pipeline as resources/show). `resource` is a decorated
+    Resource. Shared by the registrant resource viewer and admin callouts that link
+    a resource. %>
+<% if resource.downloadable_asset&.file&.attached? %>
+  <div class="flex justify-end mb-4">
+    <%= link_to resource_download_path(resource), download: true, class: "btn btn-utility" do %>
+      Download <i class="fa-solid fa-download"></i>
+    <% end %>
+  </div>
+<% end %>
+
+<%= render "assets/display_assets",
+           resource: resource, file: resource.display_image,
+           variant: :hero, link: true %>
