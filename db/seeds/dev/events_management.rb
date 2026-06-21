@@ -1296,6 +1296,26 @@ if facilitator_training && registration_form
     end
   end
 
+  # Demo 11: fuzzy matching AND multiple submissions together — two submissions,
+  # each naming a partial of a different existing org. Exercises multiple "View
+  # submission #N" links, a "Create and link" row per partial, and the fuzzy
+  # "Suggested matches" list (driven by the first/primary submission).
+  fuzzy_agency_2 = demo_orgs[1]&.name.to_s.split.length.to_i > 1 ? demo_orgs[1].name.split.drop(1).join(" ") : nil
+  if agency_field && fuzzy_agency.present? && fuzzy_agency_2.present?
+    demo_fuzzy_multi = Person.create!(
+      email: "orgchip.demo.11@seed.example.com",
+      first_name: "Org Demo",
+      last_name: "11 Fuzzy + multiple submissions"
+    )
+    EventRegistration.find_or_create_by!(event: facilitator_training, registrant: demo_fuzzy_multi) do |reg|
+      reg.status = "registered"
+    end
+    [ fuzzy_agency, fuzzy_agency_2 ].each do |org_name|
+      submission = FormSubmission.create!(person: demo_fuzzy_multi, form: registration_form, event: facilitator_training)
+      submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
+    end
+  end
+
   # --- Affiliation-status demo: two affiliations per org (a real job title plus the
   # Facilitator role that gates AWBW-active), plus the position typed on the form, so
   # the org-link editor's affiliation pills can be seen across their states. ---
