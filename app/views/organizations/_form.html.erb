@@ -142,7 +142,7 @@
       <%= f.input :website_url,
                   label: "Website URL #{website_warning}".html_safe,
                   as: :string,
-                  hint: "e.g. awbw.org, and we'll add https://".html_safe,
+                  hint: "Invalid URLs won't show as a clickable link".html_safe,
                   wrapper_html: { id: "website-url-field" },
                   input_html: {
                     class: "rounded-md #{"bg-red-200" if website_warning.present? } border-gray-300
