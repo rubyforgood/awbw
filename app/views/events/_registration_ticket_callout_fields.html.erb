@@ -45,18 +45,18 @@
               data: { callout_preview_target: "typeSelect", action: "callout-preview#update" } %>
       </div>
       <div>
-        <%= f.label :icon_class, "Icon", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-        <%= f.text_field :icon_class, placeholder: "fa-solid fa-car",
-              class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono",
-              data: { callout_preview_target: "iconInput", action: "callout-preview#update" } %>
-      </div>
-      <div>
         <%= f.label :color_class, "Colour", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
         <%= f.select :color_class,
               DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
               { include_blank: "Default (by type)" },
               class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
               data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>
+      </div>
+      <div>
+        <%= f.label :icon_class, "Icon", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+        <%= f.text_field :icon_class, placeholder: "fa-solid fa-car",
+              class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono",
+              data: { callout_preview_target: "iconInput", action: "callout-preview#update" } %>
       </div>
     </div>
 
