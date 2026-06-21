@@ -168,4 +168,18 @@ RSpec.describe EventDecorator do
       expect(apple["href"]).to include("Passcode: secret123")
     end
   end
+
+  describe "#times" do
+    it "shows a multi-day event as a date range with a single daily time range" do
+      event = build(:event, start_date: Time.zone.local(2026, 4, 21, 9), end_date: Time.zone.local(2026, 4, 23, 16, 30)).decorate
+      tz = Time.zone.local(2026, 4, 21, 9).strftime("%Z")
+      expect(event.times(display_day: true, display_date: true)).to eq("Tue-Thu, Apr 21-23 @ 9 am - 4:30 pm #{tz}")
+    end
+
+    it "shows a cross-month multi-day event with both months" do
+      event = build(:event, start_date: Time.zone.local(2026, 4, 30, 9), end_date: Time.zone.local(2026, 5, 2, 16, 30)).decorate
+      tz = Time.zone.local(2026, 4, 30, 9).strftime("%Z")
+      expect(event.times(display_day: true, display_date: true)).to eq("Thu-Sat, Apr 30 - May 2 @ 9 am - 4:30 pm #{tz}")
+    end
+  end
 end
