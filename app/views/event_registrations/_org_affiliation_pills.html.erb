@@ -1,6 +1,6 @@
 <%# Renders affiliation-status pills for one org's affiliations. Shows nothing
     when the person has no affiliation for the org.
-    Locals: org, affiliations, submitted_org_name, submitted_position %>
+    Locals: org, affiliations, submitted_org_name, submitted_position, neutral (optional) %>
 <% if affiliations.any? %>
   <% badge = "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-2.5 py-0.5" %>
   <% active = ->(a) { !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) } %>
@@ -11,8 +11,18 @@
     <span class="text-[0.65rem] font-semibold uppercase tracking-wide text-gray-400">Affiliations:</span>
     <% affiliations.each do |a| %>
       <% a_active = active.call(a) %>
-      <% color = a_active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>
-      <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "No title")}#{" — inactive" unless a_active}" %>
+      <% color = a_active && !local_assigns[:neutral] ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>
+      <% start_month = a.start_date&.strftime("%B %Y") %>
+      <% end_month = a.end_date&.strftime("%B %Y") %>
+      <% duration =
+           if start_month && end_month
+             " from #{start_month} - #{end_month}"
+           elsif end_month
+             " until #{end_month}"
+           elsif start_month
+             " starting #{start_month}"
+           end %>
+      <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "No title")}#{duration}#{" — inactive" unless a_active}" %>
       <% title_attr = a.facilitator? ? "Facilitator role — determines whether the org is active with AWBW" : nil %>
       <span class="<%= badge %> <%= color %>" title="<%= title_attr %>"><%= label %></span>
     <% end %>

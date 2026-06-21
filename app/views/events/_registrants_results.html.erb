@@ -86,7 +86,7 @@
 
                   <div class="flex items-center gap-1">
                     <div class="w-52 min-w-0">
-                      <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
+                      <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }, path_params: { return_to: "registrants", event_id: @event.id }) %>
                     </div>
 
                     <% if event_form_ids.any? && (submissions = form_submissions[person.id]) %>
@@ -113,19 +113,6 @@
                       <i class="fa-solid fa-triangle-exclamation text-amber-500" title="Multiple registrants share this email address — this may cause login conflicts"></i>
                     <% end %>
                   </div>
-
-                  <%# Organizations where this person is an active facilitator —
-                      distinct from the registration's linked orgs (next column). %>
-                  <% facilitator_orgs = person.decorate.active_facilitator_organization_names %>
-                  <% if facilitator_orgs.any? %>
-                    <div class="mt-1 flex flex-wrap gap-1">
-                      <% facilitator_orgs.each do |org_name| %>
-                        <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-purple-50 text-purple-700 border-purple-200" title="Active facilitator at <%= org_name %>">
-                          <i class="fa-solid fa-chalkboard-user text-[0.6rem]"></i><%= org_name %>
-                        </span>
-                      <% end %>
-                    </div>
-                  <% end %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
