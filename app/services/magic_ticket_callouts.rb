@@ -15,6 +15,35 @@ class MagicTicketCallouts
     def theme = DomainTheme.swatch(color)
   end
 
+  # A registration-free description of one built-in card, for the event editor's
+  # callouts section. `key` is :ce_hours / :event_details for the two whose text
+  # admins edit; nil for the cards the app fully controls (shown greyed out).
+  # `subtitle` mirrors the card's ticket subtitle; `visibility` describes when the
+  # app shows it (rendered next to the "Built in" chip in the editor); `note` is an
+  # optional extra hint on where the card's content comes from.
+  EditorCard = Data.define(:key, :icon_class, :color, :title, :subtitle, :visibility, :note) do
+    def theme = DomainTheme.swatch(color)
+    def editable? = key.present?
+  end
+
+  # Every built-in card in the order it appears on a ticket, for the editor to
+  # preview the full ticket context. Keep in sync with #cards: add a card method,
+  # add it here.
+  def self.editor_cards(event)
+    [
+      EditorCard.new(nil, "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
+      EditorCard.new(nil, "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
+      EditorCard.new(nil, "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
+      EditorCard.new(:ce_hours, "fa-solid fa-graduation-cap", "teal", event.ce_hours_details_label, "Continuing education — requirements & how to request", "When a registrant requests CE credit", nil),
+      EditorCard.new(:event_details, "fa-solid fa-palette", "blue", event.event_details_label, "Important info for this event — please read", "When the content below is filled in", nil),
+      EditorCard.new(nil, "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
+      EditorCard.new(nil, "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and letter to supervisors", "Always shown", "Items link to their relevant resources."),
+      EditorCard.new(nil, "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "Always shown", "Items link to their relevant resources."),
+      EditorCard.new(nil, "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "Always shown", nil),
+      EditorCard.new(nil, "fa-solid fa-right-to-bracket", "gray", "Facilitator Portal access", "Sign in once the training is complete", "Always shown", nil)
+    ]
+  end
+
   def initialize(event_registration)
     @registration = event_registration
     @event = event_registration.event
