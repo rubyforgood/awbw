@@ -11,11 +11,4 @@ module EventRevenueHelper
     content_tag(:span, "#{arrow} #{dollars_from_cents(delta.abs)}",
                 class: "text-xs text-gray-400 tabular-nums")
   end
-
-  # Net can be negative (the org subsidised more than it took in). Render
-  # negatives as "-$1,200" so the sign reads clearly.
-  def signed_dollars_from_cents(cents)
-    return dollars_from_cents(cents) unless cents.negative?
-    "-#{dollars_from_cents(cents.abs)}"
-  end
 end

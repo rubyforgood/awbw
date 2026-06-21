@@ -83,9 +83,20 @@ RSpec.describe EventRevenueReport do
       expect(report.years.last.in_progress).to be(false)
     end
 
-    it "features the most recent finished year, with the year before it as prior" do
-      expect(report.featured_year.year).to eq(2025)
-      expect(report.prior_year.year).to eq(2024)
+    it "features the current year by default, with the next older year as prior" do
+      expect(report.featured_year.year).to eq(2026)
+      expect(report.prior_year.year).to eq(2025)
+    end
+
+    it "features an explicit year when given (e.g. the event navigated from)" do
+      scoped = described_class.new([ e2026, e2024, e2025 ], current_year: 2026, featured_year: 2024)
+      expect(scoped.featured_year.year).to eq(2024)
+      expect(scoped.prior_year).to be_nil
+    end
+
+    it "falls back to the most recent year when the featured year has no events" do
+      scoped = described_class.new([ e2024, e2025 ], current_year: 2026, featured_year: 2026)
+      expect(scoped.featured_year.year).to eq(2025)
     end
 
     it "builds an oldest-to-newest stacked series: fees, funded scholarships, subsidy" do

@@ -73,9 +73,10 @@ class EventRevenueReport
 
   include Summable
 
-  def initialize(events, current_year: Date.current.year)
+  def initialize(events, current_year: Date.current.year, featured_year: nil)
     @events = events
     @current_year = current_year
+    @featured_year_value = featured_year || current_year
   end
 
   def rows
@@ -95,19 +96,18 @@ class EventRevenueReport
       .sort_by { |group| [ group.year ? 0 : 1, -(group.year || 0) ] }
   end
 
-  # The most recent finished year — the one whose figures a CEO lifts into the
-  # annual report. Falls back to the latest year present (e.g. only the current,
-  # in-progress year exists).
+  # The year whose figures lead the KPI strip: the year navigated from (the event
+  # clicked) or the current year. Falls back to the most recent year present when
+  # that year has no events.
   def featured_year
-    years.reject(&:in_progress).first || years.first
+    years_by_value[@featured_year_value] || years.first
   end
 
-  # The year-group immediately before the featured one, for a year-over-year
-  # delta. Nil when there's nothing to compare against.
+  # The most recent year-group strictly older than the featured one, for a
+  # year-over-year delta. Nil when there's nothing older to compare against.
   def prior_year
-    return nil unless featured_year
-    index = years.index(featured_year)
-    years[index + 1]
+    return nil unless featured_year&.year
+    years.find { |group| group.year && group.year < featured_year.year }
   end
 
   # Stacked-column series by year, oldest to newest, in dollars — for the
@@ -126,6 +126,10 @@ class EventRevenueReport
   end
 
   private
+
+  def years_by_value
+    @years_by_value ||= years.index_by(&:year)
+  end
 
   def build_row(event)
     dashboard = EventDashboard.new(event)

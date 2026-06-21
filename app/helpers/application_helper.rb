@@ -451,6 +451,11 @@ module ApplicationHelper
     MoneyFormatter.dollars_from_cents(cents)
   end
 
+  # Like dollars_from_cents but preserves a leading minus for negative amounts.
+  def signed_dollars_from_cents(cents)
+    MoneyFormatter.signed_dollars_from_cents(cents)
+  end
+
   def navbar_bg_class
     if staging_environment? && !params[:nav_bg_primary].present?
       "bg-red-600"

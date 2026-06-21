@@ -1,6 +1,11 @@
+<% note = local_assigns[:note] %>
+<% note_inline = local_assigns[:note_inline] %>
 <div class="rounded-xl border border-gray-200 bg-white p-4">
   <div class="text-xs font-semibold uppercase tracking-wide text-gray-500"><%= label %></div>
-  <div class="mt-1 text-2xl font-bold tabular-nums <%= value_class %>"><%= value %></div>
+  <div class="mt-1 text-2xl font-bold tabular-nums <%= value_class %>"><%= value %><% if note && note_inline %> <span class="text-xs font-normal italic text-gray-400">(<%= note %>)</span><% end %></div>
+  <% if note && !note_inline %>
+    <div class="text-xs italic text-gray-400">(<%= note %>)</div>
+  <% end %>
   <% delta = revenue_delta(cents, prior_cents) %>
   <% if delta %>
     <div class="mt-1 flex items-center gap-1.5"><%= delta %><span class="text-xs text-gray-400">vs <%= prior_year %></span></div>
