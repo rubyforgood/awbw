@@ -88,9 +88,9 @@ RSpec.describe EventRevenueReport do
       expect(report.prior_year.year).to eq(2024)
     end
 
-    it "builds an oldest-to-newest stacked series of money in vs org subsidy" do
+    it "builds an oldest-to-newest stacked series: fees, funded scholarships, subsidy" do
       series = report.chart_series
-      expect(series.map { |s| s[:name] }).to eq([ "Money in", "Org subsidy" ])
+      expect(series.map { |s| s[:name] }).to eq([ "Fees", "Funded scholarships", "Org subsidy" ])
       expect(series.first[:data].map(&:first)).to eq(%w[2024 2025 2026])
     end
   end

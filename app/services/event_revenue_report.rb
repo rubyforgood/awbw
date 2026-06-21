@@ -24,8 +24,14 @@ class EventRevenueReport
     :outstanding_cents,
     keyword_init: true
   ) do
+    # Fees collected/projected, with no scholarship money — the cash side of
+    # money in (registration payments + projected CE).
+    def fees_cents
+      registration_payments_cents + ce_projected_cents
+    end
+
     def money_in_cents
-      registration_payments_cents + ce_projected_cents + funded_scholarship_cents
+      fees_cents + funded_scholarship_cents
     end
 
     def org_subsidy_cents
@@ -51,7 +57,7 @@ class EventRevenueReport
   SUMMABLE = %i[
     registration_payments_cents ce_projected_cents funded_scholarship_cents
     unfunded_scholarship_cents discount_cents outstanding_cents
-    money_in_cents org_subsidy_cents net_cents total_expected_cents
+    fees_cents money_in_cents org_subsidy_cents net_cents total_expected_cents
   ].freeze
 
   module Summable
@@ -104,14 +110,19 @@ class EventRevenueReport
     years[index + 1]
   end
 
-  # Stacked-column series (money in vs org subsidy) by year, oldest to newest, in
-  # dollars — for the Chartkick trend chart.
+  # Stacked-column series by year, oldest to newest, in dollars — for the
+  # Chartkick trend chart. Fees + grant-funded scholarships make up money in;
+  # org subsidy stacks on top. Funded scholarships are broken out so grant-backed
+  # revenue is visible separately.
   def chart_series
     ascending = years.reject { |group| group.year.nil? }.reverse
-    [
-      { name: "Money in", data: ascending.map { |group| [ group.year.to_s, to_dollars(group.money_in_cents) ] } },
-      { name: "Org subsidy", data: ascending.map { |group| [ group.year.to_s, to_dollars(group.org_subsidy_cents) ] } }
-    ]
+    {
+      "Fees" => :fees_cents,
+      "Funded scholarships" => :funded_scholarship_cents,
+      "Org subsidy" => :org_subsidy_cents
+    }.map do |name, attribute|
+      { name: name, data: ascending.map { |group| [ group.year.to_s, to_dollars(group.public_send(attribute)) ] } }
+    end
   end
 
   private
