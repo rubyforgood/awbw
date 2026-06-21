@@ -1214,6 +1214,7 @@ if facilitator_training && registration_form
     )
   end
   agency_field = registration_form.form_fields.find_by(field_identifier: "agency_name")
+  agency_position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
 
   # Real, existing orgs to link against / match on (skip the AWBW house org).
   demo_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
@@ -1234,7 +1235,11 @@ if facilitator_training && registration_form
     "Riverside Trauma Recovery",
     "Riverside Youth Outreach",
     "Riverside Wellness Collective"
-  ].each { |org_name| Organization.find_or_create_by!(name: org_name) { |o| o.organization_status = active_status } }
+  ].each do |org_name|
+    org = Organization.find_or_create_by!(name: org_name) { |o| o.organization_status = active_status }
+    # Give each a location so the fuzzy "Suggested matches" list shows city/state.
+    org.addresses.create!(street_address: "100 Demo Way", city: "Riverside", locality: "Riverside", state: "CA", zip_code: "92501", primary: true) if org.addresses.none?
+  end
 
   link_org = ->(registration, organization) do
     Affiliation.find_or_create_by!(person: registration.registrant, organization: organization) do |aff|
@@ -1263,19 +1268,22 @@ if facilitator_training && registration_form
   # Case 8 is the stale edge case: a typed name that matches an existing org but was
   # never linked (e.g. the org was created after the person registered) — it reads as
   # "Pending", and the editor offers that org as a one-click match to select.
+  # Numbers are zero-padded so the registrants list (sorted by name) shows them in
+  # order 01..11 rather than 1, 10, 11, 2, 3…
   scenarios = [
-    { last: "1 Linked one org",       orgs: demo_orgs.first(1) },
-    { last: "2 Linked three orgs",    orgs: demo_orgs.first(3) },
-    { last: "3 Pending no match",     agency: "Riverside Healing Arts Collective" },
-    { last: "4 Matched name auto-linked", orgs: demo_orgs.first(1), agency: matched_org&.name },
-    { last: "5 Mixed linked + pending", orgs: demo_orgs.first(1), agency: "Westview Community Healing" },
-    { last: "6 None blank typed",     agency: "" },
-    { last: "7 None nothing typed" },
-    { last: "8 Pending matches existing org", agency: matched_org&.name }
+    { last: "01 Linked one org",       orgs: demo_orgs.first(1) },
+    { last: "02 Linked three orgs",    orgs: demo_orgs.first(3) },
+    { last: "03 Pending no match",     agency: "Riverside Healing Arts Collective" },
+    { last: "04 Matched name auto-linked", orgs: demo_orgs.first(1), agency: matched_org&.name },
+    { last: "05 Mixed linked + pending", orgs: demo_orgs.first(1), agency: "Westview Community Healing" },
+    { last: "06 None blank typed",     agency: "" },
+    { last: "07 None nothing typed" },
+    { last: "08 Pending matches existing org", agency: matched_org&.name }
   ]
   # Case 9: a single word shared by several orgs — not an exact match, so it shows
   # a "Create and link" row plus a handful of orgs under fuzzy "Suggested matches".
-  scenarios << { last: "9 Fuzzy match suggestions", agency: fuzzy_match_word }
+  # Includes a job title so the submission detail shows a position too.
+  scenarios << { last: "09 Fuzzy match suggestions", agency: fuzzy_match_word, position: "Lead Facilitator" }
 
   scenarios.each_with_index do |scenario, i|
     person = Person.create!(
@@ -1289,6 +1297,11 @@ if facilitator_training && registration_form
 
     Array(scenario[:orgs]).each { |org| link_org.call(registration, org) }
     submit_agency_name.call(registration, scenario[:agency]) if scenario.key?(:agency)
+    if scenario[:position].present? && agency_position_field
+      submission = FormSubmission.find_or_create_by!(person: person, form: registration_form)
+      answer = submission.form_answers.find_or_initialize_by(form_field: agency_position_field)
+      answer.update!(submitted_answer: scenario[:position], question_name_when_answered: agency_position_field.name)
+    end
   end
 
   # Demo 10: a registrant with more than one registration-form submission, each
