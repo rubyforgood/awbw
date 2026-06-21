@@ -915,9 +915,14 @@ RSpec.describe "Events", type: :request do
       expect(response.media_type).to eq("text/csv")
       expect(response.body).to include("First name,Last name,Email")
       expect(response.body).to include("Mailchimp")
-      expect(response.body).to include("Portal invite")
-      expect(response.body).to include("Onboarding progress,Flagged comments,Comments")
+      expect(response.body).to include("Portal access,Portal user status")
+      expect(response.body).to include("Flagged comments,Comments")
       expect(response.body).to include("Ready")
+
+      # Header and data rows must have matching column counts (no misalignment).
+      rows = CSV.parse(response.body)
+      expect(rows.length).to be > 1
+      rows[1..].each { |data_row| expect(data_row.length).to eq(rows.first.length) }
     end
 
     it "shows registration comments joined by ::: linked to the comments section" do

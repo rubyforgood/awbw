@@ -590,11 +590,11 @@ class EventsController < ApplicationController
     day_count = @event.day_count
     headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
     headers += [ "Payment status", "Fees due", "Paid" ] if cost_required
-    headers += [ "Scholarship amount", "Scholarship grant", "Scholarship tasks completed", "Fee note", "Portal invite" ]
+    headers += [ "Scholarship amount", "Scholarship grant", "Scholarship tasks completed", "Fee note", "Portal access", "Portal user status" ]
     headers += EventRegistration::CHECKLIST_STEPS.values
     headers << "Attendance status"
     headers += (1..day_count).map { |day| "Day #{day}" }
-    headers += [ "Onboarding progress", "Flagged comments", "Comments" ]
+    headers += [ "Flagged comments", "Comments" ]
 
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
@@ -625,7 +625,9 @@ class EventsController < ApplicationController
     row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
     row << onboarding_scholarship_tasks_csv(registration)
     row << registration.fee_note.to_s
-    row << (%w[ has_access invited ].include?(registration.account_status) ? "Yes" : "No")
+    account_status = registration.account_status
+    row << (account_status == "has_access" ? "Yes" : "No")
+    row << { "none" => "No account", "has_access" => "Has access", "invited" => "Invited", "no_access" => "No access" }.fetch(account_status, account_status.to_s.humanize)
     EventRegistration::CHECKLIST_STEPS.each_key do |step|
       row << (registration.checklist_step_completed?(step) ? "Yes" : "No")
     end
