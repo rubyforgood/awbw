@@ -1219,9 +1219,22 @@ if facilitator_training && registration_form
   demo_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
   matched_org = demo_orgs.first
   # A partial of the matched org's name (its words minus the first) shares words
-  # with it but isn't an exact match — drives the fuzzy "Suggested matches" list
-  # (case 9). Nil when the org name is a single word (no partial to take).
+  # with it but isn't an exact match — drives a fuzzy "Suggested matches" hit
+  # (case 11). Nil when the org name is a single word (no partial to take).
   fuzzy_agency = matched_org&.name.to_s.split.length.to_i > 1 ? matched_org.name.split.drop(1).join(" ") : nil
+
+  # Several orgs that share a word ("Riverside"), so typing just that word surfaces
+  # a handful of fuzzy "Suggested matches" at once (case 9). find_or_create so
+  # re-seeding doesn't pile up duplicates.
+  active_status = OrganizationStatus.find_by(name: "Active")
+  fuzzy_match_word = "Riverside"
+  [
+    "Riverside Counseling Center",
+    "Riverside Family Services",
+    "Riverside Trauma Recovery",
+    "Riverside Youth Outreach",
+    "Riverside Wellness Collective"
+  ].each { |org_name| Organization.find_or_create_by!(name: org_name) { |o| o.organization_status = active_status } }
 
   link_org = ->(registration, organization) do
     Affiliation.find_or_create_by!(person: registration.registrant, organization: organization) do |aff|
@@ -1260,9 +1273,9 @@ if facilitator_training && registration_form
     { last: "7 None nothing typed" },
     { last: "8 Pending matches existing org", agency: matched_org&.name }
   ]
-  # Case 9: a partial of an existing org's name — not an exact match, so it shows
-  # BOTH a "Create and link" row and the existing org under fuzzy "Suggested matches".
-  scenarios << { last: "9 Fuzzy match suggestions", agency: fuzzy_agency } if fuzzy_agency.present?
+  # Case 9: a single word shared by several orgs — not an exact match, so it shows
+  # a "Create and link" row plus a handful of orgs under fuzzy "Suggested matches".
+  scenarios << { last: "9 Fuzzy match suggestions", agency: fuzzy_match_word }
 
   scenarios.each_with_index do |scenario, i|
     person = Person.create!(

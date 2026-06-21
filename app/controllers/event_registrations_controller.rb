@@ -336,7 +336,7 @@ class EventRegistrationsController < ApplicationController
     name_field_id = field_ids["agency_name"]
     position_field_id = field_ids["agency_position"]
 
-    registration.registrant.form_submissions
+    entries = registration.registrant.form_submissions
       .where(form: form)
       .order(:created_at)
       .includes(:form_answers)
@@ -348,6 +348,15 @@ class EventRegistrationsController < ApplicationController
           position: position_field_id && answers[position_field_id]&.submitted_answer
         }
       end
+
+    # Attach the matching DB org (if any) for each submitted name, so the view can
+    # show its city/state next to the answer. Batched to avoid a query per entry.
+    names = entries.filter_map { |entry| entry[:org_name].presence&.strip&.downcase }.uniq
+    orgs_by_name = names.any? ?
+      Organization.where("LOWER(name) IN (?)", names).index_by { |org| org.name.to_s.downcase } :
+      {}
+    entries.each { |entry| entry[:organization] = entry[:org_name].present? ? orgs_by_name[entry[:org_name].strip.downcase] : nil }
+    entries
   end
 
   # Distinct, non-blank org names the registrant typed across their registration-form
