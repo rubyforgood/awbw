@@ -1,82 +1,97 @@
 require "rails_helper"
 
 RSpec.describe EventRevenueReport do
-  subject(:report) { described_class.new([ event ]) }
+  describe "per-event figures" do
+    subject(:report) { described_class.new([ event ]) }
 
-  let(:event) { create(:event, cost_cents: 10_000, facilitator_training: true) }
-  let(:person1) { create(:person) }
-  let(:person2) { create(:person) }
+    let(:event) { create(:event, cost_cents: 10_000, facilitator_training: true) }
+    let(:person1) { create(:person) }
+    let(:person2) { create(:person) }
 
-  let!(:reg1) { create(:event_registration, event: event, registrant: person1, status: "registered") }
-  let!(:reg2) do
-    create(:event_registration, event: event, registrant: person2, status: "registered",
-                                ce_credit_requested: true, ce_hours_requested: 3)
+    let!(:reg1) { create(:event_registration, event: event, registrant: person1, status: "registered") }
+    let!(:reg2) do
+      create(:event_registration, event: event, registrant: person2, status: "registered",
+                                  ce_credit_requested: true, ce_hours_requested: 3)
+    end
+
+    before do
+      # A cancelled registration whose money/CE must be ignored everywhere.
+      cancelled = create(:event_registration, event: event, registrant: create(:person), status: "cancelled",
+                                               ce_credit_requested: true, ce_hours_requested: 6)
+      create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
+                          allocatable: cancelled, amount: 5_000)
+
+      # reg1: covered by a payment plus a funded (grant-backed) scholarship.
+      create(:allocation, source: create(:payment, amount_cents: 6_000, amount_cents_remaining: 6_000),
+                          allocatable: reg1, amount: 6_000)
+      funded = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant))
+      create(:allocation, source: funded, allocatable: reg1, amount: 4_000)
+
+      # reg2: partial payment, an unfunded scholarship, and a discount; still owes.
+      create(:allocation, source: create(:payment, amount_cents: 3_000, amount_cents_remaining: 3_000),
+                          allocatable: reg2, amount: 3_000)
+      unfunded = create(:scholarship, recipient: person2, amount_cents: 2_000, grant: nil)
+      create(:allocation, source: unfunded, allocatable: reg2, amount: 2_000)
+      create(:allocation, source: create(:discount, amount_cents: 1_000), allocatable: reg2, amount: 1_000)
+    end
+
+    let(:row) { report.rows.first }
+
+    it "reports the raw components" do
+      expect(row.registration_payments_cents).to eq(9_000)
+      expect(row.ce_projected_cents).to eq(7_500)
+      expect(row.funded_scholarship_cents).to eq(4_000)
+      expect(row.unfunded_scholarship_cents).to eq(2_000)
+      expect(row.discount_cents).to eq(1_000)
+      expect(row.outstanding_cents).to eq(4_000)
+    end
+
+    it "buckets money in (payments + projected CE + funded scholarships)" do
+      expect(row.money_in_cents).to eq(20_500)
+    end
+
+    it "buckets org subsidy (unfunded scholarships + discounts)" do
+      expect(row.org_subsidy_cents).to eq(3_000)
+    end
+
+    it "nets money in against org subsidy" do
+      expect(row.net_cents).to eq(17_500)
+    end
+
+    it "projects total expected as money in plus outstanding" do
+      expect(row.total_expected_cents).to eq(24_500)
+    end
+
+    it "rolls the buckets up across the report" do
+      expect(report.money_in_cents).to eq(20_500)
+      expect(report.org_subsidy_cents).to eq(3_000)
+      expect(report.net_cents).to eq(17_500)
+      expect(report.total_expected_cents).to eq(24_500)
+    end
   end
 
-  before do
-    # A cancelled registration whose money/CE must be ignored everywhere.
-    cancelled = create(:event_registration, event: event, registrant: create(:person), status: "cancelled",
-                                             ce_credit_requested: true, ce_hours_requested: 6)
-    create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
-                        allocatable: cancelled, amount: 5_000)
+  describe "grouping over time" do
+    let(:e2024) { create(:event, start_date: Date.new(2024, 5, 1)) }
+    let(:e2025) { create(:event, start_date: Date.new(2025, 5, 1)) }
+    let(:e2026) { create(:event, start_date: Date.new(2026, 5, 1)) }
 
-    # reg1: fully covered by a payment plus a funded (grant-backed) scholarship.
-    create(:allocation, source: create(:payment, amount_cents: 6_000, amount_cents_remaining: 6_000),
-                        allocatable: reg1, amount: 6_000)
-    funded = create(:scholarship, recipient: person1, amount_cents: 4_000, grant: create(:grant))
-    create(:allocation, source: funded, allocatable: reg1, amount: 4_000)
+    subject(:report) { described_class.new([ e2026, e2024, e2025 ], current_year: 2026) }
 
-    # reg2: partial payment plus an unfunded scholarship; still owes registration.
-    create(:allocation, source: create(:payment, amount_cents: 3_000, amount_cents_remaining: 3_000),
-                        allocatable: reg2, amount: 3_000)
-    unfunded = create(:scholarship, recipient: person2, amount_cents: 2_000, grant: nil)
-    create(:allocation, source: unfunded, allocatable: reg2, amount: 2_000)
-  end
+    it "groups events by calendar year, newest first, flagging the current year" do
+      expect(report.years.map(&:year)).to eq([ 2026, 2025, 2024 ])
+      expect(report.years.first.in_progress).to be(true)
+      expect(report.years.last.in_progress).to be(false)
+    end
 
-  let(:row) { report.rows.first }
+    it "features the most recent finished year, with the year before it as prior" do
+      expect(report.featured_year.year).to eq(2025)
+      expect(report.prior_year.year).to eq(2024)
+    end
 
-  it "reports registration payments collected" do
-    expect(row.registration_payments_cents).to eq(9_000)
-  end
-
-  it "projects CE revenue at $25 per requested hour" do
-    expect(row.ce_projected_cents).to eq(7_500)
-  end
-
-  it "splits scholarships by whether a funder backs them" do
-    expect(row.funded_scholarship_cents).to eq(4_000)
-    expect(row.unfunded_scholarship_cents).to eq(2_000)
-  end
-
-  it "counts only unpaid registration cost as outstanding (CE is projected revenue)" do
-    # reg1 fully covered (0), reg2 owes 5_000 on registration.
-    expect(row.outstanding_cents).to eq(5_000)
-  end
-
-  it "totals all monies, with and without unfunded scholarships" do
-    expect(row.total_monies_cents).to eq(22_500)
-    expect(row.total_monies_excluding_unfunded_cents).to eq(20_500)
-  end
-
-  it "reports monies only, excluding all scholarships" do
-    # payments 9_000 + projected CE 7_500.
-    expect(row.monies_only_cents).to eq(16_500)
-  end
-
-  it "reports total expected monies (all monies plus outstanding)" do
-    # total monies 22_500 + outstanding 5_000.
-    expect(row.total_expected_monies_cents).to eq(27_500)
-  end
-
-  it "rolls each column up across events" do
-    expect(report.registration_payments_cents).to eq(9_000)
-    expect(report.ce_projected_cents).to eq(7_500)
-    expect(report.funded_scholarship_cents).to eq(4_000)
-    expect(report.unfunded_scholarship_cents).to eq(2_000)
-    expect(report.outstanding_cents).to eq(5_000)
-    expect(report.monies_only_cents).to eq(16_500)
-    expect(report.total_monies_cents).to eq(22_500)
-    expect(report.total_monies_excluding_unfunded_cents).to eq(20_500)
-    expect(report.total_expected_monies_cents).to eq(27_500)
+    it "builds an oldest-to-newest stacked series of money in vs org subsidy" do
+      series = report.chart_series
+      expect(series.map { |s| s[:name] }).to eq([ "Money in", "Org subsidy" ])
+      expect(series.first[:data].map(&:first)).to eq(%w[2024 2025 2026])
+    end
   end
 end

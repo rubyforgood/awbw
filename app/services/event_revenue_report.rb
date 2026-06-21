@@ -1,72 +1,118 @@
-# Cross-event revenue report: one row per paid event summarizing the money behind
-# it — registration payments collected, projected continuing-education revenue,
-# scholarships split by whether a funder/grant backs them, what's still
-# outstanding, and the rolled-up totals. Reuses EventDashboard per event so the
-# figures reconcile with each event's dashboard.
+# Revenue report for nonprofit CEOs: how much real money came in, how much the
+# org subsidized from its own pocket, and the net — per event, grouped by
+# calendar year for an over-time view and annual-report figures.
 #
-# Continuing education is not yet collected anywhere (no payment/allocation
-# tracking exists), so CE is reported as a *projected* amount — $25 x hours
-# requested — counted as revenue rather than outstanding.
+# Money in   = registration payments collected + projected CE + grant-funded
+#              scholarships (grant money the org received).
+# Org subsidy = unfunded scholarships + discounts (cost the org absorbs).
+# Net         = money in - org subsidy.
+#
+# Continuing education has no payment tracking yet, so projected CE is an
+# estimate ($25 x hours requested), flagged in the UI. It's counted in money in
+# (and therefore net) per the report's definition.
 class EventRevenueReport
   CE_HOURLY_RATE_CENTS = EventRegistration::CE_HOURLY_RATE_DOLLARS * 100
 
+  # Raw per-event component figures, with the bucket totals derived from them.
   Row = Struct.new(
     :event,
     :registration_payments_cents,
     :ce_projected_cents,
     :funded_scholarship_cents,
     :unfunded_scholarship_cents,
-    :registration_outstanding_cents,
+    :discount_cents,
+    :outstanding_cents,
     keyword_init: true
   ) do
-    # Registration fees not yet covered (event cost minus payments, discounts,
-    # and scholarships). CE is excluded — it's reported as projected revenue.
-    def outstanding_cents
-      registration_outstanding_cents
+    def money_in_cents
+      registration_payments_cents + ce_projected_cents + funded_scholarship_cents
     end
 
-    # Cash-style revenue only: registrant payments plus projected CE, with no
-    # scholarship money of any kind counted.
-    def monies_only_cents
-      registration_payments_cents + ce_projected_cents
+    def org_subsidy_cents
+      unfunded_scholarship_cents + discount_cents
     end
 
-    # All revenue tied to the event: registrant payments, projected CE, and both
-    # funded and unfunded scholarships.
-    def total_monies_cents
-      registration_payments_cents + ce_projected_cents + funded_scholarship_cents + unfunded_scholarship_cents
+    def net_cents
+      money_in_cents - org_subsidy_cents
     end
 
-    # Total revenue excluding scholarships with no funder behind them — the comped
-    # cost that never becomes real money.
-    def total_monies_excluding_unfunded_cents
-      total_monies_cents - unfunded_scholarship_cents
+    # Everything expected once outstanding registration fees are collected.
+    def total_expected_cents
+      money_in_cents + outstanding_cents
     end
 
-    # Everything the event is expected to bring in once what's owed is collected:
-    # all monies plus the still-outstanding registration cost.
-    def total_expected_monies_cents
-      total_monies_cents + outstanding_cents
+    def year
+      event.start_date&.year
     end
   end
 
-  def initialize(events)
+  # The figures that get summed — raw components plus derived buckets — so a year
+  # subtotal or the grand total is just a sum over rows.
+  SUMMABLE = %i[
+    registration_payments_cents ce_projected_cents funded_scholarship_cents
+    unfunded_scholarship_cents discount_cents outstanding_cents
+    money_in_cents org_subsidy_cents net_cents total_expected_cents
+  ].freeze
+
+  module Summable
+    SUMMABLE.each do |attribute|
+      define_method(attribute) { rows.sum { |row| row.public_send(attribute) } }
+    end
+  end
+
+  # One calendar year of events, with its rows and summed subtotals.
+  YearGroup = Struct.new(:year, :rows, :in_progress, keyword_init: true) do
+    include Summable
+  end
+
+  include Summable
+
+  def initialize(events, current_year: Date.current.year)
     @events = events
+    @current_year = current_year
   end
 
   def rows
     @rows ||= @events.map { |event| build_row(event) }
   end
 
-  def registration_payments_cents = sum_rows(:registration_payments_cents)
-  def ce_projected_cents = sum_rows(:ce_projected_cents)
-  def funded_scholarship_cents = sum_rows(:funded_scholarship_cents)
-  def unfunded_scholarship_cents = sum_rows(:unfunded_scholarship_cents)
-  def outstanding_cents = sum_rows(:outstanding_cents)
-  def monies_only_cents = sum_rows(:monies_only_cents)
-  def total_monies_cents = sum_rows(:total_monies_cents)
-  def total_monies_excluding_unfunded_cents = sum_rows(:total_monies_excluding_unfunded_cents)
-  def total_expected_monies_cents = sum_rows(:total_expected_monies_cents)
+  def any?
+    rows.any?
+  end
+
+  # Calendar-year groups, newest first, each with a subtotal. Events without a
+  # start date fall under a nil year that sorts last.
+  def years
+    @years ||= rows
+      .group_by(&:year)
+      .map { |year, year_rows| YearGroup.new(year: year, rows: year_rows, in_progress: year == @current_year) }
+      .sort_by { |group| [ group.year ? 0 : 1, -(group.year || 0) ] }
+  end
+
+  # The most recent finished year — the one whose figures a CEO lifts into the
+  # annual report. Falls back to the latest year present (e.g. only the current,
+  # in-progress year exists).
+  def featured_year
+    years.reject(&:in_progress).first || years.first
+  end
+
+  # The year-group immediately before the featured one, for a year-over-year
+  # delta. Nil when there's nothing to compare against.
+  def prior_year
+    return nil unless featured_year
+    index = years.index(featured_year)
+    years[index + 1]
+  end
+
+  # Stacked-column series (money in vs org subsidy) by year, oldest to newest, in
+  # dollars — for the Chartkick trend chart.
+  def chart_series
+    ascending = years.reject { |group| group.year.nil? }.reverse
+    [
+      { name: "Money in", data: ascending.map { |group| [ group.year.to_s, to_dollars(group.money_in_cents) ] } },
+      { name: "Org subsidy", data: ascending.map { |group| [ group.year.to_s, to_dollars(group.org_subsidy_cents) ] } }
+    ]
+  end
 
   private
 
@@ -78,7 +124,8 @@ class EventRevenueReport
       ce_projected_cents: ce_projected_cents_for(event),
       funded_scholarship_cents: dashboard.funded_scholarship_cents,
       unfunded_scholarship_cents: dashboard.unfunded_scholarship_cents,
-      registration_outstanding_cents: dashboard.outstanding_cents
+      discount_cents: dashboard.discount_cents,
+      outstanding_cents: dashboard.outstanding_cents
     )
   end
 
@@ -89,7 +136,7 @@ class EventRevenueReport
     hours.to_i * CE_HOURLY_RATE_CENTS
   end
 
-  def sum_rows(attribute)
-    rows.sum { |row| row.public_send(attribute) }
+  def to_dollars(cents)
+    (cents / 100.0).round(2)
   end
 end

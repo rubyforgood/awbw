@@ -13,73 +13,151 @@
       <% end %>
     </div>
 
-    <div class="mb-6">
+    <div class="mb-8">
       <h1 class="text-2xl font-semibold text-gray-900">Event revenue</h1>
       <p class="text-gray-600 mt-1">
-        Money behind each paid event: registration payments, projected CE, scholarships, and what's still outstanding.
-      </p>
-      <p class="text-xs text-gray-500 mt-2">
-        Projected CE is an estimate ($<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %> per requested hour) counted as revenue — CE isn't collected separately yet.
+        Program revenue by year — money in, what the org subsidized from its own funds, and the net.
       </p>
     </div>
 
-    <% if @report.rows.any? %>
-      <div class="overflow-x-auto rounded-lg border border-gray-200">
-        <table class="min-w-full divide-y divide-gray-200 text-sm">
-          <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
-            <tr>
-              <th scope="col" class="px-4 py-3 text-left font-semibold">Event</th>
-              <th scope="col" class="px-4 py-3 text-right font-semibold">Registration payments</th>
-              <th scope="col" class="px-4 py-3 text-right font-semibold">Projected CE</th>
-              <th scope="col" class="px-4 py-3 text-right font-semibold">Scholarships (funded)</th>
-              <th scope="col" class="px-4 py-3 text-right font-semibold">Scholarships (unfunded)</th>
-              <th scope="col" class="px-4 py-3 text-right font-semibold">Outstanding monies</th>
-              <th scope="col" class="px-4 py-3 text-right font-semibold">Monies only (no scholarships)</th>
-              <th scope="col" class="px-4 py-3 text-right font-semibold">Total monies (excl. unfunded)</th>
-              <th scope="col" class="px-4 py-3 text-right font-bold text-gray-900 border-l border-gray-300 bg-gray-50">Total monies</th>
-              <th scope="col" class="px-4 py-3 text-right font-bold text-gray-900 border-l border-gray-300 bg-gray-100">Total expected monies</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100 bg-white">
-            <% @report.rows.each do |row| %>
-              <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 whitespace-nowrap">
-                  <%= link_to dashboard_event_path(row.event), class: "font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" do %>
-                    <%= row.event.title %>
-                  <% end %>
-                  <div class="text-xs text-gray-500"><%= row.event.date_range %></div>
-                </td>
-                <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.registration_payments_cents) %></td>
-                <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.ce_projected_cents) %></td>
-                <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.funded_scholarship_cents) %></td>
-                <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.unfunded_scholarship_cents) %></td>
-                <td class="px-4 py-3 text-right tabular-nums text-amber-700"><%= dollars_from_cents(row.outstanding_cents) %></td>
-                <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.monies_only_cents) %></td>
-                <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.total_monies_excluding_unfunded_cents) %></td>
-                <td class="px-4 py-3 text-right tabular-nums font-semibold text-gray-900 border-l border-gray-300"><%= dollars_from_cents(row.total_monies_cents) %></td>
-                <td class="px-4 py-3 text-right tabular-nums text-base font-bold text-gray-900 border-l border-gray-300 bg-gray-50"><%= dollars_from_cents(row.total_expected_monies_cents) %></td>
-              </tr>
-            <% end %>
-          </tbody>
-          <tfoot class="bg-gray-100 border-t-2 border-gray-300 text-base font-bold text-gray-900">
-            <tr>
-              <td class="px-4 py-3 text-left uppercase tracking-wide text-xs text-gray-500">Total</td>
-              <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.registration_payments_cents) %></td>
-              <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.ce_projected_cents) %></td>
-              <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.funded_scholarship_cents) %></td>
-              <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.unfunded_scholarship_cents) %></td>
-              <td class="px-4 py-3 text-right tabular-nums text-amber-700"><%= dollars_from_cents(@report.outstanding_cents) %></td>
-              <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.monies_only_cents) %></td>
-              <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.total_monies_excluding_unfunded_cents) %></td>
-              <td class="px-4 py-3 text-right tabular-nums border-l border-gray-300"><%= dollars_from_cents(@report.total_monies_cents) %></td>
-              <td class="px-4 py-3 text-right tabular-nums text-lg font-extrabold border-l border-gray-300 bg-gray-200"><%= dollars_from_cents(@report.total_expected_monies_cents) %></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+    <% if @report.any? %>
+      <% featured = @report.featured_year %>
+      <% prior = @report.prior_year %>
+
+      <%# Headline figures for the most recent finished year — the numbers a CEO
+          lifts into the annual report, with a year-over-year delta. %>
+      <section class="mb-8">
+        <div class="flex items-baseline gap-2 mb-3">
+          <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500"><%= featured.year || "All events" %></h2>
+          <% if featured.in_progress %>
+            <span class="text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">In progress</span>
+          <% end %>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <%= render "revenue_kpi", label: "Fees collected", value: dollars_from_cents(featured.registration_payments_cents),
+                value_class: "text-gray-900", cents: featured.registration_payments_cents,
+                prior_cents: prior&.registration_payments_cents, prior_year: prior&.year %>
+          <%= render "revenue_kpi", label: "Grant-funded scholarships", value: dollars_from_cents(featured.funded_scholarship_cents),
+                value_class: "text-gray-900", cents: featured.funded_scholarship_cents,
+                prior_cents: prior&.funded_scholarship_cents, prior_year: prior&.year %>
+          <%= render "revenue_kpi", label: "Org subsidy", value: dollars_from_cents(featured.org_subsidy_cents),
+                value_class: "text-amber-700", cents: featured.org_subsidy_cents,
+                prior_cents: prior&.org_subsidy_cents, prior_year: prior&.year %>
+          <%= render "revenue_kpi", label: "Net revenue*", value: signed_dollars_from_cents(featured.net_cents),
+                value_class: featured.net_cents.negative? ? "text-rose-700" : "text-gray-900", cents: featured.net_cents,
+                prior_cents: prior&.net_cents, prior_year: prior&.year %>
+        </div>
+      </section>
+
+      <%# Revenue over time: money in vs org subsidy, one stacked column per year. %>
+      <section class="mb-8">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Revenue by year</h2>
+        <div class="rounded-xl border border-gray-200 bg-white p-4">
+          <%= column_chart @report.chart_series, stacked: true, prefix: "$", thousands: ",",
+                colors: [ "#2563eb", "#d97706" ], height: "260px", library: { borderRadius: 4 } %>
+        </div>
+      </section>
+
+      <%# Per-event detail, grouped by year. Each year leads with its subtotal;
+          each event expands to the component breakdown. The grid column template
+          is shared (via --rev-cols) so every row aligns. %>
+      <section data-controller="toggle-details" style="--rev-cols: minmax(11rem, 1.6fr) repeat(4, minmax(6rem, 1fr))">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">By event</h2>
+          <button type="button" data-toggle-details-target="toggleBtn" data-action="toggle-details#toggleAll"
+                  class="text-xs font-medium <%= DomainTheme.text_class_for(:events, intensity: 700) %> hover:underline">
+            Expand all
+          </button>
+        </div>
+
+        <div class="grid items-center gap-x-3 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500"
+             style="grid-template-columns: var(--rev-cols)">
+          <div>Event</div>
+          <div class="text-right">Money in*</div>
+          <div class="text-right">Org subsidy</div>
+          <div class="text-right">Net*</div>
+          <div class="text-right">Total expected</div>
+        </div>
+
+        <% @report.years.each do |group| %>
+          <div class="mb-4">
+            <div class="grid items-center gap-x-3 px-3 py-2 bg-gray-100 border border-gray-200 rounded-t-lg text-sm font-semibold text-gray-900"
+                 style="grid-template-columns: var(--rev-cols)">
+              <div class="flex items-center gap-2">
+                <span class="text-base"><%= group.year || "Undated" %></span>
+                <% if group.in_progress %>
+                  <span class="text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">In progress</span>
+                <% end %>
+              </div>
+              <div class="text-right tabular-nums"><%= dollars_from_cents(group.money_in_cents) %></div>
+              <div class="text-right tabular-nums text-amber-700"><%= dollars_from_cents(group.org_subsidy_cents) %></div>
+              <div class="text-right tabular-nums <%= "text-rose-700" if group.net_cents.negative? %>"><%= signed_dollars_from_cents(group.net_cents) %></div>
+              <div class="text-right tabular-nums text-gray-500"><%= dollars_from_cents(group.total_expected_cents) %></div>
+            </div>
+
+            <div class="border-x border-b border-gray-200 rounded-b-lg divide-y divide-gray-100 bg-white">
+              <% group.rows.each do |row| %>
+                <details class="group/card">
+                  <summary class="grid items-center gap-x-3 px-3 py-2.5 cursor-pointer list-none [&::-webkit-details-marker]:hidden hover:bg-gray-50"
+                           style="grid-template-columns: var(--rev-cols)">
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/card:rotate-180"></i>
+                        <span class="font-medium text-gray-900 truncate"><%= row.event.title %></span>
+                      </div>
+                      <div class="text-xs text-gray-500 pl-5"><%= row.event.date_range %></div>
+                    </div>
+                    <div class="text-right tabular-nums text-gray-900"><%= dollars_from_cents(row.money_in_cents) %></div>
+                    <div class="text-right tabular-nums text-amber-700"><%= dollars_from_cents(row.org_subsidy_cents) %></div>
+                    <div class="text-right tabular-nums font-semibold <%= row.net_cents.negative? ? "text-rose-700" : "text-gray-900" %>"><%= signed_dollars_from_cents(row.net_cents) %></div>
+                    <div class="text-right tabular-nums text-gray-500"><%= dollars_from_cents(row.total_expected_cents) %></div>
+                  </summary>
+                  <div class="px-3 pb-3 pl-8 bg-gray-50">
+                    <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-1.5 text-sm py-2">
+                      <% breakdown = [
+                           [ "Registration payments", row.registration_payments_cents ],
+                           [ "Projected CE*", row.ce_projected_cents ],
+                           [ "Grant-funded scholarships", row.funded_scholarship_cents ],
+                           [ "Unfunded scholarships", row.unfunded_scholarship_cents ],
+                           [ "Discounts", row.discount_cents ],
+                           [ "Outstanding", row.outstanding_cents ]
+                         ] %>
+                      <% breakdown.each do |label, cents| %>
+                        <div class="flex items-baseline justify-between gap-3">
+                          <dt class="text-gray-500"><%= label %></dt>
+                          <dd class="tabular-nums text-gray-800"><%= dollars_from_cents(cents) %></dd>
+                        </div>
+                      <% end %>
+                    </dl>
+                    <%= link_to "Open event dashboard →", dashboard_event_path(row.event),
+                          class: "text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+                  </div>
+                </details>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="grid items-center gap-x-3 px-3 py-3 mt-2 bg-gray-200 border border-gray-300 rounded-lg text-base font-bold text-gray-900"
+             style="grid-template-columns: var(--rev-cols)">
+          <div class="uppercase tracking-wide text-xs text-gray-600">All years</div>
+          <div class="text-right tabular-nums"><%= dollars_from_cents(@report.money_in_cents) %></div>
+          <div class="text-right tabular-nums text-amber-700"><%= dollars_from_cents(@report.org_subsidy_cents) %></div>
+          <div class="text-right tabular-nums <%= "text-rose-700" if @report.net_cents.negative? %>"><%= signed_dollars_from_cents(@report.net_cents) %></div>
+          <div class="text-right tabular-nums text-gray-700"><%= dollars_from_cents(@report.total_expected_cents) %></div>
+        </div>
+
+        <p class="mt-3 text-xs text-gray-500">
+          <span class="font-medium">Money in</span> = registration payments + projected CE + grant-funded scholarships.
+          <span class="font-medium">Org subsidy</span> = unfunded scholarships + discounts (paid from the org's own funds).
+          <span class="font-medium">Net</span> = money in − org subsidy.
+          <br>
+          * Projected CE is an estimate ($<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %> per requested hour), not yet collected.
+        </p>
+      </section>
     <% else %>
       <div class="text-center py-12 text-gray-500">
-        No paid events to report on yet.
+        No paid events yet — once events run, you'll see revenue by year here.
       </div>
     <% end %>
   </div>
