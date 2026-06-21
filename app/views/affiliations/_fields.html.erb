@@ -1,0 +1,107 @@
+<%# Shared affiliation editor row. Rendered from both the organization form
+    (counterpart: :person) and the person form (counterpart: :organization) via
+    the thin organizations/_affiliation_fields and people/_affiliation_fields
+    shims, so cocoon's link_to_add_association keeps resolving per controller. %>
+<% person_side = counterpart == :person %>
+<% manage_subject = person_side ? Organization : Person %>
+<% if allowed_to?(:manage?, manage_subject) %>
+  <% expired = f.object.inactive? || (f.object.end_date.present? && f.object.end_date < Date.current) %>
+  <% facilitator = f.object.facilitator? %>
+  <% active_bg = facilitator ? "bg-purple-100 border-purple-300" : "bg-white border-gray-200" %>
+  <% record = person_side ? f.object.person : f.object.organization %>
+  <% label = person_side ? "Person" : "Organization" %>
+  <div data-controller="inactive-toggle">
+    <div class="nested-fields flex flex-wrap gap-x-4 gap-y-1 items-start mb-4 rounded-lg border p-3 <%= expired ? 'bg-gray-100 border-gray-300 opacity-60' : active_bg %>"
+         style="border-left: 4px solid <%= facilitator ? '#a855f7' : '#d1d5db' %>"
+         <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>
+         data-inactive-toggle-target="row">
+      <div style="width: 280px; min-width: 280px; flex-shrink: 0;" data-inactive-toggle-target="profileButton">
+        <% if f.object.persisted? && record.present? %>
+          <label class="block text-sm font-medium text-gray-700 mb-1"><%= label %></label>
+          <% if person_side %>
+            <% show_email = record.profile_show_email? || allowed_to?(:manage?, Person) %>
+            <%= person_profile_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email)) %>
+          <% else %>
+            <%= organization_profile_button(record, truncate_at: 25) %>
+          <% end %>
+          <%= f.hidden_field(person_side ? :person_id : :organization_id) %>
+        <% else %>
+          <%= f.input person_side ? :person_id : :organization_id,
+            include_blank: true,
+            required: true,
+            input_html: {
+              data: {
+                controller: "remote-select",
+                remote_select_model_value: person_side ? "person" : "organization"
+              }
+            },
+            error: "#{label} can't be blank",
+            prompt: "Type to search #{person_side ? 'people' : 'organizations'}…",
+            label: label,
+            label_html: { class: "block text-sm font-medium text-gray-700 mb-1 " } %>
+        <% end %>
+      </div>
+
+      <div class="w-full sm:w-auto" style="min-width: 200px;">
+        <%= f.input :title,
+                    as: :text,
+                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                    input_html: {
+                      rows: 1,
+                      value: f.object&.title || "Facilitator",
+                      style: "height: 42px; min-height: 42px;",
+                      data: {
+                        inactive_toggle_target: "title",
+                        action: "affiliation-dates#recalculate inactive-toggle#updateBorder"
+                      }
+                    } %>
+      </div>
+
+      <div class="w-full sm:w-auto">
+        <%= f.input :start_date,
+                    as: :string,
+                    label: "Start",
+                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                    input_html: {
+                      type: "date",
+                      value: (f.object.start_date || (Date.current unless f.object.persisted?))&.strftime("%Y-%m-%d"),
+                      class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
+                      data: { action: "change->affiliation-dates#recalculate" }
+                    } %>
+      </div>
+
+      <div class="w-full sm:w-auto">
+        <%= f.input :end_date,
+                    as: :string,
+                    label: "End",
+                    label_html: { class: "block text-sm font-medium text-gray-700 mb-1" },
+                    input_html: {
+                      type: "date",
+                      value: f.object.end_date&.strftime("%Y-%m-%d"),
+                      class: "rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm",
+                      data: {
+                        inactive_toggle_target: "endDate",
+                        action: "change->inactive-toggle#toggle change->affiliation-dates#recalculate"
+                      }
+                    } %>
+      </div>
+
+      <div class="w-full sm:w-auto pb-3">
+        <label class="block whitespace-nowrap text-sm font-medium text-gray-700 mb-1">Primary org<br>contact</label>
+        <%= f.check_box :primary_contact,
+                        checked: f.object.primary_contact? || !f.object.persisted?,
+                        class: "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %>
+      </div>
+
+      <div class="w-full sm:w-auto sm:ml-auto sm:self-end sm:pb-3">
+        <%= link_to_remove_association "Remove",
+                                       f,
+                                       class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap admin-only bg-blue-100 rounded px-2 py-1" %>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <div class="ps-6 mb-4">
+    <li><%= f.object.organization&.name %> (<%= f.object.title %>)</li>
+  </div>
+<% end %>

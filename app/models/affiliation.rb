@@ -21,7 +21,7 @@ class Affiliation < ApplicationRecord
 
   # Methods
   def facilitator?
-    title.to_s.downcase.include?("facilitator")
+    title.to_s.strip == "Facilitator"
   end
 
   # Current: not flagged inactive and not past its end date. Mirrors the `active`
