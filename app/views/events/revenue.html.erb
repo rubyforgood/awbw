@@ -38,7 +38,7 @@
                 value_class: "text-gray-900", card_class: "border-blue-100 bg-blue-50", note: "reg + CE paid", cents: featured.fees_cents,
                 prior_cents: prior&.fees_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Scholarships", value: dollars_from_cents(featured.funded_scholarship_cents),
-                value_class: "text-gray-900", card_class: "border-green-100 bg-green-50", note: "grant-funded only", cents: featured.funded_scholarship_cents,
+                value_class: "text-gray-900", card_class: "border-fuchsia-100 bg-fuchsia-50", note: "grant-funded only", cents: featured.funded_scholarship_cents,
                 prior_cents: prior&.funded_scholarship_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Org subsidy", value: dollars_from_cents(featured.org_subsidy_cents),
                 value_class: "text-red-600", card_class: "border-red-100 bg-red-50", note: "discounts + unfunded", cents: featured.org_subsidy_cents,
@@ -50,7 +50,7 @@
                 value_class: featured.net_cents.negative? ? "text-rose-700" : "text-gray-900", card_class: "border-gray-200 bg-gray-50",
                 note: "fees + scholarships − subsidies", cents: featured.net_cents, prior_cents: prior&.net_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Total expected", value: dollars_from_cents(featured.total_expected_cents),
-                value_class: "text-gray-900", card_class: "border-gray-300 bg-gray-100", note: "assumes all monies paid", cents: featured.total_expected_cents,
+                value_class: "text-gray-900", card_class: "border-gray-400 bg-gray-200", note: "assumes all monies paid", cents: featured.total_expected_cents,
                 prior_cents: prior&.total_expected_cents, prior_year: prior&.year %>
         </div>
       </section>
@@ -60,7 +60,7 @@
         <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Revenue by year</h2>
         <div class="rounded-xl border border-gray-200 bg-white p-4">
           <%= column_chart @report.chart_series, stacked: true, prefix: "$", thousands: ",",
-                colors: [ "#2563eb", "#16a34a", "#dc2626" ], height: "260px", library: { borderRadius: 4 } %>
+                colors: [ "#2563eb", "#c026d3", "#dc2626" ], height: "260px", library: { borderRadius: 4 } %>
         </div>
       </section>
 
