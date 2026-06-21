@@ -27,8 +27,7 @@
                 <p class="text-xs text-gray-500"><%= org.city_state %></p>
               <% end %>
               <%= render "org_affiliation_pills", org: org, affiliations: (@affiliations_by_org[org.id] || []),
-                                                  submitted_org_name: @submitted_org_name, submitted_position: @submitted_position,
-                                                  event_registration: @event_registration %>
+                                                  submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
             </div>
             <%= button_to "Remove",
                           unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
@@ -143,8 +142,7 @@
                 <p class="text-xs text-gray-500"><%= org.city_state %></p>
               <% end %>
               <%= render "org_affiliation_pills", org: org, affiliations: affs,
-                                                  submitted_org_name: @submitted_org_name, submitted_position: @submitted_position,
-                                                  event_registration: @event_registration %>
+                                                  submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
             </li>
           <% end %>
         </ul>
