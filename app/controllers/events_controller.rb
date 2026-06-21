@@ -17,11 +17,11 @@ class EventsController < ApplicationController
     track_view(@event)
   end
 
-  # Cross-event revenue report. Scoped to facilitator trainings (including
-  # on-demand trainings), which are the events the report exists to reconcile.
+  # Cross-event revenue report across every paid event (those that charge a
+  # registration fee).
   def revenue
     authorize!
-    @events = Event.facilitator_trainings.order(start_date: :desc).map(&:decorate)
+    @events = Event.paid.order(start_date: :desc).map(&:decorate)
     @report = EventRevenueReport.new(@events)
   end
 

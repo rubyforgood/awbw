@@ -39,9 +39,8 @@ RSpec.describe EventRevenueReport do
     expect(row.registration_payments_cents).to eq(9_000)
   end
 
-  it "reports CE fees as $25 per requested hour, with none paid" do
-    expect(row.ce_fees_cents).to eq(7_500)
-    expect(row.ce_paid_cents).to eq(0)
+  it "projects CE revenue at $25 per requested hour" do
+    expect(row.ce_projected_cents).to eq(7_500)
   end
 
   it "splits scholarships by whether a funder backs them" do
@@ -49,9 +48,9 @@ RSpec.describe EventRevenueReport do
     expect(row.unfunded_scholarship_cents).to eq(2_000)
   end
 
-  it "counts unpaid registration cost plus the unpaid CE fee as outstanding" do
-    # reg1 fully covered (0), reg2 owes 5_000 on registration, plus 7_500 CE.
-    expect(row.outstanding_cents).to eq(12_500)
+  it "counts only unpaid registration cost as outstanding (CE is projected revenue)" do
+    # reg1 fully covered (0), reg2 owes 5_000 on registration.
+    expect(row.outstanding_cents).to eq(5_000)
   end
 
   it "totals all monies, with and without unfunded scholarships" do
@@ -61,10 +60,10 @@ RSpec.describe EventRevenueReport do
 
   it "rolls each column up across events" do
     expect(report.registration_payments_cents).to eq(9_000)
-    expect(report.ce_fees_cents).to eq(7_500)
+    expect(report.ce_projected_cents).to eq(7_500)
     expect(report.funded_scholarship_cents).to eq(4_000)
     expect(report.unfunded_scholarship_cents).to eq(2_000)
-    expect(report.outstanding_cents).to eq(12_500)
+    expect(report.outstanding_cents).to eq(5_000)
     expect(report.total_monies_cents).to eq(22_500)
     expect(report.total_monies_excluding_unfunded_cents).to eq(20_500)
   end

@@ -95,17 +95,19 @@ RSpec.describe "Events", type: :request do
   end
 
   describe "GET /revenue" do
-    let!(:training) { create(:event, title: "TAC 261", facilitator_training: true, cost_cents: 10_000) }
-    let!(:webinar) { create(:event, title: "Public webinar", facilitator_training: false) }
+    let!(:paid_training) { create(:event, title: "TAC 261", facilitator_training: true, cost_cents: 10_000) }
+    let!(:paid_webinar) { create(:event, title: "Paid webinar", facilitator_training: false, cost_cents: 5_000) }
+    let!(:free_event) { create(:event, title: "Free open house", cost_cents: 0) }
 
     context "as admin" do
-      it "lists facilitator trainings with their revenue figures" do
+      it "lists every paid event with its revenue figures" do
         sign_in admin
         get revenue_events_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Event revenue")
         expect(response.body).to include("TAC 261")
-        expect(response.body).not_to include("Public webinar")
+        expect(response.body).to include("Paid webinar")
+        expect(response.body).not_to include("Free open house")
       end
     end
 

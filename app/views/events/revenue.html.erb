@@ -11,10 +11,10 @@
     <div class="mb-6">
       <h1 class="text-2xl font-semibold text-gray-900">Event revenue</h1>
       <p class="text-gray-600 mt-1">
-        Money behind each facilitator training: registration payments, CE fees, scholarships, and what's still outstanding.
+        Money behind each paid event: registration payments, projected CE, scholarships, and what's still outstanding.
       </p>
       <p class="text-xs text-gray-500 mt-2">
-        CE fees are shown as the amount owed ($<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %> per requested hour); none are collected yet, so the full CE fee counts as outstanding.
+        Projected CE is an estimate ($<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %> per requested hour) counted as revenue — CE isn't collected separately yet.
       </p>
     </div>
 
@@ -25,7 +25,7 @@
             <tr>
               <th scope="col" class="px-4 py-3 text-left font-semibold">Event</th>
               <th scope="col" class="px-4 py-3 text-right font-semibold">Registration payments</th>
-              <th scope="col" class="px-4 py-3 text-right font-semibold">CE fees</th>
+              <th scope="col" class="px-4 py-3 text-right font-semibold">Projected CE</th>
               <th scope="col" class="px-4 py-3 text-right font-semibold">Scholarships (funded)</th>
               <th scope="col" class="px-4 py-3 text-right font-semibold">Scholarships (unfunded)</th>
               <th scope="col" class="px-4 py-3 text-right font-semibold">Outstanding</th>
@@ -43,7 +43,7 @@
                   <div class="text-xs text-gray-500"><%= row.event.date_range %></div>
                 </td>
                 <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.registration_payments_cents) %></td>
-                <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.ce_fees_cents) %></td>
+                <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.ce_projected_cents) %></td>
                 <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.funded_scholarship_cents) %></td>
                 <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.unfunded_scholarship_cents) %></td>
                 <td class="px-4 py-3 text-right tabular-nums text-amber-700"><%= dollars_from_cents(row.outstanding_cents) %></td>
@@ -56,7 +56,7 @@
             <tr>
               <td class="px-4 py-3 text-left">Total</td>
               <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.registration_payments_cents) %></td>
-              <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.ce_fees_cents) %></td>
+              <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.ce_projected_cents) %></td>
               <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.funded_scholarship_cents) %></td>
               <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.unfunded_scholarship_cents) %></td>
               <td class="px-4 py-3 text-right tabular-nums text-amber-700"><%= dollars_from_cents(@report.outstanding_cents) %></td>
@@ -68,7 +68,7 @@
       </div>
     <% else %>
       <div class="text-center py-12 text-gray-500">
-        No facilitator trainings to report on yet.
+        No paid events to report on yet.
       </div>
     <% end %>
   </div>
