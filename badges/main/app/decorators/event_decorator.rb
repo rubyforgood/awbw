@@ -182,15 +182,6 @@ class EventDecorator < ApplicationDecorator
       t
     end
 
-    parts_for = lambda do |d, prefix: nil|
-      parts = []
-      parts << wrap.call(prefix, muted) if prefix
-      parts << "#{day.call(d)}, " if display_day
-      parts << "#{date.call(d)} @ " if display_date
-      parts << format_time.call(d)
-      h.safe_join(parts)
-    end
-
     tz_display = wrap.call(" #{tz_abbr}", muted)
 
     # --------------------------------------------------
@@ -224,20 +215,26 @@ class EventDecorator < ApplicationDecorator
     end
 
     # --------------------------------------------------
-    # DIFFERENT DAY → two lines
+    # DIFFERENT DAY → date range + per-day time range
+    # The event runs the same hours each day, so we show the date span and a
+    # single start-end time (e.g. "Mon-Wed, Apr 21-23 @ 9 am - 4:30 pm PST")
+    # rather than a continuous range that would imply an overnight event.
     # --------------------------------------------------
     if s.to_date != e.to_date
-      if inline
-        return h.safe_join(
-          [ parts_for.call(s), h.safe_join([ parts_for.call(e), tz_display ]) ],
-          " - "
-        )
+      date_part = if s.month == e.month && s.year == e.year
+        "#{date.call(s)}-#{e.strftime('%-d')}"
+      elsif s.year == e.year
+        "#{date.call(s)} - #{date.call(e)}"
       else
-        return h.safe_join(
-          [ parts_for.call(s), h.safe_join([ parts_for.call(e), tz_display ]) ],
-          h.tag.br
-        )
+        "#{s.strftime('%b %-d, %Y')} - #{e.strftime('%b %-d, %Y')}"
       end
+
+      parts = []
+      parts << "#{day.call(s)}-#{day.call(e)}, " if display_day
+      parts << "#{date_part} @ " if display_date
+      parts << "#{format_time.call(s)} - #{format_time.call(e)}"
+      parts << tz_display
+      return h.safe_join(parts)
     end
 
     # --------------------------------------------------
