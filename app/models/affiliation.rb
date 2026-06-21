@@ -1,5 +1,5 @@
 class Affiliation < ApplicationRecord
-  belongs_to :organization
+  belongs_to :organization, inverse_of: :affiliations
   belongs_to :person, touch: true
   # Which of the organization's addresses this person is affiliated with (optional).
   belongs_to :organization_address, class_name: "Address", optional: true
