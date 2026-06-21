@@ -886,7 +886,19 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Mailchimp")
       expect(response.body).to include("CMS")
       expect(response.body).to include("Portal invite")
+      expect(response.body).to include("CE requested")
+      expect(response.body).to include("License #")
+      expect(response.body).to include("Event attendance")
       expect(response.body).to include("Onboard")
+    end
+
+    it "offers a Create scholarship link when the registrant has none" do
+      get onboarding_event_path(event)
+
+      expect(response.body).to include("Create")
+      # SGID carries an expiry, so assert the stable parts of the new-scholarship link.
+      expect(response.body).to include("/scholarships/new?allocatable_sgid=")
+      expect(response.body).to include("return_to=onboarding")
     end
 
     it "shows separately sortable first name, last name, and email columns" do
@@ -915,6 +927,7 @@ RSpec.describe "Events", type: :request do
       expect(response.media_type).to eq("text/csv")
       expect(response.body).to include("First name,Last name,Email")
       expect(response.body).to include("Mailchimp")
+      expect(response.body).to include("CE requested,CE hours,CE amount,CE license")
       expect(response.body).to include("Portal access,Portal user status")
       expect(response.body).to include("Flagged comments,Comments")
       expect(response.body).to include("Ready")
@@ -1025,6 +1038,16 @@ RSpec.describe "Events", type: :request do
             as: :turbo_stream
 
       expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "redirects a non-admin without changing anything" do
+      sign_in user
+      expect {
+        patch update_onboarding_event_registration_path(registration),
+              params: { field: "set_up_in_mailchimp", value: "1" }
+      }.not_to change(EventRegistrationChecklistCompletion, :count)
+
+      expect(response).to redirect_to(root_path)
     end
   end
 
