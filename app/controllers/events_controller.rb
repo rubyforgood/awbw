@@ -130,7 +130,6 @@ class EventsController < ApplicationController
       .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, registrant: [ :user, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
-    scope = scope.onboarding_step(params[:step], params[:step_state]) if params[:step].present?
 
     @active_count = scope.active.count
     @inactive_count = scope.inactive.count
@@ -587,9 +586,9 @@ class EventsController < ApplicationController
     cost_required = @event.cost_cents.to_i > 0
     day_count = @event.day_count
     headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
-    headers += [ "Payment status", "Fees due", "Monies paid" ] if cost_required
+    headers += [ "Payment status", "Fees due", "Paid amount" ] if cost_required
     headers << "Fee note"
-    headers += [ "Discounted", "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
+    headers += [ "Discounted amount", "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
     headers += [ "CE requested", "CE hours", "CE amount", "CE license" ]
     headers += EventRegistration::CHECKLIST_STEPS.values
     headers += [ "Portal user status", "Portal access" ]

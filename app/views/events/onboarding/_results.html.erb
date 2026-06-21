@@ -3,7 +3,7 @@
   <% columns = visible_onboarding_columns(@event, @hidden_columns) %>
   <% align_class = { "left" => "text-left", "center" => "text-center", "right" => "text-right" } %>
   <% current_filter = params[:status_filter].presence || "active" %>
-  <% filter_params = { keyword: params[:keyword].presence, step: params[:step].presence, step_state: params[:step_state].presence, hide: params[:hide].presence } %>
+  <% filter_params = { keyword: params[:keyword].presence, hide: params[:hide].presence } %>
 
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit">
     <div class="flex items-center justify-between gap-4 px-6 py-4 border-b border-gray-100">
@@ -31,7 +31,7 @@
           <% onboarding_toggle_entries(@event).each do |key, label| %>
             <% is_hidden = @hidden_columns.include?(key) %>
             <% new_hide = (is_hidden ? @hidden_columns - [ key ] : @hidden_columns + [ key ]).uniq.join(",") %>
-            <%= link_to onboarding_event_path(@event, status_filter: params[:status_filter].presence, keyword: params[:keyword].presence, step: params[:step].presence, step_state: params[:step_state].presence, hide: new_hide.presence),
+            <%= link_to onboarding_event_path(@event, status_filter: params[:status_filter].presence, keyword: params[:keyword].presence, hide: new_hide.presence),
                   class: "flex items-center gap-2 py-1 text-sm text-gray-700 hover:bg-gray-50 rounded" do %>
               <span class="flex items-center justify-center w-4 h-4 rounded border <%= is_hidden ? "border-gray-300 bg-white" : "border-blue-600 bg-blue-600 text-white" %>">
                 <% unless is_hidden %><i class="fa-solid fa-check text-[0.6rem]"></i><% end %>

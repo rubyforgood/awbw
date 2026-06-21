@@ -11,7 +11,11 @@
 <tr id="<%= onboarding_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-amber-50 ring-2 ring-inset ring-amber-300" : "hover:bg-gray-50" %>">
   <% columns.each do |column| %>
     <% td_classes = [ "px-4 py-2 text-sm", align_class[column[:align]] ]
-       td_classes << "sticky left-0 bg-white" if column[:sticky] %>
+       if column[:sticky]
+         # The row's inset ring is painted over by this sticky cell, so re-draw the
+         # amber border on the cell itself (same ring utility as the row).
+         td_classes << (highlighted ? "sticky left-0 bg-amber-50 ring-2 ring-inset ring-amber-300" : "sticky left-0 bg-white")
+       end %>
     <% case column[:kind]
        when :first_name %>
       <td class="<%= td_classes.join(" ") %> text-gray-800" data-sort-value="<%= person.first_name.to_s.downcase %>">
@@ -189,7 +193,7 @@
       </td>
 
     <% when :paid %>
-      <%# Monies paid = actual payments only; excludes scholarship and comp/discount
+      <%# Paid amount = actual payments only; excludes scholarship and comp/discount
           allocations so it doesn't double-count against the Scholarship column. %>
       <% paid_cents = registration.payments_sum %>
       <td class="<%= td_classes.join(" ") %> font-medium" data-sort-value="<%= paid_cents %>">
@@ -236,7 +240,7 @@
       </td>
 
     <% when :portal_invite %>
-      <td class="<%= td_classes.join(" ") %> align-top" data-sort-value="<%= registration.account_status %>">
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= registration.account_status %>">
         <% if person.user.present? %>
           <%= render "users/confirmed_status", user: person.user, invite_params: onboarding_back, return_params: onboarding_back %>
         <% else %>

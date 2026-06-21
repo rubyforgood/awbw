@@ -675,33 +675,6 @@ RSpec.describe EventRegistration, type: :model do
       completion = create(:event_registration_checklist_completion, event_registration: registration, step: step)
       expect(registration.reload.checklist_completion_for(step)).to eq(completion)
     end
-
-    describe ".onboarding_step scope" do
-      let!(:done) { create(:event_registration) }
-      let!(:missing) { create(:event_registration) }
-
-      before { create(:event_registration_checklist_completion, event_registration: done, step: step) }
-
-      it "filters to registrations that have a step" do
-        expect(EventRegistration.onboarding_step(step, "has")).to include(done)
-        expect(EventRegistration.onboarding_step(step, "has")).not_to include(missing)
-      end
-
-      it "filters to registrations missing a step" do
-        expect(EventRegistration.onboarding_step(step, "missing")).to include(missing)
-        expect(EventRegistration.onboarding_step(step, "missing")).not_to include(done)
-      end
-
-      it "filters by an attendance day boolean" do
-        missing.update!(completed_day_1: true)
-        expect(EventRegistration.onboarding_step("completed_day_1", "has")).to include(missing)
-        expect(EventRegistration.onboarding_step("completed_day_1", "has")).not_to include(done)
-      end
-
-      it "is a no-op for an unknown step" do
-        expect(EventRegistration.onboarding_step("nonsense", "has").count).to eq(EventRegistration.count)
-      end
-    end
   end
 
   describe "#payments_sum" do

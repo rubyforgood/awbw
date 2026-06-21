@@ -167,28 +167,6 @@ class EventRegistration < ApplicationRecord
       .distinct
   }
 
-  # Registrations that have (or are missing) a completed checklist step — drives
-  # the Onboarding tab's "show everyone missing X" filter.
-  scope :with_checklist_step, ->(step) {
-    where(id: EventRegistrationChecklistCompletion.where(step: step).select(:event_registration_id))
-  }
-  scope :without_checklist_step, ->(step) {
-    where.not(id: EventRegistrationChecklistCompletion.where(step: step).select(:event_registration_id))
-  }
-  # Filter by any onboarding column (a checklist step or a completed_day_* field),
-  # by whether it's done ("has") or not ("missing"). Unknown keys are a no-op.
-  scope :onboarding_step, ->(step, state) {
-    next all if step.blank?
-
-    if DAY_FIELDS.include?(step)
-      state == "has" ? where(step => true) : where(step => false)
-    elsif CHECKLIST_STEPS.key?(step)
-      state == "has" ? with_checklist_step(step) : without_checklist_step(step)
-    else
-      all
-    end
-  }
-
   def self.search_by_params(params)
     registrations = is_a?(ActiveRecord::Relation) ? self : all
     if params[:registrant_id].present?

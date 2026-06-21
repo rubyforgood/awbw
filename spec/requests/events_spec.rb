@@ -977,7 +977,7 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Helping Fund")
     end
 
-    it "reports Monies paid as payments only, not scholarship coverage" do
+    it "reports Paid amount as payments only, not scholarship coverage" do
       paid_event = create(:event, cost_cents: 2_000)
       paid_reg = create(:event_registration, event: paid_event, registrant: person)
       payment = create(:payment, amount_cents: 500, amount_cents_remaining: nil)
@@ -989,28 +989,11 @@ RSpec.describe "Events", type: :request do
 
       row = CSV.parse(response.body).find { |r| r[1] == person.last_name }
       headers = CSV.parse(response.body).first
-      monies_paid = row[headers.index("Monies paid")]
+      paid_amount = row[headers.index("Paid amount")]
       scholarship_amount = row[headers.index("Scholarship amount")]
 
-      expect(monies_paid).to eq("$5")        # the $5 payment, NOT the $15 scholarship
+      expect(paid_amount).to eq("$5")        # the $5 payment, NOT the $15 scholarship
       expect(scholarship_amount).to eq("$15")
-    end
-
-    it "filters to registrants missing a step" do
-      done_person = create(:person, first_name: "Allset", last_name: "Done")
-      done = create(:event_registration, event: event, registrant: done_person)
-      create(:event_registration_checklist_completion, event_registration: done, step: "set_up_in_mailchimp")
-
-      get onboarding_event_path(event, params: { step: "set_up_in_mailchimp", step_state: "missing" })
-
-      expect(response.body).to include("Onboard")
-      expect(response.body).not_to include("Allset")
-    end
-
-    it "does not crash on an unknown step filter" do
-      get onboarding_event_path(event, params: { step: "bogus", step_state: "missing" })
-
-      expect(response).to have_http_status(:ok)
     end
 
     it "redirects a non-admin" do
