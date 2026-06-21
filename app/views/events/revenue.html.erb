@@ -33,24 +33,24 @@
             <span class="text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">In progress</span>
           <% end %>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-[repeat(4,minmax(0,1fr))_repeat(2,minmax(0,1.3fr))] gap-3">
           <%= render "revenue_kpi", label: "Fees collected", value: dollars_from_cents(featured.fees_cents),
-                value_class: "text-gray-900", note: "reg + CE paid", cents: featured.fees_cents,
+                value_class: "text-gray-900", card_class: "border-blue-100 bg-blue-50", note: "reg + CE paid", cents: featured.fees_cents,
                 prior_cents: prior&.fees_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Scholarships", value: dollars_from_cents(featured.funded_scholarship_cents),
-                value_class: "text-gray-900", note: "grant-funded only", cents: featured.funded_scholarship_cents,
+                value_class: "text-gray-900", card_class: "border-green-100 bg-green-50", note: "grant-funded only", cents: featured.funded_scholarship_cents,
                 prior_cents: prior&.funded_scholarship_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Org subsidy", value: dollars_from_cents(featured.org_subsidy_cents),
-                value_class: "text-red-600", note: "discounts + unfunded", cents: featured.org_subsidy_cents,
+                value_class: "text-red-600", card_class: "border-red-100 bg-red-50", note: "discounts + unfunded", cents: featured.org_subsidy_cents,
                 prior_cents: prior&.org_subsidy_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Outstanding*", value: dollars_from_cents(featured.outstanding_cents),
-                value_class: "text-orange-600", note: "reg + CE owed", cents: featured.outstanding_cents,
+                value_class: "text-orange-600", card_class: "border-orange-100 bg-orange-50", note: "reg + CE owed", cents: featured.outstanding_cents,
                 prior_cents: prior&.outstanding_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Net", value: signed_dollars_from_cents(featured.net_cents),
-                value_class: featured.net_cents.negative? ? "text-rose-700" : "text-gray-900", note: "fees + scholarships − subsidies",
-                cents: featured.net_cents, prior_cents: prior&.net_cents, prior_year: prior&.year %>
+                value_class: featured.net_cents.negative? ? "text-rose-700" : "text-gray-900", card_class: "border-gray-200 bg-gray-50",
+                note: "fees + scholarships − subsidies", cents: featured.net_cents, prior_cents: prior&.net_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Total expected", value: dollars_from_cents(featured.total_expected_cents),
-                value_class: "text-gray-900", note: "assumes all monies paid", cents: featured.total_expected_cents,
+                value_class: "text-gray-900", card_class: "border-gray-300 bg-gray-100", note: "assumes all monies paid", cents: featured.total_expected_cents,
                 prior_cents: prior&.total_expected_cents, prior_year: prior&.year %>
         </div>
       </section>

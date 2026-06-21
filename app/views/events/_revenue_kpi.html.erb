@@ -1,5 +1,6 @@
 <% note = local_assigns[:note] %>
-<div class="rounded-xl border border-gray-200 bg-white p-4">
+<% card_class = local_assigns.fetch(:card_class, "border-gray-200 bg-white") %>
+<div class="rounded-xl border <%= card_class %> p-4">
   <div class="text-xs font-semibold uppercase tracking-wide text-gray-500"><%= label %></div>
   <div class="mt-1 text-2xl font-bold tabular-nums <%= value_class %>"><%= value %></div>
   <% if note %>
