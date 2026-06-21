@@ -109,6 +109,20 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Forms")
       end
 
+      it "models a typical registrant by default, hiding scholarship and CE" do
+        get sample_ticket_event_path(event)
+        expect(response.body).not_to include("Your scholarship request status")
+        expect(response.body).not_to include("CE hours")
+        expect(response.body).to include("Show all options")
+      end
+
+      it "turns on every option with ?options=all" do
+        get sample_ticket_event_path(event, options: "all")
+        expect(response.body).to include("Your scholarship request status")
+        expect(response.body).to include("CE hours")
+        expect(response.body).to include("Show typical ticket")
+      end
+
       it "does not create a registration" do
         expect { get sample_ticket_event_path(event) }
           .not_to change(EventRegistration, :count)
