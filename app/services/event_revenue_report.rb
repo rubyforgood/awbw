@@ -25,6 +25,12 @@ class EventRevenueReport
       registration_outstanding_cents
     end
 
+    # Cash-style revenue only: registrant payments plus projected CE, with no
+    # scholarship money of any kind counted.
+    def monies_only_cents
+      registration_payments_cents + ce_projected_cents
+    end
+
     # All revenue tied to the event: registrant payments, projected CE, and both
     # funded and unfunded scholarships.
     def total_monies_cents
@@ -35,6 +41,12 @@ class EventRevenueReport
     # cost that never becomes real money.
     def total_monies_excluding_unfunded_cents
       total_monies_cents - unfunded_scholarship_cents
+    end
+
+    # Everything the event is expected to bring in once what's owed is collected:
+    # all monies plus the still-outstanding registration cost.
+    def total_expected_monies_cents
+      total_monies_cents + outstanding_cents
     end
   end
 
@@ -51,8 +63,10 @@ class EventRevenueReport
   def funded_scholarship_cents = sum_rows(:funded_scholarship_cents)
   def unfunded_scholarship_cents = sum_rows(:unfunded_scholarship_cents)
   def outstanding_cents = sum_rows(:outstanding_cents)
+  def monies_only_cents = sum_rows(:monies_only_cents)
   def total_monies_cents = sum_rows(:total_monies_cents)
   def total_monies_excluding_unfunded_cents = sum_rows(:total_monies_excluding_unfunded_cents)
+  def total_expected_monies_cents = sum_rows(:total_expected_monies_cents)
 
   private
 

@@ -58,13 +58,25 @@ RSpec.describe EventRevenueReport do
     expect(row.total_monies_excluding_unfunded_cents).to eq(20_500)
   end
 
+  it "reports monies only, excluding all scholarships" do
+    # payments 9_000 + projected CE 7_500.
+    expect(row.monies_only_cents).to eq(16_500)
+  end
+
+  it "reports total expected monies (all monies plus outstanding)" do
+    # total monies 22_500 + outstanding 5_000.
+    expect(row.total_expected_monies_cents).to eq(27_500)
+  end
+
   it "rolls each column up across events" do
     expect(report.registration_payments_cents).to eq(9_000)
     expect(report.ce_projected_cents).to eq(7_500)
     expect(report.funded_scholarship_cents).to eq(4_000)
     expect(report.unfunded_scholarship_cents).to eq(2_000)
     expect(report.outstanding_cents).to eq(5_000)
+    expect(report.monies_only_cents).to eq(16_500)
     expect(report.total_monies_cents).to eq(22_500)
     expect(report.total_monies_excluding_unfunded_cents).to eq(20_500)
+    expect(report.total_expected_monies_cents).to eq(27_500)
   end
 end

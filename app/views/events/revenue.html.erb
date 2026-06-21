@@ -33,9 +33,11 @@
               <th scope="col" class="px-4 py-3 text-right font-semibold">Projected CE</th>
               <th scope="col" class="px-4 py-3 text-right font-semibold">Scholarships (funded)</th>
               <th scope="col" class="px-4 py-3 text-right font-semibold">Scholarships (unfunded)</th>
-              <th scope="col" class="px-4 py-3 text-right font-semibold">Outstanding</th>
+              <th scope="col" class="px-4 py-3 text-right font-semibold">Outstanding monies</th>
+              <th scope="col" class="px-4 py-3 text-right font-semibold">Monies only (no scholarships)</th>
               <th scope="col" class="px-4 py-3 text-right font-semibold">Total monies (excl. unfunded)</th>
-              <th scope="col" class="px-4 py-3 text-right font-bold text-gray-900 border-l border-gray-300 bg-gray-100">Total monies</th>
+              <th scope="col" class="px-4 py-3 text-right font-bold text-gray-900 border-l border-gray-300 bg-gray-50">Total monies</th>
+              <th scope="col" class="px-4 py-3 text-right font-bold text-gray-900 border-l border-gray-300 bg-gray-100">Total expected monies</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 bg-white">
@@ -52,21 +54,25 @@
                 <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.funded_scholarship_cents) %></td>
                 <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.unfunded_scholarship_cents) %></td>
                 <td class="px-4 py-3 text-right tabular-nums text-amber-700"><%= dollars_from_cents(row.outstanding_cents) %></td>
+                <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.monies_only_cents) %></td>
                 <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(row.total_monies_excluding_unfunded_cents) %></td>
-                <td class="px-4 py-3 text-right tabular-nums text-base font-bold text-gray-900 border-l border-gray-300 bg-gray-50"><%= dollars_from_cents(row.total_monies_cents) %></td>
+                <td class="px-4 py-3 text-right tabular-nums font-semibold text-gray-900 border-l border-gray-300"><%= dollars_from_cents(row.total_monies_cents) %></td>
+                <td class="px-4 py-3 text-right tabular-nums text-base font-bold text-gray-900 border-l border-gray-300 bg-gray-50"><%= dollars_from_cents(row.total_expected_monies_cents) %></td>
               </tr>
             <% end %>
           </tbody>
-          <tfoot class="bg-gray-50 font-semibold text-gray-900">
+          <tfoot class="bg-gray-100 border-t-2 border-gray-300 text-base font-bold text-gray-900">
             <tr>
-              <td class="px-4 py-3 text-left">Total</td>
+              <td class="px-4 py-3 text-left uppercase tracking-wide text-xs text-gray-500">Total</td>
               <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.registration_payments_cents) %></td>
               <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.ce_projected_cents) %></td>
               <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.funded_scholarship_cents) %></td>
               <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.unfunded_scholarship_cents) %></td>
               <td class="px-4 py-3 text-right tabular-nums text-amber-700"><%= dollars_from_cents(@report.outstanding_cents) %></td>
+              <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.monies_only_cents) %></td>
               <td class="px-4 py-3 text-right tabular-nums"><%= dollars_from_cents(@report.total_monies_excluding_unfunded_cents) %></td>
-              <td class="px-4 py-3 text-right tabular-nums text-lg font-extrabold text-gray-900 border-l border-gray-300 bg-gray-200"><%= dollars_from_cents(@report.total_monies_cents) %></td>
+              <td class="px-4 py-3 text-right tabular-nums border-l border-gray-300"><%= dollars_from_cents(@report.total_monies_cents) %></td>
+              <td class="px-4 py-3 text-right tabular-nums text-lg font-extrabold border-l border-gray-300 bg-gray-200"><%= dollars_from_cents(@report.total_expected_monies_cents) %></td>
             </tr>
           </tfoot>
         </table>
