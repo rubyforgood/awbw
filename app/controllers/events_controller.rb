@@ -588,11 +588,14 @@ class EventsController < ApplicationController
     day_count = @event.day_count
     headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
     headers += [ "Payment status", "Fees due", "Monies paid" ] if cost_required
-    headers += [ "Scholarship amount", "Scholarship grant", "Scholarship tasks completed", "CE requested", "CE hours", "CE amount", "CE license", "Fee note", "Portal access", "Portal user status" ]
+    headers << "Fee note"
+    headers += [ "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
+    headers += [ "CE requested", "CE hours", "CE amount", "CE license" ]
     headers += EventRegistration::CHECKLIST_STEPS.values
-    headers << "Attendance status"
+    headers += [ "Portal user status", "Portal access" ]
     headers += (1..day_count).map { |day| "Day #{day}" }
-    headers += [ "Flagged comments", "Comments" ]
+    headers << "Attendance status"
+    headers += [ "Comments", "Flagged comments" ]
 
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
@@ -619,6 +622,7 @@ class EventsController < ApplicationController
       row << helpers.dollars_from_cents(due_cents)
       row << helpers.dollars_from_cents(registration.payments_sum)
     end
+    row << registration.fee_note.to_s
     row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
     row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
     row << onboarding_scholarship_tasks_csv(registration)
@@ -627,19 +631,18 @@ class EventsController < ApplicationController
     row << (ce_hours.positive? ? ce_hours : "")
     row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
     row << registration.ce_license_number.to_s
-    row << registration.fee_note.to_s
-    account_status = registration.account_status
-    row << (account_status == "has_access" ? "Yes" : "No")
-    row << { "none" => "No account", "has_access" => "Has access", "invited" => "Invited", "no_access" => "No access" }.fetch(account_status, account_status.to_s.humanize)
     EventRegistration::CHECKLIST_STEPS.each_key do |step|
       row << (registration.checklist_step_completed?(step) ? "Yes" : "No")
     end
-    row << registration.attendance_status_label
+    account_status = registration.account_status
+    row << { "none" => "No account", "has_access" => "Has access", "invited" => "Invited", "no_access" => "No access" }.fetch(account_status, account_status.to_s.humanize)
+    row << (account_status == "has_access" ? "Yes" : "No")
     (1..day_count).each do |day|
       row << (registration.public_send("completed_day_#{day}") ? "Yes" : "No")
     end
-    row << (registration.comments.any?(&:flagged?) ? "Yes" : "No")
+    row << registration.attendance_status_label
     row << registration.comments.map { |comment| comment.body.to_s.strip }.reject(&:blank?).join(" ::: ")
+    row << (registration.comments.any?(&:flagged?) ? "Yes" : "No")
     row
   end
 

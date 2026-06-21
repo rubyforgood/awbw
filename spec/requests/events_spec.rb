@@ -942,8 +942,8 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("First name,Last name,Email")
       expect(response.body).to include("Mailchimp")
       expect(response.body).to include("CE requested,CE hours,CE amount,CE license")
-      expect(response.body).to include("Portal access,Portal user status")
-      expect(response.body).to include("Flagged comments,Comments")
+      expect(response.body).to include("Portal user status,Portal access")
+      expect(response.body).to include("Comments,Flagged comments")
       expect(response.body).to include("Ready")
 
       # Header and data rows must have matching column counts (no misalignment).
