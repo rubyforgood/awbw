@@ -438,7 +438,7 @@ RSpec.describe Person, "scholarship index helpers" do
   describe "#program_organization" do
     it "returns the organization on the recipient's facilitator affiliation" do
       org = create(:organization, name: "Prevail")
-      create(:affiliation, person: person, organization: org, title: "Lead Facilitator")
+      create(:affiliation, person: person, organization: org, title: "Facilitator")
 
       expect(person.program_organization).to eq(org)
     end

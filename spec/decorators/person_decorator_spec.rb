@@ -8,7 +8,7 @@ RSpec.describe PersonDecorator do
       beta = create(:organization, name: "Beta Org")
       alpha = create(:organization, name: "Alpha Org")
       create(:affiliation, person: person, organization: beta, title: "Facilitator")
-      create(:affiliation, person: person, organization: alpha, title: "Lead Facilitator")
+      create(:affiliation, person: person, organization: alpha, title: "Facilitator")
 
       expect(person.decorate.active_facilitator_organization_names).to eq([ "Alpha Org", "Beta Org" ])
     end
