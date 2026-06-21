@@ -29,10 +29,13 @@
               <%= render "org_affiliation_pills", org: org, affiliations: (@affiliations_by_org[org.id] || []),
                                                   submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
             </div>
-            <%= button_to "Remove",
+            <%# Intentional UX choice: Unlink only removes the org from this registration and keeps
+                the person's Affiliation. The confirm dialog spells out the distinction (Affiliations
+                are edited on the Person record). See EventRegistrationsController#unlink_organization. %>
+            <%= button_to "Unlink",
                           unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
                           method: :delete,
-                          form: { class: "shrink-0", data: { turbo_frame: "_top" } },
+                          form: { class: "shrink-0", data: { turbo_frame: "_top", turbo_confirm: "Unlink #{org.name} from this registration?\n\nThis only removes the organization from this registration — it will NOT delete any of #{@person.first_name.presence || @person.full_name}'s Affiliations with #{org.name}.\n\nTo change or remove any Affiliations, edit the Person record." } },
                           class: "inline-flex items-center rounded-full border border-transparent px-3 py-0.5 text-sm text-gray-500 underline transition hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:no-underline cursor-pointer" %>
           </li>
         <% end %>
