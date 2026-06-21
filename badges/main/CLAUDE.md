@@ -246,6 +246,7 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - After completing work, **mark the PR ready** using `gh pr ready`
 - **Do not rename branches after creating a PR** — deleting the old remote branch auto-closes the PR on GitHub, and the head ref cannot be changed after creation
 - Use `docs/pull_request_template.md` for PR description structure
+- **Remove the `Closes …` line when there's no ticket** — it's a template placeholder. Keep it (with a real issue link) only when the PR closes a tracked ticket; otherwise drop the line entirely rather than leaving the placeholder.
 - **Keep descriptions as short as possible** — a few terse bullets, not paragraphs. Cut anything a reviewer can see from the diff; only keep what explains *why*.
 - **Start the description with a review-depth tag** on its own single line, followed by a blank line, then the rest of the description. The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
   - **👀 Skim** — view-only: markup/copy/styling, no logic or data changes
