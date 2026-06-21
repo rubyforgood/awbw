@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (73) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (72) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -270,7 +270,6 @@ end
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
-- `column_visibility` — Per-column show/hide for a matrix (each menu checkbox toggles all cells tagged `data-onboarding-col`); used by the event Onboarding tab
 - `comment_edit_toggle` — Inline comment editing mode
 - `comment_required` — Require a comment body once a topic or body is filled in
 - `confirm_email` — Email confirmation UI

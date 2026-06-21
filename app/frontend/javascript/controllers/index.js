@@ -45,9 +45,6 @@ application.register("confirm-email", ConfirmEmailController)
 import ColumnToggleController from "./column_toggle_controller"
 application.register("column-toggle", ColumnToggleController)
 
-import ColumnVisibilityController from "./column_visibility_controller"
-application.register("column-visibility", ColumnVisibilityController)
-
 import CommentEditToggleController from "./comment_edit_toggle_controller"
 application.register("comment-edit-toggle", CommentEditToggleController)
 

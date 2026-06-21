@@ -4,8 +4,13 @@ module EventsHelper
   # this same list — keeping header buttons and cell positions aligned no matter
   # which optional columns (payment, attendance days) are present.
   def onboarding_columns(event)
-    columns = [
-      { key: "edit", label: "", kind: :edit, sortable: false, align: "center", sticky: true },
+    columns = [ { key: "edit", label: "", kind: :edit, sortable: false, align: "center", sticky: true } ]
+    # Attendance days sit at the far left (right after the edit button) so they're
+    # visible without scrolling.
+    (1..event.day_count).each do |day|
+      columns << { key: "completed_day_#{day}", label: "Day #{day}", kind: :checkbox, field: "completed_day_#{day}", sortable: true, align: "center", toggle: "days" }
+    end
+    columns += [
       { key: "first_name", label: "First", kind: :first_name, sortable: true, align: "left" },
       { key: "last_name", label: "Last", kind: :last_name, sortable: true, align: "left" },
       { key: "email", label: "Email", kind: :email, sortable: true, align: "left" },
@@ -25,14 +30,17 @@ module EventsHelper
       columns << { key: step, label: label, kind: :checkbox, field: step, sortable: true, align: "center", toggle: step }
     end
     columns << { key: "attendance", label: "Attendance", kind: :attendance, sortable: true, align: "center", toggle: "attendance" }
-    (1..event.day_count).each do |day|
-      columns << { key: "completed_day_#{day}", label: "Day #{day}", kind: :checkbox, field: "completed_day_#{day}", sortable: true, align: "center", toggle: "days" }
-    end
     columns << { key: "comments", label: "Comments", kind: :comments, sortable: true, align: "center", toggle: "comments" }
     columns
   end
 
-  # Distinct column-visibility menu entries (label keyed by data-onboarding-col),
+  # Columns minus any the admin has hidden (by their toggle key). Non-toggleable
+  # columns (edit, name, email, progress) are always kept.
+  def visible_onboarding_columns(event, hidden_columns = [])
+    onboarding_columns(event).reject { |column| column[:toggle].present? && hidden_columns.include?(column[:toggle]) }
+  end
+
+  # Distinct column show/hide menu entries (label keyed by toggle key),
   # collapsing the per-day columns into a single "Attendance days" toggle.
   def onboarding_toggle_entries(event)
     onboarding_columns(event).each_with_object({}) do |column, entries|

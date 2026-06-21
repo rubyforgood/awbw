@@ -7,7 +7,6 @@
   <% columns.each do |column| %>
     <% td_classes = [ "px-4 py-2 text-sm", align_class[column[:align]] ]
        td_classes << "sticky left-0 bg-white" if column[:sticky] %>
-    <% sort_data = {} %>
     <% case column[:kind]
        when :first_name %>
       <td class="<%= td_classes.join(" ") %> text-gray-800" data-sort-value="<%= person.first_name.to_s.downcase %>">
@@ -36,13 +35,13 @@
 
     <% when :program %>
       <% org_names = registration.organizations.map(&:name) %>
-      <td class="<%= td_classes.join(" ") %> text-gray-700" data-onboarding-col="program" data-sort-value="<%= org_names.join(", ").downcase %>">
+      <td class="<%= td_classes.join(" ") %> text-gray-700" data-sort-value="<%= org_names.join(", ").downcase %>">
         <%= org_names.any? ? truncate(org_names.join(", "), length: 40) : content_tag(:span, "—", class: "text-gray-400") %>
       </td>
 
     <% when :program_type %>
       <% statuses = Array(program_statuses) %>
-      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="program_type" data-sort-value="<%= statuses.map(&:to_s).sort.join %>">
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= statuses.map(&:to_s).sort.join %>">
         <% if statuses.any? %>
           <div class="flex flex-col items-center gap-1">
             <% statuses.each do |status| %>
@@ -57,7 +56,7 @@
     <% when :payment %>
       <% paid_cents = registration.allocations_sum %>
       <% due_cents = event.cost_cents.to_i - paid_cents %>
-      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="payment" data-sort-value="<%= due_cents %>">
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= due_cents %>">
         <% if registration.paid_in_full? %>
           <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-green-50 text-green-700 border-green-200"><i class="fas fa-circle-check"></i> Paid</span>
         <% elsif registration.discounted? %>
@@ -74,7 +73,7 @@
 
     <% when :scholarship %>
       <% scholarship = registration.scholarships.first %>
-      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="scholarship" data-sort-value="<%= scholarship&.amount_cents.to_i %>">
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= scholarship&.amount_cents.to_i %>">
         <% if scholarship %>
           <div class="flex flex-col items-center gap-0.5">
             <span class="font-medium text-gray-800"><%= dollars_from_cents(scholarship.amount_cents) %></span>
@@ -90,23 +89,23 @@
     <% when :scholarship_tasks %>
       <% scholarships = registration.scholarships %>
       <% sort_value = scholarships.any? ? (scholarships.all?(&:tasks_completed?) ? 1 : 0) : -1 %>
-      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="scholarship_tasks_completed" data-sort-value="<%= sort_value %>">
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= sort_value %>">
         <%= render "events/onboarding_cell", registration: registration, field: "scholarship_tasks_completed" %>
       </td>
 
     <% when :fees_due %>
       <% due_cents = [ event.cost_cents.to_i - registration.allocations_sum, 0 ].max %>
-      <td class="<%= td_classes.join(" ") %> font-medium <%= due_cents.zero? ? "text-gray-400" : "text-gray-800" %>" data-onboarding-col="fees_due" data-sort-value="<%= due_cents %>">
+      <td class="<%= td_classes.join(" ") %> font-medium <%= due_cents.zero? ? "text-gray-400" : "text-gray-800" %>" data-sort-value="<%= due_cents %>">
         <%= dollars_from_cents(due_cents) %>
       </td>
 
     <% when :fee_note %>
-      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="fee_note">
+      <td class="<%= td_classes.join(" ") %>">
         <%= render "events/onboarding_cell", registration: registration, field: "fee_note" %>
       </td>
 
     <% when :portal_invite %>
-      <td class="<%= td_classes.join(" ") %> align-top" data-onboarding-col="portal_invite" data-sort-value="<%= registration.account_status %>">
+      <td class="<%= td_classes.join(" ") %> align-top" data-sort-value="<%= registration.account_status %>">
         <% if person.user.present? %>
           <%= render "users/confirmed_status", user: person.user, invite_params: {} %>
         <% else %>
@@ -116,18 +115,18 @@
 
     <% when :checkbox %>
       <% done = EventRegistration::CHECKLIST_STEPS.key?(column[:field]) ? registration.checklist_step_completed?(column[:field]) : registration.public_send(column[:field]) %>
-      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="<%= column[:toggle] %>" data-sort-value="<%= done ? 1 : 0 %>">
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= done ? 1 : 0 %>">
         <%= render "events/onboarding_cell", registration: registration, field: column[:field] %>
       </td>
 
     <% when :attendance %>
-      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="attendance" data-sort-value="<%= registration.status %>">
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= registration.status %>">
         <%= render "event_registrations/attendance_status_badge", registration: registration %>
       </td>
 
     <% when :comments %>
       <% comments = registration.comments %>
-      <td class="<%= td_classes.join(" ") %>" data-onboarding-col="comments" data-sort-value="<%= comments.size %>">
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= comments.size %>">
         <% if comments.any? %>
           <% latest = comments.first %>
           <%= link_to edit_event_registration_path(registration, return_to: "onboarding"),

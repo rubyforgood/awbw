@@ -149,6 +149,9 @@ class EventsController < ApplicationController
 
     @dashboard = EventDashboard.new(@event)
     @program_statuses_by_registrant = @dashboard.program_statuses_by_registrant
+    # Column show/hide is server-side: `hide` is a comma-separated list of column
+    # toggle keys the admin has hidden, threaded through the filters and tab links.
+    @hidden_columns = params[:hide].to_s.split(",").map(&:strip).reject(&:blank?)
 
     respond_to do |format|
       format.html
