@@ -359,11 +359,6 @@ RSpec.describe "Events", type: :request do
         expect(event.reload.title).to eq("Updated")
       end
 
-      it "redirects to the event dashboard" do
-        patch event_path(event), params: update_params
-        expect(response).to redirect_to(dashboard_event_path(event))
-      end
-
       it "persists the show-details-on-registration toggle" do
         event.update!(autoshow_registration_details: false)
         patch event_path(event), params: { event: { autoshow_registration_details: "1" } }

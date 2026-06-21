@@ -433,7 +433,7 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       if success
-        format.html { redirect_to dashboard_event_path(@event), notice: "Event was successfully updated." }
+        format.html { redirect_to @event, notice: "Event was successfully updated." }
         format.json { render :show, status: :ok, location: @event }
       else
         set_form_variables
