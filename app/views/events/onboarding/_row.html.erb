@@ -219,7 +219,7 @@
 
     <% when :fee_note %>
       <td class="<%= td_classes.join(" ") %>">
-        <%= render "events/onboarding_cell", registration: registration, field: "fee_note" %>
+        <%= render "events/onboarding/cell", registration: registration, field: "fee_note" %>
       </td>
 
     <% when :portal_invite %>
@@ -234,7 +234,7 @@
     <% when :checkbox %>
       <% done = EventRegistration::CHECKLIST_STEPS.key?(column[:field]) ? registration.checklist_step_completed?(column[:field]) : registration.public_send(column[:field]) %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= done ? 1 : 0 %>">
-        <%= render "events/onboarding_cell", registration: registration, field: column[:field] %>
+        <%= render "events/onboarding/cell", registration: registration, field: column[:field] %>
       </td>
 
     <% when :attendance %>

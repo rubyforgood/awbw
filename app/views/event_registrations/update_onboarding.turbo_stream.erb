@@ -1,5 +1,5 @@
 <%# Replace just the edited cell — avoids re-rendering the whole matrix (and the
     dashboard) on every checkbox toggle. %>
 <%= turbo_stream.replace dom_id(@event_registration, @field) do %>
-  <%= render "events/onboarding_cell", registration: @event_registration, field: @field %>
+  <%= render "events/onboarding/cell", registration: @event_registration, field: @field %>
 <% end %>

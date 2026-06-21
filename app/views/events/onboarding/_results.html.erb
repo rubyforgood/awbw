@@ -64,7 +64,7 @@
 
           <tbody class="divide-y divide-gray-200" data-table-sort-target="body">
             <% @event_registrations.each do |registration| %>
-              <%= render "events/onboarding_row",
+              <%= render "events/onboarding/row",
                     registration: registration,
                     event: @event,
                     columns: columns,

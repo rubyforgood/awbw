@@ -140,7 +140,7 @@ class EventRegistrationsController < ApplicationController
 
     respond_to do |format|
       format.turbo_stream
-      format.html { redirect_to onboarding_event_path(@event_registration.event) }
+      format.html { redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id) }
     end
   end
 
