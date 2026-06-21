@@ -1,37 +1,22 @@
 <% content_for(:page_bg_class, "public") %>
-
+<% content_for(:page_title, "#{@callout.title} — #{@event.title}") %>
 <% reg_slug = params[:reg].presence %>
-<% back_path = reg_slug ? registration_ticket_path(reg_slug) : event_path(@event) %>
-<% back_label = reg_slug ? "Back to ticket" : "Back to event" %>
-<div class="max-w-3xl mx-auto px-4 pt-4">
-  <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
-    <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
+<% back_path = reg_slug ? registration_ticket_path(reg_slug) : nil %>
+<% resource = @callout.resource&.decorate %>
+<%= render layout: "events/callouts/callout_page", locals: { title: @callout.title, back_path: back_path } do %>
+  <% if @callout.subtitle.present? %>
+    <p class="text-base text-gray-500 mb-4"><%= @callout.subtitle %></p>
   <% end %>
-</div>
 
-<div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
-  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
-      <div class="flex items-center gap-5">
-        <div class="shrink-0">
-          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
-        </div>
-        <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight"><%= @callout.title %></h1>
-          <p class="text-sm text-blue-200"><%= @event.title %></p>
-        </div>
-      </div>
-      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+  <% if @callout.description.present? %>
+    <div class="rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700">
+      <%= form_label_html(@callout.description) %>
     </div>
+  <% end %>
 
-    <div class="px-6 sm:px-8 py-7">
-      <% if @callout.subtitle.present? %>
-        <p class="text-base text-gray-500 mb-4"><%= @callout.subtitle %></p>
-      <% end %>
-
-      <div class="rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700">
-        <%= form_label_html(@callout.description) %>
-      </div>
+  <% if resource %>
+    <div class="mt-6">
+      <%= render "events/callouts/resource_body", resource: resource %>
     </div>
-  </div>
-</div>
+  <% end %>
+<% end %>

@@ -1027,11 +1027,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_19_120508) do
     t.string "icon_class"
     t.boolean "payment_access_gated", default: false, null: false
     t.integer "position", null: false
+    t.integer "resource_id"
     t.string "subtitle"
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["event_id", "position"], name: "index_registration_ticket_callouts_on_event_id_and_position"
     t.index ["event_id"], name: "index_registration_ticket_callouts_on_event_id"
+    t.index ["resource_id"], name: "index_registration_ticket_callouts_on_resource_id"
   end
 
   create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1663,6 +1665,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_19_120508) do
   add_foreign_key "quotable_item_quotes", "quotes"
   add_foreign_key "quotes", "workshops"
   add_foreign_key "registration_ticket_callouts", "events"
+  add_foreign_key "registration_ticket_callouts", "resources", on_delete: :nullify
   add_foreign_key "report_form_field_answers", "answer_options"
   add_foreign_key "report_form_field_answers", "form_fields"
   add_foreign_key "report_form_field_answers", "reports"

@@ -99,6 +99,7 @@ Rails.application.routes.draw do
   get "registration/:slug/ce", to: "events/callouts#ce", as: :registration_ce
   get "registration/:slug/forms", to: "events/callouts#forms", as: :registration_forms
   get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
+  get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
   get "registration/:slug/portal", to: "events/callouts#portal", as: :registration_portal
   get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
