@@ -4,6 +4,7 @@ RSpec.describe Affiliation do
   describe 'associations' do
     it { should belong_to(:organization) }
     it { should belong_to(:person) }
+    it { should belong_to(:organization_address).class_name("Address").optional }
   end
 
   describe 'validations' do
@@ -12,6 +13,40 @@ RSpec.describe Affiliation do
     end
     it { should validate_presence_of(:organization_id) }
     # it { should validate_presence_of(:person_id) } # we needed to not have this to support nested attrs
+  end
+
+  describe '#organization_address' do
+    let(:organization) { create(:organization) }
+    let(:address) { create(:address, addressable: organization) }
+
+    it 'is valid when the address belongs to the same organization' do
+      affiliation = build(:affiliation, organization: organization, organization_address: address)
+      expect(affiliation).to be_valid
+    end
+
+    it 'is valid when no address is linked' do
+      affiliation = build(:affiliation, organization: organization, organization_address: nil)
+      expect(affiliation).to be_valid
+    end
+
+    it 'is invalid when the address belongs to a different organization' do
+      other_address = create(:address, addressable: create(:organization))
+      affiliation = build(:affiliation, organization: organization, organization_address: other_address)
+      expect(affiliation).not_to be_valid
+      expect(affiliation.errors[:organization_address_id]).to be_present
+    end
+
+    it "is invalid when the address belongs to a person" do
+      person_address = create(:address, addressable: create(:person))
+      affiliation = build(:affiliation, organization: organization, organization_address: person_address)
+      expect(affiliation).not_to be_valid
+    end
+
+    it 'is nullified when its linked address is destroyed' do
+      affiliation = create(:affiliation, organization: organization, organization_address: address)
+      address.destroy
+      expect(affiliation.reload.organization_address_id).to be_nil
+    end
   end
 
   describe '#active?' do

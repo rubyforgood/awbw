@@ -248,6 +248,25 @@ RSpec.describe "/organizations", type: :request do
         expect(response).to have_http_status(:unprocessable_content)
       end
     end
+
+    context "linking an affiliation to an organization address" do
+      it "saves the chosen organization_address_id on the affiliation" do
+        organization = Organization.create!(valid_attributes)
+        address = create(:address, addressable: organization)
+        person = create(:person)
+        affiliation = create(:affiliation, organization: organization, person: person)
+
+        patch organization_url(organization), params: {
+          organization: {
+            affiliations_attributes: {
+              "0" => { id: affiliation.id, person_id: person.id, organization_address_id: address.id }
+            }
+          }
+        }
+
+        expect(affiliation.reload.organization_address_id).to eq(address.id)
+      end
+    end
   end
 
   describe "sector saving" do

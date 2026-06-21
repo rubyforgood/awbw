@@ -1,9 +1,12 @@
 class Affiliation < ApplicationRecord
   belongs_to :organization
   belongs_to :person, touch: true
+  # Which of the organization's addresses this person is affiliated with (optional).
+  belongs_to :organization_address, class_name: "Address", optional: true
 
   # Validations
   validates_presence_of :organization_id
+  validate :organization_address_belongs_to_organization
 
   scope :active, -> {
     where(inactive: false)
@@ -44,6 +47,16 @@ class Affiliation < ApplicationRecord
   end
 
   private
+
+  # The linked address must be one of this affiliation's organization's own
+  # addresses — not a stray address or another org's / person's address.
+  def organization_address_belongs_to_organization
+    return if organization_address.blank?
+
+    valid = organization_address.addressable_type == "Organization" &&
+            organization_address.addressable_id == organization_id
+    errors.add(:organization_address_id, "must be an address of this organization") unless valid
+  end
 
   def skip_if_duplicate
     scope = Affiliation.where(
