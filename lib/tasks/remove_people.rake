@@ -18,6 +18,9 @@
 #
 # FORCE=true overrides ALL protections and deletes even people who look real
 # (destroying any linked account). Use only for confirmed false positives.
+#
+# The deletion is attributed to an admin actor for the Ahoy audit trail: by
+# default umberto.user@example.com, overridable with ACTOR_EMAIL=someone@example.com.
 namespace :data do
   desc "Permanently remove people and their full data + audit graph (dry run unless CONFIRM=true)"
   task remove_people: :environment do
@@ -72,13 +75,32 @@ namespace :data do
       next
     end
 
+    # Attribute the deletion to an admin actor so the Ahoy "destroy" audit records
+    # who did it. Unlike the web flow there's no controller to flush the buffered
+    # lifecycle events, so we flush them here on success.
+    actor_email = ENV.fetch("ACTOR_EMAIL", "umberto.user@example.com")
+    actor = User.where(email: actor_email).last
+    puts "Warning: audit actor #{actor_email} not found — deletions won't be attributed." unless actor
+
+    Current.user = actor
+    Current.source = "rake:data:remove_people"
     begin
       deleted = remover.call
+      flush_audit = -> {
+        events = Analytics::LifecycleBuffer.store
+        return if events.empty?
+        tracker = Ahoy::Tracker.new(user: actor)
+        events.each { |payload| tracker.track(payload[:name], payload[:properties]) }
+        events.clear
+      }
+      flush_audit.call
       puts "\nDone. Deleted #{deleted.size} person(s) and their data + audit graph."
     rescue ActiveRecord::InvalidForeignKey => e
       abort "\nAborted (nothing deleted): a linked User Account owns content that " \
             "can't be orphaned (workshops, reports, stories, etc.). Reassign or " \
             "remove it first.\n#{e.message}"
+    ensure
+      Current.reset
     end
   end
 end

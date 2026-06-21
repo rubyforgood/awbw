@@ -49,4 +49,16 @@ RSpec.describe "data:remove_people" do
 
     expect(Person.exists?(person.id)).to be false
   end
+
+  it "attributes the deletion audit to the admin actor" do
+    actor = create(:user, :admin, email: "umberto.user@example.com")
+    person = create(:person, user: nil)
+
+    expect { run_task(PERSON_IDS: person.id, CONFIRM: true) }
+      .to change { Ahoy::Event.where(name: "destroy.person").count }.by(1)
+
+    expect(Ahoy::Event.where(name: "destroy.person").last.user_id).to eq(actor.id)
+  ensure
+    Current.reset
+  end
 end
