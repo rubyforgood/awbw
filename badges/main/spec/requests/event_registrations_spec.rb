@@ -374,19 +374,12 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("Counselor — inactive")
         end
 
-        it "renders an inline editable title field for a non-facilitator affiliation" do
+        it "renders a non-facilitator affiliation title as a non-editable pill" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include('name="affiliation[title]"')
-        end
-
-        it "does not render an editable field for a Facilitator affiliation" do
-          create(:affiliation, person: regular_user.person, organization: organization, title: "Facilitator")
-
-          get link_organization_event_registration_path(existing_registration)
-
+          expect(response.body).to include("Counselor")
           expect(response.body).not_to include('name="affiliation[title]"')
         end
 
