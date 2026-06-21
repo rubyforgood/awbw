@@ -15,7 +15,7 @@ function grayOut(el) {
 }
 
 export default class extends Controller {
-  static targets = ["endDate", "title", "row", "profileButton", "stripe"]
+  static targets = ["endDate", "title", "row", "profileButton", "accentBar"]
 
   connect() {
     // Save original classes for profile buttons and their styled children
@@ -36,8 +36,8 @@ export default class extends Controller {
 
   updateBorder() {
     if (!this.hasTitleTarget) return;
-    if (this.hasStripeTarget) {
-      this.stripeTarget.style.backgroundColor = this.isFacilitator() ? "#a855f7" : "#d1d5db";
+    if (this.hasAccentBarTarget) {
+      this.accentBarTarget.style.backgroundColor = this.isFacilitator() ? "#a855f7" : "#d1d5db";
     }
     this.updateRowBackground();
   }
