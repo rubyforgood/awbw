@@ -242,10 +242,10 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## PRs
 
-- **Always create PRs as drafts** — every PR starts in draft (`gh pr create --draft`), no exceptions. Never open a PR ready for review; only `gh pr ready` promotes it once work is complete.
+- **Always create PRs as drafts** — every PR starts in draft (`gh pr create --draft`), no exceptions. Never open a PR ready for review, and never promote it. Only the user runs `gh pr ready`, manually and intentionally, when they decide the work is ready.
 - **Push to a draft PR early** — create the draft PR as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
   - **In a new Conductor workspace, do this immediately** — as the first step of any task, make an initial commit on the workspace branch and open the draft PR right away (before the work is done), then keep pushing on every commit as you go. Don't wait until there's a finished change to show.
-- After completing work, **mark the PR ready** using `gh pr ready`
+- **Never take a PR out of draft** — do not run `gh pr ready` or otherwise remove draft status, even after the work looks complete. Leave the PR in draft; the user promotes it manually and intentionally when they decide it's ready.
 - **Do not rename branches after creating a PR** — deleting the old remote branch auto-closes the PR on GitHub, and the head ref cannot be changed after creation
 - Use `docs/pull_request_template.md` for PR description structure
 - **Remove the `Closes …` line when there's no ticket** — it's a template placeholder. Keep it (with a real issue link) only when the PR closes a tracked ticket; otherwise drop the line entirely rather than leaving the placeholder.
