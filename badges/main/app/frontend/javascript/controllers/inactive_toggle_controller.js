@@ -15,7 +15,7 @@ function grayOut(el) {
 }
 
 export default class extends Controller {
-  static targets = ["endDate", "title", "row", "profileButton"]
+  static targets = ["endDate", "title", "row", "profileButton", "accentBar"]
 
   connect() {
     // Save original classes for profile buttons and their styled children
@@ -36,25 +36,54 @@ export default class extends Controller {
 
   updateBorder() {
     if (!this.hasTitleTarget) return;
-    const isFacilitator = this.titleTarget.value.toLowerCase().includes("facilitator");
-    this.rowTarget.style.borderLeft = `4px solid ${isFacilitator ? "#e879f9" : "#d1d5db"}`;
+    if (this.hasAccentBarTarget) {
+      this.accentBarTarget.style.backgroundColor = this.isFacilitator() ? "#a855f7" : "#d1d5db";
+    }
+    this.updateRowBackground();
   }
 
   apply() {
     if (!this.hasEndDateTarget) return;
-    const value = this.endDateTarget.value;
-    const isPast = value && new Date(value) < new Date(new Date().toDateString());
+    const isPast = this.isPast();
+
+    this.updateRowBackground();
 
     if (isPast) {
-      this.rowTarget.classList.add("bg-gray-100", "border-gray-300", "opacity-60");
-      this.rowTarget.classList.remove("bg-white", "border-gray-200");
       this.profileButtonTargets.forEach((btn) => {
         btn.querySelectorAll("a.group, a.group span").forEach((el) => grayOut(el));
       });
     } else {
-      this.rowTarget.classList.remove("bg-gray-100", "border-gray-300", "opacity-60");
-      this.rowTarget.classList.add("bg-white", "border-gray-200");
       this._savedClasses.forEach(({ el, className }) => { el.className = className; });
     }
+  }
+
+  // Single source of truth for the row tint: gray when expired, light purple for
+  // an active facilitator, white otherwise.
+  updateRowBackground() {
+    this.rowTarget.classList.remove(
+      "bg-gray-100", "border-gray-300", "opacity-60",
+      "bg-purple-100", "border-purple-300",
+      "bg-white", "border-gray-200"
+    );
+
+    if (this.isPast()) {
+      this.rowTarget.classList.add("bg-gray-100", "border-gray-300", "opacity-60");
+    } else if (this.isFacilitator()) {
+      this.rowTarget.classList.add("bg-purple-100", "border-purple-300");
+    } else {
+      this.rowTarget.classList.add("bg-white", "border-gray-200");
+    }
+  }
+
+  isPast() {
+    if (!this.hasEndDateTarget) return false;
+    const value = this.endDateTarget.value;
+    return value && new Date(value) < new Date(new Date().toDateString());
+  }
+
+  // Mirror Affiliation#facilitator? — an exact, case-sensitive match on
+  // "Facilitator" (trimmed), so the live row tint matches what the server will render.
+  isFacilitator() {
+    return this.hasTitleTarget && this.titleTarget.value.trim() === "Facilitator";
   }
 }
