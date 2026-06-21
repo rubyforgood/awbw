@@ -211,18 +211,26 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("Preview bulk payment page")
     end
 
-    it "renders the 'Before you attend' toggle with the details fields" do
+    it "renders the built-in 'Before you attend' card fields within the callouts section" do
       get edit_event_path(event)
+      expect(response.body).to include("Registration ticket callouts")
       expect(response.body).to include("Before you attend")
       expect(response.body).to include("event[event_details_label]")
       expect(response.body).to include("event[event_details]")
     end
 
-    it "renders the 'CE hours' toggle with the details fields" do
+    it "renders the built-in 'CE hours' card fields within the callouts section" do
       get edit_event_path(event)
+      expect(response.body).to include("Registration ticket callouts")
       expect(response.body).to include("CE hours")
       expect(response.body).to include("event[ce_hours_details_label]")
       expect(response.body).to include("event[ce_hours_details]")
+    end
+
+    it "previews the app-controlled built-in callouts (greyed, non-editable)" do
+      get edit_event_path(event)
+      expect(response.body).to include("Facilitator Portal access")
+      expect(response.body).to include("Frequently asked questions")
     end
   end
 
