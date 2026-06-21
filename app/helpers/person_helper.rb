@@ -1,4 +1,24 @@
 module PersonHelper
+  # Just the circular avatar (photo, or the name's first letter) as a link to the
+  # person's profile — for dense tables that show the name in separate columns.
+  def person_avatar_link(person, data: {}, path_params: {})
+    decorated = person.decorate
+    avatar = if decorated.avatar.present?
+      image_tag decorated.avatar.variant(:thumbnail),
+                class: "w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm"
+    else
+      content_tag(:span, decorated.name.to_s.first.to_s.upcase,
+                  class: "w-10 h-10 rounded-full flex items-center justify-center
+                          bg-sky-200 text-sky-700 font-bold text-lg
+                          border border-sky-300 shadow-sm")
+    end
+
+    link_to avatar, person_path(person, **path_params),
+            data: { turbo_prefetch: false }.merge(data),
+            title: decorated.name,
+            class: "inline-flex shrink-0 hover:opacity-80 transition-opacity"
+  end
+
   def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false, path_params: {})
     if inactive
       bg = "bg-gray-100"

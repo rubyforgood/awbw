@@ -5,7 +5,10 @@ module EventsHelper
   # which optional columns (payment, attendance days) are present.
   def onboarding_columns(event)
     columns = [
-      { key: "name", label: "Name", kind: :name, sortable: true, align: "left", sticky: true },
+      { key: "avatar", label: "", kind: :avatar, sortable: false, align: "center", sticky: true },
+      { key: "first_name", label: "First", kind: :first_name, sortable: true, align: "left" },
+      { key: "last_name", label: "Last", kind: :last_name, sortable: true, align: "left" },
+      { key: "email", label: "Email", kind: :email, sortable: true, align: "left" },
       { key: "progress", label: "Progress", kind: :progress, sortable: true, align: "center" },
       { key: "program", label: "Organization", kind: :program, sortable: true, align: "left", toggle: "program" },
       { key: "program_type", label: "Program type", kind: :program_type, sortable: true, align: "center", toggle: "program_type" }

@@ -888,6 +888,17 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Onboard")
     end
 
+    it "shows separately sortable first name, last name, and email columns" do
+      get onboarding_event_path(event)
+
+      # Three distinct sortable headers plus the registrant's split name + email.
+      expect(response.body).to match(/First\s*<span data-sort-indicator/)
+      expect(response.body).to match(/Last\s*<span data-sort-indicator/)
+      expect(response.body).to match(/Email\s*<span data-sort-indicator/)
+      expect(response.body).to include("Ready")
+      expect(response.body).to include(person.preferred_email)
+    end
+
     it "wires up click-to-sort on the matrix" do
       get onboarding_event_path(event)
 

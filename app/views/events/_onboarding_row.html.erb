@@ -9,11 +9,29 @@
        td_classes << "sticky left-0 bg-white" if column[:sticky] %>
     <% sort_data = {} %>
     <% case column[:kind]
-       when :name %>
-      <td class="<%= td_classes.join(" ") %>" data-sort-first="<%= person.first_name.to_s.downcase %>" data-sort-last="<%= person.last_name.to_s.downcase %>">
-        <div class="w-48 min-w-0">
-          <%= person_profile_button(person, data: { turbo_frame: "_top" }) %>
-        </div>
+       when :avatar %>
+      <td class="<%= td_classes.join(" ") %>">
+        <%= person_avatar_link(person, data: { turbo_frame: "_top" }) %>
+      </td>
+
+    <% when :first_name %>
+      <td class="<%= td_classes.join(" ") %> text-gray-800" data-sort-value="<%= person.first_name.to_s.downcase %>">
+        <%= link_to person.first_name.presence || "—", person_path(person), class: "font-medium text-gray-800 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %>
+      </td>
+
+    <% when :last_name %>
+      <td class="<%= td_classes.join(" ") %> text-gray-800" data-sort-value="<%= person.last_name.to_s.downcase %>">
+        <%= person.last_name.presence || content_tag(:span, "—", class: "text-gray-400") %>
+      </td>
+
+    <% when :email %>
+      <% email = person.preferred_email %>
+      <td class="<%= td_classes.join(" ") %> text-gray-600" data-sort-value="<%= email.to_s.downcase %>">
+        <% if email.present? %>
+          <!--email_off--><span class="text-gray-600"><%= email %></span><!--email_on-->
+        <% else %>
+          <span class="text-gray-400">—</span>
+        <% end %>
       </td>
 
     <% when :progress %>

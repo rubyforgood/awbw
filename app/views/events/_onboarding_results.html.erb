@@ -49,13 +49,7 @@
                 <th class="<%= th_classes.join(" ") %>"
                     <%= "data-onboarding-col=#{column[:toggle]}".html_safe if column[:toggle] %>
                     <%= 'aria-sort="none"'.html_safe if column[:sortable] %>>
-                  <% if column[:kind] == :name %>
-                    <span class="inline-flex items-center gap-1.5">
-                      <%= render "shared/sortable_header", label: "First", index: index, key: "first" %>
-                      <span class="text-gray-300" aria-hidden="true">/</span>
-                      <%= render "shared/sortable_header", label: "Last", index: index, key: "last" %>
-                    </span>
-                  <% elsif column[:sortable] %>
+                  <% if column[:sortable] %>
                     <%= render "shared/sortable_header", label: column[:label], index: index %>
                   <% else %>
                     <%= column[:label] %>
