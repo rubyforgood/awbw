@@ -35,10 +35,10 @@
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
           <%= render "revenue_kpi", label: "Fees collected*", value: dollars_from_cents(featured.fees_cents),
-                value_class: "text-gray-900", note: "reg + CE", note_inline: true, cents: featured.fees_cents,
+                value_class: "text-gray-900", note: "reg + CE", cents: featured.fees_cents,
                 prior_cents: prior&.fees_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Scholarships", value: dollars_from_cents(featured.funded_scholarship_cents),
-                value_class: "text-gray-900", note: "grant-funded only", note_inline: true, cents: featured.funded_scholarship_cents,
+                value_class: "text-gray-900", note: "grant-funded only", cents: featured.funded_scholarship_cents,
                 prior_cents: prior&.funded_scholarship_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Org subsidy", value: dollars_from_cents(featured.org_subsidy_cents),
                 value_class: "text-red-600", note: "discounts + unfunded", cents: featured.org_subsidy_cents,
