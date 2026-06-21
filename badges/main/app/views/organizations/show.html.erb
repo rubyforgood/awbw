@@ -82,7 +82,7 @@
             <% end %>
           <% end %>
           <% if @organization.profile_show_website? && @organization.website_url.present? %>
-            <% safe_url = URI.parse(@organization.website_url).to_s rescue nil %>
+            <% safe_url = @organization.website_link_url %>
             <% if safe_url.present? %>
               <span class="text-gray-600">
                 🌎 <%= link_to @organization.website_url, safe_url,
