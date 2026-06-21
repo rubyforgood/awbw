@@ -649,7 +649,7 @@ RSpec.describe EventRegistration, type: :model do
       expect(registration.reload.program_statuses).to eq([ :new ])
     end
 
-    it "uses the registrant's facilitator affiliation to the linked org as the reference" do
+    it "is ongoing when the linked org already had an active facilitator, excluding the registrant's own" do
       create(:event_registration_organization, event_registration: registration, organization: linked_org)
       create(:affiliation, organization: linked_org, title: "Facilitator",
              start_date: 2.years.ago, end_date: nil)
