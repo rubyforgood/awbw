@@ -5,7 +5,7 @@ module EventsHelper
   # which optional columns (payment, attendance days) are present.
   def onboarding_columns(event)
     columns = [
-      { key: "avatar", label: "", kind: :avatar, sortable: false, align: "center", sticky: true },
+      { key: "edit", label: "", kind: :edit, sortable: false, align: "center", sticky: true },
       { key: "first_name", label: "First", kind: :first_name, sortable: true, align: "left" },
       { key: "last_name", label: "Last", kind: :last_name, sortable: true, align: "left" },
       { key: "email", label: "Email", kind: :email, sortable: true, align: "left" },
@@ -13,9 +13,14 @@ module EventsHelper
       { key: "program", label: "Organization", kind: :program, sortable: true, align: "left", toggle: "program" },
       { key: "program_type", label: "Program type", kind: :program_type, sortable: true, align: "center", toggle: "program_type" }
     ]
-    columns << { key: "payment", label: "Payment", kind: :payment, sortable: true, align: "center", toggle: "payment" } if event.cost_cents.to_i > 0
+    if event.cost_cents.to_i > 0
+      columns << { key: "payment", label: "Payment", kind: :payment, sortable: true, align: "center", toggle: "payment" }
+      columns << { key: "fees_due", label: "Fees due", kind: :fees_due, sortable: true, align: "center", toggle: "fees_due" }
+    end
     columns << { key: "scholarship", label: "Scholarship", kind: :scholarship, sortable: true, align: "center", toggle: "scholarship" }
+    columns << { key: "scholarship_tasks_completed", label: "Tasks done", kind: :scholarship_tasks, sortable: true, align: "center", toggle: "scholarship_tasks_completed" }
     columns << { key: "fee_note", label: "Fee note", kind: :fee_note, sortable: false, align: "center", toggle: "fee_note" }
+    columns << { key: "portal_invite", label: "Portal invite", kind: :portal_invite, sortable: true, align: "center", toggle: "portal_invite" }
     EventRegistration::CHECKLIST_STEPS.each do |step, label|
       columns << { key: step, label: label, kind: :checkbox, field: step, sortable: true, align: "center", toggle: step }
     end
@@ -23,7 +28,7 @@ module EventsHelper
     (1..event.day_count).each do |day|
       columns << { key: "completed_day_#{day}", label: "Day #{day}", kind: :checkbox, field: "completed_day_#{day}", sortable: true, align: "center", toggle: "days" }
     end
-    columns << { key: "edit", label: "", kind: :edit, sortable: false, align: "right" }
+    columns << { key: "comments", label: "Comments", kind: :comments, sortable: true, align: "center", toggle: "comments" }
     columns
   end
 

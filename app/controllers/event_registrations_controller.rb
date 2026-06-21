@@ -128,6 +128,8 @@ class EventRegistrationsController < ApplicationController
 
     if @field == "fee_note"
       @event_registration.update(fee_note: params[:value])
+    elsif @field == "scholarship_tasks_completed"
+      @event_registration.scholarships.each { |scholarship| scholarship.update(tasks_completed: completed) }
     elsif EventRegistration::DAY_FIELDS.include?(@field)
       @event_registration.update(@field => completed)
     elsif EventRegistration::CHECKLIST_STEPS.key?(@field)

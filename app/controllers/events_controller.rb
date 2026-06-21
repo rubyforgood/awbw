@@ -127,7 +127,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:checklist_completions, :organizations, :allocations, :scholarships, registrant: [ :user, { affiliations: :organization } ])
+      .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, registrant: [ :user, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.onboarding_step(params[:step], params[:step_state]) if params[:step].present?
@@ -149,6 +149,16 @@ class EventsController < ApplicationController
 
     @dashboard = EventDashboard.new(@event)
     @program_statuses_by_registrant = @dashboard.program_statuses_by_registrant
+
+    respond_to do |format|
+      format.html
+      format.csv do
+        send_data onboarding_csv_string,
+          filename: "event-#{@event.id}-onboarding-#{Date.current.iso8601}.csv",
+          type: "text/csv",
+          disposition: "attachment"
+      end
+    end
   end
 
   # Public "Before you attend" page (materials, supplies, policies). Linked from
@@ -569,6 +579,65 @@ class EventsController < ApplicationController
       registration.intends_to_pay? ? "Yes" : "No",
       payment_total
     ]
+  end
+
+  def onboarding_csv_string
+    require "csv"
+    cost_required = @event.cost_cents.to_i > 0
+    day_count = @event.day_count
+    headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
+    headers += [ "Payment status", "Fees due" ] if cost_required
+    headers += [ "Scholarship amount", "Scholarship source", "Scholarship tasks completed", "Fee note", "Portal invite" ]
+    headers += EventRegistration::CHECKLIST_STEPS.values
+    headers << "Attendance status"
+    headers += (1..day_count).map { |day| "Day #{day}" }
+    headers += [ "Onboarding progress", "Comments" ]
+
+    CSV.generate(headers: headers, write_headers: true) do |csv_out|
+      @event_registrations.each do |registration|
+        csv_out << onboarding_csv_row(registration, cost_required, day_count)
+      end
+    end
+  end
+
+  def onboarding_csv_row(registration, cost_required, day_count)
+    person = registration.registrant
+    scholarship = registration.scholarships.first
+    statuses = Array(@program_statuses_by_registrant[registration.registrant_id]).map { |status| status.to_s.titleize }.join(", ")
+
+    row = [
+      person.first_name,
+      person.last_name,
+      person.preferred_email.presence || "",
+      registration.organizations.map(&:name).join("; ").presence || "",
+      statuses
+    ]
+    if cost_required
+      due_cents = [ @event.cost_cents.to_i - registration.allocations_sum, 0 ].max
+      row << registration.payment_status_label
+      row << helpers.dollars_from_cents(due_cents)
+    end
+    row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
+    row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
+    row << onboarding_scholarship_tasks_csv(registration)
+    row << registration.fee_note.to_s
+    row << (%w[ has_access invited ].include?(registration.account_status) ? "Yes" : "No")
+    EventRegistration::CHECKLIST_STEPS.each_key do |step|
+      row << (registration.checklist_step_completed?(step) ? "Yes" : "No")
+    end
+    row << registration.attendance_status_label
+    (1..day_count).each do |day|
+      row << (registration.public_send("completed_day_#{day}") ? "Yes" : "No")
+    end
+    row << "#{registration.onboarding_completed_count(day_count)}/#{registration.onboarding_total_count(day_count)}"
+    row << registration.comments.size
+    row
+  end
+
+  def onboarding_scholarship_tasks_csv(registration)
+    scholarships = registration.scholarships
+    return "" if scholarships.none?
+    scholarships.all?(&:tasks_completed?) ? "Yes" : "No"
   end
 
   def assign_event_forms(event)

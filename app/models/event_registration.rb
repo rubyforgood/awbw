@@ -31,11 +31,6 @@ class EventRegistration < ApplicationRecord
   # capturing who completed it and when). The keys double as the param/column keys
   # the toggle endpoint accepts. Adding/removing a step here needs no migration.
   CHECKLIST_STEPS = {
-    "sent_art_supply_info" => "Sent art supply info",
-    "sent_zoom_info" => "Sent Zoom info",
-    "sent_portal_invite_email" => "Sent portal invite email",
-    "sent_certificate" => "Sent certificate",
-    "set_up_in_filemaker" => "Set up in FileMaker",
     "set_up_in_mailchimp" => "Set up in Mailchimp",
     "set_up_in_cms" => "Set up in CMS"
   }.freeze

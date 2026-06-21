@@ -13,6 +13,11 @@
         <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
       </p>
     </div>
+    <%= link_to onboarding_event_path(@event, format: :csv, status_filter: params[:status_filter].presence, keyword: params[:keyword].presence, step: params[:step].presence, step_state: params[:step_state].presence),
+          class: "btn btn-secondary-outline",
+          data: { turbo: false } do %>
+      <i class="fa-solid fa-file-csv"></i> Export CSV
+    <% end %>
   </div>
 
   <%= render "onboarding_search" %>

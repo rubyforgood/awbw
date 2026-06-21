@@ -883,8 +883,9 @@ RSpec.describe "Events", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Onboarding")
-      expect(response.body).to include("Sent Zoom info")
-      expect(response.body).to include("Set up in FileMaker")
+      expect(response.body).to include("Set up in Mailchimp")
+      expect(response.body).to include("Set up in CMS")
+      expect(response.body).to include("Portal invite")
       expect(response.body).to include("Onboard")
     end
 
@@ -907,6 +908,18 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include('data-table-sort-target="header"')
     end
 
+    it "exports the matrix as CSV" do
+      get onboarding_event_path(event, format: :csv)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/csv")
+      expect(response.body).to include("First name,Last name,Email")
+      expect(response.body).to include("Set up in Mailchimp")
+      expect(response.body).to include("Portal invite")
+      expect(response.body).to include("Onboarding progress,Comments")
+      expect(response.body).to include("Ready")
+    end
+
     it "renders registrants with payment and grant-funded scholarship allocations" do
       paid_event = create(:event, cost_cents: 2_000)
       paid_reg = create(:event_registration, event: paid_event, registrant: person)
@@ -925,9 +938,9 @@ RSpec.describe "Events", type: :request do
     it "filters to registrants missing a step" do
       done_person = create(:person, first_name: "Allset", last_name: "Done")
       done = create(:event_registration, event: event, registrant: done_person)
-      create(:event_registration_checklist_completion, event_registration: done, step: "sent_zoom_info")
+      create(:event_registration_checklist_completion, event_registration: done, step: "set_up_in_mailchimp")
 
-      get onboarding_event_path(event, params: { step: "sent_zoom_info", step_state: "missing" })
+      get onboarding_event_path(event, params: { step: "set_up_in_mailchimp", step_state: "missing" })
 
       expect(response.body).to include("Onboard")
       expect(response.body).not_to include("Allset")
@@ -955,23 +968,23 @@ RSpec.describe "Events", type: :request do
     it "creates an audited completion row when a checklist step is checked" do
       expect {
         patch update_onboarding_event_registration_path(registration),
-              params: { field: "sent_zoom_info", value: "1" },
+              params: { field: "set_up_in_mailchimp", value: "1" },
               as: :turbo_stream
-      }.to change { registration.checklist_completions.where(step: "sent_zoom_info").count }.by(1)
+      }.to change { registration.checklist_completions.where(step: "set_up_in_mailchimp").count }.by(1)
 
-      completion = registration.checklist_completions.find_by(step: "sent_zoom_info")
+      completion = registration.checklist_completions.find_by(step: "set_up_in_mailchimp")
       expect(completion.completed_by).to eq(admin)
       expect(completion.completed_at).to be_present
     end
 
     it "removes the completion row when a checklist step is unchecked" do
-      create(:event_registration_checklist_completion, event_registration: registration, step: "sent_zoom_info")
+      create(:event_registration_checklist_completion, event_registration: registration, step: "set_up_in_mailchimp")
 
       expect {
         patch update_onboarding_event_registration_path(registration),
-              params: { field: "sent_zoom_info", value: "0" },
+              params: { field: "set_up_in_mailchimp", value: "0" },
               as: :turbo_stream
-      }.to change { registration.checklist_completions.where(step: "sent_zoom_info").count }.by(-1)
+      }.to change { registration.checklist_completions.where(step: "set_up_in_mailchimp").count }.by(-1)
     end
 
     it "toggles a day-attendance boolean" do
@@ -988,6 +1001,17 @@ RSpec.describe "Events", type: :request do
             as: :turbo_stream
 
       expect(registration.reload.fee_note).to eq("PAID FOR TAC261")
+    end
+
+    it "toggles scholarship tasks completed" do
+      scholarship = create(:scholarship, recipient: registration.registrant, tasks_completed: false)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+
+      patch update_onboarding_event_registration_path(registration),
+            params: { field: "scholarship_tasks_completed", value: "1" },
+            as: :turbo_stream
+
+      expect(scholarship.reload.tasks_completed).to be(true)
     end
 
     it "rejects an unknown field" do
