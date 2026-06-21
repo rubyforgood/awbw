@@ -589,7 +589,7 @@ class EventsController < ApplicationController
     headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
     headers += [ "Payment status", "Fees due", "Monies paid" ] if cost_required
     headers << "Fee note"
-    headers += [ "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
+    headers += [ "Discounted", "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
     headers += [ "CE requested", "CE hours", "CE amount", "CE license" ]
     headers += EventRegistration::CHECKLIST_STEPS.values
     headers += [ "Portal user status", "Portal access" ]
@@ -623,6 +623,7 @@ class EventsController < ApplicationController
       row << helpers.dollars_from_cents(registration.payments_sum)
     end
     row << registration.fee_note.to_s
+    row << (registration.discount_sum.positive? ? helpers.dollars_from_cents(registration.discount_sum) : "")
     row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
     row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
     row << onboarding_scholarship_tasks_csv(registration)

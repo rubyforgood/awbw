@@ -118,6 +118,17 @@
         <% end %>
       </td>
 
+    <% when :discounted %>
+      <% disc_cents = registration.discount_sum %>
+      <% allocations_link = allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "onboarding") %>
+      <td class="<%= td_classes.join(" ") %> font-medium" data-sort-value="<%= disc_cents %>">
+        <% if disc_cents.positive? %>
+          <%= link_to dollars_from_cents(disc_cents), allocations_link, title: "View allocations", class: "text-gray-800 hover:underline", data: { turbo_frame: "_top" } %>
+        <% else %>
+          <%= link_to "—", allocations_link, class: "text-gray-400 hover:text-gray-600", data: { turbo_frame: "_top" } %>
+        <% end %>
+      </td>
+
     <% when :scholarship_amount %>
       <% scholarship = registration.scholarships.first %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= scholarship ? scholarship.amount_cents : -1 %>">

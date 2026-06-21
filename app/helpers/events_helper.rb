@@ -35,6 +35,7 @@ module EventsHelper
       columns << { key: "fees_due", label: "Fees due", kind: :fees_due, sortable: true, align: "center", toggle: "fees_due" }
       columns << { key: "paid", label: "Monies paid", kind: :paid, sortable: true, align: "center", toggle: "paid" }
     end
+    columns << { key: "discounted", label: "Discounted", kind: :discounted, sortable: true, align: "center", toggle: "discounted" }
     columns << { key: "scholarship_amount", label: "Scholarship amount", kind: :scholarship_amount, sortable: true, align: "center", toggle: "scholarship_amount" }
     columns << { key: "funder", label: "Scholarship grant", kind: :funder, sortable: true, align: "left", toggle: "funder" }
     columns << { key: "scholarship_tasks_completed", label: "Scholarship tasks done", kind: :scholarship_tasks, sortable: true, align: "center", toggle: "scholarship_tasks_completed" }

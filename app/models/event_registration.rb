@@ -315,6 +315,12 @@ class EventRegistration < ApplicationRecord
     allocations.where(source_type: "Discount").exists?
   end
 
+  # Total comp/discount coverage (excludes payments and scholarships).
+  def discount_sum
+    return allocations.to_a.select { |a| a.source_type == "Discount" }.sum(&:amount) if allocations.loaded?
+    allocations.where(source_type: "Discount").sum(:amount)
+  end
+
   # True when the registrant has supplied a CE license number.
   def ce_license_provided?
     ce_license_number.present?
