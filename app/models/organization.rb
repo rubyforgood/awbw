@@ -38,7 +38,6 @@ class Organization < ApplicationRecord
   validates :name, presence: true
   validates :organization_status_id, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
-  validates :website_url, format: { with: /\Ahttps?:\/\/\S+\z/i, message: "must start with http:// or https://" }, allow_blank: true
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
 
   # Nested attributes
@@ -256,6 +255,18 @@ class Organization < ApplicationRecord
   end
 
   remote_searchable_by :name
+
+  # Returns the website as a clickable, scheme-qualified URL — prepending
+  # https:// to a bare domain like "awbw.org" — or nil when the value is blank or
+  # not a usable web address. Drives the external links on the org profile and
+  # recipients pages without forcing users to type a scheme.
+  def website_link_url
+    return if website_url.blank?
+    candidate = website_url.strip
+    candidate = "https://#{candidate}" unless candidate.match?(/\Ahttps?:\/\//i)
+    uri = URI.parse(candidate) rescue nil
+    candidate if uri.is_a?(URI::HTTP) && uri.host.present?
+  end
 
   private
 
