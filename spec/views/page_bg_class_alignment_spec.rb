@@ -149,6 +149,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/organizations/new.html.erb"             => "admin-only bg-blue-100",
     "app/views/organization_statuses/new.html.erb"     => "admin-only bg-blue-100",
     "app/views/people/new.html.erb"                    => "admin-only bg-blue-100",
+    "app/views/people/purge_confirmation.html.erb"     => "admin-only bg-blue-100",
     "app/views/quotes/new.html.erb"                    => "admin-only bg-blue-100",
     "app/views/resources/new.html.erb"                 => "admin-only bg-blue-100",
     "app/views/sectors/new.html.erb"                   => "admin-only bg-blue-100",

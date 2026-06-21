@@ -1,0 +1,87 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6">
+  <div class="mb-4">
+    <%= link_to "← Back to edit", edit_person_path(@person), class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <h1 class="text-2xl font-semibold text-gray-900 tracking-tight mb-4">
+    Delete person &amp; all data: <%= @person.name %>
+  </h1>
+
+  <% if @protections.any? %>
+    <div class="rounded-lg bg-yellow-50 border border-yellow-200 p-4 mb-6">
+      <p class="font-medium text-yellow-800">This person looks real:</p>
+      <ul class="list-disc list-inside text-sm text-yellow-700 mt-2">
+        <% @protections.each do |reason| %>
+          <li><%= reason %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if @force %>
+    <div class="rounded-lg bg-red-100 border border-red-300 p-4 mb-6">
+      <p class="font-semibold text-red-900">⚠️ Override: deleting anyway despite the protections above.</p>
+      <p class="text-sm text-red-800 mt-1">
+        The linked User Account will be destroyed too. If they authored real content
+        (workshops, reports, stories), the database will reject this and nothing
+        will be deleted.
+      </p>
+    </div>
+
+    <% if @account_blocking.any? %>
+      <div class="rounded-lg bg-red-50 border border-red-300 p-4 mb-4">
+        <p class="font-semibold text-red-900">Cannot delete: this User Account created content that must be reassigned or removed first.</p>
+      </div>
+      <dl class="divide-y divide-gray-100 border border-red-300 rounded-lg mb-6">
+        <% @account_blocking.each do |label, count| %>
+          <div class="flex justify-between px-4 py-2 text-sm <%= count.zero? ? "bg-white hover:bg-gray-100" : "bg-red-50 hover:bg-red-100" %>">
+            <dt class="text-gray-600"><%= label %></dt>
+            <dd class="tabular-nums <%= count.zero? ? "text-gray-300" : "font-bold text-gray-900" %>"><%= count.zero? ? "—" : count %></dd>
+          </div>
+        <% end %>
+      </dl>
+    <% end %>
+
+    <% if @account_cascading.any? %>
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Also removed with the User Account</h2>
+      <dl class="divide-y divide-gray-100 border border-gray-100 rounded-lg mb-6">
+        <% @account_cascading.each do |label, count| %>
+          <div class="flex justify-between px-4 py-2 text-sm <%= count.zero? ? "bg-white hover:bg-gray-100" : "bg-red-50 hover:bg-red-100" %>">
+            <dt class="text-gray-600"><%= label %></dt>
+            <dd class="tabular-nums <%= count.zero? ? "text-gray-300" : "font-bold text-gray-900" %>"><%= count.zero? ? "—" : count %></dd>
+          </div>
+        <% end %>
+      </dl>
+    <% end %>
+  <% elsif @protections.empty? %>
+    <div class="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
+      <p class="font-medium text-red-800">⚠️ This permanently deletes the person and everything below. This cannot be undone.</p>
+    </div>
+  <% end %>
+
+  <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">What will be deleted</h2>
+  <dl class="divide-y divide-gray-100 border border-gray-100 rounded-lg mb-6">
+    <% @counts.each do |label, count| %>
+      <div class="flex justify-between px-4 py-2 text-sm <%= count.zero? ? "bg-white hover:bg-gray-100" : "bg-red-50 hover:bg-red-100" %>">
+        <dt class="text-gray-600"><%= label.to_s.tr("_", " ").capitalize %></dt>
+        <dd class="tabular-nums <%= count.zero? ? "text-gray-300" : "font-bold text-gray-900" %>"><%= count.zero? ? "—" : count %></dd>
+      </div>
+    <% end %>
+  </dl>
+
+  <div class="flex justify-end gap-3">
+    <%= link_to "Cancel", edit_person_path(@person), class: "btn btn-secondary-outline" %>
+    <% if @protections.any? && !@force %>
+      <%= link_to "Delete anyway (override)",
+                  purge_confirmation_person_path(@person, force: true),
+                  class: "btn btn-danger-outline" %>
+    <% elsif @account_blocking.blank? %>
+      <%= button_to "Permanently delete",
+                    purge_person_path(@person, force: @force),
+                    method: :delete,
+                    class: "btn btn-danger",
+                    form: { data: { turbo_confirm: "Permanently delete #{@person.name} and ALL the data listed? This cannot be undone." } } %>
+    <% end %>
+  </div>
+</div>

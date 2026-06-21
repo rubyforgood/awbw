@@ -185,6 +185,7 @@ end
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas
 - `TaggingSearchService` — Search and filter tagging data
 - `PersonFromUserService` — Create Person from User account
+- `FakeSubmissionRemover` — Deletes a set of people and their full data + audit (PaperTrail/Ahoy) graph; protects real/admin accounts (override with `force`). Built for fake-submission cleanup but general-purpose. Used by the `data:remove_fake_submissions` rake task and the admin-only "Delete person & all data" purge button on person edit (`purge_confirmation`/`purge` actions)
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic
@@ -413,8 +414,9 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (4 files):
+Located in `lib/tasks/` (9 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
 - `migrate_internal_id_to_filemaker_code.rake` — FileMaker code migration
+- `remove_fake_submissions.rake` (`data:remove_fake_submissions`) — Removes fake form-submission people via `FakeSubmissionRemover` (dry run unless `CONFIRM=true`)

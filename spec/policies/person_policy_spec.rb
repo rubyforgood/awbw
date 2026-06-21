@@ -91,6 +91,20 @@ RSpec.describe PersonPolicy, type: :policy do
     end
   end
 
+  describe "#purge?" do
+    context "with admin user" do
+      subject { policy_for(record: searchable_person, user: admin_user) }
+
+      it { is_expected.to be_allowed_to(:purge?) }
+    end
+
+    context "with regular user" do
+      subject { policy_for(record: searchable_person, user: regular_user) }
+
+      it { is_expected.not_to be_allowed_to(:purge?) }
+    end
+  end
+
   describe "#edit?" do
     context "with admin user" do
       subject { policy_for(record: searchable_person, user: admin_user) }

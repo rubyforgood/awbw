@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio purge_confirmation purge ]
 
   def index
     authorize!
@@ -225,6 +225,44 @@ class PeopleController < ApplicationController
     respond_to do |format|
       format.html { redirect_to people_path, status: :see_other, notice: "Person was successfully destroyed." }
     end
+  end
+
+  # Admin-only interstitial: shows exactly what would be deleted for this person
+  # (and why they're protected, if so) before anything is removed.
+  def purge_confirmation
+    authorize! @person, to: :purge?
+    @force = params[:force] == "true"
+    # force: true so the inventory reflects the full graph that WOULD be deleted,
+    # even when the person looks real — the page always shows what's at stake.
+    preview = FakeSubmissionRemover.new(person_ids: [ @person.id ], force: true)
+    @protections = preview.protection_reasons(@person)
+    @counts = preview.counts
+    # The linked account's own content — only relevant when overriding, since that's
+    # when the account itself gets destroyed. Blocking content makes the delete
+    # impossible; cascading content is removed with the account.
+    @account_blocking = @force ? preview.blocking_account_content : {}
+    @account_cascading = @force ? preview.cascading_account_content : {}
+    @person = @person.decorate
+  end
+
+  # Admin-only deletion of a person and their whole data + audit graph. Skips a
+  # person who looks real unless force=true overrides the protections (see
+  # FakeSubmissionRemover).
+  def purge
+    authorize! @person, to: :purge?
+    remover = FakeSubmissionRemover.new(person_ids: [ @person.id ], force: params[:force] == "true")
+
+    if remover.call.include?(@person.id)
+      redirect_to people_path, status: :see_other,
+                  notice: "#{@person.full_name} and all their data were deleted."
+    else
+      reasons = remover.skipped.find { |skip| skip.person.id == @person.id }&.reasons
+      redirect_to edit_person_path(@person), status: :see_other,
+                  alert: "Couldn't delete — this person looks real (#{reasons&.join(', ')}). Use “Delete anyway” to override."
+    end
+  rescue ActiveRecord::InvalidForeignKey
+    redirect_to edit_person_path(@person), status: :see_other,
+                alert: "Couldn't delete #{@person.full_name} — the linked User Account owns content (e.g. workshops, reports, or stories) that must be reassigned or removed first."
   end
 
   def check_duplicates

@@ -2,6 +2,11 @@
 <div class="<%= DomainTheme.bg_class_for(:people) %> border border-gray-200 rounded-xl shadow p-6">
         <div class="sticky top-0 z-10 <%= DomainTheme.bg_class_for(:people) %> pb-3">
           <div class="flex flex-wrap justify-end gap-2 mb-4">
+            <% if params[:admin] == "true" && allowed_to?(:purge?, @person) %>
+              <%= link_to "Delete person & all data",
+                          purge_confirmation_person_path(@person),
+                          class: "btn btn-danger-outline px-2 py-1" %>
+            <% end %>
             <% unless @person.user %>
               <div class="admin-only bg-blue-100 p-2">
                 No user!

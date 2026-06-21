@@ -170,6 +170,8 @@ Rails.application.routes.draw do
       get :workshop_logs
       get :checkout
       get :bio
+      get :purge_confirmation
+      delete :purge
     end
     resources :comments, only: [ :index, :create, :update ]
   end
