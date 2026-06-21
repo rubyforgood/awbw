@@ -588,7 +588,7 @@ class EventsController < ApplicationController
     day_count = @event.day_count
     headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
     headers += [ "Payment status", "Fees due", "Paid" ] if cost_required
-    headers += [ "Scholarship amount", "Scholarship grant", "Scholarship tasks completed", "Fee note", "Portal access", "Portal user status" ]
+    headers += [ "Scholarship amount", "Scholarship grant", "Scholarship tasks completed", "CE requested", "CE hours", "CE amount", "CE license", "Fee note", "Portal access", "Portal user status" ]
     headers += EventRegistration::CHECKLIST_STEPS.values
     headers << "Attendance status"
     headers += (1..day_count).map { |day| "Day #{day}" }
@@ -622,6 +622,11 @@ class EventsController < ApplicationController
     row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
     row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
     row << onboarding_scholarship_tasks_csv(registration)
+    ce_hours = registration.ce_hours_requested.to_i
+    row << (registration.ce_credit_requested? ? "Yes" : "No")
+    row << (ce_hours.positive? ? ce_hours : "")
+    row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
+    row << registration.ce_license_number.to_s
     row << registration.fee_note.to_s
     account_status = registration.account_status
     row << (account_status == "has_access" ? "Yes" : "No")

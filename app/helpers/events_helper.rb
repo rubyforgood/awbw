@@ -25,6 +25,10 @@ module EventsHelper
     columns << { key: "scholarship_amount", label: "Scholarship amount", kind: :scholarship_amount, sortable: true, align: "center", toggle: "scholarship_amount" }
     columns << { key: "funder", label: "Scholarship grant", kind: :funder, sortable: true, align: "left", toggle: "funder" }
     columns << { key: "scholarship_tasks_completed", label: "Scholarship tasks done", kind: :scholarship_tasks, sortable: true, align: "center", toggle: "scholarship_tasks_completed" }
+    columns << { key: "ce_requested", label: "CE requested", kind: :ce_requested, sortable: true, align: "center", toggle: "ce_requested" }
+    columns << { key: "ce_hours", label: "CE hours", kind: :ce_hours, sortable: true, align: "center", toggle: "ce_hours" }
+    columns << { key: "ce_amount", label: "CE amount", kind: :ce_amount, sortable: true, align: "center", toggle: "ce_amount" }
+    columns << { key: "ce_license", label: "License #", kind: :ce_license, sortable: true, align: "center", toggle: "ce_license" }
     columns << { key: "fee_note", label: "Fee note", kind: :fee_note, sortable: false, align: "center", toggle: "fee_note" }
     columns << { key: "portal_invite", label: "Portal invite", kind: :portal_invite, sortable: true, align: "center", toggle: "portal_invite" }
     EventRegistration::CHECKLIST_STEPS.each do |step, label|
