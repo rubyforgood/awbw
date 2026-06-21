@@ -231,11 +231,11 @@
             Participation history
           </h2>
         </div>
-        <!-- Events registered -->
+        <!-- Events attended -->
         <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
           <% if @person.profile_show_events_registered? %>
             <div class="p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Events registered</h2>
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Events attended</h2>
               <%= turbo_frame_tag "person_events_section", src: person_path(@person, section: "events"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading events...</p>
               <% end %>
