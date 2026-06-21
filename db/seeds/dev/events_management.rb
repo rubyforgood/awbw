@@ -94,6 +94,13 @@ if registration_form.form_fields.where(field_identifier: "primary_age_group").no
   FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :professional_info ])
 end
 
+# Ensure the person/organization section (Organization Name, Position / Title) exists
+# so registrants can record the org + title they typed on the form — the registrants
+# page compares that typed org name against the registration's linked orgs.
+if registration_form.form_fields.where(field_identifier: "agency_name").none?
+  FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :person_contact_info ])
+end
+
 # The CE-interest "magic question": a single Yes/No whose answer drives the
 # resulting registration's ce_credit_requested flag (see
 # EventRegistrationServices::PublicRegistration). Seeded straight onto the form
@@ -928,6 +935,10 @@ form_submissions.each do |data|
 
   # Fill in required text fields with sample data
   data[:form].form_fields.where(answer_type: [ :free_form_input_one_line, :free_form_input_paragraph ]).each do |field|
+    # Organization Name + Position / Title are seeded later with org-matching values
+    # (record_organization_answers), so leave them blank here.
+    next if %w[agency_name agency_position].include?(field.field_identifier)
+
     sample_text = case field.field_identifier
     when "first_name" then data[:person].first_name
     when "last_name" then data[:person].last_name
@@ -1029,6 +1040,58 @@ record_professional_answers = ->(submission, i) do
   end
 end
 
+# Real orgs (minus the AWBW house org) to link registrations against and match on,
+# plus a spread of plausible job titles for the "Position / Title" answer.
+org_answer_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
+job_titles = [ "Facilitator", "Program Director", "Counselor", "Art Therapist",
+               "Case Manager", "Volunteer Coordinator", "Executive Director", "Social Worker" ]
+# Plausible, domain-appropriate org names that intentionally do NOT match any seeded
+# org, so a registrant typing one produces a realistic "Pending" mismatch chip.
+unmatched_org_names = [ "Riverside Healing Arts Collective", "Westview Community Healing",
+                        "Lakeside Survivor Support Network", "Cedar Grove Family Services",
+                        "Harbor Light Crisis Center", "Meadowbrook Wellness Coalition" ]
+
+# Give a registrant's submission the "Organization Name" + "Position / Title" answers
+# the registrants page reads: link a real org to the registration and submit a name
+# that USUALLY matches it, but every 4th enriched registrant types a different
+# organization so the "Pending" mismatch chip has visible volume. The mismatch counter
+# only advances when an org answer is actually written (registrants with submissions are
+# sparse), so the ~1-in-4 ratio holds regardless of how many registrants are skipped.
+# Idempotent: skips an already-answered field and reuses an existing linked org.
+org_answer_index = 0
+record_organization_answers = ->(registration, submission, i) do
+  person = registration.registrant
+  form = submission.form
+
+  position_field = form.form_fields.find_by(field_identifier: "agency_position")
+  if position_field && submission.form_answers.where(form_field: position_field).none?
+    submission.form_answers.create!(form_field: position_field,
+                                    submitted_answer: job_titles[i % job_titles.size],
+                                    question_name_when_answered: position_field.name)
+  end
+
+  agency_field = form.form_fields.find_by(field_identifier: "agency_name")
+  next unless agency_field && org_answer_orgs.any?
+  next if submission.form_answers.where(form_field: agency_field).any?
+
+  linked_org = registration.organizations.first
+  unless linked_org
+    linked_org = org_answer_orgs[i % org_answer_orgs.size]
+    Affiliation.find_or_create_by!(person: person, organization: linked_org) do |aff|
+      aff.title = job_titles[i % job_titles.size]
+      aff.start_date = Date.current
+    end
+    registration.event_registration_organizations.find_or_create_by!(organization: linked_org)
+  end
+
+  mismatch = org_answer_index % 4 == 3
+  typed_name = mismatch ? unmatched_org_names[org_answer_index / 4 % unmatched_org_names.size] : linked_org.name
+  org_answer_index += 1
+  submission.form_answers.create!(form_field: agency_field,
+                                  submitted_answer: typed_name,
+                                  question_name_when_answered: agency_field.name)
+end
+
 # Give the flagship cohort registration submissions so its Background charts have
 # volume (named scenarios above are unchanged; the cohort are generic fill-ins).
 if facilitator_training && (reg_form = facilitator_training.registration_form)
@@ -1053,6 +1116,7 @@ end
     next unless submission
 
     record_professional_answers.call(submission, i)
+    record_organization_answers.call(registration, submission, i)
   end
 end
 
