@@ -245,6 +245,27 @@ RSpec.describe PeopleRemover do
     end
   end
 
+  describe "lifecycle (Ahoy) events on a rolled-back purge" do
+    before { Current.user = create(:user, :admin) }
+    after  { Current.reset }
+
+    it "discards the destroy events the purge buffered so no phantom audit is left" do
+      person = create(:person)
+      create(:banner, created_by: person.user) # FK-restricted ref the purge can't remove → rollback
+
+      Analytics::LifecycleBuffer.store.clear
+      Analytics::LifecycleBuffer.push({ name: "sentinel", properties: {} })
+
+      expect do
+        described_class.new(person_ids: [ person.id ], force: true).call
+      end.to raise_error(ActiveRecord::InvalidForeignKey)
+
+      expect(Analytics::LifecycleBuffer.store).to eq([ { name: "sentinel", properties: {} } ])
+    ensure
+      Analytics::LifecycleBuffer.store.clear
+    end
+  end
+
   describe "force delete of an account that authored content" do
     it "deletes the person, the account, and everything it authored" do
       person = create(:person)

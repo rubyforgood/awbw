@@ -119,6 +119,12 @@ class PeopleRemover
   def call
     return [] if deletable.empty?
 
+    # The destroys below buffer Ahoy "destroy" lifecycle events (the who/what/when
+    # deletion audit), but the buffer is flushed after the request — outside this
+    # transaction. Remember its size so a rollback can drop the events this purge
+    # added; otherwise the controller flushes phantom destroys for records that
+    # still exist.
+    buffered_lifecycle_events = Analytics::LifecycleBuffer.store.size
     c = collected
     user_ids = c[:users].map(&:id)
     ActiveRecord::Base.transaction do
@@ -152,6 +158,11 @@ class PeopleRemover
     end
 
     deletable.map(&:id)
+  rescue
+    # Roll back the lifecycle events this purge buffered so a failed delete can't
+    # leave phantom Ahoy "destroy" records for records that still exist.
+    Analytics::LifecycleBuffer.store.slice!(buffered_lifecycle_events..)
+    raise
   end
 
   private
