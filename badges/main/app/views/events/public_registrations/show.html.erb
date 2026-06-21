@@ -8,6 +8,14 @@
     <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
     <% end %>
+    <%# Came here from the admin org-linking popup (opens in a new tab, so the
+        browser back button is useless); carry its own return_to so its
+        "Back to registrants" eyebrow still resolves. %>
+    <% if reg && params[:return_to] == "link_organization" && allowed_to?(:index?, EventRegistration) %>
+      <%= link_to link_organization_event_registration_path(reg, return_to: params[:link_org_return_to].presence), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Back to linked organizations
+      <% end %>
+    <% end %>
     <% if reg && allowed_to?(:index?, EventRegistration) %>
       <%= link_to "Registration", edit_event_registration_path(reg), class: "ml-auto admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <% end %>

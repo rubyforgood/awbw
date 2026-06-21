@@ -683,7 +683,8 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include("fa-circle-half-stroke")
-        expect(response.body).to include("Partial payment")
+        expect(response.body).to include("Partial payment · $6 due")
+        expect(response.body).not_to include(">Partial payment<")
         expect(response.body).to include("$6 due")
       end
 
@@ -715,7 +716,8 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include("fa-tag")
-        expect(response.body).to include(">Discounted<")
+        expect(response.body).to include("Discounted · $6 due")
+        expect(response.body).not_to include(">Discounted<")
         expect(response.body).to include("$6 due")
       end
 
@@ -1913,24 +1915,14 @@ RSpec.describe "Events", type: :request do
 
     before { sign_in admin }
 
-    it "shows the registrant's active facilitator affiliation organization names" do
+    it "does not show the registrant's affiliation organization names (moved to the link-organization page)" do
       create(:affiliation, person: registration.registrant,
         organization: create(:organization, name: "Helping Hands Center"),
         title: "Facilitator")
 
       get registrants_event_path(event)
 
-      expect(response.body).to include("Helping Hands Center")
-    end
-
-    it "does not show organizations from non-facilitator affiliations" do
-      create(:affiliation, person: registration.registrant,
-        organization: create(:organization, name: "Board Only Org"),
-        title: "Board Member")
-
-      get registrants_event_path(event)
-
-      expect(response.body).not_to include("Board Only Org")
+      expect(response.body).not_to include("Helping Hands Center")
     end
   end
 end

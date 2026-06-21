@@ -94,6 +94,13 @@ if registration_form.form_fields.where(field_identifier: "primary_age_group").no
   FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :professional_info ])
 end
 
+# Ensure the person/organization section (Organization Name, Position / Title) exists
+# so registrants can record the org + title they typed on the form — the registrants
+# page compares that typed org name against the registration's linked orgs.
+if registration_form.form_fields.where(field_identifier: "agency_name").none?
+  FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :person_contact_info ])
+end
+
 # The CE-interest "magic question": a single Yes/No whose answer drives the
 # resulting registration's ce_credit_requested flag (see
 # EventRegistrationServices::PublicRegistration). Seeded straight onto the form
@@ -928,6 +935,10 @@ form_submissions.each do |data|
 
   # Fill in required text fields with sample data
   data[:form].form_fields.where(answer_type: [ :free_form_input_one_line, :free_form_input_paragraph ]).each do |field|
+    # Organization Name + Position / Title are seeded later with org-matching values
+    # (record_organization_answers), so leave them blank here.
+    next if %w[agency_name agency_position].include?(field.field_identifier)
+
     sample_text = case field.field_identifier
     when "first_name" then data[:person].first_name
     when "last_name" then data[:person].last_name
@@ -1029,6 +1040,58 @@ record_professional_answers = ->(submission, i) do
   end
 end
 
+# Real orgs (minus the AWBW house org) to link registrations against and match on,
+# plus a spread of plausible job titles for the "Position / Title" answer.
+org_answer_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
+job_titles = [ "Facilitator", "Program Director", "Counselor", "Art Therapist",
+               "Case Manager", "Volunteer Coordinator", "Executive Director", "Social Worker" ]
+# Plausible, domain-appropriate org names that intentionally do NOT match any seeded
+# org, so a registrant typing one produces a realistic "Pending" mismatch chip.
+unmatched_org_names = [ "Riverside Healing Arts Collective", "Westview Community Healing",
+                        "Lakeside Survivor Support Network", "Cedar Grove Family Services",
+                        "Harbor Light Crisis Center", "Meadowbrook Wellness Coalition" ]
+
+# Give a registrant's submission the "Organization Name" + "Position / Title" answers
+# the registrants page reads: link a real org to the registration and submit a name
+# that USUALLY matches it, but every 4th enriched registrant types a different
+# organization so the "Pending" mismatch chip has visible volume. The mismatch counter
+# only advances when an org answer is actually written (registrants with submissions are
+# sparse), so the ~1-in-4 ratio holds regardless of how many registrants are skipped.
+# Idempotent: skips an already-answered field and reuses an existing linked org.
+org_answer_index = 0
+record_organization_answers = ->(registration, submission, i) do
+  person = registration.registrant
+  form = submission.form
+
+  position_field = form.form_fields.find_by(field_identifier: "agency_position")
+  if position_field && submission.form_answers.where(form_field: position_field).none?
+    submission.form_answers.create!(form_field: position_field,
+                                    submitted_answer: job_titles[i % job_titles.size],
+                                    question_name_when_answered: position_field.name)
+  end
+
+  agency_field = form.form_fields.find_by(field_identifier: "agency_name")
+  next unless agency_field && org_answer_orgs.any?
+  next if submission.form_answers.where(form_field: agency_field).any?
+
+  linked_org = registration.organizations.first
+  unless linked_org
+    linked_org = org_answer_orgs[i % org_answer_orgs.size]
+    Affiliation.find_or_create_by!(person: person, organization: linked_org) do |aff|
+      aff.title = job_titles[i % job_titles.size]
+      aff.start_date = Date.current
+    end
+    registration.event_registration_organizations.find_or_create_by!(organization: linked_org)
+  end
+
+  mismatch = org_answer_index % 4 == 3
+  typed_name = mismatch ? unmatched_org_names[org_answer_index / 4 % unmatched_org_names.size] : linked_org.name
+  org_answer_index += 1
+  submission.form_answers.create!(form_field: agency_field,
+                                  submitted_answer: typed_name,
+                                  question_name_when_answered: agency_field.name)
+end
+
 # Give the flagship cohort registration submissions so its Background charts have
 # volume (named scenarios above are unchanged; the cohort are generic fill-ins).
 if facilitator_training && (reg_form = facilitator_training.registration_form)
@@ -1053,6 +1116,7 @@ end
     next unless submission
 
     record_professional_answers.call(submission, i)
+    record_organization_answers.call(registration, submission, i)
   end
 end
 
@@ -1214,10 +1278,32 @@ if facilitator_training && registration_form
     )
   end
   agency_field = registration_form.form_fields.find_by(field_identifier: "agency_name")
+  agency_position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
 
   # Real, existing orgs to link against / match on (skip the AWBW house org).
   demo_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
   matched_org = demo_orgs.first
+  # A partial of the matched org's name (its words minus the first) shares words
+  # with it but isn't an exact match — drives a fuzzy "Suggested matches" hit
+  # (case 11). Nil when the org name is a single word (no partial to take).
+  fuzzy_agency = matched_org&.name.to_s.split.length.to_i > 1 ? matched_org.name.split.drop(1).join(" ") : nil
+
+  # Several orgs that share a word ("Riverside"), so typing just that word surfaces
+  # a handful of fuzzy "Suggested matches" at once (case 9). find_or_create so
+  # re-seeding doesn't pile up duplicates.
+  active_status = OrganizationStatus.find_by(name: "Active")
+  fuzzy_match_word = "Riverside"
+  [
+    "Riverside Counseling Center",
+    "Riverside Family Services",
+    "Riverside Trauma Recovery",
+    "Riverside Youth Outreach",
+    "Riverside Wellness Collective"
+  ].each do |org_name|
+    org = Organization.find_or_create_by!(name: org_name) { |o| o.organization_status = active_status }
+    # Give each a location so the fuzzy "Suggested matches" list shows city/state.
+    org.addresses.create!(street_address: "100 Demo Way", city: "Riverside", locality: "Riverside", state: "CA", zip_code: "92501", primary: true) if org.addresses.none?
+  end
 
   link_org = ->(registration, organization) do
     Affiliation.find_or_create_by!(person: registration.registrant, organization: organization) do |aff|
@@ -1246,16 +1332,22 @@ if facilitator_training && registration_form
   # Case 8 is the stale edge case: a typed name that matches an existing org but was
   # never linked (e.g. the org was created after the person registered) — it reads as
   # "Pending", and the editor offers that org as a one-click match to select.
+  # Numbers are zero-padded so the registrants list (sorted by name) shows them in
+  # order 01..11 rather than 1, 10, 11, 2, 3…
   scenarios = [
-    { last: "1 Linked one org",       orgs: demo_orgs.first(1) },
-    { last: "2 Linked three orgs",    orgs: demo_orgs.first(3) },
-    { last: "3 Pending no match",     agency: "Riverside Healing Arts Collective" },
-    { last: "4 Matched name auto-linked", orgs: demo_orgs.first(1), agency: matched_org&.name },
-    { last: "5 Mixed linked + pending", orgs: demo_orgs.first(1), agency: "Westview Community Healing" },
-    { last: "6 None blank typed",     agency: "" },
-    { last: "7 None nothing typed" },
-    { last: "8 Pending matches existing org", agency: matched_org&.name }
+    { last: "01 Linked one org",       orgs: demo_orgs.first(1) },
+    { last: "02 Linked three orgs",    orgs: demo_orgs.first(3) },
+    { last: "03 Pending no match",     agency: "Riverside Healing Arts Collective" },
+    { last: "04 Matched name auto-linked", orgs: demo_orgs.first(1), agency: matched_org&.name },
+    { last: "05 Mixed linked + pending", orgs: demo_orgs.first(1), agency: "Westview Community Healing" },
+    { last: "06 None blank typed",     agency: "" },
+    { last: "07 None nothing typed" },
+    { last: "08 Pending matches existing org", agency: matched_org&.name }
   ]
+  # Case 9: a single word shared by several orgs — not an exact match, so it shows
+  # a "Create and link" row plus a handful of orgs under fuzzy "Suggested matches".
+  # Includes a job title so the submission detail shows a position too.
+  scenarios << { last: "09 Fuzzy match suggestions", agency: fuzzy_match_word, position: "Lead Facilitator" }
 
   scenarios.each_with_index do |scenario, i|
     person = Person.create!(
@@ -1269,6 +1361,49 @@ if facilitator_training && registration_form
 
     Array(scenario[:orgs]).each { |org| link_org.call(registration, org) }
     submit_agency_name.call(registration, scenario[:agency]) if scenario.key?(:agency)
+    if scenario[:position].present? && agency_position_field
+      submission = FormSubmission.find_or_create_by!(person: person, form: registration_form)
+      answer = submission.form_answers.find_or_initialize_by(form_field: agency_position_field)
+      answer.update!(submitted_answer: scenario[:position], question_name_when_answered: agency_position_field.name)
+    end
+  end
+
+  # Demo 10: a registrant with more than one registration-form submission, each
+  # naming a different org we don't have — exercises the per-submission "View
+  # submission #N" links and one "Create and link" row per distinct submitted org.
+  if agency_field
+    demo_multi = Person.create!(
+      email: "orgchip.demo.10@seed.example.com",
+      first_name: "Org Demo",
+      last_name: "10 Multiple submissions"
+    )
+    EventRegistration.find_or_create_by!(event: facilitator_training, registrant: demo_multi) do |reg|
+      reg.status = "registered"
+    end
+    [ "Greenfield Survivor Services", "Harbor Light Counseling" ].each do |org_name|
+      submission = FormSubmission.create!(person: demo_multi, form: registration_form, event: facilitator_training)
+      submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
+    end
+  end
+
+  # Demo 11: fuzzy matching AND multiple submissions together — two submissions,
+  # each naming a partial of a different existing org. Exercises multiple "View
+  # submission #N" links, a "Create and link" row per partial, and the fuzzy
+  # "Suggested matches" list (driven by the first/primary submission).
+  fuzzy_agency_2 = demo_orgs[1]&.name.to_s.split.length.to_i > 1 ? demo_orgs[1].name.split.drop(1).join(" ") : nil
+  if agency_field && fuzzy_agency.present? && fuzzy_agency_2.present?
+    demo_fuzzy_multi = Person.create!(
+      email: "orgchip.demo.11@seed.example.com",
+      first_name: "Org Demo",
+      last_name: "11 Fuzzy + multiple submissions"
+    )
+    EventRegistration.find_or_create_by!(event: facilitator_training, registrant: demo_fuzzy_multi) do |reg|
+      reg.status = "registered"
+    end
+    [ fuzzy_agency, fuzzy_agency_2 ].each do |org_name|
+      submission = FormSubmission.create!(person: demo_fuzzy_multi, form: registration_form, event: facilitator_training)
+      submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
+    end
   end
 
   # --- Affiliation-status demo: two affiliations per org (a real job title plus the
