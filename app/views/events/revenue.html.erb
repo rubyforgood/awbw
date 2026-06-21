@@ -50,7 +50,7 @@
                 value_class: featured.net_cents.negative? ? "text-rose-700" : "text-gray-900", card_class: "border-gray-200 bg-gray-50",
                 note: "fees + scholarships − subsidies", cents: featured.net_cents, prior_cents: prior&.net_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Total expected", value: dollars_from_cents(featured.total_expected_cents),
-                value_class: "text-gray-900", card_class: "border-gray-400 bg-gray-200", note: "assumes all monies paid", cents: featured.total_expected_cents,
+                value_class: "text-gray-900", card_class: "border-green-300 bg-green-200", note: "assumes all monies paid", cents: featured.total_expected_cents,
                 prior_cents: prior&.total_expected_cents, prior_year: prior&.year %>
         </div>
       </section>
