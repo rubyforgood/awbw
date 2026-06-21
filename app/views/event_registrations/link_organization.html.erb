@@ -171,7 +171,12 @@
         <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500"><%= @person.first_name.presence || @person.full_name %>'s other affiliations</h2>
         <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
       </summary>
-      <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+      <%# The whole card links to the person's affiliations on their profile (same
+          destination as the header jump link) — these are managed there, not here. %>
+      <%= link_to edit_person_path(@person, anchor: "affiliations"), target: "_blank", rel: "noopener",
+                  title: "Edit affiliations on #{@person.first_name.presence || @person.full_name}'s profile",
+                  class: "group relative block bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-gray-100 transition-colors" do %>
+        <i class="fa-solid fa-arrow-up-right-from-square absolute top-3 right-3 text-[0.6rem] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
         <% if other_affiliations.any? %>
           <ul class="list-disc list-inside space-y-2 text-gray-800 marker:text-gray-400">
             <% other_affiliations.values.sort_by { |affs| affs.first.organization&.name.to_s.downcase }.each do |affs| %>
@@ -193,7 +198,7 @@
         <% else %>
           <p class="text-gray-500">No other affiliations on record.</p>
         <% end %>
-      </div>
+      <% end %>
     </details>
   </div>
 </div>
