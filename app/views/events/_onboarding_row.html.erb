@@ -42,8 +42,15 @@
 
     <% when :program_type %>
       <% statuses = Array(program_statuses) %>
+      <% org = registration.organizations.first %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= statuses.map(&:to_s).sort.join %>">
-        <% if statuses.any? %>
+        <% if statuses.any? && org %>
+          <%= link_to edit_organization_path(org, anchor: "affiliations"), class: "inline-flex flex-col items-center gap-1 hover:opacity-80", title: "Edit #{org.name} affiliations", data: { turbo_frame: "_top" } do %>
+            <% statuses.each do |status| %>
+              <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
+            <% end %>
+          <% end %>
+        <% elsif statuses.any? %>
           <div class="flex flex-col items-center gap-1">
             <% statuses.each do |status| %>
               <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 <%= OrganizationDecorator.program_status_classes(status) %>"><%= status.to_s.titleize %></span>
@@ -153,14 +160,22 @@
 
     <% when :fees_due %>
       <% due_cents = [ event.cost_cents.to_i - registration.allocations_sum, 0 ].max %>
-      <td class="<%= td_classes.join(" ") %> font-medium <%= due_cents.zero? ? "text-gray-400" : "text-gray-800" %>" data-sort-value="<%= due_cents %>">
-        <%= dollars_from_cents(due_cents) %>
+      <td class="<%= td_classes.join(" ") %> font-medium" data-sort-value="<%= due_cents %>">
+        <%= link_to dollars_from_cents(due_cents),
+              edit_event_registration_path(registration, return_to: "onboarding", anchor: "allocations-card"),
+              title: "Manage allocations",
+              class: "hover:underline #{due_cents.zero? ? "text-gray-400" : "text-gray-800"}",
+              data: { turbo_frame: "_top" } %>
       </td>
 
     <% when :paid %>
       <% paid_cents = registration.allocations_sum %>
-      <td class="<%= td_classes.join(" ") %> font-medium <%= paid_cents.zero? ? "text-gray-400" : "text-gray-800" %>" data-sort-value="<%= paid_cents %>">
-        <%= dollars_from_cents(paid_cents) %>
+      <td class="<%= td_classes.join(" ") %> font-medium" data-sort-value="<%= paid_cents %>">
+        <%= link_to dollars_from_cents(paid_cents),
+              allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "onboarding"),
+              title: "View allocations",
+              class: "hover:underline #{paid_cents.zero? ? "text-gray-400" : "text-gray-800"}",
+              data: { turbo_frame: "_top" } %>
       </td>
 
     <% when :fee_note %>
