@@ -34,8 +34,8 @@
           <% end %>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
-          <%= render "revenue_kpi", label: "Fees collected*", value: dollars_from_cents(featured.fees_cents),
-                value_class: "text-gray-900", note: "reg + CE", cents: featured.fees_cents,
+          <%= render "revenue_kpi", label: "Fees collected", value: dollars_from_cents(featured.fees_cents),
+                value_class: "text-gray-900", note: "reg + CE paid", cents: featured.fees_cents,
                 prior_cents: prior&.fees_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Scholarships", value: dollars_from_cents(featured.funded_scholarship_cents),
                 value_class: "text-gray-900", note: "grant-funded only", cents: featured.funded_scholarship_cents,
@@ -43,19 +43,19 @@
           <%= render "revenue_kpi", label: "Org subsidy", value: dollars_from_cents(featured.org_subsidy_cents),
                 value_class: "text-red-600", note: "discounts + unfunded", cents: featured.org_subsidy_cents,
                 prior_cents: prior&.org_subsidy_cents, prior_year: prior&.year %>
-          <%= render "revenue_kpi", label: "Outstanding", value: dollars_from_cents(featured.outstanding_cents),
-                value_class: "text-orange-600", cents: featured.outstanding_cents,
+          <%= render "revenue_kpi", label: "Outstanding*", value: dollars_from_cents(featured.outstanding_cents),
+                value_class: "text-orange-600", note: "reg + CE owed", cents: featured.outstanding_cents,
                 prior_cents: prior&.outstanding_cents, prior_year: prior&.year %>
-          <%= render "revenue_kpi", label: "Net revenue*", value: signed_dollars_from_cents(featured.net_cents),
-                value_class: featured.net_cents.negative? ? "text-rose-700" : "text-gray-900", cents: featured.net_cents,
-                prior_cents: prior&.net_cents, prior_year: prior&.year %>
+          <%= render "revenue_kpi", label: "Net", value: signed_dollars_from_cents(featured.net_cents),
+                value_class: featured.net_cents.negative? ? "text-rose-700" : "text-gray-900", note: "fees + scholarships − subsidies",
+                cents: featured.net_cents, prior_cents: prior&.net_cents, prior_year: prior&.year %>
           <%= render "revenue_kpi", label: "Total expected", value: dollars_from_cents(featured.total_expected_cents),
-                value_class: "text-gray-900", cents: featured.total_expected_cents,
+                value_class: "text-gray-900", note: "assumes all monies paid", cents: featured.total_expected_cents,
                 prior_cents: prior&.total_expected_cents, prior_year: prior&.year %>
         </div>
       </section>
 
-      <%# Revenue over time: money in vs org subsidy, one stacked column per year. %>
+      <%# Revenue over time: fees + funded scholarships vs org subsidy, one stacked column per year. %>
       <section class="mb-8">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Revenue by year</h2>
         <div class="rounded-xl border border-gray-200 bg-white p-4">
@@ -67,7 +67,7 @@
       <%# Per-event detail, grouped by year. Each year leads with its subtotal;
           each event expands to the component breakdown. The grid column template
           is shared (via --rev-cols) so every row aligns. %>
-      <section data-controller="toggle-details" style="--rev-cols: minmax(11rem, 1.6fr) repeat(4, minmax(6rem, 1fr))">
+      <section data-controller="toggle-details" style="--rev-cols: minmax(11rem, 1.6fr) repeat(5, minmax(6rem, 1fr))">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">By event</h2>
           <button type="button" data-toggle-details-target="toggleBtn" data-action="toggle-details#toggleAll"
@@ -79,9 +79,10 @@
         <div class="grid items-center gap-x-3 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500"
              style="grid-template-columns: var(--rev-cols)">
           <div>Event</div>
-          <div class="text-right">Money in*</div>
+          <div class="text-right">Fees collected</div>
+          <div class="text-right">Scholarships</div>
           <div class="text-right">Org subsidy</div>
-          <div class="text-right">Net*</div>
+          <div class="text-right">Outstanding*</div>
           <div class="text-right">Total expected</div>
         </div>
 
@@ -96,9 +97,10 @@
                   <span class="text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">In progress</span>
                 <% end %>
               </div>
-              <div class="text-right tabular-nums"><%= dollars_from_cents(group.money_in_cents) %></div>
+              <div class="text-right tabular-nums"><%= dollars_from_cents(group.fees_cents) %></div>
+              <div class="text-right tabular-nums"><%= dollars_from_cents(group.funded_scholarship_cents) %></div>
               <div class="text-right tabular-nums text-red-600"><%= dollars_from_cents(group.org_subsidy_cents) %></div>
-              <div class="text-right tabular-nums <%= "text-rose-700" if group.net_cents.negative? %>"><%= signed_dollars_from_cents(group.net_cents) %></div>
+              <div class="text-right tabular-nums text-orange-600"><%= dollars_from_cents(group.outstanding_cents) %></div>
               <div class="text-right tabular-nums text-gray-500"><%= dollars_from_cents(group.total_expected_cents) %></div>
             </summary>
 
@@ -114,9 +116,10 @@
                       </div>
                       <div class="text-xs text-gray-500 pl-5"><%= row.event.date_range %></div>
                     </div>
-                    <div class="text-right tabular-nums text-gray-900"><%= dollars_from_cents(row.money_in_cents) %></div>
+                    <div class="text-right tabular-nums text-gray-900"><%= dollars_from_cents(row.fees_cents) %></div>
+                    <div class="text-right tabular-nums text-gray-900"><%= dollars_from_cents(row.funded_scholarship_cents) %></div>
                     <div class="text-right tabular-nums text-red-600"><%= dollars_from_cents(row.org_subsidy_cents) %></div>
-                    <div class="text-right tabular-nums font-semibold <%= row.net_cents.negative? ? "text-rose-700" : "text-gray-900" %>"><%= signed_dollars_from_cents(row.net_cents) %></div>
+                    <div class="text-right tabular-nums text-orange-600"><%= dollars_from_cents(row.outstanding_cents) %></div>
                     <div class="text-right tabular-nums text-gray-500"><%= dollars_from_cents(row.total_expected_cents) %></div>
                   </summary>
                   <div class="px-3 pb-3 pl-8 bg-gray-50">
@@ -128,7 +131,7 @@
                            [ [ "Funded scholarships", row.funded_scholarship_cents, "text-gray-800" ],
                              [ "Unfunded scholarships", row.unfunded_scholarship_cents, "text-gray-800" ] ],
                            [ [ "Discounts", row.discount_cents, "text-gray-800" ],
-                             [ "Outstanding", row.outstanding_cents, "text-orange-600" ] ]
+                             [ "Registration owed", row.registration_outstanding_cents, "text-orange-600" ] ]
                          ] %>
                       <% columns.each do |pair| %>
                         <div class="space-y-1.5">
@@ -153,18 +156,22 @@
         <div class="grid items-center gap-x-3 px-3 py-3 mt-2 bg-gray-200 border border-gray-300 rounded-lg text-base font-bold text-gray-900"
              style="grid-template-columns: var(--rev-cols)">
           <div class="uppercase tracking-wide text-xs text-gray-600">All years</div>
-          <div class="text-right tabular-nums"><%= dollars_from_cents(@report.money_in_cents) %></div>
+          <div class="text-right tabular-nums"><%= dollars_from_cents(@report.fees_cents) %></div>
+          <div class="text-right tabular-nums"><%= dollars_from_cents(@report.funded_scholarship_cents) %></div>
           <div class="text-right tabular-nums text-red-600"><%= dollars_from_cents(@report.org_subsidy_cents) %></div>
-          <div class="text-right tabular-nums <%= "text-rose-700" if @report.net_cents.negative? %>"><%= signed_dollars_from_cents(@report.net_cents) %></div>
+          <div class="text-right tabular-nums text-orange-600"><%= dollars_from_cents(@report.outstanding_cents) %></div>
           <div class="text-right tabular-nums text-gray-700"><%= dollars_from_cents(@report.total_expected_cents) %></div>
         </div>
 
         <p class="mt-3 text-xs text-gray-500">
-          <span class="font-medium">Money in</span> = fees (registration + projected CE) + grant-funded scholarships.
+          <span class="font-medium">Fees collected</span> = registration + CE paid.
+          <span class="font-medium">Scholarships</span> = grant-funded only.
           <span class="font-medium">Org subsidy</span> = unfunded scholarships + discounts (paid from the org's own funds).
-          <span class="font-medium">Net</span> = money in − org subsidy.
+          <span class="font-medium">Outstanding</span> = registration + CE still owed.
+          <span class="font-medium">Net</span> = fees collected + scholarships − org subsidy.
+          <span class="font-medium">Total expected</span> = net once all outstanding is paid.
           <br>
-          * Fees include projected CE, an estimate ($<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %> per requested hour) not yet collected.
+          * Outstanding includes projected CE, an estimate ($<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %> per requested hour) not yet collected.
         </p>
       </section>
     <% else %>

@@ -43,30 +43,35 @@ RSpec.describe EventRevenueReport do
       expect(row.funded_scholarship_cents).to eq(4_000)
       expect(row.unfunded_scholarship_cents).to eq(2_000)
       expect(row.discount_cents).to eq(1_000)
-      expect(row.outstanding_cents).to eq(4_000)
+      expect(row.registration_outstanding_cents).to eq(4_000)
     end
 
-    it "buckets money in (payments + projected CE + funded scholarships)" do
-      expect(row.money_in_cents).to eq(20_500)
+    it "collects fees from registration payments (CE isn't collected yet)" do
+      expect(row.fees_cents).to eq(9_000)
+    end
+
+    it "owes registration plus projected CE as outstanding" do
+      expect(row.outstanding_cents).to eq(11_500)
     end
 
     it "buckets org subsidy (unfunded scholarships + discounts)" do
       expect(row.org_subsidy_cents).to eq(3_000)
     end
 
-    it "nets money in against org subsidy" do
-      expect(row.net_cents).to eq(17_500)
+    it "nets fees + funded scholarships against org subsidy" do
+      expect(row.net_cents).to eq(10_000)
     end
 
-    it "projects total expected as money in plus outstanding" do
-      expect(row.total_expected_cents).to eq(24_500)
+    it "projects total expected as net plus outstanding" do
+      expect(row.total_expected_cents).to eq(21_500)
     end
 
     it "rolls the buckets up across the report" do
-      expect(report.money_in_cents).to eq(20_500)
+      expect(report.fees_cents).to eq(9_000)
+      expect(report.outstanding_cents).to eq(11_500)
       expect(report.org_subsidy_cents).to eq(3_000)
-      expect(report.net_cents).to eq(17_500)
-      expect(report.total_expected_cents).to eq(24_500)
+      expect(report.net_cents).to eq(10_000)
+      expect(report.total_expected_cents).to eq(21_500)
     end
   end
 

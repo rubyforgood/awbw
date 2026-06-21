@@ -21,15 +21,23 @@ class EventRevenueReport
     :funded_scholarship_cents,
     :unfunded_scholarship_cents,
     :discount_cents,
-    :outstanding_cents,
+    :registration_outstanding_cents,
     keyword_init: true
   ) do
-    # Fees collected/projected, with no scholarship money — the cash side of
-    # money in (registration payments + projected CE).
+    # Fees actually collected: registration payments plus CE paid. CE has no
+    # payment tracking, so the CE portion is $0 today.
     def fees_cents
-      registration_payments_cents + ce_projected_cents
+      registration_payments_cents
     end
 
+    # Fees still owed: unpaid registration cost plus projected CE (none of which
+    # is collected yet).
+    def outstanding_cents
+      registration_outstanding_cents + ce_projected_cents
+    end
+
+    # Money that's in or counted toward revenue: collected fees plus grant-funded
+    # scholarships. Excludes outstanding (not yet paid) and org subsidy.
     def money_in_cents
       fees_cents + funded_scholarship_cents
     end
@@ -38,13 +46,14 @@ class EventRevenueReport
       unfunded_scholarship_cents + discount_cents
     end
 
+    # Net = collected fees + funded scholarships − org subsidy.
     def net_cents
       money_in_cents - org_subsidy_cents
     end
 
-    # Everything expected once outstanding registration fees are collected.
+    # What the event nets once everything owed is collected (net plus outstanding).
     def total_expected_cents
-      money_in_cents + outstanding_cents
+      net_cents + outstanding_cents
     end
 
     def year
@@ -56,8 +65,8 @@ class EventRevenueReport
   # subtotal or the grand total is just a sum over rows.
   SUMMABLE = %i[
     registration_payments_cents ce_projected_cents funded_scholarship_cents
-    unfunded_scholarship_cents discount_cents outstanding_cents
-    fees_cents money_in_cents org_subsidy_cents net_cents total_expected_cents
+    unfunded_scholarship_cents discount_cents registration_outstanding_cents
+    fees_cents outstanding_cents money_in_cents org_subsidy_cents net_cents total_expected_cents
   ].freeze
 
   module Summable
@@ -140,7 +149,7 @@ class EventRevenueReport
       funded_scholarship_cents: dashboard.funded_scholarship_cents,
       unfunded_scholarship_cents: dashboard.unfunded_scholarship_cents,
       discount_cents: dashboard.discount_cents,
-      outstanding_cents: dashboard.outstanding_cents
+      registration_outstanding_cents: dashboard.outstanding_cents
     )
   end
 

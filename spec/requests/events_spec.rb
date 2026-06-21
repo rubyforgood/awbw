@@ -107,7 +107,7 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Event revenue")
         expect(response.body).to include("Revenue by year")
-        expect(response.body).to include("Net revenue")
+        expect(response.body).to include("Fees collected")
         expect(response.body).to include("TAC 261")
         expect(response.body).to include("Paid webinar")
         expect(response.body).to include("2026", "2025", "2024")
