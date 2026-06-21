@@ -232,6 +232,19 @@ RSpec.describe PeopleRemover do
     end
   end
 
+  describe "force delete when the person's own audit columns point to its user" do
+    it "deletes despite people.created_by_id/updated_by_id referencing the account" do
+      person = create(:person)
+      user = person.user
+      person.update_columns(created_by_id: user.id, updated_by_id: user.id)
+
+      described_class.new(person_ids: [ person.id ], force: true).call
+
+      expect(Person.exists?(person.id)).to be false
+      expect(User.exists?(user.id)).to be false
+    end
+  end
+
   describe "force delete of an account that authored content" do
     it "deletes the person, the account, and everything it authored" do
       person = create(:person)

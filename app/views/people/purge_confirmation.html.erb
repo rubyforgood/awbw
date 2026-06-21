@@ -32,7 +32,7 @@
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Also removed with the User Account</h2>
       <dl class="divide-y divide-gray-100 border border-gray-100 rounded-lg mb-6">
         <% @account_content.each do |label, count| %>
-          <div class="flex justify-between px-4 py-2 text-sm <%= count.zero? ? "bg-white hover:bg-gray-100" : "bg-red-50 hover:bg-red-100" %>">
+          <div class="flex justify-between px-4 py-2 text-sm <%= count.zero? ? "bg-white hover:bg-gray-100" : "bg-orange-50 hover:bg-orange-100" %>">
             <dt class="text-gray-600"><%= label %></dt>
             <dd class="tabular-nums <%= count.zero? ? "text-gray-300" : "font-bold text-gray-900" %>"><%= count.zero? ? "—" : count %></dd>
           </div>
@@ -48,7 +48,7 @@
   <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">What will be deleted</h2>
   <dl class="divide-y divide-gray-100 border border-gray-100 rounded-lg mb-6">
     <% @counts.each do |label, count| %>
-      <div class="flex justify-between px-4 py-2 text-sm <%= count.zero? ? "bg-white hover:bg-gray-100" : "bg-red-50 hover:bg-red-100" %>">
+      <div class="flex justify-between px-4 py-2 text-sm <%= count.zero? ? "bg-white hover:bg-gray-100" : "bg-orange-50 hover:bg-orange-100" %>">
         <dt class="text-gray-600"><%= label.to_s.tr("_", " ").capitalize %></dt>
         <dd class="tabular-nums <%= count.zero? ? "text-gray-300" : "font-bold text-gray-900" %>"><%= count.zero? ? "—" : count %></dd>
       </div>

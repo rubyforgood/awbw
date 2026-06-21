@@ -112,25 +112,34 @@ class PeopleRemover
     return [] if deletable.empty?
 
     c = collected
+    user_ids = c[:users].map(&:id)
     ActiveRecord::Base.transaction do
-      # Non-cascading records first, in FK-safe order: allocations and refunds
-      # reference payments; payments reference submissions; everything else
-      # cascades off Person. Users are destroyed before their person so the
-      # has_one :user nullify (which the model forbids) never runs.
+      # Detach the user<->person link first. update_column bypasses the User
+      # validation that forbids nulling person_id and makes Person's has_one :user
+      # nullify a no-op — so we can delete the person before the user (next), even
+      # though the person references the user via created_by/updated_by.
+      c[:users].each { |user| user.update_column(:person_id, nil) }
+      deletable.each { |person| person.association(:user).reset }
+
+      # Non-cascading person records, FK-safe order: allocations and refunds
+      # reference payments; payments reference submissions.
       Allocation.where(id: c[:allocation_ids]).find_each(&:destroy!)
       Refund.where(id: c[:refund_ids]).find_each(&:destroy!)
       Payment.where(id: c[:payment_ids]).find_each(&:destroy!)
       Notification.where(id: c[:notification_ids]).find_each(&:destroy!)
       Pay::Customer.where(id: c[:pay_customer_ids]).find_each(&:destroy!)
-      # Destroy everything the account authored (FK-restricted, leaf → root) and
-      # its own notifications before the account itself — these don't cascade off
-      # the user, and the FKs would otherwise block its deletion.
-      user_ids = c[:users].map(&:id)
+
+      # Everything the account authored (FK-restricted, leaf → root) plus its own
+      # notifications — these don't cascade off the user and would block it.
       authored_content_scopes(user_ids).each { |_, relation| relation.find_each(&:destroy!) }
       Notification.where(noticeable_type: "User", noticeable_id: user_ids).delete_all
-      c[:users].each(&:destroy!)
-      deletable.each { |person| person.association(:user).reset }
+
+      # People BEFORE users: destroying a person removes its created_by/updated_by
+      # and affiliations (all FK to users), so the account is unreferenced by the
+      # time it's destroyed.
       deletable.each(&:destroy!)
+      c[:users].each(&:destroy!)
+
       delete_audit_trail(c)
     end
 
