@@ -155,19 +155,23 @@ class EventRegistrationsController < ApplicationController
     # whether each linked org is also an active/inactive affiliation (removing a
     # link here leaves the affiliation untouched).
     @affiliations_by_org = @person.affiliations.group_by(&:organization_id)
-    @submitted_org_name = find_submitted_agency_name(@event_registration)
-    # Whether an org with the submitted name already exists — if so, there's
-    # nothing to create (the admin links the existing one), so the "Create org
-    # & link" button is hidden.
-    @submitted_org_exists = @submitted_org_name.present? &&
-      Organization.where("LOWER(name) = ?", @submitted_org_name.strip.downcase).exists?
-    # The job title/position the registrant typed on the form, to compare against
-    # the title on any existing affiliation for a linked org.
-    @submitted_position = find_submitted_answer(@event_registration, "agency_position")
-    # The registrant's submission of the event's registration form, so we can link
-    # out to the public-facing form view.
-    reg_form = @event_registration.event.registration_form
-    @form_submission = reg_form && @person.form_submissions.find_by(form: reg_form)
+    # Every registration-form submission and the org/title the registrant entered
+    # on each. Normally there's one, but a registrant can have more (legacy or
+    # duplicate data), so we surface them all rather than silently picking one.
+    @submitted_entries = registration_submission_entries(@event_registration)
+    @form_submission = @submitted_entries.first&.fetch(:submission)
+    # The "primary" submitted org/title — the first submission that named an org
+    # (else the first submission) — drives the suggested-match and comparison logic.
+    primary = @submitted_entries.find { |entry| entry[:org_name].present? } || @submitted_entries.first
+    @submitted_org_name = primary && primary[:org_name]
+    @submitted_position = primary && primary[:position]
+    # Each distinct submitted org name that isn't already in the database gets its
+    # own "Create and link" row, so every typed-but-missing org can be resolved.
+    submitted_names = @submitted_entries.filter_map { |entry| entry[:org_name].presence&.strip }.uniq { |name| name.downcase }
+    existing_names = submitted_names.any? ?
+      Organization.where("LOWER(name) IN (?)", submitted_names.map(&:downcase)).pluck(Arel.sql("LOWER(name)")).map(&:to_s).to_set :
+      Set.new
+    @creatable_org_names = submitted_names.reject { |name| existing_names.include?(name.downcase) }
     @potential_matches = if @submitted_org_name.present?
       Organization.remote_search(@submitted_org_name).where.not(id: @linked_organizations.ids).limit(10)
     else
@@ -193,9 +197,13 @@ class EventRegistrationsController < ApplicationController
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :create_organization?
     @person = @event_registration.registrant
-    # Build the org from the name the registrant typed on the form, so the button
-    # can't be used to create an arbitrary org — it only resolves the pending name.
-    name = find_submitted_agency_name(@event_registration)
+    # Build the org from a name the registrant actually typed on the form, so the
+    # button can't be used to create an arbitrary org — it only resolves a pending
+    # submitted name. A specific name is passed when there are several submissions;
+    # otherwise default to the first submitted name.
+    submitted_names = submitted_agency_names(@event_registration)
+    requested = params[:organization_name].presence
+    name = requested ? submitted_names.find { |submitted| submitted.casecmp?(requested) } : submitted_names.first
     if name.blank?
       redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), alert: "No submitted organization name to create from."
       return
@@ -314,6 +322,40 @@ class EventRegistrationsController < ApplicationController
         ]
       end
     end
+  end
+
+  # Each registration-form submission with the org name and position the registrant
+  # entered on it: [{ submission:, org_name:, position: }], oldest first.
+  def registration_submission_entries(registration)
+    form = registration.event.registration_form
+    return [] unless form
+
+    field_ids = form.form_fields
+      .where(field_identifier: %w[agency_name agency_position])
+      .pluck(:field_identifier, :id).to_h
+    name_field_id = field_ids["agency_name"]
+    position_field_id = field_ids["agency_position"]
+
+    registration.registrant.form_submissions
+      .where(form: form)
+      .order(:created_at)
+      .includes(:form_answers)
+      .map do |submission|
+        answers = submission.form_answers.index_by(&:form_field_id)
+        {
+          submission: submission,
+          org_name: name_field_id && answers[name_field_id]&.submitted_answer,
+          position: position_field_id && answers[position_field_id]&.submitted_answer
+        }
+      end
+  end
+
+  # Distinct, non-blank org names the registrant typed across their registration-form
+  # submissions (case-insensitive dedupe, first spelling wins).
+  def submitted_agency_names(registration)
+    registration_submission_entries(registration)
+      .filter_map { |entry| entry[:org_name].presence&.strip }
+      .uniq { |name| name.downcase }
   end
 
   def find_submitted_agency_name(registration)

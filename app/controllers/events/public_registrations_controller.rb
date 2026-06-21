@@ -103,7 +103,15 @@ module Events
         return
       end
 
-      @form_submission = @form.form_submissions.find_by(person: person)
+      # A specific submission can be requested by id (a registrant may have more
+      # than one); scope it to this form and person so the id can't reach another
+      # person's submission. Otherwise show their first submission for the form.
+      submissions = @form.form_submissions.where(person: person)
+      @form_submission = if params[:form_submission_id].present?
+        submissions.find_by(id: params[:form_submission_id])
+      else
+        submissions.first
+      end
       unless @form_submission
         redirect_to event_path(@event), alert: "No registration form submission found."
         return

@@ -583,5 +583,26 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       expect(response.body).not_to include("Scholarship application")
     end
+
+    context "when reached from the admin org-linking popup" do
+      let(:admin) { create(:user, :admin) }
+      let!(:registration) { create(:event_registration, event: event, registrant: person) }
+
+      before { sign_in admin }
+
+      it "shows a back link to the org popup, carrying its own return_to" do
+        get event_public_registration_path(event, person_id: person.id,
+          return_to: "link_organization", link_org_return_to: "registrants")
+
+        expect(response.body).to include("Back to linked organizations")
+        expect(response.body).to include(link_organization_event_registration_path(registration, return_to: "registrants"))
+      end
+
+      it "omits the org-popup back link without the return_to marker" do
+        get event_public_registration_path(event, person_id: person.id)
+
+        expect(response.body).not_to include("Back to linked organizations")
+      end
+    end
   end
 end

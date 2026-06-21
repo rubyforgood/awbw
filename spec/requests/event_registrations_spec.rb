@@ -374,6 +374,22 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("Counselor — inactive")
         end
 
+        it "appends the affiliation's start date as 'starting Month YYYY' when there is no end date" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor", start_date: Date.new(2024, 3, 1))
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Counselor starting March 2024")
+        end
+
+        it "shows the date range when the affiliation has an end date" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor", start_date: Date.new(2024, 3, 1), end_date: Date.new(2025, 6, 1))
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Counselor from March 2024 - June 2025")
+        end
+
         it "renders a non-facilitator affiliation title as a non-editable pill" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
 
@@ -383,11 +399,13 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include('name="affiliation[title]"')
         end
 
-        it "links 'View profile affiliations' to the registrant profile affiliations anchor" do
+        it "links to the registrant's profile affiliations anchor using their name" do
+          person = regular_user.person
+
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("View profile affiliations")
-          expect(response.body).to include("#{edit_person_path(regular_user.person)}#affiliations")
+          expect(response.body).to include("View #{person.first_name.presence || person.full_name}'s affiliations")
+          expect(response.body).to include("#{edit_person_path(person)}#affiliations")
         end
 
         it "warns on Unlink that it removes the org but keeps the affiliation" do
@@ -459,12 +477,63 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "links the registration form submission to the public form view" do
-          submit_form(org_name: "Typed Agency")
+          submission = submit_form(org_name: "Typed Agency")
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("registration form submission")
-          expect(response.body).to include(event_public_registration_path(event, reg: existing_registration.slug))
+          expect(response.body).to include(event_public_registration_path(event))
+          expect(response.body).to include("reg=#{existing_registration.slug}")
+          expect(response.body).to include("form_submission_id=#{submission.id}")
+        end
+
+        it "lists each registration-form submission with its own view link" do
+          reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
+          field = reg_form.form_fields.find_by(field_identifier: "agency_name") ||
+            create(:form_field, form: reg_form, field_identifier: "agency_name")
+          sub1 = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: sub1, form_field: field, submitted_answer: "First Org")
+          sub2 = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: sub2, form_field: field, submitted_answer: "Second Org")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("First Org")
+          expect(response.body).to include("Second Org")
+          expect(response.body).to include("form_submission_id=#{sub1.id}")
+          expect(response.body).to include("form_submission_id=#{sub2.id}")
+        end
+
+        it "shows a Create and link row for each distinct submitted org not in the database" do
+          reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
+          field = reg_form.form_fields.find_by(field_identifier: "agency_name") ||
+            create(:form_field, form: reg_form, field_identifier: "agency_name")
+          sub1 = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: sub1, form_field: field, submitted_answer: "Alpha Agency")
+          sub2 = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: sub2, form_field: field, submitted_answer: "Beta Agency")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Alpha Agency")
+          expect(response.body).to include("Beta Agency")
+          expect(response.body.scan(%r{name="organization_name"}).size).to eq(2)
+        end
+
+        it "says no registration form was submitted when the person has no submission" do
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("No registration form was submitted")
+        end
+
+        it "says no organization was submitted when the form was submitted without one" do
+          submit_form
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("No organization was submitted on the")
+          expect(response.body).not_to include("No registration form was submitted")
         end
 
         it "shows 'Create org & link' when the submitted org has no existing match" do
@@ -499,12 +568,12 @@ RSpec.describe "EventRegistrations", type: :request do
             expect(details_open?(response.body, "Registration form submission")).to be true
           end
 
-          it "collapses the form submission section when the submitted org already exists" do
+          it "keeps the form submission section expanded even when the submitted org already exists" do
             submit_form(org_name: organization.name)
 
             get link_organization_event_registration_path(existing_registration)
 
-            expect(details_open?(response.body, "Registration form submission")).to be false
+            expect(details_open?(response.body, "Registration form submission")).to be true
           end
 
           it "expands the other-affiliations section when there are none" do
@@ -513,12 +582,12 @@ RSpec.describe "EventRegistrations", type: :request do
             expect(details_open?(response.body, "other affiliations")).to be true
           end
 
-          it "collapses the other-affiliations section when the person has other affiliations" do
+          it "keeps the other-affiliations section expanded when the person has other affiliations" do
             create(:affiliation, person: regular_user.person, organization: create(:organization, name: "Unlinked Co"), title: "Member")
 
             get link_organization_event_registration_path(existing_registration)
 
-            expect(details_open?(response.body, "other affiliations")).to be false
+            expect(details_open?(response.body, "other affiliations")).to be true
           end
         end
       end
@@ -574,6 +643,37 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(existing_registration.organizations).to be_empty
           expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+          expect(flash[:alert]).to be_present
+        end
+
+        it "creates the specific submitted org named in the request" do
+          create(:organization_status, name: "Active")
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          sub1 = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: sub1, form_field: field, submitted_answer: "Alpha Agency")
+          sub2 = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: sub2, form_field: field, submitted_answer: "Beta Agency")
+
+          post create_organization_event_registration_path(existing_registration), params: { organization_name: "Beta Agency" }
+
+          expect(existing_registration.organizations.pluck(:name)).to include("Beta Agency")
+          expect(existing_registration.organizations.pluck(:name)).not_to include("Alpha Agency")
+        end
+
+        it "rejects creating an org name the registrant didn't submit" do
+          create(:organization_status, name: "Active")
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Alpha Agency")
+
+          expect {
+            post create_organization_event_registration_path(existing_registration), params: { organization_name: "Made Up Org" }
+          }.not_to change(Organization, :count)
+
           expect(flash[:alert]).to be_present
         end
       end
