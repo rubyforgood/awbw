@@ -4,7 +4,7 @@
   <div class="text-xs font-semibold uppercase tracking-wide text-gray-500"><%= label %></div>
   <div class="mt-1 text-2xl font-bold tabular-nums <%= value_class %>"><%= value %></div>
   <% if note %>
-    <div class="text-xs italic text-gray-400">(<%= note %>)</div>
+    <div class="text-xs italic text-gray-400 whitespace-nowrap">(<%= note %>)</div>
   <% end %>
   <% delta = revenue_delta(cents, prior_cents) %>
   <% if delta %>
