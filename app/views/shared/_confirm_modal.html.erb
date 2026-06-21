@@ -1,0 +1,30 @@
+<%# Shared, single-instance confirmation modal that replaces the browser's native
+    confirm() dialog. Rendered once in the layout. Opened via confirmModal() (see
+    confirm_modal.js); Turbo's data-turbo-confirm is routed here in application.js. %>
+<div data-controller="confirm-modal"
+     data-action="confirm-modal:open@window->confirm-modal#open click->confirm-modal#backdropClick keydown->confirm-modal#keydown"
+     class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 print:hidden"
+     role="presentation">
+  <div data-confirm-modal-target="dialog"
+       class="w-full max-w-md rounded-lg bg-white shadow-xl"
+       role="alertdialog"
+       aria-modal="true"
+       aria-labelledby="confirm-modal-message"
+       tabindex="-1">
+    <div class="p-6">
+      <p data-confirm-modal-target="message"
+         id="confirm-modal-message"
+         class="whitespace-pre-line text-gray-800"></p>
+    </div>
+    <div class="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
+      <button type="button"
+              data-confirm-modal-target="cancel"
+              data-action="confirm-modal#cancel"
+              class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Cancel</button>
+      <button type="button"
+              data-confirm-modal-target="confirm"
+              data-action="confirm-modal#confirm"
+              class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Confirm</button>
+    </div>
+  </div>
+</div>

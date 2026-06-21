@@ -38,7 +38,7 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
     start_input = row_for("Facilitator").find("input[name*='start_date']")
     set_date_input(start_input, "2017-02-01")
 
-    accept_confirm(/status with AWBW/) do
+    accept_confirm_modal(/status with AWBW/) do
       find("[type='submit']").click
     end
 
@@ -52,7 +52,7 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
     start_input = row_for("Facilitator").find("input[name*='start_date']")
     set_date_input(start_input, "2017-02-01")
 
-    dismiss_confirm(/status with AWBW/) do
+    dismiss_confirm_modal(/status with AWBW/) do
       find("[type='submit']").click
     end
 
@@ -65,7 +65,7 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
 
     row_for("Facilitator").find("a", text: "Remove").click
 
-    accept_confirm(/status with AWBW/) do
+    accept_confirm_modal(/status with AWBW/) do
       find("[type='submit']").click
     end
 

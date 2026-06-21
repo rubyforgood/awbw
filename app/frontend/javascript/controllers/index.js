@@ -45,6 +45,9 @@ application.register("collection", CollectionController)
 import ConfirmEmailController from "./confirm_email_controller"
 application.register("confirm-email", ConfirmEmailController)
 
+import ConfirmModalController from "./confirm_modal_controller"
+application.register("confirm-modal", ConfirmModalController)
+
 import ColumnToggleController from "./column_toggle_controller"
 application.register("column-toggle", ColumnToggleController)
 

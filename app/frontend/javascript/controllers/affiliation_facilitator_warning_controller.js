@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
+import { confirmModal } from "../confirm_modal";
 
 // Connects to data-controller="affiliation-facilitator-warning"
 //
@@ -13,6 +14,7 @@ import { Controller } from "@hotwired/stimulus";
 // change is detected the user must confirm or the submission is cancelled.
 export default class extends Controller {
   connect() {
+    this.confirmed = false;
     this.snapshots = this.captureSnapshots();
     this.handleSubmit = (event) => this.guardSubmit(event);
     // Capture phase so this runs before other submit listeners (e.g. dirty-form).
@@ -24,7 +26,17 @@ export default class extends Controller {
   }
 
   guardSubmit(event) {
+    // The modal resolved true on a prior pass — let this re-submission through.
+    if (this.confirmed) {
+      this.confirmed = false;
+      return;
+    }
+
     if (!this.facilitatorChangePresent()) return;
+
+    // The modal is async, so stop this submission and re-submit only if confirmed.
+    event.preventDefault();
+    event.stopImmediatePropagation();
 
     const message =
       "You're adding, removing, or editing a facilitator affiliation. " +
@@ -32,10 +44,13 @@ export default class extends Controller {
       "from facilitator affiliations and their start and end dates.\n\n" +
       "Are you sure you want to save this change?";
 
-    if (!window.confirm(message)) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    }
+    const submitter = event.submitter;
+    confirmModal(message).then((confirmed) => {
+      if (!confirmed) return;
+
+      this.confirmed = true;
+      this.element.requestSubmit(submitter);
+    });
   }
 
   rows() {

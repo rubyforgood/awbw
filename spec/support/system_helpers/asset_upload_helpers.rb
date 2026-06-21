@@ -13,14 +13,13 @@ module AssetUploadHelpers
       end
 
     within("turbo-frame#assets") do
-      asset_container = find("div[id^='#{div_prefix}']")
-
-      accept_confirm("Delete this asset?") do
-        asset_container
-          .find("form.button_to button[type='submit']", visible: :all)
-          .click
-      end
+      find("div[id^='#{div_prefix}']")
+        .find("form.button_to button[type='submit']", visible: :all)
+        .click
     end
+
+    # The confirm modal renders at the end of <body>, outside the turbo frame.
+    accept_confirm_modal("Delete this asset?")
 
     expect(page).to have_no_selector("div[id^='#{div_prefix}']")
     expect(page).to have_selector("#asset_upload_form")

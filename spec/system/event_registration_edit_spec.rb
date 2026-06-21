@@ -239,7 +239,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      accept_confirm("Are you sure you want to delete?") do
+      accept_confirm_modal("Are you sure you want to delete?") do
         click_on "Delete"
       end
 
