@@ -237,11 +237,9 @@ class PeopleController < ApplicationController
     preview = PeopleRemover.new(person_ids: [ @person.id ], force: true)
     @protections = preview.protection_reasons(@person)
     @counts = preview.counts
-    # The linked account's own content — only relevant when overriding, since that's
-    # when the account itself gets destroyed. Blocking content makes the delete
-    # impossible; cascading content is removed with the account.
-    @account_blocking = @force ? preview.blocking_account_content : {}
-    @account_cascading = @force ? preview.cascading_account_content : {}
+    # Everything removed with the linked account — only relevant when overriding,
+    # since that's when the account itself (and its content) gets destroyed.
+    @account_content = @force ? preview.account_content : {}
     @person = @person.decorate
   end
 
@@ -262,7 +260,7 @@ class PeopleController < ApplicationController
     end
   rescue ActiveRecord::InvalidForeignKey
     redirect_to edit_person_path(@person), status: :see_other,
-                alert: "Couldn't delete #{@person.full_name} — the linked User Account owns content (e.g. workshops, reports, or stories) that must be reassigned or removed first."
+                alert: "Couldn't delete #{@person.full_name} — the linked User Account is still referenced by records it doesn't own (e.g. a shared banner or event it created). Reassign those first."
   end
 
   def check_duplicates

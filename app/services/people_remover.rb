@@ -10,11 +10,11 @@
 # allocations), bulk-payment notifications, Stripe Pay::Customer rows, and the
 # PaperTrail + Ahoy audit trail for every record removed.
 #
-# The linked User and its own data (bookmarks, comments, user_forms, the user's
-# notifications, Ahoy activity) are removed too — but only "where relevant": a
-# user that authored real content (workshops, reports, stories, ideas — see
-# User#deletable?) is FK-restricted by the database, which blocks the delete
-# rather than orphaning that content.
+# The linked User and ALL of its own data are removed too: bookmarks, comments,
+# user_forms, the user's notifications, Ahoy activity, AND everything it authored
+# (workshops, workshop logs, reports, resources, stories, and the various ideas
+# and variations). The purge preview lists all of this so the operator sees the
+# full blast radius before confirming.
 #
 # People that look real are SKIPPED, never deleted: a grant donor, a spotlighted
 # facilitator, or anyone with a User account — unless delete_users: true AND the
@@ -23,10 +23,10 @@
 # admin is always protected.
 #
 # force: true is a deliberate escape hatch that ignores ALL of the protections
-# above and deletes anyway (destroying any linked account). Use only when you are
-# certain the heuristic is a false positive. The database still refuses to orphan
-# real authored content, so a force delete of an account that authored content
-# fails and rolls back.
+# above and deletes anyway — the account and everything it authored. Records that
+# merely *reference* the account without being owned by it (e.g. it created a
+# shared banner or event) are FK-restricted; the transaction rolls back and the
+# caller surfaces a clear error rather than orphaning or rewriting them.
 class PeopleRemover
   Skip = Data.define(:person, :reasons)
 
@@ -71,39 +71,18 @@ class PeopleRemover
     @form_submission_ids - FormSubmission.where(id: @form_submission_ids).pluck(:id)
   end
 
-  # Content authored by the User account(s) that would be destroyed in a force
-  # delete and which the database REFUSES to orphan (created_by_id is FK-restricted
-  # with no dependent). If any of these exist the delete cannot proceed — the
-  # content must be reassigned or removed first.
-  def blocking_account_content
+  # Everything removed along with the destroyed User account(s) — its authored
+  # content plus the records that cascade with it — for the purge preview. Empty
+  # when no account is involved.
+  def account_content
     user_ids = collected[:users].map(&:id)
     return {} if user_ids.empty?
 
-    {
-      "Workshops" => Workshop.where(created_by_id: user_ids).count,
-      "Workshop logs" => WorkshopLog.where(created_by_id: user_ids).count,
-      "Workshop ideas" => WorkshopIdea.where(created_by_id: user_ids).count,
-      "Workshop variations" => WorkshopVariation.where(created_by_id: user_ids).count,
-      "Workshop variation ideas" => WorkshopVariationIdea.where(created_by_id: user_ids).count,
-      "Reports" => Report.where(created_by_id: user_ids).count,
-      "Resources" => Resource.where(created_by_id: user_ids).count,
-      "Stories" => Story.where(created_by_id: user_ids).count,
-      "Story ideas" => StoryIdea.where(created_by_id: user_ids).count,
-      "Comments" => Comment.where(created_by_id: user_ids).count
-    }.select { |_, count| count.positive? }
-  end
-
-  # Records owned by the User account that ARE removed with it (cascade, or cleaned
-  # up explicitly like the user's own notifications).
-  def cascading_account_content
-    user_ids = collected[:users].map(&:id)
-    return {} if user_ids.empty?
-
-    {
-      "Bookmarks" => Bookmark.where(user_id: user_ids).count,
-      "User forms" => UserForm.where(user_id: user_ids).count,
-      "Notifications" => Notification.where(noticeable_type: "User", noticeable_id: user_ids).count
-    }.select { |_, count| count.positive? }
+    counts = authored_content_scopes(user_ids).to_h { |label, relation| [ label, relation.count ] }
+    counts["Bookmarks"] = Bookmark.where(user_id: user_ids).count
+    counts["User forms"] = UserForm.where(user_id: user_ids).count
+    counts["Notifications"] = Notification.where(noticeable_type: "User", noticeable_id: user_ids).count
+    counts.select { |_, count| count.positive? }
   end
 
   # Per-record-type counts for a dry-run preview. Does not mutate anything.
@@ -143,8 +122,12 @@ class PeopleRemover
       Payment.where(id: c[:payment_ids]).find_each(&:destroy!)
       Notification.where(id: c[:notification_ids]).find_each(&:destroy!)
       Pay::Customer.where(id: c[:pay_customer_ids]).find_each(&:destroy!)
-      # The user's own notifications (noticeable: User) don't cascade off the user.
-      Notification.where(noticeable_type: "User", noticeable_id: c[:users].map(&:id)).delete_all
+      # Destroy everything the account authored (FK-restricted, leaf → root) and
+      # its own notifications before the account itself — these don't cascade off
+      # the user, and the FKs would otherwise block its deletion.
+      user_ids = c[:users].map(&:id)
+      authored_content_scopes(user_ids).each { |_, relation| relation.find_each(&:destroy!) }
+      Notification.where(noticeable_type: "User", noticeable_id: user_ids).delete_all
       c[:users].each(&:destroy!)
       deletable.each { |person| person.association(:user).reset }
       deletable.each(&:destroy!)
@@ -167,6 +150,24 @@ class PeopleRemover
 
   def people
     @people ||= Person.where(id: target_person_ids).to_a
+  end
+
+  # Content authored by the account(s), as [label, relation] in FK-safe delete
+  # order (leaf → root). created_by_id-owned with no dependent, so it must be
+  # destroyed explicitly before the account or its FKs block the deletion.
+  def authored_content_scopes(user_ids)
+    [
+      [ "Comments", Comment.where(created_by_id: user_ids) ],
+      [ "Story ideas", StoryIdea.where(created_by_id: user_ids) ],
+      [ "Workshop ideas", WorkshopIdea.where(created_by_id: user_ids) ],
+      [ "Workshop variation ideas", WorkshopVariationIdea.where(created_by_id: user_ids) ],
+      [ "Workshop variations", WorkshopVariation.where(created_by_id: user_ids) ],
+      [ "Workshop logs", WorkshopLog.where(created_by_id: user_ids) ],
+      [ "Stories", Story.where(created_by_id: user_ids) ],
+      [ "Workshops", Workshop.where(created_by_id: user_ids) ],
+      [ "Reports", Report.where(created_by_id: user_ids) ],
+      [ "Resources", Resource.where(created_by_id: user_ids) ]
+    ]
   end
 
   def reasons_for(person)

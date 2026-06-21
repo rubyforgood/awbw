@@ -209,45 +209,42 @@ RSpec.describe PeopleRemover do
     end
   end
 
-  describe "account content (force)" do
-    it "#blocking_account_content lists FK-restricted content owned by the account" do
+  describe "#account_content (force)" do
+    it "lists the account's authored content and the records removed with it" do
       person = create(:person)
       user = person.user
       create(:workshop, created_by: user)
       create(:story, created_by: user)
+      create(:bookmark, user: user)
 
-      blocking = described_class.new(person_ids: [ person.id ], force: true).blocking_account_content
+      content = described_class.new(person_ids: [ person.id ], force: true).account_content
 
-      expect(blocking["Workshops"]).to eq 1
-      expect(blocking["Stories"]).to eq 1
-      expect(blocking).not_to have_key("Reports")
-    end
-
-    it "#cascading_account_content lists records removed with the account" do
-      person = create(:person)
-      create(:bookmark, user: person.user)
-
-      cascading = described_class.new(person_ids: [ person.id ], force: true).cascading_account_content
-
-      expect(cascading["Bookmarks"]).to eq 1
+      expect(content["Workshops"]).to eq 1
+      expect(content["Stories"]).to eq 1
+      expect(content["Bookmarks"]).to eq 1
+      expect(content).not_to have_key("Reports")
     end
 
     it "is empty when there is no linked account" do
       person = create(:person, user: nil)
-      remover = described_class.new(person_ids: [ person.id ], force: true)
 
-      expect(remover.blocking_account_content).to be_empty
-      expect(remover.cascading_account_content).to be_empty
+      expect(described_class.new(person_ids: [ person.id ], force: true).account_content).to be_empty
     end
+  end
 
-    it "raises InvalidForeignKey rather than orphaning content when forced" do
+  describe "force delete of an account that authored content" do
+    it "deletes the person, the account, and everything it authored" do
       person = create(:person)
-      create(:workshop, created_by: person.user)
+      user = person.user
+      workshop = create(:workshop, created_by: user)
+      story = create(:story, created_by: user)
 
-      expect do
-        described_class.new(person_ids: [ person.id ], force: true).call
-      end.to raise_error(ActiveRecord::InvalidForeignKey)
-      expect(Person.exists?(person.id)).to be true
+      described_class.new(person_ids: [ person.id ], force: true).call
+
+      expect(Person.exists?(person.id)).to be false
+      expect(User.exists?(user.id)).to be false
+      expect(Workshop.exists?(workshop.id)).to be false
+      expect(Story.exists?(story.id)).to be false
     end
   end
 

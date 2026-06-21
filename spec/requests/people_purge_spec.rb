@@ -24,27 +24,20 @@ RSpec.describe "People purge", type: :request do
 
         expect(response.body).to include("looks real")
         expect(response.body).to include("What will be deleted")
-        expect(response.body).to include("Delete anyway")
+        expect(response.body).to include("Preview full delete")
         expect(response.body).not_to include("Permanently delete")
       end
 
-      it "shows the override warning and a delete button for a real person when force=true" do
-        real = create(:person)
-        get purge_confirmation_person_path(real, force: true)
-
-        expect(response.body).to include("Override")
-        expect(response.body).to include("Permanently delete")
-      end
-
-      it "shows blocking content and no delete button when the account authored content" do
+      it "shows the override warning, the account's content, and a delete button when force=true" do
         real = create(:person)
         create(:workshop, created_by: real.user)
 
         get purge_confirmation_person_path(real, force: true)
 
-        expect(response.body).to include("Cannot delete")
+        expect(response.body).to include("Override")
+        expect(response.body).to include("Also removed with the User Account")
         expect(response.body).to include("Workshops")
-        expect(response.body).not_to include("Permanently delete")
+        expect(response.body).to include("Permanently delete")
       end
     end
 
@@ -89,15 +82,15 @@ RSpec.describe "People purge", type: :request do
         expect(Person.exists?(real.id)).to be false
       end
 
-      it "fails gracefully when the account owns FK-restricted content" do
+      it "deletes the account's authored content too when force=true" do
         real = create(:person)
-        create(:workshop, created_by: real.user)
+        workshop = create(:workshop, created_by: real.user)
 
         delete purge_person_path(real, force: true)
 
-        expect(response).to redirect_to(edit_person_path(real))
-        expect(flash[:alert]).to include("reassigned or removed")
-        expect(Person.exists?(real.id)).to be true
+        expect(response).to redirect_to(people_path)
+        expect(Person.exists?(real.id)).to be false
+        expect(Workshop.exists?(workshop.id)).to be false
       end
     end
 
