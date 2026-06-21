@@ -137,6 +137,9 @@ Rails.application.routes.draw do
     end
   end
   resources :events do
+    collection do
+      get :revenue
+    end
     member do
       get :dashboard
       get :sample_ticket

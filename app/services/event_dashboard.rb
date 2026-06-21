@@ -32,6 +32,19 @@ class EventDashboard
     scholarships.sum(:amount_cents)
   end
 
+  # Scholarship dollars drawn from a funder/grant — money a grant pays toward
+  # registration cost, so it counts as revenue. Paired with
+  # unfunded_scholarship_cents, these sum to scholarship_total_cents.
+  def funded_scholarship_cents
+    scholarships.where.not(grant_id: nil).sum(:amount_cents)
+  end
+
+  # Scholarship dollars awarded without a grant behind them — cost the org comps
+  # directly, so no money actually changes hands.
+  def unfunded_scholarship_cents
+    scholarships.where(grant_id: nil).sum(:amount_cents)
+  end
+
   def scholarship_recipient_count
     scholarships.distinct.count(:recipient_id)
   end

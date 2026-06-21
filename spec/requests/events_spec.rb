@@ -94,6 +94,30 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /revenue" do
+    let!(:training) { create(:event, title: "TAC 261", facilitator_training: true, cost_cents: 10_000) }
+    let!(:webinar) { create(:event, title: "Public webinar", facilitator_training: false) }
+
+    context "as admin" do
+      it "lists facilitator trainings with their revenue figures" do
+        sign_in admin
+        get revenue_events_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Event revenue")
+        expect(response.body).to include("TAC 261")
+        expect(response.body).not_to include("Public webinar")
+      end
+    end
+
+    context "as non-admin" do
+      it "redirects" do
+        sign_in user
+        get revenue_events_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "GET /sample_ticket" do
     context "as admin" do
       before { sign_in admin }
