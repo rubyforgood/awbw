@@ -178,7 +178,9 @@
       </td>
 
     <% when :paid %>
-      <% paid_cents = registration.allocations_sum %>
+      <%# Monies paid = actual payments only; excludes scholarship and comp/discount
+          allocations so it doesn't double-count against the Scholarship column. %>
+      <% paid_cents = registration.payments_sum %>
       <td class="<%= td_classes.join(" ") %> font-medium" data-sort-value="<%= paid_cents %>">
         <%= link_to dollars_from_cents(paid_cents),
               allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "onboarding"),

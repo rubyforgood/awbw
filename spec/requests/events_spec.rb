@@ -977,6 +977,25 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Helping Fund")
     end
 
+    it "reports Monies paid as payments only, not scholarship coverage" do
+      paid_event = create(:event, cost_cents: 2_000)
+      paid_reg = create(:event_registration, event: paid_event, registrant: person)
+      payment = create(:payment, amount_cents: 500, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: paid_reg, amount: 500)
+      scholarship = create(:scholarship, recipient: person, amount_cents: 1_500)
+      create(:allocation, source: scholarship, allocatable: paid_reg, amount: 1_500)
+
+      get onboarding_event_path(paid_event, format: :csv)
+
+      row = CSV.parse(response.body).find { |r| r[1] == person.last_name }
+      headers = CSV.parse(response.body).first
+      monies_paid = row[headers.index("Monies paid")]
+      scholarship_amount = row[headers.index("Scholarship amount")]
+
+      expect(monies_paid).to eq("$5")        # the $5 payment, NOT the $15 scholarship
+      expect(scholarship_amount).to eq("$15")
+    end
+
     it "filters to registrants missing a step" do
       done_person = create(:person, first_name: "Allset", last_name: "Done")
       done = create(:event_registration, event: event, registrant: done_person)

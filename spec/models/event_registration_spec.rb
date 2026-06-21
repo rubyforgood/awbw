@@ -704,6 +704,21 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#payments_sum" do
+    it "counts only payment allocations, excluding scholarship" do
+      event = create(:event, cost_cents: 3_000)
+      reg = create(:event_registration, event: event)
+      payment = create(:payment, amount_cents: 1_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1_000)
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1_500)
+
+      reg.reload
+      expect(reg.payments_sum).to eq(1_000)        # payment only
+      expect(reg.allocations_sum).to eq(2_500)     # payment + scholarship
+    end
+  end
+
   describe "payment reads from a preloaded allocations association" do
     it "issues no per-row queries when allocations are preloaded" do
       event = create(:event, cost_cents: 1_000)

@@ -587,7 +587,7 @@ class EventsController < ApplicationController
     cost_required = @event.cost_cents.to_i > 0
     day_count = @event.day_count
     headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
-    headers += [ "Payment status", "Fees due", "Paid" ] if cost_required
+    headers += [ "Payment status", "Fees due", "Monies paid" ] if cost_required
     headers += [ "Scholarship amount", "Scholarship grant", "Scholarship tasks completed", "CE requested", "CE hours", "CE amount", "CE license", "Fee note", "Portal access", "Portal user status" ]
     headers += EventRegistration::CHECKLIST_STEPS.values
     headers << "Attendance status"
@@ -617,7 +617,7 @@ class EventsController < ApplicationController
       due_cents = [ @event.cost_cents.to_i - registration.allocations_sum, 0 ].max
       row << registration.payment_status_label
       row << helpers.dollars_from_cents(due_cents)
-      row << helpers.dollars_from_cents(registration.allocations_sum)
+      row << helpers.dollars_from_cents(registration.payments_sum)
     end
     row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
     row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
