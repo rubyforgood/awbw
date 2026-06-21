@@ -67,11 +67,11 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   def facilitator_since_date
-    @facilitator_since_date ||= affiliations.where("title LIKE ?", "%Facilitator%").minimum(:start_date)
+    @facilitator_since_date ||= affiliations.facilitators.minimum(:start_date)
   end
 
   def facilitation_end_date
-    facilitator_affiliations = affiliations.where("title LIKE ?", "%Facilitator%")
+    facilitator_affiliations = affiliations.facilitators
     return nil if facilitator_affiliations.active.exists?
     facilitator_affiliations.maximum(:end_date)
   end

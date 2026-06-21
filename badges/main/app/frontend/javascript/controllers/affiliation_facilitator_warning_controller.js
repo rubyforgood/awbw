@@ -62,7 +62,8 @@ export default class extends Controller {
       startDate,
       endDate,
       destroyed,
-      facilitator: title.toLowerCase().includes("facilitator"),
+      // Mirror Affiliation#facilitator?: exact, case-sensitive "Facilitator" (trimmed).
+      facilitator: title.trim() === "Facilitator",
     };
   }
 

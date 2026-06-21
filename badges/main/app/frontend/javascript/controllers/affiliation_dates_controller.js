@@ -54,9 +54,11 @@ export default class extends Controller {
       ? new Date(Math.max(...affiliations.map(a => new Date(a.endDate))))
       : null
 
-    // Facilitator since/end — same logic filtered by title
+    // Facilitator since/end — same logic filtered by title. Mirror
+    // Affiliation#facilitator?: an exact, case-sensitive match on "Facilitator"
+    // (trimmed), so the live figure matches what the server will render.
     const facilitatorAffiliations = affiliations.filter(a =>
-      a.title.toLowerCase().includes("facilitator")
+      a.title.trim() === "Facilitator"
     )
     const facStartDates = facilitatorAffiliations.map(a => a.startDate).filter(Boolean)
     const facilitatorSince = facStartDates.length
