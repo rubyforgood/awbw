@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe FakeSubmissionRemover do
+RSpec.describe PeopleRemover do
   # The :person factory associates a User by default; real fake-form people have
   # none, so deletable candidates are built with user: nil.
 
@@ -177,6 +177,17 @@ RSpec.describe FakeSubmissionRemover do
       described_class.new(person_ids: [ person.id ], force: true).call
 
       expect(Person.exists?(person.id)).to be false
+    end
+
+    it "removes the user's own notifications when the account is destroyed" do
+      person = create(:person)
+      user = person.user
+      notification = create(:notification, noticeable: user)
+
+      described_class.new(person_ids: [ person.id ], force: true).call
+
+      expect(User.exists?(user.id)).to be false
+      expect(Notification.exists?(notification.id)).to be false
     end
   end
 

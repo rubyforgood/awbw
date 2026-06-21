@@ -31,7 +31,7 @@ class PersonPolicy < ApplicationPolicy
 
   # Full purge of a person and their entire data graph. Bypasses the
   # has_associated_data? guard on destroy? on purpose — purging exists precisely
-  # to remove people who have that data. The FakeSubmissionRemover service still
+  # to remove people who have that data. The PeopleRemover service still
   # refuses to touch anyone who looks real unless explicitly forced.
   def purge?
     admin?

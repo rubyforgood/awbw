@@ -234,7 +234,7 @@ class PeopleController < ApplicationController
     @force = params[:force] == "true"
     # force: true so the inventory reflects the full graph that WOULD be deleted,
     # even when the person looks real — the page always shows what's at stake.
-    preview = FakeSubmissionRemover.new(person_ids: [ @person.id ], force: true)
+    preview = PeopleRemover.new(person_ids: [ @person.id ], force: true)
     @protections = preview.protection_reasons(@person)
     @counts = preview.counts
     # The linked account's own content — only relevant when overriding, since that's
@@ -247,10 +247,10 @@ class PeopleController < ApplicationController
 
   # Admin-only deletion of a person and their whole data + audit graph. Skips a
   # person who looks real unless force=true overrides the protections (see
-  # FakeSubmissionRemover).
+  # PeopleRemover).
   def purge
     authorize! @person, to: :purge?
-    remover = FakeSubmissionRemover.new(person_ids: [ @person.id ], force: params[:force] == "true")
+    remover = PeopleRemover.new(person_ids: [ @person.id ], force: params[:force] == "true")
 
     if remover.call.include?(@person.id)
       redirect_to people_path, status: :see_other,

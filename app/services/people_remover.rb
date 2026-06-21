@@ -1,29 +1,33 @@
-# Deletes a set of people along with their entire data graph and audit trail.
-# Built for cleaning up FAKE form submissions (hence the name and the protections
-# below), but the mechanism is general — it backs both the
-# data:remove_fake_submissions rake task and the admin-only "Delete person & all
-# data" button on the person edit page. When general person-deletion grows beyond
-# the fake-data use case, rename this to something like PersonPurger.
+# Deletes a set of people along with ALL of their associated data, their linked
+# User account and the user's own data (where relevant), and the audit trail for
+# everything removed. Backs both the data:remove_people rake task and
+# the admin-only "Delete person & all data" button on the person edit page.
 #
-# Person.destroy cascades the submissions, answers, affiliations, registrations
-# and scholarships (see Person). This also tears down what does NOT cascade:
-# payments (+ their refunds and allocations), bulk-payment notifications, Stripe
-# Pay::Customer rows, and the PaperTrail + Ahoy audit trail for every record
-# removed.
+# Person.destroy cascades everything a person owns — submissions, answers,
+# affiliations, registrations, scholarships, addresses, contact methods,
+# bookmarks, comments, sector/category tags, grants, event staffing. This also
+# tears down what does NOT cascade off Person: payments (+ their refunds and
+# allocations), bulk-payment notifications, Stripe Pay::Customer rows, and the
+# PaperTrail + Ahoy audit trail for every record removed.
+#
+# The linked User and its own data (bookmarks, comments, user_forms, the user's
+# notifications, Ahoy activity) are removed too — but only "where relevant": a
+# user that authored real content (workshops, reports, stories, ideas — see
+# User#deletable?) is FK-restricted by the database, which blocks the delete
+# rather than orphaning that content.
 #
 # People that look real are SKIPPED, never deleted: a grant donor, a spotlighted
 # facilitator, or anyone with a User account — unless delete_users: true AND the
 # account is clearly an unused auto-created one (never signed in, not a
 # super_user, no Ahoy activity of its own, authored no other people). A real
-# admin is always protected. This is ONLY for fake data — never use it to delete
-# a regular person.
+# admin is always protected.
 #
 # force: true is a deliberate escape hatch that ignores ALL of the protections
 # above and deletes anyway (destroying any linked account). Use only when you are
 # certain the heuristic is a false positive. The database still refuses to orphan
-# real authored content (workshops, reports, stories are FK-restricted), so a
-# force delete of an account that authored content fails and rolls back.
-class FakeSubmissionRemover
+# real authored content, so a force delete of an account that authored content
+# fails and rolls back.
+class PeopleRemover
   Skip = Data.define(:person, :reasons)
 
   # Only these models carry has_paper_trail.
@@ -89,14 +93,16 @@ class FakeSubmissionRemover
     }.select { |_, count| count.positive? }
   end
 
-  # Records owned by the User account that ARE removed with it (dependent: destroy).
+  # Records owned by the User account that ARE removed with it (cascade, or cleaned
+  # up explicitly like the user's own notifications).
   def cascading_account_content
     user_ids = collected[:users].map(&:id)
     return {} if user_ids.empty?
 
     {
       "Bookmarks" => Bookmark.where(user_id: user_ids).count,
-      "User forms" => UserForm.where(user_id: user_ids).count
+      "User forms" => UserForm.where(user_id: user_ids).count,
+      "Notifications" => Notification.where(noticeable_type: "User", noticeable_id: user_ids).count
     }.select { |_, count| count.positive? }
   end
 
@@ -137,6 +143,8 @@ class FakeSubmissionRemover
       Payment.where(id: c[:payment_ids]).find_each(&:destroy!)
       Notification.where(id: c[:notification_ids]).find_each(&:destroy!)
       Pay::Customer.where(id: c[:pay_customer_ids]).find_each(&:destroy!)
+      # The user's own notifications (noticeable: User) don't cascade off the user.
+      Notification.where(noticeable_type: "User", noticeable_id: c[:users].map(&:id)).delete_all
       c[:users].each(&:destroy!)
       deletable.each { |person| person.association(:user).reset }
       deletable.each(&:destroy!)

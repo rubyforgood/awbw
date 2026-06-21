@@ -1,23 +1,23 @@
 require "rails_helper"
 require "rake"
 
-# Behaviour is covered in spec/services/fake_submission_remover_spec.rb. These
-# specs just confirm the rake task wires ENV → FakeSubmissionRemover correctly.
-RSpec.describe "data:remove_fake_submissions" do
+# Behaviour is covered in spec/services/people_remover_spec.rb. These specs just
+# confirm the rake task wires ENV → PeopleRemover correctly.
+RSpec.describe "data:remove_people" do
   before(:all) do
-    Rails.application.load_tasks unless Rake::Task.task_defined?("data:remove_fake_submissions")
+    Rails.application.load_tasks unless Rake::Task.task_defined?("data:remove_people")
   end
 
-  before { Rake::Task["data:remove_fake_submissions"].reenable }
+  before { Rake::Task["data:remove_people"].reenable }
 
   def run_task(env = {})
     keys = %w[PERSON_IDS FORM_SUBMISSION_IDS CONFIRM DELETE_USERS FORCE]
     saved = keys.index_with { |k| ENV[k] }
     keys.each { |k| ENV.delete(k) }
     env.each { |k, v| ENV[k.to_s] = v.to_s }
-    suppress_output { Rake::Task["data:remove_fake_submissions"].invoke }
+    suppress_output { Rake::Task["data:remove_people"].invoke }
   ensure
-    Rake::Task["data:remove_fake_submissions"].reenable
+    Rake::Task["data:remove_people"].reenable
     keys.each { |k| ENV[k] = saved[k] }
   end
 
