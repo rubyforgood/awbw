@@ -27,6 +27,12 @@
 # merely *reference* the account without being owned by it (e.g. it created a
 # shared banner or event) are FK-restricted; the transaction rolls back and the
 # caller surfaces a clear error rather than orphaning or rewriting them.
+#
+# MAINTENANCE: the deletion graph is partly hardcoded (collected, audit_targets,
+# authored_content_scopes, account_content). When an association is added to
+# Person/User — or a model starts referencing them (person_id, user_id,
+# created_by_id, updated_by_id, polymorphic *able) — wire it in here so purges
+# keep cascading/clearing it instead of orphaning or blocking.
 class PeopleRemover
   Skip = Data.define(:person, :reasons)
 
