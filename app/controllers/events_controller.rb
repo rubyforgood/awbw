@@ -127,7 +127,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:checklist_completions, :organizations, :allocations, { scholarships: :grant }, registrant: [ :user, { affiliations: :organization } ])
+      .includes(:checklist_completions, :organizations, :allocations, :scholarships, registrant: [ :user, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.onboarding_step(params[:step], params[:step_state]) if params[:step].present?
@@ -137,7 +137,16 @@ class EventsController < ApplicationController
     @status_filter = params[:status_filter].presence || "active"
     scope = @status_filter == "inactive" ? scope.inactive : scope.active
 
-    @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
+    @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name")).to_a
+    # `scholarships` reaches the grant through the polymorphic `allocations.source`,
+    # which Rails can't eager-load with a nested `:grant` (it tries `grant` on every
+    # source type, e.g. CashPayment). Preload grants on the loaded scholarships in a
+    # second pass so the matrix's scholarship column stays query-free.
+    ActiveRecord::Associations::Preloader.new(
+      records: @event_registrations.flat_map(&:scholarships),
+      associations: :grant
+    ).call
+
     @dashboard = EventDashboard.new(@event)
     @program_statuses_by_registrant = @dashboard.program_statuses_by_registrant
   end

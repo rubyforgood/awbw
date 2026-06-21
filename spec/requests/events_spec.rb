@@ -896,6 +896,21 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include('data-table-sort-target="header"')
     end
 
+    it "renders registrants with payment and grant-funded scholarship allocations" do
+      paid_event = create(:event, cost_cents: 2_000)
+      paid_reg = create(:event_registration, event: paid_event, registrant: person)
+      payment = create(:payment, amount_cents: 500, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: paid_reg, amount: 500)
+      grant = create(:grant, name: "Helping Fund")
+      scholarship = create(:scholarship, recipient: person, grant: grant, amount_cents: 1_500)
+      create(:allocation, source: scholarship, allocatable: paid_reg, amount: 1_500)
+
+      get onboarding_event_path(paid_event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Helping Fund")
+    end
+
     it "filters to registrants missing a step" do
       done_person = create(:person, first_name: "Allset", last_name: "Done")
       done = create(:event_registration, event: event, registrant: done_person)
