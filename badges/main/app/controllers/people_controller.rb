@@ -54,7 +54,7 @@ class PeopleController < ApplicationController
         @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
       when "events"
-        @event_registrations = @person.event_registrations.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
+        @event_registrations = @person.event_registrations.active.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
       when "workshop_ideas"
         @workshop_ideas = @person.user&.workshop_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
