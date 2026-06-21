@@ -24,6 +24,33 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
+  describe "affiliation creation" do
+    let!(:organization) { create(:organization, name: "Helping Hands") }
+
+    def register_with(position:)
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+      )
+      params[field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER)] = position if position
+      described_class.call(event: event, form: form, form_params: params)
+      Person.find_by(email: "sam@example.com")
+    end
+
+    it "creates a job affiliation and a facilitator affiliation from the typed position" do
+      person = register_with(position: "Counselor")
+
+      expect(person.affiliations.where(organization: organization).pluck(:title))
+        .to contain_exactly("Counselor", "Facilitator")
+    end
+
+    it "creates only a facilitator affiliation when no position was typed" do
+      person = register_with(position: nil)
+
+      expect(person.affiliations.where(organization: organization).pluck(:title))
+        .to contain_exactly("Facilitator")
+    end
+  end
+
   describe "an answer longer than its database column" do
     # `city` (like the other mapped person/address columns) is a varchar(255).
     # A longer answer must surface as a form error, not an ActiveRecord::ValueTooLong

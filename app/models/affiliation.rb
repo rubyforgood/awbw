@@ -1,4 +1,9 @@
 class Affiliation < ApplicationRecord
+  # Standing title given to the "facilitator affiliation" we create on registration
+  # and org linking. Matches the `facilitators` scope / `facilitator?` predicate
+  # (both treat exactly "Facilitator" as canonical).
+  FACILITATOR_TITLE = "Facilitator".freeze
+
   belongs_to :organization, inverse_of: :affiliations
   belongs_to :person, touch: true
   # Which of the organization's addresses this person is affiliated with (optional).

@@ -602,6 +602,28 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
         end
+
+        it "creates a job affiliation and a facilitator affiliation from the submitted position" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_POSITION_IDENTIFIER)
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Counselor")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+            .to contain_exactly("Counselor", "Facilitator")
+        end
+
+        it "creates a facilitator affiliation even when no position was submitted" do
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+            .to contain_exactly("Facilitator")
+        end
       end
 
       describe "POST /event_registrations/:id/create_organization" do
@@ -619,6 +641,23 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(existing_registration.organizations.pluck(:name)).to include("Brand New Org")
           expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+        end
+
+        it "creates a job affiliation and a facilitator affiliation for the new org from the submitted position" do
+          create(:organization_status, name: "Active")
+          reg_form = create(:form, name: "Reg form")
+          name_field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_NAME_IDENTIFIER)
+          position_field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_POSITION_IDENTIFIER)
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
+          create(:form_answer, form_submission: submission, form_field: position_field, submitted_answer: "Counselor")
+
+          post create_organization_event_registration_path(existing_registration)
+
+          organization = Organization.find_by(name: "Brand New Org")
+          expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
+            .to contain_exactly("Counselor", "Facilitator")
         end
 
         it "links an existing org instead of creating a duplicate" do
