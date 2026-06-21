@@ -2,12 +2,13 @@
     addresses. The trigger button is only wide enough for a double-digit number;
     the panel that opens shows each address's full one-line text. Numbers mirror
     the org address editor's "Address #N" (1-based, in association order); only
-    active addresses are offered. Renders nothing when the org has none. %>
+    active addresses are offered. When the org has none, renders an equal-width
+    spacer so the following fields stay aligned across rows. %>
 <% org = f.object.organization %>
 <% numbered = org ? org.addresses.each_with_index.filter_map { |address, i| [ i + 1, address ] unless address.inactive? } : [] %>
 <% if numbered.any? %>
   <% selected = numbered.find { |_number, address| address.id == f.object.organization_address_id } %>
-  <div class="w-full sm:w-auto" data-controller="address-select">
+  <div class="w-full sm:w-16" data-controller="address-select">
     <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
     <div class="relative">
       <button type="button"
@@ -38,4 +39,8 @@
       </div>
     </div>
   </div>
+<% else %>
+  <%# No addresses to pick from: hold the column's width so the Start/End/etc.
+      fields stay vertically aligned with rows that do have an address picker. %>
+  <div class="hidden sm:block sm:w-16"></div>
 <% end %>
