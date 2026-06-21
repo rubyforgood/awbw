@@ -4,8 +4,13 @@
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
     <div class="mb-6">
-      <%= link_to "← Events", events_path,
-            class: "text-sm font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+      <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
+        <%= link_to "← Dashboard", dashboard_event_path(params[:event_id]),
+              class: "text-sm font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+      <% else %>
+        <%= link_to "← Events", events_path,
+              class: "text-sm font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+      <% end %>
     </div>
 
     <div class="mb-6">

@@ -109,6 +109,13 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Paid webinar")
         expect(response.body).not_to include("Free open house")
       end
+
+      it "returns to the originating event's dashboard when arrived from it" do
+        sign_in admin
+        get revenue_events_path(return_to: "dashboard", event_id: paid_training.id)
+        expect(response.body).to include(dashboard_event_path(paid_training))
+        expect(response.body).to include("← Dashboard")
+      end
     end
 
     context "as non-admin" do
