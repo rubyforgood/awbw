@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_21_213947) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -109,6 +109,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.date "end_date"
     t.string "filemaker_code"
     t.boolean "inactive", default: false, null: false
+    t.bigint "organization_address_id"
     t.integer "organization_agency_id"
     t.integer "organization_id", null: false
     t.bigint "person_id", null: false
@@ -118,6 +119,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
+    t.index ["organization_address_id"], name: "index_affiliations_on_organization_address_id"
     t.index ["organization_agency_id"], name: "index_affiliations_on_organization_agency_id"
     t.index ["organization_id"], name: "index_affiliations_on_organization_id"
     t.index ["person_id"], name: "index_affiliations_on_person_id"
@@ -1617,6 +1619,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
   add_foreign_key "action_text_mentions", "action_text_rich_texts"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "affiliations", "addresses", column: "organization_address_id", on_delete: :nullify
   add_foreign_key "affiliations", "organizations"
   add_foreign_key "affiliations", "organizations", column: "organization_agency_id"
   add_foreign_key "affiliations", "people"

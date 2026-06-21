@@ -239,6 +239,7 @@ class OrganizationsController < ApplicationController
         :title,
         :start_date,
         :end_date,
+        :organization_address_id,
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
