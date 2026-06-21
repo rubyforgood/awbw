@@ -2,14 +2,17 @@
     branded header, with the body supplied as a block via render(layout:). Callers
     set their own page_bg_class / page_title and pass a `title` local. Uses @event.
     The eyebrow defaults to the registrant's ticket (uses @event_registration);
-    callers without a registration can override it with a `back_path` local. %>
+    callers without a registration can override it with a `back_path` local, or
+    pass `back_path: nil` to drop the eyebrow. %>
 <% back_path = local_assigns.fetch(:back_path) { registration_ticket_path(@event_registration.slug) } %>
-<div class="max-w-3xl mx-auto px-4 pt-4">
-  <%= link_to back_path,
-              class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
-    <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
-  <% end %>
-</div>
+<% if back_path %>
+  <div class="max-w-3xl mx-auto px-4 pt-4">
+    <%= link_to back_path,
+                class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
+    <% end %>
+  </div>
+<% end %>
 
 <div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
   <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">

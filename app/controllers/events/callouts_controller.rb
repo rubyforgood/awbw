@@ -54,15 +54,25 @@ module Events
     end
 
     # Handouts page: callout-card links to the training worksheet/handout
-    # resources, in display order, each opening in a new tab.
+    # resources, in display order, each opening its own registrant resource page
+    # (PDF preview + download, with a back-to-ticket eyebrow).
     def handouts
       by_title = Resource.where(title: HANDOUT_RESOURCE_TITLES).index_by(&:title)
       @handout_cards = HANDOUT_RESOURCE_TITLES.filter_map do |title|
         resource = by_title[title]
         next unless resource
         resource_card(icon: "fa-solid fa-file-pdf", title: resource.title,
-                      subtitle: "Open this training resource", href: resource_path(resource))
+                      subtitle: "Open this training resource",
+                      href: registration_resource_path(@event_registration.slug, resource), target: nil)
       end
+    end
+
+    # Registrant-facing page for a single Resource, shown in the shared callout
+    # chrome: the PDF first-page preview and a download button. Reached from the
+    # handouts/forms callouts so a registrant views a document without leaving the
+    # ticket context.
+    def resource
+      @resource = Resource.find(params[:resource_id]).decorate
     end
 
     # Facilitator Portal access info, with a link to the home screen.
@@ -107,15 +117,17 @@ module Events
       if letter
         cards << resource_card(icon: "fa-solid fa-file-arrow-down", title: "Letter to supervisors",
                                subtitle: "Share to request release time",
-                               href: resource_download_path(letter), trailing_icon: "fa-solid fa-download")
+                               href: registration_resource_path(@event_registration.slug, letter), target: nil)
       end
       cards
     end
 
-    # A blue, new-tab callout card linking to an external/resource document.
-    def resource_card(icon:, title:, subtitle:, href:, trailing_icon: "fa-solid fa-arrow-right")
+    # A blue callout card linking to a document. External/static links open in a
+    # new tab (target: "_blank"); registrant resource pages stay in-tab so the
+    # back-to-ticket eyebrow works (pass target: nil).
+    def resource_card(icon:, title:, subtitle:, href:, target: "_blank", trailing_icon: "fa-solid fa-arrow-right")
       MagicTicketCallouts::Card.new(icon_class: icon, color: "blue", title: title, subtitle: subtitle,
-                                    href: href, target: "_blank", trailing_icon: trailing_icon)
+                                    href: href, target: target, trailing_icon: trailing_icon)
     end
   end
 end
