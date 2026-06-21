@@ -1,16 +1,14 @@
 <%# Compact numbered picker linking an affiliation to one of its organization's
     addresses. The trigger button is only wide enough for a double-digit number;
     the panel that opens shows each address's full one-line text. Numbers mirror
-    the org address editor's "Address #N" (1-based, in association order).
-    Active addresses are offered; an inactive address is offered only when it's
-    the one already linked, shown with an [INACTIVE] marker so the selection
-    stays visible. When there's nothing to show, renders an equal-width spacer so
-    the following fields stay aligned across rows. %>
+    the org address editor's "Address #N" (1-based, in association order). All
+    addresses are selectable; inactive ones are shown with an [INACTIVE] marker.
+    When the org has no addresses, renders an equal-width spacer so the following
+    fields stay aligned across rows. %>
 <% org = f.object.organization %>
-<% all_numbered = org ? org.addresses.each_with_index.map { |address, i| [ i + 1, address ] } : [] %>
+<% options = org ? org.addresses.each_with_index.map { |address, i| [ i + 1, address ] } : [] %>
 <% selected_id = f.object.organization_address_id %>
-<% selected = all_numbered.find { |_number, address| address.id == selected_id } %>
-<% options = all_numbered.select { |_number, address| !address.inactive? || address.id == selected_id } %>
+<% selected = options.find { |_number, address| address.id == selected_id } %>
 <% if options.any? %>
   <div class="w-full sm:w-16" data-controller="address-select">
     <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
