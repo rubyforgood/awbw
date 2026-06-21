@@ -246,6 +246,11 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - After completing work, **mark the PR ready** using `gh pr ready`
 - **Do not rename branches after creating a PR** — deleting the old remote branch auto-closes the PR on GitHub, and the head ref cannot be changed after creation
 - Use `docs/pull_request_template.md` for PR description structure
+- **Keep descriptions as short as possible** — a few terse bullets, not paragraphs. Cut anything a reviewer can see from the diff; only keep what explains *why*.
+- **Start the description with a review-depth tag** on its own single line, followed by a blank line, then the rest of the description. The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
+  - **👀 Skim** — view-only: markup/copy/styling, no logic or data changes
+  - **📖 Read** — light-logic: small, contained logic changes with low blast radius
+  - **🔬 Inspect** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
