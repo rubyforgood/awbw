@@ -157,6 +157,12 @@
         <%= dollars_from_cents(due_cents) %>
       </td>
 
+    <% when :paid %>
+      <% paid_cents = registration.allocations_sum %>
+      <td class="<%= td_classes.join(" ") %> font-medium <%= paid_cents.zero? ? "text-gray-400" : "text-gray-800" %>" data-sort-value="<%= paid_cents %>">
+        <%= dollars_from_cents(paid_cents) %>
+      </td>
+
     <% when :fee_note %>
       <td class="<%= td_classes.join(" ") %>">
         <%= render "events/onboarding_cell", registration: registration, field: "fee_note" %>
