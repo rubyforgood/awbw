@@ -152,6 +152,7 @@ class ScholarshipsController < ApplicationController
     if @allocatable.respond_to?(:event)
       return edit_event_registration_path(@allocatable) if params[:return_to] == "registration"
       return recipients_return_path(@allocatable.event) if params[:return_to] == "recipients"
+      return onboarding_event_path(@allocatable.event) if params[:return_to] == "onboarding"
       return registrants_event_path(@allocatable.event)
     end
 
@@ -172,6 +173,7 @@ class ScholarshipsController < ApplicationController
     event = @allocatable.try(:event)
     if event
       return recipients_return_path(event) if params[:return_to] == "recipients"
+      return onboarding_event_path(event) if params[:return_to] == "onboarding"
       return registrants_event_path(event)
     end
     return grant_path(grant) if grant

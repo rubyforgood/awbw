@@ -590,11 +590,11 @@ class EventsController < ApplicationController
     day_count = @event.day_count
     headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
     headers += [ "Payment status", "Fees due" ] if cost_required
-    headers += [ "Scholarship amount", "Scholarship source", "Scholarship tasks completed", "Fee note", "Portal invite" ]
+    headers += [ "Scholarship amount", "Scholarship grant", "Scholarship tasks completed", "Fee note", "Portal invite" ]
     headers += EventRegistration::CHECKLIST_STEPS.values
     headers << "Attendance status"
     headers += (1..day_count).map { |day| "Day #{day}" }
-    headers += [ "Onboarding progress", "Comments" ]
+    headers += [ "Onboarding progress", "Flagged comments", "Comments" ]
 
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
@@ -632,8 +632,8 @@ class EventsController < ApplicationController
     (1..day_count).each do |day|
       row << (registration.public_send("completed_day_#{day}") ? "Yes" : "No")
     end
-    row << "#{registration.onboarding_completed_count(day_count)}/#{registration.onboarding_total_count(day_count)}"
-    row << registration.comments.size
+    row << (registration.comments.any?(&:flagged?) ? "Yes" : "No")
+    row << registration.comments.map { |comment| comment.body.to_s.strip }.reject(&:blank?).join(" ::: ")
     row
   end
 

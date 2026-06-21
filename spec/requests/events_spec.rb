@@ -883,8 +883,8 @@ RSpec.describe "Events", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Onboarding")
-      expect(response.body).to include("Set up in Mailchimp")
-      expect(response.body).to include("Set up in CMS")
+      expect(response.body).to include("Mailchimp")
+      expect(response.body).to include("CMS")
       expect(response.body).to include("Portal invite")
       expect(response.body).to include("Onboard")
     end
@@ -914,10 +914,20 @@ RSpec.describe "Events", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq("text/csv")
       expect(response.body).to include("First name,Last name,Email")
-      expect(response.body).to include("Set up in Mailchimp")
+      expect(response.body).to include("Mailchimp")
       expect(response.body).to include("Portal invite")
-      expect(response.body).to include("Onboarding progress,Comments")
+      expect(response.body).to include("Onboarding progress,Flagged comments,Comments")
       expect(response.body).to include("Ready")
+    end
+
+    it "shows registration comments joined by ::: linked to the comments section" do
+      create(:comment, commentable: registration, body: "First note")
+      create(:comment, commentable: registration, body: "Second note")
+
+      get onboarding_event_path(event)
+
+      expect(response.body).to include("Second note ::: First note").or include("First note ::: Second note")
+      expect(response.body).to include("#comments-section")
     end
 
     it "renders registrants with payment and grant-funded scholarship allocations" do
@@ -1003,16 +1013,6 @@ RSpec.describe "Events", type: :request do
       expect(registration.reload.fee_note).to eq("PAID FOR TAC261")
     end
 
-    it "toggles scholarship tasks completed" do
-      scholarship = create(:scholarship, recipient: registration.registrant, tasks_completed: false)
-      create(:allocation, source: scholarship, allocatable: registration, amount: 0)
-
-      patch update_onboarding_event_registration_path(registration),
-            params: { field: "scholarship_tasks_completed", value: "1" },
-            as: :turbo_stream
-
-      expect(scholarship.reload.tasks_completed).to be(true)
-    end
 
     it "rejects an unknown field" do
       patch update_onboarding_event_registration_path(registration),

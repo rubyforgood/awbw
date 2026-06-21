@@ -31,8 +31,8 @@ class EventRegistration < ApplicationRecord
   # capturing who completed it and when). The keys double as the param/column keys
   # the toggle endpoint accepts. Adding/removing a step here needs no migration.
   CHECKLIST_STEPS = {
-    "set_up_in_mailchimp" => "Set up in Mailchimp",
-    "set_up_in_cms" => "Set up in CMS"
+    "set_up_in_mailchimp" => "Mailchimp",
+    "set_up_in_cms" => "CMS"
   }.freeze
 
   # Per-day attendance booleans on event_registrations. Plain (un-audited) columns,
@@ -367,19 +367,6 @@ class EventRegistration < ApplicationRecord
 
   def day_completed?(day)
     DAY_FIELDS.include?("completed_day_#{day}") && public_send("completed_day_#{day}")
-  end
-
-  # Completed vs. total actionable onboarding steps for this registrant — the
-  # seven manual checklist steps plus the event's in-range attendance days. Drives
-  # the per-person "X/Y done" progress bar.
-  def onboarding_completed_count(day_count)
-    checklist_done = CHECKLIST_STEPS.keys.count { |step| checklist_step_completed?(step) }
-    days_done = (1..day_count).count { |day| day_completed?(day) }
-    checklist_done + days_done
-  end
-
-  def onboarding_total_count(day_count)
-    CHECKLIST_STEPS.size + day_count
   end
 
   remote_searchable_by :registrant,

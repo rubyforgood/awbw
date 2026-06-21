@@ -10,33 +10,34 @@
     <% case column[:kind]
        when :first_name %>
       <td class="<%= td_classes.join(" ") %> text-gray-800" data-sort-value="<%= person.first_name.to_s.downcase %>">
-        <%= link_to person.first_name.presence || "—", person_path(person), class: "font-medium text-gray-800 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %>
+        <%= link_to person.first_name.presence || "—", edit_person_path(person), class: "font-medium text-gray-800 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %>
       </td>
 
     <% when :last_name %>
       <td class="<%= td_classes.join(" ") %> text-gray-800" data-sort-value="<%= person.last_name.to_s.downcase %>">
-        <%= person.last_name.presence || content_tag(:span, "—", class: "text-gray-400") %>
+        <%= link_to person.last_name.presence || "—", edit_person_path(person), class: "text-gray-800 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %>
       </td>
 
     <% when :email %>
       <% email = person.preferred_email %>
       <td class="<%= td_classes.join(" ") %> text-gray-600" data-sort-value="<%= email.to_s.downcase %>">
         <% if email.present? %>
-          <!--email_off--><span class="text-gray-600"><%= email %></span><!--email_on-->
+          <!--email_off--><%= link_to email, edit_person_path(person), class: "text-gray-600 hover:underline", data: { turbo_prefetch: false, turbo_frame: "_top" } %><!--email_on-->
         <% else %>
-          <span class="text-gray-400">—</span>
+          <%= link_to "—", edit_person_path(person), class: "text-gray-400 hover:underline", data: { turbo_frame: "_top" } %>
         <% end %>
-      </td>
-
-    <% when :progress %>
-      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= registration.onboarding_completed_count(day_count) %>">
-        <%= render "events/onboarding_progress", registration: registration, day_count: day_count %>
       </td>
 
     <% when :program %>
       <% org_names = registration.organizations.map(&:name) %>
       <td class="<%= td_classes.join(" ") %> text-gray-700" data-sort-value="<%= org_names.join(", ").downcase %>">
-        <%= org_names.any? ? truncate(org_names.join(", "), length: 40) : content_tag(:span, "—", class: "text-gray-400") %>
+        <%= link_to link_organization_event_registration_path(registration, return_to: "onboarding"),
+              title: "Link organizations for #{person.full_name}",
+              class: "inline-flex items-center gap-1 text-gray-700 hover:text-gray-900 hover:underline",
+              data: { turbo_frame: "_top" } do %>
+          <%= org_names.any? ? truncate(org_names.join(", "), length: 40) : content_tag(:span, "None", class: "text-gray-400") %>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-60"></i>
+        <% end %>
       </td>
 
     <% when :program_type %>
@@ -56,29 +57,66 @@
     <% when :payment %>
       <% paid_cents = registration.allocations_sum %>
       <% due_cents = event.cost_cents.to_i - paid_cents %>
+      <% is_paid = registration.paid_in_full? %>
+      <% is_discounted = !is_paid && registration.discounted? %>
+      <% is_partial = !is_discounted && registration.partially_paid? %>
+      <% badge_classes = if is_paid
+           "bg-green-50 text-green-700 border-green-200"
+         elsif is_discounted
+           "bg-purple-50 text-purple-700 border-purple-200"
+         elsif is_partial
+           "bg-blue-50 text-blue-700 border-blue-200"
+         else
+           "bg-amber-50 text-amber-700 border-amber-200"
+         end %>
+      <% badge_icon = if is_paid
+           "fa-circle-check"
+         elsif is_discounted
+           "fa-tag"
+         elsif is_partial
+           "fa-circle-half-stroke"
+         else
+           "fa-circle-exclamation"
+         end %>
+      <% badge_title = if is_paid
+           "Paid in full"
+         elsif is_discounted
+           "Discounted · #{dollars_from_cents(due_cents)} due"
+         elsif is_partial
+           "Partial payment · #{dollars_from_cents(due_cents)} due"
+         else
+           "#{dollars_from_cents(due_cents)} due"
+         end %>
+      <% badge_title = "#{badge_title} · Intends to pay" if !is_paid && registration.intends_to_pay? %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= due_cents %>">
-        <% if registration.paid_in_full? %>
-          <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-green-50 text-green-700 border-green-200"><i class="fas fa-circle-check"></i> Paid</span>
-        <% elsif registration.discounted? %>
-          <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-purple-50 text-purple-700 border-purple-200"><i class="fas fa-tag"></i> Discounted</span>
-        <% elsif registration.partially_paid? %>
-          <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200">Partial · <%= dollars_from_cents(due_cents) %> due</span>
-        <% else %>
-          <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-amber-50 text-amber-700 border-amber-200"><%= dollars_from_cents(due_cents) %> due</span>
+        <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "onboarding"), title: badge_title, class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 #{badge_classes} transition hover:opacity-80 hover:shadow-sm", data: { turbo_frame: "_top" } do %>
+          <i class="fas <%= badge_icon %>"></i>
+          <% if is_paid %>
+            <span>Paid</span>
+          <% else %>
+            <span><%= dollars_from_cents(due_cents) %> due</span>
+          <% end %>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
         <% end %>
-        <% if !registration.paid_in_full? && registration.intends_to_pay? %>
-          <div class="mt-1 text-[0.65rem] font-medium text-blue-600"><i class="fa-solid fa-hand-holding-dollar"></i> Intends to pay</div>
+        <% if !is_paid && registration.intends_to_pay? %>
+          <div class="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-[0.65rem] font-medium text-blue-600">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+            <span>Intends to pay</span>
+          </div>
         <% end %>
       </td>
 
-    <% when :scholarship %>
+    <% when :scholarship_amount %>
       <% scholarship = registration.scholarships.first %>
-      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= scholarship&.amount_cents.to_i %>">
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= scholarship ? scholarship.amount_cents : -1 %>">
         <% if scholarship %>
-          <div class="flex flex-col items-center gap-0.5">
-            <span class="font-medium text-gray-800"><%= dollars_from_cents(scholarship.amount_cents) %></span>
-            <span class="text-xs text-gray-500"><%= scholarship.grant&.name.presence || "Unfunded" %></span>
-          </div>
+          <%= link_to edit_scholarship_path(scholarship, return_to: "onboarding"), class: "hover:underline", data: { turbo_frame: "_top" } do %>
+            <% if scholarship.amount_cents.to_i.positive? %>
+              <span class="font-medium text-gray-800"><%= dollars_from_cents(scholarship.amount_cents) %></span>
+            <% else %>
+              <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 bg-gray-50 text-gray-500 border-gray-200">TBD</span>
+            <% end %>
+          <% end %>
         <% elsif registration.scholarship_requested? %>
           <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 bg-amber-50 text-amber-700 border-amber-200">Requested</span>
         <% else %>
@@ -86,11 +124,31 @@
         <% end %>
       </td>
 
+    <% when :funder %>
+      <% scholarship = registration.scholarships.first %>
+      <% funder = scholarship ? (scholarship.grant&.name.presence || "Unfunded") : nil %>
+      <td class="<%= td_classes.join(" ") %> text-sm text-gray-600" data-sort-value="<%= funder.to_s.downcase %>">
+        <% if scholarship %>
+          <%= link_to funder, edit_scholarship_path(scholarship, return_to: "onboarding"), class: "text-gray-600 hover:text-gray-800 hover:underline", data: { turbo_frame: "_top" } %>
+        <% else %>
+          <span class="text-gray-400">—</span>
+        <% end %>
+      </td>
+
     <% when :scholarship_tasks %>
-      <% scholarships = registration.scholarships %>
-      <% sort_value = scholarships.any? ? (scholarships.all?(&:tasks_completed?) ? 1 : 0) : -1 %>
-      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= sort_value %>">
-        <%= render "events/onboarding_cell", registration: registration, field: "scholarship_tasks_completed" %>
+      <% scholarship = registration.scholarships.first %>
+      <% done = scholarship && registration.scholarships.all?(&:tasks_completed?) %>
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= scholarship ? (done ? 1 : 0) : -1 %>">
+        <% if scholarship %>
+          <%= link_to edit_scholarship_path(scholarship, return_to: "onboarding"),
+                title: "Edit scholarship tasks",
+                class: "inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 hover:opacity-80 #{done ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}",
+                data: { turbo_frame: "_top" } do %>
+            <i class="fas <%= done ? "fa-circle-check" : "fa-clock" %>"></i><%= done ? "Yes" : "No" %>
+          <% end %>
+        <% else %>
+          <span class="text-gray-400">—</span>
+        <% end %>
       </td>
 
     <% when :fees_due %>
@@ -109,7 +167,7 @@
         <% if person.user.present? %>
           <%= render "users/confirmed_status", user: person.user, invite_params: {} %>
         <% else %>
-          <%= link_to "Create user", new_user_path(person_id: person.id), class: "btn btn-secondary-outline", data: { turbo_frame: "_top" } %>
+          <%= link_to "+User", new_user_path(person_id: person.id), class: "btn btn-secondary-outline", data: { turbo_frame: "_top" } %>
         <% end %>
       </td>
 
@@ -124,24 +182,30 @@
         <%= render "event_registrations/attendance_status_badge", registration: registration %>
       </td>
 
-    <% when :comments %>
-      <% comments = registration.comments %>
-      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= comments.size %>">
-        <% if comments.any? %>
-          <% latest = comments.first %>
-          <%= link_to edit_event_registration_path(registration, return_to: "onboarding"),
-                class: "inline-flex items-center gap-1 text-purple-500 hover:text-purple-700",
-                title: "#{comments.size} comment#{'s' if comments.size != 1} — Latest (#{latest.created_at.strftime('%Y-%m-%d')}): #{latest.body.truncate(100)}",
+    <% when :flagged_comments %>
+      <% any_flagged = registration.comments.any?(&:flagged?) %>
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= any_flagged ? 1 : 0 %>">
+        <% if any_flagged %>
+          <%= link_to edit_event_registration_path(registration, return_to: "onboarding", anchor: "comments-section"),
+                title: "Has flagged comments",
+                class: "inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 bg-orange-50 text-orange-700 border-orange-200 hover:opacity-80",
                 data: { turbo_frame: "_top" } do %>
-            <i class="fa-solid fa-message"></i><span class="text-xs"><%= comments.size %></span>
+            <i class="fa-solid fa-flag"></i> Yes
           <% end %>
         <% else %>
-          <%= link_to edit_event_registration_path(registration, return_to: "onboarding"),
-                class: "text-gray-300 hover:text-gray-500",
-                title: "Add a comment",
-                data: { turbo_frame: "_top" } do %>
-            <i class="fa-regular fa-message"></i>
-          <% end %>
+          <span class="inline-flex items-center gap-1 text-xs text-gray-400"><i class="fa-regular fa-flag"></i> No</span>
+        <% end %>
+      </td>
+
+    <% when :comments %>
+      <% comments = registration.comments %>
+      <% comments_text = comments.map { |comment| comment.body.to_s.strip }.reject(&:blank?).join(" ::: ") %>
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= comments_text.downcase %>">
+        <%= link_to edit_event_registration_path(registration, return_to: "onboarding", anchor: "comments-section"),
+              title: comments_text.presence || "Add a comment",
+              class: "block max-w-[18rem] truncate text-xs #{comments.any? ? "text-gray-600 hover:text-gray-800 hover:underline" : "text-gray-300 hover:text-gray-500"}",
+              data: { turbo_frame: "_top" } do %>
+          <%= comments_text.presence || "+ Comment" %>
         <% end %>
       </td>
 

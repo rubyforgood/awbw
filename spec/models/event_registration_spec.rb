@@ -651,18 +651,6 @@ RSpec.describe EventRegistration, type: :model do
       expect(registration.reload.checklist_completion_for(step)).to eq(completion)
     end
 
-    describe "#onboarding_completed_count / #onboarding_total_count" do
-      it "counts manual steps plus in-range attendance days" do
-        registration.update!(completed_day_1: true, completed_day_3: true)
-        create(:event_registration_checklist_completion, event_registration: registration, step: step)
-        registration.reload
-
-        # day_count of 2 means day_3 doesn't count
-        expect(registration.onboarding_completed_count(2)).to eq(2) # step + day_1
-        expect(registration.onboarding_total_count(2)).to eq(EventRegistration::CHECKLIST_STEPS.size + 2)
-      end
-    end
-
     describe ".onboarding_step scope" do
       let!(:done) { create(:event_registration) }
       let!(:missing) { create(:event_registration) }

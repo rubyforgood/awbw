@@ -1,24 +1,7 @@
 <%# One editable onboarding cell, targeted by id for inline turbo replacement.
-    Locals: registration, field (a CHECKLIST_STEPS key, a DAY_FIELDS key,
-    "scholarship_tasks_completed", or "fee_note"). %>
+    Locals: registration, field (a CHECKLIST_STEPS key, a DAY_FIELDS key, or "fee_note"). %>
 <span id="<%= dom_id(registration, field) %>" class="inline-block">
-  <% if field == "scholarship_tasks_completed" %>
-    <% scholarships = registration.scholarships %>
-    <% if scholarships.any? %>
-      <% done = scholarships.all?(&:tasks_completed?) %>
-      <%= form_with url: update_onboarding_event_registration_path(registration), method: :patch, class: "inline" do %>
-        <%= hidden_field_tag :field, "scholarship_tasks_completed" %>
-        <%= hidden_field_tag :value, done ? "0" : "1" %>
-        <%= button_tag type: "submit",
-              title: "Toggle scholarship tasks completed",
-              class: "inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2.5 py-0.5 hover:opacity-80 #{done ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}" do %>
-          <i class="fas <%= done ? "fa-circle-check" : "fa-clock" %>"></i><%= done ? "Yes" : "No" %>
-        <% end %>
-      <% end %>
-    <% else %>
-      <span class="text-gray-400">—</span>
-    <% end %>
-  <% elsif field == "fee_note" %>
+  <% if field == "fee_note" %>
     <%= form_with url: update_onboarding_event_registration_path(registration), method: :patch, class: "inline" do %>
       <%= hidden_field_tag :field, "fee_note" %>
       <%= text_field_tag :value, registration.fee_note,
