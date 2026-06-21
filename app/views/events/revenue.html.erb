@@ -43,7 +43,7 @@
           <tbody class="divide-y divide-gray-100 bg-white">
             <% @report.rows.each do |row| %>
               <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3">
+                <td class="px-4 py-3 whitespace-nowrap">
                   <%= link_to dashboard_event_path(row.event), class: "font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" do %>
                     <%= row.event.title %>
                   <% end %>
