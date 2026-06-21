@@ -217,10 +217,12 @@ class EventRegistrationsController < ApplicationController
     authorize! @event_registration, to: :unlink_organization?
     organization = Organization.find(params[:organization_id])
 
-    # Removes only the registration-scoped link; the person's global affiliation is left intact.
+    # Intentional UX choice: "Unlink" only removes the org from this registration and
+    # deliberately leaves the person's global Affiliation intact. Affiliations are managed
+    # on the Person record, not here — the Unlink button's confirm dialog warns about this.
     @event_registration.event_registration_organizations.where(organization_id: organization.id).destroy_all
 
-    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} removed from this registration."
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} unlinked from this registration."
   end
 
   def destroy

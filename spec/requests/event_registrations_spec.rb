@@ -397,6 +397,15 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("#{edit_person_path(regular_user.person)}#affiliations")
         end
 
+        it "warns on Unlink that it removes the org but keeps the affiliation" do
+          get link_organization_event_registration_path(existing_registration)
+
+          confirm = Nokogiri::HTML(response.body).css("form[data-turbo-confirm]").map { |f| f["data-turbo-confirm"] }.join
+          expect(confirm).to include("will NOT delete")
+          expect(confirm).to include("Affiliation")
+          expect(confirm).to include("edit the Person record")
+        end
+
         it "lists affiliations for non-linked orgs under the registrant's other affiliations" do
           other_org = create(:organization, name: "Unlinked Org Co")
           create(:affiliation, person: regular_user.person, organization: other_org, title: "Board Member")
