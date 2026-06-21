@@ -635,6 +635,31 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#program_statuses" do
+    let(:registration) { create(:event_registration) }
+    let(:linked_org) { create(:organization, name: "Registration Org") }
+    let(:other_org) { create(:organization, name: "Other Org") }
+
+    it "classifies only the organization linked to the registration" do
+      create(:event_registration_organization, event_registration: registration, organization: linked_org)
+      # An unrelated facilitator affiliation to a different org must be ignored.
+      create(:affiliation, organization: other_org, person: registration.registrant,
+             title: "Facilitator", start_date: Date.current)
+
+      expect(registration.reload.program_statuses).to eq([ :new ])
+    end
+
+    it "uses the registrant's facilitator affiliation to the linked org as the reference" do
+      create(:event_registration_organization, event_registration: registration, organization: linked_org)
+      create(:affiliation, organization: linked_org, title: "Facilitator",
+             start_date: 2.years.ago, end_date: nil)
+      create(:affiliation, organization: linked_org, person: registration.registrant,
+             title: "Facilitator", start_date: Date.current)
+
+      expect(registration.reload.program_statuses).to eq([ :ongoing ])
+    end
+  end
+
   describe "onboarding checklist" do
     let(:registration) { create(:event_registration) }
     let(:step) { EventRegistration::CHECKLIST_STEPS.keys.first }

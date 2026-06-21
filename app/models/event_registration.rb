@@ -369,6 +369,21 @@ class EventRegistration < ApplicationRecord
     DAY_FIELDS.include?("completed_day_#{day}") && public_send("completed_day_#{day}")
   end
 
+  # Program status(es) for THIS registration only: classify each organization
+  # linked to the registration by the registrant's own active Facilitator
+  # affiliation to that org (falling back to the org's status as of today when the
+  # registrant has no facilitator affiliation to it yet). Distinct, so a
+  # registrant with one linked org shows one badge — unlike the registrant-wide
+  # rollup, this ignores affiliations to other, unrelated organizations.
+  def program_statuses
+    organizations.filter_map do |organization|
+      reference = registrant.affiliations
+        .select { |affiliation| affiliation.organization_id == organization.id && affiliation.facilitator? && affiliation.active? }
+        .min_by { |affiliation| affiliation.start_date || Date.current }
+      reference ? organization.facilitator_status(reference) : organization.facilitator_status_on(Date.current)
+    end.uniq
+  end
+
   remote_searchable_by :registrant,
     scope: ->(query) {
       return none if query.blank?

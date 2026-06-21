@@ -147,8 +147,6 @@ class EventsController < ApplicationController
       associations: :grant
     ).call
 
-    @dashboard = EventDashboard.new(@event)
-    @program_statuses_by_registrant = @dashboard.program_statuses_by_registrant
     # Column show/hide is server-side: `hide` is a comma-separated list of column
     # toggle keys the admin has hidden, threaded through the filters and tab links.
     @hidden_columns = params[:hide].to_s.split(",").map(&:strip).reject(&:blank?)
@@ -606,7 +604,7 @@ class EventsController < ApplicationController
   def onboarding_csv_row(registration, cost_required, day_count)
     person = registration.registrant
     scholarship = registration.scholarships.first
-    statuses = Array(@program_statuses_by_registrant[registration.registrant_id]).map { |status| status.to_s.titleize }.join(", ")
+    statuses = registration.program_statuses.map { |status| status.to_s.titleize }.join(", ")
 
     row = [
       person.first_name,

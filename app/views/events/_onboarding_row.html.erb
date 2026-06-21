@@ -1,6 +1,6 @@
 <%# One registrant row on the Onboarding matrix. Iterates the shared column list
     so cell positions line up with the sortable header.
-    Locals: registration, event, columns, day_count, program_statuses (array of symbols). %>
+    Locals: registration, event, columns, day_count. %>
 <% person = registration.registrant %>
 <% align_class = { "left" => "text-left", "center" => "text-center", "right" => "text-right" } %>
 <tr id="<%= dom_id(registration, :onboarding_row) %>" class="hover:bg-gray-50 transition-colors duration-150">
@@ -41,7 +41,7 @@
       </td>
 
     <% when :program_type %>
-      <% statuses = Array(program_statuses) %>
+      <% statuses = registration.program_statuses %>
       <% org = registration.organizations.first %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= statuses.map(&:to_s).sort.join %>">
         <% if statuses.any? && org %>
