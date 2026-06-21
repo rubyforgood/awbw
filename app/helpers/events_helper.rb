@@ -32,7 +32,7 @@ module EventsHelper
     end
     columns << { key: "flagged_comments", label: "Flagged comments", kind: :flagged_comments, sortable: true, align: "center", toggle: "flagged_comments" }
     columns << { key: "comments", label: "Comments", kind: :comments, sortable: true, align: "left", toggle: "comments" }
-    columns << { key: "attendance", label: "Attendance", kind: :attendance, sortable: true, align: "center", toggle: "attendance" }
+    columns << { key: "attendance", label: "Event attendance", kind: :attendance, sortable: true, align: "center", toggle: "attendance" }
     columns
   end
 
