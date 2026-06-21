@@ -66,11 +66,14 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
     facilitator = find("[data-affiliation-dates-target='facilitatorSince']")
     expect(facilitator).to have_text("Mar 2020")
 
-    title_textareas = all("textarea[name*='affiliations_attributes'][name*='title']")
-    set_textarea_input(title_textareas.last, "Lead Facilitator")
+    # Renaming the only exact "Facilitator" to a variant drops it — facilitator
+    # matching is exact and case-sensitive, so "Lead Facilitator" no longer counts.
+    facilitator_row = all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
+      f.find("textarea[name*='title']").value.strip == "Facilitator"
+    }
+    set_textarea_input(facilitator_row.find("textarea[name*='title']"), "Lead Facilitator")
 
-    # Both affiliations now have "Facilitator" in the title; earliest is still Mar 2020
-    expect(facilitator).to have_text("Mar 2020", wait: 5)
+    expect(facilitator).to have_text("—", wait: 5)
   end
 
   it "shows end date and icon when all affiliations are inactive" do

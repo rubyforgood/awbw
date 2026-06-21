@@ -14,43 +14,6 @@ RSpec.describe Affiliation do
     # it { should validate_presence_of(:person_id) } # we needed to not have this to support nested attrs
   end
 
-  describe '#facilitator?' do
-    it 'is true for any title containing "facilitator", case-insensitively' do
-      expect(build(:affiliation, title: "Facilitator").facilitator?).to be true
-      expect(build(:affiliation, title: "Lead Facilitator").facilitator?).to be true
-      expect(build(:affiliation, title: "co-facilitator").facilitator?).to be true
-    end
-
-    it 'is false for titles without the word' do
-      expect(build(:affiliation, title: "Board Member").facilitator?).to be false
-      expect(build(:affiliation, title: nil).facilitator?).to be false
-    end
-  end
-
-  describe '#exact_facilitator?' do
-    it 'is true only when the title is exactly "Facilitator"' do
-      expect(build(:affiliation, title: "Facilitator").exact_facilitator?).to be true
-    end
-
-    it 'ignores surrounding whitespace' do
-      expect(build(:affiliation, title: "  Facilitator ").exact_facilitator?).to be true
-    end
-
-    it 'is case-sensitive' do
-      expect(build(:affiliation, title: "facilitator").exact_facilitator?).to be false
-      expect(build(:affiliation, title: "FACILITATOR").exact_facilitator?).to be false
-    end
-
-    it 'is false for titles that merely contain the word' do
-      expect(build(:affiliation, title: "Lead Facilitator").exact_facilitator?).to be false
-      expect(build(:affiliation, title: "Facilitator in training").exact_facilitator?).to be false
-    end
-
-    it 'is false when the title is blank' do
-      expect(build(:affiliation, title: nil).exact_facilitator?).to be false
-    end
-  end
-
   describe '#active?' do
     it 'is true when not inactive and has no end date' do
       expect(build(:affiliation, inactive: false, end_date: nil).active?).to be true
@@ -95,6 +58,40 @@ RSpec.describe Affiliation do
       expect {
         described_class.active.joins(:organization).to_a
       }.not_to raise_error
+    end
+  end
+
+  describe '#facilitator?' do
+    it 'is true for the exact title "Facilitator"' do
+      expect(build(:affiliation, title: "Facilitator").facilitator?).to be true
+    end
+
+    it 'ignores surrounding whitespace' do
+      expect(build(:affiliation, title: "  Facilitator ").facilitator?).to be true
+    end
+
+    it 'is false for title variants like "Lead Facilitator"' do
+      expect(build(:affiliation, title: "Lead Facilitator").facilitator?).to be false
+    end
+
+    it 'is case-sensitive' do
+      expect(build(:affiliation, title: "facilitator").facilitator?).to be false
+      expect(build(:affiliation, title: "FACILITATOR").facilitator?).to be false
+    end
+
+    it 'is false when the title is blank' do
+      expect(build(:affiliation, title: nil).facilitator?).to be false
+    end
+  end
+
+  describe '.facilitators' do
+    let!(:exact) { create(:affiliation, title: "Facilitator") }
+    let!(:whitespace) { create(:affiliation, title: "  Facilitator ") }
+    let!(:variant) { create(:affiliation, title: "Lead Facilitator") }
+    let!(:lowercase) { create(:affiliation, title: "facilitator") }
+
+    it 'includes only the exact, case-sensitive title "Facilitator" (whitespace-trimmed)' do
+      expect(described_class.facilitators).to contain_exactly(exact, whitespace)
     end
   end
 

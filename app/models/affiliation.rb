@@ -10,7 +10,11 @@ class Affiliation < ApplicationRecord
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)
   }
 
-  scope :facilitators, -> { where("title LIKE ?", "%facilitator%") }
+  # Only the exact, case-sensitive title "Facilitator" counts — variants like
+  # "Lead Facilitator" or "facilitator" are deliberately excluded. BINARY forces
+  # a case-sensitive comparison under MySQL's default case-insensitive collation;
+  # TRIM mirrors the in-memory #facilitator? strip so stray whitespace still matches.
+  scope :facilitators, -> { where("BINARY TRIM(title) = ?", "Facilitator") }
 
   before_validation :skip_if_duplicate
   before_save :set_inactive_from_dates
@@ -20,15 +24,11 @@ class Affiliation < ApplicationRecord
   after_destroy :sync_organization_affiliation_dates
 
   # Methods
+  # A facilitator affiliation is one whose title is *exactly* "Facilitator"
+  # (trimmed, case-sensitive). Variants like "Lead Facilitator" or "facilitator"
+  # are deliberately excluded. Mirrors the .facilitators scope so in-memory and
+  # SQL checks agree.
   def facilitator?
-    title.to_s.downcase.include?("facilitator")
-  end
-
-  # Stricter than #facilitator? / the .facilitators scope: the title is *exactly*
-  # "Facilitator" (trimmed, case-sensitive). Reserved for the editor-row highlight
-  # so variants like "Lead Facilitator" stay un-highlighted while still counting
-  # as facilitators everywhere else.
-  def exact_facilitator?
     title.to_s.strip == "Facilitator"
   end
 
