@@ -252,14 +252,22 @@ RSpec.describe "Events::Registrations", type: :request do
   end
 
   describe "GET /registration/:slug/videoconference" do
-    let(:event) { create(:event, videoconference_url: "https://awbw.zoom.us/j/123", videoconference_label: "Zoom") }
+    let(:event) { create(:event, videoconference_url: "https://awbw.zoom.us/j/88285411273", videoconference_label: "Zoom", videoconference_passcode: "secret123") }
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     it "shows the join link and add-to-calendar options" do
       get registration_videoconference_path(registration.slug)
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("https://awbw.zoom.us/j/123")
+      expect(response.body).to include("https://awbw.zoom.us/j/88285411273")
       expect(response.body).to include("Add to your calendar")
+    end
+
+    it "shows the meeting ID parsed from the URL and the passcode" do
+      get registration_videoconference_path(registration.slug)
+      expect(response.body).to include("Meeting ID")
+      expect(response.body).to include("882 8541 1273")
+      expect(response.body).to include("Passcode")
+      expect(response.body).to include("secret123")
     end
   end
 

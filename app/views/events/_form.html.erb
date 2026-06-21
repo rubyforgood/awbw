@@ -190,6 +190,13 @@
                         placeholder: "Virtual event",
                         class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                       } %>
+          <%= f.input :videoconference_passcode,
+                      label: "Videoconference passcode",
+                      hint: "Shown alongside the join link. The meeting ID/code is read from the URL automatically.",
+                      input_html: {
+                        placeholder: "e.g. 123456",
+                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                      } %>
         </div>
 
         <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">

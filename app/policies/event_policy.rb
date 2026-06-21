@@ -108,6 +108,7 @@ class EventPolicy < ApplicationPolicy
                   :pre_title,
                   :videoconference_url,
                   :videoconference_label,
+                  :videoconference_passcode,
                   :rhino_header,
                   :rhino_description,
                   :event_details,
