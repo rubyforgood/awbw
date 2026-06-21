@@ -4,7 +4,7 @@
     the org address editor's "Address #N" (1-based, in association order); only
     active addresses are offered. Renders nothing when the org has none. %>
 <% org = f.object.organization %>
-<% numbered = org ? org.addresses.each_with_index.filter_map { |address, i| [ i + 1, address ] if address.active? } : [] %>
+<% numbered = org ? org.addresses.each_with_index.filter_map { |address, i| [ i + 1, address ] unless address.inactive? } : [] %>
 <% if numbered.any? %>
   <% selected = numbered.find { |_number, address| address.id == f.object.organization_address_id } %>
   <div class="w-full sm:w-auto" data-controller="address-select">
