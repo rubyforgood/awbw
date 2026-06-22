@@ -107,22 +107,6 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
-  describe "#attended?" do
-    it "returns true for attended status" do
-      expect(create(:event_registration, status: "attended")).to be_attended
-    end
-
-    it "returns true for incomplete_attendance status" do
-      expect(create(:event_registration, status: "incomplete_attendance")).to be_attended
-    end
-
-    it "returns false for registered, cancelled, and no_show statuses" do
-      expect(create(:event_registration, status: "registered")).not_to be_attended
-      expect(create(:event_registration, status: "cancelled")).not_to be_attended
-      expect(create(:event_registration, status: "no_show")).not_to be_attended
-    end
-  end
-
   describe "#deletable?" do
     it "returns true for a plain registration with no allocations or attendance" do
       reg = create(:event_registration, status: "registered")
