@@ -15,7 +15,7 @@ RSpec.describe MagicTicketCallouts do
   describe "#cards" do
     it "shows the always-present cards for a bare paid-cost registration" do
       expect(card_titles(registration)).to eq([
-        "Payment", "Forms", "Handouts", "Frequently asked questions", "Facilitator Portal access"
+        "Make your payment", "Forms", "Handouts", "Frequently asked questions", "Facilitator Portal access"
       ])
     end
 
@@ -25,13 +25,17 @@ RSpec.describe MagicTicketCallouts do
     end
 
     it "makes the payment card an action card while a balance is due, reference once paid" do
-      due = card(registration, "Payment")
+      due = card(registration, "Make your payment")
       expect(due.theme).to eq(DomainTheme.swatch("orange"))
+      expect(due.badge).to end_with("due")
+      expect(due.badge_classes).to be_nil
       expect(due.trailing_icon).to eq("fa-solid fa-arrow-right")
 
       create(:allocation, source: create(:payment), allocatable: registration, amount: event.cost_cents)
       paid = card(registration, "Payment")
       expect(paid.theme).to eq(DomainTheme.swatch("blue"))
+      expect(paid.badge).to eq("Paid")
+      expect(paid.badge_classes).to include("blue")
       expect(paid.trailing_icon).to eq("fa-solid fa-arrow-right")
     end
 
@@ -70,22 +74,54 @@ RSpec.describe MagicTicketCallouts do
       expect(card_titles(registration)).to include(event.ce_hours_details_label)
     end
 
-    it "themes the CE card teal and reflects requested-vs-complete in the subtitle" do
+    it "shows an amber 'what's needed' CE badge until complete, then a teal amount due" do
       registration.update!(ce_credit_requested: true, ce_hours_requested: nil, ce_license_number: nil)
-      incomplete = card(registration, event.ce_hours_details_label)
-      expect(incomplete.theme).to eq(DomainTheme.swatch("teal"))
-      expect(incomplete.subtitle).to eq("Add your CE hours and license number")
+      both = card(registration, event.ce_hours_details_label)
+      expect(both.theme).to eq(DomainTheme.swatch("teal"))
+      expect(both.subtitle).to eq("Continuing education credit")
+      expect(both.badge).to eq("Hours & license number needed")
+      expect(both.badge_classes).to be_nil
+
+      registration.update!(ce_hours_requested: 6, ce_license_number: nil)
+      license = card(registration, event.ce_hours_details_label)
+      expect(license.subtitle).to eq("6 hours")
+      expect(license.badge).to eq("$150 · License number needed")
+      expect(license.badge_classes).to be_nil
+
+      registration.update!(ce_hours_requested: nil, ce_license_number: "LIC123")
+      expect(card(registration, event.ce_hours_details_label).badge).to eq("Hours needed")
 
       registration.update!(ce_hours_requested: 6, ce_license_number: "LIC123")
       complete = card(registration, event.ce_hours_details_label)
-      expect(complete.theme).to eq(DomainTheme.swatch("teal"))
-      expect(complete.subtitle).to eq("6 hours · $150 due")
+      expect(complete.subtitle).to eq("6 hours")
+      expect(complete.badge).to eq("$150 due")
+      expect(complete.badge_classes).to include("teal")
     end
 
-    it "shows the scholarship card only when requested" do
+    it "shows the scholarship card only when requested, without an amount chip until awarded" do
       expect(card_titles(registration)).not_to include("Scholarship")
       registration.update!(scholarship_requested: true)
-      expect(card(registration, "Scholarship").subtitle).to eq("Your scholarship request status")
+      scholarship_card = card(registration, "Scholarship")
+      expect(scholarship_card.subtitle).to eq("Your scholarship request status")
+      expect(scholarship_card.badge).to be_nil
+    end
+
+    it "flags an awarded scholarship with outstanding tasks in an amber chip" do
+      registration.update!(scholarship_requested: true)
+      scholarship = create(:scholarship, amount_cents: 25_000, tasks_completed: false)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
+      scholarship_card = card(registration, "Scholarship")
+      expect(scholarship_card.badge).to eq("$250 · Tasks outstanding")
+      expect(scholarship_card.badge_classes).to be_nil
+    end
+
+    it "shows a fuchsia amount chip once scholarship tasks are complete" do
+      registration.update!(scholarship_requested: true)
+      scholarship = create(:scholarship, amount_cents: 25_000, tasks_completed: true)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
+      scholarship_card = card(registration, "Scholarship")
+      expect(scholarship_card.badge).to eq("$250")
+      expect(scholarship_card.badge_classes).to include("fuchsia")
     end
 
     it "places payment first and FAQ last in the full ordering" do
@@ -94,7 +130,7 @@ RSpec.describe MagicTicketCallouts do
                     start_date: 3.days.ago, end_date: 2.days.ago)
       registration.update!(status: "attended", scholarship_requested: true, ce_credit_requested: true)
       expect(card_titles(registration)).to eq([
-        "Payment",
+        "Make your payment",
         "Certificate of completion",
         "Scholarship",
         event.ce_hours_details_label,
