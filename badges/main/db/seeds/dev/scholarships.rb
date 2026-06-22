@@ -183,7 +183,7 @@ scholarship_answer_sets = [
       "I've wanted formal facilitation training for years but our continuing-education budget was cut. This scholarship would change that.",
     "scholarship_contribution" => "I could personally cover roughly $150.",
     "sector" => "Mental Health",
-    "age_group" => "Mixed-age groups",
+    "age_group" => "Adults (18+)",
     "title" => "Behavioral Health Clinician"
   },
   {

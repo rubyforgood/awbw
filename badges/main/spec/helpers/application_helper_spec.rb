@@ -482,15 +482,15 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(descriptions["Mental Health"]).to be_nil
     end
 
-    it "omits the Mixed-age groups category for the primary age group field" do
+    it "offers the published AgeRange categories for the primary age group field" do
       type = create(:category_type, name: "AgeRange")
-      create(:category, :published, category_type: type, name: "3-5")
-      create(:category, :published, category_type: type, name: Category::MIXED_AGE_RANGE_NAME)
+      create(:category, :published, category_type: type, name: "Children (0-12)")
+      create(:category, :unpublished, category_type: type, name: "Retired range")
       field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_age_group")
 
       labels = helper.dynamic_form_field_options(field).map(&:first)
-      expect(labels).to include("3-5")
-      expect(labels).not_to include(Category::MIXED_AGE_RANGE_NAME)
+      expect(labels).to include("Children (0-12)")
+      expect(labels).not_to include("Retired range")
     end
   end
 end

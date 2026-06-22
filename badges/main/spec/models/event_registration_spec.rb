@@ -337,6 +337,34 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#videoconference_details_visible?" do
+    let(:user) { create(:user, :with_person) }
+
+    it "is true within a week of the start for a registrant with payment access" do
+      event = create(:event, cost_cents: 1099, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      reg = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      expect(reg.videoconference_details_visible?).to be true
+    end
+
+    it "is false more than a week before the start" do
+      event = create(:event, cost_cents: 1099, start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours)
+      reg = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      expect(reg.videoconference_details_visible?).to be false
+    end
+
+    it "is false within a week when the registrant lacks payment access" do
+      event = create(:event, cost_cents: 1099, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      reg = create(:event_registration, event: event, registrant: user.person)
+      expect(reg.videoconference_details_visible?).to be false
+    end
+
+    it "is true within a week for a free event regardless of payment" do
+      event = create(:event, cost_cents: 0, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      reg = create(:event_registration, event: event, registrant: user.person)
+      expect(reg.videoconference_details_visible?).to be true
+    end
+  end
+
   describe ".payment_status scope" do
     let(:event) { create(:event, cost_cents: 1099) }
     let(:user) { create(:user, :with_person) }
