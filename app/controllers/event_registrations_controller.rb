@@ -187,9 +187,10 @@ class EventRegistrationsController < ApplicationController
     # duplicate data), so we surface them all rather than silently picking one.
     @submitted_entries = registration_submission_entries(@event_registration)
     @form_submission = @submitted_entries.first&.fetch(:submission)
-    # The "primary" submitted org/title — the first submission that named an org
-    # (else the first submission) — drives the suggested-match and comparison logic.
-    primary = @submitted_entries.find { |entry| entry[:org_name].present? } || @submitted_entries.first
+    # The "primary" submitted org/title — the newest submission that named an org
+    # (else the newest submission) — drives the suggested-match and comparison logic,
+    # and is the same submission whose details linking applies to the org.
+    primary = primary_submission_entry(@submitted_entries)
     @submitted_org_name = primary && primary[:org_name]
     @submitted_position = primary && primary[:position]
     # Each distinct submitted org name that isn't already in the database gets its
@@ -428,25 +429,26 @@ class EventRegistrationsController < ApplicationController
       .uniq { |name| name.downcase }
   end
 
-  # The "primary" registration submission used whenever we apply what the registrant
-  # typed to a linked org: the first submission that named an org, else the first.
-  # link_organization shows this same submission, so what we apply matches the editor.
-  def primary_submission_entry(registration)
-    entries = registration_submission_entries(registration)
-    entries.find { |entry| entry[:org_name].present? } || entries.first
+  # The "primary" entry among a registrant's submission entries — the one whose
+  # details we apply to a linked org and surface in the editor: the NEWEST submission
+  # that named an org, else the newest submission. Entries come oldest-first, so we
+  # scan from the end. link_organization picks the same one, so what we apply matches
+  # the editor.
+  def primary_submission_entry(entries)
+    entries.reverse.find { |entry| entry[:org_name].present? } || entries.last
   end
 
   # The job title/position the registrant typed for their organization on the
   # registration form, from the primary submission.
   def submitted_position(registration)
-    primary_submission_entry(registration)&.dig(:position)
+    primary_submission_entry(registration_submission_entries(registration))&.dig(:position)
   end
 
   # The Organization Type and Website the registrant typed on the registration form,
   # as Organization attributes ({ agency_type:, website_url: }) — only the values the
   # registrant actually provided, so a blank answer never clobbers a curated value.
   def submitted_organization_attributes(registration)
-    entry = primary_submission_entry(registration)
+    entry = primary_submission_entry(registration_submission_entries(registration))
     return {} unless entry
 
     { agency_type: entry[:agency_type], website_url: entry[:agency_website] }

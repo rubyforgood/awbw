@@ -666,6 +666,28 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(organization.reload).to have_attributes(agency_type: "For-profit", website_url: "new.org")
         end
 
+        it "applies the newest submission's type and website when there are several" do
+          reg_form = create(:form, name: "Reg form")
+          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          type_field = create(:form_field, form: reg_form, field_identifier: "agency_type")
+          website_field = create(:form_field, form: reg_form, field_identifier: "agency_website")
+          create(:event_form, :registration, event: event, form: reg_form)
+
+          older = create(:form_submission, person: regular_user.person, form: reg_form, created_at: 2.days.ago)
+          create(:form_answer, form_submission: older, form_field: name_field, submitted_answer: "Helping Hands")
+          create(:form_answer, form_submission: older, form_field: type_field, submitted_answer: "Government agency")
+          create(:form_answer, form_submission: older, form_field: website_field, submitted_answer: "old.org")
+          newer = create(:form_submission, person: regular_user.person, form: reg_form, created_at: 1.day.ago)
+          create(:form_answer, form_submission: newer, form_field: name_field, submitted_answer: "Helping Hands")
+          create(:form_answer, form_submission: newer, form_field: type_field, submitted_answer: "For-profit")
+          create(:form_answer, form_submission: newer, form_field: website_field, submitted_answer: "new.org")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(organization.reload).to have_attributes(agency_type: "For-profit", website_url: "new.org")
+        end
+
         it "leaves a curated value untouched when the registrant left that answer blank" do
           organization.update!(agency_type: "Government agency", website_url: "curated.org")
           reg_form = create(:form, name: "Reg form")
