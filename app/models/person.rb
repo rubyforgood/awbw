@@ -228,16 +228,14 @@ class Person < ApplicationRecord
     }
   end
 
-  # Field identifiers whose "Other" free text maps onto the profile's sectors.
-  OTHER_SERVICE_AREA_IDENTIFIERS = %w[primary_service_area primary_service_area_single].freeze
   # Field identifiers whose "Other" free text maps onto the category-backed
   # profile fields shown on the edit page.
   OTHER_WORKSHOP_SETTING_IDENTIFIERS = %w[primary_age_group additional_age_group].freeze
 
-  # Free-text "Other" service areas the person typed on registration forms.
+  # Free-text "Other" sectors the person typed on registration forms.
   # They can't be Sector records, so they're surfaced beside the sector tags.
   def other_service_area_responses
-    other_form_responses(OTHER_SERVICE_AREA_IDENTIFIERS)
+    other_form_responses(FormField::SECTOR_FIELD_IDENTIFIERS)
   end
 
   # Free-text "Other" workshop settings (category-backed fields) from forms.

@@ -44,14 +44,14 @@ class FormBuilderService
     person_identifier: %w[first_name last_name primary_email confirm_email],
     person_contact_info: %w[
       primary_email_type nickname pronouns secondary_email secondary_email_type
-      mailing_street mailing_address_type mailing_city mailing_state mailing_zip
-      phone phone_type agency_name agency_position agency_street agency_city
-      agency_state agency_zip agency_type agency_website
+      mailing_street mailing_address_type mailing_city mailing_state mailing_zip mailing_country
+      phone phone_type agency_name agency_position agency_website agency_type
+      agency_street agency_city agency_state agency_zip agency_country
     ],
     person_background: %w[racial_ethnic_identity],
-    professional_info: %w[primary_service_area_single primary_service_area primary_age_group additional_age_group],
+    professional_info: %w[primary_sector_single primary_sector primary_age_group additional_age_group],
     marketing: %w[referral_source training_motivation interested_in_more],
-    scholarship: %w[scholarship_eligibility impact_description implementation_plan additional_comments],
+    scholarship: %w[scholarship_eligibility scholarship_contribution impact_description implementation_plan additional_comments],
     payment: %w[payment_method],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
@@ -65,7 +65,7 @@ class FormBuilderService
     person_background: [ "Background Information" ],
     professional_info: [ "Professional Information" ],
     marketing: [ "Marketing" ],
-    scholarship: [ "Scholarship Application" ],
+    scholarship: [ "Scholarship Application", "Your goals", "Anything else?" ],
     payment: [ "Payment Information" ],
     consent: [ "Consent" ],
     post_event_feedback: [ "Post-Event Feedback" ],
@@ -80,20 +80,21 @@ class FormBuilderService
     person_identifier: [ "First Name", "Last Name", "Email", "Confirm Email" ],
     person_contact_info: [
       "Primary Email Type", "Preferred Nickname", "Pronouns", "Secondary Email", "Secondary Email Type",
-      "Street Address", "Address Type", "City", "State / Province", "Zip / Postal Code",
-      "Phone", "Phone Type", "Organization Name", "Position / Title",
+      "Street Address", "Address Type", "City", "State / Province", "Zip / Postal Code", "Country",
+      "Phone", "Phone Type", "Organization Name", "Position / Title", "Organization Website", "Organization Type",
       "Organization Street Address", "Organization City", "Organization State / Province", "Organization Zip / Postal Code",
-      "Organization Type", "Organization Website"
+      "Organization Country"
     ],
-    person_background: [ "Racial / Ethnic Identity" ],
+    person_background: [ "How would you best describe yourself?" ],
     professional_info: [ "Primary sector", "Additional sectors", "Primary Age Group(s) Served", "Additional Age Group(s) Served" ],
     marketing: [
-      "How did you hear about this training?",
-      "What motivates you to attend this training?",
+      "How did you hear about this AWBW training?",
+      "What motivated you to sign up for AWBW's Facilitator Training?",
       "Are you interested in learning more about upcoming trainings or resources?"
     ],
     scholarship: [
-      "I / my agency cannot afford the full training cost and need a scholarship to attend.",
+      "I and/or my organization cannot afford the full training cost and need a scholarship to attend.",
+      "How much are you (and/or your organization) able to pay for this training?",
       "How will what you gain from this training directly impact the people you serve?",
       "Please describe one way in which you plan to use art workshops and how you envision it will help.",
       "Anything else you'd like to share with us?"
@@ -387,6 +388,8 @@ class FormBuilderService
                          key: "mailing_state", group: "person_contact_info", required: true, width: :third)
     position = add_field(form, position, "Zip / Postal Code", :free_form_input_one_line,
                          key: "mailing_zip", group: "person_contact_info", required: true, width: :third)
+    position = add_field(form, position, "Country", :free_form_input_one_line,
+                         key: "mailing_country", group: "person_contact_info", required: false)
 
     position = add_field(form, position, "Phone", :free_form_input_one_line,
                          key: "phone", group: "person_contact_info", required: true, width: :half)
@@ -399,6 +402,14 @@ class FormBuilderService
                          key: "agency_name", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Position / Title", :free_form_input_one_line,
                          key: "agency_position", group: "person_contact_info", required: false, width: :half)
+    position = add_field(form, position, "Organization Website", :free_form_input_one_line,
+                         key: "agency_website", group: "person_contact_info", required: false)
+    position = add_field(form, position, "Organization Type", :single_select_radio,
+                         key: "agency_type", group: "person_contact_info", required: false,
+                         options: [
+                           "501c3/nonprofit", "For-profit", "Government agency",
+                           "Other (please specify below)"
+                         ])
     position = add_field(form, position, "Organization Street Address", :free_form_input_one_line,
                          key: "agency_street", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization City", :free_form_input_one_line,
@@ -407,23 +418,26 @@ class FormBuilderService
                          key: "agency_state", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Organization Zip / Postal Code", :free_form_input_one_line,
                          key: "agency_zip", group: "person_contact_info", required: false, width: :third)
-    position = add_field(form, position, "Organization Type", :single_select_radio,
-                         key: "agency_type", group: "person_contact_info", required: false,
-                         options: [
-                           "501c3/nonprofit", "For-profit", "Government agency",
-                           "Other (please specify below)"
-                         ])
-    position = add_field(form, position, "Organization Website", :free_form_input_one_line,
-                         key: "agency_website", group: "person_contact_info", required: false)
+    position = add_field(form, position, "Organization Country", :free_form_input_one_line,
+                         key: "agency_country", group: "person_contact_info", required: false)
     position
   end
+
+  # Self-identified race/ethnicity options, mirroring the AWBW facilitator
+  # training form. Stored under the long-standing racial_ethnic_identity
+  # identifier so existing reporting keeps resolving.
+  RACIAL_ETHNIC_IDENTITY_OPTIONS = [
+    "Alaskan Native", "American Indian or Native American", "Asian",
+    "Black or African American", "Latinx", "Middle Eastern", "Multi-racial",
+    "Native Hawaiian or other Pacific Islander", "White"
+  ].freeze
 
   def build_person_background_fields(form, position)
     position = add_header(form, position, "Background Information", group: "background")
 
-    position = add_field(form, position, "Racial / Ethnic Identity", :free_form_input_one_line,
+    position = add_field(form, position, "How would you best describe yourself?", :single_select_radio,
                          key: "racial_ethnic_identity", group: "background", required: false,
-                         subtitle: "This information helps us understand the diversity of our community.")
+                         options: RACIAL_ETHNIC_IDENTITY_OPTIONS)
     position
   end
 
@@ -431,27 +445,53 @@ class FormBuilderService
     position = add_header(form, position, "Professional Information", group: "professional")
 
     position = add_field(form, position, "Primary sector", :single_select_dropdown,
-                         key: "primary_service_area_single", group: "professional", required: false,
+                         key: "primary_sector_single", group: "professional", required: false,
                          subtitle: "Select the option that best represents those you primarily intend to serve through the art workshops")
     position = add_field(form, position, "Additional sectors", :multi_select_checkbox,
-                         key: "primary_service_area", group: "professional", required: false,
+                         key: "primary_sector", group: "professional", required: false,
                          subtitle: "Select all options that represent who you intend to serve through the art workshops (check all that apply)")
-    position = add_field(form, position, "Primary Age Group(s) Served", :multi_select_checkbox,
+    position = add_field(form, position, "Primary Age Group(s) Served", :single_select_dropdown,
                          key: "primary_age_group", group: "professional", required: false,
-                         subtitle: "Select all age groups you primarily serve.")
+                         subtitle: "Select the age group you primarily intend to serve through the art workshops")
     position = add_field(form, position, "Additional Age Group(s) Served", :multi_select_checkbox,
                          key: "additional_age_group", group: "professional", required: false,
-                         subtitle: "Select all that apply. These represent the other age groups you serve.")
+                         subtitle: "Select all additional age groups you may serve through the art workshops (check all that apply)")
     position
   end
+
+  # Ways a registrant may have heard about the training. Several options reveal a
+  # free-text "please specify" box (see FormField::SPECIFY_OPTION_PLACEHOLDERS).
+  REFERRAL_SOURCE_OPTIONS = [
+    "Online Search", "Social Media", "Presentation",
+    "Work(ed) at an agency that has/had an AWBW program", "Word of Mouth",
+    "Foundation/Funder", "Email from AWBW", "Other"
+  ].freeze
+
+  # What motivated a registrant to sign up, mirroring the AWBW facilitator
+  # training form. Multi-select; the trailing "Other" reveals a free-text box.
+  TRAINING_MOTIVATION_OPTIONS = [
+    "Use art to offer accessible and effective client programming (strength-based, low-barrier, research-informed)",
+    "Deepen understanding of trauma-informed and intersectional practices",
+    "Address staff burnout through art",
+    "Support staff wellness through art",
+    "Connect with and learn from a community of art facilitators",
+    "Use art for team building and organizational culture change",
+    "Use art to support advocacy, awareness, and/or fundraising",
+    "Earn certification as an AWBW Facilitator for personal/professional development",
+    "Earn Continuing Education (CE) hours and expand knowledge about integrating art into clinical work",
+    "Other"
+  ].freeze
 
   def build_marketing_fields(form, position)
     position = add_header(form, position, "Marketing", group: "marketing")
 
-    position = add_field(form, position, "How did you hear about this training?", :free_form_input_paragraph,
-                         key: "referral_source", group: "marketing", required: false)
-    position = add_field(form, position, "What motivates you to attend this training?", :free_form_input_paragraph,
-                         key: "training_motivation", group: "marketing", required: false)
+    position = add_field(form, position, "How did you hear about this AWBW training?", :single_select_radio,
+                         key: "referral_source", group: "marketing", required: false,
+                         options: REFERRAL_SOURCE_OPTIONS)
+    position = add_field(form, position, "What motivated you to sign up for AWBW's Facilitator Training?",
+                         :multi_select_checkbox,
+                         key: "training_motivation", group: "marketing", required: false,
+                         options: TRAINING_MOTIVATION_OPTIONS)
     position = add_field(form, position, "Are you interested in learning more about upcoming trainings or resources?",
                          :single_select_radio,
                          key: "interested_in_more", group: "marketing", required: true,
@@ -463,10 +503,16 @@ class FormBuilderService
     position = add_header(form, position, "Scholarship Application", group: "scholarship")
 
     position = add_field(form, position,
-                         "I / my agency cannot afford the full training cost and need a scholarship to attend.",
-                         :multi_select_checkbox,
+                         "I and/or my organization cannot afford the full training cost and need a scholarship to attend.",
+                         :single_select_radio,
                          key: "scholarship_eligibility", group: "scholarship", required: true,
-                         options: [ "Yes" ])
+                         options: %w[Yes No])
+    position = add_field(form, position,
+                         "How much are you (and/or your organization) able to pay for this training?",
+                         :free_form_input_one_line,
+                         key: "scholarship_contribution", group: "scholarship", required: false)
+
+    position = add_header(form, position, "Your goals", group: "scholarship")
     position = add_field(form, position,
                          "How will what you gain from this training directly impact the people you serve?",
                          :free_form_input_paragraph,
@@ -477,6 +523,8 @@ class FormBuilderService
                          :free_form_input_paragraph,
                          key: "implementation_plan", group: "scholarship", required: true,
                          subtitle: "Please describe in 3-5+ sentences.")
+
+    position = add_header(form, position, "Anything else?", group: "scholarship")
     position = add_field(form, position, "Anything else you'd like to share with us?", :free_form_input_paragraph,
                          key: "additional_comments", group: "scholarship", required: false)
     position

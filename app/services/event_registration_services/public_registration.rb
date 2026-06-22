@@ -273,8 +273,7 @@ module EventRegistrationServices
     end
 
     def assign_tags(person, organization)
-      sector_ids = collect_ids_from_checkboxes("primary_service_area_single") +
-                   collect_ids_from_checkboxes("primary_service_area")
+      sector_ids = FormField::SECTOR_FIELD_IDENTIFIERS.flat_map { |id| collect_ids_from_checkboxes(id) }
       primary_age_ids = collect_ids_from_checkboxes("primary_age_group")
       additional_age_ids = collect_ids_from_checkboxes("additional_age_group")
 
