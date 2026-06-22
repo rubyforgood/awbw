@@ -36,6 +36,11 @@ RSpec.describe EventRegistration, type: :model do
       reg = create(:event_registration, status: "no_show")
       expect(reg).not_to be_active
     end
+
+    it "returns false for transferring status" do
+      reg = create(:event_registration, status: "transferring")
+      expect(reg).not_to be_active
+    end
   end
 
   describe ".active" do
@@ -43,10 +48,11 @@ RSpec.describe EventRegistration, type: :model do
       active_reg = create(:event_registration, status: "registered")
       cancelled_reg = create(:event_registration, status: "cancelled")
       no_show_reg = create(:event_registration, status: "no_show")
+      transferring_reg = create(:event_registration, status: "transferring")
 
       results = EventRegistration.active
       expect(results).to include(active_reg)
-      expect(results).not_to include(cancelled_reg, no_show_reg)
+      expect(results).not_to include(cancelled_reg, no_show_reg, transferring_reg)
     end
   end
 

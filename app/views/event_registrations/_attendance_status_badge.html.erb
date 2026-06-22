@@ -4,14 +4,16 @@
     "attended"                => "bg-green-50 text-green-700 border-green-200",
     "incomplete_attendance"   => "bg-amber-50 text-amber-700 border-amber-200",
     "cancelled"               => "bg-gray-50 text-gray-500 border-gray-200",
-    "no_show"                 => "bg-red-50 text-red-700 border-red-200"
+    "no_show"                 => "bg-red-50 text-red-700 border-red-200",
+    "transferring"            => "bg-purple-50 text-purple-700 border-purple-200"
   }
   status_icons = {
     "registered"              => "fa-clipboard-list",
     "attended"                => "fa-circle-check",
     "incomplete_attendance"   => "fa-clock",
     "cancelled"               => "fa-ban",
-    "no_show"                 => "fa-circle-xmark"
+    "no_show"                 => "fa-circle-xmark",
+    "transferring"            => "fa-right-left"
   }
   current_style = status_styles[registration.status] || "bg-gray-50 text-gray-500 border-gray-200"
   current_icon  = status_icons[registration.status] || "fa-question"

@@ -17,14 +17,16 @@
            "attended"              => "text-green-600",
            "incomplete_attendance" => "text-amber-600",
            "cancelled"             => "text-gray-500",
-           "no_show"               => "text-red-600"
+           "no_show"               => "text-red-600",
+           "transferring"          => "text-purple-600"
          } %>
       <% status_icons = {
            "registered"            => "fa-clipboard-list",
            "attended"              => "fa-circle-check",
            "incomplete_attendance" => "fa-clock",
            "cancelled"             => "fa-ban",
-           "no_show"               => "fa-circle-xmark"
+           "no_show"               => "fa-circle-xmark",
+           "transferring"          => "fa-right-left"
          } %>
       <% current_icon_color = status_icon_colors[f.object.status] || "text-gray-500" %>
       <% current_icon = status_icons[f.object.status] || "fa-question" %>

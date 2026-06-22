@@ -22,7 +22,7 @@ class EventRegistration < ApplicationRecord
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
-  INACTIVE_STATUSES = %w[ cancelled no_show ].freeze
+  INACTIVE_STATUSES = %w[ cancelled no_show transferring ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
 
   # Default price the registrant owes per requested continuing-education hour.
@@ -292,6 +292,7 @@ class EventRegistration < ApplicationRecord
     when "incomplete_attendance" then "Incomplete attendance"
     when "cancelled" then "Cancelled"
     when "no_show" then "No show"
+    when "transferring" then "Transferring"
     else status.humanize
     end
   end
