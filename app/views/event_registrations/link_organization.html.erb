@@ -77,14 +77,14 @@
       <% if @linked_organizations.any? %>
         <ul class="space-y-2 mb-4">
           <% @linked_organizations.each do |org| %>
-            <%# The whole card links to the person's affiliations section (where these
-                are managed) via a stretched link on the org name; the Unlink button is
-                lifted above the overlay with relative z-10 so it stays clickable. %>
+            <%# The whole card links to the person's edit-affiliations section (where
+                these are managed) via a stretched link on the org name; the Unlink
+                button is lifted above the overlay with relative z-10 so it stays clickable. %>
             <li class="relative flex items-start justify-between gap-3 <%= org_swatch[:bg] %> border <%= org_swatch[:border] %> rounded-lg p-3 transition hover:border-green-300 hover:shadow-sm">
               <div class="min-w-0">
-                <p class="font-medium text-gray-800"><%= link_to org.name, person_path(@person, anchor: "affiliations"),
+                <p class="font-medium text-gray-800"><%= link_to org.name, edit_person_path(@person, anchor: "affiliations"),
                             target: "_blank", rel: "noopener",
-                            title: "View #{@person.first_name.presence || @person.full_name}'s affiliations",
+                            title: "Edit #{@person.first_name.presence || @person.full_name}'s affiliations",
                             class: "after:absolute after:inset-0 hover:underline focus-visible:underline focus:outline-none",
                             data: { turbo_frame: "_top" } %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
                 <%= render "org_affiliation_pills", org: org, affiliations: (@affiliations_by_org[org.id] || []),

@@ -374,10 +374,10 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("Counselor (no dates) — inactive")
         end
 
-        it "links the linked-org card to the person's affiliations section" do
+        it "links the linked-org card to the person's edit-affiliations section" do
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("href=\"#{person_path(regular_user.person, anchor: "affiliations")}\"")
+          expect(response.body).to include("href=\"#{edit_person_path(regular_user.person, anchor: "affiliations")}\"")
         end
 
         it "shows the start date as '(since Month YYYY)' when there is no end date" do
