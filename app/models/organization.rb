@@ -60,7 +60,7 @@ class Organization < ApplicationRecord
   # See TagFilterable, Trendable, WindowsTypeFilterable
   scope :active, -> {
     status_active = joins(:organization_status).where(organization_statuses: { name: "Active" })
-    affiliation_active = where(id: Affiliation.active.select(:organization_id))
+    affiliation_active = where(id: Affiliation.active_or_pending.select(:organization_id))
     status_active.or(affiliation_active)
   }
   scope :address, ->(address) do
@@ -191,7 +191,7 @@ class Organization < ApplicationRecord
   def program_status(recipient = nil)
     facilitators = affiliations.select(&:facilitator?)
     return "New" if facilitators.empty?
-    return "Reinstate" if facilitators.none?(&:active?)
+    return "Reinstate" if facilitators.none?(&:active_or_pending?)
 
     prior = recipient ? facilitators.reject { |a| a.person_id == recipient.id } : facilitators
     prior.any? ? "Ongoing" : "New"
@@ -205,7 +205,7 @@ class Organization < ApplicationRecord
   def self.program_statuses_by_id(org_ids)
     facilitator_scope = Affiliation.facilitators.where(organization_id: org_ids)
     with_facilitators = facilitator_scope.distinct.pluck(:organization_id).to_set
-    with_active = facilitator_scope.active.distinct.pluck(:organization_id).to_set
+    with_active = facilitator_scope.active_or_pending.distinct.pluck(:organization_id).to_set
     org_ids.index_with do |id|
       next :new if with_facilitators.exclude?(id)
       with_active.include?(id) ? :ongoing : :reinstated
@@ -231,7 +231,7 @@ class Organization < ApplicationRecord
 
   def published? # needed for my_bookmarks
     return true if organization_status&.name == "Active"
-    affiliations.active.exists?
+    affiliations.active_or_pending.exists?
   end
 
   def sector_list

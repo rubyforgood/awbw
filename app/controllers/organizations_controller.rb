@@ -14,13 +14,13 @@ class OrganizationsController < ApplicationController
       ))
       filtered = base_scope.search_by_params(params).order(:name)
       @organizations_count = filtered.count
-      @active_people_count = Affiliation.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
+      @active_people_count = Affiliation.active_or_pending.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
       @organizations = filtered.paginate(page: params[:page], per_page: per_page)
       org_ids = @organizations.map(&:id)
       @affiliated_since = Affiliation.where(organization_id: org_ids)
                                             .group(:organization_id)
                                             .minimum(:start_date)
-      @active_people_counts = Affiliation.active
+      @active_people_counts = Affiliation.active_or_pending
                                                 .where(organization_id: org_ids)
                                                 .group(:organization_id)
                                                 .distinct

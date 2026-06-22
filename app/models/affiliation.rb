@@ -21,7 +21,14 @@ class Affiliation < ApplicationRecord
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)
   }
 
-  scope :active, -> { active_or_pending }
+  # Currently active: active-or-pending AND its start_date has arrived (or is
+  # unset). A future-dated affiliation (e.g. a Facilitator dated to an upcoming
+  # training's month) is therefore "pending" — counted by active_or_pending but
+  # not yet active.
+  scope :active, -> {
+    active_or_pending
+      .where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", Date.current)
+  }
 
   # Only the exact, case-sensitive title "Facilitator" counts — variants like
   # "Lead Facilitator" or "facilitator" are deliberately excluded. BINARY forces
@@ -31,9 +38,9 @@ class Affiliation < ApplicationRecord
 
   before_validation :skip_if_duplicate
   before_save :set_inactive_from_dates
-  after_save :deactivate_organization_if_no_active_people
+  after_save :sync_organization_status_from_affiliations
   after_save :sync_organization_affiliation_dates
-  after_destroy :deactivate_organization_if_no_active_people
+  after_destroy :sync_organization_status_from_affiliations
   after_destroy :sync_organization_affiliation_dates
 
   # Methods
@@ -45,11 +52,18 @@ class Affiliation < ApplicationRecord
     title.to_s.strip == "Facilitator"
   end
 
-  # Current: not flagged inactive and not past its end date. Mirrors the `active`
-  # scope so already-loaded affiliations can be filtered in Ruby without another
-  # query (e.g. on list pages that preload affiliations).
-  def active?
+  # Active-or-pending: not flagged inactive and not past its end date. A future
+  # start_date still counts (the affiliation is pending, not ended). Mirrors the
+  # `active_or_pending` scope for in-memory filtering of preloaded affiliations.
+  def active_or_pending?
     !inactive? && (end_date.nil? || end_date >= Date.current)
+  end
+
+  # Currently active: active-or-pending AND its start_date has arrived. Mirrors
+  # the `active` scope so already-loaded affiliations can be filtered in Ruby
+  # without another query (e.g. on list pages that preload affiliations).
+  def active?
+    active_or_pending? && (start_date.nil? || start_date <= Date.current)
   end
 
   def name
@@ -93,7 +107,7 @@ class Affiliation < ApplicationRecord
     affiliations = org.affiliations.where.not(id: destroyed_by_association ? id : nil)
 
     earliest_start = affiliations.minimum(:start_date)
-    has_active = affiliations.active.exists?
+    has_active = affiliations.active_or_pending.exists?
 
     updates = {}
     updates[:start_date] = earliest_start if org.start_date != earliest_start
@@ -107,22 +121,31 @@ class Affiliation < ApplicationRecord
     org.update_columns(updates) if updates.any?
   end
 
-  def deactivate_organization_if_no_active_people
-    return if organization.affiliations.active.exists?
+  # Keep the organization's Active/Inactive status in sync with whether it has any
+  # active-or-pending affiliations (an incoming facilitator counts). Symmetric:
+  # activates an Inactive org that gains people and deactivates one that loses
+  # them. Only ever toggles between Active and Inactive — manual states (Pending,
+  # Reinstate, Suspended, Unknown) are left untouched so they stick.
+  def sync_organization_status_from_affiliations
+    has_people = organization.affiliations.active_or_pending.exists?
+    current_name = organization.organization_status&.name
+    target_name = has_people ? "Active" : "Inactive"
 
-    inactive_status = OrganizationStatus.find_by(name: "Inactive")
-    return unless inactive_status
-    return if organization.organization_status_id == inactive_status.id
+    return if current_name == target_name
+    return unless [ "Active", "Inactive", nil ].include?(current_name)
 
-    organization.update_column(:organization_status_id, inactive_status.id)
+    target_status = OrganizationStatus.find_by(name: target_name)
+    return unless target_status
+
+    organization.update_column(:organization_status_id, target_status.id)
 
     Ahoy::Tracker.new(user: Current.user).track(
       "autochange.organization",
       resource_type: "Organization",
       resource_id: organization.id,
       resource_title: organization.name,
-      change: "status_set_to_inactive",
-      reason: "no_active_affiliations"
+      change: has_people ? "status_set_to_active" : "status_set_to_inactive",
+      reason: has_people ? "active_affiliation_present" : "no_active_affiliations"
     )
   end
 end

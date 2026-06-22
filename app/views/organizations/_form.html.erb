@@ -254,7 +254,7 @@
 
     <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 mb-4 shadow-sm">
       <% org_earliest_aff = f.object.persisted? ? f.object.affiliations.minimum(:start_date) : nil %>
-      <% org_aff_ended = f.object.persisted? && f.object.affiliations.any? && !f.object.affiliations.active.exists? %>
+      <% org_aff_ended = f.object.persisted? && f.object.affiliations.any? && !f.object.affiliations.active_or_pending.exists? %>
       <% org_latest_end = f.object.persisted? ? f.object.affiliations.maximum(:end_date) : nil %>
       <% org_end_date = org_aff_ended ? org_latest_end : f.object.end_date %>
       <% org_decorated = f.object.decorate %>

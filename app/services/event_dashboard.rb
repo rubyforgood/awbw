@@ -307,7 +307,7 @@ class EventDashboard
         .joins(:event_registration)
         .where(event_registration_id: active_registration_ids)
         .pluck(:organization_id, "event_registrations.registrant_id")
-      affiliated = Affiliation.active
+      affiliated = Affiliation.active_or_pending
         .where(person_id: registrant_ids)
         .pluck(:organization_id, :person_id)
       (snapshot + affiliated).each_with_object(Hash.new { |hash, key| hash[key] = Set.new }) do |(organization_id, person_id), map|
@@ -663,7 +663,7 @@ class EventDashboard
   # This event's active registrants' active affiliations, grouped by organization
   # id — the reference points for the program-status breakdown.
   def registrant_affiliations_by_org
-    @registrant_affiliations_by_org ||= Affiliation.active
+    @registrant_affiliations_by_org ||= Affiliation.active_or_pending
       .where(person_id: registrant_ids)
       .includes(:organization)
       .group_by(&:organization_id)
@@ -779,7 +779,7 @@ class EventDashboard
       snapshot_ids = EventRegistrationOrganization
         .where(event_registration_id: active_registration_ids)
         .pluck(:organization_id)
-      affiliated_ids = Affiliation.active
+      affiliated_ids = Affiliation.active_or_pending
         .where(person_id: registrant_ids)
         .pluck(:organization_id)
       (snapshot_ids + affiliated_ids).compact.uniq

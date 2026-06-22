@@ -336,6 +336,12 @@ RSpec.describe Organization, "scholarship index helpers" do
     it "is New when the org has no facilitator affiliations" do
       expect(org.program_status(recipient)).to eq("New")
     end
+
+    it "is Ongoing (not Reinstate) when the org's only facilitator is pending (future-dated)" do
+      create(:affiliation, person: create(:person), organization: org, title: "Facilitator", start_date: 1.month.from_now)
+
+      expect(org.reload.program_status(recipient)).to eq("Ongoing")
+    end
   end
 
   describe ".program_statuses_by_id" do
@@ -362,6 +368,13 @@ RSpec.describe Organization, "scholarship index helpers" do
       create(:affiliation, organization: org, person: create(:person), title: "Member")
 
       expect(Organization.program_statuses_by_id([ org.id ])).to eq(org.id => :new)
+    end
+
+    it "treats a pending (future-dated) facilitator as ongoing, not reinstated" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now)
+
+      expect(Organization.program_statuses_by_id([ org.id ])).to eq(org.id => :ongoing)
     end
   end
 end

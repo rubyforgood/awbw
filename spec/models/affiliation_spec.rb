@@ -94,6 +94,79 @@ RSpec.describe Affiliation do
         described_class.active.joins(:organization).to_a
       }.not_to raise_error
     end
+
+    it 'excludes a future-dated (pending) affiliation' do
+      pending_aff = create(:affiliation, inactive: false, start_date: 1.month.from_now)
+      expect(described_class.active).not_to include(pending_aff)
+    end
+  end
+
+  describe '.active_or_pending' do
+    it 'includes a future-dated affiliation that .active excludes' do
+      pending_aff = create(:affiliation, inactive: false, start_date: 1.month.from_now)
+
+      expect(described_class.active_or_pending).to include(pending_aff)
+      expect(described_class.active).not_to include(pending_aff)
+    end
+
+    it 'excludes inactive and ended affiliations like .active does' do
+      inactive_aff = create(:affiliation, inactive: true)
+      ended_aff = create(:affiliation, inactive: false, end_date: 1.day.ago)
+
+      expect(described_class.active_or_pending).not_to include(inactive_aff, ended_aff)
+    end
+  end
+
+  describe '#active_or_pending?' do
+    it 'is true for a future start date (where #active? is false)' do
+      affiliation = build(:affiliation, inactive: false, start_date: 1.month.from_now)
+
+      expect(affiliation.active_or_pending?).to be true
+      expect(affiliation.active?).to be false
+    end
+
+    it 'is false once ended' do
+      expect(build(:affiliation, inactive: false, end_date: 1.day.ago).active_or_pending?).to be false
+    end
+  end
+
+  describe 'organization status sync' do
+    let!(:active_status) { create(:organization_status, name: "Active") }
+    let!(:inactive_status) { create(:organization_status, name: "Inactive") }
+
+    it 'reactivates an Inactive organization when it gains an active affiliation' do
+      org = create(:organization, organization_status: inactive_status)
+
+      create(:affiliation, organization: org, inactive: false, end_date: nil)
+
+      expect(org.reload.organization_status).to eq(active_status)
+    end
+
+    it 'activates on a pending (future-dated) affiliation too' do
+      org = create(:organization, organization_status: inactive_status)
+
+      create(:affiliation, organization: org, inactive: false, start_date: 1.month.from_now)
+
+      expect(org.reload.organization_status).to eq(active_status)
+    end
+
+    it 'deactivates an Active organization when its last affiliation ends' do
+      org = create(:organization, organization_status: active_status)
+      affiliation = create(:affiliation, organization: org, inactive: false, end_date: nil)
+
+      affiliation.update!(end_date: 1.day.ago)
+
+      expect(org.reload.organization_status).to eq(inactive_status)
+    end
+
+    it 'leaves a manually set status (e.g. Suspended) untouched' do
+      suspended = create(:organization_status, name: "Suspended")
+      org = create(:organization, organization_status: suspended)
+
+      create(:affiliation, organization: org, inactive: false, end_date: nil)
+
+      expect(org.reload.organization_status).to eq(suspended)
+    end
   end
 
   describe '#facilitator?' do

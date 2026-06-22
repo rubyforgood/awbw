@@ -398,7 +398,7 @@ class EventRegistration < ApplicationRecord
   private
 
   def snapshot_registrant_organizations
-    registrant.affiliations.active.includes(:organization).find_each do |aff|
+    registrant.affiliations.active_or_pending.includes(:organization).find_each do |aff|
       event_registration_organizations.create(organization: aff.organization)
     end
   end

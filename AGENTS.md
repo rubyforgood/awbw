@@ -202,6 +202,14 @@ end
 
 ### Affiliations
 
+**Facilitator affiliations are bedrock**: an organization's standing with AWBW is *derived from its affiliations*, not a manually maintained field. The exact, case-sensitive title `"Facilitator"` (`Affiliation::FACILITATOR_TITLE`, matched by the `facilitators` scope / `facilitator?` predicate) is what counts; variants like "Lead Facilitator" don't.
+
+**Two activeness scopes** (mirrored by `active?` / `active_or_pending?` for preloaded records):
+- `active_or_pending` — not inactive, not past its end date. **Includes future-dated** affiliations (a Facilitator dated to an upcoming training's month is "pending"). Use for forward-looking questions: org program-status (New/Ongoing/Reinstate), whether an org is active/published, the event dashboard's org list, end-date/"ended" displays, and de-dupe.
+- `active` — `active_or_pending` **and** the start_date has arrived. Use for true present-tense state: a person's current-affiliations summary, "active facilitator" names, and profile searchability.
+
+`Affiliation#sync_organization_status_from_affiliations` (an `after_save`/`after_destroy` callback) keeps the org's `organization_status` in sync with whether it has any `active_or_pending` affiliations — symmetric (activates on gain, deactivates on loss) but only ever toggles between Active and Inactive, leaving manual states (Pending/Reinstate/Suspended/Unknown) alone. Tracked via Ahoy `autochange.organization`.
+
 - `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation
 
 ### Notifications

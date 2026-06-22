@@ -62,7 +62,7 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   def affiliation_end_date
-    return nil if affiliations.active.exists?
+    return nil if affiliations.active_or_pending.exists?
     affiliations.maximum(:end_date)
   end
 
@@ -72,7 +72,7 @@ class OrganizationDecorator < ApplicationDecorator
 
   def facilitation_end_date
     facilitator_affiliations = affiliations.facilitators
-    return nil if facilitator_affiliations.active.exists?
+    return nil if facilitator_affiliations.active_or_pending.exists?
     facilitator_affiliations.maximum(:end_date)
   end
 
