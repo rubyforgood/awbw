@@ -441,15 +441,33 @@ RSpec.describe FormField do
         expect(field.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
       end
 
-      it "offers the same AgeRange categories for the additional age group field as the primary one" do
+      it "offers Mixed-age groups for the additional age group field but not the primary one" do
         type = create(:category_type, name: "AgeRange")
         concrete = create(:category, :published, category_type: type, name: "3-5")
         mixed = create(:category, :published, category_type: type, name: Category::MIXED_AGE_RANGE_NAME)
-        field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
+        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_age_group")
+        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
 
-        expect(field.dynamic_categories).to eq([ concrete ])
-        expect(field.answer_inclusion_error([ concrete.id.to_s ])).to be_nil
-        expect(field.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
+        # The catch-all "Mixed-age groups" mirrors the "Other" sector: dropped from
+        # the single-select primary, kept on the multi-select additional.
+        expect(primary.dynamic_categories).to eq([ concrete ])
+        expect(additional.dynamic_categories).to contain_exactly(concrete, mixed)
+        expect(additional.answer_inclusion_error([ mixed.id.to_s ])).to be_nil
+        expect(primary.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
+      end
+
+      it "accepts a folded \"Other: <text>\" value for the additional sectors field" do
+        create(:sector, :published, name: "Other")
+        mental_health = create(:sector, :published, name: "Mental Health")
+        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
+        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector_single")
+
+        # The "Other" Sector renders a free-text box on the additional checkboxes,
+        # which submits the folded "Other: <text>" (or a bare "Other"); both pass.
+        expect(additional.answer_inclusion_error([ mental_health.id.to_s, "Other: equine therapy" ])).to be_nil
+        expect(additional.answer_inclusion_error([ "Other" ])).to be_nil
+        # The primary dropdown drops "Other" from its options, so it stays invalid there.
+        expect(primary.answer_inclusion_error([ "Other: equine therapy" ])).to eq("has an invalid selection")
       end
     end
   end
