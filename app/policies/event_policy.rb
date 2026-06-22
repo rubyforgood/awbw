@@ -126,6 +126,7 @@ class EventPolicy < ApplicationPolicy
                   :autoshow_pre_date_text,
                   :autoshow_registration_close,
                   :public_registration_enabled,
+                  :ce_credits_eligible,
                   :signed_in_one_click_enabled,
                   :autoshow_registration_details,
                   :hint_dates,

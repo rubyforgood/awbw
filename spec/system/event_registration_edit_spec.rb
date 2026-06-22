@@ -234,6 +234,47 @@ RSpec.describe "Event registration edit page", type: :system do
     end
   end
 
+  describe "conditional Organizations / scholarship / CE boxes" do
+    it "shows scholarship and CE boxes for a paid, CE-eligible event with organizations at half width" do
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      expect(page).to have_css("h2", text: "Scholarship")
+      expect(page).to have_css("h2", text: "CE credits")
+      expect(page).to have_css("section.sm\\:col-span-2", text: "Registration organizations")
+    end
+
+    it "hides the scholarship box for a free event and widens organizations" do
+      event.update!(cost_cents: 0)
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      expect(page).to have_no_css("h2", text: "Scholarship")
+      expect(page).to have_css("h2", text: "CE credits")
+      expect(page).to have_css("section.sm\\:col-span-3", text: "Registration organizations")
+    end
+
+    it "hides the CE box when the event is not CE-eligible and widens organizations" do
+      event.update!(ce_credits_eligible: false)
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      expect(page).to have_css("h2", text: "Scholarship")
+      expect(page).to have_no_css("h2", text: "CE credits")
+      expect(page).to have_css("section.sm\\:col-span-3", text: "Registration organizations")
+    end
+
+    it "fills the full row with organizations for a free, non-CE-eligible event" do
+      event.update!(cost_cents: 0, ce_credits_eligible: false)
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      expect(page).to have_no_css("h2", text: "Scholarship")
+      expect(page).to have_no_css("h2", text: "CE credits")
+      expect(page).to have_css("section.sm\\:col-span-4", text: "Registration organizations")
+    end
+  end
+
   describe "delete button" do
     it "deletes the registration" do
       sign_in(admin)

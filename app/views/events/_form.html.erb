@@ -163,6 +163,13 @@
             <p class="text-red-500 text-sm mt-1">Cost
               <%= f.object.errors[:cost].join(", ") %></p>
           <% end %>
+
+          <div class="mt-3">
+            <%= f.input :ce_credits_eligible,
+                    as: :boolean,
+                    label: "Eligible for continuing education credits",
+                    hint: "When unchecked, the CE credits box is hidden on registrations." %>
+          </div>
         </div>
 
         <div>

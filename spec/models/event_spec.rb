@@ -8,6 +8,12 @@ RSpec.describe Event, type: :model do
     it { should validate_numericality_of(:cost_cents).is_greater_than_or_equal_to(0).allow_nil }
   end
 
+  describe "ce_credits_eligible" do
+    it "defaults to true" do
+      expect(build(:event).ce_credits_eligible).to be true
+    end
+  end
+
   describe "destroying with form submissions" do
     it "is blocked and keeps the submission when the event has one" do
       event = create(:event)

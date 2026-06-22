@@ -133,12 +133,21 @@
         </div>
       </div>
 
-      <%# ---- Organizations, scholarship, and continuing education — one row ---- %>
+      <%# ---- Organizations, scholarship, and continuing education — one row.
+          Scholarship only applies to paid events; CE credits only to events the
+          organizer flagged as eligible. Organizations fills whatever the hidden
+          boxes leave behind: it starts at two of four columns and absorbs one
+          more column for each box that's hidden. ---- %>
+      <% paid_event = f.object.event.cost_cents.to_i.positive? %>
+      <% show_scholarship = paid_event %>
+      <% show_ce = f.object.event.ce_credits_eligible? %>
+      <% org_span = 2 + (show_scholarship ? 0 : 1) + (show_ce ? 0 : 1) %>
+      <% org_span_class = { 2 => "sm:col-span-2", 3 => "sm:col-span-3", 4 => "sm:col-span-4" }.fetch(org_span) %>
       <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-4">
-        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:col-span-2">
+        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm <%= org_span_class %>">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>">
               <i class="fa-solid fa-building"></i>
@@ -208,12 +217,15 @@
           </div>
         </section>
 
-        <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
+        <% if show_scholarship %>
+          <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
+        <% end %>
 
         <%# ---- CE credits — toggled "Requested" flag, plus the registrant's CE
             details (license number + requested hours) and what they owe at the
             default hourly rate, recomputed live by the ce-credit-requested
             controller. The details collapse when CE isn't requested. ---- %>
+        <% if show_ce %>
         <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
@@ -274,6 +286,7 @@
             </div>
           </div>
         </section>
+        <% end %>
       </div>
 
       <% if f.object.payment_unresolved? %>
