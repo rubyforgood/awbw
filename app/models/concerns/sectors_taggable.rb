@@ -12,9 +12,18 @@ module SectorsTaggable
   # Sectorable items ordered for display: the primary sector first, then the
   # rest alphabetically by sector name. Sorts the in-memory association rather
   # than issuing a query, so it stays correct when a form re-renders its
-  # unsaved items after a failed save.
+  # unsaved items after a failed save. Used by profile, recipients, and dashboard
+  # views, where the primary should always lead.
   def sectorable_items_primary_first
     sectorable_items.sort_by { |item| [ item.is_primary? ? 0 : 1, item.sector&.name.to_s.downcase ] }
+  end
+
+  # Sectorable items in stable order for the edit form: alphabetically by sector
+  # name (sectors have no position column, so name is the position-equivalent).
+  # Unlike sectorable_items_primary_first, the primary is NOT floated to the top,
+  # so starring a sector on the form doesn't reshuffle the chips.
+  def sectorable_items_ordered
+    sectorable_items.sort_by { |item| item.sector&.name.to_s.downcase }
   end
 
   # Additively tag sectors as primary/additional without disturbing other
