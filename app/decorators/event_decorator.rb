@@ -81,7 +81,9 @@ class EventDecorator < ApplicationDecorator
     # If both: URL in location field, physical location in description
     # If only URL: URL in location field
     # If only location: location in location field
-    event_description = object.rhino_description.to_plain_text
+    # Prefer the admin-authored short description; fall back to a flattened
+    # version of the rich show-page description when it's blank.
+    event_description = object.short_description.presence || object.rhino_description.to_plain_text
 
     if has_url && has_location
       cal_location = object.videoconference_url

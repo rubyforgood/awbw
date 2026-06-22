@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_21_213947) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_22_154549) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -543,6 +543,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_213947) do
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
     t.datetime "registration_close_date", precision: nil
+    t.text "short_description"
     t.boolean "signed_in_one_click_enabled", default: false, null: false
     t.datetime "start_date", precision: nil
     t.string "title"

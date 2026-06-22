@@ -176,28 +176,13 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <%= f.input :videoconference_url,
-                      label: "Videoconference URL",
-                      as: :url,
-                      input_html: {
-                        placeholder: "https://…",
-                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                      } %>
-          <%= f.input :videoconference_label,
-                      label: "Videoconference label",
-                      input_html: {
-                        placeholder: "Virtual event",
-                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                      } %>
-          <%= f.input :videoconference_passcode,
-                      label: "Videoconference passcode",
-                      hint: "Shown alongside the join link. The meeting ID/code is read from the URL automatically.",
-                      input_html: {
-                        placeholder: "e.g. 123456",
-                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                      } %>
-        </div>
+        <%= f.input :videoconference_url,
+                    label: "Videoconference URL",
+                    as: :url,
+                    input_html: {
+                      placeholder: "https://…",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    } %>
 
         <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
           <%= f.input :location_id,
@@ -212,6 +197,32 @@
                       } %>
         </div>
       </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <%= f.input :videoconference_label,
+                    label: "Videoconference label",
+                    input_html: {
+                      placeholder: "Virtual event",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    } %>
+        <%= f.input :videoconference_passcode,
+                    label: "Videoconference passcode",
+                    hint: "Shown alongside the join link. The meeting ID/code is read from the URL automatically.",
+                    input_html: {
+                      placeholder: "e.g. 123456",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    } %>
+      </div>
+
+      <%= f.input :short_description,
+                  label: "Short description",
+                  as: :text,
+                  hint: "Plain-text blurb for the \"Add to calendar\" links. Calendars don't render HTML — leave blank to fall back to the page description.",
+                  input_html: {
+                    rows: 3,
+                    placeholder: "Short description for calendar entries…",
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                  } %>
 
     </div>
 
