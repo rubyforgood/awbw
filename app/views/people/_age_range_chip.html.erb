@@ -1,9 +1,9 @@
 <%# A persisted age-range chip in the person form's age picker — the read-only
     form a saved sector chip takes (name span, not a select). Mirrors the sector
-    chip: the name, a primary star, and a remove ✖. Unlike sectors, a person can
-    serve several primary age groups, so the star is multi-select and there is no
-    leader/crown flag. Writes person[category_ids][] (membership) and, when
-    starred, person[primary_age_category_ids][]. New (unsaved) chips use
+    chip: the name, a single-select primary star (lighting one clears the others
+    and floats it to front), and a remove ✖. No leader/crown flag. Writes
+    person[category_ids][] (membership) and, when starred,
+    person[primary_age_category_ids][]. New (unsaved) chips use
     people/_age_range_new_field instead, which offers a select. %>
 <% is_primary = local_assigns.fetch(:is_primary, false) %>
 <div class="inline-flex items-center gap-2 rounded-md border
@@ -19,6 +19,7 @@
            value="<%= category_id %>"
            class="peer sr-only"
            <%= "checked" if is_primary %>
+           data-age-range-picker-target="primaryToggle"
            data-action="age-range-picker#togglePrimary">
     <i class="fa-solid fa-star text-base text-gray-300 peer-checked:text-amber-400 transition-colors" aria-hidden="true"></i>
     <span class="sr-only">Primary</span>

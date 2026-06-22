@@ -277,7 +277,7 @@ end
 
 - `address_select` — Compact numbered picker linking an affiliation to an org address
 - `affiliation_dates` — Recalculate affiliation date ranges
-- `age_range_picker` — Sectors-style chip editor for a person's age ranges (add/remove + multi-primary star, no leader)
+- `age_range_picker` — Sectors-style chip editor for a person's age ranges (add/remove + single-primary star that floats to front, no leader)
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state

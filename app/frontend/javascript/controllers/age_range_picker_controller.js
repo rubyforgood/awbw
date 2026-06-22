@@ -2,18 +2,18 @@ import { Controller } from "@hotwired/stimulus"
 
 // Drives the age-range chip editor on the person form. Mirrors the sector chip
 // UI: the "Add age range" button inserts a new chip with a select (like cocoon's
-// "Add Sector"), persisted chips show the name as a span. A person can serve
-// several primary age groups, so the star toggles are independent — unlike
-// primary_sector, which is single-select — and there is no leader/crown flag.
-// New chips are cloned from a <template> so their markup stays defined once in
-// the ERB partial. Each chip writes person[category_ids][] and, when starred,
-// person[primary_age_category_ids][].
+// "Add Sector"), persisted chips show the name as a span, and the primary star is
+// single-select — lighting one clears the others and floats it to the front, the
+// same as primary_sector — with no leader/crown flag. New chips are cloned from a
+// <template> so their markup stays defined once in the ERB partial. Each chip
+// writes person[category_ids][] and, when starred, person[primary_age_category_ids][].
 export default class extends Controller {
   static targets = ["addButton", "template", "chip", "chipSelect", "primaryToggle"]
   static values = { total: Number }
 
   connect() {
     this.refreshOptions()
+    this.style()
   }
 
   add() {
@@ -39,16 +39,34 @@ export default class extends Controller {
     this.refreshOptions()
   }
 
-  // Darken the chip while it is a primary age group, matching the sector chip's
-  // starred styling.
+  // Single-select primary: lighting one star clears the others and floats that
+  // chip to the front, mirroring primary_sector#selectPrimary.
   togglePrimary(event) {
-    const chip = event.target.closest("[data-age-range-picker-target='chip']")
-    if (!chip) return
-    const primary = event.target.checked
-    chip.classList.toggle("bg-amber-50", primary)
-    chip.classList.toggle("border-amber-300", primary)
-    chip.classList.toggle("bg-white", !primary)
-    chip.classList.toggle("border-gray-300", !primary)
+    if (event.target.checked) {
+      this.primaryToggleTargets.forEach((toggle) => {
+        if (toggle !== event.target) toggle.checked = false
+      })
+      this.moveToFront(event.target)
+    }
+    this.style()
+  }
+
+  moveToFront(toggle) {
+    const chip = toggle.closest("[data-age-range-picker-target='chip']")
+    if (chip) this.element.prepend(chip)
+  }
+
+  // Darken whichever chip is primary, matching the sector chip's starred styling.
+  style() {
+    this.primaryToggleTargets.forEach((toggle) => {
+      const chip = toggle.closest("[data-age-range-picker-target='chip']")
+      if (!chip) return
+      const primary = toggle.checked
+      chip.classList.toggle("bg-amber-50", primary)
+      chip.classList.toggle("border-amber-300", primary)
+      chip.classList.toggle("bg-white", !primary)
+      chip.classList.toggle("border-gray-300", !primary)
+    })
   }
 
   // Keep each picker from offering a range already chosen by another chip, and
