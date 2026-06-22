@@ -9,9 +9,6 @@ application.register("affiliation-dates", AffiliationDatesController)
 import AffiliationFacilitatorWarningController from "./affiliation_facilitator_warning_controller"
 application.register("affiliation-facilitator-warning", AffiliationFacilitatorWarningController)
 
-import AgeRangePickerController from "./age_range_picker_controller"
-application.register("age-range-picker", AgeRangePickerController)
-
 import AllocationRefController from "./allocation_ref_controller"
 application.register("allocation-ref", AllocationRefController)
 
@@ -162,8 +159,8 @@ application.register("searchable-select", SearchableSelectController)
 import SectionFilterController from "./section_filter_controller"
 application.register("section-filter", SectionFilterController)
 
-import PrimarySectorController from "./primary_sector_controller"
-application.register("primary-sector", PrimarySectorController)
+import PrimaryTagController from "./primary_tag_controller"
+application.register("primary-tag", PrimaryTagController)
 
 import FormSectionToggleController from "./form_section_toggle_controller"
 application.register("form-section-toggle", FormSectionToggleController)

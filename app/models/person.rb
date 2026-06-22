@@ -67,6 +67,15 @@ class Person < ApplicationRecord
   accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
+  # Age ranges edit through cocoon nested fields like sectors. A scoped view of
+  # categorizable_items (AgeRange categories only) so the form's add/remove and
+  # primary toggle round-trip as nested attributes — the is_primary flag splits
+  # primary vs additional, no separate primary_age_category_ids param needed.
+  has_many :age_range_categorizable_items,
+           -> { joins(category: :category_type).where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE }) },
+           class_name: "CategorizableItem", as: :categorizable, inverse_of: :categorizable
+  accepts_nested_attributes_for :age_range_categorizable_items, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs["category_id"].blank? }
   accepts_nested_attributes_for :user, update_only: true
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
     reject_if: proc { |attrs| attrs["organization_id"].blank? }

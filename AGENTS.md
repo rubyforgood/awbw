@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (74) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -277,7 +277,6 @@ end
 
 - `address_select` — Compact numbered picker linking an affiliation to an org address
 - `affiliation_dates` — Recalculate affiliation date ranges
-- `age_range_picker` — Sectors-style chip editor for a person's age ranges (add/remove + single-primary star, no reorder, no leader)
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state
@@ -301,6 +300,7 @@ end
 - `paginated_fields` — Client-side pagination of nested fields
 - `password_toggle` — Show/hide password fields
 - `prefetch_lazy` — Prefetch lazy-loaded content
+- `primary_tag` — Shared single-primary star for the sector and age-range cocoon chip editors (clears other stars, highlights via configurable classes, no reorder)
 - `print_options` — Print options toggle for analytics
 - `reminder_preview` — Live-preview a custom message in the reminder email as the admin types it on the bulk-reminder page
 - `remote_select` — AJAX-powered select dropdown

@@ -1,0 +1,37 @@
+<%# A cocoon nested field for one age-range tagging on the person form — the
+    age-range counterpart of shared/_sectorable_item_fields. A persisted item
+    shows its name; a new one (added via "Add age range") shows a select. The
+    single-select primary star is driven by the shared primary-tag controller.
+    There is no leader/crown flag for age ranges. %>
+<% collection ||= @age_ranges_collection || Category.age_ranges.published.order(:position, :name).pluck(:name, :id) %>
+<% is_primary = f.object&.is_primary? %>
+<div class="nested-fields inline-flex items-center gap-2
+            rounded-md border <%= is_primary ? "border-amber-300 bg-amber-50" : "border-gray-300 bg-white" %>
+            text-gray-700 px-3 py-1 text-sm font-medium transition"
+     data-primary-tag-target="chip">
+  <% if f.object&.category_id.present? %>
+    <%= f.hidden_field :category_id %>
+    <span><%= f.object.category&.name %></span>
+  <% else %>
+    <%= f.input :category_id,
+                as: :select,
+                label: false,
+                collection: collection,
+                selected: f.object&.category_id,
+                include_blank: "Select age range…",
+                wrapper: false,
+                input_html: {
+                  class: "bg-transparent border-none focus:ring-0 text-sm text-gray-500 cursor-pointer py-0"
+                } %>
+  <% end %>
+  <label class="cursor-pointer leading-none" title="Mark as a primary age group served">
+    <%= f.check_box :is_primary,
+                    class: "peer sr-only",
+                    data: { primary_tag_target: "primary", action: "primary-tag#selectPrimary" } %>
+    <i class="fa-solid fa-star text-base text-gray-300 peer-checked:text-amber-400 transition-colors" aria-hidden="true"></i>
+    <span class="sr-only">Primary</span>
+  </label>
+  <%= link_to_remove_association "✖",
+                                 f,
+                                 class: "ml-0.5 text-gray-400 hover:text-gray-600 font-bold text-xs transition" %>
+</div>

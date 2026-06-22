@@ -17,22 +17,26 @@ RSpec.describe "Person age ranges", type: :request do
 
   before { sign_in admin }
 
-  def update_person(category_ids:, primary_age_category_ids: [])
+  # Age ranges are saved as age_range_categorizable_items nested attributes (the
+  # cocoon picker), not category_ids. category_ids only carries workshop settings,
+  # of which there are none here.
+  def update_person(age_items:)
     patch person_path(person), params: {
       person: {
         first_name: person.first_name,
-        category_ids: category_ids,
-        primary_age_category_ids: primary_age_category_ids,
-        managed_category_type_ids: [ age_type.id ]
+        category_ids: [ "" ],
+        managed_category_type_ids: [],
+        age_range_categorizable_items_attributes: age_items
       }
     }
   end
 
   describe "edit form" do
-    it "renders the age-range chip picker with every published age range" do
+    it "renders the cocoon age-range editor with every published age range" do
       get edit_person_path(person)
 
-      expect(response.body).to include("age-range-picker")
+      expect(response.body).to include("primary-tag")
+      expect(response.body).to include("Add age range")
       expect(response.body).to include("Children (0-12)")
       expect(response.body).to include("Adults (18+)")
     end
@@ -51,12 +55,26 @@ RSpec.describe "Person age ranges", type: :request do
   end
 
   describe "saving age ranges" do
-    it "tags the selected age ranges and marks the chosen ones primary" do
-      update_person(category_ids: [ children.id, adults.id ], primary_age_category_ids: [ children.id ])
+    it "tags the selected age ranges and marks the chosen one primary" do
+      update_person(age_items: [
+        { category_id: children.id, is_primary: "1" },
+        { category_id: adults.id, is_primary: "0" }
+      ])
 
       person.reload
       expect(person.primary_age_groups).to contain_exactly(children)
       expect(person.additional_age_groups).to contain_exactly(adults)
+    end
+
+    it "removes an age range via _destroy" do
+      person.categories << children
+      item = person.categorizable_items.find_by(category: children)
+
+      update_person(age_items: [ { id: item.id, category_id: children.id, _destroy: "1" } ])
+
+      person.reload
+      expect(person.primary_age_groups).to be_empty
+      expect(person.additional_age_groups).to be_empty
     end
   end
 
@@ -70,9 +88,7 @@ RSpec.describe "Person age ranges", type: :request do
     it "does not delete or edit the person's non-AgeRange category connections" do
       original_item = person.categorizable_items.find_by(category: clay)
 
-      # The form only ever submits age-range ids in category_ids — Clay is not on
-      # the form. Saving must keep it anyway.
-      update_person(category_ids: [ children.id ], primary_age_category_ids: [ children.id ])
+      update_person(age_items: [ { category_id: children.id, is_primary: "1" } ])
 
       person.reload
       expect(person.categories).to include(clay)
@@ -84,15 +100,6 @@ RSpec.describe "Person age ranges", type: :request do
 
       # And the age ranges were still applied alongside the preserved tagging.
       expect(person.primary_age_groups).to contain_exactly(children)
-    end
-
-    it "clears age ranges without touching the non-AgeRange tagging" do
-      update_person(category_ids: [ "" ])
-
-      person.reload
-      expect(person.primary_age_groups).to be_empty
-      expect(person.additional_age_groups).to be_empty
-      expect(person.categories).to include(clay)
     end
   end
 end

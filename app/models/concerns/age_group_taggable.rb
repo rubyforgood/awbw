@@ -27,12 +27,23 @@ module AgeGroupTaggable
     primary_age_groups.map(&:id)
   end
 
+  # AgeRange categorizable_items (primary and additional together) in category
+  # position order, for the cocoon chip editor on the person form. Filters the
+  # in-memory association like primary_age_groups does, and is NOT primary-first —
+  # starring a chip shouldn't reshuffle the list. Display surfaces still lead with
+  # the primary via primary_age_groups / additional_age_groups.
+  def age_range_items_ordered
+    categorizable_items
+      .select { |item| age_range_item?(item) }
+      .sort_by { |item| [ item.category&.position || 0, item.category&.name.to_s ] }
+  end
+
   # Flip is_primary on the AgeRange categorizable_items to match the given set.
   # Runs after category membership has been assigned (the edit-form flow), so it
   # only updates existing items rather than creating them.
   def apply_primary_age_groups!(primary_category_ids)
     primary = sanitize_age_ids(primary_category_ids).to_set
-    age_range_categorizable_items.includes(:category).find_each do |item|
+    age_range_items_relation.includes(:category).find_each do |item|
       desired = primary.include?(item.category_id)
       item.update!(is_primary: desired) if item.is_primary? != desired
     end
@@ -64,7 +75,9 @@ module AgeGroupTaggable
     item.category&.category_type&.name == AGE_RANGE_CATEGORY_TYPE
   end
 
-  def age_range_categorizable_items
+  # Query relation of this record's AgeRange categorizable_items. Named to avoid
+  # colliding with Person's age_range_categorizable_items nested association.
+  def age_range_items_relation
     categorizable_items
       .joins(category: :category_type)
       .where(category_types: { name: AGE_RANGE_CATEGORY_TYPE })
