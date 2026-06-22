@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~80 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~54 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~55 files |
 | `app/jobs/` | SolidQueue background jobs | 4 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
@@ -215,6 +215,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
+- `StoryImporter` — Imports stories from a WordPress Posts Export CSV (idea per row, connected published Story for published rows)
 - `DisplayImagePresenter` — Image display logic
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 - `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
@@ -482,7 +483,7 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (8 files):
+Located in `lib/tasks/` (9 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
@@ -490,4 +491,5 @@ Located in `lib/tasks/` (8 files):
 - `convert_age_ranges.rake` — Age range data conversion
 - `legacy_user_permissions_to_comments.rake` — Migrate legacy user permissions into comments
 - `migrate_sectors.rake` — Sector data migration
+- `import_stories.rake` — Imports stories from a WordPress Posts Export CSV (`StoryImporter`)
 - `migrate_workshop_logs.rake` — Workshop log migration
