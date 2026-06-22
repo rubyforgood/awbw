@@ -109,7 +109,7 @@ class EventPolicy < ApplicationPolicy
                   :videoconference_url,
                   :videoconference_label,
                   :videoconference_passcode,
-                  :calendar_description,
+                  :short_description,
                   :rhino_header,
                   :rhino_description,
                   :event_details,

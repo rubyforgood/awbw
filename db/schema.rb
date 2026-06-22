@@ -517,7 +517,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_22_154549) do
     t.boolean "autoshow_title", default: true, null: false
     t.boolean "autoshow_videoconference_label", default: true, null: false
     t.boolean "autoshow_videoconference_link", default: true, null: false
-    t.text "calendar_description"
     t.text "ce_hours_details"
     t.string "ce_hours_details_label", default: "CE hours", null: false
     t.integer "cost_cents"
@@ -544,6 +543,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_22_154549) do
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
     t.datetime "registration_close_date", precision: nil
+    t.text "short_description"
     t.boolean "signed_in_one_click_enabled", default: false, null: false
     t.datetime "start_date", precision: nil
     t.string "title"

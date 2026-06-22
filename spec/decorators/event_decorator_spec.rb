@@ -132,7 +132,7 @@ RSpec.describe EventDecorator do
   end
 
   describe "#calendar_links" do
-    it "falls back to rhino_description plain text when calendar_description is blank" do
+    it "falls back to rhino_description plain text when short_description is blank" do
       event = create(:event)
       event.update!(rhino_description: "<div>Join us for healing through art</div>")
       decorated = event.decorate
@@ -159,8 +159,8 @@ RSpec.describe EventDecorator do
       expect(yahoo["href"]).to include("desc=#{desc_encoded}")
     end
 
-    it "uses calendar_description over rhino_description when present" do
-      event = create(:event, calendar_description: "Bring a friend!")
+    it "uses short_description over rhino_description when present" do
+      event = create(:event, short_description: "Bring a friend!")
       event.update!(rhino_description: "<div>Join us for healing through art</div>")
       decorated = event.decorate
 
