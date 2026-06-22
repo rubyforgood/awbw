@@ -202,7 +202,7 @@ end
 
 ### Affiliations
 
-- `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, skipping the facilitator one only when the person already has an active affiliation titled exactly "Facilitator" with that org (so a job title like "Lead Facilitator" still gets its own Facilitator affiliation)
+- `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation
 
 ### Notifications
 

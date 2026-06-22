@@ -48,6 +48,15 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     expect(person.affiliations.facilitators.where(organization: organization).count).to eq(1)
   end
 
+  it "skips the facilitator affiliation when a pending (future-dated) one already exists for the org" do
+    create(:affiliation, person: person, organization: organization,
+                         title: "Facilitator", start_date: 2.months.from_now.to_date)
+
+    described_class.call(person: person, organization: organization, job_title: nil)
+
+    expect(person.affiliations.facilitators.where(organization: organization).count).to eq(1)
+  end
+
   it "adds a facilitator affiliation when the existing one for the org has ended" do
     create(:affiliation, person: person, organization: organization,
                          title: "Facilitator", end_date: 1.month.ago.to_date)
@@ -55,6 +64,15 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     described_class.call(person: person, organization: organization, job_title: nil)
 
     expect(person.affiliations.facilitators.where(organization: organization).count).to eq(2)
+  end
+
+  it "does not create a duplicate affiliation with the same title, org, and dates" do
+    described_class.call(person: person, organization: organization,
+                         job_title: "Counselor", training_date: Date.new(2026, 9, 17))
+    described_class.call(person: person, organization: organization,
+                         job_title: "Counselor", training_date: Date.new(2026, 9, 17))
+
+    expect(titles).to contain_exactly("Counselor", "Facilitator")
   end
 
   it "does not duplicate the job affiliation on a repeat call" do

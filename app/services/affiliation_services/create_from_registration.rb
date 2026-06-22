@@ -7,11 +7,14 @@ module AffiliationServices
   #   2. a standing "facilitator affiliation" titled "Facilitator".
   #
   # The facilitator affiliation is skipped only when the person already has an
-  # active affiliation titled exactly "Facilitator" with the organization. Because
-  # the job affiliation is created first, a job title of exactly "Facilitator"
-  # satisfies that check, so we don't add a redundant duplicate. A facilitator-ish
-  # job title that isn't exactly "Facilitator" (e.g. "Lead Facilitator") still gets
-  # its own standing "Facilitator" affiliation alongside it.
+  # active-or-pending affiliation titled exactly "Facilitator" with the
+  # organization (a current one, or one dated to a future training that hasn't
+  # started yet). An ended facilitator affiliation does NOT block a new one — a
+  # returning facilitator gets a second affiliation with the new start date.
+  # Because the job affiliation is created first, a job title of exactly
+  # "Facilitator" satisfies that check, so we don't add a redundant duplicate. A
+  # facilitator-ish job title that isn't exactly "Facilitator" (e.g. "Lead
+  # Facilitator") still gets its own standing "Facilitator" affiliation alongside it.
   #
   # Start dates: the facilitator affiliation begins on the first day of the
   # training's month (that's when they become a facilitator). The job affiliation
@@ -31,21 +34,23 @@ module AffiliationServices
     end
 
     def call
-      create_job_affiliation
-      create_facilitator_affiliation
+      ActiveRecord::Base.transaction do
+        create_job_affiliation
+        create_facilitator_affiliation
+      end
     end
 
     private
 
     def create_job_affiliation
       return unless @job_title
-      return if active_affiliation_with_title?(@job_title)
+      return if active_or_pending_affiliation_with_title?(@job_title)
 
       create_affiliation(@job_title, start_date: nil)
     end
 
     def create_facilitator_affiliation
-      return if active_facilitator_affiliation?
+      return if active_or_pending_facilitator_affiliation?
 
       create_affiliation(Affiliation::FACILITATOR_TITLE, start_date: facilitator_start_date)
     end
@@ -58,15 +63,17 @@ module AffiliationServices
       (@training_date || Date.current).to_date.beginning_of_month
     end
 
-    def active_affiliation_with_title?(title)
-      @person.affiliations.active.where(organization: @organization, title: title).exists?
+    def active_or_pending_affiliation_with_title?(title)
+      @person.affiliations.active_or_pending.where(organization: @organization, title: title).exists?
     end
 
     # Uses the model's canonical `facilitators` scope (exactly "Facilitator",
     # trimmed and case-sensitive) so this agrees with #facilitator? and the rest of
-    # the app on what counts as a facilitator affiliation.
-    def active_facilitator_affiliation?
-      @person.affiliations.active.facilitators.where(organization: @organization).exists?
+    # the app on what counts as a facilitator affiliation. Counts pending
+    # (future-dated) facilitator affiliations too, so registering for a second
+    # upcoming training doesn't mint a duplicate.
+    def active_or_pending_facilitator_affiliation?
+      @person.affiliations.active_or_pending.facilitators.where(organization: @organization).exists?
     end
   end
 end
