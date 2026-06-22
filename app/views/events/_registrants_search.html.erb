@@ -57,6 +57,20 @@
     </div>
   <% end %>
 
+  <% if @offers_ce %>
+    <div class="w-full md:w-48">
+      <%= label_tag :ce_status, "CE status", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :ce_status,
+                     options_for_select(
+                       [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
+                       params[:ce_status]
+                     ),
+                     include_blank: "Any CE status",
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+              focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+    </div>
+  <% end %>
+
   <% if @dashboard.states.any? %>
     <div class="w-full md:w-48">
       <%= label_tag :state, "State", class: "block text-sm font-medium text-gray-700 mb-1" %>

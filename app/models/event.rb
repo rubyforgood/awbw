@@ -107,6 +107,13 @@ class Event < ApplicationRecord
     forms.find_by(event_forms: { role: "registration" })
   end
 
+  # True when at least one registrant for this event requested CE credit. Drives
+  # the CE status column and filter on the registrants index — there's nothing
+  # to show or filter when no one has asked for CE.
+  def any_ce_credit_requests?
+    event_registrations.exists?(ce_credit_requested: true)
+  end
+
   # Whether a signed-in user should register in one click rather than being
   # routed to the registration form. True when no registration form is linked,
   # or when an admin has explicitly opted members out of the form. A linked form

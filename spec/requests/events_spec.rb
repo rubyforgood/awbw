@@ -838,6 +838,73 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /events/:id/registrants with the CE status filter" do
+    let(:event) { create(:event, cost_cents: 1_000) }
+    let(:complete_person) { create(:person, first_name: "Complete", last_name: "Person") }
+    let(:missing_person) { create(:person, first_name: "Missing", last_name: "Person") }
+    let(:none_person) { create(:person, first_name: "Noce", last_name: "Person") }
+
+    let!(:complete_reg) do
+      reg = create(:event_registration, event: event, registrant: complete_person,
+                                         ce_credit_requested: true, ce_license_number: "ABC123", ce_hours_requested: 3)
+      create(:allocation, source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000),
+                          allocatable: reg, amount: 1_000)
+      reg
+    end
+    let!(:missing_reg) { create(:event_registration, event: event, registrant: missing_person, ce_credit_requested: true) }
+    let!(:none_reg) { create(:event_registration, event: event, registrant: none_person, ce_credit_requested: false) }
+
+    before { sign_in admin }
+
+    it "shows the CE status column and filter once an event has CE requests" do
+      get registrants_event_path(event)
+      expect(response.body).to include("CE status")
+    end
+
+    it "filters to all CE requests" do
+      get registrants_event_path(event, ce_status: "requested")
+      expect(response.body).to include("Complete Person")
+      expect(response.body).to include("Missing Person")
+      expect(response.body).not_to include("Noce Person")
+    end
+
+    it "filters to CE requests missing a license number" do
+      get registrants_event_path(event, ce_status: "license_not_provided")
+      expect(response.body).to include("Missing Person")
+      expect(response.body).not_to include("Complete Person")
+    end
+
+    it "filters to CE requests missing hours" do
+      get registrants_event_path(event, ce_status: "hours_not_provided")
+      expect(response.body).to include("Missing Person")
+      expect(response.body).not_to include("Complete Person")
+    end
+
+    it "filters to paid CE requests" do
+      get registrants_event_path(event, ce_status: "paid")
+      expect(response.body).to include("Complete Person")
+      expect(response.body).not_to include("Missing Person")
+    end
+
+    it "does not crash on an invalid ce_status" do
+      get registrants_event_path(event, ce_status: "bogus")
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "hides the CE column when no one requested CE credit" do
+      plain_event = create(:event)
+      create(:event_registration, event: plain_event)
+      get registrants_event_path(plain_event)
+      expect(response.body).not_to include("CE status")
+    end
+
+    it "includes a CE status column in the CSV export" do
+      get registrants_event_path(event, format: :csv)
+      expect(response.body).to include("CE status")
+      expect(response.body).to include("Incomplete")
+    end
+  end
+
   describe "GET /events/:id/registrants with state and county filters" do
     let(:ca_person) { create(:person, first_name: "Cali", last_name: "Person") }
     let(:ny_person) { create(:person, first_name: "York", last_name: "Person") }

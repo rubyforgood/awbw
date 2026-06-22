@@ -147,6 +147,19 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  # Mirrors ReminderRecipientFilter#matches_ce_status?. The "license"/"hours"
+  # sub-statuses only make sense for someone who requested CE credit, so they're
+  # gated on it. "paid" has no CE-specific payment record yet, so it falls back
+  # to the registrant being paid in full.
+  scope :ce_status, ->(value) {
+    case value
+    when "requested" then where(ce_credit_requested: true)
+    when "license_not_provided" then where(ce_credit_requested: true).where(ce_license_number: [ nil, "" ])
+    when "hours_not_provided" then where(ce_credit_requested: true).where("COALESCE(ce_hours_requested, 0) <= 0")
+    when "paid" then where(ce_credit_requested: true).merge(paid_in_full)
+    else all
+    end
+  }
   scope :keyword, ->(term) {
     return none if term.blank?
 
@@ -260,6 +273,17 @@ class EventRegistration < ApplicationRecord
   # True when the registrant has supplied a CE license number.
   def ce_license_provided?
     ce_license_number.present?
+  end
+
+  # A short label summarizing the registrant's CE credit standing, matching the
+  # ce_status filter buckets. Nil when CE credit was not requested, so callers
+  # can render a placeholder. "Incomplete" takes precedence over "Paid" because
+  # a missing license/hours is the actionable state regardless of payment.
+  def ce_status_label
+    return unless ce_credit_requested?
+    return "Incomplete" if !ce_license_provided? || ce_hours_requested.to_i <= 0
+    return "Paid" if paid_in_full?
+    "Requested"
   end
 
   # What the registrant owes for their requested CE hours, in cents, at the

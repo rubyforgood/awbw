@@ -174,6 +174,45 @@ RSpec.describe EventRegistration, type: :model do
         expect(EventRegistration.payment_status("bogus")).to include(paid_reg, unpaid_reg)
       end
     end
+
+    describe ".ce_status" do
+      let!(:complete_ce) do
+        create(:event_registration, event: event, ce_credit_requested: true, ce_license_number: "ABC123", ce_hours_requested: 3).tap do |r|
+          create(:allocation, source: create(:payment, amount_cents: event.cost_cents, amount_cents_remaining: event.cost_cents),
+                              allocatable: r, amount: event.cost_cents)
+        end
+      end
+      let!(:missing_ce) { create(:event_registration, event: event, ce_credit_requested: true) }
+      let!(:no_ce) { create(:event_registration, event: event, ce_credit_requested: false) }
+
+      it "maps 'requested' to anyone who asked for CE credit" do
+        results = EventRegistration.ce_status("requested")
+        expect(results).to include(complete_ce, missing_ce)
+        expect(results).not_to include(no_ce)
+      end
+
+      it "maps 'license_not_provided' to CE requests missing a license number" do
+        results = EventRegistration.ce_status("license_not_provided")
+        expect(results).to include(missing_ce)
+        expect(results).not_to include(complete_ce, no_ce)
+      end
+
+      it "maps 'hours_not_provided' to CE requests missing hours" do
+        results = EventRegistration.ce_status("hours_not_provided")
+        expect(results).to include(missing_ce)
+        expect(results).not_to include(complete_ce, no_ce)
+      end
+
+      it "maps 'paid' to CE requests that are paid in full" do
+        results = EventRegistration.ce_status("paid")
+        expect(results).to include(complete_ce)
+        expect(results).not_to include(missing_ce, no_ce)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.ce_status("bogus")).to include(complete_ce, missing_ce, no_ce)
+      end
+    end
   end
 
   describe "#scholarship?" do

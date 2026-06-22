@@ -87,6 +87,7 @@ class EventsController < ApplicationController
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
     scope = scope.scholarship_status(params[:scholarship]) if params[:scholarship].present?
+    scope = scope.ce_status(params[:ce_status]) if params[:ce_status].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
     scope = scope.registrant_state(params[:state]) if params[:state].present?
     scope = scope.registrant_county(params[:county]) if params[:county].present?
@@ -105,6 +106,7 @@ class EventsController < ApplicationController
 
     @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
     @dashboard = EventDashboard.new(@event)
+    @offers_ce = @event.any_ce_credit_requests?
 
     emails = @event_registrations.map { |r| r.registrant.preferred_email&.downcase }.compact
     @duplicate_emails = emails.tally.select { |_, count| count > 1 }.keys.to_set
@@ -535,15 +537,17 @@ class EventsController < ApplicationController
   def event_registrations_csv_string
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
+    include_ce = @event.any_ce_credit_requests?
     headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Intends to pay", "Payment total" ]
+    headers << "CE status" if include_ce
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
-        csv_out << event_registration_csv_row(registration, cost_required)
+        csv_out << event_registration_csv_row(registration, cost_required, include_ce)
       end
     end
   end
 
-  def event_registration_csv_row(registration, cost_required)
+  def event_registration_csv_row(registration, cost_required, include_ce = false)
     person = registration.registrant
     orgs = person.affiliations
       .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
@@ -552,7 +556,7 @@ class EventsController < ApplicationController
     total_cents = registration.allocations_sum
     payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
     payment_status = cost_required ? registration.payment_status_label : ""
-    [
+    row = [
       person.first_name,
       person.last_name,
       person.preferred_email.presence || "",
@@ -564,6 +568,8 @@ class EventsController < ApplicationController
       registration.intends_to_pay? ? "Yes" : "No",
       payment_total
     ]
+    row << registration.ce_status_label.to_s if include_ce
+    row
   end
 
   def onboarding_csv_string
