@@ -51,6 +51,46 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "matching an existing registrant by name" do
+    it "matches a person stored under a nickname when the registrant types their legal first name" do
+      existing = create(:person, first_name: "Bob", legal_first_name: "Robert",
+                                 last_name: "Smith", email: "bob@example.com")
+
+      params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com")
+
+      expect {
+        described_class.call(event: event, form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "matches a person stored under a legal name when the registrant types their nickname" do
+      existing = create(:person, first_name: "Robert", legal_first_name: nil,
+                                 last_name: "Smith", email: "bob@example.com")
+
+      params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com").merge(
+        field_id("nickname") => "Bob"
+      )
+
+      expect {
+        described_class.call(event: event, form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "still creates a new person when the email matches but it is a different name" do
+      create(:person, first_name: "Bob", last_name: "Smith", email: "shared@example.com")
+
+      params = base_form_params(first_name: "Dana", last_name: "Jones", email: "shared@example.com")
+
+      expect {
+        described_class.call(event: event, form: form, form_params: params)
+      }.to change(Person, :count).by(1)
+    end
+  end
+
   describe "an answer longer than its database column" do
     # `city` (like the other mapped person/address columns) is a varchar(255).
     # A longer answer must surface as a form error, not an ActiveRecord::ValueTooLong
