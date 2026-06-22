@@ -30,8 +30,10 @@ RSpec.describe "EventRegistrations", type: :request do
 
         get event_registrations_path(organization_id: organization.id)
         expect(response).to have_http_status(:success)
-        expect(response.body).to include(matching_reg.registrant.first_name)
-        expect(response.body).not_to include(existing_registration.registrant.first_name)
+        # Assert on each row's dom_id rather than the registrant's (Faker-random,
+        # possibly 2-char) first name, which can collide with unrelated page markup.
+        expect(response.body).to include(ActionView::RecordIdentifier.dom_id(matching_reg))
+        expect(response.body).not_to include(ActionView::RecordIdentifier.dom_id(existing_registration))
       end
 
       it "exports CSV with headers and data only (no captions)" do
