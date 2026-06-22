@@ -3,6 +3,10 @@
 # dev events that share them, event registrations for named scenarios, and form submissions.
 # Named people are looked up when present (e.g. after `rake db:seed:people_profiles`).
 
+# Faker is installed but not auto-required on staging, where the app runs as
+# RAILS_ENV=production and Bundler.require only loads the production group.
+require "faker"
+
 puts "Creating standalone registration forms…"
 unless Form.standalone.exists?(name: "Training Registration Form")
   # Sections are built in this order (not the canonical SECTIONS order) so the

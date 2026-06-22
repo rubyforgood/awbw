@@ -2,6 +2,10 @@
 # or as part of `rake db:seed:dev`. Creates Person records for the seed users, a set of
 # search-disambiguation test people, their affiliations, and addresses/sectors.
 
+# Faker is installed but not auto-required on staging, where the app runs as
+# RAILS_ENV=production and Bundler.require only loads the production group.
+require "faker"
+
 puts "Creating Persons and Affiliations for seed users…"
 [
   User.find_by(email: "umberto.user@example.com"),
