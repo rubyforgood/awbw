@@ -3,6 +3,10 @@
 # CommunityNews, StoryIdeas, WorkshopIdeas, WorkshopVariationIdeas (and links some variations
 # to them), and Stories. Related records (organizations, workshops, people) are looked up when present.
 
+# Faker is installed but not auto-required on staging, where the app runs as
+# RAILS_ENV=production and Bundler.require only loads the production group.
+require "faker"
+
 puts "Creating CommunityNews…"
 [
   "Workshop Spotlight: Building Confidence Through Art",
