@@ -183,6 +183,7 @@ end
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
 - `DisplayImagePresenter` — Image display logic
+- `RelatedComments` — Gathers all comments related to a commentable (type-aware: registrant/user/active orgs, etc.) for the comments overview page
 
 ### Event Registrations
 

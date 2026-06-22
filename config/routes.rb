@@ -166,6 +166,10 @@ Rails.application.routes.draw do
     post :revert, on: :member
   end
 
+  # Global preview of every comment and the record it's about. Per-record,
+  # context-aware overviews live under each commentable's nested :comments.
+  resources :comments, only: [ :index ]
+
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
   resources :affiliations

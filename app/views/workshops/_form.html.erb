@@ -478,7 +478,10 @@
     <% if f.object.persisted? %>
       <% if allowed_to?(:manage?, Comment) %>
         <div class="admin-only bg-blue-100 form-group p-3 space-y-4 mt-6 rounded-md" id="comments-section">
-          <div class="font-semibold text-gray-700 mb-2">Comments</div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-gray-700">Comments</span>
+            <%= render "comments/view_all_link", commentable: f.object %>
+          </div>
 
           <div class="admin-only bg-blue-100 rounded-lg border border-gray-200 p-4 mb-4 shadow-sm"
               data-controller="paginated-fields comment-edit-toggle"
