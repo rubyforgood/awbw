@@ -7,8 +7,9 @@
 <%= render "shared/errors", resource: f.object if f.object.errors.any? %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          data-controller="scholarship-preview"
-          data-scholarship-preview-event-cost-value="<%= @allocatable.respond_to?(:event) ? @allocatable.event.cost_cents.to_i : 0 %>"
-          data-scholarship-preview-other-allocated-value="<%= @allocatable.respond_to?(:event) ? (@allocatable.allocations_sum.to_i - f.object.allocation&.amount.to_i) : 0 %>">
+         data-scholarship-preview-event-cost-value="<%= @allocatable.respond_to?(:event) ? @allocatable.event.cost_cents.to_i : 0 %>"
+         data-scholarship-preview-other-allocated-value="<%= @allocatable.respond_to?(:event) ? (@allocatable.allocations_sum.to_i - f.object.allocation&.amount.to_i) : 0 %>"
+         data-scholarship-preview-grant-funded-value="<%= grant_funded %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
       <i class="fa-solid fa-graduation-cap"></i>
@@ -76,6 +77,37 @@
       </div>
     <% end %>
 
+    <%# Grant-funded scholarships have no event to owe against, so mirror the event
+        stat grid with the award split across "Allocated" (counts once tasks are
+        completed) and "Amount due" (what's still owed the recipient).
+        scholarship_preview_controller keeps these in sync as the amount and the
+        tasks toggle change. %>
+    <% if grant_funded %>
+      <% amount_cents = f.object.amount_cents.to_i %>
+      <% allocated_cents = f.object.tasks_completed? ? amount_cents : 0 %>
+      <% due_cents = [ amount_cents - allocated_cents, 0 ].max %>
+      <% paid = due_cents <= 0 %>
+      <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Scholarship amount</dt>
+          <dd data-scholarship-preview-target="grantAmount" class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(amount_cents) %></dd>
+        </div>
+        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Allocated</dt>
+          <dd data-scholarship-preview-target="grantAllocated" class="mt-1 text-sm font-semibold <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> tabular-nums"><%= dollars_from_cents(allocated_cents) %></dd>
+        </div>
+        <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</dt>
+          <dd data-scholarship-preview-target="grantDue" class="mt-1">
+            <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-medium <%= paid ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700" %>">
+              <i class="fas <%= paid ? "fa-circle-check" : "fa-circle-exclamation" %>"></i>
+              <%= paid ? "Paid" : "#{dollars_from_cents(due_cents)} due" %>
+            </span>
+          </dd>
+        </div>
+      </dl>
+    <% end %>
+
     <%# With a registration, the amount + tasks-completed toggle live in the stat grid
         above. Without one (grant-funded or standalone) they live here instead. %>
     <% unless @allocatable.respond_to?(:event) %>
@@ -103,7 +135,7 @@
         <div>
           <%= f.label :tasks_completed, "Tasks completed", class: "block text-sm font-medium text-gray-700 mb-1" %>
           <label class="flex h-[2.625rem] items-center gap-2.5 cursor-pointer">
-            <%= f.check_box :tasks_completed, class: "sr-only peer" %>
+            <%= f.check_box :tasks_completed, class: "sr-only peer", data: { "scholarship-preview-target": "completed", action: "scholarship-preview#update" } %>
             <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
             <span class="text-sm text-gray-400 peer-checked:hidden">Not yet</span>
             <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Completed</span>

@@ -378,6 +378,22 @@ RSpec.describe "/scholarships (grant-funded flow)", type: :request do
     end
   end
 
+  describe "GET /scholarships/:id/edit (grant-funded)" do
+    it "shows allocated and amount-due cards reflecting the pending scholarship amount" do
+      scholarship = create(:scholarship, grant:, recipient:, amount_cents: 10_000, tasks_completed: false)
+
+      get edit_scholarship_path(scholarship, return_to: "grant_show")
+
+      expect(response).to be_successful
+      expect(response.body).to include("Scholarship amount")
+      expect(response.body).to include("Allocated")
+      expect(response.body).to include("Amount due")
+      expect(response.body).to include("scholarship-preview-grant-funded-value=\"true\"")
+      # Tasks not yet completed: nothing allocated, the full $100 is due.
+      expect(response.body).to include("$100 due")
+    end
+  end
+
   describe "grant pages list associated scholarships" do
     it "shows the scholarship on the grant show page" do
       create(:scholarship, grant:, recipient:, amount_cents: 10_000)

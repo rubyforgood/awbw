@@ -3,9 +3,16 @@ import { Controller } from "@hotwired/stimulus"
 // Connects to data-controller="scholarship-preview"
 // Live-previews the "Still owed" stat and the scholarship-amount allocation
 // as the user edits the amount — before saving.
+//
+// Grant-funded scholarships have no event/registration to allocate against, so
+// instead the pending award is split live across "Allocated" (counts once the
+// recipient's tasks are completed) and "Amount due" (what's still owed them).
 export default class extends Controller {
-  static targets = ["amount", "owed", "amountBox", "allocationStrip", "allocatedHint"]
-  static values = { eventCost: Number, otherAllocated: Number }
+  static targets = [
+    "amount", "owed", "amountBox", "allocationStrip", "allocatedHint",
+    "completed", "grantAmount", "grantAllocated", "grantDue"
+  ]
+  static values = { eventCost: Number, otherAllocated: Number, grantFunded: Boolean }
 
   connect() {
     this.update()
@@ -17,6 +24,7 @@ export default class extends Controller {
 
     this.renderOwed(allocatedCents)
     this.renderAllocation(allocatedCents)
+    this.renderGrantSplit(allocatedCents)
   }
 
   renderOwed(allocatedCents) {
@@ -50,6 +58,32 @@ export default class extends Controller {
         const amount = this.formatDollars(allocatedCents)
         this.allocatedHintTarget.innerHTML = `<span class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-100 px-2 py-0.5 text-[0.65rem] font-medium text-fuchsia-700"><i class="fa-solid fa-circle-check text-[0.55rem]"></i>${amount} allocated to registration</span>`
       }
+    }
+  }
+
+  // Grant-funded only: the award counts as allocated once tasks are completed;
+  // whatever isn't allocated is still due to the recipient.
+  renderGrantSplit(amountCents) {
+    if (!this.grantFundedValue) return
+
+    const completed = this.hasCompletedTarget && this.completedTarget.checked
+    const allocatedCents = completed ? amountCents : 0
+    const dueCents = Math.max(amountCents - allocatedCents, 0)
+
+    if (this.hasGrantAmountTarget) {
+      this.grantAmountTarget.textContent = this.formatDollars(amountCents)
+    }
+
+    if (this.hasGrantAllocatedTarget) {
+      this.grantAllocatedTarget.textContent = this.formatDollars(allocatedCents)
+    }
+
+    if (this.hasGrantDueTarget) {
+      const paid = dueCents <= 0
+      const cls = paid ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700"
+      const icon = paid ? "fa-circle-check" : "fa-circle-exclamation"
+      const label = paid ? "Paid" : `${this.formatDollars(dueCents)} due`
+      this.grantDueTarget.innerHTML = `<span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-medium ${cls}"><i class="fas ${icon}"></i>${label}</span>`
     }
   }
 
