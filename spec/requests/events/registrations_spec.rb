@@ -277,8 +277,13 @@ RSpec.describe "Events::Registrations", type: :request do
   end
 
   describe "GET /registration/:slug/videoconference" do
-    let(:event) { create(:event, videoconference_url: "https://awbw.zoom.us/j/88285411273", videoconference_label: "Zoom", videoconference_passcode: "secret123") }
-    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+    let(:event) do
+      create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours,
+                     videoconference_url: "https://awbw.zoom.us/j/88285411273",
+                     videoconference_label: "Zoom", videoconference_passcode: "secret123")
+    end
+    # Within a week and intends to pay → the connection details are visible.
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person, intends_to_pay: true) }
 
     it "shows the join link and add-to-calendar options" do
       get registration_videoconference_path(registration.slug)
@@ -293,6 +298,22 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("882 8541 1273")
       expect(response.body).to include("Passcode")
       expect(response.body).to include("secret123")
+    end
+
+    it "withholds the link and credentials more than a week before the event" do
+      event.update!(start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours)
+      get registration_videoconference_path(registration.slug)
+      expect(response.body).not_to include("88285411273")
+      expect(response.body).not_to include("secret123")
+      expect(response.body).to include("about a week before the event")
+    end
+
+    it "withholds the link and credentials until the registrant has payment access" do
+      registration.update!(intends_to_pay: false)
+      get registration_videoconference_path(registration.slug)
+      expect(response.body).not_to include("88285411273")
+      expect(response.body).not_to include("secret123")
+      expect(response.body).to include("payment is on file")
     end
   end
 

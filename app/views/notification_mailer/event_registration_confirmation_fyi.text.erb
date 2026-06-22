@@ -23,13 +23,10 @@ Event date
   <%= @event.location.name %>
 <% end %>
 
-<% if @event.videoconference_url.present? %>
-  Videoconference URL
-  <%= @event.videoconference_url %>
-<% vc_room = @event.decorate.videoconference_room %>
-<% if vc_room %>  <%= vc_room[:label] %>: <%= vc_room[:value] %>
-<% end %><% if @event.videoconference_passcode.present? %>  Passcode: <%= @event.videoconference_passcode %>
-<% end %><% end %>
+<% if event_platform_label(@event).present? %>
+  Videoconference
+  <%= event_platform_label(@event) %>
+<% end %>
 
 <% if @event.labelled_cost.present? %>
   Cost
