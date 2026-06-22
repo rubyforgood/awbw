@@ -129,14 +129,14 @@
   <% (@managed_category_type_ids || []).each do |type_id| %>
     <%= hidden_field_tag "person[managed_category_type_ids][]", type_id %>
   <% end %>
-  <div class="flex flex-wrap gap-4 items-start">
+  <div class="flex flex-wrap gap-4 items-stretch">
     <!-- Sectors -->
-    <div class="form-group space-y-4 flex-1 min-w-[20rem]">
+    <div class="form-group flex flex-col flex-1 min-w-[20rem]">
       <div class="font-semibold text-gray-700 mb-2">
         Sectors
       </div>
-      <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm
-                  flex flex-wrap items-center gap-2"
+      <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm
+                  flex flex-wrap items-center content-start gap-2 flex-1"
            data-controller="primary-sector">
         <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
         <%= f.simple_fields_for :sectorable_items, sectors_owner.sectorable_items_primary_first do |sfi| %>
@@ -158,13 +158,14 @@
 
     <!-- Age ranges -->
     <% if @age_ranges_collection.present? %>
-      <div class="form-group space-y-4 flex-1 min-w-[20rem]">
+      <div class="form-group flex flex-col flex-1 min-w-[20rem]">
         <div class="font-semibold text-gray-700 mb-2">
           Age ranges
         </div>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm
-                    flex flex-wrap items-center gap-2"
-             data-controller="age-range-picker">
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm
+                    flex flex-wrap items-center content-start gap-2 flex-1"
+             data-controller="age-range-picker"
+             data-age-range-picker-total-value="<%= @age_ranges_collection.size %>">
           <%# Always submit empty values so removing every chip clears the
               membership and primary taggings. %>
           <%= hidden_field_tag "person[category_ids][]", "" %>
@@ -177,16 +178,13 @@
             <%= render "people/age_range_chip", category_id: category.id, category_name: category.name, is_primary: false %>
           <% end %>
 
-          <select data-age-range-picker-target="select"
+          <%# Mirrors "Add Sector": a button that inserts a chip with a picker. %>
+          <button type="button"
                   data-action="age-range-picker#add"
-                  class="rounded-md border border-gray-300 bg-white text-sm text-gray-600 px-3 py-1.5 cursor-pointer focus:ring-0">
-            <option value="">➕ Add age range</option>
-            <% @age_ranges_collection.each do |category| %>
-              <option value="<%= category.id %>"><%= category.name %></option>
-            <% end %>
-          </select>
+                  data-age-range-picker-target="addButton"
+                  class="btn btn-secondary-outline">➕ Add age range</button>
 
-          <template data-age-range-picker-target="template"><%= render "people/age_range_chip", category_id: "__ID__", category_name: "__NAME__", is_primary: false %></template>
+          <template data-age-range-picker-target="template"><%= render "people/age_range_new_field" %></template>
         </div>
       </div>
     <% end %>

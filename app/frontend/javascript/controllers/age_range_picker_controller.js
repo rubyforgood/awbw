@@ -1,34 +1,42 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Drives the age-range chip editor on the person form. Mirrors the sector chip
-// UI (add/remove + a primary star) but a person can serve several primary age
-// groups, so the star toggles are independent — unlike primary_sector, which is
-// single-select — and there is no leader/crown flag. New chips are cloned from a
-// <template> so their markup stays defined once in the ERB partial. Each chip
-// writes person[category_ids][] and, when starred, person[primary_age_category_ids][].
+// UI: the "Add age range" button inserts a new chip with a select (like cocoon's
+// "Add Sector"), persisted chips show the name as a span. A person can serve
+// several primary age groups, so the star toggles are independent — unlike
+// primary_sector, which is single-select — and there is no leader/crown flag.
+// New chips are cloned from a <template> so their markup stays defined once in
+// the ERB partial. Each chip writes person[category_ids][] and, when starred,
+// person[primary_age_category_ids][].
 export default class extends Controller {
-  static targets = ["select", "template", "chip"]
+  static targets = ["addButton", "template", "chip", "chipSelect", "primaryToggle"]
+  static values = { total: Number }
 
   connect() {
-    this.refreshSelect()
+    this.refreshOptions()
   }
 
-  add(event) {
+  add() {
+    const chip = this.templateTarget.content.firstElementChild.cloneNode(true)
+    this.addButtonTarget.insertAdjacentElement("beforebegin", chip)
+    chip.querySelector("[data-age-range-picker-target='chipSelect']")?.focus()
+    this.refreshOptions()
+  }
+
+  // A new chip's range was chosen: key its primary star to that id (so starring
+  // submits the right category) and re-filter the other selects.
+  choose(event) {
     const select = event.target
-    const id = select.value
-    if (!id) return
-    const name = select.options[select.selectedIndex].text
-    const html = this.templateTarget.innerHTML
-      .replaceAll("__ID__", id)
-      .replaceAll("__NAME__", name)
-    select.insertAdjacentHTML("beforebegin", html)
-    select.value = ""
-    this.refreshSelect()
+    const chip = select.closest("[data-age-range-picker-target='chip']")
+    chip.dataset.categoryId = select.value
+    const toggle = chip.querySelector("[data-age-range-picker-target='primaryToggle']")
+    if (toggle) toggle.value = select.value
+    this.refreshOptions()
   }
 
   remove(event) {
     event.target.closest("[data-age-range-picker-target='chip']")?.remove()
-    this.refreshSelect()
+    this.refreshOptions()
   }
 
   // Darken the chip while it is a primary age group, matching the sector chip's
@@ -43,12 +51,19 @@ export default class extends Controller {
     chip.classList.toggle("border-gray-300", !primary)
   }
 
-  // Hide options already chosen so each age range can be added at most once.
-  refreshSelect() {
-    const chosen = this.chipTargets.map((chip) => chip.dataset.categoryId)
-    Array.from(this.selectTarget.options).forEach((option) => {
-      if (!option.value) return
-      option.hidden = chosen.includes(option.value)
+  // Keep each picker from offering a range already chosen by another chip, and
+  // disable the add button once every range is in use.
+  refreshOptions() {
+    const chosen = this.chipTargets.map((chip) => chip.dataset.categoryId).filter((id) => id)
+    this.chipSelectTargets.forEach((select) => {
+      Array.from(select.options).forEach((option) => {
+        if (!option.value) return
+        option.hidden = option.value !== select.value && chosen.includes(option.value)
+      })
     })
+    const exhausted = chosen.length >= this.totalValue
+    this.addButtonTarget.disabled = exhausted
+    this.addButtonTarget.classList.toggle("opacity-50", exhausted)
+    this.addButtonTarget.classList.toggle("pointer-events-none", exhausted)
   }
 }

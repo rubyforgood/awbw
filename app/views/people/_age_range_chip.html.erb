@@ -1,10 +1,10 @@
-<%# A single age-range chip in the person form's age picker. Mirrors the sector
-    chip (shared/_sectorable_item_fields): the name, a primary star, and a remove
-    ✖. Unlike sectors, a person can serve several primary age groups, so the star
-    is multi-select and there is no leader/crown flag. Writes person[category_ids][]
-    (membership) and, when starred, person[primary_age_category_ids][] so it round-
-    trips through the existing TagAssignable flow. category_id/category_name are
-    "__ID__"/"__NAME__" placeholders when rendered into the add <template>. %>
+<%# A persisted age-range chip in the person form's age picker — the read-only
+    form a saved sector chip takes (name span, not a select). Mirrors the sector
+    chip: the name, a primary star, and a remove ✖. Unlike sectors, a person can
+    serve several primary age groups, so the star is multi-select and there is no
+    leader/crown flag. Writes person[category_ids][] (membership) and, when
+    starred, person[primary_age_category_ids][]. New (unsaved) chips use
+    people/_age_range_new_field instead, which offers a select. %>
 <% is_primary = local_assigns.fetch(:is_primary, false) %>
 <div class="inline-flex items-center gap-2 rounded-md border
             <%= is_primary ? "border-amber-300 bg-amber-50" : "border-gray-300 bg-white" %>
