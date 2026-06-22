@@ -2,15 +2,16 @@ module EventRegistrationServices
   class BulkPayment
     Result = Struct.new(:success?, :form_submission, :errors, keyword_init: true)
 
-    def self.call(event:, form:, form_params:, person: nil)
-      new(event:, form:, form_params:, person:).call
+    def self.call(event:, form:, form_params:, person: nil, send_confirmation: true)
+      new(event:, form:, form_params:, person:, send_confirmation:).call
     end
 
-    def initialize(event:, form:, form_params:, person: nil)
+    def initialize(event:, form:, form_params:, person: nil, send_confirmation: true)
       @event = event
       @form = form
       @form_params = form_params
       @person = person
+      @send_confirmation = send_confirmation
       @errors = []
     end
 
@@ -28,17 +29,20 @@ module EventRegistrationServices
 
     private
 
-    # Emails the payer a confirmation and notifies staff with an FYI.
+    # Emails the payer a confirmation (unless an admin suppressed it via the
+    # on-behalf option) and always notifies staff with an FYI.
     def send_notifications(submission, person)
-      payer_email = person.preferred_email.presence || field_value("payer_email")&.strip
-      if payer_email.present?
-        NotificationServices::CreateNotification.call(
-          noticeable: submission,
-          kind: :bulk_payment_confirmation,
-          recipient_role: :person,
-          recipient_email: payer_email,
-          notification_type: 0
-        )
+      if @send_confirmation
+        payer_email = person.preferred_email.presence || field_value("payer_email")&.strip
+        if payer_email.present?
+          NotificationServices::CreateNotification.call(
+            noticeable: submission,
+            kind: :bulk_payment_confirmation,
+            recipient_role: :person,
+            recipient_email: payer_email,
+            notification_type: 0
+          )
+        end
       end
 
       NotificationServices::CreateNotification.call(

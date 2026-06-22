@@ -60,5 +60,16 @@ RSpec.describe EventRegistrationServices::BulkPayment do
 
       described_class.call(event: event, form: form, form_params: base_form_params)
     end
+
+    it "skips the payer confirmation but still sends the FYI when send_confirmation is false" do
+      expect(NotificationServices::CreateNotification).not_to receive(:call).with(
+        hash_including(kind: :bulk_payment_confirmation, recipient_role: :person)
+      )
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: :bulk_payment_confirmation_fyi, recipient_role: :admin)
+      )
+
+      described_class.call(event: event, form: form, form_params: base_form_params, send_confirmation: false)
+    end
   end
 end

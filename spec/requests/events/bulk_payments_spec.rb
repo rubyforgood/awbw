@@ -330,4 +330,81 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(flash[:notice]).to eq("Confirmation email sent.")
     end
   end
+
+  describe "admin on-behalf mode" do
+    let(:seeded_form) do
+      FormBuilderService.new(name: "Bulk Payment", sections: %i[bulk_payment], role: "bulk_payment").call
+    end
+
+    before do
+      EventForm.where(event: event).destroy_all
+      EventForm.create!(event: event, form: seeded_form, role: "bulk_payment")
+    end
+
+    def field_id(key)
+      seeded_form.form_fields.find_by!(field_identifier: key).id.to_s
+    end
+
+    describe "GET new" do
+      it "hides the on-behalf toggle from guests" do
+        sign_out admin
+
+        get new_event_bulk_payment_path(event)
+
+        expect(response.body).not_to include("Submitting on someone's behalf")
+      end
+
+      it "shows the on-behalf toggle to admins, pre-checked when requested" do
+        get new_event_bulk_payment_path(event, on_behalf: true)
+
+        expect(response.body).to include("Submitting on someone's behalf")
+        expect(response.body).to match(/name="on_behalf"[^>]*checked/)
+      end
+
+      it "wires the on-behalf Stimulus controller for admins" do
+        get new_event_bulk_payment_path(event)
+
+        expect(response.body).to include("bulk-payment-attendees on-behalf")
+      end
+    end
+
+    describe "POST create" do
+      let(:submission) { create(:form_submission, form: seeded_form, person: create(:person), role: "bulk_payment") }
+      let(:result) do
+        EventRegistrationServices::BulkPayment::Result.new(success?: true, form_submission: submission, errors: [])
+      end
+
+      def submit(on_behalf:)
+        post event_bulk_payment_path(event),
+             params: {
+               on_behalf: on_behalf ? "1" : "0",
+               bulk_payment: { form_fields: {
+                 field_id("payer_first_name") => "Pat",
+                 field_id("payer_last_name") => "Payer",
+                 field_id("payer_email") => "pat@example.com",
+                 field_id("payment_method") => "Check",
+                 field_id("number_of_attendees") => "3"
+               } }
+             }
+      end
+
+      it "tells the service to skip the payer confirmation when an admin opts in" do
+        expect(EventRegistrationServices::BulkPayment).to receive(:call)
+          .with(hash_including(send_confirmation: false, person: nil)).and_return(result)
+
+        submit(on_behalf: true)
+
+        expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
+      end
+
+      it "still sends the confirmation when not in on-behalf mode" do
+        expect(EventRegistrationServices::BulkPayment).to receive(:call)
+          .with(hash_including(send_confirmation: true)).and_return(result)
+
+        submit(on_behalf: false)
+
+        expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
+      end
+    end
+  end
 end

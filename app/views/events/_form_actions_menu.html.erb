@@ -21,6 +21,7 @@
       <% end %>
       <% if @event.bulk_payment_form %>
         <%= link_to "Bulk payment form", new_event_bulk_payment_path(@event), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+        <%= link_to "Bulk payment on behalf", new_event_bulk_payment_path(@event, on_behalf: true), class: item_class %>
       <% end %>
       <div class="my-1 border-t border-gray-100"></div>
       <%= link_to "Change form settings", edit_event_path(@event, anchor: "registration_form_section"), class: item_class %>

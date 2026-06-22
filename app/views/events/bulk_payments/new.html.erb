@@ -50,13 +50,31 @@
         </div>
       <% end %>
 
+      <% form_controllers = "bulk-payment-attendees" %>
+      <% form_controllers += " on-behalf" if allowed_to?(:dashboard?, @event) %>
       <%= form_with url: event_bulk_payment_path(@event), method: :post,
-                     data: { controller: "bulk-payment-attendees", action: "submit->bulk-payment-attendees#serialize", turbo: false },
+                     data: { controller: form_controllers, action: "submit->bulk-payment-attendees#serialize", turbo: false },
                      class: "space-y-2" do |f| %>
 
         <div class="hidden" aria-hidden="true">
           <input type="text" name="bulk_payment[website_url]" tabindex="-1" autocomplete="off">
         </div>
+
+        <%# Admin-only: submit a bulk payment on someone's behalf without emailing
+            them a confirmation. The payer is still found/created from the form. %>
+        <% if allowed_to?(:dashboard?, @event) %>
+          <label class="admin-only flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 mb-4 cursor-pointer">
+            <%= check_box_tag :on_behalf, "1", on_behalf?, class: "mt-0.5", data: { on_behalf_target: "toggle", action: "on-behalf#reveal" } %>
+            <span>
+              <span class="block text-sm font-semibold text-blue-900">Submitting on someone's behalf</span>
+              <span class="block text-xs text-blue-700">They won't receive a confirmation email — staff FYI will still be sent.</span>
+            </span>
+            <span class="ml-auto inline-flex items-center gap-1 rounded-full bg-blue-200 px-2 py-0.5 text-[0.65rem] font-semibold text-blue-800">
+              <i class="fa-solid fa-user-shield text-[0.6rem]"></i>
+              Admin only
+            </span>
+          </label>
+        <% end %>
 
         <%
           fields_by_identifier = @form_fields.select(&:field_identifier).index_by(&:field_identifier)
@@ -66,13 +84,15 @@
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
           <% @form_fields.each do |field| %>
             <% next if field.field_identifier == "bulk_payment_attendees" %>
+            <% behalf_only = @behalf_only_field_ids.include?(field.id) %>
+            <% behalf_data = { on_behalf_target: "field" } if behalf_only %>
 
             <% if field.group_header? %>
-              <div class="md:col-span-12 pt-7 pb-4">
+              <%= tag.div class: class_names("md:col-span-12 pt-7 pb-4", "hidden" => behalf_only && !on_behalf?), data: behalf_data do %>
                 <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-purple-900">
                   <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
                 </h3>
-              </div>
+              <% end %>
             <% elsif payer_fields.include?(field.field_identifier) %>
               <%
                 submitted_value = @form_params&.dig(field.id.to_s)
@@ -82,7 +102,7 @@
                 field_name = "bulk_payment[form_fields][#{field.id}]"
                 field_id = "bulk_payment_form_fields_#{field.id}"
               %>
-              <div class="<%= field.grid_span_class %>">
+              <%= tag.div class: class_names(field.grid_span_class, "hidden" => behalf_only && !on_behalf?), data: behalf_data do %>
                 <div class="mb-5">
                   <label class="rich-label block text-sm font-semibold text-gray-700 mb-1.5" for="<%= field_id %>">
                     <%= form_label_html(field.name) %>
@@ -123,14 +143,14 @@
                     </p>
                   <% end %>
                 </div>
-              </div>
+              <% end %>
             <% elsif field.field_identifier == "payment_method" %>
               <%
                 submitted_value = @form_params&.dig(field.id.to_s)
                 error = @field_errors&.dig(field.id)
                 field_id = "bulk_payment_form_fields_#{field.id}"
               %>
-              <div class="<%= field.grid_span_class %>">
+              <%= tag.div class: class_names(field.grid_span_class, "hidden" => behalf_only && !on_behalf?), data: behalf_data do %>
                 <div class="mb-5">
                   <label class="rich-label block text-sm font-semibold text-gray-700 mb-1.5">
                     <%= form_label_html(field.name) %>
@@ -155,7 +175,7 @@
                     </p>
                   <% end %>
                 </div>
-              </div>
+              <% end %>
             <% end %>
           <% end %>
         </div>

@@ -12,10 +12,8 @@ module Events
     def new
       authorize! :bulk_payment, to: :new?
 
-      @form_fields = visible_form_fields
+      set_field_variables
       @event = @event.decorate
-
-      @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
     end
 
     def create
@@ -25,9 +23,8 @@ module Events
 
       @field_errors = validate_required_fields
       if @field_errors.any?
-        @form_fields = visible_form_fields
+        set_field_variables
         @event = @event.decorate
-        @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
         render :new, status: :unprocessable_content
         return
       end
@@ -36,7 +33,10 @@ module Events
         event: @event,
         form: @form,
         form_params: @form_params,
-        person: current_user&.person
+        # On-behalf mode finds/creates the payer from the form rather than tying
+        # the submission to the admin filling it out.
+        person: registration_person,
+        send_confirmation: !on_behalf?
       )
 
       if result.success?
@@ -48,9 +48,8 @@ module Events
                       notice: "Your bulk payment information has been submitted."
         end
       else
-        @form_fields = visible_form_fields
+        set_field_variables
         @event = @event.decorate
-        @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
         flash.now[:alert] = result.errors.join(", ")
         render :new, status: :unprocessable_content
       end
@@ -111,15 +110,46 @@ module Events
 
     private
 
-    def visible_form_fields
-      scope = @form.form_fields.reorder(position: :asc)
+    # An admin (or event manager) submitting a bulk payment for someone else:
+    # only honored for users who can manage the event, so a guest can't suppress
+    # the payer's confirmation email.
+    def on_behalf?
+      return false unless ActiveModel::Type::Boolean.new.cast(params[:on_behalf])
+      allowed_to?(:dashboard?, @event)
+    end
+    helper_method :on_behalf?
 
-      if current_user
-        logged_out_only_ids = scope.where(visibility: :logged_out_only).ids
-        scope = scope.where.not(id: logged_out_only_ids) if logged_out_only_ids.any?
+    # The person the form is being filled out for. In on-behalf mode there's no
+    # logged-in payer, so we treat it as a fresh (logged-out) submission and let
+    # the service find/create the payer from the form.
+    def registration_person
+      on_behalf? ? nil : current_user&.person
+    end
+
+    # Builds @form_fields for the form. Admins always get the full logged-out
+    # field set so they can pay on a not-logged-in person's behalf; the payer
+    # fields normally hidden for the logged-in admin are flagged "behalf-only"
+    # and revealed client-side when "on behalf" is checked.
+    def set_field_variables
+      @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
+
+      unless allowed_to?(:dashboard?, @event)
+        @form_fields = visible_form_fields
+        @behalf_only_field_ids = []
+        return
       end
 
-      scope
+      logged_in_ids = visible_form_fields(include_logged_out_only: false).ids
+      @form_fields = visible_form_fields(include_logged_out_only: true)
+      @behalf_only_field_ids = @form_fields.ids - logged_in_ids
+    end
+
+    def visible_form_fields(include_logged_out_only: current_user.nil?)
+      scope = @form.form_fields.reorder(position: :asc)
+      return scope if include_logged_out_only
+
+      logged_out_only_ids = scope.where(visibility: :logged_out_only).ids
+      logged_out_only_ids.any? ? scope.where.not(id: logged_out_only_ids) : scope
     end
 
     def set_event
@@ -134,8 +164,11 @@ module Events
     end
 
     def validate_required_fields
+      # In on-behalf mode the payer fields are shown and must be validated even
+      # though they're hidden for a logged-in admin by default.
+      visible_fields = on_behalf? ? visible_form_fields(include_logged_out_only: true) : visible_form_fields
       # The nested attendees field is validated separately, so exclude it here.
-      fields = visible_form_fields.reject { |field| field.field_identifier == "bulk_payment_attendees" }
+      fields = visible_fields.reject { |field| field.field_identifier == "bulk_payment_attendees" }
       FormAnswerValidator.call(fields, @form_params)
     end
 
