@@ -15,10 +15,12 @@ class FormField < ApplicationRecord
   # "required" flag is meaningless for them (nothing to fill in).
   NON_INPUT_ANSWER_TYPES = %w[no_user_input group_header].freeze
 
-  # Multi-select "additional sectors" field identifiers. The current "sector"
-  # name and the legacy "service area" name are both accepted so existing form
-  # data keeps resolving.
-  ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector primary_service_area].freeze
+  # Multi-select "additional sectors" field identifiers. "additional_sectors" is
+  # the canonical name new forms are built with; the older "primary_sector" name
+  # (a misnomer — it was always the multi-select additional field) and the legacy
+  # "service area" name are both still accepted so existing form data keeps
+  # resolving.
+  ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors primary_sector primary_service_area].freeze
 
   # Single-select "primary sector" field identifiers (current + legacy). Unlike
   # the multi-select "additional" field, these omit the catch-all "Other" sector

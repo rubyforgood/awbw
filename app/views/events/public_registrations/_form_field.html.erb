@@ -74,7 +74,7 @@
               <%= "required" if field.required %>><%= value %></textarea>
 
   <% when "single_select_radio" %>
-    <%# Dynamic fields (e.g. primary_sector) source options from Sector/Category
+    <%# Dynamic fields (e.g. additional_sectors) source options from Sector/Category
         data and store none of their own, so fall back to those when present. %>
     <% radio_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
@@ -133,7 +133,7 @@
   <% when "multi_select_checkbox" %>
     <% checkbox_name = "public_registration[form_fields][#{field.id}][]" %>
     <% selected_values = Array(value) %>
-    <%# Dynamic fields (e.g. primary_sector) source options from Sector/Category
+    <%# Dynamic fields (e.g. additional_sectors) source options from Sector/Category
         data; everything else uses the field's own stored answer options. Sector and
         Category options carry an optional description, shown as subtext under the label. %>
     <% checkbox_options = dynamic_form_field_options(field) ||

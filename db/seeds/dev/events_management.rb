@@ -1023,13 +1023,13 @@ puts "Giving Amy a free-text \"Other\" answer on her Facilitator Training submis
 # who picked the "Other" option (folded into "Other: <text>") on a sector-backed
 # field (Additional sectors). The free-text value can't be a Sector record, so it
 # only surfaces via Person#other_sector_responses.
-# Seeded before the professional-answer enrichment below so the primary_sector
+# Seeded before the professional-answer enrichment below so the additional_sectors
 # value survives its "skip if already answered" guard. Idempotent.
 if facilitator_training && amy_person
   amy_submission = FormSubmission.find_by(person: amy_person, form: facilitator_training.registration_form)
   if amy_submission
     {
-      "primary_sector" => "Other: Equine-assisted therapy"
+      "additional_sectors" => "Other: Equine-assisted therapy"
     }.each do |identifier, value|
       field = amy_submission.form.form_fields.find_by(field_identifier: identifier)
       next unless field
@@ -1040,14 +1040,14 @@ if facilitator_training && amy_person
 end
 
 puts "Recording professional answers (age group / sector) on registration submissions…"
-# The Background page charts the registrants' "Primary Age Group(s) Served" and
-# "Primary Sector(s)" registration answers. Public registration stores
-# these checkbox answers as ", "-joined category / sector ids (see
-# PublicRegistration#save_form_answers + assign_tags); seed them the same way so
-# the charts have data. Age group is read from the form answers; the sector is
-# read from SectorableItem tags, so write both. Idempotent: skips a field already
-# answered on a submission, and only enriches people who have a submission (so the
-# "registered but didn't fill the form" scenarios stay answer-free).
+# The Background page charts the registrants' age-group and sector registration
+# answers. Public registration stores these as ", "-joined category / sector ids
+# (see PublicRegistration#save_form_answers + assign_tags); seed them the same way
+# so the charts have data. The age-group and primary-sector charts read the form
+# answers; the All-sectors chart reads SectorableItem tags, so write both.
+# Idempotent: skips a field already answered on a submission, and only enriches
+# people who have a submission (so the "registered but didn't fill the form"
+# scenarios stay answer-free).
 age_range_categories = Category.age_ranges.published.order(:position, :name).to_a
 # Exclude the catch-all "Other" sector: it's the free-text fallback registrants
 # type into (surfaced via Person#other_sector_responses), not a selectable
@@ -1067,24 +1067,29 @@ record_professional_answers = ->(submission, i) do
                                     question_name_when_answered: age_field.name)
   end
 
-  service_field = form.form_fields.find_by(field_identifier: "primary_sector")
   sectors = selectable_sectors.empty? ? [] : [ selectable_sectors[i % selectable_sectors.size], selectable_sectors[(i + 4) % selectable_sectors.size] ].uniq
-  if service_field && sectors.present? && submission.form_answers.where(form_field: service_field).none?
-    submission.form_answers.create!(form_field: service_field,
-                                    submitted_answer: sectors.map(&:id).join(", "),
-                                    question_name_when_answered: service_field.name)
-  end
-  # Sector chart reads SectorableItem tags, mirroring assign_tags.
-  sectors.each { |sector| SectorableItem.find_or_create_by!(sector: sector, sectorable: person) }
-  # Make the first submitted sector the person's single primary sector, so the
-  # recipients page + profile crown a primary that matches what they selected on the
-  # registration form. Demote any other primary first to keep exactly one (a person
-  # registered for several events is enriched once per event). Idempotent.
   primary_sector = sectors.first
-  if primary_sector
-    person.sectorable_items.where(is_primary: true).where.not(sector: primary_sector).update_all(is_primary: false)
-    person.sectorable_items.find_by(sector: primary_sector)&.update!(is_primary: true)
+  additional_sectors = sectors.drop(1)
+
+  # Mirror the registration form's two sector fields: the single-select primary
+  # sector dropdown and the multi-select additional sectors checkboxes.
+  primary_field = form.form_fields.find_by(field_identifier: "primary_sector_single")
+  if primary_field && primary_sector && submission.form_answers.where(form_field: primary_field).none?
+    submission.form_answers.create!(form_field: primary_field,
+                                    submitted_answer: primary_sector.id.to_s,
+                                    question_name_when_answered: primary_field.name)
   end
+  additional_field = form.form_fields.find_by(field_identifier: "additional_sectors")
+  if additional_field && additional_sectors.present? && submission.form_answers.where(form_field: additional_field).none?
+    submission.form_answers.create!(form_field: additional_field,
+                                    submitted_answer: additional_sectors.map(&:id).join(", "),
+                                    question_name_when_answered: additional_field.name)
+  end
+
+  # Tag the person with the same primary/additional split assign_tags applies, so
+  # the All-sectors chart has data and the recipients page + profile crown a single
+  # primary that matches the form. Idempotent (a person enriched once per event).
+  person.tag_sectors(primary_ids: [ primary_sector&.id ].compact, additional_ids: additional_sectors.map(&:id))
 end
 
 # Real orgs (minus the AWBW house org) to link registrations against and match on,
