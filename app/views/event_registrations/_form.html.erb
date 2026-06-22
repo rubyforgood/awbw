@@ -18,7 +18,8 @@
            "incomplete_attendance" => "text-amber-600",
            "cancelled"             => "text-gray-500",
            "no_show"               => "text-red-600",
-           "transferring"          => "text-purple-600"
+           "transferred_in"        => "text-teal-600",
+           "transferred_out"       => "text-purple-600"
          } %>
       <% status_icons = {
            "registered"            => "fa-clipboard-list",
@@ -26,7 +27,8 @@
            "incomplete_attendance" => "fa-clock",
            "cancelled"             => "fa-ban",
            "no_show"               => "fa-circle-xmark",
-           "transferring"          => "fa-right-left"
+           "transferred_in"        => "fa-right-to-bracket",
+           "transferred_out"       => "fa-right-from-bracket"
          } %>
       <% current_icon_color = status_icon_colors[f.object.status] || "text-gray-500" %>
       <% current_icon = status_icons[f.object.status] || "fa-question" %>

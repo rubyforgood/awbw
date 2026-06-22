@@ -37,22 +37,28 @@ RSpec.describe EventRegistration, type: :model do
       expect(reg).not_to be_active
     end
 
-    it "returns false for transferring status" do
-      reg = create(:event_registration, status: "transferring")
+    it "returns false for transferred_out status" do
+      reg = create(:event_registration, status: "transferred_out")
       expect(reg).not_to be_active
+    end
+
+    it "returns true for transferred_in status" do
+      reg = create(:event_registration, status: "transferred_in")
+      expect(reg).to be_active
     end
   end
 
   describe ".active" do
     it "returns only registrations with active statuses" do
       active_reg = create(:event_registration, status: "registered")
+      transferred_in_reg = create(:event_registration, status: "transferred_in")
       cancelled_reg = create(:event_registration, status: "cancelled")
       no_show_reg = create(:event_registration, status: "no_show")
-      transferring_reg = create(:event_registration, status: "transferring")
+      transferred_out_reg = create(:event_registration, status: "transferred_out")
 
       results = EventRegistration.active
-      expect(results).to include(active_reg)
-      expect(results).not_to include(cancelled_reg, no_show_reg, transferring_reg)
+      expect(results).to include(active_reg, transferred_in_reg)
+      expect(results).not_to include(cancelled_reg, no_show_reg, transferred_out_reg)
     end
   end
 

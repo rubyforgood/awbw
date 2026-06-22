@@ -5,7 +5,8 @@
     "incomplete_attendance"   => "bg-amber-50 text-amber-700 border-amber-200",
     "cancelled"               => "bg-gray-50 text-gray-500 border-gray-200",
     "no_show"                 => "bg-red-50 text-red-700 border-red-200",
-    "transferring"            => "bg-purple-50 text-purple-700 border-purple-200"
+    "transferred_in"          => "bg-teal-50 text-teal-700 border-teal-200",
+    "transferred_out"         => "bg-purple-50 text-purple-700 border-purple-200"
   }
   status_icons = {
     "registered"              => "fa-clipboard-list",
@@ -13,7 +14,8 @@
     "incomplete_attendance"   => "fa-clock",
     "cancelled"               => "fa-ban",
     "no_show"                 => "fa-circle-xmark",
-    "transferring"            => "fa-right-left"
+    "transferred_in"          => "fa-right-to-bracket",
+    "transferred_out"         => "fa-right-from-bracket"
   }
   current_style = status_styles[registration.status] || "bg-gray-50 text-gray-500 border-gray-200"
   current_icon  = status_icons[registration.status] || "fa-question"
