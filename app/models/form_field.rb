@@ -100,6 +100,11 @@ class FormField < ApplicationRecord
   # Keeps an over-long name as a friendly validation error instead of a
   # database ValueTooLong exception (the column is text, this is the UX cap).
   validates :name, length: { maximum: 1000 }
+  # A field_identifier wires a field to backend logic (Stripe, service areas,
+  # email checks, etc.), so the same identifier must not appear twice on one form
+  # or that logic would target an ambiguous field. Ordinary fields carry no
+  # identifier, so blanks are exempt — any number of them may coexist.
+  validates :field_identifier, uniqueness: { scope: :form_id }, allow_blank: true
   validates :min_words, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :max_characters, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :max_characters_allows_min_words

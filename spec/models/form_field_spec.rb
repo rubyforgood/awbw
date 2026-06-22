@@ -49,6 +49,29 @@ RSpec.describe FormField do
         expect(field).to be_valid
       end
     end
+
+    describe "field_identifier uniqueness" do
+      let(:form) { create(:form) }
+
+      it "rejects a second field on the same form with the same identifier" do
+        create(:form_field, form: form, field_identifier: "payment_method")
+        duplicate = build(:form_field, form: form, field_identifier: "payment_method")
+        expect(duplicate).not_to be_valid
+        expect(duplicate.errors[:field_identifier]).to be_present
+      end
+
+      it "allows the same identifier on a different form" do
+        create(:form_field, form: form, field_identifier: "payment_method")
+        other = build(:form_field, form: create(:form), field_identifier: "payment_method")
+        expect(other).to be_valid
+      end
+
+      it "allows multiple fields on the same form with a blank identifier" do
+        create(:form_field, form: form, field_identifier: nil)
+        expect(build(:form_field, form: form, field_identifier: nil)).to be_valid
+        expect(build(:form_field, form: form, field_identifier: "")).to be_valid
+      end
+    end
   end
 
   describe "#collects_input?" do

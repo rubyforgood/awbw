@@ -150,6 +150,17 @@
                 class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0" %>
         </div>
 
+        <% if params[:admin] == "true" %>
+          <%# Field identifiers tie a field to backend logic (Stripe, service areas, email, etc.),
+              so they're only editable with ?admin=true on the URL. %>
+          <label class="flex items-center gap-2 text-xs text-gray-500">
+            <span class="shrink-0 font-medium">Field identifier</span>
+            <%= f.text_field :field_identifier, placeholder: "e.g. payment_method",
+                  class: "min-w-0 flex-1 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
+                  title: "Internal identifier linking this field to system logic — leave blank for an ordinary field" %>
+          </label>
+        <% end %>
+
         <% unless option_source %>
           <% options_locked = field.fixed_options? && params[:admin] != "true" %>
           <div class="hidden space-y-2 pl-1 border-t border-gray-100 pt-3" data-answer-options-target="list">
