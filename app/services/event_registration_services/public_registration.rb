@@ -273,10 +273,10 @@ module EventRegistrationServices
     end
 
     def assign_tags(person, organization)
-      primary_sector_ids = collect_sector_ids(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
-      additional_sector_ids = collect_sector_ids(FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS)
-      primary_age_ids = collect_ids_from_checkboxes("primary_age_group")
-      additional_age_ids = collect_ids_from_checkboxes("additional_age_group")
+      primary_sector_ids = collect_ids(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
+      additional_sector_ids = collect_ids(FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS)
+      primary_age_ids = collect_ids(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS)
+      additional_age_ids = collect_ids(FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS)
 
       if primary_sector_ids.any? || additional_sector_ids.any?
         person.tag_sectors(primary_ids: primary_sector_ids, additional_ids: additional_sector_ids)
@@ -292,7 +292,7 @@ module EventRegistrationServices
       end
     end
 
-    def collect_sector_ids(identifiers)
+    def collect_ids(identifiers)
       identifiers.flat_map { |id| collect_ids_from_checkboxes(id) }
     end
 

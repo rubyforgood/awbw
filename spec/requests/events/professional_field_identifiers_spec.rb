@@ -29,19 +29,23 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
   let!(:sector_other)     { create(:sector, :published, name: Sector::OTHER_SECTOR_NAME) }
   let!(:sector_hidden)    { create(:sector, name: "Hidden sector") }
 
-  # Each scheme maps the two sector fields onto a canonical or legacy identifier;
-  # the age-group fields have never been renamed, so they stay constant.
+  # Each scheme maps the two sector fields and the additional-age field onto a
+  # canonical or legacy identifier. The primary age field has never been renamed,
+  # so it stays constant; the additional age field also accepts a pluralized
+  # legacy name (`additional_age_groups`) some older forms carry.
   {
-    "canonical identifiers"         => { primary_sector: "primary_sector_single",       additional_sector: "additional_sectors" },
-    "legacy additional-sector name" => { primary_sector: "primary_sector_single",       additional_sector: "primary_sector" },
-    "legacy service-area names"     => { primary_sector: "primary_service_area_single", additional_sector: "primary_service_area" }
+    "canonical identifiers"          => { primary_sector: "primary_sector_single",       additional_sector: "additional_sectors" },
+    "legacy additional-sector name"  => { primary_sector: "primary_sector_single",       additional_sector: "primary_sector" },
+    "legacy service-area names"      => { primary_sector: "primary_service_area_single", additional_sector: "primary_service_area" },
+    "pluralized additional-age name" => { primary_sector: "primary_sector_single",       additional_sector: "additional_sectors", additional_age: "additional_age_groups" }
   }.each do |scheme_name, ids|
     context "with #{scheme_name}" do
+      let(:additional_age_identifier) { ids.fetch(:additional_age, "additional_age_group") }
       let(:form) { build_professional_form(ids) }
       let(:primary_sector_field)    { form.form_fields.find_by!(field_identifier: ids[:primary_sector]) }
       let(:additional_sector_field) { form.form_fields.find_by!(field_identifier: ids[:additional_sector]) }
       let(:primary_age_field)       { form.form_fields.find_by!(field_identifier: "primary_age_group") }
-      let(:additional_age_field)    { form.form_fields.find_by!(field_identifier: "additional_age_group") }
+      let(:additional_age_field)    { form.form_fields.find_by!(field_identifier: additional_age_identifier) }
 
       before { EventForm.create!(event: event, form: form, role: "registration") }
 
@@ -98,7 +102,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
             ids[:primary_sector] => sector_education.id.to_s,
             ids[:additional_sector] => "#{sector_mh.id}, Other: Equine therapy",
             "primary_age_group" => age_adults.id.to_s,
-            "additional_age_group" => "#{age_teens.id}, #{age_children.id}"
+            additional_age_identifier => "#{age_teens.id}, #{age_children.id}"
           )
         end
 
@@ -150,8 +154,9 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
   # ---- Form construction ----
 
   # Builds a registration form with just the identity + professional sections,
-  # then renames the two sector fields onto the scheme's identifiers (the age
-  # fields keep their canonical names — they were never renamed).
+  # then renames the two sector fields (and, when the scheme asks, the additional
+  # age field) onto the scheme's identifiers. The primary age field keeps its
+  # canonical name — it was never renamed.
   def build_professional_form(ids)
     form = FormBuilderService.new(
       name: "Reg #{ids[:primary_sector]} / #{ids[:additional_sector]}",
@@ -160,6 +165,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
     ).call
     rename_field(form, "primary_sector_single", ids[:primary_sector])
     rename_field(form, "additional_sectors", ids[:additional_sector])
+    rename_field(form, "additional_age_group", ids.fetch(:additional_age, "additional_age_group"))
     form
   end
 
