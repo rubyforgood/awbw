@@ -6,7 +6,6 @@
   <% active = ->(a) { !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) } %>
   <% position = submitted_position.to_s.strip %>
   <% is_submitted_org = submitted_org_name.to_s.strip.present? && org.name.to_s.strip.casecmp?(submitted_org_name.to_s.strip) %>
-  <% role_affiliations = affiliations.reject(&:facilitator?) %>
   <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
     <span class="text-[0.65rem] font-semibold uppercase tracking-wide text-gray-400">Affiliations:</span>
     <% affiliations.each do |a| %>
@@ -28,7 +27,7 @@
       <% title_attr = a.facilitator? ? "Facilitator role — determines whether the org is active with AWBW" : nil %>
       <span class="<%= badge %> <%= color %>" title="<%= title_attr %>"><%= label %></span>
     <% end %>
-    <% if is_submitted_org && position.present? && role_affiliations.none? { |a| a.title.to_s.casecmp?(position) } %>
+    <% if is_submitted_org && position.present? && affiliations.none? { |a| a.title.to_s.casecmp?(position) } %>
       <span class="<%= badge %> bg-amber-50 text-amber-700 border-amber-200" title="Form: <%= position %>">Title differs from form (form: <%= position %>)</span>
     <% end %>
   </div>
