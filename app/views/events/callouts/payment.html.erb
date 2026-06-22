@@ -22,7 +22,7 @@
     <div class="text-right">
       <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</p>
       <p class="mt-1">
-        <span class="inline-flex items-center rounded-full px-3 py-1 text-2xl font-semibold tabular-nums <%= @event_registration.remaining_cost.positive? ? "bg-amber-200 text-amber-900" : "bg-green-100 text-green-800" %>"><%= dollars_from_cents(@event_registration.remaining_cost) %></span>
+        <span class="inline-flex items-center rounded-full px-3 py-1 text-2xl font-semibold tabular-nums <%= @event_registration.remaining_cost.positive? ? "bg-amber-200 text-amber-900" : "bg-blue-100 text-blue-800" %>"><%= dollars_from_cents(@event_registration.remaining_cost) %></span>
       </p>
     </div>
   </div>
