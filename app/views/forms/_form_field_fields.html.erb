@@ -153,10 +153,10 @@
         <% if params[:admin] == "true" %>
           <%# Field identifiers tie a field to backend logic (Stripe, service areas, email, etc.),
               so they're only editable with ?admin=true on the URL. %>
-          <label class="flex items-center gap-2 text-xs text-gray-500">
+          <label class="flex items-center justify-end gap-2 text-xs text-gray-500">
             <span class="shrink-0 font-medium">Field identifier</span>
             <%= f.text_field :field_identifier, placeholder: "e.g. payment_method",
-                  class: "min-w-0 flex-1 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
+                  class: "w-1/4 min-w-0 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
                   title: "Internal identifier linking this field to system logic — leave blank for an ordinary field" %>
           </label>
         <% end %>
