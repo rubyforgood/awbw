@@ -394,24 +394,26 @@ RSpec.describe Person, type: :model do
       create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
     end
 
-    describe "#other_service_area_responses" do
-      it "returns free-text Other values from primary service area fields" do
+    describe "#other_sector_responses" do
+      # Exercises the legacy "service area" field identifiers on purpose — they
+      # must still resolve via FormField::SECTOR_FIELD_IDENTIFIERS.
+      it "returns free-text Other values from primary sector fields" do
         answer("primary_service_area", "5, Other: Equine therapy")
         answer("primary_service_area_single", "Other: Music therapy")
 
-        expect(person.other_service_area_responses).to contain_exactly("Equine therapy", "Music therapy")
+        expect(person.other_sector_responses).to contain_exactly("Equine therapy", "Music therapy")
       end
 
       it "ignores answers without an Other value" do
         answer("primary_service_area", "5, 12")
 
-        expect(person.other_service_area_responses).to be_empty
+        expect(person.other_sector_responses).to be_empty
       end
 
       it "does not pull from unrelated fields" do
         answer("primary_age_group", "Other: School")
 
-        expect(person.other_service_area_responses).to be_empty
+        expect(person.other_sector_responses).to be_empty
       end
     end
 

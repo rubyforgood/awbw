@@ -273,14 +273,17 @@ module EventRegistrationServices
     end
 
     def assign_tags(person, organization)
-      sector_ids = FormField::SECTOR_FIELD_IDENTIFIERS.flat_map { |id| collect_ids_from_checkboxes(id) }
+      primary_sector_ids = collect_sector_ids(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
+      additional_sector_ids = collect_sector_ids(FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS)
       primary_age_ids = collect_ids_from_checkboxes("primary_age_group")
       additional_age_ids = collect_ids_from_checkboxes("additional_age_group")
 
-      if sector_ids.any?
-        sectors = Sector.where(id: sector_ids)
-        assign_primary_sectors(person, sectors)
-        organization.sectors = (organization.sectors + sectors).uniq if organization
+      if primary_sector_ids.any? || additional_sector_ids.any?
+        person.tag_sectors(primary_ids: primary_sector_ids, additional_ids: additional_sector_ids)
+        # Organizations aggregate sectors across many people and have no single
+        # "primary", so union everyone's selections in as additional tags rather
+        # than churning the org's primary on each registration.
+        organization&.tag_sectors(primary_ids: [], additional_ids: primary_sector_ids + additional_sector_ids)
       end
 
       if primary_age_ids.any? || additional_age_ids.any?
@@ -289,11 +292,8 @@ module EventRegistrationServices
       end
     end
 
-    def assign_primary_sectors(person, sectors)
-      sectors.each do |sector|
-        item = person.sectorable_items.find_or_initialize_by(sector: sector)
-        item.update!(is_primary: true)
-      end
+    def collect_sector_ids(identifiers)
+      identifiers.flat_map { |id| collect_ids_from_checkboxes(id) }
     end
 
     def collect_ids_from_checkboxes(identifier)

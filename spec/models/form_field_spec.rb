@@ -403,10 +403,12 @@ RSpec.describe FormField do
         expect(field.answer_inclusion_error("999999")).to eq("has an invalid selection")
       end
 
-      # Both the current "sector" identifiers and the legacy "service area"
-      # identifiers must behave identically so existing form data keeps resolving.
+      # The canonical identifiers, the legacy "primary_sector" additional name,
+      # and the legacy "service area" names must all behave identically so
+      # existing form data keeps resolving.
       {
-        "sector" => %w[primary_sector_single primary_sector],
+        "sector" => %w[primary_sector_single additional_sectors],
+        "sector (legacy additional name)" => %w[primary_sector_single primary_sector],
         "service area (legacy)" => %w[primary_service_area_single primary_service_area]
       }.each do |scheme, (primary_id, additional_id)|
         it "rejects the Other sector for the primary #{scheme} field but accepts it for additional" do

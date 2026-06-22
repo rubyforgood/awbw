@@ -144,7 +144,7 @@ RSpec.describe FormBuilderService do
 
       it "asks for a single primary sector via a dropdown before the additional sectors checkboxes" do
         primary = form.form_fields.find_by(field_identifier: "primary_sector_single")
-        additional = form.form_fields.find_by(field_identifier: "primary_sector")
+        additional = form.form_fields.find_by(field_identifier: "additional_sectors")
 
         expect(primary).to have_attributes(name: "Primary sector", answer_type: "single_select_dropdown")
         expect(additional).to have_attributes(name: "Additional sectors", answer_type: "multi_select_checkbox")
@@ -229,7 +229,7 @@ RSpec.describe FormBuilderService do
         keys = form.form_fields.pluck(:field_identifier).compact
         expect(keys).to include(
           "first_name", "nickname", "racial_ethnic_identity",
-          "primary_sector", "referral_source",
+          "additional_sectors", "referral_source",
           "scholarship_eligibility", "payment_method", "communication_consent"
         )
       end

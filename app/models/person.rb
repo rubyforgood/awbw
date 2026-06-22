@@ -234,7 +234,7 @@ class Person < ApplicationRecord
 
   # Free-text "Other" sectors the person typed on registration forms.
   # They can't be Sector records, so they're surfaced beside the sector tags.
-  def other_service_area_responses
+  def other_sector_responses
     other_form_responses(FormField::SECTOR_FIELD_IDENTIFIERS)
   end
 

@@ -121,26 +121,27 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
-  describe "primary sector tagging" do
+  describe "sector tagging" do
     let!(:primary_sector) { create(:sector, name: "Healthcare") }
-    let!(:other_sector) { create(:sector, name: "Education") }
+    let!(:additional_sector) { create(:sector, name: "Education") }
 
-    it "tags the selected primary sector as primary on the person" do
+    it "marks the dropdown answer primary and the checkbox answers additional" do
       result = described_class.call(
         event: event,
         form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_sector") => [ primary_sector.id.to_s ]
+          field_id("primary_sector_single") => primary_sector.id.to_s,
+          field_id("additional_sectors") => [ additional_sector.id.to_s ]
         )
       )
 
       expect(result.success?).to be true
       person = result.event_registration.registrant
-      primary_item = person.sectorable_items.find_by(sector: primary_sector)
-      expect(primary_item.is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: additional_sector).is_primary).to be false
     end
 
-    it "marks an existing additional sector as primary when later selected" do
+    it "promotes an existing additional sector when later named as primary" do
       person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
       person.sectorable_items.create!(sector: primary_sector, is_primary: false)
 
@@ -148,11 +149,28 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         event: event,
         form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_sector") => [ primary_sector.id.to_s ]
+          field_id("primary_sector_single") => primary_sector.id.to_s
         )
       )
 
       expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+    end
+
+    it "demotes a prior primary that the registrant did not re-select as primary" do
+      person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
+      person.sectorable_items.create!(sector: additional_sector, is_primary: true)
+
+      described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+          field_id("primary_sector_single") => primary_sector.id.to_s
+        )
+      )
+
+      person.reload
+      expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: additional_sector).is_primary).to be false
     end
   end
 
