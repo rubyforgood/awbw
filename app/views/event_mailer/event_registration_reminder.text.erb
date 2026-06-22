@@ -22,7 +22,7 @@ Location: <%= event_location_label(@event.object) %>
 <% if @event.labelled_cost.present? %>
 <%= @event.labelled_cost %>
 <% end %>
-
+<%= render "ce_deadlines", event: @event %>
 <% if @event_registration.slug.present? %>
 View your ticket for event details, directions, and calendar links:
 <%= registration_ticket_url(@event_registration.slug) %>
