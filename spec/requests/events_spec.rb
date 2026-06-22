@@ -1532,8 +1532,9 @@ RSpec.describe "Events", type: :request do
 
         expect(response.body).to include("Facilitator Org")
         expect(response.body).to include(organization_path(org))
-        # The facilitator title itself is suppressed in the fallback line.
-        expect(response.body).not_to match(/Facilitator Org.*·\s*<span>Facilitator/m)
+        # The facilitator title itself is suppressed in the fallback line, so no
+        # "Facilitator, " title prefix precedes the org name.
+        expect(response.body).not_to include('<span class="text-gray-700">Facilitator</span>,')
       end
 
       it "excludes registrants who did not request a scholarship" do

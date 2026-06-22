@@ -109,6 +109,7 @@
                     <% organization = affiliation.organization %>
                     <% location = organization.program_location %>
                     <div class="text-sm text-gray-600 leading-tight">
+                      <% if affiliation.title.present? %><span class="text-gray-700"><%= affiliation.title %></span>,<% end %>
                       <% if allowed_to?(:show?, organization) %>
                         <%= link_to organization.name, organization_path(organization),
                                     data: { turbo_frame: "_top" },
@@ -117,7 +118,6 @@
                         <span class="font-medium text-gray-700"><%= organization.name %></span>
                       <% end %>
                       <% if location.present? %><span class="text-gray-500">(<%= location %>)</span><% end %>
-                      <% if affiliation.title.present? %><span class="text-gray-300">·</span><span><%= affiliation.title %></span><% end %>
                     </div>
                   <% end %>
                 </div>
