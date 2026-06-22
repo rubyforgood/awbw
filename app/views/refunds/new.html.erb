@@ -68,7 +68,7 @@
 
     <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>
     <div class="mt-6">
-      <%= f.button :submit, @payment.is_a?(ExternalProcessorPayment) ? "Refund via Stripe" : "Create Refund", class: "btn btn-primary" %>
+      <%= f.button :submit, @payment.is_a?(ExternalProcessorPayment) ? "Refund via Stripe" : "Submit", class: "btn btn-primary" %>
       <% if @payment.present? %>
         <%= link_to "Cancel", payment_path(@payment), class: "btn btn-secondary ml-2" %>
       <% else %>
