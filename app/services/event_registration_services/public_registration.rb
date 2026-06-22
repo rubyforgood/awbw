@@ -351,7 +351,10 @@ module EventRegistrationServices
     end
 
     def create_form_submission(person)
-      submission = FormSubmission.create!(person: person, form: @form, event: @event)
+      submission = FormSubmission.create!(
+        person: person, form: @form, event: @event,
+        submitted_amount_cents: @event.cost_cents.to_i
+      )
       save_form_answers(submission)
       submission
     end
@@ -359,7 +362,9 @@ module EventRegistrationServices
     def update_form_submission(person)
       submission = FormSubmission.find_or_create_by!(person: person, form: @form) do |record|
         record.event = @event
+        record.submitted_amount_cents = @event.cost_cents.to_i
       end
+      submission.update!(submitted_amount_cents: @event.cost_cents.to_i)
       save_form_answers(submission)
       submission
     end

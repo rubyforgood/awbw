@@ -24,6 +24,34 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
+  describe "submitted amount" do
+    it "snapshots the event cost on the form submission at submission time" do
+      event.update!(cost_cents: 4_000)
+
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com")
+      )
+
+      expect(result.success?).to be true
+      expect(result.form_submission.submitted_amount_cents).to eq(4_000)
+    end
+
+    it "keeps the snapshot fixed to its original event cost when the event cost later changes" do
+      event.update!(cost_cents: 4_000)
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com")
+      )
+
+      event.update!(cost_cents: 9_000)
+
+      expect(result.form_submission.reload.submitted_amount_cents).to eq(4_000)
+    end
+  end
+
   describe "affiliation creation" do
     let!(:organization) { create(:organization, name: "Helping Hands") }
 

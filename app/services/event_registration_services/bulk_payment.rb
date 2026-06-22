@@ -101,6 +101,10 @@ module EventRegistrationServices
     def create_form_submission(person)
       submission = FormSubmission.create!(person: person, form: @form, event: @event, role: "bulk_payment")
       save_form_answers(submission)
+      # Snapshot the expected total (event cost times attendee count) now that the
+      # answers it derives from are saved, so the ticket can show the right figure
+      # before Stripe reports the actual payment back.
+      submission.update!(submitted_amount_cents: submission.bulk_payment_amount_cents(@event))
       submission
     end
 

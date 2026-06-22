@@ -49,6 +49,21 @@ RSpec.describe EventRegistrationServices::BulkPayment do
     end
   end
 
+  describe "submitted amount" do
+    it "snapshots the expected total (event cost times attendee count) on the submission" do
+      event.update!(cost_cents: 2_500)
+
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(field_id("number_of_attendees") => "3")
+      )
+
+      expect(result.success?).to be true
+      expect(result.form_submission.submitted_amount_cents).to eq(7_500)
+    end
+  end
+
   describe "notifications" do
     it "sends the payer confirmation and the staff FYI" do
       expect(NotificationServices::CreateNotification).to receive(:call).with(

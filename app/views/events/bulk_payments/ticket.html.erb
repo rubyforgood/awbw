@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "public") %>
 <%
   attendees = @submission.bulk_payment_attendees
-  total_cents = @payment&.amount_cents || @submission.bulk_payment_amount_cents(@event)
+  total_cents = @payment&.amount_cents || @submission.submitted_amount_cents || @submission.bulk_payment_amount_cents(@event)
 %>
 
 <div class="max-w-2xl mx-auto px-4 pt-4">
