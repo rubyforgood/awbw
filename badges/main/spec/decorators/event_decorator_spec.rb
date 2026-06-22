@@ -132,7 +132,7 @@ RSpec.describe EventDecorator do
   end
 
   describe "#calendar_links" do
-    it "includes rhino_description plain text in all calendar links" do
+    it "falls back to rhino_description plain text when short_description is blank" do
       event = create(:event)
       event.update!(rhino_description: "<div>Join us for healing through art</div>")
       decorated = event.decorate
@@ -157,6 +157,24 @@ RSpec.describe EventDecorator do
 
       yahoo = links.find { |a| a.text == "Yahoo" }
       expect(yahoo["href"]).to include("desc=#{desc_encoded}")
+    end
+
+    it "uses short_description over rhino_description when present" do
+      event = create(:event, short_description: "Bring a friend!")
+      event.update!(rhino_description: "<div>Join us for healing through art</div>")
+      decorated = event.decorate
+
+      doc = Nokogiri::HTML.fragment(decorated.calendar_links)
+      links = doc.css("a")
+
+      desc_encoded = ERB::Util.url_encode("Bring a friend!")
+
+      google = links.find { |a| a.text == "Google" }
+      expect(google["href"]).to include("details=#{desc_encoded}")
+      expect(google["href"]).not_to include(ERB::Util.url_encode("healing through art"))
+
+      apple = links.find { |a| a.text == "Apple" }
+      expect(apple["href"]).to include("DESCRIPTION:Bring a friend!")
     end
 
     it "embeds the join link, meeting ID, and passcode within a week of the event" do
