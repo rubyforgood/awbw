@@ -77,7 +77,7 @@ class MagicTicketCallouts
              title: due ? "Make your payment" : "Payment",
              subtitle: due ? "view your balance" : "view your payment history",
              badge: due ? "#{MoneyFormatter.dollars_from_cents(registration.remaining_cost)} due" : "Paid",
-             badge_classes: due ? nil : "bg-green-100 text-green-800",
+             badge_classes: due ? nil : "bg-blue-100 text-blue-800 border border-blue-300",
              href: registration_payment_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
@@ -94,16 +94,26 @@ class MagicTicketCallouts
   end
 
   # Shown only when the registrant requested a scholarship. Its page surfaces the
-  # award amount, funder, and tasks once awarded.
+  # award amount, funder, and tasks once awarded. Awarded but with tasks still
+  # pending shows an amber "$X · Tasks outstanding" badge (action needed); fully
+  # met shows a fuchsia amount badge.
   def scholarship_status_card
     return unless registration.scholarship_requested?
     awarded = registration.scholarship?
+    tasks_outstanding = awarded && !registration.scholarship_tasks_met?
     Card.new(icon_class: "fa-solid fa-award", color: DomainTheme.color_for(:scholarships).to_s,
              title: "Scholarship",
              subtitle: awarded ? "Your award — amount, funder, and tasks" : "Your scholarship request status",
              href: registration_scholarship_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
-             badge: awarded ? MoneyFormatter.dollars_from_cents(registration.scholarships.sum(:amount_cents)) : nil)
+             badge: scholarship_badge(awarded, tasks_outstanding),
+             badge_classes: tasks_outstanding ? nil : "bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-300")
+  end
+
+  def scholarship_badge(awarded, tasks_outstanding)
+    return unless awarded
+    amount = MoneyFormatter.dollars_from_cents(registration.scholarships.sum(:amount_cents))
+    tasks_outstanding ? "#{amount} · Tasks outstanding" : amount
   end
 
   # CE hours: an action card prompting the registrant to request credit until
@@ -111,28 +121,45 @@ class MagicTicketCallouts
   # number on file. Shown when the event offers CE or the registrant asked for it.
   def ce_hours_card
     return unless registration.ce_credit_requested?
-    complete = registration.ce_credit_requested? && registration.ce_hours_requested.present? && registration.ce_license_provided?
+    complete = registration.ce_hours_requested.present? && registration.ce_license_provided?
     Card.new(icon_class: "fa-solid fa-graduation-cap", color: "teal",
              title: event.ce_hours_details_label,
-             subtitle: ce_hours_subtitle(complete),
+             subtitle: ce_hours_subtitle,
              href: registration_ce_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
-             badge: ce_hours_badge(complete))
+             badge: ce_hours_badge(complete),
+             # Amber while hours/license are still needed, teal once it's just the
+             # amount due (nil badge_classes falls back to amber in _callout_card).
+             badge_classes: complete ? "bg-teal-100 text-teal-800 border border-teal-300" : nil)
   end
 
-  def ce_hours_subtitle(complete)
-    return "Continuing education — requirements & how to request" unless registration.ce_credit_requested?
-    return "Add your CE hours and license number" unless complete
-    "#{registration.ce_hours_requested} hours"
+  def ce_hours_subtitle
+    return "#{registration.ce_hours_requested} hours" if registration.ce_hours_requested.present?
+    "Continuing education credit"
   end
 
-  # Amount owed, shown as the card's amber badge — matching the payment card's
-  # "$X due" chip. Only once the request is complete and money is owed.
+  # Teal "$X due" once hours + license are on file and money is owed; otherwise an
+  # amber chip naming what's still needed, prefixed with the amount when the hours
+  # (and so the fee) are already known — e.g. "$250 · License number needed".
   def ce_hours_badge(complete)
-    return unless complete
-    amount = registration.ce_amount_owed_cents.to_i
-    return unless amount.positive?
-    "#{MoneyFormatter.dollars_from_cents(amount)} due"
+    amount_cents = registration.ce_amount_owed_cents.to_i
+    amount = MoneyFormatter.dollars_from_cents(amount_cents)
+
+    if complete
+      return unless amount_cents.positive?
+      return "#{amount} due"
+    end
+
+    needed = ce_missing_text
+    amount_cents.positive? ? "#{amount} · #{needed}" : needed
+  end
+
+  def ce_missing_text
+    missing_hours = registration.ce_hours_requested.blank?
+    missing_license = !registration.ce_license_provided?
+    return "Hours & license number needed" if missing_hours && missing_license
+    return "Hours needed" if missing_hours
+    "License number needed"
   end
 
   # "Art supplies & what to bring" — the event's own details page.
