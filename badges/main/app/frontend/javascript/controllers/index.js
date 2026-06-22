@@ -84,6 +84,9 @@ application.register("file-preview", FilePreviewController)
 import FieldOptionsController from "./field_options_controller"
 application.register("field-options", FieldOptionsController)
 
+import FormErrorsController from "./form_errors_controller"
+application.register("form-errors", FormErrorsController)
+
 import FormFieldsSortableController from "./form_fields_sortable_controller"
 application.register("form-fields-sortable", FormFieldsSortableController)
 
