@@ -192,15 +192,41 @@ class Person < ApplicationRecord
       .first&.organization
   end
 
-  # The organization a person facilitates for — the org on their (active, most
-  # recent) facilitator affiliation. This is the "program" a scholarship serves.
-  # Falls back to any facilitator affiliation when none is currently active.
-  # Selects in memory so a preloaded affiliations association (the scholarship
-  # index eager-loads it) is reused rather than re-queried per recipient.
-  def program_organization
-    facilitator_affiliations = affiliations.select(&:facilitator?)
-    active = facilitator_affiliations.select(&:active?).max_by(&:updated_at)
-    (active || facilitator_affiliations.max_by(&:updated_at))&.organization
+  # A person typically holds two affiliations to the SAME org: their real job
+  # and a separate "AWBW Facilitator" role. The two carry different display
+  # data, so each side has its own helper:
+  #
+  #   facilitator_affiliation -> the FACILITATOR affiliation. Its org
+  #     (facilitator_organization) is the program/location (e.g. city/state) a
+  #     scholarship serves.
+  #   job_affiliation         -> the REAL-JOB (non-facilitator) affiliation.
+  #     Source of the displayed job title — never the "Facilitator" title.
+  #
+  # The person's "AWBW Facilitator" affiliation — the active, most recent one
+  # whose title marks them as a facilitator. Falls back to any facilitator
+  # affiliation when none is currently active. See job_affiliation for the
+  # real-job side of the same org. Selects in memory so a preloaded affiliations
+  # association (the scholarship index eager-loads it) is reused, not re-queried.
+  def facilitator_affiliation
+    facilitators = affiliations.select(&:facilitator?)
+    active = facilitators.select(&:active?).max_by(&:updated_at)
+    active || facilitators.max_by(&:updated_at)
+  end
+
+  # The person's "real job" affiliation — the active, most recent non-facilitator
+  # one — whose title is the job title to display (not the "Facilitator" role).
+  # Falls back to any non-facilitator affiliation when none is currently active.
+  # See facilitator_affiliation for the facilitator side of the same org.
+  def job_affiliation
+    jobs = affiliations.reject(&:facilitator?)
+    active = jobs.select(&:active?).max_by(&:updated_at)
+    active || jobs.max_by(&:updated_at)
+  end
+
+  # The organization a person facilitates for — the org on their facilitator
+  # affiliation. This is the "program" a scholarship serves.
+  def facilitator_organization
+    facilitator_affiliation&.organization
   end
 
   # Facilitator-training events ("TACs") this person registered for and

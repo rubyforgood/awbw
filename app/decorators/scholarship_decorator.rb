@@ -15,7 +15,7 @@ class ScholarshipDecorator < ApplicationDecorator
   def program
     return @program if defined?(@program)
 
-    @program = object.recipient&.program_organization
+    @program = object.recipient&.facilitator_organization
   end
 
   def program_name

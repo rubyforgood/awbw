@@ -107,6 +107,24 @@ This codebase (Rails 8.1)
 | `Report` | STI base class for MonthlyReport |
 | `WorkshopLog` | Standalone model for workshop log submissions (attendance, form fields) |
 
+### Affiliation convention: two roles per org
+
+A `Person` typically holds **two affiliations to the same `Organization`**: their
+**real job** and a separate **"AWBW Facilitator"** role. The two carry different
+display data, so read each side through its own `Person` helper — never assume one
+affiliation:
+
+- `Person#facilitator_affiliation` → the **facilitator** affiliation;
+  `Person#facilitator_organization` is its org. Source of the program/location (e.g.
+  `Organization#city_state`) a scholarship serves.
+- `Person#job_affiliation` → the **real-job** (non-facilitator) affiliation. Source
+  of the displayed **job title** — never the "Facilitator" title.
+
+A "facilitator" affiliation is the one titled exactly `"Facilitator"`
+(`Affiliation#facilitator?` / `Affiliation.facilitators` scope, case-sensitive +
+trimmed); every other title (including a blank one) is a job. In code, never call
+this org/role an "agency" — use org / affiliation / facilitator.
+
 ### STI Models
 
 - **Asset** (inheritance column: `type`): PrimaryAsset, GalleryAsset, RichTextAsset, DownloadableAsset, ThumbnailAsset

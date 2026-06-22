@@ -437,12 +437,12 @@ end
 RSpec.describe Person, "scholarship index helpers" do
   let(:person) { create(:person) }
 
-  describe "#program_organization" do
+  describe "#facilitator_organization" do
     it "returns the organization on the recipient's facilitator affiliation" do
       org = create(:organization, name: "Prevail")
       create(:affiliation, person: person, organization: org, title: "Facilitator")
 
-      expect(person.program_organization).to eq(org)
+      expect(person.facilitator_organization).to eq(org)
     end
 
     it "prefers an active facilitator affiliation over a lapsed one" do
@@ -451,13 +451,61 @@ RSpec.describe Person, "scholarship index helpers" do
       create(:affiliation, person: person, organization: lapsed_org, title: "Facilitator", end_date: 1.year.ago.to_date)
       create(:affiliation, person: person, organization: active_org, title: "Facilitator")
 
-      expect(person.program_organization).to eq(active_org)
+      expect(person.facilitator_organization).to eq(active_org)
     end
 
     it "ignores non-facilitator affiliations" do
       create(:affiliation, person: person, organization: create(:organization), title: "Board Member")
 
-      expect(person.program_organization).to be_nil
+      expect(person.facilitator_organization).to be_nil
+    end
+  end
+
+  describe "#facilitator_affiliation" do
+    it "returns the facilitator affiliation (the AWBW role)" do
+      org = create(:organization, name: "County Health")
+      create(:affiliation, person: person, organization: org, title: "Social Worker")
+      facilitator = create(:affiliation, person: person, organization: org, title: "Facilitator")
+
+      expect(person.facilitator_affiliation).to eq(facilitator)
+    end
+
+    it "prefers an active facilitator affiliation over a lapsed one" do
+      lapsed = create(:affiliation, person: person, organization: create(:organization), title: "Facilitator", end_date: 1.year.ago.to_date)
+      active = create(:affiliation, person: person, organization: create(:organization), title: "Facilitator")
+
+      expect(person.facilitator_affiliation).to eq(active)
+      expect(person.facilitator_affiliation).not_to eq(lapsed)
+    end
+
+    it "ignores non-facilitator affiliations" do
+      create(:affiliation, person: person, organization: create(:organization), title: "Board Member")
+
+      expect(person.facilitator_affiliation).to be_nil
+    end
+  end
+
+  describe "#job_affiliation" do
+    it "returns the non-facilitator affiliation (the real job)" do
+      org = create(:organization, name: "County Health")
+      job = create(:affiliation, person: person, organization: org, title: "Social Worker")
+      create(:affiliation, person: person, organization: org, title: "Facilitator")
+
+      expect(person.job_affiliation).to eq(job)
+    end
+
+    it "prefers an active job affiliation over a lapsed one" do
+      lapsed = create(:affiliation, person: person, organization: create(:organization), title: "Counselor", end_date: 1.year.ago.to_date)
+      active = create(:affiliation, person: person, organization: create(:organization), title: "Therapist")
+
+      expect(person.job_affiliation).to eq(active)
+      expect(person.job_affiliation).not_to eq(lapsed)
+    end
+
+    it "ignores facilitator affiliations" do
+      create(:affiliation, person: person, organization: create(:organization), title: "Facilitator")
+
+      expect(person.job_affiliation).to be_nil
     end
   end
 
