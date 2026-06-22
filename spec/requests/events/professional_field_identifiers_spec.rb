@@ -6,9 +6,9 @@ require "rails_helper"
 # form might still carry. For each identifier scheme this exercises, end to end:
 #
 #   * option rendering — the "primary" fields are dropdowns of the published
-#     options minus the catch-all ("Other" sector / "Mixed-age groups"), while
-#     the "additional" fields are checkboxes of every published option including
-#     the catch-all;
+#     options minus the catch-all ("Other" sector / "Mixed-age groups"); the
+#     additional sector field keeps "Other", but the additional age field also
+#     drops "Mixed-age groups" (age groups never offer a catch-all);
 #   * submission storage into form_answers (including a folded "Other: <text>");
 #   * the primary/additional split recorded as person sector/age tags; and
 #   * that the stored selections are readable on the person show, person edit,
@@ -59,7 +59,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
           expect(select_option_values(primary_age_field)).not_to include(age_mixed.id.to_s, age_hidden.id.to_s)
         end
 
-        it "renders the additional fields as checkboxes of all published options including the catch-all" do
+        it "renders the additional fields as checkboxes — sectors keep Other, age groups drop Mixed-age groups" do
           sector_values = checkbox_values(additional_sector_field)
           expect(sector_values).to include(sector_education.id.to_s, sector_mh.id.to_s)
           # The "Other" sector renders a free-text box, so its checkbox submits the
@@ -68,8 +68,10 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
           expect(sector_values).not_to include(sector_hidden.id.to_s)
 
           age_values = checkbox_values(additional_age_field)
-          expect(age_values).to include(age_children.id.to_s, age_teens.id.to_s, age_adults.id.to_s, age_mixed.id.to_s)
-          expect(age_values).not_to include(age_hidden.id.to_s)
+          expect(age_values).to include(age_children.id.to_s, age_teens.id.to_s, age_adults.id.to_s)
+          # Additional age groups drop the catch-all "Mixed-age groups" (and never
+          # offer an "Other"), unlike additional sectors.
+          expect(age_values).not_to include(age_mixed.id.to_s, age_hidden.id.to_s)
         end
       end
 
@@ -86,7 +88,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
             primary_sector_field.id.to_s => sector_education.id.to_s,
             additional_sector_field.id.to_s => [ sector_mh.id.to_s, "Other: Equine therapy" ],
             primary_age_field.id.to_s => age_adults.id.to_s,
-            additional_age_field.id.to_s => [ age_teens.id.to_s, age_mixed.id.to_s ]
+            additional_age_field.id.to_s => [ age_teens.id.to_s, age_children.id.to_s ]
           } } }
         end
 
@@ -100,7 +102,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
             ids[:primary_sector] => sector_education.id.to_s,
             ids[:additional_sector] => "#{sector_mh.id}, Other: Equine therapy",
             "primary_age_group" => age_adults.id.to_s,
-            "additional_age_group" => "#{age_teens.id}, #{age_mixed.id}"
+            "additional_age_group" => "#{age_teens.id}, #{age_children.id}"
           )
         end
 
@@ -109,14 +111,14 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
           expect(additional_sectors_of(registrant)).to contain_exactly(sector_mh)
           expect(registrant.other_sector_responses).to include("Equine therapy")
           expect(registrant.primary_age_groups).to contain_exactly(age_adults)
-          expect(registrant.additional_age_groups).to contain_exactly(age_teens, age_mixed)
+          expect(registrant.additional_age_groups).to contain_exactly(age_teens, age_children)
         end
 
         it "shows the resolved names on the person show page" do
           sign_in admin
           get person_path(registrant)
 
-          expect(response.body).to include("Education", "Mental Health", "Adults (18+)", "Teens (13-17)", "Mixed-age groups")
+          expect(response.body).to include("Education", "Mental Health", "Adults (18+)", "Teens (13-17)", "Children (0-12)")
           expect(response.body).to include("Equine therapy")
         end
 
@@ -131,7 +133,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
           # the primary toggle set only on the primary age group.
           expect(membership_checked?(page, age_adults)).to be(true)
           expect(membership_checked?(page, age_teens)).to be(true)
-          expect(membership_checked?(page, age_mixed)).to be(true)
+          expect(membership_checked?(page, age_children)).to be(true)
           expect(primary_age_checked?(page, age_adults)).to be(true)
           expect(primary_age_checked?(page, age_teens)).to be(false)
         end
@@ -143,7 +145,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
           expect(response.body).to include("Education")
           expect(response.body).to include("Mental Health, Other: Equine therapy")
           expect(response.body).to include("Adults (18+)")
-          expect(response.body).to include("Teens (13-17), Mixed-age groups")
+          expect(response.body).to include("Teens (13-17), Children (0-12)")
         end
       end
     end

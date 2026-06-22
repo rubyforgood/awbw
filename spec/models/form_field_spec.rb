@@ -441,18 +441,18 @@ RSpec.describe FormField do
         expect(field.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
       end
 
-      it "offers Mixed-age groups for the additional age group field but not the primary one" do
+      it "omits Mixed-age groups from both the primary and additional age group fields" do
         type = create(:category_type, name: "AgeRange")
         concrete = create(:category, :published, category_type: type, name: "3-5")
         mixed = create(:category, :published, category_type: type, name: Category::MIXED_AGE_RANGE_NAME)
         primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_age_group")
         additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
 
-        # The catch-all "Mixed-age groups" mirrors the "Other" sector: dropped from
-        # the single-select primary, kept on the multi-select additional.
+        # Unlike the sector fields (where the additional field keeps "Other"), both
+        # age fields drop the catch-all "Mixed-age groups".
         expect(primary.dynamic_categories).to eq([ concrete ])
-        expect(additional.dynamic_categories).to contain_exactly(concrete, mixed)
-        expect(additional.answer_inclusion_error([ mixed.id.to_s ])).to be_nil
+        expect(additional.dynamic_categories).to eq([ concrete ])
+        expect(additional.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
         expect(primary.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
       end
 

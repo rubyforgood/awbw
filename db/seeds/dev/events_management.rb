@@ -1076,10 +1076,10 @@ record_professional_answers = ->(submission, i) do
                                     question_name_when_answered: age_field.name)
   end
 
-  # Additional age groups are multi-select checkboxes that keep the catch-all
-  # "Mixed-age groups", so store a couple of ", "-joined ids (sometimes including
-  # it) the same way public registration does.
-  additional_ages = age_range_categories.rotate(i + 1).reject { |category| category == age }.first(2)
+  # Additional age groups are multi-select checkboxes, but like the primary field
+  # they omit the catch-all "Mixed-age groups", so draw from the concrete ranges
+  # and store a couple of ", "-joined ids the way public registration does.
+  additional_ages = primary_age_categories.rotate(i + 1).reject { |category| category == age }.first(2)
   additional_age_field = form.form_fields.find_by(field_identifier: "additional_age_group")
   if additional_age_field && additional_ages.present? && submission.form_answers.where(form_field: additional_age_field).none?
     submission.form_answers.create!(form_field: additional_age_field,
