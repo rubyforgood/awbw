@@ -1,4 +1,13 @@
 module ApplicationHelper
+  # Pending (future-dated) affiliations are visible only to admins; everyone else
+  # sees only the currently-active set. Single source of truth for the
+  # active vs. active_or_pending split on the people/organization index & profile
+  # pages, which are becoming visible to non-admins. In controllers, call via
+  # `helpers.include_pending_affiliations?`.
+  def include_pending_affiliations?
+    current_user&.super_user?
+  end
+
   # Tags an admin may use in a form field name / group header that should
   # render (rather than escape) on the public form. Block + inline formatting,
   # links, line breaks, and font sizing/coloring (via <font> or inline style).

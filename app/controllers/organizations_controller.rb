@@ -13,14 +13,16 @@ class OrganizationsController < ApplicationController
         logo_attachment: :blob
       ))
       filtered = base_scope.search_by_params(params).order(:name)
+      # Pending affiliations count toward "active people" only for admins.
+      people_scope = helpers.include_pending_affiliations? ? Affiliation.active_or_pending : Affiliation.active
       @organizations_count = filtered.count
-      @active_people_count = Affiliation.active_or_pending.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
+      @active_people_count = people_scope.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
       @organizations = filtered.paginate(page: params[:page], per_page: per_page)
       org_ids = @organizations.map(&:id)
       @affiliated_since = Affiliation.where(organization_id: org_ids)
                                             .group(:organization_id)
                                             .minimum(:start_date)
-      @active_people_counts = Affiliation.active_or_pending
+      @active_people_counts = people_scope
                                                 .where(organization_id: org_ids)
                                                 .group(:organization_id)
                                                 .distinct
