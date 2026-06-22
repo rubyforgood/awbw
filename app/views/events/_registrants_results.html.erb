@@ -32,7 +32,7 @@
       </label>
     </div>
 
-    <% event_form_ids = @event.form_ids %>
+    <% event_form_ids = @event.registration_form_ids %>
     <% form_submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
     <% registration_form = @event.registration_form %>
     <% agency_name_field = registration_form&.form_fields&.find_by(field_identifier: "agency_name") %>

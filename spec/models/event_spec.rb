@@ -239,6 +239,23 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#registration_form_ids" do
+    it "returns only the ids of forms linked with the registration role" do
+      event = create(:event)
+      registration_form = create(:form, name: "Registration")
+      bulk_payment_form = create(:form, name: "Bulk payment")
+      create(:event_form, event: event, form: registration_form, role: "registration")
+      create(:event_form, event: event, form: bulk_payment_form, role: "bulk_payment")
+
+      expect(event.registration_form_ids).to contain_exactly(registration_form.id)
+    end
+
+    it "returns an empty array when no registration form is linked" do
+      event = create(:event)
+      expect(event.registration_form_ids).to eq([])
+    end
+  end
+
   describe "#one_click_for_signed_in?" do
     it "is true when no registration form is linked" do
       event = create(:event)

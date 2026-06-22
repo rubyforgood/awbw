@@ -101,6 +101,10 @@ class Event < ApplicationRecord
     forms.find_by(event_forms: { role: "registration" })
   end
 
+  def registration_form_ids
+    event_forms.registration.pluck(:form_id)
+  end
+
   # Whether a signed-in user should register in one click rather than being
   # routed to the registration form. True when no registration form is linked,
   # or when an admin has explicitly opted members out of the form. A linked form
