@@ -91,6 +91,96 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  # A single "Download all" header button bundles every attached document on the
+  # page into one zip. It appears on any callout page with more than one
+  # downloadable resource, except Payment (which manages its own W-9/invoice).
+  describe "the Download all button and its zip endpoint" do
+    def attach_resource_to(callout, title)
+      resource = create(:resource, title:)
+      create(:registration_ticket_callout_resource, registration_ticket_callout: callout, resource:)
+      create(:downloadable_asset, owner: resource)
+      resource
+    end
+
+    describe "button visibility on the callout page" do
+      let(:callout) { create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false) }
+
+      it "links to the documents zip when there's more than one attached resource" do
+        attach_resource_to(callout, "Aha Moments")
+        attach_resource_to(callout, "AWBW Training Workshop Worksheets")
+
+        get registration_handouts_path(registration.slug)
+
+        expect(response.body).to include(registration_download_all_path(registration.slug, "handouts"))
+      end
+
+      it "is omitted when only one resource carries an attached file" do
+        attach_resource_to(callout, "Aha Moments")
+
+        get registration_handouts_path(registration.slug)
+
+        expect(response.body).not_to include("documents.zip")
+      end
+
+      it "is omitted when no linked resource carries an attached file" do
+        resource = create(:resource, title: "Aha Moments")
+        create(:registration_ticket_callout_resource, registration_ticket_callout: callout, resource:)
+
+        get registration_handouts_path(registration.slug)
+
+        expect(response.body).not_to include("documents.zip")
+      end
+
+      it "never shows on the payment page, even with downloadable documents linked" do
+        paid = create(:event, cost_cents: 10_000)
+        paid_reg = create(:event_registration, event: paid)
+        payment = create(:registration_ticket_callout, event: paid, builtin_key: "payment")
+        attach_resource_to(payment, "W-9")
+        attach_resource_to(payment, "Terms")
+
+        get registration_payment_path(paid_reg.slug)
+
+        expect(response.body).not_to include("documents.zip")
+      end
+    end
+
+    describe "GET /registration/:slug/:builtin_key/documents.zip" do
+      let(:callout) { create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false) }
+
+      it "streams a zip of every attached document, named by resource title" do
+        attach_resource_to(callout, "Aha Moments")
+        attach_resource_to(callout, "Workshop Worksheets")
+
+        get registration_download_all_path(registration.slug, "handouts")
+
+        expect(response).to have_http_status(:success)
+        expect(response.media_type).to eq("application/zip")
+        entries = Zip::File.open_buffer(response.body).map(&:name)
+        expect(entries).to contain_exactly("Aha Moments.pdf", "Workshop Worksheets.pdf")
+      end
+
+      it "404s when fewer than two documents are attached" do
+        attach_resource_to(callout, "Only One")
+
+        get registration_download_all_path(registration.slug, "handouts")
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "404s for the payment callout" do
+        paid = create(:event, cost_cents: 10_000)
+        paid_reg = create(:event_registration, event: paid)
+        payment = create(:registration_ticket_callout, event: paid, builtin_key: "payment")
+        attach_resource_to(payment, "W-9")
+        attach_resource_to(payment, "Terms")
+
+        get registration_download_all_path(paid_reg.slug, "payment")
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+  end
+
   describe "GET /registration/:slug/payment" do
     let(:event) { create(:event, cost_cents: 10_000) }
 

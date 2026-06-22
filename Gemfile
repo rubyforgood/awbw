@@ -29,6 +29,9 @@ gem "will_paginate", "~> 3.1.7"
 # gem "ckeditor", "~> 4.3.0" # removed given gh security scan results. still need a replacement.
 gem "image_processing"
 
+# Bundle a callout's attached documents into a single downloadable zip
+gem "rubyzip", require: "zip"
+
 # Visit and event tracking
 gem "ahoy_matey"
 # To give group_by_day and similar methods to ActiveRecord relations

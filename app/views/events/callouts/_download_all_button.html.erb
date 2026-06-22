@@ -1,0 +1,7 @@
+<%# "Download all" header action for a callout page: a plain link to the callout's
+    documents.zip endpoint (see CalloutsController#download_all), which bundles every
+    attached document into one archive. url is the zip path. %>
+<%= link_to url, class: "inline-flex items-center gap-2 rounded-lg bg-white/15 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-inset ring-white/30 hover:bg-white/25 transition-colors" do %>
+  <i class="fa-solid fa-download"></i>
+  <span class="hidden sm:inline">Download all</span>
+<% end %>

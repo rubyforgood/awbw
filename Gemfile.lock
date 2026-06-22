@@ -824,6 +824,7 @@ DEPENDENCIES
   rails (~> 8.1.0)
   rspec-rails
   rubocop-rails-omakase
+  rubyzip
   search_cop
   selenium-webdriver
   shoulda-matchers

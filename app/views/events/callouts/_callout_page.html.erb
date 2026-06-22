@@ -30,6 +30,13 @@
           <h1 class="text-xl font-semibold tracking-wide leading-tight"><%= title %></h1>
           <p class="text-sm text-blue-200"><%= @event.title %></p>
         </div>
+        <%# Download every attached document on this page as one zip. The controller
+            sets @download_all_url only when there's more than one downloadable
+            resource — a single document is grabbed from its own card — and never for
+            Payment, which manages its own invoice/receipt/W-9 documents. %>
+        <% if @download_all_url %>
+          <div class="shrink-0"><%= render "events/callouts/download_all_button", url: @download_all_url %></div>
+        <% end %>
       </div>
       <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>

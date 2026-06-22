@@ -150,6 +150,7 @@ module Events
       return redirect_to registration_ticket_path(@event_registration.slug) unless builtin_published?("handouts")
       callout = @event.registration_ticket_callouts.find_by(builtin_key: "handouts")
       @handout_cards = resource_cards_for(callout, icon: "fa-solid fa-file-pdf", return_to: "handouts")
+      @download_all_url = download_all_url_for(callout)
     end
 
     # Registrant-facing page for a single Resource, shown in the shared callout
@@ -176,6 +177,17 @@ module Events
       return redirect_to(registration_ticket_path(@event_registration.slug)) unless builtin_published?("faq")
       callout = @event.registration_ticket_callouts.find_by(builtin_key: "faq")
       @faq_content = callout&.description.presence || BuiltinCallouts.faq_html
+    end
+
+    # Streams every attached document on a callout as a single zip (the "Download
+    # all" button). Payment is excluded — it manages its own documents — and a
+    # callout with fewer than two files 404s, since the button only shows past one.
+    def download_all
+      callout = @event.registration_ticket_callouts.find_by(builtin_key: params[:builtin_key])
+      resources = callout && callout.builtin_key != "payment" ? downloadable_resources(callout) : []
+      raise ActiveRecord::RecordNotFound if resources.size < 2
+      send_data build_documents_zip(resources),
+        filename: documents_zip_filename(callout), type: "application/zip"
     end
 
     private
@@ -228,6 +240,7 @@ module Events
       @builtin_intro = callout&.description.presence
       callout = nil if action_name == "payment"
       @builtin_resource_cards = resource_cards_for(callout, icon: "fa-solid fa-file-lines", return_to: action_name)
+      @download_all_url = download_all_url_for(callout)
     end
 
     # This registrant's cards for a callout's linked resources (nil callout → none).
@@ -237,6 +250,57 @@ module Events
     def resource_cards_for(callout, icon:, return_to:)
       return [] unless callout
       callout.decorate.resource_cards(registrant_slug: @event_registration.slug, return_to:, icon:)
+    end
+
+    # The zip endpoint for a callout's attached documents, or nil when the button
+    # shouldn't show. Backs the "Download all" button the shared callout chrome
+    # renders whenever a page has more than one downloadable resource (handouts and
+    # any built-in callout with attachments — Payment passes a nil callout here, so
+    # its own invoice/receipt/W-9 documents are excluded). Hidden in the sample
+    # preview, whose sentinel slug wouldn't resolve at the zip endpoint.
+    def download_all_url_for(callout)
+      return if callout.nil? || sample_preview?
+      return unless downloadable_resources(callout).many?
+      registration_download_all_path(@event_registration.slug, callout.builtin_key)
+    end
+
+    # A callout's linked resources that carry an attached file, in display order.
+    def downloadable_resources(callout)
+      callout.registration_ticket_callout_resources.ordered
+             .includes(resource: { downloadable_asset: :file_attachment })
+             .filter_map(&:resource)
+             .select { |resource| resource.downloadable_asset&.file&.attached? }
+    end
+
+    # Builds an in-memory zip of the resources' files, named by resource title and
+    # de-duped so two documents sharing a title don't collide inside the archive.
+    def build_documents_zip(resources)
+      used = Set.new
+      Zip::OutputStream.write_buffer do |zip|
+        resources.each do |resource|
+          file = resource.downloadable_asset.file
+          zip.put_next_entry(unique_entry_name(resource, file, used))
+          zip.write(file.download)
+        end
+      end.string
+    end
+
+    def unique_entry_name(resource, file, used)
+      base = resource.title.to_s.strip.gsub(%r{[/\\]}, "-").presence || "document"
+      ext = File.extname(file.filename.to_s)
+      name = "#{base}#{ext}"
+      index = 1
+      while used.include?(name.downcase)
+        index += 1
+        name = "#{base} (#{index})#{ext}"
+      end
+      used << name.downcase
+      name
+    end
+
+    def documents_zip_filename(callout)
+      base = callout.title.presence || callout.builtin_key.humanize
+      "#{base.parameterize}-documents.zip"
     end
 
     # The join row for @resource on the callout the registrant arrived from

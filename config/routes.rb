@@ -91,6 +91,7 @@ Rails.application.routes.draw do
   get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
   get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
   get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference
+  get "registration/:slug/:builtin_key/documents.zip", to: "events/callouts#download_all", as: :registration_download_all
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
