@@ -634,6 +634,51 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
             .to contain_exactly("Facilitator")
         end
+
+        it "applies the submitted organization type and website to the linked org" do
+          reg_form = create(:form, name: "Reg form")
+          type_field = create(:form_field, form: reg_form, field_identifier: "agency_type")
+          website_field = create(:form_field, form: reg_form, field_identifier: "agency_website")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: type_field, submitted_answer: "For-profit")
+          create(:form_answer, form_submission: submission, form_field: website_field, submitted_answer: "example.org")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(organization.reload).to have_attributes(agency_type: "For-profit", website_url: "example.org")
+        end
+
+        it "overrides the existing org's curated type and website with the submitted values" do
+          organization.update!(agency_type: "Government agency", website_url: "curated.org")
+          reg_form = create(:form, name: "Reg form")
+          type_field = create(:form_field, form: reg_form, field_identifier: "agency_type")
+          website_field = create(:form_field, form: reg_form, field_identifier: "agency_website")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: type_field, submitted_answer: "For-profit")
+          create(:form_answer, form_submission: submission, form_field: website_field, submitted_answer: "new.org")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(organization.reload).to have_attributes(agency_type: "For-profit", website_url: "new.org")
+        end
+
+        it "leaves a curated value untouched when the registrant left that answer blank" do
+          organization.update!(agency_type: "Government agency", website_url: "curated.org")
+          reg_form = create(:form, name: "Reg form")
+          website_field = create(:form_field, form: reg_form, field_identifier: "agency_website")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: website_field, submitted_answer: "new.org")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(organization.reload).to have_attributes(agency_type: "Government agency", website_url: "new.org")
+        end
       end
 
       describe "POST /event_registrations/:id/create_organization" do
@@ -709,6 +754,24 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(existing_registration.organizations.pluck(:name)).to include("Beta Agency")
           expect(existing_registration.organizations.pluck(:name)).not_to include("Alpha Agency")
+        end
+
+        it "applies the submitted organization type and website to the new org" do
+          create(:organization_status, name: "Active")
+          reg_form = create(:form, name: "Reg form")
+          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          type_field = create(:form_field, form: reg_form, field_identifier: "agency_type")
+          website_field = create(:form_field, form: reg_form, field_identifier: "agency_website")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
+          create(:form_answer, form_submission: submission, form_field: type_field, submitted_answer: "501c3/nonprofit")
+          create(:form_answer, form_submission: submission, form_field: website_field, submitted_answer: "brandnew.org")
+
+          post create_organization_event_registration_path(existing_registration)
+
+          expect(Organization.find_by(name: "Brand New Org"))
+            .to have_attributes(agency_type: "501c3/nonprofit", website_url: "brandnew.org")
         end
 
         it "rejects creating an org name the registrant didn't submit" do

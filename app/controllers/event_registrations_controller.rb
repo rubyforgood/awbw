@@ -219,6 +219,8 @@ class EventRegistrationsController < ApplicationController
       training_date: @event_registration.event.start_date
     )
 
+    apply_submitted_organization_attributes(organization, @event_registration)
+
     @event_registration.event_registration_organizations
       .find_or_create_by!(organization: organization)
 
@@ -251,6 +253,9 @@ class EventRegistrationsController < ApplicationController
       job_title: submitted_position(@event_registration),
       training_date: @event_registration.event.start_date
     )
+
+    apply_submitted_organization_attributes(organization, @event_registration)
+
     @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
 
     notice = existing ? "#{organization.name} linked." : "#{organization.name} created and linked."
@@ -375,17 +380,20 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
-  # Each registration-form submission with the org name and position the registrant
-  # entered on it: [{ submission:, org_name:, position: }], oldest first.
+  # Each registration-form submission with the org details the registrant entered on
+  # it: [{ submission:, org_name:, position:, agency_type:, agency_website: }], oldest
+  # first.
   def registration_submission_entries(registration)
     form = registration.event.registration_form
     return [] unless form
 
     field_ids = form.form_fields
-      .where(field_identifier: %w[agency_name agency_position])
+      .where(field_identifier: %w[agency_name agency_position agency_type agency_website])
       .pluck(:field_identifier, :id).to_h
     name_field_id = field_ids["agency_name"]
     position_field_id = field_ids["agency_position"]
+    type_field_id = field_ids["agency_type"]
+    website_field_id = field_ids["agency_website"]
 
     entries = registration.registrant.form_submissions
       .where(form: form)
@@ -396,7 +404,9 @@ class EventRegistrationsController < ApplicationController
         {
           submission: submission,
           org_name: name_field_id && answers[name_field_id]&.submitted_answer,
-          position: position_field_id && answers[position_field_id]&.submitted_answer
+          position: position_field_id && answers[position_field_id]&.submitted_answer,
+          agency_type: type_field_id && answers[type_field_id]&.submitted_answer,
+          agency_website: website_field_id && answers[website_field_id]&.submitted_answer
         }
       end
 
@@ -418,13 +428,36 @@ class EventRegistrationsController < ApplicationController
       .uniq { |name| name.downcase }
   end
 
-  # The job title/position the registrant typed for their organization on the
-  # registration form. Uses the same "primary" submission as link_organization
-  # (the first submission that named an org, else the first), so the title applied
-  # when linking matches what the editor shows.
-  def submitted_position(registration)
+  # The "primary" registration submission used whenever we apply what the registrant
+  # typed to a linked org: the first submission that named an org, else the first.
+  # link_organization shows this same submission, so what we apply matches the editor.
+  def primary_submission_entry(registration)
     entries = registration_submission_entries(registration)
-    primary = entries.find { |entry| entry[:org_name].present? } || entries.first
-    primary && primary[:position]
+    entries.find { |entry| entry[:org_name].present? } || entries.first
+  end
+
+  # The job title/position the registrant typed for their organization on the
+  # registration form, from the primary submission.
+  def submitted_position(registration)
+    primary_submission_entry(registration)&.dig(:position)
+  end
+
+  # The Organization Type and Website the registrant typed on the registration form,
+  # as Organization attributes ({ agency_type:, website_url: }) — only the values the
+  # registrant actually provided, so a blank answer never clobbers a curated value.
+  def submitted_organization_attributes(registration)
+    entry = primary_submission_entry(registration)
+    return {} unless entry
+
+    { agency_type: entry[:agency_type], website_url: entry[:agency_website] }
+      .select { |_, value| value.present? }
+  end
+
+  # Overwrite the org's Organization Type and Website with what the registrant typed.
+  # We intentionally override curated values here (admins asked for the registrant's
+  # answer to win); every change is captured as an Ahoy lifecycle event.
+  def apply_submitted_organization_attributes(organization, registration)
+    attributes = submitted_organization_attributes(registration)
+    organization.update!(attributes) if attributes.any?
   end
 end
