@@ -129,10 +129,7 @@ module EventRegistrationServices
       email = field_value("primary_email")&.strip&.downcase
       email_type = field_value("primary_email_type")&.downcase
 
-      person = Person.find_by(
-        "LOWER(first_name) = ? AND LOWER(last_name) = ? AND LOWER(email) = ?",
-        first_name&.downcase, last_name&.downcase, email&.downcase
-      )
+      person = find_matching_person(last_name: last_name, email: email)
       return person if person
 
       Person.create!(
@@ -145,6 +142,28 @@ module EventRegistrationServices
         email_2: field_value("secondary_email")&.strip,
         email_2_type: field_value("secondary_email_type")&.downcase,
       )
+    end
+
+    # Find the existing registrant this submission belongs to, tolerating a
+    # first-name / nickname swap. We match on email + last name (both strong,
+    # stable identifiers) and accept either the typed first name or the nickname
+    # against either the stored first_name or legal_first_name. Without this, a
+    # returning registrant who types their legal name when we stored their
+    # nickname (or vice versa) slips past the match and registers as a duplicate
+    # Person. Anonymous (incognito) registrations rely on this; logged-in ones
+    # already arrive with @person set and never reach here.
+    def find_matching_person(last_name:, email:)
+      return if email.blank? || last_name.blank?
+
+      first_names = [ field_value("first_name"), field_value("nickname") ]
+        .filter_map { |value| value&.strip.presence&.downcase }
+        .uniq
+      return if first_names.empty?
+
+      Person
+        .where("LOWER(last_name) = ? AND LOWER(email) = ?", last_name.downcase, email.downcase)
+        .where("LOWER(first_name) IN (:names) OR LOWER(COALESCE(legal_first_name, '')) IN (:names)", names: first_names)
+        .first
     end
 
     def create_mailing_address(person)
