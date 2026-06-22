@@ -170,6 +170,36 @@ RSpec.describe Affiliation do
     end
   end
 
+  describe '.active_on' do
+    let(:date) { Date.new(2024, 6, 1) }
+    let!(:spanning) { create(:affiliation, start_date: Date.new(2023, 1, 1), end_date: Date.new(2025, 1, 1)) }
+    let!(:open_ended) { create(:affiliation, start_date: Date.new(2023, 1, 1), end_date: nil) }
+    let!(:ended_before) { create(:affiliation, start_date: Date.new(2020, 1, 1), end_date: Date.new(2021, 1, 1)) }
+    let!(:starts_after) { create(:affiliation, start_date: Date.new(2025, 1, 1), end_date: nil) }
+    let!(:no_dates) { create(:affiliation, start_date: nil, end_date: nil) }
+
+    it 'includes affiliations whose span covers the date' do
+      expect(described_class.active_on(date)).to include(spanning, open_ended)
+    end
+
+    it 'excludes affiliations that ended before the date' do
+      expect(described_class.active_on(date)).not_to include(ended_before)
+    end
+
+    it 'excludes affiliations that start after the date' do
+      expect(described_class.active_on(date)).not_to include(starts_after)
+    end
+
+    it 'includes affiliations with no dates on record' do
+      expect(described_class.active_on(date)).to include(no_dates)
+    end
+
+    it 'ignores the cached inactive flag, judging purely by dates' do
+      flagged = create(:affiliation, start_date: Date.new(2023, 1, 1), end_date: nil, inactive: true)
+      expect(described_class.active_on(date)).to include(flagged)
+    end
+  end
+
   describe '#set_inactive_from_dates' do
     let(:op) { create(:affiliation, inactive: false, end_date: nil) }
 
