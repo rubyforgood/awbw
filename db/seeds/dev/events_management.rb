@@ -1063,12 +1063,22 @@ record_professional_answers = ->(submission, i) do
   form = submission.form
 
   # Primary age group is a single-select dropdown, so store one AgeRange category id.
-  age_field = form.form_fields.find_by(field_identifier: "primary_age_group")
   age = age_range_categories[i % age_range_categories.size] if age_range_categories.any?
+  age_field = form.form_fields.find_by(field_identifier: "primary_age_group")
   if age_field && age && submission.form_answers.where(form_field: age_field).none?
     submission.form_answers.create!(form_field: age_field,
                                     submitted_answer: age.id.to_s,
                                     question_name_when_answered: age_field.name)
+  end
+
+  # Additional age groups are multi-select checkboxes, so store a couple of
+  # ", "-joined AgeRange ids the way public registration does.
+  additional_ages = age_range_categories.rotate(i + 1).reject { |category| category == age }.first(2)
+  additional_age_field = form.form_fields.find_by(field_identifier: "additional_age_group")
+  if additional_age_field && additional_ages.present? && submission.form_answers.where(form_field: additional_age_field).none?
+    submission.form_answers.create!(form_field: additional_age_field,
+                                    submitted_answer: additional_ages.map(&:id).join(", "),
+                                    question_name_when_answered: additional_age_field.name)
   end
 
   sectors = selectable_sectors.empty? ? [] : [ selectable_sectors[i % selectable_sectors.size], selectable_sectors[(i + 4) % selectable_sectors.size] ].uniq
@@ -1094,6 +1104,7 @@ record_professional_answers = ->(submission, i) do
   # the All-sectors chart has data and the recipients page + profile crown a single
   # primary that matches the form. Idempotent (a person enriched once per event).
   person.tag_sectors(primary_ids: [ primary_sector&.id ].compact, additional_ids: additional_sectors.map(&:id))
+  person.tag_age_groups(primary_ids: [ age&.id ].compact, additional_ids: additional_ages.map(&:id))
 end
 
 # Real orgs (minus the AWBW house org) to link registrations against and match on,

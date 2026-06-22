@@ -35,17 +35,14 @@ class FormField < ApplicationRecord
   # Field identifiers whose selectable options are sourced dynamically from a
   # CategoryType's published categories. The submitted value is a Category id
   # (as a string). Maps the field identifier to its backing CategoryType name.
+  # Both the "primary" and "additional" age group fields are backed by the
+  # published AgeRange categories. Unlike the sector fields, age groups have no
+  # catch-all option — the additional sector field keeps "Other", but neither age
+  # field offers one.
   DYNAMIC_FIELD_CATEGORY_TYPES = {
     "primary_age_group" => "AgeRange",
     "additional_age_group" => "AgeRange"
   }.freeze
-
-  # The "primary" and "additional" age group fields. Both are backed by AgeRange
-  # categories but omit the catch-all "Mixed-age groups" category — a respondent
-  # names the concrete age groups they serve, not the mixed bucket.
-  PRIMARY_AGE_GROUP_FIELD_IDENTIFIER = "primary_age_group"
-  ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIER = "additional_age_group"
-  AGE_GROUP_FIELD_IDENTIFIERS = [ PRIMARY_AGE_GROUP_FIELD_IDENTIFIER, ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIER ].freeze
 
   # The payment-method field. Its answer options ("Credit card (now)", etc.) are
   # wired to Stripe charge logic in the controllers, so they must not be edited
@@ -335,16 +332,13 @@ class FormField < ApplicationRecord
   end
 
   # The published Category records a category-backed dynamic field offers, in
-  # position/name order. The age group fields omit the catch-all "Mixed-age
-  # groups" AgeRange category — a respondent names the concrete age groups they
-  # serve. Empty when the backing CategoryType is missing. Source of truth shared
-  # by the public form's rendering and submission validation.
+  # position/name order. Empty when the backing CategoryType is missing. Source of
+  # truth shared by the public form's rendering and submission validation.
   def dynamic_categories
     type = CategoryType.find_by(name: DYNAMIC_FIELD_CATEGORY_TYPES[field_identifier])
     return Category.none unless type
 
-    scope = type.categories.published.order(:position, :name)
-    AGE_GROUP_FIELD_IDENTIFIERS.include?(field_identifier) ? scope.excluding_mixed_age : scope
+    type.categories.published.order(:position, :name)
   end
 
   # The "please specify" placeholder for an option label, or nil when the option
@@ -374,12 +368,28 @@ class FormField < ApplicationRecord
   end
 
   # The labels of this field's offered options that reveal a free-text box
-  # (e.g. "Other", "Word of Mouth"). Empty for dynamic fields, which never
-  # offer them.
+  # (e.g. "Other", "Word of Mouth"). Dynamic sector/category fields offer one
+  # only when their option set includes a catch-all "Other" (the published "Other"
+  # Sector, or an "Other"-named Category) — the multi-select "additional sectors"
+  # field is the common case. The single-select "primary" fields drop "Other" from
+  # their options, so they expose no specify option.
   def specify_option_labels
-    return [] if dynamic_options?
+    option_names = dynamic_options? ? dynamic_option_names : answer_options.map(&:name)
+    option_names.select { |name| FormField.specify_option?(name, field_identifier) }
+  end
 
-    answer_options.map(&:name).select { |name| FormField.specify_option?(name, field_identifier) }
+  # The names of this field's dynamically-sourced options (Sector or Category),
+  # mirroring what the public form renders and what allowed_answer_values keys
+  # off. Used to detect a catch-all "Other" option on a dynamic field. Empty for
+  # non-dynamic fields.
+  def dynamic_option_names
+    if field_identifier.in?(SECTOR_FIELD_IDENTIFIERS)
+      sector_options.pluck(:name)
+    elsif DYNAMIC_FIELD_CATEGORY_TYPES.key?(field_identifier)
+      dynamic_categories.pluck(:name)
+    else
+      []
+    end
   end
 
   # True when a submitted value is a valid "specify" answer for one of this

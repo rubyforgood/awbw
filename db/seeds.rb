@@ -185,7 +185,6 @@ category_type_categories = [
   [ "AgeRange", "Teens (13-17)" ],
   [ "AgeRange", "Adults (18+)" ],
   [ "AgeRange", "Elders (65+)" ],
-  [ "AgeRange", "Mixed-age groups" ],
   # ["ArtType", "Boxes", 1],
   [ "ArtType", "Clay", 11 ],
   [ "ArtType", "Collage", 2 ],
