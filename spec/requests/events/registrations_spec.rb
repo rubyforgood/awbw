@@ -149,7 +149,8 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Payment history")
       expect(response.body).to include("Amount due")
       expect(response.body).to include("Pay with Credit Card")
-      expect(response.body).to include("Paying by check?")
+      expect(response.body).to include("View invoice")
+      expect(response.body).to include("Prefer to pay by check?")
       expect(response.body).to include("A Window Between Worlds")
     end
 
@@ -157,7 +158,7 @@ RSpec.describe "Events::Registrations", type: :request do
       create(:allocation, allocatable: registration, amount: event.cost_cents)
       get registration_payment_path(registration.slug)
       expect(response.body).not_to include("Pay with Credit Card")
-      expect(response.body).not_to include("Paying by check?")
+      expect(response.body).not_to include("Prefer to pay by check?")
     end
   end
 

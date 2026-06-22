@@ -49,11 +49,12 @@ RSpec.describe "Event registration show page", type: :system do
   end
 
   describe "payment due" do
-    it "shows the payment-due badge and pay button for an active registration with a balance" do
+    it "shows the payment card with the amount due and a pay button for an active registration with a balance" do
       sign_in(user)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_text("payment is due")
+      expect(page).to have_text("Make your payment")
+      expect(page).to have_text("due")
       expect(page).to have_button("Pay with Credit Card")
     end
   end

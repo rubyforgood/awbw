@@ -287,10 +287,7 @@ class EventDecorator < ApplicationDecorator
     return if cost_cents.blank?
     return "Free event" if cost_cents.zero?
 
-    dollars = cost_cents / 100
-    cents   = cost_cents % 100
-    formatted = cents.zero? ? "$#{dollars}" : "$#{dollars}.#{cents.to_s.rjust(2, '0')}"
-    "Cost: #{formatted}"
+    "Cost: #{MoneyFormatter.dollars_from_cents(cost_cents)}"
   end
 
   def content
