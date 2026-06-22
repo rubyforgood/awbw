@@ -77,9 +77,16 @@
       <% if @linked_organizations.any? %>
         <ul class="space-y-2 mb-4">
           <% @linked_organizations.each do |org| %>
-            <li class="flex items-start justify-between gap-3 <%= org_swatch[:bg] %> border <%= org_swatch[:border] %> rounded-lg p-3">
+            <%# The whole card links to the person's affiliations section (where these
+                are managed) via a stretched link on the org name; the Unlink button is
+                lifted above the overlay with relative z-10 so it stays clickable. %>
+            <li class="relative flex items-start justify-between gap-3 <%= org_swatch[:bg] %> border <%= org_swatch[:border] %> rounded-lg p-3 transition hover:border-green-300 hover:shadow-sm">
               <div class="min-w-0">
-                <p class="font-medium text-gray-800"><%= org.name %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
+                <p class="font-medium text-gray-800"><%= link_to org.name, person_path(@person, anchor: "affiliations"),
+                            target: "_blank", rel: "noopener",
+                            title: "View #{@person.first_name.presence || @person.full_name}'s affiliations",
+                            class: "after:absolute after:inset-0 hover:underline focus-visible:underline focus:outline-none",
+                            data: { turbo_frame: "_top" } %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
                 <%= render "org_affiliation_pills", org: org, affiliations: (@affiliations_by_org[org.id] || []),
                                                     submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
               </div>
@@ -89,7 +96,7 @@
               <%= button_to "Unlink",
                             unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
                             method: :delete,
-                            form: { class: "shrink-0", data: { turbo_frame: "_top", turbo_confirm: "Unlink #{org.name} from this registration?\n\nThis only removes the organization from this registration — it will NOT delete any of #{@person.first_name.presence || @person.full_name}'s Affiliations with #{org.name}.\n\nTo change or remove any Affiliations, edit the Person record." } },
+                            form: { class: "relative z-10 shrink-0", data: { turbo_frame: "_top", turbo_confirm: "Unlink #{org.name} from this registration?\n\nThis only removes the organization from this registration — it will NOT delete any of #{@person.first_name.presence || @person.full_name}'s Affiliations with #{org.name}.\n\nTo change or remove any Affiliations, edit the Person record." } },
                             class: "inline-flex items-center rounded-full border border-transparent px-3 py-0.5 text-sm text-gray-500 underline transition hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:no-underline cursor-pointer" %>
             </li>
           <% end %>
