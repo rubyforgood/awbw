@@ -36,7 +36,7 @@
     </div>
     <% if @payment.check_number.present? %>
       <div>
-        <dt class="text-sm font-medium text-gray-500">Check Number</dt>
+        <dt class="text-sm font-medium text-gray-500">Check number</dt>
         <dd class="mt-1 text-sm text-gray-900"><%= @payment.check_number %></dd>
       </div>
     <% end %>
@@ -48,7 +48,7 @@
     <% end %>
     <% if @payment.pay_charge_id.present? %>
       <div>
-        <dt class="text-sm font-medium text-gray-500">Pay Charge ID</dt>
+        <dt class="text-sm font-medium text-gray-500">Pay charge ID</dt>
         <dd class="mt-1 text-sm text-gray-900"><%= @payment.pay_charge_id %></dd>
       </div>
     <% end %>
@@ -92,43 +92,57 @@
   </dl>
   <% if @allocations.any? %>
     <div class="mt-8">
-      <h2 class="text-lg font-medium mb-4">Allocations</h2>
+      <div class="flex items-baseline justify-between mb-1">
+        <h2 class="text-lg font-medium">Allocations</h2>
+      </div>
+      <p class="text-sm text-gray-500 mb-4">Removing an allocation returns its amount to this payment's unallocated balance.</p>
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allocated To</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allocated to</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/Time</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/time</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
             <% @allocations.each do |allocation| %>
-              <% row_class = if allocation.amount.to_i < 0
-                  'bg-red-50'
-                elsif allocation.reverted_id.present?
-                  'bg-gray-100 border border-gray-300 opacity-60'
+              <% is_reversal = allocation.amount.to_i < 0 %>
+              <% is_removed = allocation.reverted_id.present? %>
+              <% row_class = if is_reversal
+                  "bg-amber-50"
+                elsif is_removed
+                  "bg-gray-50 text-gray-400"
                 end %>
               <tr class="<%= row_class %>">
-                <td class="px-4 py-3 text-sm text-gray-900">
-                  <%= link_to allocations_path(allocatable_sgid: allocation.allocatable.to_sgid.to_s) do %>
-                    <% if allocation.allocatable_type == "EventRegistration" && allocation.allocatable.present? %>
-                      <%= allocation.allocatable.registrant.full_name %>
-                      —
-                      <%= allocation.allocatable.event.title %>
-                    <% else %>
-                      <%= allocation.allocatable_type.underscore.titleize %>
+                <td class="px-4 py-3 text-sm">
+                  <div class="flex items-center gap-2">
+                    <%= link_to allocations_path(allocatable_sgid: allocation.allocatable.to_sgid.to_s), class: "#{'line-through' if is_removed}" do %>
+                      <% if allocation.allocatable_type == "EventRegistration" && allocation.allocatable.present? %>
+                        <%= allocation.allocatable.registrant.full_name %>
+                        —
+                        <%= allocation.allocatable.event.title %>
+                      <% else %>
+                        <%= allocation.allocatable_type.underscore.humanize %>
+                      <% end %>
                     <% end %>
-                  <% end %>
+                    <% if is_reversal %>
+                      <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-amber-50 text-amber-700 border-amber-200"><i class="fa-solid fa-rotate-left"></i> Reversal</span>
+                    <% elsif is_removed %>
+                      <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-gray-100 text-gray-500 border-gray-300"><i class="fa-solid fa-xmark"></i> Removed</span>
+                    <% end %>
+                  </div>
                 </td>
 
-                <td class="px-4 py-3 text-sm text-gray-900"><%= dollars_from_cents(allocation.amount) %></td>
+                <td class="px-4 py-3 text-sm <%= is_reversal ? 'text-amber-700' : 'text-gray-900' %>"><%= dollars_from_cents(allocation.amount) %></td>
                 <td class="px-4 py-3 text-sm text-gray-500"><%= allocation.created_at.strftime("%B %d, %Y at %I:%M %p") %></td>
 
                 <td class="px-4 py-3 text-right text-sm font-medium">
-                  <% unless allocation.reverted? || allocation.amount.to_i < 0 %>
-                    <%= button_to "revert", revert_allocation_path(allocation), method: :post, class: "cursor-pointer text-danger hover:text-danger-dark", data: { turbo_confirm: "are you sure you want to revert this allocation?" } %>
+                  <% unless is_removed || is_reversal %>
+                    <%= button_to revert_allocation_path(allocation), method: :post, class: "inline-flex items-center gap-1.5 cursor-pointer text-danger hover:text-danger-dark", data: { turbo_confirm: "Remove this allocation? The #{dollars_from_cents(allocation.amount)} will be returned to this payment's unallocated balance." } do %>
+                      <i class="fa-solid fa-trash-can"></i> Remove
+                    <% end %>
                   <% end %>
                 </td>
               </tr>
@@ -149,7 +163,7 @@
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recipient</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/Time</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/time</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
