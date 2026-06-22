@@ -456,14 +456,16 @@ RSpec.describe EventDashboard do
       expect(dashboard.scholarship_answers_by_applicant[embedded_applicant.id].size).to eq(1)
     end
 
-    it "gathers header (service area / age group) answers keyed by applicant and identifier" do
+    it "gathers header (sector / age group) answers keyed by applicant, sector answers under the normalized sector key" do
+      # Use a legacy "service area" identifier to confirm it still resolves under
+      # the normalized sector key alongside the current "sector" identifiers.
       service_field = create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
       reg_submission = FormSubmission.find_by(person: embedded_applicant, form: registration_form)
       create(:form_answer, form_submission: reg_submission, form_field: service_field, submitted_answer: "5")
 
       header = dashboard.header_answers_by_applicant
 
-      expect(header[embedded_applicant.id]["primary_service_area"].submitted_answer).to eq("5")
+      expect(header[embedded_applicant.id][EventDashboard::HEADER_SECTOR_KEY].submitted_answer).to eq("5")
       expect(header).not_to have_key(non_applicant.id)
     end
 

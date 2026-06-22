@@ -121,16 +121,16 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
-  describe "primary service area tagging" do
+  describe "primary sector tagging" do
     let!(:primary_sector) { create(:sector, name: "Healthcare") }
     let!(:other_sector) { create(:sector, name: "Education") }
 
-    it "tags the selected primary service area sectors as primary on the person" do
+    it "tags the selected primary sector as primary on the person" do
       result = described_class.call(
         event: event,
         form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+          field_id("primary_sector") => [ primary_sector.id.to_s ]
         )
       )
 
@@ -148,7 +148,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         event: event,
         form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+          field_id("primary_sector") => [ primary_sector.id.to_s ]
         )
       )
 

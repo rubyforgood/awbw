@@ -164,8 +164,9 @@ scholarship_answer_sets = [
     "additional_comments" =>
       "Thank you for considering my application. A scholarship is the only way my small agency can send me to this training right now, " \
       "and the ripple effect on the survivors we serve would be immediate.",
+    "scholarship_contribution" => "Our agency can contribute about $250 toward the cost.",
     "service_area" => "Sexual Assault",
-    "age_group" => "18+",
+    "age_group" => "Adults (18+)",
     "title" => "Prevention, Education, and Outreach Specialist"
   },
   {
@@ -180,6 +181,7 @@ scholarship_answer_sets = [
       "I envision the shared making and witnessing reducing isolation and helping members feel they aren't alone in their experience.",
     "additional_comments" =>
       "I've wanted formal facilitation training for years but our continuing-education budget was cut. This scholarship would change that.",
+    "scholarship_contribution" => "I could personally cover roughly $150.",
     "service_area" => "Mental Health",
     "age_group" => "Mixed-age groups",
     "title" => "Behavioral Health Clinician"
@@ -196,8 +198,9 @@ scholarship_answer_sets = [
       "I envision it giving teens a consistent place to process their week and build confidence through finishing something that's theirs.",
     "additional_comments" =>
       "Our program serves families at no cost, so outside funding for my training is what makes this possible. Thank you.",
-    "service_area" => "Child Abuse",
-    "age_group" => "6-12",
+    "scholarship_contribution" => "Unfortunately we can't contribute anything at this time.",
+    "service_area" => "Child Abuse/Neglect",
+    "age_group" => "Children (0-12)",
     "title" => "Youth Program Coordinator"
   },
   {
@@ -212,8 +215,9 @@ scholarship_answer_sets = [
       "I envision it strengthening the group's sense of community and giving members a tangible reminder of how far they've come.",
     "additional_comments" =>
       "I'm so grateful for this opportunity. Investing in me is investing in everyone I'll go on to support.",
+    "scholarship_contribution" => "I'm able to pay up to $100 out of pocket.",
     "service_area" => "Domestic Violence",
-    "age_group" => "18+",
+    "age_group" => "Adults (18+)",
     "title" => "Peer Support Specialist"
   }
 ]
@@ -230,10 +234,10 @@ scholarship_fields = scholarship_form ? scholarship_form.form_fields.where.not(a
 # answers — the recipients page reads those first, then falls back to the
 # person's profile (sectors / age-range tags).
 registration_form = Form.standalone.find_by(role: "registration")
-if registration_form && registration_form.form_fields.where(field_identifier: "primary_service_area").none?
+if registration_form && registration_form.form_fields.where(field_identifier: "primary_sector").none?
   FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :professional_info ])
 end
-service_area_field = registration_form&.form_fields&.find_by(field_identifier: "primary_service_area")
+service_area_field = registration_form&.form_fields&.find_by(field_identifier: "primary_sector")
 age_group_field = registration_form&.form_fields&.find_by(field_identifier: "primary_age_group")
 
 # Existing dev organizations (excluding AWBW itself) to affiliate recipients

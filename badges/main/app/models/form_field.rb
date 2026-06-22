@@ -15,15 +15,20 @@ class FormField < ApplicationRecord
   # "required" flag is meaningless for them (nothing to fill in).
   NON_INPUT_ANSWER_TYPES = %w[no_user_input group_header].freeze
 
+  # Multi-select "additional sectors" field identifiers. The current "sector"
+  # name and the legacy "service area" name are both accepted so existing form
+  # data keeps resolving.
+  ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector primary_service_area].freeze
+
+  # Single-select "primary sector" field identifiers (current + legacy). Unlike
+  # the multi-select "additional" field, these omit the catch-all "Other" sector
+  # — a respondent's primary sector must be a concrete sector.
+  PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector_single primary_service_area_single].freeze
+
   # Field identifiers whose selectable options are sourced dynamically from
   # Sector records rather than the field's own stored answer options. The
   # submitted value for these is a Sector id (as a string).
-  SERVICE_AREA_FIELD_IDENTIFIERS = %w[primary_service_area primary_service_area_single].freeze
-
-  # The single-select "primary" service-area field. Unlike the multi-select
-  # "additional" field, it omits the catch-all "Other" sector — a respondent's
-  # primary service area must be a concrete sector.
-  PRIMARY_SERVICE_AREA_FIELD_IDENTIFIER = "primary_service_area_single"
+  SECTOR_FIELD_IDENTIFIERS = (ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + PRIMARY_SECTOR_FIELD_IDENTIFIERS).freeze
 
   # Field identifiers whose selectable options are sourced dynamically from a
   # CategoryType's published categories. The submitted value is a Category id
@@ -291,7 +296,7 @@ class FormField < ApplicationRecord
   # True when this field's selectable options come from Sector/Category data
   # rather than its own stored answer options. Dynamic fields never offer "Other".
   def dynamic_options?
-    field_identifier.in?(SERVICE_AREA_FIELD_IDENTIFIERS) ||
+    field_identifier.in?(SECTOR_FIELD_IDENTIFIERS) ||
       DYNAMIC_FIELD_CATEGORY_TYPES.key?(field_identifier)
   end
 
@@ -302,8 +307,8 @@ class FormField < ApplicationRecord
   def allowed_answer_values
     return unless selectable?
 
-    values = if field_identifier.in?(SERVICE_AREA_FIELD_IDENTIFIERS)
-      service_area_sectors.pluck(:id).map(&:to_s)
+    values = if field_identifier.in?(SECTOR_FIELD_IDENTIFIERS)
+      sector_options.pluck(:id).map(&:to_s)
     elsif DYNAMIC_FIELD_CATEGORY_TYPES.key?(field_identifier)
       dynamic_categories.pluck(:id).map(&:to_s)
     else
@@ -313,13 +318,13 @@ class FormField < ApplicationRecord
     values.to_set
   end
 
-  # The published Sector records a service-area field offers, in name order. The
+  # The published Sector records a sector-backed field offers, in name order. The
   # single-select "primary" field omits the catch-all "Other" sector; the
   # multi-select "additional" field includes it. Source of truth shared by the
   # public form's rendering and submission validation.
-  def service_area_sectors
+  def sector_options
     scope = Sector.published.order(:name)
-    field_identifier == PRIMARY_SERVICE_AREA_FIELD_IDENTIFIER ? scope.excluding_other : scope
+    field_identifier.in?(PRIMARY_SECTOR_FIELD_IDENTIFIERS) ? scope.excluding_other : scope
   end
 
   # The published Category records a category-backed dynamic field offers, in
