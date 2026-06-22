@@ -122,52 +122,73 @@
     </div>
   </div>
 
-  <!-- Sectors -->
-  <div class="form-group space-y-4">
-    <div class="font-semibold text-gray-700 mb-2">
-      Sectors
-    </div>
-    <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm
-                flex flex-wrap items-center gap-2"
-         data-controller="primary-sector">
-      <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
-      <%= f.simple_fields_for :sectorable_items, sectors_owner.sectorable_items_primary_first do |sfi| %>
-        <%= render "shared/sectorable_item_fields", f: sfi, show_admin_flags: true %>
-      <% end %>
+  <!-- Sectors + Age ranges (side by side; age ranges is the thinner column) -->
+  <% age_type, age_cats = (@person_categories_grouped || {}).find { |type, _| type.name == "AgeRange" } %>
+  <% primary_age_ids = @person.primary_age_category_ids %>
+  <div class="flex flex-col lg:flex-row gap-4 items-start">
+    <!-- Sectors -->
+    <div class="form-group space-y-4 w-full lg:flex-1">
+      <div class="font-semibold text-gray-700 mb-2">
+        Sectors
+      </div>
+      <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm
+                  flex flex-wrap items-center gap-2"
+           data-controller="primary-sector">
+        <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
+        <%= f.simple_fields_for :sectorable_items, sectors_owner.sectorable_items_primary_first do |sfi| %>
+          <%= render "shared/sectorable_item_fields", f: sfi, show_admin_flags: true %>
+        <% end %>
 
-      <%= link_to_add_association "➕ Add Sector",
-                                  f,
-                                  :sectorable_items,
-                                  partial: "shared/sectorable_item_fields",
-                                  render_options: {
-                                    locals: { collection: (@sectors_collection || [])
-                                      .reject { |_, id| (@current_sector_ids || []).include?(id) },
-                                              show_admin_flags: true } },
-                                  class: "btn btn-secondary-outline" %>
-      <%= render "people/other_responses", responses: @person.other_sector_responses %>
+        <%= link_to_add_association "➕ Add Sector",
+                                    f,
+                                    :sectorable_items,
+                                    partial: "shared/sectorable_item_fields",
+                                    render_options: {
+                                      locals: { collection: (@sectors_collection || [])
+                                        .reject { |_, id| (@current_sector_ids || []).include?(id) },
+                                                show_admin_flags: true } },
+                                    class: "btn btn-secondary-outline" %>
+        <%= render "people/other_responses", responses: @person.other_sector_responses %>
+      </div>
     </div>
+
+    <!-- Age ranges -->
+    <% if age_type %>
+      <div class="form-group space-y-4 w-full lg:w-80 lg:flex-shrink-0">
+        <div class="font-semibold text-gray-700 mb-2">
+          <%= age_type.display_label %>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+          <%# Ensures the primary-age param is always submitted so unchecking every
+              toggle clears the primary flags. %>
+          <%= hidden_field_tag "person[primary_age_category_ids][]", "" %>
+          <p class="text-sm text-gray-500 mb-3">Check every age group served, then mark the primary ones.</p>
+          <div class="flex flex-wrap gap-3">
+            <% age_cats.each do |category| %>
+              <%= render "shared/category_checkbox", param_key: "person", category: category,
+                         checked: @person.category_ids.include?(category.id),
+                         is_age: true,
+                         primary_checked: primary_age_ids.include?(category.id) %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
   </div>
 
-  <!-- Profile-specific Categories -->
-  <% if @person_categories_grouped.present? %>
-    <% primary_age_ids = @person.primary_age_category_ids %>
+  <!-- Profile-specific Categories (other than age ranges) -->
+  <% other_category_types = (@person_categories_grouped || {}).reject { |type, _| type.name == "AgeRange" } %>
+  <% if other_category_types.present? %>
     <div class="form-group space-y-4">
-      <%# Ensures the primary-age param is always submitted so unchecking every
-          toggle clears the primary flags. %>
-      <%= hidden_field_tag "person[primary_age_category_ids][]", "" %>
-      <% @person_categories_grouped.each do |type, cats| %>
-        <% is_age = type.name == "AgeRange" %>
+      <% other_category_types.each do |type, cats| %>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
           <h3 class="font-semibold text-gray-700 mb-3"><%= type.display_label %></h3>
-          <% if is_age %>
-            <p class="text-sm text-gray-500 mb-3">Check every age group served, then mark the primary ones.</p>
-          <% end %>
           <div class="flex flex-wrap gap-3">
             <% cats.each do |category| %>
               <%= render "shared/category_checkbox", param_key: "person", category: category,
                          checked: @person.category_ids.include?(category.id),
-                         is_age: is_age,
-                         primary_checked: is_age && primary_age_ids.include?(category.id) %>
+                         is_age: false,
+                         primary_checked: false %>
             <% end %>
           </div>
         </div>

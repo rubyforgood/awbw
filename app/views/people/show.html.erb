@@ -142,38 +142,45 @@
               <% end %>
             </div>
           <% end %>
-          <!-- Sectors -->
-          <% if @person.profile_show_sectors? %>
-            <%# One combined list: the primary sector leads as a darker-green starred
-                chip, followed by the additional sectors alphabetically and any
-                free-text "Other" responses. %>
-            <% sectorable_items = @person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
-            <% other_sectors = @person.other_sector_responses %>
-            <div class="md:col-span-2 p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
-              <% if sectorable_items.any? || other_sectors.any? %>
-                <div class="flex flex-wrap gap-2">
-                  <% sectorable_items.each do |si| %>
-                    <%= render "sectors/tagging_label",
-                                 sector: si.sector,
-                                 is_primary: si.is_primary?,
-                                 display_leader: true,
-                                 is_leader: si.is_leader %>
-                  <% end %>
-                  <%= render "people/other_responses", responses: other_sectors %>
-                </div>
-              <% else %>
-                <p class="text-gray-500 italic">None selected.</p>
-              <% end %>
-            </div>
-          <% end %>
-          <!-- Age groups served -->
+          <!-- Sectors + Age ranges (two columns; age ranges is the thinner column) -->
+          <% sectorable_items = @person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
+          <% other_sectors = @person.other_sector_responses %>
+          <% show_sectors = @person.profile_show_sectors? %>
           <% primary_age_groups = @person.primary_age_groups.to_a %>
           <% additional_age_groups = @person.additional_age_groups.to_a %>
-          <% if primary_age_groups.any? || additional_age_groups.any? %>
+          <% show_age = primary_age_groups.any? || additional_age_groups.any? %>
+          <% if show_sectors || show_age %>
             <div class="md:col-span-2 p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Age groups served</h2>
-              <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
+              <div class="flex gap-4 items-start">
+                <% if show_sectors %>
+                  <%# One combined list: the primary sector leads as a darker-green
+                      starred chip, then additional sectors alphabetically and any
+                      free-text "Other" responses. %>
+                  <div class="flex-1 min-w-0">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+                    <% if sectorable_items.any? || other_sectors.any? %>
+                      <div class="flex flex-wrap gap-2">
+                        <% sectorable_items.each do |si| %>
+                          <%= render "sectors/tagging_label",
+                                       sector: si.sector,
+                                       is_primary: si.is_primary?,
+                                       display_leader: true,
+                                       is_leader: si.is_leader %>
+                        <% end %>
+                        <%= render "people/other_responses", responses: other_sectors %>
+                      </div>
+                    <% else %>
+                      <p class="text-gray-500 italic">None selected.</p>
+                    <% end %>
+                  </div>
+                <% end %>
+                <% if show_age %>
+                  <div class="w-32 flex-shrink-0">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3">Age ranges</h2>
+                    <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups, compact: true %>
+                  </div>
+                <% end %>
+              </div>
             </div>
           <% end %>
         </div>
