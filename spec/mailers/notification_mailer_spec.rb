@@ -46,6 +46,23 @@ RSpec.describe NotificationMailer, type: :mailer do
         expect(subject).to include("New event scholarship registration by")
       end
     end
+
+    context "for a virtual event" do
+      let(:event) { create(:event, videoconference_url: "https://zoom.us/j/123", videoconference_label: "Zoom", videoconference_passcode: "secret123") }
+      let(:event_registration) { create(:event_registration, event: event) }
+
+      it "shows the platform label as plain text" do
+        body = described_class.event_registration_confirmation_fyi(notification).body.encoded
+        expect(body).to include("Zoom")
+      end
+
+      it "does not include the join link, meeting ID, or passcode" do
+        body = described_class.event_registration_confirmation_fyi(notification).body.encoded
+        expect(body).not_to include("https://zoom.us/j/123")
+        expect(body).not_to include("secret123")
+        expect(body).not_to include("Meeting ID")
+      end
+    end
   end
 
   describe "#report_submitted_fyi" do
