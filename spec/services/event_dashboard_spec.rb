@@ -350,6 +350,16 @@ RSpec.describe EventDashboard do
       end
     end
 
+    describe "localities" do
+      it "lists distinct localities from active registrants' active addresses, sorted and excluding inactive" do
+        person1.addresses.first.update!(locality: "Northern CA")
+        person2.addresses.where(inactive: false).first.update!(locality: "LA City")
+        person2.addresses.where(inactive: true).first.update!(locality: "Southern CA")
+
+        expect(dashboard.localities).to eq([ "LA City", "Northern CA" ])
+      end
+    end
+
     describe "countries" do
       it "returns the registrant ids that have a country on file, excluding inactive and cancelled" do
         expect(dashboard.country_registrant_ids).to contain_exactly(person1.id, person2.id)

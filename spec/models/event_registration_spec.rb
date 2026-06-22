@@ -348,6 +348,35 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe ".registrant_locality scope" do
+    it "filters to registrations whose registrant has an active address in the locality" do
+      match = create(:event_registration)
+      create(:address, addressable: match.registrant, locality: "LA City", inactive: false)
+      other = create(:event_registration)
+      create(:address, addressable: other.registrant, locality: "Northern CA", inactive: false)
+
+      expect(EventRegistration.registrant_locality("LA City")).to contain_exactly(match)
+    end
+
+    it "ignores inactive addresses" do
+      reg = create(:event_registration)
+      create(:address, addressable: reg.registrant, locality: "LA City", inactive: true)
+
+      expect(EventRegistration.registrant_locality("LA City")).to be_empty
+    end
+  end
+
+  describe ".registrant_country scope" do
+    it "filters to registrations whose registrant has an active address in the country" do
+      match = create(:event_registration)
+      create(:address, addressable: match.registrant, country: "Canada", inactive: false)
+      other = create(:event_registration)
+      create(:address, addressable: other.registrant, country: "Mexico", inactive: false)
+
+      expect(EventRegistration.registrant_country("Canada")).to contain_exactly(match)
+    end
+  end
+
   describe "#paid_in_full?" do
     let(:event) { create(:event, cost_cents: 1000) }
     let(:user) { create(:user, :with_person) }

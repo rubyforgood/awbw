@@ -471,6 +471,18 @@ class EventDashboard
       .sort
   end
 
+  # Localities (e.g. urban / rural / suburban) on file across active registrants'
+  # active addresses, sorted by name — the option list for the registrants filter.
+  def localities
+    @localities ||= Address
+      .active
+      .where(addressable_type: "Person", addressable_id: registrant_ids)
+      .where.not(locality: [ nil, "" ])
+      .distinct
+      .pluck(:locality)
+      .sort
+  end
+
   # Distinct registrant count per country.
   def country_counts
     @country_counts ||= Address

@@ -89,8 +89,15 @@ class EventsController < ApplicationController
     scope = scope.scholarship_status(params[:scholarship]) if params[:scholarship].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
     scope = scope.registrant_state(params[:state]) if params[:state].present?
+    scope = scope.registrant_locality(params[:locality]) if params[:locality].present?
     scope = scope.registrant_county(params[:county]) if params[:county].present?
+    scope = scope.registrant_country(params[:country]) if params[:country].present?
     scope = scope.registrant_sector(params[:sector]) if params[:sector].present?
+
+    if params[:organization_status].present?
+      registration_ids = EventOrganizationLinkStatus.new(@event).registration_ids_for(params[:organization_status])
+      scope = scope.where(id: registration_ids)
+    end
 
     @active_count = scope.active.count
     @inactive_count = scope.inactive.count

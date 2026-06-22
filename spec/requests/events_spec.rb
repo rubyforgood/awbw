@@ -138,6 +138,50 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /registrants with organization_status filter" do
+    let(:form) { create(:form) }
+    let!(:event_form) { create(:event_form, :registration, event: event, form: form) }
+    let!(:agency_field) { create(:form_field, form: form, field_identifier: "agency_name") }
+
+    let(:linked_person) { create(:person, first_name: "Linny", last_name: "Linked") }
+    let(:pending_person) { create(:person, first_name: "Penny", last_name: "Pending") }
+    let(:none_person) { create(:person, first_name: "Nora", last_name: "None") }
+
+    before do
+      linked = create(:event_registration, event: event, registrant: linked_person)
+      create(:event_registration_organization, event_registration: linked, organization: create(:organization, name: "Acme Org"))
+
+      create(:event_registration, event: event, registrant: pending_person)
+      submission = create(:form_submission, person: pending_person, form: form)
+      create(:form_answer, form_submission: submission, form_field: agency_field, submitted_answer: "Unlinked Agency")
+
+      create(:event_registration, event: event, registrant: none_person)
+
+      sign_in admin
+    end
+
+    it "shows only linked registrants when filtering by linked" do
+      get registrants_event_path(event, organization_status: "linked")
+      expect(response.body).to include("Linny")
+      expect(response.body).not_to include("Penny")
+      expect(response.body).not_to include("Nora None")
+    end
+
+    it "shows only pending registrants when filtering by pending" do
+      get registrants_event_path(event, organization_status: "pending")
+      expect(response.body).to include("Penny")
+      expect(response.body).not_to include("Linny")
+      expect(response.body).not_to include("Nora None")
+    end
+
+    it "shows only unresolved registrants when filtering by none" do
+      get registrants_event_path(event, organization_status: "none")
+      expect(response.body).to include("Nora None")
+      expect(response.body).not_to include("Linny")
+      expect(response.body).not_to include("Penny")
+    end
+  end
+
   describe "GET /details" do
     let(:event) { create(:event, :published, :publicly_visible) }
 
@@ -581,15 +625,15 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include(">Pending<")
-        expect(response.body).not_to include(">None<")
+        expect(response.body).to include("<span>Pending</span>")
+        expect(response.body).not_to include("<span>None</span>")
       end
 
       it "shows a 'None' chip when a registrant has no linked org and submitted nothing" do
         get registrants_event_path(event)
 
-        expect(response.body).to include(">None<")
-        expect(response.body).not_to include(">Pending<")
+        expect(response.body).to include("<span>None</span>")
+        expect(response.body).not_to include("<span>Pending</span>")
       end
 
       it "shows the linked org AND a 'Pending' chip when the submitted name is not among the linked orgs" do
@@ -599,7 +643,7 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include(organization.name)
-        expect(response.body).to include(">Pending<")
+        expect(response.body).to include("<span>Pending</span>")
       end
 
       it "does not show 'Pending' when the submitted name matches a linked org" do
@@ -609,7 +653,7 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include(organization.name)
-        expect(response.body).not_to include(">Pending<")
+        expect(response.body).not_to include("<span>Pending</span>")
       end
     end
 

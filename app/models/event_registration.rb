@@ -76,6 +76,16 @@ class EventRegistration < ApplicationRecord
     conditions[:state] = state if state.present?
     joins(registrant: :addresses).where(addresses: conditions).distinct
   }
+  scope :registrant_locality, ->(locality) {
+    joins(registrant: :addresses)
+      .where(addresses: { inactive: false, locality: locality })
+      .distinct
+  }
+  scope :registrant_country, ->(country) {
+    joins(registrant: :addresses)
+      .where(addresses: { inactive: false, country: country })
+      .distinct
+  }
   scope :registrant_sector, ->(sector_id) {
     joins(registrant: :sectorable_items)
       .where(sectorable_items: { sector_id: sector_id })
