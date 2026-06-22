@@ -374,7 +374,7 @@ RSpec.describe "Public form submissions", type: :system do
     fill_pr_text reg_field("mailing_street"), with: "123 Main St"
     choose_pr_radio reg_field("mailing_address_type"), "Personal"
     fill_pr_text reg_field("mailing_city"), with: "Los Angeles"
-    select_pr reg_field("mailing_state"), "California (CA)"
+    fill_pr_text reg_field("mailing_state"), with: "CA"
     fill_pr_text reg_field("mailing_zip"), with: "90001"
     fill_pr_text reg_field("mailing_country"), with: "United States"
     fill_pr_text reg_field("phone"), with: "555-123-4567"
@@ -386,7 +386,7 @@ RSpec.describe "Public form submissions", type: :system do
     choose_pr_radio reg_field("agency_type"), "501c3/nonprofit"
     fill_pr_text reg_field("agency_street"), with: "9 Center Ave"
     fill_pr_text reg_field("agency_city"), with: "Pasadena"
-    select_pr reg_field("agency_state"), "California (CA)"
+    fill_pr_text reg_field("agency_state"), with: "CA"
     fill_pr_text reg_field("agency_zip"), with: "91101"
     fill_pr_text reg_field("agency_country"), with: "United States"
 

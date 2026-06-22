@@ -66,4 +66,48 @@ RSpec.describe Address, type: :model do
       expect(address).to be_valid
     end
   end
+
+  describe "state by country" do
+    it "treats a blank or United States country as domestic" do
+      expect(build(:address, country: nil)).to be_united_states
+      expect(build(:address, country: "United States")).to be_united_states
+      expect(build(:address, country: "Canada")).not_to be_united_states
+    end
+
+    it "accepts a recognized US state abbreviation for a domestic address" do
+      address = build(:address, country: "United States", state: "CA")
+      expect(address).to be_valid
+    end
+
+    it "rejects an unrecognized state for a domestic address" do
+      address = build(:address, country: "United States", state: "Ontario")
+      expect(address).not_to be_valid
+      expect(address.errors[:state]).to include("is not a valid US state")
+    end
+
+    it "accepts a free-form region for an international address" do
+      address = build(:address, country: "Canada", state: "Ontario")
+      expect(address).to be_valid
+    end
+
+    it "still requires a state for an international address" do
+      address = build(:address, country: "Canada", state: nil)
+      expect(address).not_to be_valid
+      expect(address.errors[:state]).to include("can't be blank")
+    end
+  end
+
+  describe "#name" do
+    it "formats a US address with a state" do
+      address = build(:address, street_address: "123 Main St", city: "Los Angeles",
+                                state: "CA", zip_code: "90001")
+      expect(address.name).to eq("123 Main St, Los Angeles, CA 90001")
+    end
+
+    it "omits a blank state without leaving a stray separator" do
+      address = build(:address, street_address: "10 King St W", city: "Toronto",
+                                state: nil, zip_code: "M5H 1B6")
+      expect(address.name).to eq("10 King St W, Toronto, M5H 1B6")
+    end
+  end
 end

@@ -1,5 +1,8 @@
 import { application } from "./application"
 
+import AddressRegionController from "./address_region_controller"
+application.register("address-region", AddressRegionController)
+
 import AddressSelectController from "./address_select_controller"
 application.register("address-select", AddressSelectController)
 

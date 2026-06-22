@@ -169,6 +169,7 @@ module EventRegistrationServices
     def create_mailing_address(person)
       new_city = field_value("mailing_city")&.strip
       new_state = field_value("mailing_state")&.strip
+      new_country = field_value("mailing_country")&.strip.presence
 
       existing = person.addresses.find_by(
         "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
@@ -179,6 +180,7 @@ module EventRegistrationServices
         existing.update!(
           street_address: field_value("mailing_street"),
           zip_code: field_value("mailing_zip"),
+          country: new_country,
           primary: true,
           inactive: false
         )
@@ -191,6 +193,7 @@ module EventRegistrationServices
         street_address: field_value("mailing_street"),
         city: new_city,
         state: new_state,
+        country: new_country,
         zip_code: field_value("mailing_zip"),
         locality: "Unknown",
         address_type: field_value("mailing_address_type")&.downcase || "unknown",
@@ -243,6 +246,7 @@ module EventRegistrationServices
     def create_agency_address(organization)
       new_city = field_value("agency_city")&.strip
       new_state = field_value("agency_state")&.strip
+      new_country = field_value("agency_country")&.strip.presence
 
       existing = organization.addresses.find_by(
         "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
@@ -253,6 +257,7 @@ module EventRegistrationServices
         existing.update!(
           street_address: field_value("agency_street"),
           zip_code: field_value("agency_zip"),
+          country: new_country,
           primary: true,
           inactive: false
         )
@@ -265,6 +270,7 @@ module EventRegistrationServices
         street_address: field_value("agency_street"),
         city: new_city,
         state: new_state,
+        country: new_country,
         zip_code: field_value("agency_zip"),
         locality: "Unknown",
         address_type: "work",

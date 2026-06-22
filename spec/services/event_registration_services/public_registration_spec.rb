@@ -121,6 +121,37 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "international vs. US mailing address" do
+    def register_with(state:, country:)
+      params = base_form_params(first_name: "Robin", last_name: "Avery", email: "robin@example.com").merge(
+        field_id("mailing_street") => "123 Main St",
+        field_id("mailing_city") => "Toronto",
+        field_id("mailing_state") => state,
+        field_id("mailing_zip") => "M5H 1B6",
+        field_id("mailing_country") => country
+      )
+      described_class.call(event: event, form: form, form_params: params)
+    end
+
+    it "saves a free-form region and country for an international address" do
+      result = register_with(state: "Ontario", country: "Canada")
+
+      expect(result.success?).to be true
+      address = Person.find_by(first_name: "Robin").addresses.find_by(primary: true)
+      expect(address).to have_attributes(state: "Ontario", country: "Canada")
+    end
+
+    it "rejects an unrecognized state when the country is the United States" do
+      result = nil
+      expect {
+        result = register_with(state: "Ontario", country: "United States")
+      }.not_to change(EventRegistration, :count)
+
+      expect(result.success?).to be false
+      expect(result.errors.join).to match(/state.*not a valid US state/i)
+    end
+  end
+
   describe "sector tagging" do
     let!(:primary_sector) { create(:sector, name: "Healthcare") }
     let!(:additional_sector) { create(:sector, name: "Education") }

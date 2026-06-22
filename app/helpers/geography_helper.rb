@@ -1,57 +1,26 @@
 module GeographyHelper
   def us_states
-    [
-      [ "Alabama", "AL" ],
-      [ "Alaska", "AK" ],
-      [ "Arizona", "AZ" ],
-      [ "Arkansas", "AR" ],
-      [ "California", "CA" ],
-      [ "Colorado", "CO" ],
-      [ "Connecticut", "CT" ],
-      [ "Delaware", "DE" ],
-      [ "District of Columbia", "DC" ],
-      [ "Florida", "FL" ],
-      [ "Georgia", "GA" ],
-      [ "Hawaii", "HI" ],
-      [ "Idaho", "ID" ],
-      [ "Illinois", "IL" ],
-      [ "Indiana", "IN" ],
-      [ "Iowa", "IA" ],
-      [ "Kansas", "KS" ],
-      [ "Kentucky", "KY" ],
-      [ "Louisiana", "LA" ],
-      [ "Maine", "ME" ],
-      [ "Maryland", "MD" ],
-      [ "Massachusetts", "MA" ],
-      [ "Michigan", "MI" ],
-      [ "Minnesota", "MN" ],
-      [ "Mississippi", "MS" ],
-      [ "Missouri", "MO" ],
-      [ "Montana", "MT" ],
-      [ "Nebraska", "NE" ],
-      [ "Nevada", "NV" ],
-      [ "New Hampshire", "NH" ],
-      [ "New Jersey", "NJ" ],
-      [ "New Mexico", "NM" ],
-      [ "New York", "NY" ],
-      [ "North Carolina", "NC" ],
-      [ "North Dakota", "ND" ],
-      [ "Ohio", "OH" ],
-      [ "Oklahoma", "OK" ],
-      [ "Oregon", "OR" ],
-      [ "Pennsylvania", "PA" ],
-      [ "Rhode Island", "RI" ],
-      [ "South Carolina", "SC" ],
-      [ "South Dakota", "SD" ],
-      [ "Tennessee", "TN" ],
-      [ "Texas", "TX" ],
-      [ "Utah", "UT" ],
-      [ "Vermont", "VT" ],
-      [ "Virginia", "VA" ],
-      [ "Washington", "WA" ],
-      [ "West Virginia", "WV" ],
-      [ "Wisconsin", "WI" ],
-      [ "Wyoming", "WY" ]
-    ]
+    UsState::ALL
+  end
+
+  # A <datalist> of US states for a free-text state/region input: it suggests US
+  # states (stored as abbreviations) while still letting the user type any
+  # international region or leave it blank. Reference it from an input via
+  # `list:` matching the given +id+.
+  def us_states_datalist(id)
+    options = us_states.map { |name, abbr| tag.option(value: abbr, label: name) }
+    tag.datalist(safe_join(options), id: id)
+  end
+
+  # Country names for the address country dropdown: the canonical "United States"
+  # first (it drives the US-state-vs-region toggle), then every other country
+  # alphabetically. The US is excluded from the gem list by code so the only US
+  # option is our canonical value, not the gem's verbose "United States of America".
+  def country_options
+    others = ISO3166::Country.all
+      .reject { |country| country.alpha2 == "US" }
+      .map(&:iso_short_name)
+      .sort
+    [ Address::US_COUNTRY ] + others
   end
 end

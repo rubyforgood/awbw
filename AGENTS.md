@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (74) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -266,6 +266,7 @@ end
 
 ### Stimulus Controllers
 
+- `address_region` — Toggle an address's state field between a US state dropdown and a free-text region input based on the selected country
 - `address_select` — Compact numbered picker linking an affiliation to an org address
 - `affiliation_dates` — Recalculate affiliation date ranges
 - `anchor_highlight` — Highlight anchored elements

@@ -1,4 +1,6 @@
-<div class="nested-fields rounded-lg bg-white border border-gray-200 p-6 mb-4">
+<div class="nested-fields rounded-lg bg-white border border-gray-200 p-6 mb-4"
+     data-controller="address-region"
+     data-address-region-us-country-value="<%= Address::US_COUNTRY %>">
   <div class="text-lg font-semibold text-gray-800 mb-4">
     Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %>
   </div>
@@ -93,11 +95,32 @@
                   class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 } %>
 
-    <%= f.input :state,
-                label: "State",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
+    <%# State: a validated US dropdown for domestic addresses, a free-text region
+        input for international ones. The address-region controller shows whichever
+        matches the selected country; the hidden one is disabled so it never submits. %>
+    <% domestic = f.object.new_record? || f.object.united_states? %>
+    <div>
+      <div data-address-region-wrapper class="<%= "hidden" unless domestic %>">
+        <%= f.label :state, "State", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.select :state,
+                     us_states,
+                     { include_blank: "Select a state" },
+                     required: true,
+                     disabled: !domestic,
+                     data: { address_region_target: "stateSelect" },
+                     class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+      </div>
+      <div data-address-region-wrapper class="<%= "hidden" if domestic %>">
+        <%= f.label :state, "State / region", for: f.field_id(:state, :region),
+                    class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :state,
+                         id: f.field_id(:state, :region),
+                         required: true,
+                         disabled: domestic,
+                         data: { address_region_target: "stateText" },
+                         class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+      </div>
+    </div>
     <%= f.input :zip_code,
                 label: "ZIP Code",
                 input_html: {
@@ -119,11 +142,17 @@
                   class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 } %>
 
-    <%= f.input :country,
-                label: "Country",
-                input_html: {
-                  class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                } %>
+    <%# Country drives the state field above: choosing anything other than the
+        United States swaps the state dropdown for a free-text region input. %>
+    <div>
+      <%= f.label :country, "Country", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :country,
+                   country_options,
+                   { selected: f.object.country.presence || Address::US_COUNTRY },
+                   required: true,
+                   data: { address_region_target: "country", action: "address-region#update" },
+                   class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+    </div>
     <%= f.input :phone,
                 label: "Phone",
                 input_html: {

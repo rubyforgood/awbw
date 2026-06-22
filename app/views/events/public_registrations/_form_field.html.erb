@@ -34,15 +34,16 @@
   <% case field.answer_type %>
   <% when "free_form_input_one_line" %>
     <% if field.field_identifier&.end_with?("_state") %>
-      <select name="<%= field_name %>"
-              id="<%= field_id %>"
-              class="<%= input_classes %>"
-              <%= "required" if field.required %>>
-        <option value="">Select a state</option>
-        <% us_states.each do |name, abbr| %>
-          <option value="<%= abbr %>" <%= "selected" if value == abbr %>><%= name %> (<%= abbr %>)</option>
-        <% end %>
-      </select>
+      <%# Free-text so international registrants can enter any region, with US
+          states offered as datalist suggestions (stored as abbreviations). %>
+      <input type="text"
+             name="<%= field_name %>"
+             id="<%= field_id %>"
+             value="<%= value %>"
+             list="<%= field_id %>_states"
+             class="<%= input_classes %>"
+             <%= "required" if field.required %>>
+      <%= us_states_datalist("#{field_id}_states") %>
     <% else %>
       <%
         html_type = case field.field_identifier
