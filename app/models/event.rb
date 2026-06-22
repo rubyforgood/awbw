@@ -107,11 +107,15 @@ class Event < ApplicationRecord
     forms.find_by(event_forms: { role: "registration" })
   end
 
-  # True when at least one registrant for this event requested CE credit. Drives
-  # the CE status column and filter on the registrants index — there's nothing
-  # to show or filter when no one has asked for CE.
-  def any_ce_credit_requests?
-    event_registrations.exists?(ce_credit_requested: true)
+  # True when this event's registration form includes the seeded CE-interest
+  # question — i.e. the event actually offers continuing-education credit. Gates
+  # every CE surface (registrants index, onboarding matrix, bulk reminders) and
+  # their CSV exports, so events that don't offer CE never show empty CE
+  # columns/filters even if a stray registration carries CE data.
+  def offers_ce?
+    registration_form&.form_fields&.exists?(
+      field_identifier: EventRegistrationServices::PublicRegistration::CE_CREDIT_INTEREST_IDENTIFIER
+    ) || false
   end
 
   # Whether a signed-in user should register in one click rather than being

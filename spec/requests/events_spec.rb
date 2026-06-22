@@ -5,6 +5,15 @@ RSpec.describe "Events", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:event) { create(:event) }
 
+  # Attaches a registration form carrying the seeded CE-interest question so the
+  # event reports `offers_ce?`, which gates every CE column/filter/export.
+  def offer_ce!(target_event)
+    form = create(:form)
+    create(:event_form, event: target_event, form: form, role: "registration")
+    create(:form_field, form: form, field_identifier: "ce_credit_interest")
+    target_event
+  end
+
   let(:valid_params) do
     {
       event: {
@@ -854,11 +863,21 @@ RSpec.describe "Events", type: :request do
     let!(:missing_reg) { create(:event_registration, event: event, registrant: missing_person, ce_credit_requested: true) }
     let!(:none_reg) { create(:event_registration, event: event, registrant: none_person, ce_credit_requested: false) }
 
-    before { sign_in admin }
+    before do
+      offer_ce!(event)
+      sign_in admin
+    end
 
-    it "shows the CE status column and filter once an event has CE requests" do
+    it "shows the CE status column and filter when the event offers CE" do
       get registrants_event_path(event)
       expect(response.body).to include("CE status")
+      expect(response.body).to include('data-column-toggle-group-value="ce"')
+    end
+
+    it "renders the CE status column hidden by default, behind its toggle" do
+      get registrants_event_path(event)
+      # The CE column markers carry the `hidden` class until the toggle reveals them.
+      expect(response.body).to match(/class="[^"]*hidden[^"]*"[^>]*data-column-toggle-col="ce"/)
     end
 
     it "filters to all CE requests" do
@@ -891,9 +910,9 @@ RSpec.describe "Events", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "hides the CE column when no one requested CE credit" do
+    it "hides CE entirely when the event's registration form doesn't offer CE" do
       plain_event = create(:event)
-      create(:event_registration, event: plain_event)
+      create(:event_registration, event: plain_event, ce_credit_requested: true)
       get registrants_event_path(plain_event)
       expect(response.body).not_to include("CE status")
     end
@@ -955,7 +974,10 @@ RSpec.describe "Events", type: :request do
     let(:person) { create(:person, first_name: "Onboard", last_name: "Ready") }
     let!(:registration) { create(:event_registration, event: event, registrant: person) }
 
-    before { sign_in admin }
+    before do
+      offer_ce!(event)
+      sign_in admin
+    end
 
     it "renders the onboarding matrix with the checklist columns" do
       get onboarding_event_path(event)

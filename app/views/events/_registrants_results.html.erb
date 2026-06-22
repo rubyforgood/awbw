@@ -1,5 +1,5 @@
 <%= turbo_frame_tag :registrants_results do %>
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-controller="column-toggle">
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-column-toggle-root>
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
       <% current_filter = params[:attendance_status].present? ? nil : (params[:status_filter].presence || "active") %>
       <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Attendance filter">
@@ -15,21 +15,43 @@
         <% end %>
       </nav>
 
-      <label class="inline-flex items-center gap-2 cursor-pointer select-none">
-        <span class="text-sm text-gray-500">User confirmation</span>
+      <div class="flex items-center gap-4">
+        <% if @offers_ce %>
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+                 data-controller="column-toggle" data-column-toggle-group-value="ce">
+            <span class="text-sm text-gray-500">CE status</span>
 
-        <input
-          type="checkbox"
-          data-column-toggle-target="toggle"
-          data-action="column-toggle#toggle"
-          class="sr-only"
-        >
+            <input
+              type="checkbox"
+              data-column-toggle-target="toggle"
+              data-action="column-toggle#toggle"
+              class="sr-only"
+            >
 
-        <span class="relative inline-block w-9 h-5">
-          <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-          <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
-        </span>
-      </label>
+            <span class="relative inline-block w-9 h-5">
+              <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
+              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+            </span>
+          </label>
+        <% end %>
+
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+               data-controller="column-toggle" data-column-toggle-group-value="confirmed">
+          <span class="text-sm text-gray-500">User confirmation</span>
+
+          <input
+            type="checkbox"
+            data-column-toggle-target="toggle"
+            data-action="column-toggle#toggle"
+            class="sr-only"
+          >
+
+          <span class="relative inline-block w-9 h-5">
+            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+          </span>
+        </label>
+      </div>
     </div>
 
     <% event_form_ids = @event.form_ids %>
@@ -69,12 +91,12 @@
               <% end %>
 
               <% if ce_col %>
-                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
+                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" aria-sort="none" data-column-toggle-col="ce">
                   <%= render "shared/sortable_header", label: "CE status", index: ce_index %>
                 </th>
               <% end %>
 
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col>Confirmed</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col="confirmed">Confirmed</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
                 <%= render "shared/sortable_header", label: "Date registered", index: date_index %>
               </th>
@@ -259,7 +281,7 @@
                 <% end %>
 
                 <% if ce_col %>
-                  <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= registration.ce_credit_requested? ? 1 : 0 %>">
+                  <td class="px-4 py-2 text-sm text-center hidden" data-column-toggle-col="ce" data-sort-value="<%= registration.ce_credit_requested? ? 1 : 0 %>">
                     <% if (ce_label = registration.ce_status_label) %>
                       <% ce_badge_classes, ce_badge_icon = case ce_label
                            when "Incomplete" then [ "bg-amber-50 text-amber-700 border-amber-200", "fa-circle-exclamation" ]
@@ -283,7 +305,7 @@
                   </td>
                 <% end %>
 
-                <td class="px-4 py-2 text-center align-top hidden" data-column-toggle-col>
+                <td class="px-4 py-2 text-center align-top hidden" data-column-toggle-col="confirmed">
                   <% if person.user.present? %>
                     <%= render "users/confirmed_status", user: person.user, invite_params: {} %>
                   <% else %>

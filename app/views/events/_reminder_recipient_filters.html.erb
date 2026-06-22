@@ -55,15 +55,17 @@
             ),
             include_blank: "Any scholarship status", class: select_class %>
     </div>
-    <div>
-      <%= label_tag :ce_status, "CE", class: label_class %>
-      <%= select_tag :ce_status,
-            options_for_select(
-              [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
-              params[:ce_status]
-            ),
-            include_blank: "Any CE status", class: select_class %>
-    </div>
+    <% if @offers_ce %>
+      <div>
+        <%= label_tag :ce_status, "CE", class: label_class %>
+        <%= select_tag :ce_status,
+              options_for_select(
+                [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
+                params[:ce_status]
+              ),
+              include_blank: "Any CE status", class: select_class %>
+      </div>
+    <% end %>
     <div>
       <%= label_tag :account_status, "User account", class: label_class %>
       <%= select_tag :account_status,

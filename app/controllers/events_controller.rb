@@ -106,7 +106,7 @@ class EventsController < ApplicationController
 
     @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
     @dashboard = EventDashboard.new(@event)
-    @offers_ce = @event.any_ce_credit_requests?
+    @offers_ce = @event.offers_ce?
 
     emails = @event_registrations.map { |r| r.registrant.preferred_email&.downcase }.compact
     @duplicate_emails = emails.tally.select { |_, count| count > 1 }.keys.to_set
@@ -316,6 +316,7 @@ class EventsController < ApplicationController
   def preview_reminder
     authorize! @event
     @event = @event.decorate
+    @offers_ce = @event.offers_ce?
     @event_registrations = @event.event_registrations
       .includes(
         :event, :organizations, :comments,
@@ -537,7 +538,7 @@ class EventsController < ApplicationController
   def event_registrations_csv_string
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
-    include_ce = @event.any_ce_credit_requests?
+    include_ce = @event.offers_ce?
     headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Intends to pay", "Payment total" ]
     headers << "CE status" if include_ce
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
@@ -575,12 +576,13 @@ class EventsController < ApplicationController
   def onboarding_csv_string
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
+    include_ce = @event.offers_ce?
     day_count = @event.day_count
     headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
     headers += [ "Payment status", "Fees due", "Paid amount" ] if cost_required
     headers << "Fee note"
     headers += [ "Discounted amount", "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
-    headers += [ "CE requested", "CE hours", "CE amount", "CE license" ]
+    headers += [ "CE requested", "CE hours", "CE amount", "CE license" ] if include_ce
     headers += EventRegistration::CHECKLIST_STEPS.values
     headers += [ "Portal user status", "Portal access" ]
     headers += (1..day_count).map { |day| "Day #{day}" }
@@ -589,12 +591,12 @@ class EventsController < ApplicationController
 
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
-        csv_out << onboarding_csv_row(registration, cost_required, day_count)
+        csv_out << onboarding_csv_row(registration, cost_required, day_count, include_ce)
       end
     end
   end
 
-  def onboarding_csv_row(registration, cost_required, day_count)
+  def onboarding_csv_row(registration, cost_required, day_count, include_ce = false)
     person = registration.registrant
     scholarship = registration.scholarships.first
     statuses = registration.program_statuses.map { |status| status.to_s.titleize }.join(", ")
@@ -617,11 +619,13 @@ class EventsController < ApplicationController
     row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
     row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
     row << onboarding_scholarship_tasks_csv(registration)
-    ce_hours = registration.ce_hours_requested.to_i
-    row << (registration.ce_credit_requested? ? "Yes" : "No")
-    row << (ce_hours.positive? ? ce_hours : "")
-    row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
-    row << registration.ce_license_number.to_s
+    if include_ce
+      ce_hours = registration.ce_hours_requested.to_i
+      row << (registration.ce_credit_requested? ? "Yes" : "No")
+      row << (ce_hours.positive? ? ce_hours : "")
+      row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
+      row << registration.ce_license_number.to_s
+    end
     EventRegistration::CHECKLIST_STEPS.each_key do |step|
       row << (registration.checklist_step_completed?(step) ? "Yes" : "No")
     end
