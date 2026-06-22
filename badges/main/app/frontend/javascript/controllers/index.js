@@ -1,5 +1,8 @@
 import { application } from "./application"
 
+import AddressSelectController from "./address_select_controller"
+application.register("address-select", AddressSelectController)
+
 import AffiliationDatesController from "./affiliation_dates_controller"
 application.register("affiliation-dates", AffiliationDatesController)
 

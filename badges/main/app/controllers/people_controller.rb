@@ -152,7 +152,7 @@ class PeopleController < ApplicationController
       { avatar_attachment: :blob },
       { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
-      affiliations: { organization: :logo_attachment }
+      affiliations: { organization: [ :logo_attachment, :addresses ] }
     ).find(params[:id]).decorate
     authorize! @person
     set_form_variables
@@ -473,6 +473,7 @@ class PeopleController < ApplicationController
         :primary_contact,
         :start_date,
         :end_date,
+        :organization_address_id,
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
