@@ -167,6 +167,30 @@ RSpec.describe EventDecorator do
       expect(apple["href"]).to include("Meeting ID: 882 8541 1273")
       expect(apple["href"]).to include("Passcode: secret123")
     end
+
+    it "emits a single set of links for a same-day event" do
+      event = build(:event, start_date: Time.zone.local(2026, 4, 21, 9), end_date: Time.zone.local(2026, 4, 21, 16, 30))
+      doc = Nokogiri::HTML.fragment(event.decorate.calendar_links)
+
+      expect(doc.css("a").select { |a| a.text == "Google" }.size).to eq(1)
+    end
+
+    it "emits a separate set of links per day for a multi-day event, each running the daily hours" do
+      event = build(:event, start_date: Time.zone.local(2026, 4, 21, 9), end_date: Time.zone.local(2026, 4, 23, 16, 30))
+      doc = Nokogiri::HTML.fragment(event.decorate.calendar_links)
+
+      google_links = doc.css("a").select { |a| a.text == "Google" }
+      expect(google_links.size).to eq(3)
+
+      day_dates = google_links.map { |a| a["href"][/dates=([^&]+)/, 1] }
+      expect(day_dates).to eq([
+        "#{Time.zone.local(2026, 4, 21, 9).utc.strftime("%Y%m%dT%H%M%SZ")}/#{Time.zone.local(2026, 4, 21, 16, 30).utc.strftime("%Y%m%dT%H%M%SZ")}",
+        "#{Time.zone.local(2026, 4, 22, 9).utc.strftime("%Y%m%dT%H%M%SZ")}/#{Time.zone.local(2026, 4, 22, 16, 30).utc.strftime("%Y%m%dT%H%M%SZ")}",
+        "#{Time.zone.local(2026, 4, 23, 9).utc.strftime("%Y%m%dT%H%M%SZ")}/#{Time.zone.local(2026, 4, 23, 16, 30).utc.strftime("%Y%m%dT%H%M%SZ")}"
+      ])
+
+      expect(doc.text).to include("Apr 21:", "Apr 22:", "Apr 23:")
+    end
   end
 
   describe "#times" do

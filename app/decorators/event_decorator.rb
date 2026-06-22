@@ -62,89 +62,27 @@ class EventDecorator < ApplicationDecorator
     length ? description&.truncate(length) : description
   end
 
+  # "Add to calendar" links. A multi-day event runs the same hours each day
+  # (e.g. Apr 21-23, 9 am-4:30 pm), so we emit a separate set of links per day —
+  # one calendar entry per day — rather than a single block that would span
+  # overnight. Each day's row is prefixed with its date.
   def calendar_links
-    start_time   = object.start_date.utc.strftime("%Y%m%dT%H%M%SZ")
-    end_time     = object.end_date.utc.strftime("%Y%m%dT%H%M%SZ")
-    title_encoded = ERB::Util.url_encode(object.title)
+    ranges = calendar_day_ranges
+    return calendar_links_for(ranges.first[:start], ranges.first[:end]) if ranges.one?
 
-    has_url      = object.videoconference_url.present?
-    has_location = object.location.present?
-    location_name = has_location ? object.location.name : nil
-
-    # If both: URL in location field, physical location in description
-    # If only URL: URL in location field
-    # If only location: location in location field
-    event_description = object.rhino_description.to_plain_text
-
-    if has_url && has_location
-      cal_location = object.videoconference_url
-      base_description = "#{location_name}\n\n#{event_description}"
-    elsif has_url
-      cal_location = object.videoconference_url
-      base_description = event_description
-    elsif has_location
-      cal_location = location_name
-      base_description = event_description
-    else
-      cal_location = nil
-      base_description = event_description
+    rows = ranges.map do |range|
+      day_label = h.content_tag(
+        :span,
+        "#{range[:start].in_time_zone(Time.zone).strftime('%b %-d')}:",
+        class: "text-xs font-semibold text-gray-500 mr-1 shrink-0"
+      )
+      h.content_tag(
+        :div,
+        h.safe_join([ day_label, calendar_links_for(range[:start], range[:end]) ], " "),
+        class: "flex flex-wrap gap-1 items-center justify-center w-full"
+      )
     end
-
-    # Carry the join link, meeting ID/code, and passcode into the calendar entry
-    # so registrants have everything they need to connect straight from the event.
-    description = [ videoconference_calendar_details, base_description ].compact_blank.join("\n\n")
-
-    desc_encoded     = ERB::Util.url_encode(description)
-    location_encoded = ERB::Util.url_encode(cal_location.to_s)
-
-    google_link =
-      "https://calendar.google.com/calendar/render?action=TEMPLATE" \
-        "&text=#{title_encoded}&dates=#{start_time}/#{end_time}" \
-        "&details=#{desc_encoded}&location=#{location_encoded}"
-
-    apple_link =
-      "data:text/calendar;charset=utf8,BEGIN:VCALENDAR\n" \
-        "VERSION:2.0\n" \
-        "BEGIN:VEVENT\n" \
-        "SUMMARY:#{object.title}\n" \
-        "DTSTART:#{start_time}\n" \
-        "DTEND:#{end_time}\n" \
-        "DESCRIPTION:#{description}\n" \
-        "#{"LOCATION:#{cal_location}\n" if cal_location}" \
-        "END:VEVENT\n" \
-        "END:VCALENDAR"
-
-    outlook_link =
-      "https://outlook.live.com/owa/?rru=addevent" \
-        "&startdt=#{start_time}&enddt=#{end_time}" \
-        "&subject=#{title_encoded}&body=#{desc_encoded}&location=#{location_encoded}"
-
-    office365_link =
-      "https://outlook.office.com/owa/?rru=addevent" \
-        "&startdt=#{start_time}&enddt=#{end_time}" \
-        "&subject=#{title_encoded}&body=#{desc_encoded}&location=#{location_encoded}"
-
-    yahoo_link =
-      "https://calendar.yahoo.com/?v=60" \
-        "&title=#{title_encoded}&st=#{start_time}" \
-        "&et=#{end_time}&desc=#{desc_encoded}&in_loc=#{location_encoded}"
-
-    h.safe_join(
-      [
-        h.link_to("Google", google_link, class: "text-blue-600 hover:underline text-xs", target: "_blank"),
-        h.content_tag(:span, "•", class: "text-gray-300"),
-        h.link_to("Apple", apple_link, class: "text-blue-600 hover:underline text-xs",
-                  target: "_blank",
-                  download: "#{object.title.parameterize}.ics"),
-        h.content_tag(:span, "•", class: "text-gray-300"),
-        h.link_to("Outlook", outlook_link, class: "text-blue-600 hover:underline text-xs", target: "_blank"),
-        h.content_tag(:span, "•", class: "text-gray-300"),
-        h.link_to("Office 365", office365_link, class: "text-blue-600 hover:underline text-xs", target: "_blank"),
-        h.content_tag(:span, "•", class: "text-gray-300"),
-        h.link_to("Yahoo", yahoo_link, class: "text-blue-600 hover:underline text-xs", target: "_blank")
-      ],
-      " "
-    )
+    h.safe_join(rows)
   end
 
   # True when the event spans more than one calendar day in the viewer's time
@@ -340,6 +278,109 @@ class EventDecorator < ApplicationDecorator
     when 10 then id.sub(/\A(\d{3})(\d{3})(\d{4})\z/, '\1 \2 \3')
     else id
     end
+  end
+
+  # One start/end pair per calendar day the event spans, each running the
+  # event's daily hours (start time-of-day to end time-of-day). A same-day event
+  # returns its actual start/end so single-day links are unchanged.
+  def calendar_day_ranges
+    s = object.start_date.in_time_zone(Time.zone)
+    e = (object.end_date || object.start_date).in_time_zone(Time.zone)
+    return [ { start: object.start_date, end: object.end_date || object.start_date } ] if s.to_date == e.to_date
+
+    (s.to_date..e.to_date).map do |day|
+      {
+        start: Time.zone.local(day.year, day.month, day.day, s.hour, s.min),
+        end:   Time.zone.local(day.year, day.month, day.day, e.hour, e.min)
+      }
+    end
+  end
+
+  # Builds the five provider links for a single start/end pair.
+  def calendar_links_for(start_date, end_date)
+    start_time    = start_date.utc.strftime("%Y%m%dT%H%M%SZ")
+    end_time      = end_date.utc.strftime("%Y%m%dT%H%M%SZ")
+    title_encoded = ERB::Util.url_encode(object.title)
+
+    has_url      = object.videoconference_url.present?
+    has_location = object.location.present?
+    location_name = has_location ? object.location.name : nil
+
+    # If both: URL in location field, physical location in description
+    # If only URL: URL in location field
+    # If only location: location in location field
+    event_description = object.rhino_description.to_plain_text
+
+    if has_url && has_location
+      cal_location = object.videoconference_url
+      base_description = "#{location_name}\n\n#{event_description}"
+    elsif has_url
+      cal_location = object.videoconference_url
+      base_description = event_description
+    elsif has_location
+      cal_location = location_name
+      base_description = event_description
+    else
+      cal_location = nil
+      base_description = event_description
+    end
+
+    # Carry the join link, meeting ID/code, and passcode into the calendar entry
+    # so registrants have everything they need to connect straight from the event.
+    description = [ videoconference_calendar_details, base_description ].compact_blank.join("\n\n")
+
+    desc_encoded     = ERB::Util.url_encode(description)
+    location_encoded = ERB::Util.url_encode(cal_location.to_s)
+
+    google_link =
+      "https://calendar.google.com/calendar/render?action=TEMPLATE" \
+        "&text=#{title_encoded}&dates=#{start_time}/#{end_time}" \
+        "&details=#{desc_encoded}&location=#{location_encoded}"
+
+    apple_link =
+      "data:text/calendar;charset=utf8,BEGIN:VCALENDAR\n" \
+        "VERSION:2.0\n" \
+        "BEGIN:VEVENT\n" \
+        "SUMMARY:#{object.title}\n" \
+        "DTSTART:#{start_time}\n" \
+        "DTEND:#{end_time}\n" \
+        "DESCRIPTION:#{description}\n" \
+        "#{"LOCATION:#{cal_location}\n" if cal_location}" \
+        "END:VEVENT\n" \
+        "END:VCALENDAR"
+
+    outlook_link =
+      "https://outlook.live.com/owa/?rru=addevent" \
+        "&startdt=#{start_time}&enddt=#{end_time}" \
+        "&subject=#{title_encoded}&body=#{desc_encoded}&location=#{location_encoded}"
+
+    office365_link =
+      "https://outlook.office.com/owa/?rru=addevent" \
+        "&startdt=#{start_time}&enddt=#{end_time}" \
+        "&subject=#{title_encoded}&body=#{desc_encoded}&location=#{location_encoded}"
+
+    yahoo_link =
+      "https://calendar.yahoo.com/?v=60" \
+        "&title=#{title_encoded}&st=#{start_time}" \
+        "&et=#{end_time}&desc=#{desc_encoded}&in_loc=#{location_encoded}"
+
+    ics_date = start_date.in_time_zone(Time.zone).strftime("%b-%-d").downcase
+    h.safe_join(
+      [
+        h.link_to("Google", google_link, class: "text-blue-600 hover:underline text-xs", target: "_blank"),
+        h.content_tag(:span, "•", class: "text-gray-300"),
+        h.link_to("Apple", apple_link, class: "text-blue-600 hover:underline text-xs",
+                  target: "_blank",
+                  download: "#{object.title.parameterize}-#{ics_date}.ics"),
+        h.content_tag(:span, "•", class: "text-gray-300"),
+        h.link_to("Outlook", outlook_link, class: "text-blue-600 hover:underline text-xs", target: "_blank"),
+        h.content_tag(:span, "•", class: "text-gray-300"),
+        h.link_to("Office 365", office365_link, class: "text-blue-600 hover:underline text-xs", target: "_blank"),
+        h.content_tag(:span, "•", class: "text-gray-300"),
+        h.link_to("Yahoo", yahoo_link, class: "text-blue-600 hover:underline text-xs", target: "_blank")
+      ],
+      " "
+    )
   end
 
   def header_image
