@@ -107,6 +107,23 @@ RSpec.describe MagicTicketCallouts do
       expect(paid.badge).to be_nil
     end
 
+    it "names the CE request deadline on the license-needed badge" do
+      event.update!(ce_hours_cost_cents: 15_000, ce_hours_request_deadline: Date.new(2026, 7, 1))
+      license = create(:professional_license, :placeholder, person: registration.registrant)
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      expect(card(registration.reload, event.ce_hours_details_label).badge).to eq("$150 · License number needed by Jul 1")
+    end
+
+    it "appends the CE payment deadline to the amount-due badge, dropping it once paid" do
+      event.update!(ce_hours_cost_cents: 15_000, ce_payment_due_deadline: Date.new(2026, 8, 15))
+      license = create(:professional_license, person: registration.registrant, number: "LIC123")
+      ce_reg = create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      expect(card(registration.reload, event.ce_hours_details_label).badge).to eq("$150 due by Aug 15")
+
+      create(:allocation, source: create(:payment), allocatable: ce_reg, amount: ce_reg.cost_cents)
+      expect(card(registration.reload, event.ce_hours_details_label).badge).to be_nil
+    end
+
     it "shows the scholarship card only when requested, without an amount chip until awarded" do
       expect(card_titles(registration)).not_to include("Scholarship")
       registration.update!(scholarship_requested: true)
@@ -203,6 +220,17 @@ RSpec.describe MagicTicketCallouts do
 
       # Certificate isn't unlocked (event not ended, not attended).
       expect(described_class.new(registration).card_for(callout)).to be_nil
+    end
+
+    it "keeps the live CE deadline badge on a materialized CE row" do
+      event.update!(ce_hours_cost_cents: 15_000, ce_payment_due_deadline: Date.new(2026, 8, 15))
+      license = create(:professional_license, person: registration.registrant, number: "LIC123")
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      callout = create(:registration_ticket_callout, event:, magic_key: "ce_hours", title: "CE credit")
+
+      card = described_class.new(registration.reload).card_for(callout)
+      expect(card.title).to eq("CE credit")            # row owns the text
+      expect(card.badge).to eq("$150 due by Aug 15")   # app keeps the live deadline badge
     end
   end
 end

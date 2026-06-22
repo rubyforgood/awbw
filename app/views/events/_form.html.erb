@@ -588,6 +588,22 @@
                     title_placeholder: "CE hours",
                     content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Wrap a part in <details><summary>Title</summary>…</details> to make it a collapsible section.",
                     content_placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><details><summary>Before the training</summary><ul><li>Email your license number</li></ul></details>" %>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 pl-9">
+                <div>
+                  <%= f.label :ce_hours_request_deadline, "Request CE credit by", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+                  <p class="text-xs text-gray-500 mb-1">Deadline for registrants to request CE credit and submit their license. Shown on the CE callout. Leave blank to hide.</p>
+                  <%= f.text_field :ce_hours_request_deadline,
+                        type: "date",
+                        class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+                </div>
+                <div>
+                  <%= f.label :ce_payment_due_deadline, "Payment due by", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+                  <p class="text-xs text-gray-500 mb-1">Deadline for CE payment. Shown on the CE callout. Leave blank to hide.</p>
+                  <%= f.text_field :ce_payment_due_deadline,
+                        type: "date",
+                        class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+                </div>
+              </div>
             <% when :event_details %>
               <%= render "events/builtin_callout_card", f: f, card: card,
                     label_field: :event_details_label, content_field: :event_details,
