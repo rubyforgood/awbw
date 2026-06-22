@@ -21,7 +21,9 @@
   <div class="mt-5 flex items-end justify-end border-t border-gray-200 pt-4">
     <div class="text-right">
       <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</p>
-      <p class="mt-1 text-2xl font-semibold tabular-nums <%= @event_registration.remaining_cost.positive? ? "text-amber-700" : "text-green-700" %>"><%= dollars_from_cents(@event_registration.remaining_cost) %></p>
+      <p class="mt-1">
+        <span class="inline-flex items-center rounded-full px-3 py-1 text-2xl font-semibold tabular-nums <%= @event_registration.remaining_cost.positive? ? "bg-amber-200 text-amber-900" : "bg-green-100 text-green-800" %>"><%= dollars_from_cents(@event_registration.remaining_cost) %></span>
+      </p>
     </div>
   </div>
 
@@ -30,17 +32,31 @@
       <%= button_to "Pay with Credit Card",
                     registration_pay_path(@event_registration.slug),
                     data: { turbo: false },
-                    class: "btn px-6 py-2 text-sm uppercase font-telefon text-white hover:bg-white",
-                    style: "background-color: rgb(170, 46, 0); border: 2px solid rgb(170, 46, 0);" %>
+                    class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
     </div>
 
-    <div class="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 leading-relaxed space-y-2">
-      <p class="font-semibold text-gray-900">Paying by check?</p>
-      <p>Write the check out to <strong>A Window Between Worlds</strong> and mail it to:</p>
-      <p class="font-medium text-gray-900">1210 Fernside Dr.<br>La Cañada, CA 91011</p>
-      <p>Please send us an email letting us know the date the check will be mailed. If that date changes, please let us know.</p>
-      <p><strong>Note:</strong> AWBW had an address change in recent years. Please be sure your accounting department has this current address — mail sent to the old address will not be received.</p>
-      <p>Payment is due no later than 5:00 PM PT on April 9th. We'll send more information after your payment is received, so we encourage you to submit it as soon as possible.</p>
-    </div>
+    <%= link_to registration_invoice_path(@event_registration.slug), target: "_blank", rel: "noopener",
+                  class: "mt-10 flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
+      <i class="fa-solid fa-file-invoice-dollar text-gray-400 text-xl shrink-0"></i>
+
+      <div class="flex-1 min-w-0 text-left">
+        <p class="font-semibold text-gray-900">View invoice</p>
+        <p class="text-sm text-gray-500">Itemized invoice for this registration</p>
+      </div>
+
+      <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
+    <% end %>
+
+    <details class="mt-6">
+      <summary class="cursor-pointer text-sm text-gray-500 hover:text-gray-700">Prefer to pay by check?</summary>
+
+      <div class="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 leading-relaxed space-y-2">
+        <p>Write the check out to <strong>A Window Between Worlds</strong> and mail it to:</p>
+        <p class="font-medium text-gray-900">1210 Fernside Dr.<br>La Cañada, CA 91011</p>
+        <p>Please send us an email letting us know the date the check will be mailed. If that date changes, please let us know.</p>
+        <p><strong>Note:</strong> AWBW had an address change in recent years. Please be sure your accounting department has this current address — mail sent to the old address will not be received.</p>
+        <p>Payment is due no later than 5:00 PM PT on April 9th. We'll send more information after your payment is received, so we encourage you to submit it as soon as possible.</p>
+      </div>
+    </details>
   <% end %>
 <% end %>

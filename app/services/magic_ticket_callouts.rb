@@ -10,8 +10,15 @@
 class MagicTicketCallouts
   include Rails.application.routes.url_helpers
 
-  Card = Data.define(:icon_class, :color, :title, :subtitle, :href, :target, :trailing_icon, :chip) do
-    def initialize(chip: nil, **) = super
+  # `badge` / `badge_classes` are an optional status chip shown inline in the
+  # subtitle row (the payment card's "$1,350 due" / "Paid", the CE card's amount
+  # owed, the scholarship award). `badge_classes` defaults to amber in the
+  # _callout_card partial; both default to nil so chip-less cards are unchanged.
+  Card = Data.define(:icon_class, :color, :title, :subtitle, :href, :target, :trailing_icon, :badge, :badge_classes) do
+    def initialize(badge: nil, badge_classes: nil, **rest)
+      super(badge:, badge_classes:, **rest)
+    end
+
     def display_icon_class = icon_class
     def theme = DomainTheme.swatch(color)
   end
@@ -67,8 +74,10 @@ class MagicTicketCallouts
     return if event.cost_cents.to_i <= 0
     due = registration.remaining_cost.to_i.positive?
     Card.new(icon_class: "fa-solid fa-credit-card", color: due ? "orange" : "blue",
-             title: "Payment",
-             subtitle: due ? "#{MoneyFormatter.dollars_from_cents(registration.remaining_cost)} due — view your balance" : "Paid in full — view your payment history",
+             title: due ? "Make your payment" : "Payment",
+             subtitle: due ? "view your balance" : "view your payment history",
+             badge: due ? "#{MoneyFormatter.dollars_from_cents(registration.remaining_cost)} due" : "Paid",
+             badge_classes: due ? nil : "bg-green-100 text-green-800",
              href: registration_payment_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
@@ -94,7 +103,7 @@ class MagicTicketCallouts
              subtitle: awarded ? "Your award — amount, funder, and tasks" : "Your scholarship request status",
              href: registration_scholarship_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
-             chip: awarded ? MoneyFormatter.dollars_from_cents(registration.scholarships.sum(:amount_cents)) : nil)
+             badge: awarded ? MoneyFormatter.dollars_from_cents(registration.scholarships.sum(:amount_cents)) : nil)
   end
 
   # CE hours: an action card prompting the registrant to request credit until
@@ -108,7 +117,7 @@ class MagicTicketCallouts
              subtitle: ce_hours_subtitle(complete),
              href: registration_ce_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
-             chip: ce_hours_chip(complete))
+             badge: ce_hours_badge(complete))
   end
 
   def ce_hours_subtitle(complete)
@@ -117,9 +126,9 @@ class MagicTicketCallouts
     "#{registration.ce_hours_requested} hours"
   end
 
-  # Amount owed, shown as an amber chip on the card — matching the ticket's
-  # "payment is due" chip. Only once the request is complete and money is owed.
-  def ce_hours_chip(complete)
+  # Amount owed, shown as the card's amber badge — matching the payment card's
+  # "$X due" chip. Only once the request is complete and money is owed.
+  def ce_hours_badge(complete)
     return unless complete
     amount = registration.ce_amount_owed_cents.to_i
     return unless amount.positive?

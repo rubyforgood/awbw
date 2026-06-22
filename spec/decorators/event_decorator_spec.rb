@@ -124,6 +124,11 @@ RSpec.describe EventDecorator do
       event = build(:event, cost_cents: 2505).decorate
       expect(event.labelled_cost).to eq("Cost: $25.05")
     end
+
+    it "adds a thousands separator for large amounts" do
+      event = build(:event, cost_cents: 150_000).decorate
+      expect(event.labelled_cost).to eq("Cost: $1,500")
+    end
   end
 
   describe "#calendar_links" do

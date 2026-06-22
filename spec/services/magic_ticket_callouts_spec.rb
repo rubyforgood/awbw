@@ -15,7 +15,7 @@ RSpec.describe MagicTicketCallouts do
   describe "#cards" do
     it "shows the always-present cards for a bare paid-cost registration" do
       expect(card_titles(registration)).to eq([
-        "Payment", "Forms", "Handouts", "Frequently asked questions", "Facilitator Portal access"
+        "Make your payment", "Forms", "Handouts", "Frequently asked questions", "Facilitator Portal access"
       ])
     end
 
@@ -25,13 +25,15 @@ RSpec.describe MagicTicketCallouts do
     end
 
     it "makes the payment card an action card while a balance is due, reference once paid" do
-      due = card(registration, "Payment")
+      due = card(registration, "Make your payment")
       expect(due.theme).to eq(DomainTheme.swatch("orange"))
+      expect(due.badge).to end_with("due")
       expect(due.trailing_icon).to eq("fa-solid fa-arrow-right")
 
       create(:allocation, source: create(:payment), allocatable: registration, amount: event.cost_cents)
       paid = card(registration, "Payment")
       expect(paid.theme).to eq(DomainTheme.swatch("blue"))
+      expect(paid.badge).to eq("Paid")
       expect(paid.trailing_icon).to eq("fa-solid fa-arrow-right")
     end
 
@@ -80,12 +82,12 @@ RSpec.describe MagicTicketCallouts do
       complete = card(registration, event.ce_hours_details_label)
       expect(complete.theme).to eq(DomainTheme.swatch("teal"))
       expect(complete.subtitle).to eq("6 hours")
-      expect(complete.chip).to eq("$150 due")
+      expect(complete.badge).to eq("$150 due")
     end
 
     it "carries no CE chip until hours, license, and a positive amount are on file" do
       registration.update!(ce_credit_requested: true, ce_hours_requested: nil, ce_license_number: nil)
-      expect(card(registration, event.ce_hours_details_label).chip).to be_nil
+      expect(card(registration, event.ce_hours_details_label).badge).to be_nil
     end
 
     it "shows the scholarship card only when requested, without an amount chip until awarded" do
@@ -93,14 +95,14 @@ RSpec.describe MagicTicketCallouts do
       registration.update!(scholarship_requested: true)
       scholarship_card = card(registration, "Scholarship")
       expect(scholarship_card.subtitle).to eq("Your scholarship request status")
-      expect(scholarship_card.chip).to be_nil
+      expect(scholarship_card.badge).to be_nil
     end
 
     it "shows the awarded scholarship amount as a chip once awarded" do
       registration.update!(scholarship_requested: true)
       scholarship = create(:scholarship, amount_cents: 25_000)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
-      expect(card(registration, "Scholarship").chip).to eq("$250")
+      expect(card(registration, "Scholarship").badge).to eq("$250")
     end
 
     it "places payment first and FAQ last in the full ordering" do
@@ -109,7 +111,7 @@ RSpec.describe MagicTicketCallouts do
                     start_date: 3.days.ago, end_date: 2.days.ago)
       registration.update!(status: "attended", scholarship_requested: true, ce_credit_requested: true)
       expect(card_titles(registration)).to eq([
-        "Payment",
+        "Make your payment",
         "Certificate of completion",
         "Scholarship",
         event.ce_hours_details_label,
