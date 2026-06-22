@@ -11,7 +11,7 @@ class AffiliationPolicy < ApplicationPolicy
   relation_scope do |relation|
     next relation if admin?
     if authenticated?
-      relation.active_or_pending
+      relation.active
     end
   end
 end

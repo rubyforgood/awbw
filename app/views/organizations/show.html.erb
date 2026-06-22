@@ -120,7 +120,7 @@
             Affiliations
           </h2>
           <% active_affiliations = @organization.affiliations
-               .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) && a.person.present? }
+               .select { |a| (current_user&.super_user? ? a.active_or_pending? : a.active?) && a.person.present? }
                .sort_by { |a| [a.person.first_name.to_s.downcase, a.person.last_name.to_s.downcase] } %>
           <% grouped = active_affiliations.group_by(&:person) %>
           <% if grouped.any? %>

@@ -67,7 +67,7 @@
                 </td>
                 <!-- Affiliations -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% affiliations = person.affiliations.select { |a| a.organization.present? && !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) } %>
+                  <% affiliations = person.affiliations.select { |a| a.organization.present? && (current_user&.super_user? ? a.active_or_pending? : a.active?) } %>
                   <% if affiliations.any? %>
                     <div class="flex flex-wrap gap-2">
                       <% affiliations.first(3).each do |affiliation| %>
