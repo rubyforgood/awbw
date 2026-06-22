@@ -143,7 +143,7 @@ end
 # scholarship submission). Recipients are flagged scholarship_requested so they
 # appear on that page. Reasonable answers to every scholarship question, inspired
 # by actual recipient responses, are cycled across recipients for variety, along
-# with a matching primary service area, age group, and a non-facilitator agency
+# with a matching primary sector, age group, and a non-facilitator agency
 # affiliation (title + organization) so the recipient header renders like the real
 # export.
 puts "Seeding Scholarship application answers…"
@@ -165,7 +165,7 @@ scholarship_answer_sets = [
       "Thank you for considering my application. A scholarship is the only way my small agency can send me to this training right now, " \
       "and the ripple effect on the survivors we serve would be immediate.",
     "scholarship_contribution" => "Our agency can contribute about $250 toward the cost.",
-    "service_area" => "Sexual Assault",
+    "sector" => "Sexual Assault",
     "age_group" => "Adults (18+)",
     "title" => "Prevention, Education, and Outreach Specialist"
   },
@@ -182,7 +182,7 @@ scholarship_answer_sets = [
     "additional_comments" =>
       "I've wanted formal facilitation training for years but our continuing-education budget was cut. This scholarship would change that.",
     "scholarship_contribution" => "I could personally cover roughly $150.",
-    "service_area" => "Mental Health",
+    "sector" => "Mental Health",
     "age_group" => "Mixed-age groups",
     "title" => "Behavioral Health Clinician"
   },
@@ -199,7 +199,7 @@ scholarship_answer_sets = [
     "additional_comments" =>
       "Our program serves families at no cost, so outside funding for my training is what makes this possible. Thank you.",
     "scholarship_contribution" => "Unfortunately we can't contribute anything at this time.",
-    "service_area" => "Child Abuse/Neglect",
+    "sector" => "Child Abuse/Neglect",
     "age_group" => "Children (0-12)",
     "title" => "Youth Program Coordinator"
   },
@@ -216,7 +216,7 @@ scholarship_answer_sets = [
     "additional_comments" =>
       "I'm so grateful for this opportunity. Investing in me is investing in everyone I'll go on to support.",
     "scholarship_contribution" => "I'm able to pay up to $100 out of pocket.",
-    "service_area" => "Domestic Violence",
+    "sector" => "Domestic Violence",
     "age_group" => "Adults (18+)",
     "title" => "Peer Support Specialist"
   }
@@ -230,14 +230,14 @@ scholarship_form = Form.standalone.find_by(role: "scholarship")
 scholarship_fields = scholarship_form ? scholarship_form.form_fields.where.not(answer_type: :group_header).to_a : []
 
 # Make sure the registration form asks the professional questions, so each
-# recipient's primary service area and age group are captured as registration
+# recipient's primary sector and age group are captured as registration
 # answers — the recipients page reads those first, then falls back to the
 # person's profile (sectors / age-range tags).
 registration_form = Form.standalone.find_by(role: "registration")
 if registration_form && registration_form.form_fields.where(field_identifier: "primary_sector").none?
   FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :professional_info ])
 end
-service_area_field = registration_form&.form_fields&.find_by(field_identifier: "primary_sector")
+sector_field = registration_form&.form_fields&.find_by(field_identifier: "primary_sector")
 age_group_field = registration_form&.form_fields&.find_by(field_identifier: "primary_age_group")
 
 # Existing dev organizations (excluding AWBW itself) to affiliate recipients
@@ -247,9 +247,9 @@ recipient_orgs = Organization.where.not(name: "A Window Between Worlds").order(:
 # Capture the recipient's professional answers on their registration submission,
 # storing the sector / age-range ids the professional fields expect.
 attach_header_answers = ->(submission, set) do
-  sector = Sector.published.find_by(name: set["service_area"])
-  if service_area_field && sector && submission.form_answers.where(form_field: service_area_field).none?
-    submission.form_answers.create!(form_field: service_area_field, submitted_answer: sector.id.to_s, question_name_when_answered: service_area_field.name)
+  sector = Sector.published.find_by(name: set["sector"])
+  if sector_field && sector && submission.form_answers.where(form_field: sector_field).none?
+    submission.form_answers.create!(form_field: sector_field, submitted_answer: sector.id.to_s, question_name_when_answered: sector_field.name)
   end
 
   age_category = Category.age_ranges.published.find_by(name: set["age_group"])

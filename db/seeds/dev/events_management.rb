@@ -1022,7 +1022,7 @@ puts "Giving Amy a free-text \"Other\" answer on her Facilitator Training submis
 # Demo data for the "Other" chip on the person profile + edit pages: a registrant
 # who picked the "Other" option (folded into "Other: <text>") on a sector-backed
 # field (Additional sectors). The free-text value can't be a Sector record, so it
-# only surfaces via Person#other_service_area_responses.
+# only surfaces via Person#other_sector_responses.
 # Seeded before the professional-answer enrichment below so the primary_sector
 # value survives its "skip if already answered" guard. Idempotent.
 if facilitator_training && amy_person
@@ -1039,20 +1039,20 @@ if facilitator_training && amy_person
   end
 end
 
-puts "Recording professional answers (age group / service area) on registration submissions…"
+puts "Recording professional answers (age group / sector) on registration submissions…"
 # The Background page charts the registrants' "Primary Age Group(s) Served" and
-# "Primary Service Area(s)" registration answers. Public registration stores
+# "Primary Sector(s)" registration answers. Public registration stores
 # these checkbox answers as ", "-joined category / sector ids (see
 # PublicRegistration#save_form_answers + assign_tags); seed them the same way so
-# the charts have data. Age group is read from the form answers; service area is
+# the charts have data. Age group is read from the form answers; the sector is
 # read from SectorableItem tags, so write both. Idempotent: skips a field already
 # answered on a submission, and only enriches people who have a submission (so the
 # "registered but didn't fill the form" scenarios stay answer-free).
 age_range_categories = Category.age_ranges.published.order(:position, :name).to_a
 # Exclude the catch-all "Other" sector: it's the free-text fallback registrants
-# type into (surfaced via Person#other_service_area_responses), not a selectable
-# service area. Seeding it as a sector tag would list "Other" as a real service area.
-service_area_sectors = Sector.published.excluding_other.order(:name).to_a
+# type into (surfaced via Person#other_sector_responses), not a selectable
+# sector. Seeding it as a sector tag would list "Other" as a real sector.
+selectable_sectors = Sector.published.excluding_other.order(:name).to_a
 
 record_professional_answers = ->(submission, i) do
   person = submission.person
@@ -1068,15 +1068,15 @@ record_professional_answers = ->(submission, i) do
   end
 
   service_field = form.form_fields.find_by(field_identifier: "primary_sector")
-  sectors = service_area_sectors.empty? ? [] : [ service_area_sectors[i % service_area_sectors.size], service_area_sectors[(i + 4) % service_area_sectors.size] ].uniq
+  sectors = selectable_sectors.empty? ? [] : [ selectable_sectors[i % selectable_sectors.size], selectable_sectors[(i + 4) % selectable_sectors.size] ].uniq
   if service_field && sectors.present? && submission.form_answers.where(form_field: service_field).none?
     submission.form_answers.create!(form_field: service_field,
                                     submitted_answer: sectors.map(&:id).join(", "),
                                     question_name_when_answered: service_field.name)
   end
-  # Service area chart reads SectorableItem tags, mirroring assign_tags.
+  # Sector chart reads SectorableItem tags, mirroring assign_tags.
   sectors.each { |sector| SectorableItem.find_or_create_by!(sector: sector, sectorable: person) }
-  # Make the first submitted service area the person's single primary sector, so the
+  # Make the first submitted sector the person's single primary sector, so the
   # recipients page + profile crown a primary that matches what they selected on the
   # registration form. Demote any other primary first to keep exactly one (a person
   # registered for several events is enriched once per event). Idempotent.

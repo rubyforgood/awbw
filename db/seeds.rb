@@ -150,8 +150,8 @@ end
 
 puts "Creating Sectors…"
 # Optional descriptions clarify a sector on the public registration form: shown as
-# subtext under the checkbox in the additional service-areas list, and folded into
-# the "Name (description)" label in the single primary service-area dropdown (which
+# subtext under the checkbox in the additional sectors list, and folded into
+# the "Name (description)" label in the single primary sector dropdown (which
 # can't show subtext). They come from the parenthetical clarifications on the
 # canonical sector list. Names without an entry below have no description. Admins
 # can edit each from the Sectors admin once seeded.

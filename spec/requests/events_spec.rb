@@ -1385,8 +1385,8 @@ RSpec.describe "Events", type: :request do
       create(:form_field, form: scholarship_form, name: "How will this help the people you serve?",
                           field_identifier: "impact_description")
     end
-    let(:service_area_field) do
-      create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
+    let(:sector_field) do
+      create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_sector")
     end
 
     before do
@@ -1394,10 +1394,10 @@ RSpec.describe "Events", type: :request do
       create(:event_form, :scholarship, event: event, form: scholarship_form)
       create(:event_registration, event: event, registrant: applicant, status: "registered", scholarship_requested: true)
 
-      # Service area captured as a registration answer (resolved from the sector id).
+      # Sector captured as a registration answer (resolved from the sector id).
       sector = create(:sector, name: "Sexual Assault")
       reg_submission = create(:form_submission, person: applicant, form: registration_form)
-      create(:form_answer, form_submission: reg_submission, form_field: service_area_field, submitted_answer: sector.id.to_s)
+      create(:form_answer, form_submission: reg_submission, form_field: sector_field, submitted_answer: sector.id.to_s)
 
       # Scholarship answer rides on a separate scholarship submission.
       sch_submission = create(:form_submission, person: applicant, form: scholarship_form, role: "scholarship")
@@ -1407,7 +1407,7 @@ RSpec.describe "Events", type: :request do
     context "as admin" do
       before { sign_in admin }
 
-      it "renders each applicant with their service area resolved from the form answer and scholarship answers" do
+      it "renders each applicant with their sector resolved from the form answer and scholarship answers" do
         get recipients_event_path(event)
 
         expect(response).to have_http_status(:ok)
