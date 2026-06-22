@@ -79,6 +79,16 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       expect(result.form_submission.answers_by_identifier["pronouns"]).to eq("she/her")
     end
+
+    it "flags backfilled answers as backfilled and leaves typed ones unflagged" do
+      result = described_class.call(event: event, form: form,
+                                    form_params: { field_id("pronouns") => "she/her" }, person: person)
+
+      answers = result.form_submission.form_answers.includes(:form_field).index_by { |a| a.form_field.field_identifier }
+      expect(answers["first_name"]).to be_backfilled
+      expect(answers["mailing_city"]).to be_backfilled
+      expect(answers["pronouns"]).not_to be_backfilled
+    end
   end
 
   describe "affiliation creation" do

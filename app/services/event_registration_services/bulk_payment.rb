@@ -11,6 +11,7 @@ module EventRegistrationServices
       @form = form
       @form_params = form_params
       @person = person
+      @backfilled_field_ids = []
       @errors = []
     end
 
@@ -76,6 +77,7 @@ module EventRegistrationServices
         field = @form.form_fields.find_by(field_identifier: key)
         next unless field
         @form_params[field.id.to_s] = value
+        @backfilled_field_ids << field.id
       end
     end
 
@@ -140,7 +142,8 @@ module EventRegistrationServices
         end
 
         record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(submitted_answer: text, question_name_when_answered: field.name)
+        record.update!(submitted_answer: text, question_name_when_answered: field.name,
+                       backfilled: @backfilled_field_ids.include?(field.id))
       end
     end
   end

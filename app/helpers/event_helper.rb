@@ -127,6 +127,17 @@ module EventHelper
     text
   end
 
+  # A small marker shown beside answers that weren't typed on the form but were
+  # filled in from the member's profile at submission time, so reviewers can tell
+  # captured profile data apart from what the person actually entered.
+  def backfilled_indicator(response)
+    return unless response&.backfilled?
+
+    label = "Filled in automatically from the member's profile"
+    tag.i(class: "fa-solid fa-wand-magic-sparkles text-gray-400 ml-1",
+          title: label, "aria-label": label, role: "img")
+  end
+
   # Resolve a stored answer to readable text, mapping the sector/category ids
   # behind the professional fields to their names. Free-text tokens (e.g. an
   # "Other: <text>" answer) aren't ids, so they pass through unchanged. Returns

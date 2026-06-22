@@ -86,6 +86,20 @@ RSpec.describe EventRegistrationServices::BulkPayment do
       expect(answers["payer_organization"]).to eq(person.primary_organization.name)
     end
 
+    it "flags the backfilled answers as backfilled and leaves typed ones unflagged" do
+      result = described_class.call(
+        event: event,
+        form: form,
+        form_params: logged_in_params,
+        person: person
+      )
+
+      answers = result.form_submission.form_answers.includes(:form_field).index_by { |a| a.form_field.field_identifier }
+      expect(answers["payer_first_name"]).to be_backfilled
+      expect(answers["payer_email"]).to be_backfilled
+      expect(answers["payment_method"]).not_to be_backfilled
+    end
+
     it "does not alter the logged-in person's existing phone contact methods" do
       expect {
         described_class.call(event: event, form: form, form_params: logged_in_params, person: person)

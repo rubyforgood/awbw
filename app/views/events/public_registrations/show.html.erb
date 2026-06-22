@@ -60,7 +60,7 @@
             <div class="<%= field.grid_span_class %> py-2">
               <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(display_question_label(field, response)) %></dt>
               <dd class="mt-1 text-sm text-gray-900">
-                <%= display_response_text(field, response) %>
+                <%= display_response_text(field, response) %><%= backfilled_indicator(response) %>
               </dd>
             </div>
           <% end %>

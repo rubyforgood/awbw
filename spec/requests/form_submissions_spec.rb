@@ -18,6 +18,19 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("Organization")
         expect(response.body).to include("AWBW")
       end
+
+      it "marks a backfilled answer with the profile indicator icon" do
+        typed = create(:form_field, form: submission.form, name: "Typed")
+        from_profile = create(:form_field, form: submission.form, name: "From profile")
+        create(:form_answer, form_submission: submission, form_field: typed, submitted_answer: "Typed value")
+        create(:form_answer, :backfilled, form_submission: submission, form_field: from_profile,
+                                          submitted_answer: "Profile value")
+
+        get form_submission_path(submission)
+
+        expect(response.body).to include("fa-wand-magic-sparkles")
+        expect(response.body).to include("Filled in automatically from the member&#39;s profile")
+      end
     end
 
     context "when arriving from the bulk payments index" do

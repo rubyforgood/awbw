@@ -4,5 +4,10 @@ FactoryBot.define do
     association :form_field
     submitted_answer { Faker::Lorem.sentence }
     question_name_when_answered { nil }
+    backfilled { false }
+
+    trait :backfilled do
+      backfilled { true }
+    end
   end
 end
