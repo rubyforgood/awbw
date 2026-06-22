@@ -374,10 +374,12 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("Counselor (no dates) — inactive")
         end
 
-        it "links the linked-org card to the person's edit-affiliations section" do
+        it "links the linked-org card to the person's edit-affiliations section, returning here on save" do
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("href=\"#{edit_person_path(regular_user.person, anchor: "affiliations")}\"")
+          expect(response.body).to include(edit_person_path(regular_user.person))
+          expect(response.body).to include("return_to=registration_link")
+          expect(response.body).to include("event_registration_id=#{existing_registration.id}")
         end
 
         it "shows the start date as '(since Month YYYY)' when there is no end date" do
@@ -405,13 +407,15 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include('name="affiliation[title]"')
         end
 
-        it "links to the registrant's profile affiliations anchor using their name" do
+        it "links to the registrant's edit-affiliations section using their name, returning here on save" do
           person = regular_user.person
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("View #{person.first_name.presence || person.full_name}'s affiliations")
-          expect(response.body).to include("#{edit_person_path(person)}#affiliations")
+          expect(response.body).to include("Edit #{person.first_name.presence || person.full_name}'s affiliations")
+          expect(response.body).to include(edit_person_path(person))
+          expect(response.body).to include("#affiliations")
+          expect(response.body).to include("return_to=registration_link")
         end
 
         it "warns on Unlink that it removes the org but keeps the affiliation" do
