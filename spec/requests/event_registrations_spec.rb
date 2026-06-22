@@ -365,29 +365,29 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include("No other affiliations on record")
         end
 
-        it "shows the affiliation pill inline on the linked org" do
+        it "shows the affiliation pill inline on the linked org, noting it has no dates" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Counselor")
-          expect(response.body).not_to include("Counselor — inactive")
+          expect(response.body).to include("Counselor (no dates)")
+          expect(response.body).not_to include("Counselor (no dates) — inactive")
         end
 
-        it "appends the affiliation's start date as 'starting Month YYYY' when there is no end date" do
+        it "shows the start date as '(since Month YYYY)' when there is no end date" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor", start_date: Date.new(2024, 3, 1))
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Counselor starting March 2024")
+          expect(response.body).to include("Counselor (since March 2024)")
         end
 
-        it "shows the date range when the affiliation has an end date" do
+        it "shows the date range in parens when the affiliation has an end date" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor", start_date: Date.new(2024, 3, 1), end_date: Date.new(2025, 6, 1))
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include("Counselor from March 2024 - June 2025")
+          expect(response.body).to include("Counselor (March 2024 – June 2025)")
         end
 
         it "renders a non-facilitator affiliation title as a non-editable pill" do
@@ -435,7 +435,7 @@ RSpec.describe "EventRegistrations", type: :request do
           get link_organization_event_registration_path(existing_registration)
 
           expect(response.body).to include("Facilitator")
-          expect(response.body).not_to include("Facilitator — inactive")
+          expect(response.body).not_to include("Facilitator (no dates) — inactive")
         end
 
         it "shows a facilitator affiliation as inactive once it has ended" do
