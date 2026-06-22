@@ -1,7 +1,8 @@
 <%# A persisted age-range chip in the person form's age picker — the read-only
     form a saved sector chip takes (name span, not a select). Mirrors the sector
-    chip: the name, a single-select primary star (lighting one clears the others
-    and floats it to front), and a remove ✖. No leader/crown flag. Writes
+    chip: the name, a single-select primary star (lighting one clears the others;
+    chips stay in category position order, no reordering), and a remove ✖. No
+    leader/crown flag. Writes
     person[category_ids][] (membership) and, when starred,
     person[primary_age_category_ids][]. New (unsaved) chips use
     people/_age_range_new_field instead, which offers a select. %>

@@ -6,7 +6,9 @@ RSpec.describe "Person age ranges", type: :request do
 
   # AgeGroupTaggable matches the type by the exact name "AgeRange".
   let(:age_type) { create(:category_type, :published, name: "AgeRange") }
+  # Created in order so the positioned gem assigns positions children < teens < adults.
   let!(:children) { create(:category, :published, category_type: age_type, name: "Children (0-12)") }
+  let!(:teens) { create(:category, :published, category_type: age_type, name: "Teens (13-17)") }
   let!(:adults) { create(:category, :published, category_type: age_type, name: "Adults (18+)") }
 
   # A category of some other type that the person form never shows.
@@ -33,6 +35,18 @@ RSpec.describe "Person age ranges", type: :request do
       expect(response.body).to include("age-range-picker")
       expect(response.body).to include("Children (0-12)")
       expect(response.body).to include("Adults (18+)")
+    end
+
+    it "renders selected age ranges in category position order, not primary first" do
+      person.categories << children << teens << adults
+      # Mark the last-positioned range primary; it must NOT float to the front.
+      person.categorizable_items.find_by(category: adults).update!(is_primary: true)
+
+      get edit_person_path(person)
+
+      body = response.body
+      expect(body.index("Children (0-12)")).to be < body.index("Teens (13-17)")
+      expect(body.index("Teens (13-17)")).to be < body.index("Adults (18+)")
     end
   end
 

@@ -3,10 +3,11 @@ import { Controller } from "@hotwired/stimulus"
 // Drives the age-range chip editor on the person form. Mirrors the sector chip
 // UI: the "Add age range" button inserts a new chip with a select (like cocoon's
 // "Add Sector"), persisted chips show the name as a span, and the primary star is
-// single-select — lighting one clears the others and floats it to the front, the
-// same as primary_sector — with no leader/crown flag. New chips are cloned from a
-// <template> so their markup stays defined once in the ERB partial. Each chip
-// writes person[category_ids][] and, when starred, person[primary_age_category_ids][].
+// single-select — lighting one clears the others — with no leader/crown flag.
+// Unlike primary_sector, chips are NOT reordered: they stay in category position
+// order (the server renders them that way). New chips are cloned from a <template>
+// so their markup stays defined once in the ERB partial. Each chip writes
+// person[category_ids][] and, when starred, person[primary_age_category_ids][].
 export default class extends Controller {
   static targets = ["addButton", "template", "chip", "chipSelect", "primaryToggle"]
   static values = { total: Number }
@@ -39,21 +40,15 @@ export default class extends Controller {
     this.refreshOptions()
   }
 
-  // Single-select primary: lighting one star clears the others and floats that
-  // chip to the front, mirroring primary_sector#selectPrimary.
+  // Single-select primary: lighting one star clears the others. Chips keep their
+  // position order — no reordering, unlike primary_sector.
   togglePrimary(event) {
     if (event.target.checked) {
       this.primaryToggleTargets.forEach((toggle) => {
         if (toggle !== event.target) toggle.checked = false
       })
-      this.moveToFront(event.target)
     }
     this.style()
-  }
-
-  moveToFront(toggle) {
-    const chip = toggle.closest("[data-age-range-picker-target='chip']")
-    if (chip) this.element.prepend(chip)
   }
 
   // Darken whichever chip is primary, matching the sector chip's starred styling.

@@ -171,11 +171,13 @@
           <%= hidden_field_tag "person[category_ids][]", "" %>
           <%= hidden_field_tag "person[primary_age_category_ids][]", "" %>
 
-          <% @person.primary_age_groups.each do |category| %>
-            <%= render "people/age_range_chip", category_id: category.id, category_name: category.name, is_primary: true %>
-          <% end %>
-          <% @person.additional_age_groups.each do |category| %>
-            <%= render "people/age_range_chip", category_id: category.id, category_name: category.name, is_primary: false %>
+          <%# Keep the chips in category position order — don't float the primary
+              to the front. primary_age_groups / additional_age_groups are each
+              already position-sorted, so the merged list re-sorts by position. %>
+          <% primary_age_ids = @person.primary_age_category_ids %>
+          <% selected_age_groups = (@person.primary_age_groups + @person.additional_age_groups).sort_by { |category| [ category.position || 0, category.name.to_s ] } %>
+          <% selected_age_groups.each do |category| %>
+            <%= render "people/age_range_chip", category_id: category.id, category_name: category.name, is_primary: primary_age_ids.include?(category.id) %>
           <% end %>
 
           <%# Mirrors "Add Sector": a button that inserts a chip with a picker. %>
