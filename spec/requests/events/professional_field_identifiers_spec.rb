@@ -5,10 +5,9 @@ require "rails_helper"
 # AgeRange records and must keep working across every legacy field_identifier a
 # form might still carry. For each identifier scheme this exercises, end to end:
 #
-#   * option rendering — the "primary" fields are dropdowns of the published
-#     options minus the catch-all ("Other" sector / "Mixed-age groups"); the
-#     additional sector field keeps "Other", but the additional age field also
-#     drops "Mixed-age groups" (age groups never offer a catch-all);
+#   * option rendering — the primary sector field is a dropdown of the published
+#     sectors minus the catch-all "Other"; the additional sector field keeps
+#     "Other"; both age fields offer every published AgeRange (no catch-all);
 #   * submission storage into form_answers (including a folded "Other: <text>");
 #   * the primary/additional split recorded as person sector/age tags; and
 #   * that the stored selections are readable on the person show, person edit,
@@ -18,13 +17,11 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
   let(:event) { create(:event, cost_cents: 0) }
 
   # An AgeRange type (profile-specific so the person edit form lists it) with the
-  # concrete ranges, the catch-all "Mixed-age groups", and an unpublished range
-  # that must never be offered.
+  # published ranges plus an unpublished range that must never be offered.
   let!(:age_type) { create(:category_type, name: "AgeRange", published: true, profile_specific: true) }
   let!(:age_children) { create(:category, category_type: age_type, name: "Children (0-12)", published: true) }
   let!(:age_teens)    { create(:category, category_type: age_type, name: "Teens (13-17)", published: true) }
   let!(:age_adults)   { create(:category, category_type: age_type, name: "Adults (18+)", published: true) }
-  let!(:age_mixed)    { create(:category, category_type: age_type, name: Category::MIXED_AGE_RANGE_NAME, published: true) }
   let!(:age_hidden)   { create(:category, category_type: age_type, name: "Unpublished range", published: false) }
 
   let!(:sector_education) { create(:sector, :published, name: "Education") }
@@ -51,15 +48,15 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
       describe "GET new (option rendering)" do
         before { get new_event_public_registration_path(event) }
 
-        it "renders the primary fields as dropdowns of published options minus the catch-all" do
+        it "renders the primary sector as a dropdown minus Other, and primary age as a dropdown of all published ranges" do
           expect(select_option_values(primary_sector_field)).to include(sector_education.id.to_s, sector_mh.id.to_s)
           expect(select_option_values(primary_sector_field)).not_to include(sector_other.id.to_s, sector_hidden.id.to_s)
 
           expect(select_option_values(primary_age_field)).to include(age_children.id.to_s, age_teens.id.to_s, age_adults.id.to_s)
-          expect(select_option_values(primary_age_field)).not_to include(age_mixed.id.to_s, age_hidden.id.to_s)
+          expect(select_option_values(primary_age_field)).not_to include(age_hidden.id.to_s)
         end
 
-        it "renders the additional fields as checkboxes — sectors keep Other, age groups drop Mixed-age groups" do
+        it "renders the additional fields as checkboxes — sectors keep Other, age groups offer every published range" do
           sector_values = checkbox_values(additional_sector_field)
           expect(sector_values).to include(sector_education.id.to_s, sector_mh.id.to_s)
           # The "Other" sector renders a free-text box, so its checkbox submits the
@@ -69,9 +66,8 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
 
           age_values = checkbox_values(additional_age_field)
           expect(age_values).to include(age_children.id.to_s, age_teens.id.to_s, age_adults.id.to_s)
-          # Additional age groups drop the catch-all "Mixed-age groups" (and never
-          # offer an "Other"), unlike additional sectors.
-          expect(age_values).not_to include(age_mixed.id.to_s, age_hidden.id.to_s)
+          # Age groups have no catch-all; only the unpublished range is withheld.
+          expect(age_values).not_to include(age_hidden.id.to_s)
         end
       end
 

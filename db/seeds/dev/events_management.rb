@@ -1053,11 +1053,6 @@ puts "Recording professional answers (age group / sector) on registration submis
 # people who have a submission (so the "registered but didn't fill the form"
 # scenarios stay answer-free).
 age_range_categories = Category.age_ranges.published.order(:position, :name).to_a
-# Primary age group is a single-select dropdown that omits the catch-all
-# "Mixed-age groups" (a respondent names a concrete age group), so draw the
-# primary from the concrete ranges only — the multi-select additional field keeps
-# the catch-all and can carry it.
-primary_age_categories = age_range_categories.reject { |category| category.name == Category::MIXED_AGE_RANGE_NAME }
 # Exclude the catch-all "Other" sector: it's the free-text fallback registrants
 # type into (surfaced via Person#other_sector_responses), not a selectable
 # sector. Seeding it as a sector tag would list "Other" as a real sector.
@@ -1068,7 +1063,7 @@ record_professional_answers = ->(submission, i) do
   form = submission.form
 
   # Primary age group is a single-select dropdown, so store one AgeRange category id.
-  age = primary_age_categories[i % primary_age_categories.size] if primary_age_categories.any?
+  age = age_range_categories[i % age_range_categories.size] if age_range_categories.any?
   age_field = form.form_fields.find_by(field_identifier: "primary_age_group")
   if age_field && age && submission.form_answers.where(form_field: age_field).none?
     submission.form_answers.create!(form_field: age_field,
@@ -1076,10 +1071,9 @@ record_professional_answers = ->(submission, i) do
                                     question_name_when_answered: age_field.name)
   end
 
-  # Additional age groups are multi-select checkboxes, but like the primary field
-  # they omit the catch-all "Mixed-age groups", so draw from the concrete ranges
-  # and store a couple of ", "-joined ids the way public registration does.
-  additional_ages = primary_age_categories.rotate(i + 1).reject { |category| category == age }.first(2)
+  # Additional age groups are multi-select checkboxes, so store a couple of
+  # ", "-joined AgeRange ids the way public registration does.
+  additional_ages = age_range_categories.rotate(i + 1).reject { |category| category == age }.first(2)
   additional_age_field = form.form_fields.find_by(field_identifier: "additional_age_group")
   if additional_age_field && additional_ages.present? && submission.form_answers.where(form_field: additional_age_field).none?
     submission.form_answers.create!(form_field: additional_age_field,

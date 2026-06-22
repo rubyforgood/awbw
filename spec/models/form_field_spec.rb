@@ -431,29 +431,19 @@ RSpec.describe FormField do
         expect(field.answer_inclusion_error([ other_type_category.id.to_s ])).to eq("has an invalid selection")
       end
 
-      it "rejects the Mixed-age groups category for the primary age group field" do
+      it "offers every published AgeRange category to both age group fields (no catch-all)" do
         type = create(:category_type, name: "AgeRange")
-        concrete = create(:category, :published, category_type: type, name: "3-5")
-        mixed = create(:category, :published, category_type: type, name: Category::MIXED_AGE_RANGE_NAME)
-        field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_age_group")
-
-        expect(field.answer_inclusion_error([ concrete.id.to_s ])).to be_nil
-        expect(field.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
-      end
-
-      it "omits Mixed-age groups from both the primary and additional age group fields" do
-        type = create(:category_type, name: "AgeRange")
-        concrete = create(:category, :published, category_type: type, name: "3-5")
-        mixed = create(:category, :published, category_type: type, name: Category::MIXED_AGE_RANGE_NAME)
+        children = create(:category, :published, category_type: type, name: "Children (0-12)")
+        adults = create(:category, :published, category_type: type, name: "Adults (18+)")
+        unpublished = create(:category, :unpublished, category_type: type, name: "Retired range")
         primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_age_group")
         additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
 
-        # Unlike the sector fields (where the additional field keeps "Other"), both
-        # age fields drop the catch-all "Mixed-age groups".
-        expect(primary.dynamic_categories).to eq([ concrete ])
-        expect(additional.dynamic_categories).to eq([ concrete ])
-        expect(additional.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
-        expect(primary.answer_inclusion_error([ mixed.id.to_s ])).to eq("has an invalid selection")
+        # Age groups have no catch-all to drop (unlike the additional sector field's
+        # "Other"), so both fields offer exactly the published categories.
+        expect(primary.dynamic_categories).to contain_exactly(children, adults)
+        expect(additional.dynamic_categories).to contain_exactly(children, adults)
+        expect(additional.answer_inclusion_error([ unpublished.id.to_s ])).to eq("has an invalid selection")
       end
 
       it "accepts a folded \"Other: <text>\" value for the additional sectors field" do

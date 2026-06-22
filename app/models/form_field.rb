@@ -35,18 +35,14 @@ class FormField < ApplicationRecord
   # Field identifiers whose selectable options are sourced dynamically from a
   # CategoryType's published categories. The submitted value is a Category id
   # (as a string). Maps the field identifier to its backing CategoryType name.
+  # Both the "primary" and "additional" age group fields are backed by the
+  # published AgeRange categories. Unlike the sector fields, age groups have no
+  # catch-all option — the additional sector field keeps "Other", but neither age
+  # field offers one.
   DYNAMIC_FIELD_CATEGORY_TYPES = {
     "primary_age_group" => "AgeRange",
     "additional_age_group" => "AgeRange"
   }.freeze
-
-  # The "primary" and "additional" age group fields. Both are backed by AgeRange
-  # categories but omit the catch-all "Mixed-age groups" category — a respondent
-  # names the concrete age groups they serve, not the mixed bucket. (Unlike the
-  # sector fields, where the multi-select "additional" field keeps "Other".)
-  PRIMARY_AGE_GROUP_FIELD_IDENTIFIER = "primary_age_group"
-  ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIER = "additional_age_group"
-  AGE_GROUP_FIELD_IDENTIFIERS = [ PRIMARY_AGE_GROUP_FIELD_IDENTIFIER, ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIER ].freeze
 
   # The payment-method field. Its answer options ("Credit card (now)", etc.) are
   # wired to Stripe charge logic in the controllers, so they must not be edited
@@ -331,16 +327,13 @@ class FormField < ApplicationRecord
   end
 
   # The published Category records a category-backed dynamic field offers, in
-  # position/name order. Both the primary and additional age group fields omit the
-  # catch-all "Mixed-age groups" AgeRange category — a respondent names the
-  # concrete age groups they serve. Empty when the backing CategoryType is missing.
-  # Source of truth shared by the public form's rendering and submission validation.
+  # position/name order. Empty when the backing CategoryType is missing. Source of
+  # truth shared by the public form's rendering and submission validation.
   def dynamic_categories
     type = CategoryType.find_by(name: DYNAMIC_FIELD_CATEGORY_TYPES[field_identifier])
     return Category.none unless type
 
-    scope = type.categories.published.order(:position, :name)
-    AGE_GROUP_FIELD_IDENTIFIERS.include?(field_identifier) ? scope.excluding_mixed_age : scope
+    type.categories.published.order(:position, :name)
   end
 
   # The "please specify" placeholder for an option label, or nil when the option

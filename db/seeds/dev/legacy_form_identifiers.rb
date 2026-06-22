@@ -18,12 +18,11 @@
 puts "Creating legacy field-identifier registration forms…"
 
 # The dynamic option pools, mirroring the canonical lists. The single-select
-# "primary" fields omit the catch-all ("Other" sector / "Mixed-age groups"). The
-# additional sector field keeps "Other" (offered as a folded "Other: <text>"),
-# but the additional age field — like the primary — drops "Mixed-age groups".
+# primary sector field omits the catch-all "Other"; the additional sector field
+# keeps it (offered as a folded "Other: <text>"). Age groups have no catch-all.
 concrete_sectors = Sector.published.excluding_other.order(:name).to_a
 other_sector = Sector.published.find_by(name: Sector::OTHER_SECTOR_NAME)
-concrete_ages = Category.age_ranges.published.excluding_mixed_age.order(:position, :name).to_a
+age_categories = Category.age_ranges.published.order(:position, :name).to_a
 
 # Each scheme renames the two canonical sector fields onto a legacy combination.
 # The age-group fields have never been renamed, so they stay canonical.
@@ -67,10 +66,8 @@ legacy_schemes.each_with_index do |scheme, i|
 
   primary_sector = concrete_sectors[i % concrete_sectors.size] if concrete_sectors.any?
   additional_sectors = concrete_sectors.rotate(i + 1).reject { |sector| sector == primary_sector }.first(2)
-  primary_age = concrete_ages[i % concrete_ages.size] if concrete_ages.any?
-  # Additional age groups omit the catch-all "Mixed-age groups" (same as the
-  # primary field), so draw the extras from the concrete ranges too.
-  additional_ages = concrete_ages.rotate(i + 1).reject { |age| age == primary_age }.first(2)
+  primary_age = age_categories[i % age_categories.size] if age_categories.any?
+  additional_ages = age_categories.rotate(i + 1).reject { |age| age == primary_age }.first(2)
 
   # Mirror how public registration stores the answers: a single id for the
   # dropdowns, ", "-joined ids for the checkboxes, and a folded "Other: <text>" for
