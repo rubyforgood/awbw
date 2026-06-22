@@ -210,29 +210,7 @@ module Events
 
       person = current_user&.person
       if person
-        # Always hide logged_out_only fields for logged-in users with known data
-        known_identifiers = person_known_identifiers(person)
-        if known_identifiers.any?
-          known_ids = @form.form_fields
-                           .where(visibility: :logged_out_only, field_identifier: known_identifiers)
-                           .ids
-          scope = scope.where.not(id: known_ids) if known_ids.any?
-        end
-
-        # Hide logged_out_only headers when all their non-header fields are hidden
-        logged_out_sections = @form.form_fields.where(visibility: :logged_out_only)
-                                  .where.not(answer_type: :group_header)
-                                  .pluck(:section).uniq.compact
-        logged_out_sections.each do |sect|
-          section_field_ids = @form.form_fields.where(section: sect, visibility: :logged_out_only)
-                                  .where.not(answer_type: :group_header).ids
-          if section_field_ids.any? && known_identifiers.any? && (section_field_ids - scope.where(id: section_field_ids).ids).any?
-            remaining = scope.where(id: section_field_ids).ids
-            if remaining.empty?
-              scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :logged_out_only)
-            end
-          end
-        end
+        scope = hide_logged_out_only_fields(scope)
 
         if @form.hide_answered_form_questions?
           answered_field_ids = []
@@ -294,31 +272,43 @@ module Events
       scope.reorder(position: :asc)
     end
 
-    def person_known_identifiers(person)
-      keys = []
-      keys << "first_name" if person.first_name.present?
-      keys << "last_name" if person.last_name.present?
-      keys << "primary_email" << "confirm_email" if person.email.present?
-      keys << "primary_email_type" if person.email_type.present?
-      keys << "nickname" if person.legal_first_name.present? || person.first_name.present?
-      keys << "pronouns" if person.pronouns.present?
-      keys << "secondary_email" if person.email_2.present?
-      keys << "secondary_email_type" if person.email_2_type.present?
+    # `logged_out_only` fields are asked only of logged-out registrants — a
+    # signed-in registrant manages this data on their profile, and whatever we
+    # already have is backfilled onto the submission by PersonKnownFields. So hide
+    # the whole set for signed-in users regardless of what's on file, matching the
+    # bulk-payment form's rule.
+    #
+    # Temporary exception: the Organization Information fields (`agency_*`) stay
+    # visible until we backfill them from the person's affiliations. We keep their
+    # section header too, and drop every other logged_out_only header once nothing
+    # under it survives (walking in position order so headers that share a DB
+    # `section` with the org fields are handled individually).
+    ORG_FIELD_PREFIX = "agency_".freeze
 
-      if person.addresses.exists?
-        address = person.addresses.find_by(primary: true) || person.addresses.first
-        keys << "mailing_street" if address.street_address.present?
-        keys << "mailing_address_type" if address.address_type.present?
-        keys << "mailing_city" if address.city.present?
-        keys << "mailing_state" if address.state.present?
-        keys << "mailing_zip" if address.zip_code.present?
+    def hide_logged_out_only_fields(scope)
+      ordered = @form.form_fields.where(visibility: :logged_out_only).reorder(position: :asc).to_a
+      return scope if ordered.empty?
+
+      hidden_ids = []
+      pending_header = nil
+      group_kept = false
+
+      drop_empty_header = -> { hidden_ids << pending_header.id if pending_header && !group_kept }
+
+      ordered.each do |field|
+        if field.group_header?
+          drop_empty_header.call
+          pending_header = field
+          group_kept = false
+        elsif field.field_identifier.to_s.start_with?(ORG_FIELD_PREFIX)
+          group_kept = true
+        else
+          hidden_ids << field.id
+        end
       end
+      drop_empty_header.call
 
-      if person.contact_methods.where(kind: :phone).exists?
-        keys << "phone" << "phone_type"
-      end
-
-      keys
+      hidden_ids.any? ? scope.where.not(id: hidden_ids) : scope
     end
 
     def ensure_registerable

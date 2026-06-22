@@ -479,4 +479,79 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(FormSubmission.where(person: person, role: "scholarship")).to be_empty
     end
   end
+
+  describe "backfilling on-file fields a signed-in registrant didn't fill in" do
+    let(:person) do
+      create(:person,
+             first_name: "Jordy", legal_first_name: "Jordan", last_name: "Rivera",
+             pronouns: "they/them",
+             email: "jordan@example.com", email_type: "personal",
+             email_2: "jordan.work@example.com", email_2_type: "work")
+    end
+
+    before do
+      person.addresses.create!(
+        street_address: "1 Main St", city: "Austin", state: "TX", zip_code: "78701",
+        address_type: "personal", locality: "Unknown", primary: true
+      )
+      person.contact_methods.create!(kind: :phone, value: "555-867-5309", contact_type: "work", primary: true)
+    end
+
+    def answers_by_identifier(submission)
+      submission.form_answers
+                .includes(:form_field)
+                .index_by { |answer| answer.form_field.field_identifier }
+    end
+
+    it "records the hidden logged_out_only fields from the person's on-file data" do
+      # A signed-in registrant whose identity/contact data is on file sees those
+      # fields hidden, so the submitted params carry none of them.
+      result = described_class.call(event: event, form: form, person: person, form_params: {})
+
+      expect(result.success?).to be true
+      answers = answers_by_identifier(result.form_submission)
+
+      expect(answers["first_name"].submitted_answer).to eq("Jordan")
+      expect(answers["nickname"].submitted_answer).to eq("Jordy")
+      expect(answers["last_name"].submitted_answer).to eq("Rivera")
+      expect(answers["pronouns"].submitted_answer).to eq("they/them")
+      expect(answers["primary_email"].submitted_answer).to eq("jordan@example.com")
+      expect(answers["primary_email_type"].submitted_answer).to eq("Personal")
+      expect(answers["secondary_email"].submitted_answer).to eq("jordan.work@example.com")
+      expect(answers["secondary_email_type"].submitted_answer).to eq("Work")
+      expect(answers["mailing_street"].submitted_answer).to eq("1 Main St")
+      expect(answers["mailing_city"].submitted_answer).to eq("Austin")
+      expect(answers["mailing_state"].submitted_answer).to eq("TX")
+      expect(answers["mailing_zip"].submitted_answer).to eq("78701")
+      expect(answers["mailing_address_type"].submitted_answer).to eq("Personal")
+      expect(answers["phone"].submitted_answer).to eq("555-867-5309")
+      expect(answers["phone_type"].submitted_answer).to eq("Work")
+    end
+
+    it "never records a confirm_email answer" do
+      result = described_class.call(event: event, form: form, person: person, form_params: {})
+
+      expect(answers_by_identifier(result.form_submission)).not_to have_key("confirm_email")
+    end
+
+    it "does not overwrite an answer the registrant actually submitted" do
+      result = described_class.call(
+        event: event, form: form, person: person,
+        form_params: { field_id("pronouns") => "she/her" }
+      )
+
+      expect(answers_by_identifier(result.form_submission)["pronouns"].submitted_answer).to eq("she/her")
+    end
+
+    it "does not backfill when no one is signed in" do
+      result = described_class.call(
+        event: event, form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com")
+      )
+
+      answers = answers_by_identifier(result.form_submission)
+      expect(answers).not_to have_key("pronouns")
+      expect(answers).not_to have_key("phone")
+    end
+  end
 end

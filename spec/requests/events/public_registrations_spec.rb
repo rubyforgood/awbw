@@ -633,4 +633,34 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       end
     end
   end
+
+  describe "GET new hides logged_out_only fields for a signed-in registrant" do
+    let(:form) do
+      FormBuilderService.new(
+        name: "Registration",
+        sections: %i[person_identifier person_contact_info]
+      ).call
+    end
+    let(:user) { create(:user, :with_person) }
+
+    it "hides logged_out_only fields but keeps the organization section visible" do
+      sign_in user
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).not_to include("Preferred Nickname")
+      expect(response.body).not_to include("Secondary Email")
+      expect(response.body).not_to include("Mailing Address")
+      expect(response.body).to include("Organization Information")
+      expect(response.body).to include("Organization Name")
+    end
+
+    it "shows the logged_out_only fields to a logged-out registrant" do
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Preferred Nickname")
+      expect(response.body).to include("Secondary Email")
+      expect(response.body).to include("Organization Name")
+    end
+  end
 end

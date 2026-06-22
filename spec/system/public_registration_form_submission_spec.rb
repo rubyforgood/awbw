@@ -37,8 +37,10 @@ RSpec.describe "Public form submissions", type: :system do
 
   let(:user) { create(:user) }
   # A returning registrant whose name, email, primary address, and phone are on
-  # file — so the logged_out_only identity / mailing / phone fields are hidden when
-  # signed in, leaving the always-ask + answers-on-file questions to fill.
+  # file. When signed in, every logged_out_only field is hidden — the identity /
+  # mailing / phone ones get backfilled from this data, while background fields we
+  # don't have are simply never asked — leaving the always-ask + answers-on-file
+  # questions to fill.
   let(:logged_in_person) do
     person = create(:person, user: user, first_name: "Dana", last_name: "Lee",
                     email: "dana.lee@example.com", email_type: "personal")
@@ -121,20 +123,22 @@ RSpec.describe "Public form submissions", type: :system do
       expect(person.additional_age_groups).to include(age_teens)
     end
 
-    it "logged in: reuses the signed-in person, hides known fields, saves the rest" do
+    it "logged in: reuses the signed-in person, hides logged_out_only fields, backfills known answers" do
       logged_in_person
       sign_in user
 
       visit new_event_public_registration_path(event)
 
-      # Known identity / mailing / phone questions are hidden for a returning person.
+      # Every logged_out_only question is hidden for a signed-in registrant: the
+      # identity / mailing / phone fields we have on file, and background fields
+      # like racial / ethnic identity that we don't (but still never ask).
       expect(page).not_to have_selector("##{pr_dom_id(reg_field('first_name'))}")
       expect(page).not_to have_selector("##{pr_dom_id(reg_field('mailing_city'))}")
+      expect(page).not_to have_selector("##{pr_dom_id(reg_field('racial_ethnic_identity'))}")
 
       select_pr reg_field("primary_sector_single"), "Education"
       check_pr_box reg_field("additional_sectors"), sector_dv.id.to_s
       select_pr reg_field("primary_age_group"), "Teens (13-17)"
-      choose_pr_radio reg_field("racial_ethnic_identity"), "Asian"
       choose_pr_radio reg_field("referral_source"), "Social Media"
       choose_pr_radio reg_field("payment_method"), "Check"
       check_pr_box reg_field("communication_consent"), "Yes"
@@ -150,11 +154,21 @@ RSpec.describe "Public form submissions", type: :system do
         "primary_sector_single" => sector_education.id.to_s,
         "additional_sectors" => sector_dv.id.to_s,
         "primary_age_group" => age_teens.id.to_s,
-        "racial_ethnic_identity" => "Asian",
         "referral_source" => "Social Media",
         "payment_method" => "Check",
         "communication_consent" => "Yes"
       )
+      # The hidden identity / mailing / phone answers are still recorded on the
+      # submission, backfilled from the signed-in person's profile.
+      expect(answers).to include(
+        "first_name" => "Dana",
+        "last_name" => "Lee",
+        "primary_email" => "dana.lee@example.com",
+        "mailing_city" => "Oakland",
+        "phone" => "555-000-1111"
+      )
+      # The background field we never ask has no answer.
+      expect(answers).not_to have_key("racial_ethnic_identity")
       logged_in_person.reload
       expect(logged_in_person.primary_age_groups).to include(age_teens)
       expect(logged_in_person.sectorable_items.map(&:sector)).to include(sector_education, sector_dv)

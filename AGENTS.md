@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~78 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~28 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~29 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
 | `app/models/concerns/` | Shared model modules | 15 concerns |
 
@@ -188,6 +188,7 @@ end
 - `PersonFromUserService` — Create Person from User account
 - `BulkInviteService` — Bulk send welcome instructions and reset created_at for users
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
+- `PersonKnownFields` — Maps a person's on-file identity/contact data to the registration form's `logged_out_only` field identifiers; `PublicRegistration` uses it to backfill those (hidden) answers onto a signed-in registrant's submission
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
 - `DisplayImagePresenter` — Image display logic

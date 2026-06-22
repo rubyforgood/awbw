@@ -353,6 +353,7 @@ module EventRegistrationServices
     def create_form_submission(person)
       submission = FormSubmission.create!(person: person, form: @form, event: @event)
       save_form_answers(submission)
+      save_known_field_answers(submission)
       submission
     end
 
@@ -361,6 +362,7 @@ module EventRegistrationServices
         record.event = @event
       end
       save_form_answers(submission)
+      save_known_field_answers(submission)
       submission
     end
 
@@ -378,6 +380,30 @@ module EventRegistrationServices
 
         record = submission.form_answers.find_or_initialize_by(form_field: field)
         record.update!(submitted_answer: text, question_name_when_answered: field.name)
+      end
+    end
+
+    # A signed-in registrant's `logged_out_only` fields are hidden from the form
+    # (see PublicRegistrationsController#hide_logged_out_only_fields) and so never
+    # reach @form_params. Record whatever we already have on file onto the
+    # submission anyway, so it's a complete snapshot rather than silently dropping
+    # the hidden answers. Only fires for signed-in registrants (@person);
+    # logged-out registrants are shown — and submit — every field.
+    def save_known_field_answers(submission)
+      return unless @person
+
+      PersonKnownFields.call(@person).each do |identifier, value|
+        next if identifier == "confirm_email" || value.blank?
+
+        field = @form.form_fields.find_by(visibility: :logged_out_only, field_identifier: identifier)
+        next unless field
+        next if submission.form_answers.exists?(form_field: field)
+
+        submission.form_answers.create!(
+          form_field: field,
+          submitted_answer: value.to_s,
+          question_name_when_answered: field.name
+        )
       end
     end
 
