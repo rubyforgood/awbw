@@ -1,0 +1,11 @@
+<%# Toggle: when checked, linking this org also applies the org info from the
+    registrant's form — overwrites the website and type, and adds the submitted address
+    as the new primary (refreshing a same-street one instead of duplicating). Defaults
+    on for a create-and-link or a suggested match (very likely the same org), off for the
+    manual search box (often an unrelated established org). The caller passes `checked`.
+    Lives inside each link form so it submits with that form without any JS. %>
+<% checked = local_assigns.fetch(:checked, true) %>
+<label class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+  <%= check_box_tag :apply_form_details, "1", checked, class: "rounded border-gray-300 text-blue-900 focus:ring-blue-500" %>
+  Also populate this org's address, website, and type from the form answers
+</label>

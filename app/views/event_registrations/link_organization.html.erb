@@ -121,18 +121,23 @@
             <%= @creatable_org_names.size > 1 ? "These organizations the registrant entered aren't in the database yet. Create each in the database and link it in one step:" : "The registrant entered this organization on their form, but it's not in the database yet. Create the organization in the database and link it in one step:" %>
           </p>
           <% @creatable_org_names.each do |creatable_name| %>
-            <div class="flex items-stretch gap-2 mb-2">
-              <div class="flex-1 min-w-0 flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800">
-                <span class="truncate"><%= creatable_name %></span>
+            <%= form_with url: create_organization_event_registration_path(@event_registration),
+                          method: :post,
+                          data: { turbo_frame: "_top" },
+                          class: "mb-2" do %>
+              <%= hidden_field_tag :organization_name, creatable_name %>
+              <%= hidden_field_tag :return_to, params[:return_to] %>
+              <div class="flex items-stretch gap-2">
+                <div class="flex-1 min-w-0 flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800">
+                  <span class="truncate"><%= creatable_name %></span>
+                </div>
+                <%= submit_tag "Create and link",
+                               class: "shrink-0 w-48 text-center rounded-md px-6 py-2 font-semibold #{btn_solid} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
               </div>
-              <%= button_to create_organization_event_registration_path(@event_registration, return_to: params[:return_to]),
-                            method: :post,
-                            params: { organization_name: creatable_name },
-                            form: { class: "shrink-0", data: { turbo_frame: "_top" } },
-                            class: "shrink-0 w-48 text-center rounded-md px-6 py-2 font-semibold #{btn_solid} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" do %>
-                Create and link
-              <% end %>
-            </div>
+              <div class="mt-2">
+                <%= render "apply_form_details_checkbox", checked: true %>
+              </div>
+            <% end %>
           <% end %>
           <p class="text-sm text-gray-600 mb-2 mt-4">Or, add an existing organization instead:</p>
         <% end %>
@@ -144,13 +149,18 @@
               <%= form_with url: select_organization_event_registration_path(@event_registration),
                             method: :post,
                             data: { turbo_frame: "_top" },
-                            class: "flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3" do %>
+                            class: "bg-blue-50 border border-blue-200 rounded-lg p-3" do %>
                 <%= hidden_field_tag :organization_id, org.id %>
                 <%= hidden_field_tag :return_to, params[:return_to] %>
-                <div class="min-w-0">
-                  <p class="font-medium text-gray-800"><%= org.name %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
+                <div class="flex items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="font-medium text-gray-800"><%= org.name %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
+                  </div>
+                  <%= submit_tag "Link organization", class: "shrink-0 rounded-md bg-blue-900 px-4 py-1.5 text-white text-sm font-medium hover:bg-blue-800 transition cursor-pointer" %>
                 </div>
-                <%= submit_tag "Link organization", class: "rounded-md bg-blue-900 px-4 py-1.5 text-white text-sm font-medium hover:bg-blue-800 transition cursor-pointer" %>
+                <div class="mt-2">
+                  <%= render "apply_form_details_checkbox", checked: true %>
+                </div>
               <% end %>
             <% end %>
           </div>
@@ -159,18 +169,21 @@
         <%= form_with url: select_organization_event_registration_path(@event_registration),
                       method: :post,
                       data: { turbo_frame: "_top" },
-                      class: "flex items-stretch gap-2" do %>
+                      class: "space-y-2" do %>
           <%= hidden_field_tag :return_to, params[:return_to] %>
-          <div class="flex-1 min-w-0">
-            <%= select_tag :organization_id,
-                           options_from_collection_for_select([], :id, :name),
-                           include_blank: true,
-                           class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                           data: { controller: "remote-select", remote_select_model_value: "organization" },
-                           prompt: "Type to search organizations…" %>
+          <div class="flex items-stretch gap-2">
+            <div class="flex-1 min-w-0">
+              <%= select_tag :organization_id,
+                             options_from_collection_for_select([], :id, :name),
+                             include_blank: true,
+                             class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                             data: { controller: "remote-select", remote_select_model_value: "organization" },
+                             prompt: "Type to search organizations…" %>
+            </div>
+            <%= submit_tag "Link organization",
+                           class: "shrink-0 w-48 text-center rounded-md px-6 py-2 font-semibold #{create_is_primary ? btn_outline : btn_solid} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
           </div>
-          <%= submit_tag "Link organization",
-                         class: "shrink-0 w-48 text-center rounded-md px-6 py-2 font-semibold #{create_is_primary ? btn_outline : btn_solid} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
+          <%= render "apply_form_details_checkbox", checked: false %>
         <% end %>
       </div>
     </div>

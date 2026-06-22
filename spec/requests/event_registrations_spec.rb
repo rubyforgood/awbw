@@ -401,24 +401,34 @@ RSpec.describe "EventRegistrations", type: :request do
     describe "organization linking" do
       let(:organization) { create(:organization, name: "Helping Hands") }
 
+      # Records what the registrant "typed on the form" so the editor can show the
+      # submission, compare its position to an existing affiliation title, and carry
+      # the org details onto an org created from it.
+      def submit_form(org_name: nil, position: nil, street: nil, city: nil, state: nil, zip: nil, type: nil, website: nil)
+        reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
+        create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
+        submission = create(:form_submission, person: regular_user.person, form: reg_form)
+        {
+          "agency_name" => org_name,
+          "agency_position" => position,
+          "agency_street" => street,
+          "agency_city" => city,
+          "agency_state" => state,
+          "agency_zip" => zip,
+          "agency_type" => type,
+          "agency_website" => website
+        }.each do |identifier, value|
+          next if value.nil?
+          field = reg_form.form_fields.find_by(field_identifier: identifier) ||
+            create(:form_field, form: reg_form, field_identifier: identifier)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+        end
+        submission
+      end
+
       describe "GET /event_registrations/:id/link_organization" do
         before do
           create(:event_registration_organization, event_registration: existing_registration, organization: organization)
-        end
-
-        # Records what the registrant "typed on the form" so the editor can show
-        # the submission and compare its position to an existing affiliation title.
-        def submit_form(org_name: nil, position: nil)
-          reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
-          create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
-          submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          {  "agency_name" => org_name, "agency_position" => position }.each do |identifier, value|
-            next if value.nil?
-            field = reg_form.form_fields.find_by(field_identifier: identifier) ||
-              create(:form_field, form: reg_form, field_identifier: identifier)
-            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
-          end
-          submission
         end
 
         # Whether the <details> section whose text contains `heading` is expanded.
@@ -649,6 +659,42 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).to include(create_organization_event_registration_path(existing_registration))
         end
 
+        # Finds the apply_form_details checkbox inside the form identified by `marker`
+        # (a CSS selector unique to that form), so each link form's default can be checked.
+        def populate_toggle_in_form(body, marker)
+          form = Nokogiri::HTML(body).css("form").find { |f| f.at_css(marker) }
+          form&.at_css('input[type="checkbox"][name="apply_form_details"]')
+        end
+
+        it "checks the populate toggle by default on a create-and-link row" do
+          submit_form(org_name: "Totally New Org")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          checkbox = populate_toggle_in_form(response.body, 'input[name="organization_name"]')
+          expect(checkbox).to be_present
+          expect(checkbox["checked"]).to be_present
+        end
+
+        it "checks the populate toggle by default on a suggested match" do
+          create(:organization, name: "Helpers United")
+          submit_form(org_name: "Helpers United")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          checkbox = populate_toggle_in_form(response.body, 'input[type="hidden"][name="organization_id"]')
+          expect(checkbox).to be_present
+          expect(checkbox["checked"]).to be_present
+        end
+
+        it "leaves the populate toggle unchecked on the manual search form" do
+          get link_organization_event_registration_path(existing_registration)
+
+          checkbox = populate_toggle_in_form(response.body, 'select[name="organization_id"]')
+          expect(checkbox).to be_present
+          expect(checkbox["checked"]).to be_nil
+        end
+
         it "hides 'Create org & link' when an org with the submitted name already exists" do
           create(:organization, name: "Already Exists Org")
           submit_form(org_name: "Already Exists Org")
@@ -728,6 +774,82 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
             .to contain_exactly("Facilitator")
+        end
+
+        it "populates address, website, and type from the form when the admin opts in" do
+          gov_type = create(:organization_type, name: "Government agency")
+          submit_form(org_name: organization.name, type: "Government agency",
+                      website: "matchable.org", street: "9 Oak Ave", city: "Boise", state: "ID")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id, apply_form_details: "1" }
+
+          organization.reload
+          expect(organization.organization_type).to eq(gov_type)
+          expect(organization.website_url).to eq("matchable.org")
+          expect(organization.addresses.active.first).to have_attributes(street_address: "9 Oak Ave", city: "Boise", state: "ID", primary: true)
+        end
+
+        it "does not touch the org's details when the admin does not opt in" do
+          create(:organization_type, name: "Government agency")
+          submit_form(org_name: organization.name, type: "Government agency",
+                      website: "matchable.org", city: "Boise", state: "ID")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          organization.reload
+          expect(organization.organization_type).to be_nil
+          expect(organization.website_url).to be_blank
+          expect(organization.addresses).to be_empty
+        end
+
+        it "overwrites the org's existing website and logs the change when opting in" do
+          organization.update!(website_url: "https://old.example")
+          submit_form(org_name: organization.name, website: "https://new.example")
+
+          expect {
+            post select_organization_event_registration_path(existing_registration),
+              params: { organization_id: organization.id, apply_form_details: "1" }
+          }.to change { Ahoy::Event.where(name: "update.organization").count }.by(1)
+
+          expect(organization.reload.website_url).to eq("https://new.example")
+        end
+
+        it "adds the submitted address as a new primary, demoting but keeping the old one" do
+          old = create(:address, addressable: organization, street_address: "1 Old Rd", city: "Old City", state: "CA", primary: true)
+          submit_form(org_name: organization.name, street: "9 Oak Ave", city: "Boise", state: "ID")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id, apply_form_details: "1" }
+
+          expect(organization.reload.addresses.where(primary: true).map(&:city)).to eq([ "Boise" ])
+          expect(old.reload).to have_attributes(primary: false, inactive: false)
+        end
+
+        it "refreshes a same-street address instead of duplicating it" do
+          existing = create(:address, addressable: organization, street_address: "9 Oak Ave", city: "Old City", state: "CA")
+          submit_form(org_name: organization.name, street: "9 Oak Ave", city: "Boise", state: "ID")
+
+          expect {
+            post select_organization_event_registration_path(existing_registration),
+              params: { organization_id: organization.id, apply_form_details: "1" }
+          }.not_to change { organization.addresses.count }
+
+          expect(existing.reload).to have_attributes(city: "Boise", state: "ID", primary: true)
+        end
+
+        it "overwrites the org's existing type and logs the change when opting in" do
+          organization.update!(organization_type: create(:organization_type, name: "For-profit"))
+          gov_type = create(:organization_type, name: "Government agency")
+          submit_form(org_name: organization.name, type: "Government agency")
+
+          expect {
+            post select_organization_event_registration_path(existing_registration),
+              params: { organization_id: organization.id, apply_form_details: "1" }
+          }.to change { Ahoy::Event.where(name: "update.organization").count }.by(1)
+
+          expect(organization.reload.organization_type).to eq(gov_type)
         end
       end
 
@@ -819,6 +941,81 @@ RSpec.describe "EventRegistrations", type: :request do
           }.not_to change(Organization, :count)
 
           expect(flash[:alert]).to be_present
+        end
+
+        it "carries the registrant's typed org details onto the new org" do
+          create(:organization_status, name: "Active")
+          for_profit = create(:organization_type, name: "For-profit")
+          submit_form(org_name: "Detailed Org", street: "100 Main St", city: "Austin",
+                      state: "TX", zip: "78701", type: "For-profit", website: "https://detailed.org")
+
+          post create_organization_event_registration_path(existing_registration), params: { apply_form_details: "1" }
+
+          org = Organization.find_by(name: "Detailed Org")
+          expect(org.organization_type).to eq(for_profit)
+          expect(org.website_url).to eq("https://detailed.org")
+          address = org.addresses.first
+          expect(address).to have_attributes(street_address: "100 Main St", city: "Austin",
+                                             state: "TX", zip_code: "78701", address_type: "work")
+        end
+
+        it "sets the registrant's affiliation title from the submitted position" do
+          create(:organization_status, name: "Active")
+          submit_form(org_name: "Titled Org", position: "Lead Facilitator")
+
+          post create_organization_event_registration_path(existing_registration)
+
+          affiliation = regular_user.person.affiliations.find_by(organization: Organization.find_by(name: "Titled Org"))
+          expect(affiliation.title).to eq("Lead Facilitator")
+        end
+
+        it "stores a bare-domain website as typed (normalized at render)" do
+          create(:organization_status, name: "Active")
+          submit_form(org_name: "Schemeless Org", website: "example.com")
+
+          post create_organization_event_registration_path(existing_registration), params: { apply_form_details: "1" }
+
+          expect(Organization.find_by(name: "Schemeless Org").website_url).to eq("example.com")
+        end
+
+        it "skips the address when no state was submitted" do
+          create(:organization_status, name: "Active")
+          submit_form(org_name: "Partial Address Org", city: "Austin")
+
+          expect {
+            post create_organization_event_registration_path(existing_registration), params: { apply_form_details: "1" }
+          }.to change(Organization, :count).by(1)
+
+          expect(Organization.find_by(name: "Partial Address Org").addresses).to be_empty
+        end
+
+        it "creates a bare org when the populate toggle is off" do
+          create(:organization_status, name: "Active")
+          submit_form(org_name: "Bare Org", type: "For-profit", website: "bare.org", city: "Reno", state: "NV")
+
+          post create_organization_event_registration_path(existing_registration)
+
+          org = Organization.find_by(name: "Bare Org")
+          expect(org).to be_present
+          expect(org.organization_type).to be_nil
+          expect(org.website_url).to be_blank
+          expect(org.addresses).to be_empty
+          expect(existing_registration.organizations).to include(org)
+        end
+
+        it "populates an existing org on create-and-link when the toggle is on" do
+          existing = create(:organization, name: "Sparse Org")
+          for_profit = create(:organization_type, name: "For-profit")
+          submit_form(org_name: "Sparse Org", type: "For-profit", website: "sparse.org",
+                      street: "5 Elm St", city: "Reno", state: "NV", zip: "89501")
+
+          post create_organization_event_registration_path(existing_registration), params: { apply_form_details: "1" }
+
+          existing.reload
+          expect(existing.organization_type).to eq(for_profit)
+          expect(existing.website_url).to eq("sparse.org")
+          expect(existing.addresses.active.first).to have_attributes(street_address: "5 Elm St", city: "Reno", state: "NV")
+          expect(existing_registration.organizations).to include(existing)
         end
       end
 

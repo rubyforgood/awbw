@@ -215,6 +215,12 @@ class EventRegistrationsController < ApplicationController
     @person = @event_registration.registrant
     organization = Organization.find(params[:organization_id])
 
+    # Apply the org details the form captured only when the admin opted in — linking an
+    # established org shouldn't silently rewrite its address/website.
+    entries = registration_submission_entries(@event_registration)
+    answers = submitted_agency_answers(entries, organization.name)
+    apply_submitted_org_details(organization, answers) if params[:apply_form_details] == "1"
+
     AffiliationServices::CreateFromRegistration.call(
       person: @person,
       organization: organization,
@@ -236,7 +242,8 @@ class EventRegistrationsController < ApplicationController
     # button can't be used to create an arbitrary org — it only resolves a pending
     # submitted name. A specific name is passed when there are several submissions;
     # otherwise default to the first submitted name.
-    submitted_names = submitted_agency_names(@event_registration)
+    entries = registration_submission_entries(@event_registration)
+    submitted_names = entries.filter_map { |entry| entry[:org_name].presence&.strip }.uniq { |name| name.downcase }
     requested = params[:organization_name].presence
     name = requested ? submitted_names.find { |submitted| submitted.casecmp?(requested) } : submitted_names.first
     if name.blank?
@@ -244,9 +251,24 @@ class EventRegistrationsController < ApplicationController
       return
     end
 
-    # Reuse an existing org with that name rather than creating a duplicate.
+    # The other org details the registrant typed on the same submission, applied when the
+    # admin leaves the populate toggle on (checked by default for create-and-link).
+    answers = submitted_agency_answers(entries, name)
+    apply = params[:apply_form_details] == "1"
+
+    # Reuse an existing org with that name rather than creating a duplicate. A new org is
+    # built from the form when populating, else created bare; an existing org is populated
+    # only when the toggle is on (never silently).
     existing = Organization.where("LOWER(name) = ?", name.strip.downcase).first
-    organization = existing || Organization.create!(name: name.strip, organization_status: OrganizationStatus.find_by(name: "Active"))
+    organization =
+      if existing
+        existing
+      elsif apply
+        build_organization_from_answers(name, answers)
+      else
+        Organization.create!(name: name.strip, organization_status: OrganizationStatus.find_by(name: "Active"))
+      end
+    apply_submitted_org_details(organization, answers) if existing && apply
 
     AffiliationServices::CreateFromRegistration.call(
       person: @person,
@@ -414,12 +436,15 @@ class EventRegistrationsController < ApplicationController
     entries
   end
 
-  # Distinct, non-blank org names the registrant typed across their registration-form
-  # submissions (case-insensitive dedupe, first spelling wins).
-  def submitted_agency_names(registration)
-    registration_submission_entries(registration)
-      .filter_map { |entry| entry[:org_name].presence&.strip }
-      .uniq { |name| name.downcase }
+  # The agency answers (org details + position) the registrant submitted for this org,
+  # keyed by field_identifier. Uses the submission that named this org, else the first
+  # that named any org (registrants normally have a single submission), so a resolved
+  # org and affiliation can carry what they typed. {} when nothing was submitted.
+  def submitted_agency_answers(entries, name)
+    entry = entries.find { |e| e[:org_name].present? && e[:org_name].strip.casecmp?(name.to_s.strip) } ||
+            entries.find { |e| e[:org_name].present? } ||
+            entries.first
+    entry&.fetch(:submission)&.answers_by_identifier || {}
   end
 
   # The job title/position the registrant typed for their organization on the
@@ -430,5 +455,109 @@ class EventRegistrationsController < ApplicationController
     entries = registration_submission_entries(registration)
     primary = entries.find { |entry| entry[:org_name].present? } || entries.first
     primary && primary[:position]
+  end
+
+  # Apply the org info the registrant submitted to an org we already have, when the
+  # admin opts in (the apply_form_details checkbox). Website and organization type
+  # overwrite the org's values (each logged to Ahoy). The address is additive — a new
+  # record — unless one with the same street exists, which we refresh instead of duplicating.
+  def apply_submitted_org_details(organization, answers)
+    return if answers.blank?
+
+    overwrite_org_field(organization, :website_url, answers["agency_website"])
+    overwrite_org_type(organization, answers["agency_type"])
+    apply_submitted_address(organization, answers)
+  end
+
+  # Overwrite a single org column with the submitted value — an explicit admin opt-in —
+  # and log the change to Ahoy. No-op when the form had no value or it already matches.
+  def overwrite_org_field(organization, field, submitted)
+    value = submitted.to_s.strip
+    return if value.blank? || organization.public_send(field).to_s == value
+
+    previous = organization.public_send(field)
+    organization.update!(field => value)
+    Ahoy::Tracker.new(user: current_user).track(
+      "update.organization",
+      resource_type: "Organization",
+      resource_id: organization.id,
+      resource_title: organization.name,
+      change: field.to_s,
+      from: previous,
+      to: value,
+      reason: "registration_form_apply"
+    )
+  end
+
+  # Overwrite the org's type from the submitted type name, resolving it to an
+  # OrganizationType record and logging the change to Ahoy. No-op when the form had no
+  # type, it names no known type, or it already matches.
+  def overwrite_org_type(organization, submitted)
+    type = submitted_organization_type(submitted)
+    return if type.nil? || organization.organization_type_id == type.id
+
+    previous = organization.organization_type&.name
+    organization.update!(organization_type: type)
+    Ahoy::Tracker.new(user: current_user).track(
+      "update.organization",
+      resource_type: "Organization",
+      resource_id: organization.id,
+      resource_title: organization.name,
+      change: "organization_type",
+      from: previous,
+      to: type.name,
+      reason: "registration_form_apply"
+    )
+  end
+
+  # The OrganizationType matching a submitted type name (case-insensitive), or nil when
+  # blank or unrecognized. The form submits a type name from OrganizationType.published_names.
+  def submitted_organization_type(submitted)
+    name = submitted.to_s.strip
+    return if name.blank?
+
+    OrganizationType.where("LOWER(name) = ?", name.downcase).first
+  end
+
+  # Creates an Active org from a submitted name, carrying over the org-level details
+  # the registrant typed: type, website (stored as typed; see Organization#website_link_url),
+  # and a primary work address.
+  def build_organization_from_answers(name, answers)
+    organization = Organization.create!(
+      name: name.strip,
+      organization_status: OrganizationStatus.find_by(name: "Active"),
+      organization_type: submitted_organization_type(answers["agency_type"]),
+      website_url: answers["agency_website"].presence&.strip
+    )
+    apply_submitted_address(organization, answers)
+    organization
+  end
+
+  # Add the submitted address as a new primary "work" record with an "Unknown" locality
+  # (the form doesn't capture one). Additive — but if the org already has an address with
+  # the same street, refresh that one (e.g. fill in a city it was missing) rather than
+  # duplicating it. The chosen record becomes primary and any others are demoted, leaving
+  # them active so prior addresses aren't lost. Skipped unless city and state are present
+  # (the Address model requires them); street_address and zip_code are NOT NULL columns,
+  # so a missing one is stored as "" rather than nil.
+  def apply_submitted_address(organization, answers)
+    city = answers["agency_city"].presence&.strip
+    state = answers["agency_state"].presence&.strip
+    return if city.blank? || state.blank?
+
+    street = answers["agency_street"].to_s.strip
+    zip = answers["agency_zip"].to_s.strip
+    match = street.present? && organization.addresses.find { |a| a.street_address.to_s.strip.casecmp?(street) }
+
+    address = if match
+      match.update!(city: city, state: state, zip_code: zip, primary: true, inactive: false)
+      match
+    else
+      organization.addresses.create!(
+        street_address: street, city: city, state: state, zip_code: zip,
+        locality: "Unknown", address_type: "work", primary: true
+      )
+    end
+    organization.addresses.where.not(id: address.id).update_all(primary: false)
   end
 end

@@ -234,8 +234,8 @@ module EventRegistrationServices
 
       if existing
         existing.update!(
-          street_address: field_value("mailing_street"),
-          zip_code: field_value("mailing_zip"),
+          street_address: field_value("mailing_street").to_s,
+          zip_code: field_value("mailing_zip").to_s,
           primary: true,
           inactive: false
         )
@@ -246,10 +246,10 @@ module EventRegistrationServices
       person.addresses.where(primary: true).update_all(primary: false, inactive: true)
 
       person.addresses.create!(
-        street_address: field_value("mailing_street"),
+        street_address: field_value("mailing_street").to_s,
         city: new_city,
         state: new_state,
-        zip_code: field_value("mailing_zip"),
+        zip_code: field_value("mailing_zip").to_s,
         country: field_value("mailing_country")&.strip,
         locality: "Unknown",
         address_type: field_value("mailing_address_type")&.downcase || "unknown",
@@ -327,8 +327,8 @@ module EventRegistrationServices
 
       if existing
         existing.update!(
-          street_address: field_value("agency_street"),
-          zip_code: field_value("agency_zip"),
+          street_address: field_value("agency_street").to_s,
+          zip_code: field_value("agency_zip").to_s,
           primary: existing.primary? || make_primary,
           inactive: false
         )
@@ -337,10 +337,10 @@ module EventRegistrationServices
       end
 
       organization.addresses.create!(
-        street_address: field_value("agency_street"),
+        street_address: field_value("agency_street").to_s,
         city: new_city,
         state: new_state,
-        zip_code: field_value("agency_zip"),
+        zip_code: field_value("agency_zip").to_s,
         country: field_value("agency_country")&.strip,
         locality: "Unknown",
         address_type: "work",

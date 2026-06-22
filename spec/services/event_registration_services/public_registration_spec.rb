@@ -358,6 +358,29 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "an agency address submitted without a zip or street" do
+    # zip_code and street_address are NOT NULL columns. A registrant who fills the org
+    # city/state but leaves the zip/street blank must not hit a NotNullViolation 500.
+    let!(:organization) { create(:organization, name: "Helping Org") }
+    let(:params) do
+      base_form_params(first_name: "Sam", last_name: "Roe", email: "sam@example.com").merge(
+        field_id("agency_name") => "Helping Org",
+        field_id("agency_city") => "Reno",
+        field_id("agency_state") => "NV"
+      )
+    end
+
+    it "creates the address without raising" do
+      result = nil
+      expect {
+        result = described_class.call(event: event, form: form, form_params: params)
+      }.not_to raise_error
+
+      expect(result.success?).to be true
+      expect(organization.addresses.last).to have_attributes(city: "Reno", state: "NV", zip_code: "", street_address: "")
+    end
+  end
+
   describe "sector tagging" do
     let!(:primary_sector) { create(:sector, name: "Healthcare") }
     let!(:additional_sector) { create(:sector, name: "Education") }
