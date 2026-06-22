@@ -64,7 +64,9 @@ RSpec.describe EventDashboard do
       create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
                           allocatable: cancelled_reg, amount: 5_000)
 
-      # Money: reg1 fully covered (payment + scholarship), reg2 partly paid.
+      # Money: reg1 fully covered (payment + scholarship), reg2 partly paid. Each
+      # payment is fully applied to its registration, so the allocation callback
+      # decrements its remaining to zero — no unallocated balance left over.
       create(:allocation, source: create(:payment, amount_cents: 6_000, amount_cents_remaining: 6_000),
                           allocatable: reg1, amount: 6_000)
       scholarship = create(:scholarship, recipient: person1, amount_cents: 4_000, tasks_completed: true)
@@ -144,16 +146,21 @@ RSpec.describe EventDashboard do
         expect(dashboard.registration_subtotal_cents).to eq(16_000)
       end
 
-      it "reports grand total as registration subtotal plus completed scholarships plus cont ed plus unallocated bulk payments" do
+      it "reports grand total as registration subtotal plus completed scholarships plus cont ed plus unallocated bulk and direct payments" do
         expect(dashboard.grand_total_cents).to eq(20_000)
         expect(dashboard.grand_total_cents).to eq(
           dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents +
-            dashboard.cont_ed_total_cents + dashboard.unallocated_bulk_payment_cents
+            dashboard.cont_ed_total_cents + dashboard.unallocated_bulk_payment_cents +
+            dashboard.unallocated_direct_payment_cents
         )
       end
 
       it "reports no unallocated bulk payments without a bulk payment form" do
         expect(dashboard.unallocated_bulk_payment_cents).to eq(0)
+      end
+
+      it "reports no unallocated direct payments when every payment is fully applied" do
+        expect(dashboard.unallocated_direct_payment_cents).to eq(0)
       end
 
       it "is not free when the event has a cost" do
@@ -845,6 +852,67 @@ RSpec.describe EventDashboard do
              amount_cents: 7_000, amount_cents_remaining: 7_000)
 
       expect(dashboard.unallocated_bulk_payment_cents).to eq(0)
+    end
+  end
+
+  describe "unallocated direct payments" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:payer) { create(:person) }
+    let!(:registration) { create(:event_registration, event: event, registrant: payer, status: "registered") }
+
+    it "sums the leftover balance on direct payments applied to the event's registrations" do
+      # Overpaid: a $5,000 payment with only $3,000 applied leaves $2,000 unallocated
+      # (the allocation callback decrements the payment's remaining).
+      payment = create(:payment, person: payer, amount_cents: 5_000, amount_cents_remaining: 5_000)
+      create(:allocation, source: payment, allocatable: registration, amount: 3_000)
+
+      expect(dashboard.unallocated_direct_payment_cents).to eq(2_000)
+    end
+
+    it "adds the leftover balance to the grand total" do
+      payment = create(:payment, person: payer, amount_cents: 5_000, amount_cents_remaining: 5_000)
+      create(:allocation, source: payment, allocatable: registration, amount: 3_000)
+
+      expect(dashboard.grand_total_cents).to eq(
+        dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents +
+          dashboard.cont_ed_total_cents + dashboard.unallocated_bulk_payment_cents + 2_000
+      )
+    end
+
+    it "ignores fully-applied direct payments" do
+      payment = create(:payment, person: payer, amount_cents: 3_000, amount_cents_remaining: 3_000)
+      create(:allocation, source: payment, allocatable: registration, amount: 3_000)
+
+      expect(dashboard.unallocated_direct_payment_cents).to eq(0)
+    end
+
+    it "ignores payments allocated to other events' registrations" do
+      other_event = create(:event, cost_cents: 10_000)
+      other_registration = create(:event_registration, event: other_event, registrant: payer, status: "registered")
+      payment = create(:payment, person: payer, amount_cents: 5_000, amount_cents_remaining: 5_000)
+      create(:allocation, source: payment, allocatable: other_registration, amount: 3_000)
+
+      expect(dashboard.unallocated_direct_payment_cents).to eq(0)
+    end
+
+    it "ignores payments allocated only to inactive registrations" do
+      cancelled = create(:event_registration, event: event, registrant: create(:person), status: "cancelled")
+      payment = create(:payment, person: payer, amount_cents: 5_000, amount_cents_remaining: 5_000)
+      create(:allocation, source: payment, allocatable: cancelled, amount: 3_000)
+
+      expect(dashboard.unallocated_direct_payment_cents).to eq(0)
+    end
+
+    it "does not double-count bulk payments that have been applied to registrations" do
+      bulk_form = create(:form)
+      create(:event_form, event: event, form: bulk_form, role: "bulk_payment")
+      submission = create(:form_submission, person: payer, form: bulk_form, event: event, role: "bulk_payment")
+      bulk_payment = create(:payment, person: payer, form_submission: submission,
+                                      amount_cents: 5_000, amount_cents_remaining: 5_000)
+      create(:allocation, source: bulk_payment, allocatable: registration, amount: 3_000)
+
+      expect(dashboard.unallocated_direct_payment_cents).to eq(0)
+      expect(dashboard.unallocated_bulk_payment_cents).to eq(2_000)
     end
   end
 end

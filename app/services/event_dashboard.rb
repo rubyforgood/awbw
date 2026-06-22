@@ -189,13 +189,22 @@ class EventDashboard
   end
 
   def grand_total_cents
-    registration_subtotal_cents + scholarship_total_cents + cont_ed_total_cents + unallocated_bulk_payment_cents
+    registration_subtotal_cents + scholarship_total_cents + cont_ed_total_cents +
+      unallocated_bulk_payment_cents + unallocated_direct_payment_cents
   end
 
   # Money received through this event's bulk payment submissions that hasn't been
   # allocated to a registration yet — cash on hand still waiting to be applied.
   def unallocated_bulk_payment_cents
     bulk_payments.sum(:amount_cents_remaining)
+  end
+
+  # Leftover cash on direct (non-bulk) payments applied to this event's
+  # registrations — e.g. a registrant who overpaid, so the payment still carries
+  # an unallocated balance. Excludes bulk payments, whose remainder is already
+  # counted by unallocated_bulk_payment_cents, so the two never double-count.
+  def unallocated_direct_payment_cents
+    direct_payments.sum(:amount_cents_remaining)
   end
 
   # Cash actually collected from registrants: registration payments received plus
@@ -748,6 +757,16 @@ class EventDashboard
     @bulk_payments ||= Payment.where(
       form_submission_id: event.form_submissions.where(role: "bulk_payment").select(:id)
     )
+  end
+
+  # Direct (non-bulk) payments allocated to this event's active registrations
+  # that still carry an unallocated balance. Excludes bulk payments so their
+  # remainder isn't double-counted against unallocated_bulk_payment_cents.
+  def direct_payments
+    @direct_payments ||= Payment
+      .where(id: registration_allocations.where(source_type: "Payment").select(:source_id))
+      .where("amount_cents_remaining > 0")
+      .where.not(id: bulk_payments.select(:id))
   end
 
   def scholarships

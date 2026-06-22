@@ -83,6 +83,7 @@
           $grand = $registration + $scholarships + $cont_ed. Left-aligned; the headline
           figure dominates while the addends stay muted, and the row wraps on mobile. %>
       <% show_bulk_payments = @dashboard.unallocated_bulk_payment_cents.positive? %>
+      <% show_direct_payments = @dashboard.unallocated_direct_payment_cents.positive? %>
       <%# Each equation term is colorless at rest and reveals its domain color on
           hover — a tinted fill + darker border, matching the amber bulk-payments
           term's look but per-domain. border-transparent reserves the border so
@@ -134,8 +135,21 @@
                   <p class="hidden lg:block text-xs text-gray-500">Unallocated bulk payments</p>
                 <% end %>
               <% end %>
+              <% if show_direct_payments %>
+                <span class="text-2xl font-light text-gray-300 select-none">+</span>
+                <%# Same amber treatment as the bulk-payments term — leftover cash on
+                    a registrant's direct payment still needs allocating. Links to the
+                    payments index filtered to payments with an unallocated balance. %>
+                <%= link_to payments_path(has_remaining: "yes"), class: "whitespace-nowrap leading-tight rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 hover:bg-amber-100 transition-colors", title: "View unallocated payments" do %>
+                  <p class="flex items-center gap-1.5 text-lg sm:text-xl font-semibold text-amber-700 tabular-nums">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <%= dollars_from_cents(@dashboard.unallocated_direct_payment_cents) %>
+                  </p>
+                  <p class="hidden lg:block text-xs text-gray-500">Unallocated direct payments</p>
+                <% end %>
+              <% end %>
             </div>
-            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees<%= " + unallocated bulk payments" if show_bulk_payments %></p>
+            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees<%= " + unallocated bulk payments" if show_bulk_payments %><%= " + unallocated direct payments" if show_direct_payments %></p>
           </div>
 
           <%# Cash view of the same money: what's collected (registration paid +

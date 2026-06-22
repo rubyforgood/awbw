@@ -1140,6 +1140,26 @@ RSpec.describe "Events", type: :request do
 
         expect(response.body).not_to include("Unallocated bulk payments")
       end
+
+      it "shows unallocated direct payments in the equation, linking to the filtered payments index" do
+        payment = create(:payment, person: person, amount_cents: 5_000, amount_cents_remaining: 5_000)
+        create(:allocation, source: payment, allocatable: registration, amount: 3_000)
+
+        get dashboard_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Unallocated direct payments")
+        expect(response.body).to include(payments_path(has_remaining: "yes"))
+      end
+
+      it "omits the direct payments term when every payment is fully applied" do
+        payment = create(:payment, person: person, amount_cents: 3_000, amount_cents_remaining: 3_000)
+        create(:allocation, source: payment, allocatable: registration, amount: 3_000)
+
+        get dashboard_event_path(event)
+
+        expect(response.body).not_to include("Unallocated direct payments")
+      end
     end
 
     context "as non-admin non-owner" do
