@@ -116,6 +116,8 @@
 
     <% event_form_ids = @event.registration_form_ids %>
     <% form_submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
+    <% scholarship_form = @event.scholarship_form %>
+    <% scholarship_submitter_ids = scholarship_form ? FormSubmission.joins(:form_answers).where(form_id: scholarship_form.id, role: "scholarship", person_id: @event_registrations.map(&:registrant_id)).distinct.pluck(:person_id).to_set : Set.new %>
     <% registration_form = @event.registration_form %>
     <% agency_name_field = registration_form&.form_fields&.find_by(field_identifier: "agency_name") %>
     <% submitted_org_names = agency_name_field ? FormAnswer.joins(:form_submission).where(form_submissions: { person_id: @event_registrations.map(&:registrant_id), form_id: registration_form.id }, form_field_id: agency_name_field.id).pluck(Arel.sql("form_submissions.person_id"), :submitted_answer).to_h : {} %>
@@ -186,12 +188,12 @@
                       <%= person_profile_button(person, truncate_at: 30, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }, path_params: { return_to: "registrants", event_id: @event.id }, compact: true) %>
                     </div>
 
+                    <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
                     <% if event_form_ids.any? %>
                       <%# Reserve a fixed slot so the comment/warning icons stay aligned
                           across rows whether or not this registrant submitted a form. %>
                       <span class="inline-flex w-4 justify-center">
                         <% if (submissions = form_submissions[person.id]) %>
-                          <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
                           <% tooltip_parts = submissions.map { |name, ts| "#{name} — Submitted #{ts.strftime('%B %d, %Y at %l:%M %P')}" } %>
                           <% tooltip_parts << "Scholarship requested" if registration.scholarship_requested? %>
                           <%= link_to event_public_registration_path(@event, **form_show_params, return_to: "registrants", return_registration_id: registration.id),
@@ -202,6 +204,15 @@
                           <% end %>
                         <% end %>
                       </span>
+                    <% end %>
+
+                    <% if scholarship_submitter_ids.include?(person.id) %>
+                      <%= link_to event_public_registration_path(@event, **form_show_params, return_to: "registrants", return_registration_id: registration.id, anchor: "scholarship-application"),
+                                  class: "text-purple-600 hover:text-purple-800",
+                                  title: "Scholarship application submitted",
+                                  data: { turbo_frame: "_top" } do %>
+                        <i class="fa-solid fa-hand-holding-heart"></i>
+                      <% end %>
                     <% end %>
 
                     <% if registration.comments.any? %>
