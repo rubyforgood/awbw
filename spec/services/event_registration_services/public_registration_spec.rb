@@ -51,6 +51,85 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "structured profile backfill" do
+    it "stores racial/ethnic identity and mailing country on a new registrant" do
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => "Asian",
+        field_id("mailing_street") => "1 Main St",
+        field_id("mailing_city") => "Oakland",
+        field_id("mailing_state") => "CA",
+        field_id("mailing_zip") => "94601",
+        field_id("mailing_country") => "USA"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by!(email: "ada@example.com")
+
+      expect(person.racial_ethnic_identity).to eq("Asian")
+      expect(person.addresses.find_by(primary: true).country).to eq("USA")
+    end
+
+    it "overwrites a racial/ethnic identity already on file with the latest answer" do
+      existing = create(:person, first_name: "Ada", last_name: "Lin",
+                                 email: "ada@example.com", racial_ethnic_identity: "Multi-racial")
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => "Asian"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(existing.reload.racial_ethnic_identity).to eq("Asian")
+    end
+
+    it "leaves a racial/ethnic identity on file untouched when the answer is blank" do
+      existing = create(:person, first_name: "Ada", last_name: "Lin",
+                                 email: "ada@example.com", racial_ethnic_identity: "Multi-racial")
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => ""
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(existing.reload.racial_ethnic_identity).to eq("Multi-racial")
+    end
+
+    context "with a matched organization" do
+      let!(:organization) { create(:organization, name: "Helping Hands") }
+
+      def register_with_org(extra)
+        params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+          field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+        ).merge(extra)
+        described_class.call(event: event, form: form, form_params: params)
+      end
+
+      it "fills website, agency type, and address country when blank" do
+        register_with_org(
+          field_id("agency_website") => "helpinghands.org",
+          field_id("agency_type") => "501c3/nonprofit",
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501",
+          field_id("agency_country") => "USA"
+        )
+        organization.reload
+
+        expect(organization.agency_type).to eq("501c3/nonprofit")
+        expect(organization.website_url).to include("helpinghands.org")
+        expect(organization.addresses.find_by(primary: true).country).to eq("USA")
+      end
+
+      it "overwrites an organization's existing website with the latest answer" do
+        organization.update!(website_url: "https://existing.org")
+
+        register_with_org(field_id("agency_website") => "helpinghands.org")
+
+        expect(organization.reload.website_url).to include("helpinghands.org")
+      end
+    end
+  end
+
   describe "matching an existing registrant by name" do
     it "matches a person stored under a nickname when the registrant types their legal first name" do
       existing = create(:person, first_name: "Bob", legal_first_name: "Robert",

@@ -44,13 +44,17 @@ module EventRegistrationServices
     def call
       ActiveRecord::Base.transaction do
         person = find_or_create_person
+        sync_person_profile(person)
 
         create_mailing_address(person) if field_value("mailing_city").present?
         create_phone_contact(person) if field_value("phone").present?
 
         organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
-        create_affiliation(person, organization) if organization
-        create_agency_address(organization) if organization && field_value("agency_city").present?
+        if organization
+          create_affiliation(person, organization)
+          sync_organization_profile(organization)
+          create_agency_address(organization) if field_value("agency_city").present?
+        end
 
         assign_tags(person, organization)
 
@@ -166,6 +170,29 @@ module EventRegistrationServices
         .first
     end
 
+    # Populate the structured columns that the registration form collects but that
+    # we historically stored only as form answers. A non-blank submitted value
+    # overwrites whatever was on file: the latest registration is treated as the
+    # freshest source of truth, and the prior value is preserved in the audit trail
+    # — every model includes AhoyTrackable, whose after_update logs an Ahoy::Event
+    # capturing the change. A blank answer never clobbers existing data.
+    def sync_person_profile(person)
+      apply_value(person, :racial_ethnic_identity, field_value("racial_ethnic_identity"))
+    end
+
+    def sync_organization_profile(organization)
+      apply_value(organization, :website_url, field_value("agency_website"))
+      apply_value(organization, :agency_type, field_value("agency_type"))
+    end
+
+    # Write value onto attribute when a non-blank value was submitted, overwriting
+    # any existing value. A no-op when the value is unchanged (update! records no
+    # change, so no spurious audit event).
+    def apply_value(record, attribute, value)
+      return if value.blank?
+      record.update!(attribute => value.strip)
+    end
+
     def create_mailing_address(person)
       new_city = field_value("mailing_city")&.strip
       new_state = field_value("mailing_state")&.strip
@@ -182,6 +209,7 @@ module EventRegistrationServices
           primary: true,
           inactive: false
         )
+        apply_value(existing, :country, field_value("mailing_country"))
         return existing
       end
 
@@ -192,6 +220,7 @@ module EventRegistrationServices
         city: new_city,
         state: new_state,
         zip_code: field_value("mailing_zip"),
+        country: field_value("mailing_country")&.strip,
         locality: "Unknown",
         address_type: field_value("mailing_address_type")&.downcase || "unknown",
         primary: true
@@ -256,6 +285,7 @@ module EventRegistrationServices
           primary: true,
           inactive: false
         )
+        apply_value(existing, :country, field_value("agency_country"))
         return existing
       end
 
@@ -266,6 +296,7 @@ module EventRegistrationServices
         city: new_city,
         state: new_state,
         zip_code: field_value("agency_zip"),
+        country: field_value("agency_country")&.strip,
         locality: "Unknown",
         address_type: "work",
         primary: true
