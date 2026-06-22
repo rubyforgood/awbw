@@ -57,6 +57,11 @@ class Person < ApplicationRecord
   CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
   validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
+  # Mirrors SectorsTaggable's single-primary rule for age ranges — the chip
+  # editor's single-star JS is the first line of defense, this guards imports,
+  # the console, and bad form posts. Person-only: organizations aggregate
+  # several members' primary age groups, so they legitimately have more than one.
+  validate :at_most_one_primary_age_range
   # TODO: add validation for zip code containing only numbers
   # TODO: add validation on STATE
   # TODO: add validation on phone number type
@@ -277,7 +282,24 @@ class Person < ApplicationRecord
     other_form_responses(OTHER_WORKSHOP_SETTING_IDENTIFIERS)
   end
 
+  # The age-range nested items in category position order for the cocoon chip
+  # editor. Reads the same association the form's nested attributes build into, so
+  # unsaved picks survive a failed save (and aren't primary-first — starring
+  # shouldn't reshuffle them). Display surfaces lead with the primary instead.
+  def age_range_items_ordered
+    age_range_categorizable_items.sort_by { |item| [ item.category&.position || 0, item.category&.name.to_s ] }
+  end
+
   private
+
+  # Count the in-memory set (not a DB query): nested attributes build the items in
+  # one transaction, so a row-level check would see none persisted yet.
+  def at_most_one_primary_age_range
+    primary_count = age_range_categorizable_items.reject(&:marked_for_destruction?).count(&:is_primary?)
+    return if primary_count <= 1
+
+    errors.add(:base, "Only one age range can be marked as primary")
+  end
 
   def other_form_responses(identifiers)
     form_submissions

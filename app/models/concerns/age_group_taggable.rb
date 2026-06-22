@@ -27,17 +27,6 @@ module AgeGroupTaggable
     primary_age_groups.map(&:id)
   end
 
-  # AgeRange categorizable_items (primary and additional together) in category
-  # position order, for the cocoon chip editor on the person form. Filters the
-  # in-memory association like primary_age_groups does, and is NOT primary-first —
-  # starring a chip shouldn't reshuffle the list. Display surfaces still lead with
-  # the primary via primary_age_groups / additional_age_groups.
-  def age_range_items_ordered
-    categorizable_items
-      .select { |item| age_range_item?(item) }
-      .sort_by { |item| [ item.category&.position || 0, item.category&.name.to_s ] }
-  end
-
   # Flip is_primary on the AgeRange categorizable_items to match the given set.
   # Runs after category membership has been assigned (the edit-form flow), so it
   # only updates existing items rather than creating them.

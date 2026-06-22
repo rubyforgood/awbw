@@ -78,6 +78,55 @@ RSpec.describe "Person age ranges", type: :request do
     end
   end
 
+  describe "re-rendering after a validation error" do
+    it "retains a newly chosen age range and its primary flag, with options available" do
+      patch person_path(person), params: {
+        person: {
+          first_name: person.first_name,
+          last_name: "",
+          category_ids: [ "" ],
+          managed_category_type_ids: [],
+          age_range_categorizable_items_attributes: [
+            { category_id: children.id, is_primary: "1" }
+          ]
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      # The chosen age range comes back as a rendered chip, not dropped, with its
+      # category_id retained in a nested-attributes field.
+      expect(response.body).to include("<span>Children (0-12)</span>")
+      expect(response.body).to match(/value="#{children.id}"\s+name="person\[age_range_categorizable_items_attributes\]\[\d+\]\[category_id\]"/)
+      # Its primary star comes back checked.
+      expect(response.body).to match(/primary-tag#selectPrimary[^>]*checked="checked"/)
+      # The add picker still offers the other ranges.
+      expect(response.body).to include("Teens (13-17)")
+    end
+  end
+
+  describe "more than one primary age range" do
+    it "fails validation with the same single-primary rule as sectors" do
+      update_person(age_items: [
+        { category_id: children.id, is_primary: "1" },
+        { category_id: adults.id, is_primary: "1" }
+      ])
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Only one age range can be marked as primary")
+
+      person.reload
+      expect(person.primary_age_groups).to be_empty
+    end
+
+    it "is enforced at the model level" do
+      person.age_range_categorizable_items.build(category: children, is_primary: true)
+      person.age_range_categorizable_items.build(category: adults, is_primary: true)
+
+      expect(person).not_to be_valid
+      expect(person.errors[:base]).to include("Only one age range can be marked as primary")
+    end
+  end
+
   describe "preserving non-AgeRange category connections" do
     before do
       person.categories << clay
