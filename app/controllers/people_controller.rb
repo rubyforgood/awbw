@@ -293,16 +293,26 @@ class PeopleController < ApplicationController
       normalized_last = NicknameMap.normalize(last_name)
       normalized_first = NicknameMap.normalize(first_name)
 
+      # Match the typed first name (and its nickname variants) against either the
+      # stored first_name or legal_first_name, so a returning registrant whose legal
+      # name lives in legal_first_name (nickname in first_name) is still surfaced when
+      # they type their legal name. Mirrors the registration matcher in
+      # EventRegistrationServices::PublicRegistration#find_matching_person.
       name_matches = Person.includes(:user)
                            .where("REPLACE(REPLACE(LOWER(last_name), '.', ''), ' ', '') = ?", normalized_last)
-                           .where("REPLACE(REPLACE(LOWER(first_name), '.', ''), ' ', '') IN (?)", first_variants)
+                           .where(
+                             "REPLACE(REPLACE(LOWER(first_name), '.', ''), ' ', '') IN (:names) " \
+                             "OR REPLACE(REPLACE(LOWER(COALESCE(legal_first_name, '')), '.', ''), ' ', '') IN (:names)",
+                             names: first_variants
+                           )
                            .limit(10)
 
       name_matches.each do |person|
         next if duplicate_ids.include?(person.id)
 
         duplicate_ids.add(person.id)
-        exact_name = NicknameMap.normalize(person.first_name) == normalized_first
+        exact_name = NicknameMap.normalize(person.first_name) == normalized_first ||
+          NicknameMap.normalize(person.legal_first_name) == normalized_first
         duplicates << format_duplicate(person, exact: exact_name, entered_email: email)
       end
     end

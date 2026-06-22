@@ -63,6 +63,39 @@ RSpec.describe "/people/check_duplicates", type: :request do
       end
     end
 
+    # --- Legal first name matching ---
+
+    context "when the entered first name matches a stored legal first name" do
+      before do
+        create(:person, first_name: "Sunny", legal_first_name: "Yuki", last_name: "Tanaka")
+      end
+
+      it "matches a returning registrant who types their legal name" do
+        get check_duplicates_people_path, params: { first_name: "Yuki", last_name: "Tanaka", email: "" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Sunny Tanaka")
+        expect(response.body).to include("name match")
+      end
+
+      it "matches the legal name through period normalization" do
+        create(:person, first_name: "Beanie", legal_first_name: "J.J.", last_name: "Park")
+
+        get check_duplicates_people_path, params: { first_name: "JJ", last_name: "Park", email: "" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Beanie Park")
+        expect(response.body).to include("name match")
+      end
+
+      it "does not match when neither first nor legal name matches" do
+        get check_duplicates_people_path, params: { first_name: "Kenji", last_name: "Tanaka", email: "" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("Sunny Tanaka")
+      end
+    end
+
     # --- Period and space normalization ---
 
     context "when names contain periods or extra spaces" do
