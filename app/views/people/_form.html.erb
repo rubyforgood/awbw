@@ -446,6 +446,11 @@
   </div>
 
   <% if f.object.persisted? %>
+    <!-- Notifications -->
+    <% if allowed_to?(:index?, with: NotificationPolicy) %>
+      <%= render "notifications", f: f %>
+    <% end %>
+
     <!-- Comments -->
     <% if allowed_to?(:manage?, Comment) %>
       <div class="admin-only bg-blue-100 form-group space-y-4" id="comments-section">

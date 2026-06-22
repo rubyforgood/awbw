@@ -1,17 +1,17 @@
-<%# ---- Notifications — communications for this registrant, newest first.
+<%# ---- Notifications — communications addressed to this person, newest first.
     Persisted entries are read-only and paginated like the comments box; new
     manual log entries (email/phone/text/video) can be added inline and are
-    saved with the registration form. Links open in a new tab so unsaved edits
-    aren't lost. ---- %>
-<% registration = f.object %>
-<% email = registration.registrant.preferred_email %>
+    saved with the person form. Links open in a new tab so unsaved edits aren't
+    lost. Mirrors the registration edit notifications section. ---- %>
+<% person = f.object %>
+<% email = person.preferred_email %>
 <% notifications = email.present? ? Notification.email(email).order(created_at: :desc) : Notification.none %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:users, intensity: 100) %> <%= DomainTheme.text_class_for(:users, intensity: 600) %>">
       <i class="fa-solid fa-bell"></i>
     </span>
-    <h2 class="text-sm font-semibold text-gray-700">Registration communications</h2>
+    <h2 class="text-sm font-semibold text-gray-700">Communications</h2>
     <% if email.present? %>
       <%= link_to notifications_path(email: email),
                   class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
@@ -42,17 +42,17 @@
         <div data-paginated-fields-target="nav"></div>
       </div>
     <% else %>
-      <p class="text-sm text-gray-400">No notifications for this registrant yet.</p>
+      <p class="text-sm text-gray-400">No notifications for this person yet.</p>
     <% end %>
 
-    <%# Inline add — manual log entries, saved with the registration form. %>
+    <%# Inline add — manual log entries, saved with the person form. %>
     <div class="space-y-2 border-t border-gray-100 pt-3">
-      <%= f.simple_fields_for :notifications, registration.notifications.select(&:new_record?) do |nf| %>
-        <%= render "notifications/notification_fields", f: nf, record: registration %>
+      <%= f.simple_fields_for :notifications, person.notifications.select(&:new_record?) do |nf| %>
+        <%= render "notifications/notification_fields", f: nf, record: person %>
       <% end %>
       <%= link_to_add_association f, :notifications,
             partial: "notifications/notification_fields",
-            render_options: { locals: { record: registration } },
+            render_options: { locals: { record: person } },
             class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
         <i class="fa-solid fa-plus text-[0.6rem]"></i>
         Add notification

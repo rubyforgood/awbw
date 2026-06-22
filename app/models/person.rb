@@ -17,6 +17,7 @@ class Person < ApplicationRecord
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
            dependent: :restrict_with_error
@@ -69,6 +70,7 @@ class Person < ApplicationRecord
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
     reject_if: proc { |attrs| attrs["organization_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :notifications, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   # Search Cop
   include SearchCop
