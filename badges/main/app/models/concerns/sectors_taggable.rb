@@ -17,7 +17,43 @@ module SectorsTaggable
     sectorable_items.sort_by { |item| [ item.is_primary? ? 0 : 1, item.sector&.name.to_s.downcase ] }
   end
 
+  # Additively tag sectors as primary/additional without disturbing other
+  # taggings — used by registration, where a respondent names a single primary
+  # sector (the dropdown) plus any number of additional sectors (the checkboxes).
+  # Mirrors AgeGroupTaggable#tag_age_groups, but upholds the single-primary rule:
+  # at most one id is promoted, and any prior primary the respondent didn't
+  # re-select is demoted first. A sector listed as both primary and additional is
+  # treated as primary.
+  def tag_sectors(primary_ids:, additional_ids:)
+    primary = sanitize_sector_ids(primary_ids).first(1)
+    additional = sanitize_sector_ids(additional_ids) - primary
+
+    demote_unselected_primary_sectors(primary) if primary.any?
+    upsert_sector_items(primary, is_primary: true)
+    upsert_sector_items(additional, is_primary: false)
+    sectorable_items.reset
+  end
+
   private
+
+  # Demote any currently-primary sector that isn't the newly selected primary, so
+  # promoting the new pick never leaves two primaries behind.
+  def demote_unselected_primary_sectors(primary_ids)
+    sectorable_items.where(is_primary: true).where.not(sector_id: primary_ids)
+      .update_all(is_primary: false)
+  end
+
+  def upsert_sector_items(sector_ids, is_primary:)
+    Sector.where(id: sector_ids).find_each do |sector|
+      item = sectorable_items.find_or_initialize_by(sector: sector)
+      item.is_primary = is_primary
+      item.save!
+    end
+  end
+
+  def sanitize_sector_ids(ids)
+    Array(ids).reject(&:blank?).map(&:to_i)
+  end
 
   def at_most_one_primary_sector
     # Count the in-memory set (not a DB query): with nested attributes both

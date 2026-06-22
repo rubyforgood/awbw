@@ -137,10 +137,10 @@
                 chip, followed by the additional sectors alphabetically and any
                 free-text "Other" responses. %>
             <% sectorable_items = @person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
-            <% other_service_areas = @person.other_service_area_responses %>
+            <% other_sectors = @person.other_sector_responses %>
             <div class="md:col-span-2 p-3">
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
-              <% if sectorable_items.any? || other_service_areas.any? %>
+              <% if sectorable_items.any? || other_sectors.any? %>
                 <div class="flex flex-wrap gap-2">
                   <% sectorable_items.each do |si| %>
                     <%= render "sectors/tagging_label",
@@ -149,7 +149,7 @@
                                  display_leader: true,
                                  is_leader: si.is_leader %>
                   <% end %>
-                  <%= render "people/other_responses", responses: other_service_areas %>
+                  <%= render "people/other_responses", responses: other_sectors %>
                 </div>
               <% else %>
                 <p class="text-gray-500 italic">None selected.</p>

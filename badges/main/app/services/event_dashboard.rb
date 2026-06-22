@@ -689,7 +689,7 @@ class EventDashboard
       .sort_by(&:name)
   end
 
-  # The person's primary service area: the sector they marked primary, falling
+  # The person's primary sector: the sector they marked primary, falling
   # back to their first sector alphabetically. Nil when they have none.
   def primary_sector_name_for(person)
     person.sectorable_items_primary_first.first&.sector&.name

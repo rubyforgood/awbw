@@ -138,7 +138,7 @@
                                       .reject { |_, id| (@current_sector_ids || []).include?(id) },
                                               show_admin_flags: true } },
                                   class: "btn btn-secondary-outline" %>
-      <%= render "people/other_responses", responses: @person.other_service_area_responses %>
+      <%= render "people/other_responses", responses: @person.other_sector_responses %>
     </div>
   </div>
 
