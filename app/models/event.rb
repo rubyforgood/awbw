@@ -7,6 +7,12 @@ class Event < ApplicationRecord
   # link is available to paid registrants.
   VIDEOCONFERENCE_JOIN_BUFFER = 30.minutes
 
+  # How far ahead of the start the videoconference connection details (join link,
+  # meeting ID, passcode) may be shared. Kept hidden until then so the link isn't
+  # exposed — on the ticket, the videoconference page, or in calendar entries —
+  # more than a week in advance.
+  VIDEOCONFERENCE_DETAILS_LEAD = 7.days
+
   has_rich_text :rhino_header
   has_rich_text :rhino_description
 
@@ -134,6 +140,13 @@ class Event < ApplicationRecord
     return false unless start_date && end_date
     now = Time.current
     now >= start_date - VIDEOCONFERENCE_JOIN_BUFFER && now <= end_date + VIDEOCONFERENCE_JOIN_BUFFER
+  end
+
+  # Whether the videoconference connection details may be revealed yet: only once
+  # the event is within VIDEOCONFERENCE_DETAILS_LEAD of starting.
+  def videoconference_details_visible?
+    return false unless start_date
+    Time.current >= start_date - VIDEOCONFERENCE_DETAILS_LEAD
   end
 
   def registerable?

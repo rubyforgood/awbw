@@ -314,6 +314,16 @@ class EventRegistration < ApplicationRecord
     active? && payment_access_granted? && event.videoconference_window_open?
   end
 
+  # Whether this registrant may see the videoconference connection details yet
+  # (join link, meeting ID, passcode) — on the ticket, the videoconference page,
+  # and in calendar entries. Gated on payment access (paid or intends to pay) AND
+  # the event being within a week of starting, so the link isn't shared early.
+  # Distinct from #joinable?, which is the tight 30-minute "click to join now"
+  # window for the live link.
+  def videoconference_details_visible?
+    payment_access_granted? && event.videoconference_details_visible?
+  end
+
   # Bucket the registrant's login account into one of four states for the bulk
   # reminder filters. Precedence matters: a confirmed, unlocked, active account
   # has access regardless of when it was invited; a still-pending account counts

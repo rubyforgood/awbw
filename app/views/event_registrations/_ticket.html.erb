@@ -167,7 +167,7 @@
             Add to your calendar
           </p>
 
-          <div class="flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium"><%= event_registration.event.decorate.calendar_links %></div>
+          <div class="flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium"><%= event_registration.event.decorate.calendar_links(show_videoconference_details: event_registration.videoconference_details_visible?) %></div>
         </div>
       <% end %>
     </div>
