@@ -82,7 +82,7 @@
                 button is lifted above the overlay with relative z-10 so it stays clickable. %>
             <li class="relative flex items-start justify-between gap-3 <%= org_swatch[:bg] %> border <%= org_swatch[:border] %> rounded-lg p-3 transition hover:border-green-300 hover:shadow-sm">
               <div class="min-w-0">
-                <p class="font-medium text-gray-800"><%= link_to org.name, edit_person_path(@person, anchor: "affiliations"),
+                <p class="font-medium text-gray-800"><%= link_to org.name, edit_person_path(@person, anchor: "affiliations", return_to: "registration_link", event_registration_id: @event_registration.id, link_org_return_to: params[:return_to].presence),
                             title: "Edit #{@person.first_name.presence || @person.full_name}'s affiliations",
                             class: "after:absolute after:inset-0 hover:underline focus-visible:underline focus:outline-none",
                             data: { turbo_frame: "_top" } %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>

@@ -8,6 +8,14 @@
   <% user_id = @user&.id || @person&.user&.id %>
   <%= hidden_field_tag :user_id, user_id if user_id %>
 
+  <%# Carry the origin context through the save so #update can return the admin
+      to where they came from (e.g. the registration org-linking page). %>
+  <% if params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
+    <%= hidden_field_tag :return_to, "registration_link" %>
+    <%= hidden_field_tag :event_registration_id, params[:event_registration_id] %>
+    <%= hidden_field_tag :link_org_return_to, params[:link_org_return_to] if params[:link_org_return_to].present? %>
+  <% end %>
+
   <div class="flex flex-col md:flex-row gap-8 items-start">
     <div class="w-full md:w-3/4">
       <div class="space-y-6">
