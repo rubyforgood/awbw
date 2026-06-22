@@ -201,6 +201,7 @@ it needs a `page_bg_class` and register it:**
 - Use `const` for fixed values — not `SCREAMING_SNAKE_CASE` constants (e.g., `const styleId = "foo"` not `const STYLE_ID = "foo"`)
 - **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery
 - **Always use Tailwind CSS** utility classes for styling — do not write custom CSS unless absolutely necessary
+- **Prefer static Tailwind classes over dynamically-constructed ones.** Tailwind's JIT scanner only generates classes it finds as complete literal strings in the source — a class built by interpolation (e.g. `bg-#{color}-500`, `text-${size}`, `class="w-#{n}"`) won't be generated and silently renders unstyled. Write the full class names out, and select between complete literals (e.g. a lookup hash mapping a value to a whole class string, or a ternary picking between two literal classes) rather than splicing fragments. Only build a class dynamically when the set of values is open-ended and can't be enumerated; in that case add the candidates to the Tailwind safelist.
 - **Prefer Font Awesome (free)** icons over inline SVGs — use `icon("fa-solid fa-foo")` helper. Inline SVGs are acceptable when a specific icon design is preferred.
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
 - Controller naming: `[name]_controller.js`
