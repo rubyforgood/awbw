@@ -141,7 +141,7 @@ module EventHelper
             .join(", ").presence || submitted_answer
     }
     case field&.field_identifier
-    when "primary_service_area", "primary_service_area_single"
+    when *FormField::SECTOR_FIELD_IDENTIFIERS
       resolve.call(Sector)
     when "primary_age_group", "additional_age_group"
       resolve.call(Category)

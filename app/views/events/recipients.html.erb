@@ -56,7 +56,7 @@
         <% participant_slug = @dashboard.registration_slug_by_registrant[person.id] %>
         <% answers = (answers_by_applicant[person.id] || []).reject { |a| a.form_field&.field_identifier == "scholarship_eligibility" } %>
         <% header = header_answers[person.id] || {} %>
-        <% service_area_answer = header["primary_service_area"] %>
+        <% service_area_answer = header[EventDashboard::HEADER_SECTOR_KEY] %>
         <% age_group_answer = header["primary_age_group"] %>
         <%# Prefer the registrant's form answers; fall back to their profile data. %>
         <% service_area_text = resolve_answer_text(service_area_answer&.form_field, service_area_answer&.submitted_answer).presence || person.sectors.map(&:name).join(", ").presence %>

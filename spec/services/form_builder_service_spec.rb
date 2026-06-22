@@ -59,6 +59,19 @@ RSpec.describe FormBuilderService do
         expect(keys).to include("nickname", "pronouns", "phone", "mailing_city", "agency_name")
       end
 
+      it "captures a mailing and organization country" do
+        keys = form.form_fields.pluck(:field_identifier).compact
+        expect(keys).to include("mailing_country", "agency_country")
+      end
+
+      it "asks for the organization website and type before its street address" do
+        positions = form.form_fields.where(
+          field_identifier: %w[agency_website agency_type agency_street]
+        ).pluck(:field_identifier, :position).to_h
+        expect(positions["agency_website"]).to be < positions["agency_street"]
+        expect(positions["agency_type"]).to be < positions["agency_street"]
+      end
+
       it "offers the agency type as the four organization classifications" do
         field = form.form_fields.find_by(field_identifier: "agency_type")
         expect(field.answer_options.pluck(:name)).to contain_exactly(
@@ -73,6 +86,13 @@ RSpec.describe FormBuilderService do
       it "creates scholarship fields" do
         keys = form.form_fields.pluck(:field_identifier).compact
         expect(keys).to include("scholarship_eligibility", "impact_description", "implementation_plan")
+      end
+
+      it "asks eligibility as Yes/No and captures what the applicant can contribute" do
+        eligibility = form.form_fields.find_by(field_identifier: "scholarship_eligibility")
+        expect(eligibility.answer_type).to eq("single_select_radio")
+        expect(eligibility.answer_options.pluck(:name)).to contain_exactly("Yes", "No")
+        expect(form.form_fields.pluck(:field_identifier)).to include("scholarship_contribution")
       end
     end
 
@@ -123,12 +143,30 @@ RSpec.describe FormBuilderService do
       let(:form) { described_class.new(name: "Test", sections: %i[professional_info]).call }
 
       it "asks for a single primary sector via a dropdown before the additional sectors checkboxes" do
-        primary = form.form_fields.find_by(field_identifier: "primary_service_area_single")
-        additional = form.form_fields.find_by(field_identifier: "primary_service_area")
+        primary = form.form_fields.find_by(field_identifier: "primary_sector_single")
+        additional = form.form_fields.find_by(field_identifier: "primary_sector")
 
         expect(primary).to have_attributes(name: "Primary sector", answer_type: "single_select_dropdown")
         expect(additional).to have_attributes(name: "Additional sectors", answer_type: "multi_select_checkbox")
         expect(primary.position).to be < additional.position
+      end
+
+      it "asks for a single primary age group via a dropdown alongside additional-age checkboxes" do
+        primary = form.form_fields.find_by(field_identifier: "primary_age_group")
+        additional = form.form_fields.find_by(field_identifier: "additional_age_group")
+
+        expect(primary.answer_type).to eq("single_select_dropdown")
+        expect(additional.answer_type).to eq("multi_select_checkbox")
+      end
+    end
+
+    context "person_background section" do
+      let(:form) { described_class.new(name: "Test", sections: %i[person_background]).call }
+
+      it "asks how respondents describe themselves as a single-select with options" do
+        field = form.form_fields.find_by(field_identifier: "racial_ethnic_identity")
+        expect(field.answer_type).to eq("single_select_radio")
+        expect(field.answer_options.pluck(:name)).to include("Multi-racial", "White")
       end
     end
 
@@ -138,6 +176,16 @@ RSpec.describe FormBuilderService do
       it "creates marketing fields" do
         keys = form.form_fields.pluck(:field_identifier).compact
         expect(keys).to include("referral_source", "training_motivation", "interested_in_more")
+      end
+
+      it "offers referral and motivation as selectable questions with options" do
+        referral = form.form_fields.find_by(field_identifier: "referral_source")
+        motivation = form.form_fields.find_by(field_identifier: "training_motivation")
+
+        expect(referral.answer_type).to eq("single_select_radio")
+        expect(referral.answer_options.pluck(:name)).to include("Online Search", "Word of Mouth")
+        expect(motivation.answer_type).to eq("multi_select_checkbox")
+        expect(motivation.answer_options.pluck(:name)).to include("Address staff burnout through art")
       end
     end
 
@@ -181,7 +229,7 @@ RSpec.describe FormBuilderService do
         keys = form.form_fields.pluck(:field_identifier).compact
         expect(keys).to include(
           "first_name", "nickname", "racial_ethnic_identity",
-          "primary_service_area", "referral_source",
+          "primary_sector", "referral_source",
           "scholarship_eligibility", "payment_method", "communication_consent"
         )
       end

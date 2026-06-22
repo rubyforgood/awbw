@@ -403,13 +403,20 @@ RSpec.describe FormField do
         expect(field.answer_inclusion_error("999999")).to eq("has an invalid selection")
       end
 
-      it "rejects the Other sector for the primary service-area field but accepts it for additional" do
-        other = create(:sector, :published, name: "Other")
-        primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
-        additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+      # Both the current "sector" identifiers and the legacy "service area"
+      # identifiers must behave identically so existing form data keeps resolving.
+      {
+        "sector" => %w[primary_sector_single primary_sector],
+        "service area (legacy)" => %w[primary_service_area_single primary_service_area]
+      }.each do |scheme, (primary_id, additional_id)|
+        it "rejects the Other sector for the primary #{scheme} field but accepts it for additional" do
+          other = create(:sector, :published, name: "Other")
+          primary = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: primary_id)
+          additional = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: additional_id)
 
-        expect(primary.answer_inclusion_error(other.id.to_s)).to eq("has an invalid selection")
-        expect(additional.answer_inclusion_error([ other.id.to_s ])).to be_nil
+          expect(primary.answer_inclusion_error(other.id.to_s)).to eq("has an invalid selection")
+          expect(additional.answer_inclusion_error([ other.id.to_s ])).to be_nil
+        end
       end
 
       it "accepts a published Category id from the backing type for a category field" do
