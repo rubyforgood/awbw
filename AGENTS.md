@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~78 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~28 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~29 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
 | `app/models/concerns/` | Shared model modules | 15 concerns |
 
@@ -190,6 +190,7 @@ end
 - `FormBuilderService` — Builds configurable forms from composable sections with per-field visibility
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
+- `StoryImporter` — Imports stories from a WordPress Posts Export CSV (idea per row, connected published Story for published rows)
 - `DisplayImagePresenter` — Image display logic
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 
@@ -343,7 +344,7 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 | `spec/routing/` | ~13 | Route definition tests |
 | `spec/policies/` | ~9 | Authorization policy tests |
 | `spec/decorators/` | ~10 | Decorator tests |
-| `spec/services/` | ~12 | Service object tests |
+| `spec/services/` | ~17 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
 | `spec/helpers/` | ~1 | Helper tests |
 | `spec/factories/` | ~53 | FactoryBot factory definitions |
@@ -419,8 +420,12 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (4 files):
+Located in `lib/tasks/` (8 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
 - `migrate_internal_id_to_filemaker_code.rake` — FileMaker code migration
+- `import_stories.rake` — Imports stories from a WordPress Posts Export CSV (`StoryImporter`)
+- `convert_age_ranges.rake` — Age range conversion
+- `legacy_user_permissions_to_comments.rake` — Migrate legacy user permissions into comments
+- `migrate_workshop_logs.rake` — Workshop log migration
