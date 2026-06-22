@@ -93,7 +93,8 @@ class MagicTicketCallouts
              title: "Scholarship",
              subtitle: awarded ? "Your award — amount, funder, and tasks" : "Your scholarship request status",
              href: registration_scholarship_path(registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-arrow-right")
+             target: nil, trailing_icon: "fa-solid fa-arrow-right",
+             chip: awarded ? MoneyFormatter.dollars_from_cents(registration.scholarships.sum(:amount_cents)) : nil)
   end
 
   # CE hours: an action card prompting the registrant to request credit until

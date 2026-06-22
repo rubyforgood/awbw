@@ -88,10 +88,19 @@ RSpec.describe MagicTicketCallouts do
       expect(card(registration, event.ce_hours_details_label).chip).to be_nil
     end
 
-    it "shows the scholarship card only when requested" do
+    it "shows the scholarship card only when requested, without an amount chip until awarded" do
       expect(card_titles(registration)).not_to include("Scholarship")
       registration.update!(scholarship_requested: true)
-      expect(card(registration, "Scholarship").subtitle).to eq("Your scholarship request status")
+      scholarship_card = card(registration, "Scholarship")
+      expect(scholarship_card.subtitle).to eq("Your scholarship request status")
+      expect(scholarship_card.chip).to be_nil
+    end
+
+    it "shows the awarded scholarship amount as a chip once awarded" do
+      registration.update!(scholarship_requested: true)
+      scholarship = create(:scholarship, amount_cents: 25_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
+      expect(card(registration, "Scholarship").chip).to eq("$250")
     end
 
     it "places payment first and FAQ last in the full ordering" do
