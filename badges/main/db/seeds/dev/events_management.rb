@@ -1063,8 +1063,11 @@ record_organization_answers = ->(registration, submission, i) do
   person = registration.registrant
   form = submission.form
 
+  # A title on most submissions, but leave roughly one in five blank so dev data
+  # exercises both registration/linking outcomes: a job + Facilitator affiliation
+  # when a title was given, and a Facilitator-only affiliation when it wasn't.
   position_field = form.form_fields.find_by(field_identifier: "agency_position")
-  if position_field && submission.form_answers.where(form_field: position_field).none?
+  if position_field && i % 5 != 4 && submission.form_answers.where(form_field: position_field).none?
     submission.form_answers.create!(form_field: position_field,
                                     submitted_answer: job_titles[i % job_titles.size],
                                     question_name_when_answered: position_field.name)

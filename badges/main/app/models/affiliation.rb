@@ -1,4 +1,9 @@
 class Affiliation < ApplicationRecord
+  # Standing title given to the "facilitator affiliation" we create on registration
+  # and org linking. Matches the `facilitators` scope / `facilitator?` predicate
+  # (both treat exactly "Facilitator" as canonical).
+  FACILITATOR_TITLE = "Facilitator".freeze
+
   belongs_to :organization, inverse_of: :affiliations
   belongs_to :person, touch: true
   # Which of the organization's addresses this person is affiliated with (optional).
@@ -8,10 +13,15 @@ class Affiliation < ApplicationRecord
   validates_presence_of :organization_id
   validate :organization_address_belongs_to_organization
 
-  scope :active, -> {
+  # Not flagged inactive and not past its end date. Includes affiliations whose
+  # start_date is still in the future (e.g. a Facilitator affiliation dated to an
+  # upcoming training's month) — they are "pending" but counted here.
+  scope :active_or_pending, -> {
     where(inactive: false)
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)
   }
+
+  scope :active, -> { active_or_pending }
 
   # Only the exact, case-sensitive title "Facilitator" counts — variants like
   # "Lead Facilitator" or "facilitator" are deliberately excluded. BINARY forces

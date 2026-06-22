@@ -14,15 +14,17 @@
       <% color = a_active && !local_assigns[:neutral] ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>
       <% start_month = a.start_date&.strftime("%B %Y") %>
       <% end_month = a.end_date&.strftime("%B %Y") %>
-      <% duration =
+      <% dates =
            if start_month && end_month
-             " from #{start_month} - #{end_month}"
+             "#{start_month} – #{end_month}"
            elsif end_month
-             " until #{end_month}"
+             "until #{end_month}"
            elsif start_month
-             " starting #{start_month}"
+             "since #{start_month}"
+           else
+             "no dates"
            end %>
-      <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "No title")}#{duration}#{" — inactive" unless a_active}" %>
+      <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "No title")} (#{dates})#{" — inactive" unless a_active}" %>
       <% title_attr = a.facilitator? ? "Facilitator role — determines whether the org is active with AWBW" : nil %>
       <span class="<%= badge %> <%= color %>" title="<%= title_attr %>"><%= label %></span>
     <% end %>
