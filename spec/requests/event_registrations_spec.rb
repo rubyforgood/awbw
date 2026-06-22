@@ -688,6 +688,29 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(organization.reload).to have_attributes(agency_type: "For-profit", website_url: "new.org")
         end
 
+        it "skips a newer submission that collected no org address, using the newest one that did" do
+          reg_form = create(:form, name: "Reg form")
+          city_field = create(:form_field, form: reg_form, field_identifier: "agency_city")
+          type_field = create(:form_field, form: reg_form, field_identifier: "agency_type")
+          website_field = create(:form_field, form: reg_form, field_identifier: "agency_website")
+          create(:event_form, :registration, event: event, form: reg_form)
+
+          # Older submission collected an org address (and its type/website).
+          with_address = create(:form_submission, person: regular_user.person, form: reg_form, created_at: 2.days.ago)
+          create(:form_answer, form_submission: with_address, form_field: city_field, submitted_answer: "Seattle")
+          create(:form_answer, form_submission: with_address, form_field: type_field, submitted_answer: "For-profit")
+          create(:form_answer, form_submission: with_address, form_field: website_field, submitted_answer: "right.org")
+          # Newer submission from a form that didn't ask for org info.
+          no_address = create(:form_submission, person: regular_user.person, form: reg_form, created_at: 1.day.ago)
+          create(:form_answer, form_submission: no_address, form_field: type_field, submitted_answer: "Government agency")
+          create(:form_answer, form_submission: no_address, form_field: website_field, submitted_answer: "wrong.org")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(organization.reload).to have_attributes(agency_type: "For-profit", website_url: "right.org")
+        end
+
         it "leaves a curated value untouched when the registrant left that answer blank" do
           organization.update!(agency_type: "Government agency", website_url: "curated.org")
           reg_form = create(:form, name: "Reg form")

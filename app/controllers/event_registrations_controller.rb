@@ -389,10 +389,11 @@ class EventRegistrationsController < ApplicationController
     return [] unless form
 
     field_ids = form.form_fields
-      .where(field_identifier: %w[agency_name agency_position agency_type agency_website])
+      .where(field_identifier: %w[agency_name agency_position agency_city agency_type agency_website])
       .pluck(:field_identifier, :id).to_h
     name_field_id = field_ids["agency_name"]
     position_field_id = field_ids["agency_position"]
+    city_field_id = field_ids["agency_city"]
     type_field_id = field_ids["agency_type"]
     website_field_id = field_ids["agency_website"]
 
@@ -406,6 +407,7 @@ class EventRegistrationsController < ApplicationController
           submission: submission,
           org_name: name_field_id && answers[name_field_id]&.submitted_answer,
           position: position_field_id && answers[position_field_id]&.submitted_answer,
+          agency_city: city_field_id && answers[city_field_id]&.submitted_answer,
           agency_type: type_field_id && answers[type_field_id]&.submitted_answer,
           agency_website: website_field_id && answers[website_field_id]&.submitted_answer
         }
@@ -430,12 +432,18 @@ class EventRegistrationsController < ApplicationController
   end
 
   # The "primary" entry among a registrant's submission entries — the one whose
-  # details we apply to a linked org and surface in the editor: the NEWEST submission
-  # that named an org, else the newest submission. Entries come oldest-first, so we
-  # scan from the end. link_organization picks the same one, so what we apply matches
-  # the editor.
+  # details we apply to a linked org and surface in the editor. Not every form asks
+  # for organization info, so the newest submission overall may carry none; we pick
+  # the NEWEST submission that actually collected an org address (agency_city present
+  # — the same signal public_registration uses to build the address), falling back to
+  # the newest that named an org, then the newest overall. Entries come oldest-first,
+  # so we scan from the end. link_organization picks the same one, so what we apply
+  # matches the editor.
   def primary_submission_entry(entries)
-    entries.reverse.find { |entry| entry[:org_name].present? } || entries.last
+    newest_first = entries.reverse
+    newest_first.find { |entry| entry[:agency_city].present? } ||
+      newest_first.find { |entry| entry[:org_name].present? } ||
+      newest_first.first
   end
 
   # The job title/position the registrant typed for their organization on the
