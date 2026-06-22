@@ -1505,19 +1505,35 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Mark tasks complete")
       end
 
-      it "shows the non-facilitator affiliation's title and linked organization, excluding facilitator roles" do
+      it "shows the connected org's job title, linked organization, and city/state" do
         org = create(:organization, name: "Safe Harbor of Sheboygan")
+        create(:address, addressable: org, city: "Sheboygan", state: "WI")
+        registration = event.event_registrations.find_by(registrant: applicant)
+        create(:event_registration_organization, event_registration: registration, organization: org)
         create(:affiliation, person: applicant, organization: org,
                              title: "Prevention, Education, and Outreach Specialist", start_date: 1.year.ago)
-        create(:affiliation, person: applicant, organization: create(:organization, name: "Facilitator Org"),
-                             title: "Facilitator", start_date: 1.year.ago)
 
         get recipients_event_path(event)
 
         expect(response.body).to include("Prevention, Education, and Outreach Specialist")
         expect(response.body).to include("Safe Harbor of Sheboygan")
         expect(response.body).to include(organization_path(org))
-        expect(response.body).not_to include("Facilitator Org")
+        expect(response.body).to include("Sheboygan, WI")
+      end
+
+      it "falls back to a title-less line for a facilitator at an active/pending connected org" do
+        org = create(:organization, name: "Facilitator Org",
+                                    organization_status: create(:organization_status, name: "Active"))
+        registration = event.event_registrations.find_by(registrant: applicant)
+        create(:event_registration_organization, event_registration: registration, organization: org)
+        create(:affiliation, person: applicant, organization: org, title: "Facilitator", start_date: 1.year.ago)
+
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Facilitator Org")
+        expect(response.body).to include(organization_path(org))
+        # The facilitator title itself is suppressed in the fallback line.
+        expect(response.body).not_to match(/Facilitator Org.*·\s*<span>Facilitator/m)
       end
 
       it "excludes registrants who did not request a scholarship" do

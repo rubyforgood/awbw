@@ -2,7 +2,6 @@
 
 <% answers_by_applicant = @dashboard.scholarship_answers_by_applicant %>
 <% header_answers = @dashboard.header_answers_by_applicant %>
-<% event_date = @event.start_date %>
 
 <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back link + sub-nav, matching the other event pages %>
@@ -61,11 +60,10 @@
         <%# Prefer the registrant's form answers; fall back to their profile data. %>
         <% service_area_text = resolve_answer_text(service_area_answer&.form_field, service_area_answer&.submitted_answer).presence || person.sectors.map(&:name).join(", ").presence %>
         <% age_group_text = resolve_answer_text(age_group_answer&.form_field, age_group_answer&.submitted_answer).presence || person.categories.select { |c| c.category_type&.name == "AgeRange" }.map(&:name).join(", ").presence %>
-        <%# The affiliation active at the time of the event, excluding facilitator roles. %>
-        <% recipient_affiliations = person.affiliations.select { |a|
-             !a.facilitator? &&
-             (event_date.blank? || ((a.start_date.nil? || a.start_date <= event_date) && (a.end_date.nil? || a.end_date >= event_date)))
-           } %>
+        <%# Org line(s) from the registrant's registration: the connected org(s),
+            each with the registrant's job title there (title-less for the
+            facilitator fallback). %>
+        <% recipient_affiliations = @dashboard.recipient_affiliations_by_registrant[person.id] || [] %>
 
         <div id="<%= "participant-#{participant_slug}" if participant_slug %>"
              class="scroll-mt-24 bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm overflow-hidden break-inside-avoid"
@@ -108,18 +106,18 @@
                   <%= link_to person.name, person_path(person), data: { turbo_frame: "_top" },
                               class: "text-lg font-bold text-gray-900 hover:underline" %>
                   <% recipient_affiliations.each do |affiliation| %>
+                    <% organization = affiliation.organization %>
+                    <% location = organization.program_location %>
                     <div class="text-sm text-gray-600 leading-tight">
-                      <% if affiliation.organization %>
-                        <% if allowed_to?(:show?, affiliation.organization) %>
-                          <%= link_to affiliation.organization.name, organization_path(affiliation.organization),
-                                      data: { turbo_frame: "_top" },
-                                      class: "font-medium text-gray-700 hover:text-gray-900 hover:underline" %>
-                        <% else %>
-                          <span class="font-medium text-gray-700"><%= affiliation.organization.name %></span>
-                        <% end %>
+                      <% if allowed_to?(:show?, organization) %>
+                        <%= link_to organization.name, organization_path(organization),
+                                    data: { turbo_frame: "_top" },
+                                    class: "font-medium text-gray-700 hover:text-gray-900 hover:underline" %>
+                      <% else %>
+                        <span class="font-medium text-gray-700"><%= organization.name %></span>
                       <% end %>
-                      <% if affiliation.organization && affiliation.title.present? %><span class="text-gray-300">·</span><% end %>
-                      <% if affiliation.title.present? %><span><%= affiliation.title %></span><% end %>
+                      <% if location.present? %><span class="text-gray-500">(<%= location %>)</span><% end %>
+                      <% if affiliation.title.present? %><span class="text-gray-300">·</span><span><%= affiliation.title %></span><% end %>
                     </div>
                   <% end %>
                 </div>

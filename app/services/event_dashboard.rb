@@ -59,6 +59,25 @@ class EventDashboard
       .sort_by(&:name)
   end
 
+  # One organization line shown beneath a recipient's name: the org and, for a
+  # job affiliation, the registrant's title there (nil for the facilitator
+  # fallback, where the title is deliberately suppressed).
+  RecipientAffiliation = Struct.new(:organization, :title, keyword_init: true)
+
+  # The organization line(s) under each recipient's name on the recipients page,
+  # keyed by Person id. Driven by the org(s) connected to the registrant's
+  # registration (the snapshot taken at registration plus any an admin linked
+  # later) rather than all of the person's affiliations. For each connected org
+  # we show the title from the registrant's active, non-facilitator job
+  # affiliation there; absent one, we fall back to a title-less line when they
+  # are a facilitator at that org and the org is active or pending. Orgs matching
+  # neither are omitted, so a recipient can show several lines or none.
+  def recipient_affiliations_by_registrant
+    @recipient_affiliations_by_registrant ||= scholarship_applicants.to_h do |person|
+      [ person.id, recipient_affiliation_rows(person) ]
+    end
+  end
+
   # Scholarship-application answers for this event's applicants, keyed by Person
   # id and de-duplicated to one answer per question. The scholarship section may
   # be captured on the registration submission (registered with scholarship
@@ -658,6 +677,34 @@ class EventDashboard
 
   def scholarship_applicant_ids
     @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
+  end
+
+  # Org statuses that still warrant showing a facilitator-only fallback line.
+  FALLBACK_FACILITATOR_STATUSES = %w[Active Pending].freeze
+
+  # Recipient affiliation lines for one person (see #recipient_affiliations_by_registrant).
+  def recipient_affiliation_rows(person)
+    affiliations_by_org = person.affiliations.group_by(&:organization_id)
+    registration_organizations_by_registrant.fetch(person.id, []).filter_map do |organization|
+      org_affiliations = affiliations_by_org[organization.id] || []
+      job = org_affiliations.find { |affiliation| !affiliation.facilitator? && affiliation.active? }
+      if job
+        RecipientAffiliation.new(organization: organization, title: job.title)
+      elsif org_affiliations.any?(&:facilitator?) && FALLBACK_FACILITATOR_STATUSES.include?(organization.organization_status&.name)
+        RecipientAffiliation.new(organization: organization, title: nil)
+      end
+    end
+  end
+
+  # Organizations connected to each applicant's active registration, sorted by
+  # name, with addresses and status preloaded for the recipients header. Keyed by
+  # Person id.
+  def registration_organizations_by_registrant
+    @registration_organizations_by_registrant ||= active_registrations
+      .where(registrant_id: scholarship_applicant_ids)
+      .includes(organizations: [ :addresses, :organization_status ])
+      .index_by(&:registrant_id)
+      .transform_values { |registration| registration.organizations.sort_by(&:name) }
   end
 
   # Registrant (Person) ids behind active registrations that opted into a

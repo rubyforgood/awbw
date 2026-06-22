@@ -845,4 +845,82 @@ RSpec.describe EventDashboard do
       expect(dashboard.unallocated_bulk_payment_cents).to eq(0)
     end
   end
+
+  describe "#recipient_affiliations_by_registrant" do
+    let(:event) { create(:event) }
+    let(:active_status) { create(:organization_status, name: "Active") }
+    let(:pending_status) { create(:organization_status, name: "Pending") }
+    let(:suspended_status) { create(:organization_status, name: "Suspended") }
+
+    def applicant_with(organizations)
+      person = create(:person)
+      registration = create(:event_registration, event: event, registrant: person,
+                            status: "registered", scholarship_requested: true)
+      organizations.each { |org| create(:event_registration_organization, event_registration: registration, organization: org) }
+      person
+    end
+
+    def rows_for(person)
+      described_class.new(event).recipient_affiliations_by_registrant[person.id]
+    end
+
+    it "shows the job title and the org's city/state for an active job affiliation" do
+      org = create(:organization, name: "Job Org", organization_status: active_status)
+      create(:address, addressable: org, city: "Austin", state: "TX")
+      person = applicant_with([ org ])
+      create(:affiliation, person: person, organization: org, title: "Director")
+
+      rows = rows_for(person)
+      expect(rows.map(&:title)).to eq([ "Director" ])
+      expect(rows.first.organization).to eq(org)
+      expect(rows.first.organization.program_location).to eq("Austin, TX")
+    end
+
+    it "falls back to a title-less line for a facilitator at an active or pending org" do
+      org = create(:organization, organization_status: pending_status)
+      person = applicant_with([ org ])
+      create(:affiliation, person: person, organization: org, title: "Facilitator")
+
+      rows = rows_for(person)
+      expect(rows.map(&:title)).to eq([ nil ])
+      expect(rows.first.organization).to eq(org)
+    end
+
+    it "omits a facilitator-only org whose status is neither active nor pending" do
+      org = create(:organization, organization_status: suspended_status)
+      person = applicant_with([ org ])
+      create(:affiliation, person: person, organization: org, title: "Facilitator")
+
+      expect(rows_for(person)).to be_empty
+    end
+
+    it "prefers the job affiliation over a facilitator one at the same org" do
+      org = create(:organization, organization_status: active_status)
+      person = applicant_with([ org ])
+      create(:affiliation, person: person, organization: org, title: "Facilitator")
+      create(:affiliation, person: person, organization: org, title: "Coordinator")
+
+      expect(rows_for(person).map(&:title)).to eq([ "Coordinator" ])
+    end
+
+    it "shows one line per connected org, sorted by name" do
+      org_b = create(:organization, name: "Beta", organization_status: active_status)
+      org_a = create(:organization, name: "Alpha", organization_status: active_status)
+      person = applicant_with([ org_b, org_a ])
+      create(:affiliation, person: person, organization: org_a, title: "Lead")
+      create(:affiliation, person: person, organization: org_b, title: "Aide")
+
+      expect(rows_for(person).map { |row| row.organization.name }).to eq(%w[Alpha Beta])
+    end
+
+    it "ignores affiliations whose org is not connected to the registration" do
+      connected = create(:organization, name: "Connected", organization_status: active_status)
+      unconnected = create(:organization, name: "Unconnected", organization_status: active_status)
+      person = applicant_with([ connected ])
+      create(:affiliation, person: person, organization: connected, title: "Manager")
+      create(:affiliation, person: person, organization: unconnected, title: "Volunteer")
+
+      expect(rows_for(person).map { |row| row.organization.name }).to eq(%w[Connected])
+    end
+  end
 end
