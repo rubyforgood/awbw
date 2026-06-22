@@ -1,4 +1,8 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<%# Every jump to the person's affiliations editor (header link, linked-org cards,
+    other-affiliations card) shares this path so a save returns here — carrying the
+    origin and this page's own return_to. %>
+<% edit_affiliations_path = edit_person_path(@person, anchor: "affiliations", return_to: "registration_link", event_registration_id: @event_registration.id, link_org_return_to: params[:return_to].presence) %>
 <div class="max-w-2xl mx-auto py-8 px-4">
   <div class="mb-4">
     <% if params[:return_to] == "onboarding" %>
@@ -10,10 +14,9 @@
   <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
     <div class="flex items-start justify-between gap-3 mb-2">
       <h1 class="text-2xl font-bold text-gray-900">Organizations &amp; affiliations</h1>
-      <%= link_to edit_person_path(@person, anchor: "affiliations"), target: "_blank", rel: "noopener",
+      <%= link_to edit_affiliations_path, data: { turbo_frame: "_top" },
                   class: "inline-flex items-center gap-1 text-sm text-gray-500 underline hover:text-gray-700 shrink-0 mt-1.5" do %>
-        View <%= @person.first_name.presence || @person.full_name %>'s affiliations
-        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+        Edit <%= @person.first_name.presence || @person.full_name %>'s affiliations
       <% end %>
     </div>
     <p class="text-gray-600 mb-6">Registrant: <strong><%= @person.full_name %></strong></p>
@@ -77,9 +80,15 @@
       <% if @linked_organizations.any? %>
         <ul class="space-y-2 mb-4">
           <% @linked_organizations.each do |org| %>
-            <li class="flex items-start justify-between gap-3 <%= org_swatch[:bg] %> border <%= org_swatch[:border] %> rounded-lg p-3">
+            <%# The whole card links to the person's edit-affiliations section (where
+                these are managed) via a stretched link on the org name; the Unlink
+                button is lifted above the overlay with relative z-10 so it stays clickable. %>
+            <li class="relative flex items-start justify-between gap-3 <%= org_swatch[:bg] %> border <%= org_swatch[:border] %> rounded-lg p-3 transition hover:border-green-300 hover:shadow-sm">
               <div class="min-w-0">
-                <p class="font-medium text-gray-800"><%= org.name %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
+                <p class="font-medium text-gray-800"><%= link_to org.name, edit_affiliations_path,
+                            title: "Edit #{@person.first_name.presence || @person.full_name}'s affiliations",
+                            class: "after:absolute after:inset-0 hover:underline focus-visible:underline focus:outline-none",
+                            data: { turbo_frame: "_top" } %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
                 <%= render "org_affiliation_pills", org: org, affiliations: (@affiliations_by_org[org.id] || []),
                                                     submitted_org_name: @submitted_org_name, submitted_position: @submitted_position %>
               </div>
@@ -89,7 +98,7 @@
               <%= button_to "Unlink",
                             unlink_organization_event_registration_path(@event_registration, organization_id: org.id, return_to: params[:return_to]),
                             method: :delete,
-                            form: { class: "shrink-0", data: { turbo_frame: "_top", turbo_confirm: "Unlink #{org.name} from this registration?\n\nThis only removes the organization from this registration — it will NOT delete any of #{@person.first_name.presence || @person.full_name}'s Affiliations with #{org.name}.\n\nTo change or remove any Affiliations, edit the Person record." } },
+                            form: { class: "relative z-10 shrink-0", data: { turbo_frame: "_top", turbo_confirm: "Unlink #{org.name} from this registration?\n\nThis only removes the organization from this registration — it will NOT delete any of #{@person.first_name.presence || @person.full_name}'s Affiliations with #{org.name}.\n\nTo change or remove any Affiliations, edit the Person record." } },
                             class: "inline-flex items-center rounded-full border border-transparent px-3 py-0.5 text-sm text-gray-500 underline transition hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:no-underline cursor-pointer" %>
             </li>
           <% end %>
@@ -175,12 +184,11 @@
         <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500"><%= @person.first_name.presence || @person.full_name %>'s other affiliations</h2>
         <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
       </summary>
-      <%# The whole card links to the person's affiliations on their profile (same
-          destination as the header jump link) — these are managed there, not here. %>
-      <%= link_to edit_person_path(@person, anchor: "affiliations"), target: "_blank", rel: "noopener",
+      <%# The whole card links to the person's affiliations editor (same destination
+          as the header jump link) — these are managed there, not here. %>
+      <%= link_to edit_affiliations_path, data: { turbo_frame: "_top" },
                   title: "Edit affiliations on #{@person.first_name.presence || @person.full_name}'s profile",
                   class: "group relative block bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-gray-100 transition-colors" do %>
-        <i class="fa-solid fa-arrow-up-right-from-square absolute top-3 right-3 text-[0.6rem] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
         <% if other_affiliations.any? %>
           <ul class="list-disc list-inside space-y-2 text-gray-800 marker:text-gray-400">
             <% other_affiliations.values.sort_by { |affs| affs.first.organization&.name.to_s.downcase }.each do |affs| %>

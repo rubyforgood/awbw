@@ -15,6 +15,14 @@ module EventRegistrationServices
     ADDITIONAL_FORMS_INVOICE = "Invoice".freeze
     ADDITIONAL_FORMS_W9 = "W-9".freeze
 
+    # Well-known field_identifiers for the registrant's organization name and
+    # position on the registration form. We name them in organization terms here
+    # as we move the vocabulary away from "agency"; the stored identifiers are
+    # still "agency_*" pending a form-field rename. Kept here so the service,
+    # controller, and specs agree on a single source.
+    ORGANIZATION_NAME_IDENTIFIER = "agency_name".freeze
+    ORGANIZATION_POSITION_IDENTIFIER = "agency_position".freeze
+
     def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil,
                   scholarship_form: nil, scholarship_params: {})
       new(event:, form:, form_params:, scholarship_requested:, person:,
@@ -40,7 +48,7 @@ module EventRegistrationServices
         create_mailing_address(person) if field_value("mailing_city").present?
         create_phone_contact(person) if field_value("phone").present?
 
-        organization = find_organization if field_value("agency_name").present?
+        organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
         create_affiliation(person, organization) if organization
         create_agency_address(organization) if organization && field_value("agency_city").present?
 
@@ -198,20 +206,19 @@ module EventRegistrationServices
     end
 
     def find_organization
-      name = field_value("agency_name")&.strip
+      name = field_value(ORGANIZATION_NAME_IDENTIFIER)&.strip
       return nil if name.blank?
 
       Organization.find_by(name: name)
     end
 
     def create_affiliation(person, organization)
-      Affiliation.find_or_create_by!(
+      AffiliationServices::CreateFromRegistration.call(
         person: person,
-        organization: organization
-      ) do |aff|
-        aff.title = field_value("agency_position")
-        aff.start_date = Date.current
-      end
+        organization: organization,
+        job_title: field_value(ORGANIZATION_POSITION_IDENTIFIER),
+        training_date: @event.start_date
+      )
     end
 
     def create_agency_address(organization)

@@ -212,7 +212,12 @@ class EventRegistrationsController < ApplicationController
     @person = @event_registration.registrant
     organization = Organization.find(params[:organization_id])
 
-    Affiliation.find_or_create_by!(person: @person, organization: organization)
+    AffiliationServices::CreateFromRegistration.call(
+      person: @person,
+      organization: organization,
+      job_title: submitted_position(@event_registration),
+      training_date: @event_registration.event.start_date
+    )
 
     @event_registration.event_registration_organizations
       .find_or_create_by!(organization: organization)
@@ -240,7 +245,12 @@ class EventRegistrationsController < ApplicationController
     existing = Organization.where("LOWER(name) = ?", name.strip.downcase).first
     organization = existing || Organization.create!(name: name.strip, organization_status: OrganizationStatus.find_by(name: "Active"))
 
-    Affiliation.find_or_create_by!(person: @person, organization: organization)
+    AffiliationServices::CreateFromRegistration.call(
+      person: @person,
+      organization: organization,
+      job_title: submitted_position(@event_registration),
+      training_date: @event_registration.event.start_date
+    )
     @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
 
     notice = existing ? "#{organization.name} linked." : "#{organization.name} created and linked."
@@ -408,22 +418,13 @@ class EventRegistrationsController < ApplicationController
       .uniq { |name| name.downcase }
   end
 
-  def find_submitted_agency_name(registration)
-    find_submitted_answer(registration, "agency_name")
-  end
-
-  def find_submitted_answer(registration, field_identifier)
-    form = registration.event.registration_form
-    return nil unless form
-
-    field = form.form_fields.find_by(field_identifier: field_identifier)
-    return nil unless field
-
-    FormAnswer
-      .joins(form_submission: :person)
-      .find_by(
-        form_submissions: { person_id: registration.registrant_id, form_id: form.id },
-        form_field_id: field.id
-      )&.submitted_answer
+  # The job title/position the registrant typed for their organization on the
+  # registration form. Uses the same "primary" submission as link_organization
+  # (the first submission that named an org, else the first), so the title applied
+  # when linking matches what the editor shows.
+  def submitted_position(registration)
+    entries = registration_submission_entries(registration)
+    primary = entries.find { |entry| entry[:org_name].present? } || entries.first
+    primary && primary[:position]
   end
 end

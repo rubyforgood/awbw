@@ -211,7 +211,7 @@ class PeopleController < ApplicationController
 
     if @person.save
       assign_associations(@person) if params.dig(:person, :category_ids)
-      redirect_to @person, notice: "Person was successfully updated."
+      redirect_to person_update_return_path, notice: "Person was successfully updated."
     else
       set_form_variables
       render :edit, status: :unprocessable_content
@@ -368,6 +368,17 @@ class PeopleController < ApplicationController
       name_match: exact,
       blocked: primary_email_match
     }
+  end
+
+  # Where to send the admin after a successful update. Defaults to the person's
+  # profile, but returns to the registration org-linking page when the edit was
+  # opened from one of its linked-org cards (preserving that page's own return_to).
+  def person_update_return_path
+    if params[:return_to] == "registration_link" && params[:event_registration_id].present?
+      link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence)
+    else
+      @person
+    end
   end
 
   # Only allow a list of trusted parameters through.
