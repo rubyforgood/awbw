@@ -12,6 +12,7 @@
 <% target = local_assigns.fetch(:target) { callout.try(:target) } %>
 <% trailing = local_assigns.fetch(:trailing_icon) { callout.try(:trailing_icon) }.presence ||
               (callout.action? ? "fa-solid fa-arrow-right" : "fa-solid fa-circle-info") %>
+<% chip = local_assigns.fetch(:chip) { callout.try(:chip) } %>
 <% card_class = "flex items-center gap-3 rounded-xl border-2 #{theme[:border]} #{theme[:bg]} px-4 py-3 #{theme[:hover]} transition-colors" %>
 <% card_body = capture do %>
   <i class="<%= callout.display_icon_class %> <%= theme[:icon] %> text-xl shrink-0"></i>
@@ -22,6 +23,10 @@
       <p class="text-sm <%= theme[:subtitle] %>"><%= callout.subtitle %></p>
     <% end %>
   </div>
+
+  <% if chip.present? %>
+    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 shrink-0"><%= chip %></span>
+  <% end %>
 
   <i class="<%= trailing %> <%= theme[:icon] %> shrink-0"></i>
 <% end %>

@@ -10,7 +10,8 @@
 class MagicTicketCallouts
   include Rails.application.routes.url_helpers
 
-  Card = Data.define(:icon_class, :color, :title, :subtitle, :href, :target, :trailing_icon) do
+  Card = Data.define(:icon_class, :color, :title, :subtitle, :href, :target, :trailing_icon, :chip) do
+    def initialize(chip: nil, **) = super
     def display_icon_class = icon_class
     def theme = DomainTheme.swatch(color)
   end
@@ -105,13 +106,23 @@ class MagicTicketCallouts
              title: event.ce_hours_details_label,
              subtitle: ce_hours_subtitle(complete),
              href: registration_ce_path(registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-arrow-right")
+             target: nil, trailing_icon: "fa-solid fa-arrow-right",
+             chip: ce_hours_chip(complete))
   end
 
   def ce_hours_subtitle(complete)
     return "Continuing education — requirements & how to request" unless registration.ce_credit_requested?
     return "Add your CE hours and license number" unless complete
-    "#{registration.ce_hours_requested} hours · #{MoneyFormatter.dollars_from_cents(registration.ce_amount_owed_cents)} due"
+    "#{registration.ce_hours_requested} hours"
+  end
+
+  # Amount owed, shown as an amber chip on the card — matching the ticket's
+  # "payment is due" chip. Only once the request is complete and money is owed.
+  def ce_hours_chip(complete)
+    return unless complete
+    amount = registration.ce_amount_owed_cents.to_i
+    return unless amount.positive?
+    "#{MoneyFormatter.dollars_from_cents(amount)} due"
   end
 
   # "Art supplies & what to bring" — the event's own details page.

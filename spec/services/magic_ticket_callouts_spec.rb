@@ -79,7 +79,13 @@ RSpec.describe MagicTicketCallouts do
       registration.update!(ce_hours_requested: 6, ce_license_number: "LIC123")
       complete = card(registration, event.ce_hours_details_label)
       expect(complete.theme).to eq(DomainTheme.swatch("teal"))
-      expect(complete.subtitle).to eq("6 hours · $150 due")
+      expect(complete.subtitle).to eq("6 hours")
+      expect(complete.chip).to eq("$150 due")
+    end
+
+    it "carries no CE chip until hours, license, and a positive amount are on file" do
+      registration.update!(ce_credit_requested: true, ce_hours_requested: nil, ce_license_number: nil)
+      expect(card(registration, event.ce_hours_details_label).chip).to be_nil
     end
 
     it "shows the scholarship card only when requested" do
