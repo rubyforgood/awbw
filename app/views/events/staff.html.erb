@@ -25,8 +25,9 @@
     <div class="flex flex-wrap justify-center gap-6">
       <% @event_staffs.each do |event_staff| %>
         <% person = event_staff.person.decorate %>
-        <% active_affiliation = person.affiliations.find { |a| !a.inactive? } %>
-        <% org = active_affiliation&.organization %>
+        <%# The staffer's real-job organization, falling back to the org they
+            facilitate for when they have no separate job affiliation. %>
+        <% org = person.job_affiliation&.organization || person.facilitator_organization %>
         <% bio = event_staff.public_bio %>
         <%# Primary sector first (starred, darker chip), then the rest alphabetically —
             the same treatment as the recipients page. %>

@@ -52,15 +52,16 @@ class EventDashboard
   HEADER_SECTOR_KEY = "sector".freeze
 
   # Active registrants who requested a scholarship for this event, as Person
-  # records sorted by display name. Sectors, age-range tags, and affiliations are
-  # preloaded for the recipients page header; their application answers appear
-  # below it.
+  # records sorted by display name. Sectors, age-range tags, and affiliations →
+  # organization → addresses are preloaded for the recipients page header (job
+  # title, program org, and its city/state add no per-row queries); their
+  # application answers appear below it.
   def scholarship_applicants
     @scholarship_applicants ||= Person
       .where(id: scholarship_applicant_ids)
       .includes(:sectors, { categories: :category_type },
                 { categorizable_items: { category: :category_type } },
-                { affiliations: :organization })
+                { affiliations: { organization: :addresses } })
       .sort_by(&:name)
   end
 
@@ -99,14 +100,18 @@ class EventDashboard
 
   # Shout outs for the recipients page: each active registrant the admin flagged
   # for a shout-out who also has shout-out text on their profile, paired with that
-  # text, their first active affiliated organization (if any), and their primary
-  # sector / age group (from their profile) for the parenthetical after their name.
-  # Flagged registrants with blank shout-out text are omitted; org/sector/age are optional.
+  # text, the organization to credit, and their primary sector / age group (from
+  # their profile) for the parenthetical after their name. The credited org
+  # prefers their real job, then their AWBW Facilitator role, then the org
+  # snapshotted on their registration for this event. Flagged registrants with
+  # blank shout-out text are omitted; org/sector/age are optional.
   def shoutouts
     @shoutouts ||= shoutout_registrants.filter_map do |person|
       text = person.shoutout_text.to_s.strip.presence
       next unless text
-      organization = person.affiliations.reject(&:inactive?).filter_map(&:organization).first
+      organization = person.job_affiliation&.organization ||
+                     person.facilitator_affiliation&.organization ||
+                     registration_org_by_registrant[person.id]
       Shoutout.new(
         recipient: person,
         organization: organization,
@@ -115,6 +120,21 @@ class EventDashboard
         age_group: age_group_text_for(person)
       )
     end
+  end
+
+  # The organization snapshotted on each shout-out registrant's registration for
+  # this event (their active affiliations at registration time), keyed by Person
+  # id. The last fallback for the shout-out credit when a recipient currently
+  # holds neither a job nor a facilitator affiliation. Preloaded so the shout-out
+  # list adds no per-row queries.
+  def registration_org_by_registrant
+    @registration_org_by_registrant ||= active_registrations
+      .where(registrant_id: shoutout_registrant_ids)
+      .includes(event_registration_organizations: :organization)
+      .each_with_object({}) do |registration, map|
+        org = registration.event_registration_organizations.filter_map(&:organization).first
+        map[registration.registrant_id] ||= org if org
+      end
   end
 
   # The scholarship record per recipient, keyed by Person id — lets the roster
