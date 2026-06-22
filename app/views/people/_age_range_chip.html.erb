@@ -1,0 +1,30 @@
+<%# A single age-range chip in the person form's age picker. Mirrors the sector
+    chip (shared/_sectorable_item_fields): the name, a primary star, and a remove
+    ✖. Unlike sectors, a person can serve several primary age groups, so the star
+    is multi-select and there is no leader/crown flag. Writes person[category_ids][]
+    (membership) and, when starred, person[primary_age_category_ids][] so it round-
+    trips through the existing TagAssignable flow. category_id/category_name are
+    "__ID__"/"__NAME__" placeholders when rendered into the add <template>. %>
+<% is_primary = local_assigns.fetch(:is_primary, false) %>
+<div class="inline-flex items-center gap-2 rounded-md border
+            <%= is_primary ? "border-amber-300 bg-amber-50" : "border-gray-300 bg-white" %>
+            text-gray-700 px-3 py-1 text-sm font-medium transition"
+     data-age-range-picker-target="chip"
+     data-category-id="<%= category_id %>">
+  <input type="hidden" name="person[category_ids][]" value="<%= category_id %>">
+  <span><%= category_name %></span>
+  <label class="cursor-pointer leading-none" title="Mark as a primary age group served">
+    <input type="checkbox"
+           name="person[primary_age_category_ids][]"
+           value="<%= category_id %>"
+           class="peer sr-only"
+           <%= "checked" if is_primary %>
+           data-action="age-range-picker#togglePrimary">
+    <i class="fa-solid fa-star text-base text-gray-300 peer-checked:text-amber-400 transition-colors" aria-hidden="true"></i>
+    <span class="sr-only">Primary</span>
+  </label>
+  <button type="button"
+          data-action="age-range-picker#remove"
+          class="ml-0.5 text-gray-400 hover:text-gray-600 font-bold text-xs transition"
+          aria-label="Remove age range">✖</button>
+</div>

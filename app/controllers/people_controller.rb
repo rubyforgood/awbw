@@ -293,6 +293,18 @@ class PeopleController < ApplicationController
       .group_by(&:category_type)
       .select { |type, _| type&.profile_specific? }
       .sort_by { |type, _| type&.name.to_s.downcase }
+
+    # Age ranges edit as their own sectors-style chip picker (AgeRange isn't a
+    # profile_specific type, so it never appears in @person_categories_grouped).
+    @age_range_type = CategoryType.find_by(name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE)
+    @age_ranges_collection = @age_range_type ? @age_range_type.categories.published.order(:position, :name) : Category.none
+
+    # The category types this form actually edits — age ranges plus every
+    # profile-specific type shown above. assign_associations preserves taggings
+    # of any other type, so saving the form can't drop a person's non-AgeRange
+    # category connections (e.g. art types tagged elsewhere).
+    @managed_category_type_ids = ([ @age_range_type&.id ] +
+      @person_categories_grouped.map { |type, _| type.id }).compact.uniq
   end
 
   def find_duplicate_people(first_name, last_name, email, legal_first_name: nil, email_2: nil)
@@ -465,7 +477,6 @@ class PeopleController < ApplicationController
       :youtube_url,
       :twitter_url,
       :created_by_id, :updated_by_id,
-      category_ids: [],
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :is_primary, :_destroy ],
       addresses_attributes: [
         :id,

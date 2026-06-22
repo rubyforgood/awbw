@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (74) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -277,6 +277,7 @@ end
 
 - `address_select` — Compact numbered picker linking an affiliation to an org address
 - `affiliation_dates` — Recalculate affiliation date ranges
+- `age_range_picker` — Sectors-style chip editor for a person's age ranges (add/remove + multi-primary star, no leader)
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state

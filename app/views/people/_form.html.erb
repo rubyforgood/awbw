@@ -122,12 +122,16 @@
     </div>
   </div>
 
-  <!-- Sectors + Age ranges (side by side; age ranges is the thinner column) -->
-  <% age_type, age_cats = (@person_categories_grouped || {}).find { |type, _| type.name == "AgeRange" } %>
-  <% primary_age_ids = @person.primary_age_category_ids %>
-  <div class="flex flex-col lg:flex-row gap-4 items-start">
+  <!-- Sectors + Age ranges (split width; both wrap their chips) -->
+  <%# Tells the controller which category types this form edits, so saving only
+      replaces age-range and workshop-setting taggings and preserves any other
+      type the form never shows. %>
+  <% (@managed_category_type_ids || []).each do |type_id| %>
+    <%= hidden_field_tag "person[managed_category_type_ids][]", type_id %>
+  <% end %>
+  <div class="flex flex-wrap gap-4 items-start">
     <!-- Sectors -->
-    <div class="form-group space-y-4 w-full lg:flex-1">
+    <div class="form-group space-y-4 flex-1 min-w-[20rem]">
       <div class="font-semibold text-gray-700 mb-2">
         Sectors
       </div>
@@ -153,24 +157,36 @@
     </div>
 
     <!-- Age ranges -->
-    <% if age_type %>
-      <div class="form-group space-y-4 w-full lg:w-80 lg:flex-shrink-0">
+    <% if @age_ranges_collection.present? %>
+      <div class="form-group space-y-4 flex-1 min-w-[20rem]">
         <div class="font-semibold text-gray-700 mb-2">
-          <%= age_type.display_label %>
+          Age ranges
         </div>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
-          <%# Ensures the primary-age param is always submitted so unchecking every
-              toggle clears the primary flags. %>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm
+                    flex flex-wrap items-center gap-2"
+             data-controller="age-range-picker">
+          <%# Always submit empty values so removing every chip clears the
+              membership and primary taggings. %>
+          <%= hidden_field_tag "person[category_ids][]", "" %>
           <%= hidden_field_tag "person[primary_age_category_ids][]", "" %>
-          <p class="text-sm text-gray-500 mb-3">Check every age group served, then mark the primary ones.</p>
-          <div class="flex flex-wrap gap-3">
-            <% age_cats.each do |category| %>
-              <%= render "shared/category_checkbox", param_key: "person", category: category,
-                         checked: @person.category_ids.include?(category.id),
-                         is_age: true,
-                         primary_checked: primary_age_ids.include?(category.id) %>
+
+          <% @person.primary_age_groups.each do |category| %>
+            <%= render "people/age_range_chip", category_id: category.id, category_name: category.name, is_primary: true %>
+          <% end %>
+          <% @person.additional_age_groups.each do |category| %>
+            <%= render "people/age_range_chip", category_id: category.id, category_name: category.name, is_primary: false %>
+          <% end %>
+
+          <select data-age-range-picker-target="select"
+                  data-action="age-range-picker#add"
+                  class="rounded-md border border-gray-300 bg-white text-sm text-gray-600 px-3 py-1.5 cursor-pointer focus:ring-0">
+            <option value="">➕ Add age range</option>
+            <% @age_ranges_collection.each do |category| %>
+              <option value="<%= category.id %>"><%= category.name %></option>
             <% end %>
-          </div>
+          </select>
+
+          <template data-age-range-picker-target="template"><%= render "people/age_range_chip", category_id: "__ID__", category_name: "__NAME__", is_primary: false %></template>
         </div>
       </div>
     <% end %>

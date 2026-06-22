@@ -9,6 +9,9 @@ application.register("affiliation-dates", AffiliationDatesController)
 import AffiliationFacilitatorWarningController from "./affiliation_facilitator_warning_controller"
 application.register("affiliation-facilitator-warning", AffiliationFacilitatorWarningController)
 
+import AgeRangePickerController from "./age_range_picker_controller"
+application.register("age-range-picker", AgeRangePickerController)
+
 import AllocationRefController from "./allocation_ref_controller"
 application.register("allocation-ref", AllocationRefController)
 
