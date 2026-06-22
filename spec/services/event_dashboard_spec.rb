@@ -456,17 +456,57 @@ RSpec.describe EventDashboard do
       expect(dashboard.scholarship_answers_by_applicant[embedded_applicant.id].size).to eq(1)
     end
 
-    it "gathers header (sector / age group) answers keyed by applicant, sector answers under the normalized sector key" do
-      # Use a legacy "service area" identifier to confirm it still resolves under
-      # the normalized sector key alongside the current "sector" identifiers.
-      service_field = create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
+    it "gathers the primary age group header answer keyed by applicant" do
+      age_field = create(:form_field, form: registration_form, name: "Primary age group", field_identifier: "primary_age_group")
       reg_submission = FormSubmission.find_by(person: embedded_applicant, form: registration_form)
-      create(:form_answer, form_submission: reg_submission, form_field: service_field, submitted_answer: "5")
+      create(:form_answer, form_submission: reg_submission, form_field: age_field, submitted_answer: "5")
 
       header = dashboard.header_answers_by_applicant
 
-      expect(header[embedded_applicant.id][EventDashboard::HEADER_SECTOR_KEY].submitted_answer).to eq("5")
+      expect(header[embedded_applicant.id]["primary_age_group"].submitted_answer).to eq("5")
       expect(header).not_to have_key(non_applicant.id)
+    end
+
+    describe "#header_sectors_for" do
+      let(:health) { create(:sector, name: "Healthcare") }
+      let(:education) { create(:sector, name: "Education") }
+      let(:housing) { create(:sector, name: "Housing") }
+
+      def answer_sectors(primary_identifier:, additional_identifier:, primary:, additional:)
+        primary_field = create(:form_field, form: registration_form, name: "Primary sector",
+                                            field_identifier: primary_identifier, answer_type: :single_select_dropdown)
+        additional_field = create(:form_field, form: registration_form, name: "Additional sectors",
+                                               field_identifier: additional_identifier, answer_type: :multi_select_checkbox)
+        reg_submission = FormSubmission.find_by(person: embedded_applicant, form: registration_form)
+        create(:form_answer, form_submission: reg_submission, form_field: primary_field, submitted_answer: primary.id.to_s)
+        create(:form_answer, form_submission: reg_submission, form_field: additional_field,
+                             submitted_answer: additional.map { |s| s.id }.join(", "))
+      end
+
+      it "returns the primary sector first (starred) then additional sectors, uniqued" do
+        # health is named both primary and additional; it must appear once, as primary.
+        answer_sectors(primary_identifier: "primary_sector_single", additional_identifier: "additional_sectors",
+                       primary: health, additional: [ education, housing, health ])
+
+        expect(dashboard.header_sectors_for(embedded_applicant))
+          .to eq([ [ health, true ], [ education, false ], [ housing, false ] ])
+      end
+
+      it "still resolves the legacy service-area identifiers" do
+        answer_sectors(primary_identifier: "primary_service_area_single", additional_identifier: "primary_service_area",
+                       primary: health, additional: [ education ])
+
+        expect(dashboard.header_sectors_for(embedded_applicant))
+          .to eq([ [ health, true ], [ education, false ] ])
+      end
+
+      it "falls back to the person's profile sector tags when no sector answers exist" do
+        embedded_applicant.sectorable_items.create!(sector: health, is_primary: true)
+        embedded_applicant.sectorable_items.create!(sector: education, is_primary: false)
+
+        expect(dashboard.header_sectors_for(embedded_applicant))
+          .to eq([ [ health, true ], [ education, false ] ])
+      end
     end
 
     describe "shout outs" do

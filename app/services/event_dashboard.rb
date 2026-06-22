@@ -41,15 +41,11 @@ class EventDashboard
   # standalone scholarship form, or both).
   SCHOLARSHIP_ANSWER_IDENTIFIERS = FormBuilderService::SECTION_FIELD_IDENTIFIERS[:scholarship].freeze
 
-  # Professional-info answers shown in each recipient's header. The view falls
-  # back to the person's profile (sectors / age-range tags) when these aren't on
-  # file as form answers. Sector answers are normalized under the "sector" key
-  # (see #header_answers_by_applicant) so the view reads one key regardless of
-  # which sector field identifier the answer was stored under.
-  HEADER_ANSWER_IDENTIFIERS = (FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + %w[primary_age_group]).freeze
-
-  # The key sector answers are filed under in the per-applicant header hash.
-  HEADER_SECTOR_KEY = "sector".freeze
+  # Non-sector professional-info answers shown in each recipient's header (just
+  # the primary age group today). Sectors are handled separately by
+  # #header_sectors_for, which combines the primary + additional sector answers.
+  # The view falls back to the person's profile tags when these aren't on file.
+  HEADER_ANSWER_IDENTIFIERS = %w[primary_age_group].freeze
 
   # Active registrants who requested a scholarship for this event, as Person
   # records sorted by display name. Sectors, age-range tags, and affiliations are
@@ -58,7 +54,7 @@ class EventDashboard
   def scholarship_applicants
     @scholarship_applicants ||= Person
       .where(id: scholarship_applicant_ids)
-      .includes(:sectors, { categories: :category_type },
+      .includes(:sectors, { sectorable_items: :sector }, { categories: :category_type },
                 { categorizable_items: { category: :category_type } },
                 { affiliations: :organization })
       .sort_by(&:name)
@@ -75,20 +71,30 @@ class EventDashboard
       .transform_values { |answers| dedupe_answers(answers) }
   end
 
-  # Sector / primary_age_group answers for the recipients page header, keyed by
-  # Person id then by header key (one answer each). Sector answers (whichever
-  # sector field identifier they used) are filed under HEADER_SECTOR_KEY so the
-  # view reads a single, stable key. Same cross-submission gathering as
-  # scholarship_answers_by_applicant.
+  # Non-sector header answers (primary age group) for the recipients page, keyed
+  # by Person id then by field identifier (one answer each). Same cross-submission
+  # gathering as scholarship_answers_by_applicant.
   def header_answers_by_applicant
     @header_answers_by_applicant ||= applicant_answers_for(HEADER_ANSWER_IDENTIFIERS)
-      .transform_values { |answers| answers.index_by { |answer| header_answer_key(answer.form_field&.field_identifier) } }
+      .transform_values { |answers| answers.index_by { |answer| answer.form_field&.field_identifier } }
   end
 
-  # Normalizes a header answer's field identifier to its lookup key: every sector
-  # field collapses to HEADER_SECTOR_KEY; other identifiers pass through.
-  def header_answer_key(identifier)
-    identifier.in?(FormField::SECTOR_FIELD_IDENTIFIERS) ? HEADER_SECTOR_KEY : identifier
+  # A recipient's sectors for the "Serves" header, as [ Sector, is_primary ] pairs
+  # with their primary sector first (starred) and additional sectors following
+  # (alphabetical), all uniqued. Read straight from this event's form answers —
+  # combining the single-select primary and multi-select additional sector fields
+  # — so it reflects what the registrant chose, independent of the profile's
+  # is_primary tags. Falls back to the person's profile sector tags when they
+  # named no sectors on a form.
+  def header_sectors_for(person)
+    ids = header_sector_ids_by_applicant[person.id]
+    return profile_sector_pairs(person) unless ids && (ids[:primary].any? || ids[:additional].any?)
+
+    primary = ids[:primary].filter_map { |id| [ header_sector_lookup[id], true ] if header_sector_lookup[id] }
+    additional = ids[:additional]
+      .filter_map { |id| [ header_sector_lookup[id], false ] if header_sector_lookup[id] }
+      .sort_by { |sector, _| sector.name.to_s.downcase }
+    primary + additional
   end
 
   # A "shout out": a registrant the admin opted in (shoutout on their
@@ -707,6 +713,43 @@ class EventDashboard
     @applicant_submission_ids ||= FormSubmission
       .where(person_id: scholarship_applicant_ids, form_id: event.forms.ids)
       .pluck(:id)
+  end
+
+  # Sector ids each applicant named on this event's forms, split into their
+  # single primary (the dropdown answer) and additional ones (the multi-select
+  # answer), keyed by Person id. A sector named in both collapses to the primary.
+  def header_sector_ids_by_applicant
+    @header_sector_ids_by_applicant ||=
+      applicant_answers_for(FormField::SECTOR_FIELD_IDENTIFIERS).transform_values do |answers|
+        primary = sector_ids_in(answers, FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
+        { primary: primary, additional: sector_ids_in(answers, FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS) - primary }
+      end
+  end
+
+  # Sector records for every id named across all applicants, fetched in one query
+  # and keyed by id, so #header_sectors_for resolves names without an N+1.
+  def header_sector_lookup
+    @header_sector_lookup ||= begin
+      ids = header_sector_ids_by_applicant.values.flat_map { |split| split[:primary] + split[:additional] }.uniq
+      Sector.where(id: ids).index_by(&:id)
+    end
+  end
+
+  # The integer Sector ids in the given answers for the given field identifiers,
+  # de-duplicated. Submitted values are ", "-joined Sector ids; non-numeric
+  # tokens (e.g. an "Other: <text>" free-text answer) are dropped.
+  def sector_ids_in(answers, identifiers)
+    answers
+      .select { |answer| answer.form_field&.field_identifier.in?(identifiers) }
+      .flat_map { |answer| answer.submitted_answer.to_s.split(", ") }
+      .filter_map { |token| token.to_i if token.match?(/\A\d+\z/) }
+      .uniq
+  end
+
+  # The person's profile sector tags as [ Sector, is_primary ] pairs, primary
+  # first — the fallback when they named no sectors on a form.
+  def profile_sector_pairs(person)
+    person.sectorable_items_primary_first.filter_map { |item| [ item.sector, item.is_primary? ] if item.sector }
   end
 
   # Non-blank answers for the given field identifiers across the applicants'

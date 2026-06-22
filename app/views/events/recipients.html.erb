@@ -56,10 +56,8 @@
         <% participant_slug = @dashboard.registration_slug_by_registrant[person.id] %>
         <% answers = (answers_by_applicant[person.id] || []).reject { |a| a.form_field&.field_identifier == "scholarship_eligibility" } %>
         <% header = header_answers[person.id] || {} %>
-        <% sector_answer = header[EventDashboard::HEADER_SECTOR_KEY] %>
         <% age_group_answer = header["primary_age_group"] %>
         <%# Prefer the registrant's form answers; fall back to their profile data. %>
-        <% sector_text = resolve_answer_text(sector_answer&.form_field, sector_answer&.submitted_answer).presence || person.sectors.map(&:name).join(", ").presence %>
         <% age_group_text = resolve_answer_text(age_group_answer&.form_field, age_group_answer&.submitted_answer).presence || person.categories.select { |c| c.category_type&.name == "AgeRange" }.map(&:name).join(", ").presence %>
         <%# The affiliation active at the time of the event, excluding facilitator roles. %>
         <% recipient_affiliations = person.affiliations.select { |a|
@@ -76,10 +74,12 @@
               the avatar stays blank). Calm palette: neutral name/org links, with
               the sector chips as the single accent. %>
           <% dp = person.decorate %>
-          <%# Primary sector first (rendered as a darker-green crowned chip),
-              then the additional sectors alphabetically. %>
-          <% sectorable_items = person.sectorable_items_primary_first %>
-          <% has_sectors = sectorable_items.any? %>
+          <%# The registrant's sectors as [ sector, is_primary ] pairs — primary
+              first (starred chip), then the additional sectors alphabetically —
+              combined and uniqued from their form answers (profile tags as a
+              fallback). %>
+          <% header_sectors = @dashboard.header_sectors_for(person) %>
+          <% has_sectors = header_sectors.any? %>
           <%# Primary age groups first (starred amber chips), then the additional
               ones — matching the sector chips above. Falls back to the form
               answer / profile text only when the person carries no tagged age
@@ -125,19 +125,14 @@
                 </div>
 
                 <%# Serves / Ages — parallel with the name %>
-                <% if has_sectors || sector_text.present? || has_age_groups || age_group_text.present? %>
+                <% if has_sectors || has_age_groups || age_group_text.present? %>
                   <div class="flex flex-wrap items-center gap-x-8 gap-y-2">
                     <% if has_sectors %>
                       <div class="flex flex-wrap items-center gap-2">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Serves</span>
-                        <% sectorable_items.each do |si| %>
-                          <%= render "sectors/tagging_label", sector: si.sector, is_primary: si.is_primary? %>
+                        <% header_sectors.each do |sector, is_primary| %>
+                          <%= render "sectors/tagging_label", sector: sector, is_primary: is_primary %>
                         <% end %>
-                      </div>
-                    <% elsif sector_text.present? %>
-                      <div class="text-sm text-gray-600">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Serves</span>
-                        <%= sector_text %>
                       </div>
                     <% end %>
                     <% if has_age_groups %>
