@@ -143,7 +143,7 @@ module EventHelper
     case field&.field_identifier
     when *FormField::SECTOR_FIELD_IDENTIFIERS
       resolve.call(Sector)
-    when "primary_age_group", "additional_age_group"
+    when *FormField::AGE_GROUP_FIELD_IDENTIFIERS
       resolve.call(Category)
     else
       submitted_answer
