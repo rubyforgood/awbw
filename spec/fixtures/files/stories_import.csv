@@ -1,0 +1,4 @@
+ID,Title,Content,Status,organization_name,story_workshop_name,Tags,Categories,showhide_the_name,state,facilitator_name,Date
+101,Healing through art,<p>A published story.</p>,publish,Test Org,Adult Windows Workshop,Adults,Domestic Violence,display_full_name,California,Jane,2021-07-11 10:07:53
+102,Finding my voice,<p>Another published story.</p>,publish,Test Org,Heart Stories,Children,Mental Health,hide_full_name,Florida,Maria,2022-03-02 09:00:00
+103,A work in progress,<p>A draft.</p>,draft,Test Org,,Adults,Self-Care &amp; Personal Growth,display_first_name,Oregon,Sam,2023-01-15 12:00:00

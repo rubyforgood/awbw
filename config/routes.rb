@@ -280,6 +280,10 @@ Rails.application.routes.draw do
   end
   get "search/:model", to: "search#index"
   resources :story_ideas
+  resource :story_import, only: %i[new create], path: "stories/import",
+                          controller: "story_imports" do
+    post :confirm
+  end
   resources :stories
   get "story_share/admin", to: "story_share_admin#show", as: :story_share_admin
   match "story_share/admin/reorder", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder

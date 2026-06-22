@@ -493,3 +493,4 @@ Located in `lib/tasks/` (9 files):
 - `migrate_sectors.rake` — Sector data migration
 - `import_stories.rake` — Imports stories from a WordPress Posts Export CSV (`StoryImporter`)
 - `migrate_workshop_logs.rake` — Workshop log migration
+- `migrate_sectors.rake` — Sector data migration
