@@ -425,8 +425,8 @@ RSpec.describe Person, type: :model do
           .to contain_exactly("Toddlers")
       end
 
-      it "does not pull from the service area fields" do
-        answer("primary_service_area", "Other: Equine therapy")
+      it "does not pull from the sector fields" do
+        answer("additional_sectors", "Other: Equine therapy")
 
         expect(person.other_workshop_setting_responses).to be_empty
       end

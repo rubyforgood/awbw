@@ -416,8 +416,8 @@ RSpec.describe FormField do
     end
 
     context "with dynamically-sourced options" do
-      it "accepts a published Sector id and rejects others for a service-area field" do
-        field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
+      it "accepts a published Sector id and rejects others for a sector field" do
+        field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector_single")
         offered = create(:sector, :published)
         unpublished = create(:sector, :unpublished)
 

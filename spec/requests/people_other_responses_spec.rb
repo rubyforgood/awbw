@@ -14,9 +14,9 @@ RSpec.describe "Person Other form responses", type: :request do
   before { sign_in admin }
 
   describe "profile page" do
-    it "shows the Other service area as a free-text chip, not the primary sector" do
+    it "shows the Other sector as a free-text chip, not the primary sector" do
       person.update!(profile_show_sectors: true)
-      answer("primary_service_area", "Other: Equine therapy")
+      answer("additional_sectors", "Other: Equine therapy")
 
       get person_path(person)
 
@@ -29,8 +29,8 @@ RSpec.describe "Person Other form responses", type: :request do
   end
 
   describe "edit page" do
-    it "shows the Other service area in the sectors section" do
-      answer("primary_service_area_single", "Other: Music therapy")
+    it "shows the Other sector in the sectors section" do
+      answer("primary_sector_single", "Other: Music therapy")
 
       get edit_person_path(person)
 

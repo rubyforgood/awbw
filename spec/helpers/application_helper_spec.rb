@@ -454,19 +454,19 @@ RSpec.describe ApplicationHelper, type: :helper do
   describe "#dynamic_form_field_options" do
     let(:form) { create(:form) }
 
-    it "omits the Other sector for the primary service-area dropdown" do
+    it "omits the Other sector for the primary sector dropdown" do
       create(:sector, :published, name: "Domestic Violence")
       create(:sector, :published, name: "Other")
-      field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_sector_single")
 
       labels = helper.dynamic_form_field_options(field).map(&:first)
       expect(labels).to include("Domestic Violence")
       expect(labels).not_to include("Other")
     end
 
-    it "includes the Other sector for the additional service-areas field" do
+    it "includes the Other sector for the additional sectors field" do
       create(:sector, :published, name: "Other")
-      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
 
       labels = helper.dynamic_form_field_options(field).map(&:first)
       expect(labels).to include("Other")
@@ -475,7 +475,7 @@ RSpec.describe ApplicationHelper, type: :helper do
     it "carries each sector's description as the third tuple element" do
       create(:sector, :published, name: "Domestic Violence", description: "DV services")
       create(:sector, :published, name: "Mental Health", description: nil)
-      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
 
       descriptions = helper.dynamic_form_field_options(field).to_h { |name, _id, desc| [ name, desc ] }
       expect(descriptions["Domestic Violence"]).to eq("DV services")

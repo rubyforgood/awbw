@@ -354,14 +354,14 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
 
     it "renders a dynamic-option field switched to single choice as radio buttons" do
-      # primary_service_area sources its options dynamically from Sector
+      # additional_sectors sources its options dynamically from Sector
       # (it stores no answer options of its own). When such a field is changed
       # from checkbox to single-choice radio, the public form must still render
       # the dynamic options — otherwise the question shows up blank.
       sector_a = create(:sector, :published, name: "Healthcare")
       sector_b = create(:sector, :published, name: "Education")
       create(:form_field, form: form, answer_type: :single_select_radio,
-             field_identifier: "primary_service_area", name: "Primary sector",
+             field_identifier: "additional_sectors", name: "Additional sectors",
              required: false)
 
       get new_event_public_registration_path(event)
@@ -375,7 +375,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     it "still renders a dynamic-option field as checkboxes" do
       create(:sector, :published, name: "Healthcare")
       create(:form_field, form: form, answer_type: :multi_select_checkbox,
-             field_identifier: "primary_service_area", name: "Primary sector",
+             field_identifier: "additional_sectors", name: "Additional sectors",
              required: false)
 
       get new_event_public_registration_path(event)

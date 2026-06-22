@@ -238,7 +238,7 @@ RSpec.describe EventDashboard do
         # single-select dropdown. Both also carry sector1 as a tag, so sector1 is
         # primary for person1 AND an additional sector for person2 — the counts
         # overlap (don't partition).
-        service_field = create(:form_field, form: registration_form, field_identifier: "primary_service_area_single",
+        service_field = create(:form_field, form: registration_form, field_identifier: "primary_sector_single",
                                             answer_type: :single_select_dropdown)
         create(:form_answer, form_field: service_field, submitted_answer: sector1.id.to_s,
                              form_submission: FormSubmission.find_by!(person: person1, form: registration_form))
@@ -246,7 +246,7 @@ RSpec.describe EventDashboard do
                              form_submission: FormSubmission.find_by!(person: person2, form: registration_form))
       end
 
-      it "counts distinct sectors named as a primary service area" do
+      it "counts distinct sectors named as a primary sector" do
         expect(dashboard.primary_sector_count).to eq(2)
       end
 
