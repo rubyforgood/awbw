@@ -229,6 +229,10 @@ Rails.application.routes.draw do
   end
   get "search/:model", to: "search#index"
   resources :story_ideas
+  resource :story_import, only: %i[new create], path: "stories/import",
+                          controller: "story_imports" do
+    post :confirm
+  end
   resources :stories
   resources :story_shares, only: [ :index, :show ]
   resources :video_recordings

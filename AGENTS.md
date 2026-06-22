@@ -57,7 +57,7 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~70 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~74 files |
 | `app/views/` | ERB templates | ~504 files |
 | `app/decorators/` | Draper decorators for view logic | ~38 files |
 | `app/policies/` | ActionPolicy authorization rules | ~49 files |
@@ -339,7 +339,7 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 |---|---|---|
 | `spec/models/` | ~58 | Model unit tests |
 | `spec/views/` | ~73 | View template tests |
-| `spec/requests/` | ~47 | HTTP request/integration tests |
+| `spec/requests/` | ~68 | HTTP request/integration tests |
 | `spec/system/` | ~25 | End-to-end browser tests (Capybara) |
 | `spec/routing/` | ~13 | Route definition tests |
 | `spec/policies/` | ~9 | Authorization policy tests |
@@ -420,7 +420,7 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (8 files):
+Located in `lib/tasks/` (9 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
@@ -429,3 +429,4 @@ Located in `lib/tasks/` (8 files):
 - `convert_age_ranges.rake` — Age range conversion
 - `legacy_user_permissions_to_comments.rake` — Migrate legacy user permissions into comments
 - `migrate_workshop_logs.rake` — Workshop log migration
+- `migrate_sectors.rake` — Sector data migration
