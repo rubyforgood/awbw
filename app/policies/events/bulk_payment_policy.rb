@@ -10,4 +10,8 @@ class Events::BulkPaymentPolicy < ApplicationPolicy
   def show?
     true
   end
+
+  def ticket?
+    true
+  end
 end

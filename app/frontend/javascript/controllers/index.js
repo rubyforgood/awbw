@@ -1,7 +1,13 @@
 import { application } from "./application"
 
+import AddressSelectController from "./address_select_controller"
+application.register("address-select", AddressSelectController)
+
 import AffiliationDatesController from "./affiliation_dates_controller"
 application.register("affiliation-dates", AffiliationDatesController)
+
+import AffiliationFacilitatorWarningController from "./affiliation_facilitator_warning_controller"
+application.register("affiliation-facilitator-warning", AffiliationFacilitatorWarningController)
 
 import AllocationRefController from "./allocation_ref_controller"
 application.register("allocation-ref", AllocationRefController)
@@ -20,6 +26,9 @@ application.register("asset-picker", AssetPickerController)
 
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
+
+import CalloutPreviewController from "./callout_preview_controller"
+application.register("callout-preview", CalloutPreviewController)
 
 import CarouselController from "./carousel_controller"
 application.register("carousel", CarouselController)
@@ -75,6 +84,9 @@ application.register("file-preview", FilePreviewController)
 import FieldOptionsController from "./field_options_controller"
 application.register("field-options", FieldOptionsController)
 
+import FormErrorsController from "./form_errors_controller"
+application.register("form-errors", FormErrorsController)
+
 import FormFieldsSortableController from "./form_fields_sortable_controller"
 application.register("form-fields-sortable", FormFieldsSortableController)
 
@@ -90,8 +102,8 @@ application.register("inactive-toggle", InactiveToggleController)
 import OptimisticBookmarkController from "./optimistic_bookmark_controller"
 application.register("optimistic-bookmark", OptimisticBookmarkController)
 
-import OtherOptionController from "./other_option_controller"
-application.register("other-option", OtherOptionController)
+import SpecifyOptionController from "./specify_option_controller"
+application.register("specify-option", SpecifyOptionController)
 
 import OrgToggleController from "./org_toggle_controller"
 application.register("org-toggle", OrgToggleController)
@@ -113,6 +125,9 @@ application.register("prefetch-lazy", PrefetchLazyController)
 
 import PrintOptionsController from "./print_options_controller"
 application.register("print-options", PrintOptionsController)
+
+import ReminderPreviewController from "./reminder_preview_controller"
+application.register("reminder-preview", ReminderPreviewController)
 
 import RevealSectionController from "./reveal_section_controller"
 application.register("reveal-section", RevealSectionController)
@@ -203,4 +218,7 @@ application.register("currency-input", CurrencyInputController)
 
 import BulkPaymentAttendeesController from "./bulk_payment_attendees_controller"
 application.register("bulk-payment-attendees", BulkPaymentAttendeesController)
+
+import ConditionalFieldsController from "./conditional_fields_controller"
+application.register("conditional-fields", ConditionalFieldsController)
 

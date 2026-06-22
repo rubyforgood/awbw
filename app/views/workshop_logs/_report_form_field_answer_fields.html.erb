@@ -13,7 +13,7 @@
                   include_blank: "Select an option",
                   label: f.object.form_field&.name,
                   required: f.object.form_field&.required?,
-                  hint: f.object.form_field.hint_text,
+                  hint: f.object.form_field.subtitle,
                   input_html: { class: "form-control mb-2" } %>
     <% else %>
       <!-- Freeform text with 3 rows -->
@@ -21,7 +21,7 @@
                   label: f.object.form_field&.name,
                   placeholder: "Enter response...",
                   required: f.object.form_field&.required?,
-                  hint: f.object.form_field.hint_text,
+                  hint: f.object.form_field.subtitle,
                   input_html: { class: "form-control mb-2", rows: 3 } %>
     <% end %>
     <% if f.object.errors[:answer].any? %>

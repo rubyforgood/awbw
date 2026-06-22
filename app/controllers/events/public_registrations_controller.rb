@@ -47,6 +47,7 @@ module Events
       if @field_errors.any?
         @form_fields = visible_form_fields
         @event = @event.decorate
+        flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
         render :new, status: :unprocessable_content
         return
       end
@@ -58,7 +59,9 @@ module Events
         form: @form,
         form_params: registration_params,
         scholarship_requested: @scholarship,
-        person: current_user&.person
+        person: current_user&.person,
+        scholarship_form: @scholarship_form,
+        scholarship_params: scholarship_params
       )
 
       if result.success?
@@ -74,7 +77,8 @@ module Events
       else
         @form_fields = visible_form_fields
         @event = @event.decorate
-        flash.now[:alert] = result.errors.join(", ")
+        flash.now[:error] = result.errors.join(", ")
+        flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
         render :new, status: :unprocessable_content
       end
     end
@@ -99,7 +103,15 @@ module Events
         return
       end
 
-      @form_submission = @form.form_submissions.find_by(person: person)
+      # A specific submission can be requested by id (a registrant may have more
+      # than one); scope it to this form and person so the id can't reach another
+      # person's submission. Otherwise show their first submission for the form.
+      submissions = @form.form_submissions.where(person: person)
+      @form_submission = if params[:form_submission_id].present?
+        submissions.find_by(id: params[:form_submission_id])
+      else
+        submissions.first
+      end
       unless @form_submission
         redirect_to event_path(@event), alert: "No registration form submission found."
         return
@@ -107,6 +119,9 @@ module Events
 
       @form_fields = visible_form_fields
       @responses = @form_submission.form_answers.index_by(&:form_field_id)
+
+      load_scholarship_submission(person)
+
       @event = @event.decorate
     end
 
@@ -156,6 +171,23 @@ module Events
       @event.registration_form
     end
 
+    # Surface the separate scholarship-form application (its own role: "scholarship"
+    # submission) on the view-submission page when the registrant filled it out.
+    # Only set when answers are actually on file so the view renders nothing for
+    # plain registrations.
+    def load_scholarship_submission(person)
+      scholarship_form = @event.scholarship_form
+      return unless scholarship_form
+
+      submission = scholarship_form.form_submissions.find_by(person: person, role: "scholarship")
+      return unless submission&.form_answers&.exists?
+
+      @scholarship_submission = submission
+      @scholarship_form = scholarship_form
+      @scholarship_fields = scholarship_form.form_fields.reorder(position: :asc)
+      @scholarship_responses = submission.form_answers.index_by(&:form_field_id)
+    end
+
     def scholarship_mode?
       params[:scholarship_requested] == "true"
     end
@@ -171,26 +203,6 @@ module Events
       end
 
       [ registration, scholarship ]
-    end
-
-    def create_or_update_scholarship_submission(person, scholarship_params)
-      scholarship_form = @event.scholarship_form
-      return unless scholarship_form
-
-      submission = FormSubmission.find_or_create_by!(
-        person: person, form: scholarship_form, role: "scholarship"
-      )
-
-      scholarship_params.each do |field_id, raw_value|
-        field = scholarship_form.form_fields.find_by(id: field_id)
-        next unless field
-        next if field.group_header?
-
-        text = raw_value.is_a?(Array) ? raw_value.reject(&:blank?).join(", ") : raw_value.to_s
-
-        record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(submitted_answer: text, question_name_when_answered: field.name)
-      end
     end
 
     def visible_form_fields
@@ -237,9 +249,8 @@ module Events
             answered_field_ids.concat(answered_one_time)
           end
 
-          # Regular fields: hide if answered on forms within this event
-          event_form_ids = @event.forms.ids
-          event_submissions = FormSubmission.where(person: person, form_id: event_form_ids)
+          # Regular fields: hide if answered on a submission for this event
+          event_submissions = FormSubmission.where(person: person, event_id: @event.id)
           if event_submissions.exists?
             regular_field_ids = @form.form_fields.where(visibility: :answers_on_file, one_time: false)
                                      .where.not(answer_type: :group_header).ids

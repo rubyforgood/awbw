@@ -105,11 +105,15 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/categories/index.html.erb"              => "admin-only bg-blue-100",
     "app/views/category_types/index.html.erb"          => "admin-only bg-blue-100",
     "app/views/events/dashboard.html.erb"              => "admin-only bg-blue-100",
+    "app/views/events/sample_ticket.html.erb"          => "admin-only bg-blue-100",
+    "app/views/events/bulk_payments.html.erb"          => "admin-only bg-blue-100",
     "app/views/events/background.html.erb"             => "admin-only bg-blue-100",
     "app/views/events/edit_staff.html.erb"             => "admin-only bg-white",
     "app/views/events/recipients.html.erb"             => "admin-only bg-white",
     "app/views/events/registrants.html.erb"         => "admin-only bg-blue-100",
+    "app/views/events/onboarding.html.erb"             => "admin-only bg-blue-100",
     "app/views/events/preview_reminder.html.erb"       => "admin-only bg-blue-100",
+    "app/views/events/confirm_reminder.html.erb"       => "admin-only bg-blue-100",
     "app/views/event_registrations/index.html.erb"     => "admin-only bg-blue-100",
     "app/views/forms/index.html.erb"                   => "admin-only bg-blue-100",
     "app/views/forms/show.html.erb"                    => "admin-only bg-blue-100",
@@ -123,6 +127,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshop_ideas/index.html.erb"          => "admin-only bg-blue-100",
     "app/views/workshop_variation_ideas/index.html.erb" => "admin-only bg-blue-100",
     "app/views/grants/index.html.erb"                  => "admin-only bg-blue-100",
+    "app/views/scholarships/index.html.erb"            => "admin-only bg-blue-100",
     # show
     "app/views/banners/show.html.erb"                  => "admin-only bg-blue-100",
     "app/views/categories/show.html.erb"               => "admin-only bg-blue-100",
@@ -182,6 +187,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshop_variation_ideas/edit.html.erb" => "admin-only bg-blue-100",
     "app/views/scholarships/edit.html.erb"             => "admin-only bg-blue-100",
     "app/views/grants/edit.html.erb"                   => "admin-only bg-blue-100",
+    "app/views/payments/edit.html.erb"                 => "admin-only bg-blue-100",
     "app/views/workshop_variations/edit.html.erb"      => "admin-only bg-blue-100",
     "app/views/workshops/edit.html.erb"                => "admin-only bg-blue-100",
 
@@ -189,10 +195,28 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/public_registrations/new.html.erb"  => "public",
     "app/views/events/public_registrations/show.html.erb" => "public",
     "app/views/events/registrations/show.html.erb"        => "public",
+    "app/views/events/registrations/invoice.html.erb"     => "public",
+    "app/views/events/callouts/scholarship.html.erb"      => "public",
+    "app/views/events/callouts/faq.html.erb"              => "public",
+    "app/views/events/callouts/payment.html.erb"          => "public",
+    "app/views/events/callouts/certificate.html.erb"      => "public",
+    "app/views/events/callouts/ce.html.erb"               => "public",
+    "app/views/events/callouts/forms.html.erb"            => "public",
+    "app/views/events/callouts/handouts.html.erb"         => "public",
+    "app/views/events/callouts/resource.html.erb"         => "public",
+    "app/views/events/callouts/portal.html.erb"           => "public",
+    "app/views/events/callouts/videoconference.html.erb"  => "public",
+    "app/views/events/details.html.erb"                   => "public",
+    "app/views/events/ce_hours.html.erb"                  => "public",
+    "app/views/registration_ticket_callouts/show.html.erb" => "public",
 
     # ─── bulk payment views ───
     "app/views/events/bulk_payments/new.html.erb"        => "public",
     "app/views/events/bulk_payments/show.html.erb"       => "public",
+    "app/views/events/bulk_payments/ticket.html.erb"     => "public",
+
+    # ─── event invoice (slug/submission-reachable; blank template gated in controller) ───
+    "app/views/events/invoices/show.html.erb"            => "public",
 
     # ─── admin-only confirm/interstitial ───
     "app/views/event_registrations/confirm.html.erb"     => "admin-only bg-blue-100",

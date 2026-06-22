@@ -326,6 +326,55 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#reminder_days_phrase" do
+    it "says today for 0 days" do
+      expect(helper.reminder_days_phrase(0)).to eq(" <strong>today</strong>")
+    end
+
+    it "says tomorrow for 1 day" do
+      expect(helper.reminder_days_phrase(1)).to eq(" <strong>tomorrow</strong>")
+    end
+
+    it "bolds the day count for more than one day out" do
+      expect(helper.reminder_days_phrase(60)).to eq(" in <strong>60 days</strong>")
+    end
+
+    it "is blank when the day count is unknown" do
+      expect(helper.reminder_days_phrase(nil)).to eq("")
+    end
+  end
+
+  describe "#default_reminder_message" do
+    before do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("ORGANIZATION_NAME", "AWBW").and_return("A Window Between Worlds")
+    end
+
+    it "names the organization and the bolded dynamic day count" do
+      expect(helper.default_reminder_message(60))
+        .to eq("This is a reminder that you're registered for the following A Window Between Worlds event in <strong>60 days</strong>.")
+    end
+
+    it "omits the day phrase when the count is unknown" do
+      expect(helper.default_reminder_message(nil))
+        .to eq("This is a reminder that you're registered for the following A Window Between Worlds event.")
+    end
+  end
+
+  describe "#default_reminder_subject" do
+    it "uses the AWBW Portal prefix with the event title and formatted start date" do
+      event = build(:event, title: "Healing Workshop", start_date: Time.zone.local(2026, 8, 7, 18, 0))
+      expect(helper.default_reminder_subject(event))
+        .to eq("AWBW Portal: Reminder: Healing Workshop – August 7, 2026")
+    end
+
+    it "omits the date suffix when the event has no start date" do
+      event = build(:event, title: "Healing Workshop", start_date: nil)
+      expect(helper.default_reminder_subject(event))
+        .to eq("AWBW Portal: Reminder: Healing Workshop")
+    end
+  end
+
   describe "#event_registration_close_date_label" do
     it "is the month and day, without year, ordinal, or time" do
       event = build(:event, registration_close_date: Time.zone.local(2026, 8, 7, 8, 45))
@@ -382,7 +431,7 @@ RSpec.describe ApplicationHelper, type: :helper do
       create(:event_form, event: event, form: form, role: "registration")
       person = create(:person)
       registration = create(:event_registration, event: event, registrant: person)
-      submission = create(:form_submission, form: form, person: person, role: "registration")
+      submission = create(:form_submission, event: nil, form: form, person: person, role: "registration")
 
       expect(helper.routable_path(submission))
         .to eq(event_public_registration_path(event, reg: registration.slug))
@@ -432,6 +481,49 @@ RSpec.describe ApplicationHelper, type: :helper do
       user = build(:user)
 
       expect(helper.noticeable_label(user)).to eq(user.name)
+    end
+  end
+
+  describe "#dynamic_form_field_options" do
+    let(:form) { create(:form) }
+
+    it "omits the Other sector for the primary service-area dropdown" do
+      create(:sector, :published, name: "Domestic Violence")
+      create(:sector, :published, name: "Other")
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown, field_identifier: "primary_service_area_single")
+
+      labels = helper.dynamic_form_field_options(field).map(&:first)
+      expect(labels).to include("Domestic Violence")
+      expect(labels).not_to include("Other")
+    end
+
+    it "includes the Other sector for the additional service-areas field" do
+      create(:sector, :published, name: "Other")
+      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+
+      labels = helper.dynamic_form_field_options(field).map(&:first)
+      expect(labels).to include("Other")
+    end
+
+    it "carries each sector's description as the third tuple element" do
+      create(:sector, :published, name: "Domestic Violence", description: "DV services")
+      create(:sector, :published, name: "Mental Health", description: nil)
+      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_service_area")
+
+      descriptions = helper.dynamic_form_field_options(field).to_h { |name, _id, desc| [ name, desc ] }
+      expect(descriptions["Domestic Violence"]).to eq("DV services")
+      expect(descriptions["Mental Health"]).to be_nil
+    end
+
+    it "omits the Mixed-age groups category for the primary age group field" do
+      type = create(:category_type, name: "AgeRange")
+      create(:category, :published, category_type: type, name: "3-5")
+      create(:category, :published, category_type: type, name: Category::MIXED_AGE_RANGE_NAME)
+      field = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "primary_age_group")
+
+      labels = helper.dynamic_form_field_options(field).map(&:first)
+      expect(labels).to include("3-5")
+      expect(labels).not_to include(Category::MIXED_AGE_RANGE_NAME)
     end
   end
 end

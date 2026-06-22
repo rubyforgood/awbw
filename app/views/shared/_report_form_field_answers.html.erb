@@ -8,15 +8,15 @@
 
   <div class="label-plus-comment">
     <% unless answers.include?(log_field.id) %>
-      <label class='bold'><%= "#{log_field.name}" %><% if log_field.required %><%= " *" %><% end %></label>
+      <label class='bold'><%= log_field.name %><% if log_field.required && log_field.collects_input? %><%= " *" %><% end %></label>
     <% end %>
 
-    <% unless answers.include?(log_field.hint_text) %>
-      <div class='custom-smaller'><%= log_field.hint_text %></div>
+    <% unless answers.include?(log_field.subtitle) %>
+      <div class='custom-smaller'><%= log_field.subtitle %></div>
     <% end %>
   </div>
 
-  <% answers.push(log_field.id, log_field.hint_text) %>
+  <% answers.push(log_field.id, log_field.subtitle) %>
 
   <%= form.hidden_field :answer_option_id, id: "log-field-#{log_field.id}" %>
 

@@ -83,12 +83,25 @@ Rails.application.routes.draw do
     collection do
       get :dedupe_index
       get :dedupe_preview
-      post :dedupe_execute
+      post :dedupe_perform
       patch :dedupe_update_keep
     end
   end
   resources :community_news
+  get "bulk_payment/:slug", to: "events/bulk_payments#ticket", as: :bulk_payment_ticket
+  post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payments#resend_confirmation", as: :bulk_payment_resend_confirmation
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket
+  get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
+  get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
+  get "registration/:slug/faq", to: "events/callouts#faq", as: :registration_faq
+  get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment
+  get "registration/:slug/certificate", to: "events/callouts#certificate", as: :registration_certificate
+  get "registration/:slug/ce", to: "events/callouts#ce", as: :registration_ce
+  get "registration/:slug/forms", to: "events/callouts#forms", as: :registration_forms
+  get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
+  get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
+  get "registration/:slug/portal", to: "events/callouts#portal", as: :registration_portal
+  get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
@@ -99,6 +112,9 @@ Rails.application.routes.draw do
       post :process_confirm
       get :link_organization
       post :select_organization
+      post :create_organization
+      delete :unlink_organization
+      patch :update_onboarding
     end
     resources :comments, only: [ :index, :create, :update ]
   end
@@ -112,7 +128,7 @@ Rails.application.routes.draw do
   end
   resources :form_submissions, only: [ :show ]
   resources :grants
-  resources :scholarships, only: [ :new, :create, :show, :edit, :update, :destroy ] do
+  resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
     member { patch :toggle_tasks }
   end
   resources :discounts, only: [ :create, :show, :destroy ] do
@@ -123,8 +139,12 @@ Rails.application.routes.draw do
   resources :events do
     member do
       get :dashboard
+      get :sample_ticket
       get :background
       get :registrants
+      get :onboarding
+      get :details
+      get :ce_hours
       get :staff
       get "staff/edit", action: :edit_staff, as: :edit_staff
       patch "staff", action: :update_staff
@@ -133,11 +153,16 @@ Rails.application.routes.draw do
       get :preview_reminder
       patch :preview
       post :copy_registration_form
+      post :confirm_reminder
       post :send_reminder
+      post :allocate_bulk_payment
+      post :create_bulk_payment
     end
+    resources :registration_ticket_callouts, only: [ :show, :update ]
     resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
     resource :bulk_payment, only: [ :new, :create, :show ], module: :events
+    resource :invoice, only: [ :show ], module: :events
   end
   resources :people do
     collection do
@@ -166,9 +191,11 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create, :update ]
     resources :monthly_reports, only: :index
   end
-  resources :payments, only: [ :new, :create, :show, :index ] do
+  resources :payments, only: [ :new, :create, :show, :index, :edit, :update ] do
     collection do
       post :allocation_form
+      get :new_checkout_link
+      post :create_checkout_link
     end
   end
   resources :allocations, only: [ :new, :create, :index ] do
@@ -177,7 +204,7 @@ Rails.application.routes.draw do
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
-  resources :affiliations
+  resources :affiliations, only: :destroy
   resources :quotes
 
   resources :monthly_reports, only: [ :index, :show ], constraints: { id: /\d+/ }
@@ -196,7 +223,7 @@ Rails.application.routes.draw do
     collection do
       get :dedupe_index
       get :dedupe_preview
-      post :dedupe_execute
+      post :dedupe_perform
       patch :dedupe_update_keep
     end
   end

@@ -144,11 +144,16 @@ RSpec.describe EventDashboard do
         expect(dashboard.registration_subtotal_cents).to eq(16_000)
       end
 
-      it "reports grand total as registration subtotal plus completed scholarships plus cont ed" do
+      it "reports grand total as registration subtotal plus completed scholarships plus cont ed plus unallocated bulk payments" do
         expect(dashboard.grand_total_cents).to eq(20_000)
         expect(dashboard.grand_total_cents).to eq(
-          dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents + dashboard.cont_ed_total_cents
+          dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents +
+            dashboard.cont_ed_total_cents + dashboard.unallocated_bulk_payment_cents
         )
+      end
+
+      it "reports no unallocated bulk payments without a bulk payment form" do
+        expect(dashboard.unallocated_bulk_payment_cents).to eq(0)
       end
 
       it "is not free when the event has a cost" do
@@ -451,37 +456,71 @@ RSpec.describe EventDashboard do
       expect(dashboard.scholarship_answers_by_applicant[embedded_applicant.id].size).to eq(1)
     end
 
-    it "gathers header (service area / age group) answers keyed by applicant and identifier" do
-      service_field = create(:form_field, form: registration_form, name: "Primary service area", field_identifier: "primary_service_area")
+    it "gathers header (sector / age group) answers keyed by applicant, sector answers under the normalized sector key" do
+      # Use a legacy "service area" identifier to confirm it still resolves under
+      # the normalized sector key alongside the current "sector" identifiers.
+      service_field = create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
       reg_submission = FormSubmission.find_by(person: embedded_applicant, form: registration_form)
       create(:form_answer, form_submission: reg_submission, form_field: service_field, submitted_answer: "5")
 
       header = dashboard.header_answers_by_applicant
 
-      expect(header[embedded_applicant.id]["primary_service_area"].submitted_answer).to eq("5")
+      expect(header[embedded_applicant.id][EventDashboard::HEADER_SECTOR_KEY].submitted_answer).to eq("5")
       expect(header).not_to have_key(non_applicant.id)
     end
 
     describe "shout outs" do
-      let(:org_with_bio) { create(:organization, name: "New Economics for Women", description: "Fights for economic justice for women.") }
-      let(:org_without_bio) { create(:organization, name: "Quiet Org", description: "") }
+      let(:org) { create(:organization, name: "New Economics for Women") }
 
-      it "pairs each recipient who has an affiliated org with a bio to that org and its description" do
-        create(:affiliation, person: embedded_applicant, organization: org_with_bio)
-
-        shoutout = dashboard.scholarship_shoutouts.find { |s| s.recipient == embedded_applicant }
-        expect(shoutout.organization).to eq(org_with_bio)
-        expect(shoutout.bio).to eq("Fights for economic justice for women.")
+      def opt_in(person, text:)
+        person.update!(shoutout_text: text)
+        EventRegistration.find_by(event: event, registrant: person).update!(shoutout: true)
       end
 
-      it "omits recipients with no affiliated organization" do
-        expect(dashboard.scholarship_shoutouts.map(&:recipient)).not_to include(separate_applicant)
+      it "pairs each opted-in registrant's shout-out text with their affiliated organization" do
+        opt_in(embedded_applicant, text: "Grateful to bring art to the survivors we serve.")
+        create(:affiliation, person: embedded_applicant, organization: org)
+
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == embedded_applicant }
+        expect(shoutout.text).to eq("Grateful to bring art to the survivors we serve.")
+        expect(shoutout.organization).to eq(org)
       end
 
-      it "omits recipients whose organization has no bio on file" do
-        create(:affiliation, person: separate_applicant, organization: org_without_bio)
+      it "exposes the registrant's primary sector and age group" do
+        age_range = create(:category_type, name: "AgeRange")
+        embedded_applicant.sectorable_items.create!(sector: create(:sector, name: "Sexual Assault"), is_primary: true)
+        create(:categorizable_item, category: create(:category, name: "Teens", category_type: age_range), categorizable: embedded_applicant)
+        opt_in(embedded_applicant, text: "Here to help.")
 
-        expect(dashboard.scholarship_shoutouts.map(&:recipient)).not_to include(separate_applicant)
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == embedded_applicant }
+        expect(shoutout.sector).to eq("Sexual Assault")
+        expect(shoutout.age_group).to eq("Teens")
+      end
+
+      it "includes an opted-in registrant with no affiliated organization (org is optional)" do
+        opt_in(separate_applicant, text: "Art has been my way through.")
+
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == separate_applicant }
+        expect(shoutout.text).to eq("Art has been my way through.")
+        expect(shoutout.organization).to be_nil
+      end
+
+      it "is independent of scholarships — a non-scholarship registrant can opt in" do
+        opt_in(non_applicant, text: "Proud to support this work.")
+
+        expect(dashboard.shoutouts.map(&:recipient)).to include(non_applicant)
+      end
+
+      it "omits registrants who opted in but left their shout-out text blank" do
+        opt_in(embedded_applicant, text: "")
+
+        expect(dashboard.shoutouts.map(&:recipient)).not_to include(embedded_applicant)
+      end
+
+      it "omits registrants with shout-out text who did not opt in" do
+        separate_applicant.update!(shoutout_text: "I have text but did not opt in.")
+
+        expect(dashboard.shoutouts.map(&:recipient)).not_to include(separate_applicant)
       end
     end
   end
@@ -716,6 +755,96 @@ RSpec.describe EventDashboard do
 
     it "keeps the breakdown total equal to the organization count" do
       expect(dashboard.program_status_counts.values.sum).to eq(dashboard.organization_count)
+    end
+  end
+
+  # Admins create facilitator affiliations manually after registration, so a
+  # registrant frequently has none yet. The org must still be classified by its
+  # own history as of today rather than defaulting to :new.
+  context "program-status when the registrant has no facilitator affiliation yet" do
+    let(:event) { create(:event) }
+    let(:person) { create(:person) }
+
+    before do
+      create(:event_registration_organization, event_registration: registration, organization: org)
+    end
+
+    let(:registration) { create(:event_registration, event: event, registrant: person, status: "registered") }
+
+    context "an org that already has an active facilitator" do
+      let(:org) { create(:organization, name: "Established Agency") }
+
+      before do
+        create(:affiliation, organization: org, title: "Facilitator", start_date: 2.years.ago, end_date: nil)
+      end
+
+      it "classifies the org as ongoing, not new" do
+        expect(dashboard.program_statuses_by_registrant[person.id]).to eq([ :ongoing ])
+      end
+    end
+
+    context "an org whose only facilitator affiliation has lapsed" do
+      let(:org) { create(:organization, name: "Lapsed Agency") }
+
+      before do
+        create(:affiliation, organization: org, title: "Facilitator", start_date: 5.years.ago, end_date: 4.years.ago)
+      end
+
+      it "classifies the org as reinstated" do
+        expect(dashboard.program_statuses_by_registrant[person.id]).to eq([ :reinstated ])
+      end
+    end
+  end
+
+  describe "unallocated bulk payments" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:bulk_form) { create(:form) }
+    let!(:event_form) { create(:event_form, event: event, form: bulk_form, role: "bulk_payment") }
+    let(:payer) { create(:person) }
+    let!(:submission) { create(:form_submission, person: payer, form: bulk_form, event: event, role: "bulk_payment") }
+
+    it "sums the unallocated remainder across the event's bulk payments" do
+      create(:payment, person: payer, form_submission: submission,
+             amount_cents: 10_000, amount_cents_remaining: 3_000)
+      create(:payment, person: payer, form_submission: submission,
+             amount_cents: 5_000, amount_cents_remaining: 5_000)
+
+      expect(dashboard.unallocated_bulk_payment_cents).to eq(8_000)
+    end
+
+    it "adds the unallocated remainder to the grand total" do
+      create(:payment, person: payer, form_submission: submission,
+             amount_cents: 10_000, amount_cents_remaining: 4_000)
+
+      expect(dashboard.grand_total_cents).to eq(
+        dashboard.registration_subtotal_cents + dashboard.scholarship_total_cents +
+          dashboard.cont_ed_total_cents + 4_000
+      )
+    end
+
+    it "ignores payments from other events' bulk forms" do
+      other_event = create(:event, cost_cents: 10_000)
+      other_form = create(:form)
+      create(:event_form, event: other_event, form: other_form, role: "bulk_payment")
+      other_submission = create(:form_submission, person: payer, form: other_form,
+                                event: other_event, role: "bulk_payment")
+      create(:payment, person: payer, form_submission: other_submission,
+             amount_cents: 9_000, amount_cents_remaining: 9_000)
+
+      expect(dashboard.unallocated_bulk_payment_cents).to eq(0)
+    end
+
+    it "ignores submissions on a SHARED bulk form that belong to another event" do
+      # Same bulk_form, reused by another event — scoping must key off the
+      # submission's own event_id, not the form's event_forms, or this leaks in.
+      other_event = create(:event, cost_cents: 10_000)
+      create(:event_form, event: other_event, form: bulk_form, role: "bulk_payment")
+      other_submission = create(:form_submission, person: payer, form: bulk_form,
+                                event: other_event, role: "bulk_payment")
+      create(:payment, person: payer, form_submission: other_submission,
+             amount_cents: 7_000, amount_cents_remaining: 7_000)
+
+      expect(dashboard.unallocated_bulk_payment_cents).to eq(0)
     end
   end
 end

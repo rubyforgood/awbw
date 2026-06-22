@@ -82,7 +82,7 @@
             <% end %>
           <% end %>
           <% if @organization.profile_show_website? && @organization.website_url.present? %>
-            <% safe_url = URI.parse(@organization.website_url).to_s rescue nil %>
+            <% safe_url = @organization.website_link_url %>
             <% if safe_url.present? %>
               <span class="text-gray-600">
                 🌎 <%= link_to @organization.website_url, safe_url,
@@ -115,7 +115,7 @@
     <!-- Info grid -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
         <!-- Organization affiliations -->
-        <div class="md:col-span-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="9">
+        <div id="affiliations" class="md:col-span-3 scroll-mt-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="9">
           <h2 class="text-lg font-semibold text-gray-800 mb-2">
             Affiliations
           </h2>
@@ -167,7 +167,16 @@
                           class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
             </div>
           </div>
-        <% end %>     
+        <% end %>
+        <!-- Age groups served (deduped across the org and its affiliated people) -->
+        <% primary_age_groups = @organization.all_primary_age_groups %>
+        <% additional_age_groups = @organization.all_additional_age_groups %>
+        <% if primary_age_groups.any? || additional_age_groups.any? %>
+          <div class="md:col-span-2 p-3">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Age groups served</h2>
+            <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
+          </div>
+        <% end %>
       </div>
     <hr class="my-8 border-gray-200">
     <!-- Workshops authored -->
@@ -209,22 +218,17 @@
           <%# end %>
         </div>
       <% end %>
-      <!-- Events registered -->
+      <!-- Events attended -->
     <% if @organization.profile_show_events_registered? %>
       <div class="mt-10">
         <h2 class="text-lg font-semibold text-gray-800 mb-2">
-          Events hosted
+          Events attended
         </h2>
-        <%# if Event.all.any? %>
-        <%# Event.all.each do |event| %>
-          <%# event_name = "#{event.title} - #{event.start_date.strftime("%b %Y") rescue nil}" %>
-          <%#= link_to event_name, event_path(event), class: "btn btn-secondary-outline" %>
-          <%# end %>
-          <%# else %>
-          <p class="text-gray-500 italic">No events recorded.</p>
-          <%# end %>
-        </div>
-      <% end %>
+        <%= turbo_frame_tag "organization_events_section", src: organization_path(@organization, section: "events"), loading: :lazy do %>
+          <p class="text-gray-500 italic">Loading events...</p>
+        <% end %>
+      </div>
+    <% end %>
     <hr class="my-8 border-gray-200">
     <% if allowed_to?(:show_workshop_logs?, @organization) %>
         <div class="organization-only <%= DomainTheme.bg_class_for(:user_only) %>

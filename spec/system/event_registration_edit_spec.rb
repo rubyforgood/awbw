@@ -29,12 +29,12 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Registration allocations") do
+      within("section", text: "Registration payments and allocations") do
         expect(page).to have_text(/registration cost/i)
         expect(page).to have_text(/amount allocated/i)
         expect(page).to have_text(/amount due/i)
         expect(page).to have_text("$10.99")
-        expect(page).to have_text("$0.00")
+        expect(page).to have_text("$0")
       end
     end
 
@@ -45,9 +45,9 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Registration allocations") do
+      within("section", text: "Registration payments and allocations") do
         expect(page).to have_text(/amount allocated/i)
-        expect(page).to have_text("$10.00")
+        expect(page).to have_text("$10")
         expect(page).to have_no_text("Source")
       end
     end
@@ -59,7 +59,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
-      within("section", text: "Registration allocations") do
+      within("section", text: "Registration payments and allocations") do
         expect(page).to have_text("Nothing")
       end
     end
@@ -105,6 +105,65 @@ RSpec.describe "Event registration edit page", type: :system do
         expect(page).to have_css("span.bg-amber-50.text-amber-700", text: "Tasks outstanding")
         expect(page).to have_no_css("span", text: "Tasks completed")
       end
+    end
+
+    it "links the grant's organization funder to its profile" do
+      organization = create(:organization, name: "Acme Foundation")
+      grant = create(:grant, donor: organization)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000, grant: grant)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Scholarship") do
+        expect(page).to have_text("Funded by")
+        expect(page).to have_link("Acme Foundation", href: organization_path(organization))
+      end
+    end
+
+    it "links the grant's person funder to its profile" do
+      funder = create(:person, first_name: "Dana", last_name: "Donor")
+      grant = create(:grant, :donated_by_person, donor: funder)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000, grant: grant)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Scholarship") do
+        expect(page).to have_link(funder.full_name, href: person_path(funder))
+      end
+    end
+
+    it "omits the funder line when the scholarship has no grant" do
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Scholarship") do
+        expect(page).to have_no_text("Funded by")
+      end
+    end
+  end
+
+  describe "shout out box" do
+    it "stores the shout-out text on the registrant and flags the registration when saved" do
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      within("section", text: "Shout out") do
+        fill_in "Shout-out text", with: "Grateful to bring art to the survivors we serve."
+        check "Feature on the recipients page", allow_label_click: true
+      end
+
+      click_on "Save changes"
+
+      expect(page).to have_current_path(registrants_event_path(event))
+      expect(registration.reload.shoutout).to be(true)
+      expect(registration.registrant.reload.shoutout_text).to eq("Grateful to bring art to the survivors we serve.")
     end
   end
 

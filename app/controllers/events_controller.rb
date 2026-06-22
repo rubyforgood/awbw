@@ -1,8 +1,8 @@
 class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
-  skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
+  skip_before_action :authenticate_user!, only: [ :index, :show, :staff, :details, :ce_hours ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard background registrants staff edit_staff update_staff recipients bulk_payments preview_reminder send_reminder copy_registration_form ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants onboarding details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder confirm_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
 
   def index
     authorize!
@@ -42,6 +42,36 @@ class EventsController < ApplicationController
     @dashboard = EventDashboard.new(@event)
   end
 
+  # Admin preview of the registration ticket. Builds an in-memory sample
+  # registration — never saved. By default it models a typical registrant (no
+  # scholarship, no continuing education, no extra requests) so the preview is
+  # indicative of what most tickets look like. The "Show all options" toggle
+  # (?options=all) turns on every registrant-chosen option at once so admins can
+  # see every section present. The ticket partial renders in `preview: true`
+  # mode, which disables the state-changing buttons (pay, resend, cancel) and
+  # renders the callout cards non-navigating. A sentinel slug lets the callout
+  # route helpers build without raising, since the sample isn't persisted.
+  def sample_ticket
+    authorize! @event, to: :dashboard?
+
+    @show_all_options = params[:options] == "all"
+    registrant = Person.new(first_name: "Sample", last_name: "Registrant")
+    @event_registration = @event.event_registrations.new(
+      registrant: registrant,
+      slug: "sample",
+      status: "registered",
+      intends_to_pay: true,
+      w9_requested: @show_all_options,
+      invoice_requested: @show_all_options,
+      scholarship_requested: @show_all_options,
+      shoutout: @show_all_options,
+      ce_credit_requested: @show_all_options,
+      ce_hours_requested: @show_all_options ? 6 : nil,
+      ce_license_number: @show_all_options ? "SAMPLE-12345" : nil,
+      created_at: Time.current
+    )
+  end
+
   def background
     authorize! @event, to: :background?
     @event = @event.decorate
@@ -52,7 +82,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob } ])
+      .includes(:comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob }, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
@@ -90,6 +120,75 @@ class EventsController < ApplicationController
     end
   end
 
+  # Admin onboarding tracker: a per-registrant checklist matrix (system setup,
+  # info-sent milestones, attendance days) over derived data (program type,
+  # scholarship, payment). Mirrors the registrants roster's filters/active toggle.
+  def onboarding
+    authorize! @event, to: :registrants?
+    @event = @event.decorate
+    scope = @event.event_registrations
+      .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, registrant: [ :user, { affiliations: :organization } ])
+      .joins(:registrant)
+    scope = scope.keyword(params[:keyword]) if params[:keyword].present?
+
+    @active_count = scope.active.count
+    @inactive_count = scope.inactive.count
+    @status_filter = params[:status_filter].presence || "active"
+    scope = @status_filter == "inactive" ? scope.inactive : scope.active
+
+    @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name")).to_a
+    # `scholarships` reaches the grant through the polymorphic `allocations.source`,
+    # which Rails can't eager-load with a nested `:grant` (it tries `grant` on every
+    # source type, e.g. CashPayment). Preload grants on the loaded scholarships in a
+    # second pass so the matrix's scholarship column stays query-free.
+    ActiveRecord::Associations::Preloader.new(
+      records: @event_registrations.flat_map(&:scholarships),
+      associations: :grant
+    ).call
+
+    # Column show/hide is server-side: `hide` is a comma-separated list of column
+    # toggle keys the admin has hidden, threaded through the filters and tab links.
+    @hidden_columns = params[:hide].to_s.split(",").map(&:strip).reject(&:blank?)
+
+    respond_to do |format|
+      format.html
+      format.csv do
+        send_data onboarding_csv_string,
+          filename: "event-#{@event.id}-onboarding-#{Date.current.iso8601}.csv",
+          type: "text/csv",
+          disposition: "attachment"
+      end
+    end
+  end
+
+  # Public "Before you attend" page (materials, supplies, policies). Linked from
+  # the registration ticket. When no details are set there is nothing to show, so
+  # fall back to the event page.
+  def details
+    authorize! @event, to: :details?
+
+    if @event.event_details.blank?
+      redirect_to event_path(@event, reg: params[:reg].presence)
+      return
+    end
+
+    @event = @event.decorate
+  end
+
+  # Public CE hours page (continuing education requirements, payment, sign-in
+  # rules). Linked from the registration ticket. When no details are set there
+  # is nothing to show, so fall back to the event page.
+  def ce_hours
+    authorize! @event, to: :ce_hours?
+
+    if @event.ce_hours_details.blank?
+      redirect_to event_path(@event, reg: params[:reg].presence)
+      return
+    end
+
+    @event = @event.decorate
+  end
+
   def staff
     authorize! @event, to: :staff?
     @event = @event.decorate
@@ -123,45 +222,201 @@ class EventsController < ApplicationController
     authorize! @event
 
     @event = @event.decorate
-    @submissions = FormSubmission.joins(form: :event_forms)
-                                 .where(event_forms: { event_id: @event.id, role: "bulk_payment" })
-                                 .includes(:person, form_answers: :form_field)
-                                 .order(created_at: :desc)
+    # Shared across every card so attendee matching and allocated totals don't
+    # re-query per registration per card.
+    @event_registrations = @event.event_registrations.active.includes(:registrant)
+    @submissions = @event.form_submissions
+                         .where(role: "bulk_payment")
+                         .includes(:person, form_answers: :form_field, payment: :allocations)
+                         .order(created_at: :desc)
+    @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+  end
+
+  def allocate_bulk_payment
+    authorize! @event
+    @event = @event.decorate
+    payment = Payment.find(params[:payment_id])
+    event_registration = EventRegistration.find_by(id: params[:event_registration_id])
+    unless event_registration
+      flash.now[:alert] = "Please select a registrant"
+      assign_allocation_card_data(payment)
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to bulk_payments_event_path(@event), alert: "Please select a registrant" }
+      end
+      return
+    end
+    amount_cents = (params[:amount_dollars].to_d * 100).to_i
+
+    if amount_cents <= 0
+      flash.now[:alert] = "Amount must be greater than $0.00"
+    elsif amount_cents > (payment.amount_cents_remaining || 0)
+      flash.now[:alert] = "Amount exceeds remaining balance"
+    else
+      allocation = Allocation.new(source: payment, allocatable: event_registration, amount: amount_cents)
+      if allocation.save
+        flash.now[:notice] = "Allocation successful"
+      else
+        flash.now[:alert] = allocation.errors.full_messages.to_sentence
+      end
+    end
+
+    assign_allocation_card_data(payment)
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to bulk_payments_event_path(@event), notice: flash.now[:alert] || "Allocation successful" }
+    end
+  end
+
+  def create_bulk_payment
+    authorize! @event
+    @event = @event.decorate
+    @event_registrations = @event.event_registrations.active.includes(:registrant)
+    @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+
+    submission = @event.form_submissions.find(params[:submission_id])
+    payment_type = params[:payment_type]
+
+    unless %w[CashPayment CheckPayment].include?(payment_type)
+      flash.now[:alert] = "Invalid payment type"
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to bulk_payments_event_path(@event), alert: "Invalid payment type" }
+      end
+      return
+    end
+
+    person_id = params[:person_id].presence
+    organization_id = params[:organization_id].presence
+
+    if organization_id.present? && person_id.blank?
+      payer_type = "Organization"
+    elsif person_id.present? && organization_id.blank?
+      payer_type = "Person"
+    elsif person_id.present? && organization_id.present?
+      payer_type = params[:payer_type].presence || "Organization"
+    else
+      person_id = submission.person_id
+      payer_type = "Person"
+    end
+
+    payment = submission.build_payment(
+      person_id: person_id,
+      organization_id: organization_id,
+      payer_type: payer_type,
+      amount_cents: (params[:amount_dollars].to_d * 100).to_i,
+      currency: params[:currency].presence || "usd",
+      type: payment_type,
+      check_number: params[:check_number].presence,
+      memo: params[:memo].presence
+    )
+
+    if payment.save
+      @payment = payment
+      @submission = submission.decorate
+      flash.now[:notice] = "Payment recorded"
+    else
+      flash.now[:alert] = payment.errors.full_messages.to_sentence
+    end
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to bulk_payments_event_path(@event), notice: flash.now[:alert] || "Payment recorded" }
+    end
   end
 
   def preview_reminder
     authorize! @event
     @event = @event.decorate
     @event_registrations = @event.event_registrations
-      .includes(registrant: [ :user, :contact_methods ])
+      .includes(
+        :event, :organizations, :comments,
+        { scholarships: { grant: :donor } },
+        registrant: [ :user, :contact_methods ]
+      )
       .joins(:registrant)
       .select { |r| r.registrant.preferred_email.present? }
+
+    # Filters keep every registrant in the list and only flag who still matches,
+    # so the recipient checkboxes pre-check the matched set rather than removing
+    # rows. See app/views/events/_reminder_recipients.html.erb.
+    recipient_filter = ReminderRecipientFilter.new(@event_registrations, params)
+    @matched_ids = recipient_filter.matched_ids
+    @filtering = recipient_filter.filtering?
+
+    return render partial: "events/reminder_recipients" if turbo_frame_request?
+
     @sample_registration = @event_registrations.first
-    @days_until_event = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
+    days_until_event = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
+    # Pre-fill the editable message with the standard reminder sentence (days
+    # resolved now). Absent param = first load → default; a present-but-blank
+    # param = the admin cleared it (e.g. bounced back here) → respect the blank.
+    @custom_message = params.key?(:custom_message) ? params[:custom_message].to_s : helpers.default_reminder_message(days_until_event)
+    # Pre-fill the editable subject with the standard portal subject. Same
+    # absent-vs-present logic as the message, so a bounce-back keeps the admin's
+    # edit; a blank subject falls back to the default at send time.
+    @custom_subject = params.key?(:custom_subject) ? params[:custom_subject].to_s : helpers.default_reminder_subject(@event)
 
     if @sample_registration
-      mail = EventMailer.event_registration_reminder(@sample_registration, days_until_event: @days_until_event)
+      # Render in preview mode so the custom-message container is always present
+      # in the markup for the live preview, even before any text is typed.
+      mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, custom_subject: @custom_subject, preview: true)
       @reminder_preview_html = mail.html_part&.body&.decoded
     end
   end
 
-  def send_reminder
+  # Interstitial between picking recipients and actually sending: it lists exactly
+  # who will be emailed and shows the static subject + body composed on the picker,
+  # so the admin confirms against a real preview instead of a browser dialog.
+  def confirm_reminder
     authorize! @event, to: :send_reminder?
-    allowed_ids = Array(params[:registration_ids]).map(&:to_i).reject(&:zero?)
-    registrations = @event.event_registrations
-      .where(id: allowed_ids)
-      .includes(registrant: [ :user, :contact_methods ])
-      .select { |r| r.registrant.preferred_email.present? }
-    days_until = @event.start_date.present? ? (@event.start_date.to_date - Date.current).to_i : nil
+    @event = @event.decorate
+    @event_registrations = selected_reminder_registrations
+    @custom_message = params[:custom_message].to_s
+    @custom_subject = params[:custom_subject].to_s
 
-    if registrations.empty?
-      redirect_to preview_reminder_event_path(@event), alert: "Please select at least one recipient."
+    if @event_registrations.empty?
+      redirect_to preview_reminder_event_path(@event, custom_message: @custom_message, custom_subject: @custom_subject), alert: "Please select at least one recipient."
       return
     end
 
-    registrations.each do |event_registration|
-      EventMailer.event_registration_reminder(event_registration, days_until_event: days_until).deliver_later
+    mail = EventMailer.event_registration_reminder(@event_registrations.first, custom_message: @custom_message, custom_subject: @custom_subject)
+    @reminder_subject = mail.subject
+    @reminder_preview_html = mail.html_part&.body&.decoded
+  end
+
+  def send_reminder
+    authorize! @event, to: :send_reminder?
+    custom_message = params[:custom_message].to_s
+    custom_subject = params[:custom_subject].to_s
+    registrations = selected_reminder_registrations
+
+    if registrations.empty?
+      redirect_to preview_reminder_event_path(@event, custom_message: custom_message, custom_subject: custom_subject), alert: "Please select at least one recipient."
+      return
     end
+
+    # Record an individual notification per recipient (delivered + persisted via
+    # NotificationMailerJob), so each reminder shows up in that person's
+    # communication history and can be resent — like confirmations/cancellations.
+    registrations.each do |event_registration|
+      NotificationServices::CreateNotification.call(
+        noticeable: event_registration,
+        kind: "event_registration_reminder",
+        recipient_role: :person,
+        recipient_email: event_registration.registrant.preferred_email,
+        notification_type: 0,
+        custom_message: custom_message.presence,
+        custom_subject: custom_subject.presence
+      )
+    end
+
+    # One admin summary for the whole batch: count, roster, and a copy of what
+    # was sent. Roster passed as plain "Name <email>" labels so the delivery job
+    # needs no record lookups.
+    recipient_labels = registrations.map { |r| "#{r.registrant.full_name} <#{r.registrant.preferred_email}>" }
+    EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence).deliver_later
 
     redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
   end
@@ -219,7 +474,7 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       if success
-        format.html { redirect_to @event, notice: "Event was successfully updated." }
+        format.html { redirect_to dashboard_event_path(@event), notice: "Event was successfully updated." }
         format.json { render :show, status: :ok, location: @event }
       else
         set_form_variables
@@ -231,11 +486,18 @@ class EventsController < ApplicationController
 
   def destroy
     authorize! @event
-    @event.destroy
 
-    respond_to do |format|
-      format.html { redirect_to events_path, status: :see_other, notice: "Event was successfully destroyed." }
-      format.json { head :no_content }
+    if @event.destroy
+      respond_to do |format|
+        format.html { redirect_to events_path, status: :see_other, notice: "Event was successfully destroyed." }
+        format.json { head :no_content }
+      end
+    else
+      message = @event.errors.full_messages.to_sentence.presence || "Event could not be destroyed."
+      respond_to do |format|
+        format.html { redirect_to event_path(@event), status: :see_other, alert: message }
+        format.json { render json: { errors: @event.errors.full_messages }, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -255,10 +517,40 @@ class EventsController < ApplicationController
 
   private
 
+  # The registrations the admin checked on the recipient picker, narrowed to those
+  # we can actually email. Shared by the confirm interstitial and the send action
+  # so both operate on exactly the same set.
+  def selected_reminder_registrations
+    allowed_ids = Array(params[:registration_ids]).map(&:to_i).reject(&:zero?)
+    @event.event_registrations
+      .where(id: allowed_ids)
+      .includes(registrant: [ :user, :contact_methods ])
+      .select { |r| r.registrant.preferred_email.present? }
+  end
+
+  # Reloads the payment and the data its bulk payment card needs, so the
+  # allocate turbo stream can re-render the whole card with fresh due/allocated
+  # totals and re-evaluate whether each registration is now paid in full.
+  def assign_allocation_card_data(payment)
+    @payment = payment.reload
+    @submission = @payment.form_submission
+    @event_registrations = @event.event_registrations.active.includes(:registrant)
+    @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+  end
+
+  # Allocated cents per registration id, fetched in one grouped query so the
+  # bulk payment cards read totals from a hash instead of querying per row.
+  def allocated_cents_by_registration(registrations)
+    Allocation
+      .where(allocatable_type: "EventRegistration", allocatable_id: registrations.ids)
+      .group(:allocatable_id)
+      .sum(:amount)
+  end
+
   def event_registrations_csv_string
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
-    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Payment total" ]
+    headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Intends to pay", "Payment total" ]
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
         csv_out << event_registration_csv_row(registration, cost_required)
@@ -274,7 +566,7 @@ class EventsController < ApplicationController
     org_names = orgs.map(&:name).join("; ")
     total_cents = registration.allocations_sum
     payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
-    payment_status = cost_required ? (registration.paid_in_full? ? "Paid in full" : "Not paid in full") : ""
+    payment_status = cost_required ? registration.payment_status_label : ""
     [
       person.first_name,
       person.last_name,
@@ -284,8 +576,80 @@ class EventsController < ApplicationController
       registration.scholarships.any? ? "Yes" : "No",
       registration.scholarships.completed.any? ? "Yes" : "No",
       payment_status,
+      registration.intends_to_pay? ? "Yes" : "No",
       payment_total
     ]
+  end
+
+  def onboarding_csv_string
+    require "csv"
+    cost_required = @event.cost_cents.to_i > 0
+    day_count = @event.day_count
+    headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
+    headers += [ "Payment status", "Fees due", "Paid amount" ] if cost_required
+    headers << "Fee note"
+    headers += [ "Discounted amount", "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
+    headers += [ "CE requested", "CE hours", "CE amount", "CE license" ]
+    headers += EventRegistration::CHECKLIST_STEPS.values
+    headers += [ "Portal user status", "Portal access" ]
+    headers += (1..day_count).map { |day| "Day #{day}" }
+    headers << "Attendance status"
+    headers += [ "Comments", "Flagged comments" ]
+
+    CSV.generate(headers: headers, write_headers: true) do |csv_out|
+      @event_registrations.each do |registration|
+        csv_out << onboarding_csv_row(registration, cost_required, day_count)
+      end
+    end
+  end
+
+  def onboarding_csv_row(registration, cost_required, day_count)
+    person = registration.registrant
+    scholarship = registration.scholarships.first
+    statuses = registration.program_statuses.map { |status| status.to_s.titleize }.join(", ")
+
+    row = [
+      person.first_name,
+      person.last_name,
+      person.preferred_email.presence || "",
+      registration.organizations.map(&:name).join("; ").presence || "",
+      statuses
+    ]
+    if cost_required
+      due_cents = [ @event.cost_cents.to_i - registration.allocations_sum, 0 ].max
+      row << registration.payment_status_label
+      row << helpers.dollars_from_cents(due_cents)
+      row << helpers.dollars_from_cents(registration.payments_sum)
+    end
+    row << registration.fee_note.to_s
+    row << (registration.discount_sum.positive? ? helpers.dollars_from_cents(registration.discount_sum) : "")
+    row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
+    row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
+    row << onboarding_scholarship_tasks_csv(registration)
+    ce_hours = registration.ce_hours_requested.to_i
+    row << (registration.ce_credit_requested? ? "Yes" : "No")
+    row << (ce_hours.positive? ? ce_hours : "")
+    row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
+    row << registration.ce_license_number.to_s
+    EventRegistration::CHECKLIST_STEPS.each_key do |step|
+      row << (registration.checklist_step_completed?(step) ? "Yes" : "No")
+    end
+    account_status = registration.account_status
+    row << { "none" => "No account", "has_access" => "Has access", "invited" => "Invited", "no_access" => "No access" }.fetch(account_status, account_status.to_s.humanize)
+    row << (account_status == "has_access" ? "Yes" : "No")
+    (1..day_count).each do |day|
+      row << (registration.public_send("completed_day_#{day}") ? "Yes" : "No")
+    end
+    row << registration.attendance_status_label
+    row << registration.comments.map { |comment| comment.body.to_s.strip }.reject(&:blank?).join(" ::: ")
+    row << (registration.comments.any?(&:flagged?) ? "Yes" : "No")
+    row
+  end
+
+  def onboarding_scholarship_tasks_csv(registration)
+    scholarships = registration.scholarships
+    return "" if scholarships.none?
+    scholarships.all?(&:tasks_completed?) ? "Yes" : "No"
   end
 
   def assign_event_forms(event)

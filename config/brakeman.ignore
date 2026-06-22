@@ -117,13 +117,13 @@
     {
       "warning_type": "Mass Assignment",
       "warning_code": 105,
-      "fingerprint": "ed621305ecb26c24fe0cfb0b55955439f0d2a7d0e7ff19e5911657f47bcb3ff1",
+      "fingerprint": "a750b09d4d42ef567df595f7a9035933dc1178c533bf8ae8f8986ae8e837c6b8",
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "app/controllers/forms_controller.rb",
-      "line": 121,
+      "line": 138,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
-      "code": "params.require(:form).permit(:name, :role, :header, :hide_answered_person_questions, :hide_answered_form_questions, :form_fields_attributes => ([:id, :name, :answer_type, :required, :hint_text, :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy, { :form_field_answer_options_attributes => ([:id, :option_name, :_destroy]) }]))",
+      "code": "params.require(:form).permit(:name, :role, :header, :hide_answered_person_questions, :hide_answered_form_questions, :form_fields_attributes => ([:id, :name, :answer_type, :required, :subtitle, :hint_text, :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy, { :form_field_answer_options_attributes => ([:id, :option_name, :_destroy]) }]))",
       "render_path": null,
       "location": {
         "type": "method",
@@ -203,8 +203,77 @@
       "cwe_id": [
         79
       ],
-      "note": "sdf"
+      "note": "email_body_html is the server-rendered HTML of a notification email, generated from trusted mailer templates rather than user-supplied free text. It is rendered intentionally as a preview on notifications/show, which is gated to admin-or-owner (NotificationPolicy#show?), so no untrusted input reaches the page."
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "343336d81aa87ab12862c5f9ca2b0f9ac4155488c053c1ce9c7ed27c456e3dba",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped parameter value",
+      "file": "app/views/events/confirm_reminder.html.erb",
+      "line": 53,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "EventMailer.event_registration_reminder(selected_reminder_registrations.first, :custom_message => params[:custom_message].to_s, :custom_subject => params[:custom_subject].to_s).html_part.body.decoded",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "EventsController",
+          "method": "confirm_reminder",
+          "line": 316,
+          "file": "app/controllers/events_controller.rb",
+          "rendered": {
+            "name": "events/confirm_reminder",
+            "file": "app/views/events/confirm_reminder.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "events/confirm_reminder"
+      },
+      "user_input": "params[:custom_message].to_s",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "Admin-only reminder confirmation. Same as preview_reminder: the raw value is the server-rendered email HTML; the embedded custom message is sanitized via reminder_message_html (SafeListSanitizer) and the custom subject is shown escaped, separately, so no unsanitized user input reaches the page."
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 4,
+      "fingerprint": "081b76f4d760b6f2879493fdde335a57dfc310ba0adfb28d5abe40d5f983189f",
+      "check_name": "LinkToHref",
+      "message": "Potentially unsafe model attribute in `link_to` href",
+      "file": "app/views/organizations/show.html.erb",
+      "line": 88,
+      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
+      "code": "link_to(Organization.includes(:organization_status, :windows_type, :addresses, :categorizable_items, { :comments => ([:created_by, :updated_by]) }, { :sectorable_items => :sector }, :affiliations => :person).find(params[:id]).website_url, Organization.includes(:organization_status, :windows_type, :addresses, :categorizable_items, { :comments => ([:created_by, :updated_by]) }, { :sectorable_items => :sector }, :affiliations => :person).find(params[:id]).website_link_url, :target => \"_blank\", :rel => \"noopener noreferrer\", :class => \"text-blue-600 hover:underline\")",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "OrganizationsController",
+          "method": "show",
+          "line": 74,
+          "file": "app/controllers/organizations_controller.rb",
+          "rendered": {
+            "name": "organizations/show",
+            "file": "app/views/organizations/show.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "organizations/show"
+      },
+      "user_input": "Organization.includes(:organization_status, :windows_type, :addresses, :categorizable_items, { :comments => ([:created_by, :updated_by]) }, { :sectorable_items => :sector }, :affiliations => :person).find(params[:id]).website_link_url",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "Organization#website_link_url only ever returns an http(s):// URL (it requires a URI::HTTP with a host), so the href can't carry a javascript: or data: scheme."
     }
   ],
-  "brakeman_version": "8.0.4"
+  "brakeman_version": "8.0.4",
+  "updated": "2026-06-19 10:05:46 -0400"
 }

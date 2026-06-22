@@ -48,21 +48,21 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~75 files |
-| `app/services/` | Service objects for complex logic | ~23 files |
+| `app/models/` | ActiveRecord models | ~78 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~28 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
-| `app/models/concerns/` | Shared model modules | 14 concerns |
+| `app/models/concerns/` | Shared model modules | 15 concerns |
 
 ### Presentation
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~69 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~70 files |
 | `app/views/` | ERB templates | ~504 files |
-| `app/decorators/` | Draper decorators for view logic | ~37 files |
+| `app/decorators/` | Draper decorators for view logic | ~38 files |
 | `app/policies/` | ActionPolicy authorization rules | ~49 files |
-| `app/presenters/` | Presentation objects | 1 file |
-| `app/helpers/` | View helpers | ~19 files |
+| `app/presenters/` | Presentation objects | 3 files |
+| `app/helpers/` | View helpers | ~24 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (62) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (74) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -96,6 +96,8 @@ This codebase (Rails 8.1)
 | `Workshop` | Core content: rich text fields, categories, sectors, bookmarks, variations |
 | `Event` | Events with registrations, featured/published states |
 | `EventStaff` | Join model connecting `Person` to `Event` as staff (title, `expected_to_attend`); drives the "Meet the staff" roster and "My events" |
+| `EventRegistrationChecklistCompletion` | Audited completion row for one manual onboarding step on an `EventRegistration` (`step` from `EventRegistration::CHECKLIST_STEPS`, `completed_by` User, `completed_at`); row-exists = done. Powers the event Onboarding tab's checkbox matrix |
+| `RegistrationTicketCallout` | Admin-configured call-outs shown on an event's registration ticket (title, subtitle, HTML description, `callout_type` action/reference, icon/colour, `payment_access_gated` — only shown once the registrant has `payment_access_granted?` (paid or intends to pay), draggable `position` via the positioning gem); each links to its own public detail page |
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
@@ -123,6 +125,7 @@ This codebase (Rails 8.1)
 
 | Concern | Purpose |
 |---|---|
+| `AgeGroupTaggable` | Splits AgeRange category taggings into primary/additional via `categorizable_items.is_primary` (Person, Organization) |
 | `AhoyTrackable` | Event tracking integration |
 | `AuthorCreditable` | Author attribution |
 | `Featureable` | `featured`, `publicly_featured` scopes |
@@ -141,7 +144,7 @@ This codebase (Rails 8.1)
 
 ### Namespaces
 
-- **Root level** (~51 controllers): Workshops, stories, resources, events, people, organizations, etc.
+- **Root level** (~52 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
@@ -188,11 +191,18 @@ end
 - `ModelDeduper` — Deduplication logic
 - `RichTextMigrator` — Rich text migration utility
 - `DisplayImagePresenter` — Image display logic
+- `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 
 ### Event Registrations
 
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
+- `ReminderRecipientFilter` — Decides which event registrations stay checked on the bulk reminder page given the admin's filters (matches in memory, returns matching ids)
+- `MagicTicketCallouts` — Code-defined ("magic") ticket callout cards (payment, certificate, scholarship, CE hours, art supplies, forms, handouts, portal, videoconference, FAQ), each with its own visibility rule; rendered through the same `_callout_card` partial as admin-configured `RegistrationTicketCallout`s. Their public show pages live under `app/views/events/callouts/` and are served by `Events::CalloutsController` (slug-authorized, no login)
+
+### Affiliations
+
+- `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation
 
 ### Notifications
 
@@ -211,7 +221,7 @@ All inherit from `ApplicationDecorator` which provides:
 - `display_image` — selects primary/gallery/downloadable asset intelligently
 - `link_target` — polymorphic path generation
 
-Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator.
+Key decorators: WorkshopDecorator, StoryDecorator, ResourceDecorator, PersonDecorator, OrganizationDecorator, UserDecorator, EventDecorator, ReportDecorator, GrantDecorator, ScholarshipDecorator (derives the scholarship index's program/location/training/status columns).
 
 ## Policies (ActionPolicy)
 
@@ -256,6 +266,7 @@ end
 
 ### Stimulus Controllers
 
+- `address_select` — Compact numbered picker linking an affiliation to an org address
 - `affiliation_dates` — Recalculate affiliation date ranges
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
@@ -281,6 +292,7 @@ end
 - `password_toggle` — Show/hide password fields
 - `prefetch_lazy` — Prefetch lazy-loaded content
 - `print_options` — Print options toggle for analytics
+- `reminder_preview` — Live-preview a custom message in the reminder email as the admin types it on the bulk-reminder page
 - `remote_select` — AJAX-powered select dropdown
 - `reveal_section` — Expand a collapsible section and scroll to it when loaded via matching URL hash
 - `rhino_source` — Rich text editor integration
@@ -288,7 +300,7 @@ end
 - `searchable_checkbox` — TomSelect checkbox-style multi-select
 - `searchable_select` — Tom Select autocomplete
 - `share_url` — URL sharing/copying
-- `sortable` — Drag-drop sorting (SortableJS)
+- `sortable` — Drag-drop sorting (SortableJS); persists order via a per-row PUT (used by categories index and the registration ticket callouts editor)
 - `submit_once` — Disables a form's submit button after submit to block duplicate submissions; re-enables on Back/bfcache/Turbo restore
 - `tabs` — Tab panel navigation
 - `tag_link_loading` — Loading state for tag links

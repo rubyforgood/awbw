@@ -98,6 +98,7 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - **Use `Foo.method`** not `Foo::method` for method calls
 - **No parentheses around conditions:** `if foo` not `if (foo)`
 - **No semicolons** to separate statements
+- **Use `format(...)`** for string formatting, not the `%` operator: `format("%.2f", amount)` not `"%.2f" % amount`
 
 ## Casing
 
@@ -106,6 +107,30 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - Use `.underscore.humanize` to convert PascalCase model/type names to sentence case (e.g., `"AgeRange".underscore.humanize` → `"Age range"`)
 - Avoid `.titleize` for user-facing labels — it produces title case
 - **Exception:** when a category type name prefixes a category name (e.g., "Age Range: 3-5"), use `.titleize` for the prefix
+
+## Currency display
+
+**Always display money with the `dollars_from_cents(cents)` helper** (`app/helpers/application_helper.rb`),
+which delegates to the **`MoneyFormatter`** PORO (`app/services/money_formatter.rb`).
+It takes an integer **cents** amount and renders `$1,500.50` when there are cents and `$1,500`
+(no trailing `.00`) when the amount is a whole number of dollars. The helper is display-only — keep
+storing and calculating in integer cents. For an abbreviated figure in tight UI (e.g. the grant
+picker), use `MoneyFormatter.compact_from_cents(cents)` (`$12.5k`, `$1.2m`) — also cents-based.
+
+- **Pass cents, not dollars.** Use the `*_cents` column/accessor (`amount_cents`,
+  `amount_cents_remaining`, `allocation.amount`, etc.), not `amount_dollars`. Don't prepend a literal
+  `$` — the helper includes it.
+- **Do NOT use** `number_to_currency`, `format("%.2f", …)`, or the naked `"%.2f" % x` operator to show
+  money. They always print `.00` and reintroduce the inconsistency this helper exists to remove.
+  (`number_to_currency` is fine only inside the helper definition itself.)
+- **In decorators**, call it via `h.dollars_from_cents(...)`; **in controllers**, via
+  `helpers.dollars_from_cents(...)`. In a **model** or other PORO (no view-helper access), call
+  `MoneyFormatter.dollars_from_cents(cents)` directly (e.g. validation messages) — don't fall back to
+  `format("%.2f", …)`, which reprints `.00`.
+- **Mirror the same rule in JavaScript** when a Stimulus controller renders a live money figure: drop
+  the cents for whole-dollar amounts, keep two decimals otherwise (see `formatDollars` in
+  `scholarship_preview_controller.js`). Keep the server-rendered initial value and the JS-updated value
+  formatted identically.
 
 ## HTML/ERB Formatting
 
@@ -124,6 +149,52 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
   >
   ```
 
+## Navigation & back links (eyebrows)
+
+The "eyebrow" is the back/return link in a page's top bar (e.g. `← Registrants`).
+**Whenever you add a link from one page to another, think through the eyebrow on the
+destination** — the user must be able to return to exactly where they came from, not a
+generic default. This applies to any navigation, and matters most for links that open in
+a new tab (`target: "_blank"`), where the browser back button is useless. When a page is
+reachable from several origins, the eyebrow must adapt to whichever one the user came from.
+
+- **Pass a `return_to` param** from the originating link identifying the origin context.
+  The destination's eyebrow branches on `params[:return_to]` to build the correct back
+  link, falling back to a sensible default when it's absent or unrecognized.
+- **Preserve UI state on return.** If the origin had an expanded row, open accordion,
+  active tab, scroll position, or filter, pass enough params to restore it — an identifier
+  to re-open the element **and** an `anchor:` fragment so the browser scrolls to it. The
+  target element needs a matching `id` and a `scroll-mt-*` utility so it isn't hidden under
+  sticky headers.
+- **Carry whatever the destination can't infer.** If the back link needs context the
+  destination doesn't already have (e.g. linking to a record that isn't scoped to the
+  origin's parent), pass that too (an `event_id`, a parent slug, etc.).
+- **Keep both ends in sync.** When you change what a `return_to` value means, update every
+  page that consumes it. Controller `case params[:return_to]` redirects (after save/destroy)
+  and the view eyebrow should agree on where a given origin returns to.
+- **Reuse, don't reinvent.** Match the mechanism already used by nearby flows, and extract a
+  helper when the same back-link is built in more than one destination (e.g.
+  `EventHelper#bulk_payments_return_path` centralizes the expand + anchor logic for the bulk
+  payments flow).
+
+## Page background class (`page_bg_class`)
+
+Every page view sets `<% content_for(:page_bg_class, "...") %>` at the top — the layout
+(`app/views/layouts/application.html.erb`) renders it on the main content wrapper. The class
+string is a **semantic policy marker** matching the page's authorization level (e.g. `"public"`,
+`"admin-or-auth"`, `"admin-or-owner"`, `"admin-only bg-blue-100"`), not just a Tailwind class.
+
+**Whenever you add a new page (a new `*.html.erb` view rendered as a full page), check whether
+it needs a `page_bg_class` and register it:**
+
+- **Set `content_for(:page_bg_class, "...")`** at the top of the new view, choosing the marker
+  that matches the controller action's policy (compare against the relevant `*_policy.rb`).
+- **Add the view path → expected value to `EXPECTED_MAPPINGS`** in
+  `spec/views/page_bg_class_alignment_spec.rb`. A test asserts every view that sets
+  `page_bg_class` is listed there (and matches its policy), so the suite fails if you skip this.
+- **Match neighboring pages.** Use the same marker as sibling views with the same authorization
+  level rather than inventing a new value.
+
 ## JavaScript
 
 - ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
@@ -134,6 +205,7 @@ This project uses rubocop-rails-omakase. All code MUST follow these rules:
 - Prefer Turbo for navigation and form submissions before reaching for Stimulus
 - Controller naming: `[name]_controller.js`
 - Keep controllers focused and small
+- **Before adding a new JS/Stimulus controller, check whether an existing one already covers the behavior or can be lightly adapted** — search `app/frontend/javascript/controllers/` for similar names/behavior (e.g. sorting, toggling, autocomplete). Prefer reusing it, or generalizing it with a new value/target/class so both callers share it, over creating a near-duplicate. Only add a new controller when the behavior is genuinely distinct. If a small change to an existing controller would make it reusable, do that (and re-verify its existing callers)
 
 ### Stimulus Conventions
 
@@ -157,8 +229,8 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## Migrations
 
-- Name migration files using **UTC timestamps** (e.g., `20260228143000`), not sequential numbers (e.g., `20260228000007`)
-- Multiple branches adding migrations on the same date will collide if they use sequential numbering
+- Name migration files using the **actual current UTC timestamp down to the second** — generate it (`date -u +%Y%m%d%H%M%S`), don't hand-write the number. The minutes and seconds (`…HHMMSS`) must be real, not zero-padded.
+- **Never use round, zero-trailing times** like `20260618030000` or sequential numbers like `20260228000007`. They collide when two branches add a migration the same day, because everyone gravitates to the same round number. Real second-level timestamps (e.g. `20260618034355`) effectively never collide. (This has bitten us: two PRs both shipped `20260618020000`.)
 - **Migrations must be reversible** — always use explicit `up`/`down` methods instead of `change` when the rollback isn't trivially invertible. Guard `down` operations with `if_exists: true`, `column_exists?`, `index_exists?`, and `foreign_key_exists?` so rollbacks are idempotent and recover from partial failures
 
 ## Git
@@ -170,10 +242,18 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## PRs
 
-- **Push to a draft PR early** — push commits and create a draft PR (`gh pr create --draft`) as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
-- After completing work, **mark the PR ready** using `gh pr ready`
+- **Always create PRs as drafts** — every PR starts in draft (`gh pr create --draft`), no exceptions. Never open a PR ready for review, and never promote it. Only the user runs `gh pr ready`, manually and intentionally, when they decide the work is ready.
+- **Push to a draft PR early** — create the draft PR as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
+  - **In a new Conductor workspace, do this immediately** — as the first step of any task, make an initial commit on the workspace branch and open the draft PR right away (before the work is done), then keep pushing on every commit as you go. Don't wait until there's a finished change to show.
+- **Never take a PR out of draft** — do not run `gh pr ready` or otherwise remove draft status, even after the work looks complete. Leave the PR in draft; the user promotes it manually and intentionally when they decide it's ready.
 - **Do not rename branches after creating a PR** — deleting the old remote branch auto-closes the PR on GitHub, and the head ref cannot be changed after creation
 - Use `docs/pull_request_template.md` for PR description structure
+- **Remove the `Closes …` line when there's no ticket** — it's a template placeholder. Keep it (with a real issue link) only when the PR closes a tracked ticket; otherwise drop the line entirely rather than leaving the placeholder.
+- **Keep descriptions as short as possible** — a few terse bullets, not paragraphs. Cut anything a reviewer can see from the diff; only keep what explains *why*.
+- **Start the description with a review-depth tag** on its own single line, prefixed with `🤖 PR, suggested 👤 review level: `, followed by a blank line, then the rest of the description. The tag is the prefix, the icon, the level name, and the short note on what that level means — e.g. `🤖 PR, suggested 👤 review level: 👀 Skim — view-only: markup/copy/styling, no logic or data changes`. Always spell out the meaning inline; never post the icon and name alone. The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
+  - **👀 Skim** — view-only: markup/copy/styling, no logic or data changes
+  - **📖 Read** — light-logic: small, contained logic changes with low blast radius
+  - **🔬 Inspect** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
@@ -237,6 +317,7 @@ See `ai/` directory for executable scripts:
 | Command | What it does |
 |---|---|
 | `ai/recap` | Session recap: accomplishments + unresolved items (see above) |
+| `ai/review` | Code review: agent reviews the workspace diff, posts inline comments, and gives a Recap + Risks + Outstanding decisions summary (runs the `ai-review` skill) |
 | `ai/test [args]` | Run RSpec |
 | `ai/lint` | Rubocop on all files |
 | `ai/lint --fix` | Auto-fix lint issues |
@@ -247,4 +328,4 @@ See `ai/` directory for executable scripts:
 | `ai/seed` | Load the full dev sample dataset (`db:seed:dev`) into the workspace DB |
 | `ai/security` | Security scan: Brakeman + bundler-audit (mirrors CI) |
 
-> **"ai <name>" means the `ai/` script of that name** (e.g. "ai test" → `ai/test`, "ai security" → `ai/security`) — shell scripts in `ai/`, not slash-command skills. If a referenced `ai/<name>` script doesn't exist, ask what's intended rather than substituting a similarly named skill. (`ai/recap` is special — it triggers the agent **Session recap** behavior above, not a real script's output; never confuse it with the `/audit` design skill or the `ai/security` scan.)
+> **"ai <name>" means the `ai/` script of that name** (e.g. "ai test" → `ai/test`, "ai security" → `ai/security`) — shell scripts in `ai/`, not slash-command skills. If a referenced `ai/<name>` script doesn't exist, ask what's intended rather than substituting a similarly named skill. Two are special — they print a trigger word, and the agent does the work directly rather than producing script output: (1) **"ai recap"** triggers the **Session recap** behavior above; never confuse it with the `/audit` design skill or the `ai/security` scan. (2) **"ai review"** (`ai/review`) triggers the **`ai-review` skill** — review the current workspace diff, post one inline comment per qualifying bug, then give a Recap + Risks + Outstanding decisions summary; it is not the `/audit` skill or the `/code-review` / `/review` skills.

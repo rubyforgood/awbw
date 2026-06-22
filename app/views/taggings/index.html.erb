@@ -1,14 +1,12 @@
 <% content_for(:page_bg_class, "public") %>
 <% sector_names = @sector_names_all.to_s.split("--").join(", ") %>
+<%# Resolve the active filters to records so admins can jump straight to editing
+    the sector/category they're browsing. The header still falls back to the raw
+    param names below for any value that doesn't match a record. %>
+<% filtered_sectors = @sector_names_all.present? ? Sector.sector_names_all(@sector_names_all).order(:name).to_a : [] %>
+<% filtered_categories = @category_names_all.present? ? Category.category_names_all(@category_names_all).includes(:category_type).order(:name).to_a : [] %>
 <% category_full_names =
-     if @category_names_all.present?
-       Category.category_names_all(@category_names_all)
-               .includes(:category_type)
-               .map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }
-               .join(", ")
-     else
-       nil
-     end
+     filtered_categories.map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }.join(", ").presence
 %>
 
 <div class="taggings-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:tags) %> border border-gray-200 rounded-xl shadow p-6">
@@ -29,14 +27,34 @@
     <% if sector_names.present? || category_full_names.present? || @category_names_all.present? %>
       <div class="mt-4 text-center">
         <% if sector_names.present? %>
-          <div class="text-3xl md:text-4xl font-semibold text-gray-900 leading-tight">
-            <%= sector_names %>
+          <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+            <span class="text-3xl md:text-4xl font-semibold text-gray-900 leading-tight">
+              <%= sector_names %>
+            </span>
+            <% if filtered_sectors.any? && allowed_to?(:edit?, filtered_sectors.first) %>
+              <% filtered_sectors.each do |sector| %>
+                <%= link_to edit_sector_path(sector),
+                            class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" do %>
+                  Edit sector<%= " (#{sector.name})" if filtered_sectors.size > 1 %>
+                <% end %>
+              <% end %>
+            <% end %>
           </div>
         <% end %>
 
         <% if category_full_names.present? || @category_names_all.present? %>
-          <div class="mt-2 text-base md:text-lg text-gray-600 font-semibold">
-            <%= category_full_names || @category_names_all %>
+          <div class="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+            <span class="text-base md:text-lg text-gray-600 font-semibold">
+              <%= category_full_names || @category_names_all %>
+            </span>
+            <% if filtered_categories.any? && allowed_to?(:edit?, filtered_categories.first) %>
+              <% filtered_categories.each do |category| %>
+                <%= link_to edit_category_path(category),
+                            class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" do %>
+                  Edit category<%= " (#{category.name})" if filtered_categories.size > 1 %>
+                <% end %>
+              <% end %>
+            <% end %>
           </div>
         <% end %>
       </div>

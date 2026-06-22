@@ -8,6 +8,7 @@ class SectorsController < ApplicationController
     base_scope = authorized_scope(Sector.all)
     filtered = base_scope.filter_scope(params)
     @sectors = filtered.order(:name).paginate(page: params[:page], per_page: per_page)
+    @taggings_counts = SectorableItem.where(sector_id: @sectors.map(&:id)).group(:sector_id).count
 
     @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
   end
@@ -75,7 +76,7 @@ class SectorsController < ApplicationController
   # Strong parameters
   def sector_params
     params.require(:sector).permit(
-      :name, :published
+      :name, :published, :description
     )
   end
 end

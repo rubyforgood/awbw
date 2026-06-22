@@ -28,6 +28,18 @@
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
+    <!-- Taggings -->
+    <div>
+      <%= f.label :has_taggings, "Taggings",
+                  class: "block text-sm font-medium text-gray-700" %>
+
+      <%= f.select :has_taggings,
+                   options_for_select([["All", ""], ["With taggings", "with"], ["Without taggings", "without"]], params[:has_taggings]),
+                   {},
+                   class: "mt-1 block w-full rounded-md border border-gray-300 p-2",
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
     <!-- Clear -->
     <div>
       <%= link_to "Clear filters",

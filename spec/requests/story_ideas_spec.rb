@@ -59,6 +59,19 @@ RSpec.describe "/story_ideas", type: :request do
         get story_idea_url(create(:story_idea))
         expect(response).to be_successful
       end
+
+      it "renders the organization and creator as links" do
+        creator = create(:user)
+        creator_person = create(:person, user: creator)
+        org = create(:organization, name: "Community Arts Project")
+        story_idea = create(:story_idea, created_by: creator, organization: org)
+
+        get story_idea_url(story_idea)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link(org.name, href: organization_path(org))
+        expect(page).to have_link(creator.name, href: person_path(creator_person))
+      end
     end
 
     describe "GET /new" do
@@ -227,6 +240,29 @@ RSpec.describe "/story_ideas", type: :request do
         story_idea = create(:story_idea, created_by: regular_user)
         get story_idea_url(story_idea)
         expect(response).to be_successful
+      end
+
+      it "renders the organization as plain text and the creator as a link" do
+        person = create(:person, user: regular_user)
+        org = create(:organization, name: "Community Arts Project")
+        story_idea = create(:story_idea, created_by: regular_user, organization: org)
+
+        get story_idea_url(story_idea)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text(org.name)
+        expect(page).not_to have_link(org.name)
+        expect(page).to have_link(regular_user.name, href: person_path(person))
+      end
+
+      it "renders the creator as plain text when they have no person record" do
+        story_idea = create(:story_idea, created_by: regular_user)
+
+        get story_idea_url(story_idea)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text(regular_user.name)
+        expect(page).not_to have_link(regular_user.name)
       end
     end
   end

@@ -1,22 +1,24 @@
 module EventHelper
-  # The special free-text option label that reveals a "please specify" input.
-  OTHER_OPTION_PREFIX = "Other"
-
-  # True when an option label is the special free-text "Other" choice.
-  def other_option?(label)
-    label.to_s.strip.casecmp?(OTHER_OPTION_PREFIX)
+  # The "please specify" placeholder for an option label, or nil when the option
+  # does not reveal a free-text box. Pass the field to honor placeholders scoped
+  # to one field (e.g. the CE question's "Yes"). Canonical config lives on
+  # FormField (shared with answer validation).
+  def specify_placeholder(label, field = nil)
+    FormField.specify_placeholder_for(label, field&.field_identifier)
   end
 
-  # True when a stored answer represents the "Other" option being chosen. Works
-  # for both single answers (a string) and multi-select answers (an array).
-  def other_option_selected?(value)
-    Array(value).any? { |v| v.to_s == OTHER_OPTION_PREFIX || v.to_s.start_with?("#{OTHER_OPTION_PREFIX}:") }
+  # True when a stored answer selects the given specify option: the bare label,
+  # or its "<label>: <text>" form. Works for single (string) and multi (array)
+  # answers.
+  def specify_option_selected?(label, value)
+    Array(value).any? { |v| v.to_s == label.to_s || v.to_s.start_with?("#{label}:") }
   end
 
-  # Extracts the user's custom text from a stored "Other: <text>" answer.
-  def other_option_text(value)
-    answer = Array(value).find { |v| v.to_s.start_with?(OTHER_OPTION_PREFIX) }
-    answer.to_s.delete_prefix(OTHER_OPTION_PREFIX).delete_prefix(":").strip
+  # Extracts the user's typed text from a stored "<label>: <text>" answer for the
+  # given specify option, or "" when the option is bare or unselected.
+  def specify_option_text(label, value)
+    answer = Array(value).find { |v| v.to_s == label.to_s || v.to_s.start_with?("#{label}:") }
+    answer.to_s.delete_prefix(label.to_s).delete_prefix(":").strip
   end
 
   # Splits an ActionText rich text into two HTML-safe fragments by character length.
@@ -53,6 +55,20 @@ module EventHelper
     bottom_html = bottom_nodes.map(&:to_html).join.html_safe
 
     [ top_html, bottom_html ]
+  end
+
+  # Back link for any page reached from a bulk payment tray (the expanded card on
+  # the bulk payments index). Returns to that index re-expanding the originating
+  # submission's row and anchor-scrolling to it. Relies on the originating link
+  # passing `expand: submission.id`; the card reads `params[:expand]` to expand and
+  # carries a matching `id="payment-card-<id>"` + `scroll-mt-*` for the anchor.
+  def bulk_payments_return_path(event)
+    expand = params[:expand].presence
+    bulk_payments_event_path(
+      event,
+      expand: expand,
+      anchor: ("payment-card-#{expand}" if expand)
+    )
   end
 
   def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil)
@@ -97,6 +113,14 @@ module EventHelper
     end
   end
 
+  # The question label to show next to a stored answer: the wording captured at
+  # submission time (so editing a question later doesn't rewrite history), falling
+  # back to the field's current name when there's no answer on file — e.g. a
+  # question added after this person submitted.
+  def display_question_label(field, response)
+    response&.question_name_when_answered.presence || field&.name
+  end
+
   def display_response_text(field, response)
     text = resolve_answer_text(field, response&.submitted_answer)
     return tag.span("—", class: "text-gray-400") if text.blank?
@@ -117,9 +141,9 @@ module EventHelper
             .join(", ").presence || submitted_answer
     }
     case field&.field_identifier
-    when "primary_service_area", "primary_service_area_single"
+    when *FormField::SECTOR_FIELD_IDENTIFIERS
       resolve.call(Sector)
-    when "workshop_environments", "client_life_experiences", "primary_age_group"
+    when "primary_age_group", "additional_age_group"
       resolve.call(Category)
     else
       submitted_answer

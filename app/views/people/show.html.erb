@@ -1,4 +1,13 @@
 <% content_for(:page_bg_class, "admin-or-owner-or-authsearchable") %>
+<%# Returned from a registrant's profile link on the event registrants page. Shown
+    above the profile topper; needs event_id since the profile isn't event-scoped. %>
+<% if params[:return_to] == "registrants" && params[:event_id].present? %>
+  <div class="mb-3">
+    <%= link_to registrants_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to registrants
+    <% end %>
+  </div>
+<% end %>
 <div class="admin-or-owner <%#= DomainTheme.bg_class_for(:people) %> border border-gray-200 rounded-xl shadow overflow-hidden">
   <!-- Person header banner -->
   <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people, intensity: 300) %> px-8 py-3">
@@ -12,6 +21,12 @@
   <div class="p-4 sm:p-8 relative">
     <!-- Header actions -->
     <div class="flex flex-wrap justify-end gap-2 mb-4">
+      <% if params[:return_to] == "bulk_payments" && params[:event_id].present? %>
+        <%# Returned from a bulk payment tray: mr-auto pins this back link left while the rest stay right. %>
+        <%= link_to bulk_payments_return_path(params[:event_id]), class: "mr-auto text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> Bulk payments
+        <% end %>
+      <% end %>
       <% unless @person.user %>
         <div class="admin-only bg-blue-100 p-2">
           No user!
@@ -48,7 +63,7 @@
       </div>
       <div class="flex-1 text-center md:text-left">
         <h1 class="text-3xl font-bold text-gray-900">
-          <%= @person.name %>
+          <%= @person.name %><% if @person.credentials.present? && @person.profile_show_credentials? %><span class="font-normal">, <%= @person.credentials %></span><% end %>
           <% if @person.pronouns.present? && @person.profile_show_pronouns? %>
             <span class="text-gray-500 font-normal text-base italic">(<%= @person.pronouns %>)</span>
           <% end %>
@@ -109,7 +124,7 @@
         <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
           <!-- Organization affiliations -->
           <% if @person.profile_show_affiliations? %>
-            <div class="md:col-span-3 p-3">
+            <div id="affiliations" class="md:col-span-3 p-3 scroll-mt-4">
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Affiliations</h2>
               <%= turbo_frame_tag "person_affiliations_section", src: person_path(@person, section: "affiliations"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading affiliations...</p>
@@ -118,42 +133,36 @@
           <% end %>
           <!-- Sectors -->
           <% if @person.profile_show_sectors? %>
-            <% sectorable_items = @person.sectorable_items.includes(:sector).order("sectors.name") %>
-            <% primary_sector_items = sectorable_items.select(&:is_primary?) %>
-            <% additional_sector_items = sectorable_items.reject(&:is_primary?) %>
+            <%# One combined list: the primary sector leads as a darker-green starred
+                chip, followed by the additional sectors alphabetically and any
+                free-text "Other" responses. %>
+            <% sectorable_items = @person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
+            <% other_sectors = @person.other_sector_responses %>
             <div class="md:col-span-2 p-3">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Primary sector</h2>
-                  <% if primary_sector_items.any? %>
-                    <div class="flex flex-wrap gap-2">
-                      <% primary_sector_items.each do |si| %>
-                        <%= render "sectors/tagging_label",
-                                     sector: si.sector,
-                                     display_leader: true,
-                                     is_leader: si.is_leader %>
-                      <% end %>
-                    </div>
-                  <% else %>
-                    <p class="text-gray-500 italic">None selected.</p>
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
+              <% if sectorable_items.any? || other_sectors.any? %>
+                <div class="flex flex-wrap gap-2">
+                  <% sectorable_items.each do |si| %>
+                    <%= render "sectors/tagging_label",
+                                 sector: si.sector,
+                                 is_primary: si.is_primary?,
+                                 display_leader: true,
+                                 is_leader: si.is_leader %>
                   <% end %>
+                  <%= render "people/other_responses", responses: other_sectors %>
                 </div>
-                <div>
-                  <h2 class="text-lg font-semibold text-gray-800 mb-3">Additional sectors</h2>
-                  <% if additional_sector_items.any? %>
-                    <div class="flex flex-wrap gap-2">
-                      <% additional_sector_items.each do |si| %>
-                        <%= render "sectors/tagging_label",
-                                     sector: si.sector,
-                                     display_leader: true,
-                                     is_leader: si.is_leader %>
-                      <% end %>
-                    </div>
-                  <% else %>
-                    <p class="text-gray-500 italic">None selected.</p>
-                  <% end %>
-                </div>
-              </div>
+              <% else %>
+                <p class="text-gray-500 italic">None selected.</p>
+              <% end %>
+            </div>
+          <% end %>
+          <!-- Age groups served -->
+          <% primary_age_groups = @person.primary_age_groups.to_a %>
+          <% additional_age_groups = @person.additional_age_groups.to_a %>
+          <% if primary_age_groups.any? || additional_age_groups.any? %>
+            <div class="md:col-span-2 p-3">
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Age groups served</h2>
+              <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
             </div>
           <% end %>
         </div>
@@ -222,11 +231,11 @@
             Participation history
           </h2>
         </div>
-        <!-- Events registered -->
+        <!-- Events attended -->
         <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
           <% if @person.profile_show_events_registered? %>
             <div class="p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Events registered</h2>
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Events attended</h2>
               <%= turbo_frame_tag "person_events_section", src: person_path(@person, section: "events"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading events...</p>
               <% end %>
@@ -238,17 +247,25 @@
     <!-- SUBMITTED SECTION -->
     <% if allowed_to?(:show?, @person) %>
       <div class="user-only <%= DomainTheme.bg_class_for(:user_only) %>
-            border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm">
+            border <%= DomainTheme.border_class_for(:user_only) %> rounded-lg shadow-sm"
+           data-controller="expandable-card"
+           data-expandable-card-expanded-value="false">
         <!-- Header -->
-        <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3
+        <button type="button" data-action="expandable-card#toggle"
+                aria-expanded="false"
+                class="section-header w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 text-left
               border-b <%= DomainTheme.border_class_for(:user_only) %>">
           <h2 class="text-xl font-semibold text-gray-800">
             Submitted content
           </h2>
-          <span class="text-sm text-amber-700 italic">Only visible to you</span>
-        </div>
+          <span class="flex items-center gap-3">
+            <span class="text-sm text-amber-700 italic">Only visible to you</span>
+            <i class="fa-solid fa-chevron-down transition-transform text-gray-400" data-expandable-card-target="icon"></i>
+          </span>
+        </button>
         <!-- Submitted Content -->
-        <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
+        <div class="section-content hidden px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10"
+             data-expandable-card-target="body">
           <!-- Workshop ideas -->
           <% if @person.profile_show_workshop_ideas? %>
             <div class="p-3">

@@ -11,6 +11,75 @@ class FormField < ApplicationRecord
   # Answer types that collect free-form text, where a minimum word count applies
   FREE_FORM_TEXT_TYPES = %w[free_form_input_one_line free_form_input_paragraph].freeze
 
+  # Answer types that display text only and never collect a response — so a
+  # "required" flag is meaningless for them (nothing to fill in).
+  NON_INPUT_ANSWER_TYPES = %w[no_user_input group_header].freeze
+
+  # Multi-select "additional sectors" field identifiers. "additional_sectors" is
+  # the canonical name new forms are built with; the older "primary_sector" name
+  # (a misnomer — it was always the multi-select additional field) and the legacy
+  # "service area" name are both still accepted so existing form data keeps
+  # resolving.
+  ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors primary_sector primary_service_area].freeze
+
+  # Single-select "primary sector" field identifiers (current + legacy). Unlike
+  # the multi-select "additional" field, these omit the catch-all "Other" sector
+  # — a respondent's primary sector must be a concrete sector.
+  PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector_single primary_service_area_single].freeze
+
+  # Field identifiers whose selectable options are sourced dynamically from
+  # Sector records rather than the field's own stored answer options. The
+  # submitted value for these is a Sector id (as a string).
+  SECTOR_FIELD_IDENTIFIERS = (ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + PRIMARY_SECTOR_FIELD_IDENTIFIERS).freeze
+
+  # Field identifiers whose selectable options are sourced dynamically from a
+  # CategoryType's published categories. The submitted value is a Category id
+  # (as a string). Maps the field identifier to its backing CategoryType name.
+  DYNAMIC_FIELD_CATEGORY_TYPES = {
+    "primary_age_group" => "AgeRange",
+    "additional_age_group" => "AgeRange"
+  }.freeze
+
+  # The "primary" and "additional" age group fields. Both are backed by AgeRange
+  # categories but omit the catch-all "Mixed-age groups" category — a respondent
+  # names the concrete age groups they serve, not the mixed bucket.
+  PRIMARY_AGE_GROUP_FIELD_IDENTIFIER = "primary_age_group"
+  ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIER = "additional_age_group"
+  AGE_GROUP_FIELD_IDENTIFIERS = [ PRIMARY_AGE_GROUP_FIELD_IDENTIFIER, ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIER ].freeze
+
+  # The payment-method field. Its answer options ("Credit card (now)", etc.) are
+  # wired to Stripe charge logic in the controllers, so they must not be edited
+  # casually from the form builder — the editor shows them read-only unless the
+  # admin override is present.
+  PAYMENT_METHOD_FIELD_IDENTIFIER = "payment_method"
+
+  # The generic free-text option label that lets a respondent supply their own
+  # value; a chosen "Other" answer is stored as "Other" or "Other: <text>".
+  OTHER_OPTION_PREFIX = "Other"
+
+  # Selectable option labels that reveal a free-text "please specify" box when
+  # chosen, each mapped to that box's placeholder. A chosen answer is stored as
+  # "<label>: <typed text>" (or the bare label when nothing is typed), so the
+  # server needs no extra params. "Other" is the generic catch-all; the rest
+  # capture a specific named source for "how did you hear about us" questions.
+  SPECIFY_OPTION_PLACEHOLDERS = {
+    OTHER_OPTION_PREFIX => "Please specify",
+    "Work(ed) at an agency that has/had an AWBW program" => "Please specify organization",
+    "Word of Mouth" => "Please list the name of the person",
+    "Foundation/Funder" => "Please list the name of the foundation/funder"
+  }.freeze
+
+  # Specify options scoped to a single field by its field_identifier, rather than
+  # to an option label everywhere it appears (SPECIFY_OPTION_PLACEHOLDERS). The
+  # CE-interest question's "Yes" reveals a "How many CE hours?" box that only
+  # makes sense there — a bare "Yes" anywhere else must stay a plain choice. The
+  # typed value folds into the answer as "Yes: <hours>", which the registration
+  # service parses onto EventRegistration#ce_hours_requested. The identifier
+  # matches EventRegistrationServices::PublicRegistration::CE_CREDIT_INTEREST_IDENTIFIER.
+  FIELD_SPECIFY_OPTION_PLACEHOLDERS = {
+    "ce_credit_interest" => { "Yes" => "How many CE hours?" }
+  }.freeze
+
   # Fallback character ceilings applied when a free-form field has no explicit
   # max_characters set. This is a safety net against pathological submissions
   # (megabyte answers that bloat the DB and break admin/email rendering), not a
@@ -34,6 +103,13 @@ class FormField < ApplicationRecord
   validates :min_words, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :max_characters, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :max_characters_allows_min_words
+  validate :non_input_types_cannot_be_required
+
+  # New fields submitted without a position (e.g. added in the form editor and
+  # not dragged) would otherwise save with a nil position and sort to the top of
+  # the list. Append them to the bottom instead. Dragged fields arrive with an
+  # explicit position and are left untouched.
+  before_validation :append_to_bottom, on: :create, if: -> { position.blank? }
 
   # Enum
   enum :status, [ :inactive, :active ]
@@ -100,6 +176,13 @@ class FormField < ApplicationRecord
     answer_type.in?(SELECTABLE_ANSWER_TYPES)
   end
 
+  # True for fields whose answer options are tied to backend logic (currently the
+  # payment-method field's Stripe wiring) and so should be shown read-only in the
+  # form builder rather than freely edited.
+  def fixed_options?
+    field_identifier == PAYMENT_METHOD_FIELD_IDENTIFIER
+  end
+
   def html_id
     self.name.tr(" /#,')(.", "_").downcase
   end
@@ -126,6 +209,12 @@ class FormField < ApplicationRecord
     FREE_FORM_TEXT_TYPES.include?(answer_type)
   end
 
+  # False for display-only types (informational text, section headers) that
+  # never collect an answer; true for every field a respondent fills in.
+  def collects_input?
+    NON_INPUT_ANSWER_TYPES.exclude?(answer_type)
+  end
+
   # Field identifiers (system-assigned by FormBuilderService) that collect an
   # email address, so a submitted value should be format-checked. The "*_type"
   # selector fields are deliberately excluded — this is an exact allowlist, not
@@ -136,8 +225,13 @@ class FormField < ApplicationRecord
     field_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
   end
 
+  # Counts whitespace-separated tokens. Uses the Unicode-aware [[:space:]] class
+  # rather than \S, which is ASCII-only — pasted answers (Word, Google Docs, web
+  # pages) routinely carry non-breaking (U+00A0) and other Unicode spaces that \S
+  # treats as word characters, collapsing a real answer into one "word" and
+  # wrongly tripping the minimum.
   def word_count(value)
-    value.to_s.scan(/\S+/).size
+    value.to_s.scan(/[^[:space:]]+/).size
   end
 
   # Returns a validation error string when a submitted value falls short of the
@@ -166,6 +260,21 @@ class FormField < ApplicationRecord
     errors.add(:max_characters, "is too low for a #{min_words}-word minimum (allow at least #{required})")
   end
 
+  # Display-only fields (informational text, section headers) have nothing to
+  # fill in, so they can't be marked required.
+  def non_input_types_cannot_be_required
+    return if collects_input?
+    return unless required?
+
+    errors.add(:required, "is not available for #{answer_type_label.downcase} fields")
+  end
+
+  # Places a positionless new field after the current last field on its form, so
+  # newly added fields land at the bottom of the editor list rather than the top.
+  def append_to_bottom
+    self.position = (form&.form_fields&.maximum(:position) || 0) + 1
+  end
+
   # The character ceiling actually enforced for this field: the explicit
   # max_characters when set, otherwise the per-type default safety net. Returns
   # nil for non-free-form fields (no cap applies).
@@ -184,6 +293,112 @@ class FormField < ApplicationRecord
     return if value.to_s.length <= limit
 
     "must be #{limit} #{"character".pluralize(limit)} or fewer"
+  end
+
+  # True when this field's selectable options come from Sector/Category data
+  # rather than its own stored answer options. Dynamic fields never offer "Other".
+  def dynamic_options?
+    field_identifier.in?(SECTOR_FIELD_IDENTIFIERS) ||
+      DYNAMIC_FIELD_CATEGORY_TYPES.key?(field_identifier)
+  end
+
+  # The set of values a submission may legitimately contain for this selectable
+  # field — stored option names, or dynamic Sector/Category ids as strings —
+  # exactly mirroring what the public form renders. nil for non-selectable
+  # fields. This is the source of truth for both rendering and validation.
+  def allowed_answer_values
+    return unless selectable?
+
+    values = if field_identifier.in?(SECTOR_FIELD_IDENTIFIERS)
+      sector_options.pluck(:id).map(&:to_s)
+    elsif DYNAMIC_FIELD_CATEGORY_TYPES.key?(field_identifier)
+      dynamic_categories.pluck(:id).map(&:to_s)
+    else
+      answer_options.pluck(:name)
+    end
+
+    values.to_set
+  end
+
+  # The published Sector records a sector-backed field offers, in name order. The
+  # single-select "primary" field omits the catch-all "Other" sector; the
+  # multi-select "additional" field includes it. Source of truth shared by the
+  # public form's rendering and submission validation.
+  def sector_options
+    scope = Sector.published.order(:name)
+    field_identifier.in?(PRIMARY_SECTOR_FIELD_IDENTIFIERS) ? scope.excluding_other : scope
+  end
+
+  # The published Category records a category-backed dynamic field offers, in
+  # position/name order. The age group fields omit the catch-all "Mixed-age
+  # groups" AgeRange category — a respondent names the concrete age groups they
+  # serve. Empty when the backing CategoryType is missing. Source of truth shared
+  # by the public form's rendering and submission validation.
+  def dynamic_categories
+    type = CategoryType.find_by(name: DYNAMIC_FIELD_CATEGORY_TYPES[field_identifier])
+    return Category.none unless type
+
+    scope = type.categories.published.order(:position, :name)
+    AGE_GROUP_FIELD_IDENTIFIERS.include?(field_identifier) ? scope.excluding_mixed_age : scope
+  end
+
+  # The "please specify" placeholder for an option label, or nil when the option
+  # does not reveal a free-text box. Matched case- and whitespace-insensitively
+  # against SPECIFY_OPTION_PLACEHOLDERS, then (when a field_identifier is given)
+  # against that field's FIELD_SPECIFY_OPTION_PLACEHOLDERS, which wins.
+  def self.specify_placeholder_for(label, field_identifier = nil)
+    normalized = label.to_s.strip
+    return if normalized.blank?
+
+    field_scoped = FIELD_SPECIFY_OPTION_PLACEHOLDERS[field_identifier]&.find { |key, _| key.casecmp?(normalized) }&.last
+    field_scoped || SPECIFY_OPTION_PLACEHOLDERS.find { |key, _| key.casecmp?(normalized) }&.last
+  end
+
+  # True when an option label reveals a free-text "please specify" box, optionally
+  # scoped to a field via its field_identifier.
+  def self.specify_option?(label, field_identifier = nil)
+    specify_placeholder_for(label, field_identifier).present?
+  end
+
+  # True when an option label is the generic free-text "Other" choice. Unlike
+  # the named specify options (whose bare label still carries meaning), a bare
+  # "Other" is useless, so dropdowns — which can't collect the free text —
+  # strip it entirely.
+  def self.other_option?(label)
+    label.to_s.strip.casecmp?(OTHER_OPTION_PREFIX)
+  end
+
+  # The labels of this field's offered options that reveal a free-text box
+  # (e.g. "Other", "Word of Mouth"). Empty for dynamic fields, which never
+  # offer them.
+  def specify_option_labels
+    return [] if dynamic_options?
+
+    answer_options.map(&:name).select { |name| FormField.specify_option?(name, field_identifier) }
+  end
+
+  # True when a submitted value is a valid "specify" answer for one of this
+  # field's specify options: the bare label or its "<label>: <free text>" form.
+  def specify_answer?(value)
+    specify_option_labels.any? do |label|
+      value == label || value.start_with?("#{label}:")
+    end
+  end
+
+  # Returns a validation error string when a submitted selectable value is not
+  # one of the field's offered options — guarding against tampered/forged
+  # submissions — or nil when it passes / does not apply. Handles single and
+  # multi-select, and allows a "specify" option's "<label>: <text>" free-text
+  # form when the field offers it. Blank values are left to the presence check.
+  def answer_inclusion_error(value)
+    allowed = allowed_answer_values
+    return unless allowed
+
+    submitted = Array(value).map(&:to_s).reject(&:blank?)
+    return if submitted.empty?
+    return if submitted.all? { |v| allowed.include?(v) || specify_answer?(v) }
+
+    "has an invalid selection"
   end
 
   def html_input_type

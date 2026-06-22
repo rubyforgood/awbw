@@ -327,6 +327,21 @@ RSpec.describe "Event show page", type: :system do
   end
 
   describe "videoconference link" do
+    # The join link is only available within the event's join window, so the
+    # event under test is in progress unless a context says otherwise.
+    let(:event) do
+      create(
+        :event,
+        :published,
+        :publicly_visible,
+        title: "My Event",
+        cost: 10.99,
+        videoconference_url: "https://www.example_zoom.com/123",
+        start_date: 1.hour.ago,
+        end_date: 1.hour.from_now
+      )
+    end
+
     context "user not registered" do
       it "does not show the join link" do
         sign_in(user)
@@ -342,8 +357,8 @@ RSpec.describe "Event show page", type: :system do
                title: "Free Event",
                cost_cents: 0,
                videoconference_url: "https://www.zoom.us/123",
-               start_date: 2.days.from_now,
-               end_date: 2.days.from_now + 2.hours)
+               start_date: 1.hour.ago,
+               end_date: 1.hour.from_now)
       end
 
       before { create(:event_registration, event: free_event, registrant: user.person) }
@@ -379,6 +394,35 @@ RSpec.describe "Event show page", type: :system do
         visit event_path(event)
 
         expect(page).to have_link("Join on Example_zoom", href: "https://www.example_zoom.com/123")
+      end
+    end
+
+    context "event is outside the join window" do
+      let(:event) do
+        create(
+          :event,
+          :published,
+          :publicly_visible,
+          title: "My Event",
+          cost: 10.99,
+          videoconference_url: "https://www.example_zoom.com/123",
+          start_date: 2.days.from_now,
+          end_date: 2.days.from_now + 2.hours
+        )
+      end
+
+      before do
+        registration = create(:event_registration, event: event, registrant: user.person)
+        payment = create(:payment, person: user.person, amount_cents: event.cost_cents, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: registration, amount: event.cost_cents)
+      end
+
+      it "hides the join link for a paid registrant until the window opens" do
+        sign_in(user)
+        visit event_path(event)
+
+        expect(page).to have_text("Virtual event")
+        expect(page).not_to have_link("Join on Example_zoom")
       end
     end
 

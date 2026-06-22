@@ -72,6 +72,78 @@ RSpec.describe Payment, type: :model do
     end
   end
 
+  describe "compound payer/designation sgids" do
+    let(:person) { create(:person) }
+    let(:org) { create(:organization) }
+
+    it "sets payer_type and organization from an organization payer sgid" do
+      payment = build(:payment, person: nil, organization: nil, payer_type: nil)
+      payment.payer_sgid = org.to_sgid.to_s
+      payment.additional_designation_sgid = person.to_sgid.to_s
+      expect(payment).to be_valid
+
+      expect(payment.payer_type).to eq("Organization")
+      expect(payment.organization).to eq(org)
+      expect(payment.person).to eq(person)
+    end
+
+    it "sets payer_type and person from a person payer sgid" do
+      payment = build(:payment, person: nil, organization: nil, payer_type: nil)
+      payment.payer_sgid = person.to_sgid.to_s
+      payment.additional_designation_sgid = org.to_sgid.to_s
+      payment.valid?
+
+      expect(payment.payer_type).to eq("Person")
+      expect(payment.person).to eq(person)
+      expect(payment.organization).to eq(org)
+    end
+
+    it "clears the slots when an empty additional designation is submitted" do
+      payment = build(:payment, person: nil, organization: nil, payer_type: nil)
+      payment.payer_sgid = org.to_sgid.to_s
+      payment.additional_designation_sgid = ""
+      payment.valid?
+
+      expect(payment.payer_type).to eq("Organization")
+      expect(payment.organization).to eq(org)
+      expect(payment.person).to be_nil
+    end
+
+    it "is invalid when the payer and designation are both people" do
+      other_person = create(:person)
+      payment = build(:payment, person: nil, organization: nil, payer_type: nil)
+      payment.payer_sgid = person.to_sgid.to_s
+      payment.additional_designation_sgid = other_person.to_sgid.to_s
+
+      expect(payment).not_to be_valid
+      expect(payment.errors[:base]).to include(a_string_including("must be different kinds"))
+    end
+
+    it "is invalid when the payer and designation are both organizations" do
+      other_org = create(:organization)
+      payment = build(:payment, person: nil, organization: nil, payer_type: nil)
+      payment.payer_sgid = org.to_sgid.to_s
+      payment.additional_designation_sgid = other_org.to_sgid.to_s
+
+      expect(payment).not_to be_valid
+      expect(payment.errors[:base]).to include(a_string_including("must be different kinds"))
+    end
+
+    it "is valid when the payer and designation are different kinds" do
+      payment = build(:payment, person: nil, organization: nil, payer_type: nil)
+      payment.payer_sgid = person.to_sgid.to_s
+      payment.additional_designation_sgid = org.to_sgid.to_s
+
+      expect(payment).to be_valid
+    end
+
+    it "exposes the current payer/designation as sgids for the form" do
+      payment = build(:payment, person: person, organization: org, payer_type: "Organization")
+      expect(GlobalID::Locator.locate_signed(payment.selected_payer.to_sgid.to_s)).to eq(org)
+      expect(GlobalID::Locator.locate_signed(payment.selected_additional_designation.to_sgid.to_s)).to eq(person)
+    end
+  end
+
   describe "scopes" do
     let(:person1) { create(:person) }
     let(:person2) { create(:person) }

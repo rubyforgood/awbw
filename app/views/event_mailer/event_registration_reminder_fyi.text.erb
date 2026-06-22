@@ -1,0 +1,23 @@
+Reminder sent
+
+A reminder email was sent to <%= @recipient_labels.size %> registrant<%= "s" if @recipient_labels.size != 1 %> for <%= @event.title %>.
+
+<% @recipient_labels.each do |label| %>- <%= label %>
+<% end %>
+--
+Reminder content sent to each registrant:
+
+<% if @custom_message.present? %><%= strip_tags(@custom_message).strip %>
+
+<% end %><%= @event.title %>
+<% Time.use_zone(@time_zone) do %><% if event_dates_detail_label(@event.object).present? %><%= event_dates_detail_label(@event.object) %>
+<% end %><% if event_times_label(@event.object).present? %><%= event_times_label(@event.object) %>
+<% end %><% end %><% if @event.labelled_cost.present? %>
+<%= @event.labelled_cost %>
+<% end %><% if event_location_label(@event.object).present? %>
+Location: <%= event_location_label(@event.object) %>
+<% end %><% if event_platform_label(@event.object).present? %>
+<%= event_platform_label(@event.object) %>
+<% end %>
+
+Each registrant also received a personalized "View ticket" link.

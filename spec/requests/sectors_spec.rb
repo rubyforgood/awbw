@@ -27,6 +27,44 @@ RSpec.describe "/sectors", type: :request do
       get sectors_url
       expect(response).to be_successful
     end
+
+    context "filtering" do
+      let!(:sectors) do
+        [
+          create(:sector, name: "Sector1", published: true),
+          create(:sector, name: "Sector2", published: true),
+          create(:sector, name: "Sector3", published: false),
+          create(:sector, name: "Sector4", published: false)
+        ]
+      end
+
+      it "returns all sectors without filters" do
+        get sectors_url
+        sectors.each { |sector| expect(response.body).to include(sector.name) }
+      end
+
+      it "returns only published sectors when published=true" do
+        get sectors_url, params: { published: "true" }
+        expect(response.body).to include("Sector1", "Sector2")
+        expect(response.body).not_to include("Sector3")
+        expect(response.body).not_to include("Sector4")
+      end
+
+      it "returns only unpublished sectors when published=false" do
+        get sectors_url, params: { published: "false" }
+        expect(response.body).to include("Sector3", "Sector4")
+        expect(response.body).not_to include("Sector1")
+        expect(response.body).not_to include("Sector2")
+      end
+
+      it "filters by name" do
+        get sectors_url, params: { sector_name: "Sector1" }
+        expect(response.body).to include("Sector1")
+        expect(response.body).not_to include("Sector2")
+        expect(response.body).not_to include("Sector3")
+        expect(response.body).not_to include("Sector4")
+      end
+    end
   end
 
   describe "GET /show" do
@@ -84,7 +122,8 @@ RSpec.describe "/sectors", type: :request do
     context "with valid parameters" do
       let(:new_attributes) do
         valid_attributes.merge(
-          name: "Updated Sector Name"
+          name: "Updated Sector Name",
+          description: "Clarifying subtext for this sector"
         )
       end
 
@@ -92,7 +131,8 @@ RSpec.describe "/sectors", type: :request do
         sector = Sector.create! valid_attributes
         patch sector_url(sector), params: { sector: new_attributes }
         sector.reload
-        skip("Add assertions for updated state")
+        expect(sector.name).to eq("Updated Sector Name")
+        expect(sector.description).to eq("Clarifying subtext for this sector")
       end
 
       it "redirects to the sector" do

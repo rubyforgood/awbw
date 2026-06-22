@@ -4,6 +4,7 @@ RSpec.describe Affiliation do
   describe 'associations' do
     it { should belong_to(:organization) }
     it { should belong_to(:person) }
+    it { should belong_to(:organization_address).class_name("Address").optional }
   end
 
   describe 'validations' do
@@ -12,6 +13,58 @@ RSpec.describe Affiliation do
     end
     it { should validate_presence_of(:organization_id) }
     # it { should validate_presence_of(:person_id) } # we needed to not have this to support nested attrs
+  end
+
+  describe '#organization_address' do
+    let(:organization) { create(:organization) }
+    let(:address) { create(:address, addressable: organization) }
+
+    it 'is valid when the address belongs to the same organization' do
+      affiliation = build(:affiliation, organization: organization, organization_address: address)
+      expect(affiliation).to be_valid
+    end
+
+    it 'is valid when no address is linked' do
+      affiliation = build(:affiliation, organization: organization, organization_address: nil)
+      expect(affiliation).to be_valid
+    end
+
+    it 'is invalid when the address belongs to a different organization' do
+      other_address = create(:address, addressable: create(:organization))
+      affiliation = build(:affiliation, organization: organization, organization_address: other_address)
+      expect(affiliation).not_to be_valid
+      expect(affiliation.errors[:organization_address_id]).to be_present
+    end
+
+    it "is invalid when the address belongs to a person" do
+      person_address = create(:address, addressable: create(:person))
+      affiliation = build(:affiliation, organization: organization, organization_address: person_address)
+      expect(affiliation).not_to be_valid
+    end
+
+    it 'is nullified when its linked address is destroyed' do
+      affiliation = create(:affiliation, organization: organization, organization_address: address)
+      address.destroy
+      expect(affiliation.reload.organization_address_id).to be_nil
+    end
+  end
+
+  describe '#active?' do
+    it 'is true when not inactive and has no end date' do
+      expect(build(:affiliation, inactive: false, end_date: nil).active?).to be true
+    end
+
+    it 'is true when not inactive and the end date is in the future' do
+      expect(build(:affiliation, inactive: false, end_date: 1.month.from_now).active?).to be true
+    end
+
+    it 'is false when flagged inactive' do
+      expect(build(:affiliation, inactive: true, end_date: nil).active?).to be false
+    end
+
+    it 'is false when the end date has passed' do
+      expect(build(:affiliation, inactive: false, end_date: 1.day.ago).active?).to be false
+    end
   end
 
   describe '.active' do
@@ -40,6 +93,40 @@ RSpec.describe Affiliation do
       expect {
         described_class.active.joins(:organization).to_a
       }.not_to raise_error
+    end
+  end
+
+  describe '#facilitator?' do
+    it 'is true for the exact title "Facilitator"' do
+      expect(build(:affiliation, title: "Facilitator").facilitator?).to be true
+    end
+
+    it 'ignores surrounding whitespace' do
+      expect(build(:affiliation, title: "  Facilitator ").facilitator?).to be true
+    end
+
+    it 'is false for title variants like "Lead Facilitator"' do
+      expect(build(:affiliation, title: "Lead Facilitator").facilitator?).to be false
+    end
+
+    it 'is case-sensitive' do
+      expect(build(:affiliation, title: "facilitator").facilitator?).to be false
+      expect(build(:affiliation, title: "FACILITATOR").facilitator?).to be false
+    end
+
+    it 'is false when the title is blank' do
+      expect(build(:affiliation, title: nil).facilitator?).to be false
+    end
+  end
+
+  describe '.facilitators' do
+    let!(:exact) { create(:affiliation, title: "Facilitator") }
+    let!(:whitespace) { create(:affiliation, title: "  Facilitator ") }
+    let!(:variant) { create(:affiliation, title: "Lead Facilitator") }
+    let!(:lowercase) { create(:affiliation, title: "facilitator") }
+
+    it 'includes only the exact, case-sensitive title "Facilitator" (whitespace-trimmed)' do
+      expect(described_class.facilitators).to contain_exactly(exact, whitespace)
     end
   end
 

@@ -3,6 +3,7 @@
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Payment</h1>
     <div class="flex gap-2">
+      <%= link_to "Edit", edit_payment_path(@payment), class: "btn btn-secondary-outline" %>
       <% if @payment.amount_cents_remaining > 0 %>
         <%= link_to "Allocate", new_allocation_path(source_sgid: @payment.to_sgid.to_s), class: "btn btn-primary" %>
         <% if @payment.is_a?(ExternalProcessorPayment) && @payment.pay_charge_id.blank? %>
@@ -27,11 +28,11 @@
     </div>
     <div>
       <dt class="text-sm font-medium text-gray-500">Amount</dt>
-      <dd class="mt-1 text-sm text-gray-900">$<%= "%.2f" % @payment.amount_dollars %></dd>
+      <dd class="mt-1 text-sm text-gray-900"><%= dollars_from_cents(@payment.amount_cents) %></dd>
     </div>
     <div>
       <dt class="text-sm font-medium text-gray-500">Amount remaining to allocate</dt>
-      <dd class="mt-1 text-sm text-gray-900">$<%= "%.2f" % @payment.remaining_dollars %></dd>
+      <dd class="mt-1 text-sm text-gray-900"><%= dollars_from_cents(@payment.amount_cents_remaining) %></dd>
     </div>
     <% if @payment.check_number.present? %>
       <div>
@@ -51,7 +52,7 @@
         <dd class="mt-1 text-sm text-gray-900"><%= @payment.pay_charge_id %></dd>
       </div>
     <% end %>
-    <% receipt_url = @payment.metadata.dig("stripe_charge", "receipt_url") %>
+    <% receipt_url = @payment.metadata&.dig("stripe_charge", "receipt_url") %>
     <% if receipt_url.present? %>
       <div>
         <dt class="text-sm font-medium text-gray-500">Stripe Receipt</dt>
@@ -82,6 +83,9 @@
         </div>
       </div>
     <% end %>
+    <div class="sm:col-span-2">
+      <%= render "papertrail_versions", record: @payment %>
+    </div>
   </dl>
   <% if @allocations.any? %>
     <div class="mt-8">
@@ -116,7 +120,7 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-3 text-sm text-gray-900">$<%= "%.2f" % (allocation.amount.to_d / 100) %></td>
+                <td class="px-4 py-3 text-sm text-gray-900"><%= dollars_from_cents(allocation.amount) %></td>
                 <td class="px-4 py-3 text-sm text-gray-500"><%= allocation.created_at.strftime("%B %d, %Y at %I:%M %p") %></td>
 
                 <td class="px-4 py-3 text-right text-sm font-medium">
@@ -156,7 +160,7 @@
                   <% end %>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-900"><%= refund.method.titleize %></td>
-                <td class="px-4 py-3 text-sm text-gray-900">$<%= "%.2f" % refund.amount_dollars %></td>
+                <td class="px-4 py-3 text-sm text-gray-900"><%= dollars_from_cents(refund.amount_cents) %></td>
                 <td class="px-4 py-3 text-sm text-gray-500"><%= refund.created_at.strftime("%B %d, %Y at %I:%M %p") %></td>
               </tr>
             <% end %>

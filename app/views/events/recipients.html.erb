@@ -27,20 +27,21 @@
   </div>
 
   <% if @dashboard.scholarship_applicants.any? %>
-    <div data-controller="expandable-cards scholarship-status-toggle">
+    <div data-controller="expandable-cards scholarship-status-toggle"
+         data-scholarship-status-toggle-shown-value="true">
       <%# Controls — show/hide scholarship status for all recipients, and expand/collapse all %>
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4 print:hidden">
         <%# Show / hide each recipient's awarded amount + tasks-completed status %>
-        <button type="button" role="switch" aria-checked="false"
+        <button type="button" role="switch" aria-checked="true"
                 data-action="scholarship-status-toggle#toggle"
                 data-scholarship-status-toggle-target="switch"
                 class="group inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800">
-          <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-gray-300 transition-colors"
+          <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-fuchsia-600 transition-colors"
                 data-scholarship-status-toggle-target="track">
-            <span class="inline-block h-4 w-4 translate-x-0.5 transform rounded-full bg-white shadow transition-transform"
+            <span class="inline-block h-4 w-4 translate-x-[1.125rem] transform rounded-full bg-white shadow transition-transform"
                   data-scholarship-status-toggle-target="knob"></span>
           </span>
-          <span data-scholarship-status-toggle-target="label">Show scholarship status</span>
+          <span data-scholarship-status-toggle-target="label">Hide scholarship status</span>
         </button>
         <%# Expand / collapse all %>
         <button type="button" data-action="expandable-cards#toggleAll"
@@ -55,10 +56,10 @@
         <% participant_slug = @dashboard.registration_slug_by_registrant[person.id] %>
         <% answers = (answers_by_applicant[person.id] || []).reject { |a| a.form_field&.field_identifier == "scholarship_eligibility" } %>
         <% header = header_answers[person.id] || {} %>
-        <% service_area_answer = header["primary_service_area"] %>
+        <% sector_answer = header[EventDashboard::HEADER_SECTOR_KEY] %>
         <% age_group_answer = header["primary_age_group"] %>
         <%# Prefer the registrant's form answers; fall back to their profile data. %>
-        <% service_area_text = resolve_answer_text(service_area_answer&.form_field, service_area_answer&.submitted_answer).presence || person.sectors.map(&:name).join(", ").presence %>
+        <% sector_text = resolve_answer_text(sector_answer&.form_field, sector_answer&.submitted_answer).presence || person.sectors.map(&:name).join(", ").presence %>
         <% age_group_text = resolve_answer_text(age_group_answer&.form_field, age_group_answer&.submitted_answer).presence || person.categories.select { |c| c.category_type&.name == "AgeRange" }.map(&:name).join(", ").presence %>
         <%# The affiliation active at the time of the event, excluding facilitator roles. %>
         <% recipient_affiliations = person.affiliations.select { |a|
@@ -75,7 +76,17 @@
               the avatar stays blank). Calm palette: neutral name/org links, with
               the sector chips as the single accent. %>
           <% dp = person.decorate %>
-          <% has_sectors = person.sectors.any? %>
+          <%# Primary sector first (rendered as a darker-green crowned chip),
+              then the additional sectors alphabetically. %>
+          <% sectorable_items = person.sectorable_items_primary_first %>
+          <% has_sectors = sectorable_items.any? %>
+          <%# Primary age groups first (starred amber chips), then the additional
+              ones — matching the sector chips above. Falls back to the form
+              answer / profile text only when the person carries no tagged age
+              groups. %>
+          <% primary_age_groups = person.primary_age_groups.to_a %>
+          <% additional_age_groups = person.additional_age_groups.to_a %>
+          <% has_age_groups = primary_age_groups.any? || additional_age_groups.any? %>
           <div class="relative px-5 py-4 pr-12 <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:scholarships) %>">
             <button type="button" data-action="expandable-card#toggle"
                     aria-label="Toggle <%= person.name %> application"
@@ -114,22 +125,27 @@
                 </div>
 
                 <%# Serves / Ages — parallel with the name %>
-                <% if has_sectors || service_area_text.present? || age_group_text.present? %>
+                <% if has_sectors || sector_text.present? || has_age_groups || age_group_text.present? %>
                   <div class="flex flex-wrap items-center gap-x-8 gap-y-2">
                     <% if has_sectors %>
                       <div class="flex flex-wrap items-center gap-2">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Serves</span>
-                        <% person.sectors.sort_by(&:name).each do |sector| %>
-                          <%= render "sectors/tagging_label", sector: sector %>
+                        <% sectorable_items.each do |si| %>
+                          <%= render "sectors/tagging_label", sector: si.sector, is_primary: si.is_primary? %>
                         <% end %>
                       </div>
-                    <% elsif service_area_text.present? %>
+                    <% elsif sector_text.present? %>
                       <div class="text-sm text-gray-600">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Serves</span>
-                        <%= service_area_text %>
+                        <%= sector_text %>
                       </div>
                     <% end %>
-                    <% if age_group_text.present? %>
+                    <% if has_age_groups %>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Ages</span>
+                        <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
+                      </div>
+                    <% elsif age_group_text.present? %>
                       <div class="flex items-center gap-2">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Ages</span>
                         <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-medium text-gray-600"><%= age_group_text %></span>
@@ -146,13 +162,13 @@
               stays visible regardless of the card's expand/collapse state. %>
           <% scholarship = @dashboard.scholarship_by_recipient[person.id] %>
           <% if scholarship %>
-            <div class="hidden px-5 py-3 border-b <%= DomainTheme.border_class_for(:scholarships) %> bg-gray-50"
+            <div class="px-5 py-3 border-b <%= DomainTheme.border_class_for(:scholarships) %> bg-gray-50"
                  data-scholarship-status-toggle-target="status">
               <div class="flex flex-wrap items-center gap-3">
                 <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Scholarship</span>
                 <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900">
                   <i class="fa-solid fa-sack-dollar text-gray-400"></i>
-                  <%= number_to_currency(scholarship.amount_dollars) %>
+                  <%= dollars_from_cents(scholarship.amount_cents) %>
                 </span>
                 <% if scholarship.grant&.funder_name.present? %>
                   <span class="inline-flex items-center gap-1.5 text-sm text-gray-600">
@@ -161,6 +177,10 @@
                   </span>
                 <% end %>
                 <%= render "scholarships/tasks_status", scholarship: scholarship %>
+                <% if allowed_to?(:edit?, scholarship) %>
+                  <%= new_tab_link "Edit", edit_scholarship_path(scholarship, return_to: "recipients", participant: participant_slug),
+                              class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline" %>
+                <% end %>
               </div>
             </div>
           <% end %>
@@ -171,7 +191,7 @@
               <dl class="space-y-4">
                 <% answers.each do |answer| %>
                   <div>
-                    <dt class="text-sm font-semibold text-gray-800"><%= answer.question_name_when_answered.presence || answer.form_field&.name %></dt>
+                    <dt class="text-sm font-semibold text-gray-800"><%= display_question_label(answer.form_field, answer) %></dt>
                     <dd class="mt-1 text-sm text-gray-700 whitespace-pre-line"><%= resolve_answer_text(answer.form_field, answer.submitted_answer) %></dd>
                   </div>
                 <% end %>
@@ -190,23 +210,37 @@
     </div>
   <% end %>
 
-  <%# ---- Shout outs: recipients' organizations and their bios ---- %>
-  <% if @dashboard.scholarship_shoutouts.any? %>
+  <%# ---- Shout outs: registrants who opted in, with their shout-out text ---- %>
+  <% if @dashboard.shoutouts.any? %>
     <div class="mt-10 break-inside-avoid">
       <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
         <i class="fa-solid fa-bullhorn"></i>
-        Shout out scholarship programs
+        Shout outs
       </h2>
       <div class="bg-white border <%= DomainTheme.border_class_for(:scholarships) %> rounded-xl shadow-sm divide-y divide-gray-100">
-        <% @dashboard.scholarship_shoutouts.each do |shoutout| %>
+        <% @dashboard.shoutouts.each do |shoutout| %>
+          <% org_link_class = "text-sm font-semibold #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:#{DomainTheme.text_class_for(:scholarships)} hover:underline" %>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 px-5 py-4 break-inside-avoid">
+            <%# Organization on the left, linked to its website when it has one,
+                otherwise to its profile page. %>
             <div class="sm:col-span-1">
-              <%= link_to shoutout.organization.name, organization_path(shoutout.organization),
-                          class: "text-sm font-semibold #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:#{DomainTheme.text_class_for(:scholarships)} hover:underline" %>
+              <% if (organization = shoutout.organization) %>
+                <% website = organization.website_link_url %>
+                <% if website %>
+                  <%= link_to organization.name, website, target: "_blank", rel: "noopener noreferrer", class: org_link_class %>
+                <% else %>
+                  <%= link_to organization.name, organization_path(organization), class: org_link_class %>
+                <% end %>
+              <% end %>
             </div>
+            <%# Recipient name on the right, bold and linked to their profile, with
+                their primary sector and age group in parens, then their shout-out text. %>
             <div class="sm:col-span-2 text-sm text-gray-700">
-              <span class="font-semibold text-gray-900"><%= shoutout.recipient.name %></span>
-              — <%= shoutout.bio %>
+              <%= link_to shoutout.recipient.name, person_path(shoutout.recipient),
+                          class: "font-semibold text-gray-900 hover:underline" %>
+              <% meta = [ shoutout.sector, shoutout.age_group ].compact_blank %>
+              <% if meta.any? %><span class="text-gray-500">(<%= meta.join(", ") %>)</span><% end %>
+              — <%= shoutout.text %>
             </div>
           </div>
         <% end %>

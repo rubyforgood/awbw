@@ -1,0 +1,9 @@
+<%# Renders a form section header inside the 12-column form grid. locals: field %>
+<div class="md:col-span-12 pt-7 pb-4">
+  <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-purple-900">
+    <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
+  </h3>
+  <% if field.subtitle.present? %>
+    <p class="rich-label mt-1.5 text-sm text-gray-500"><%= form_label_html(field.subtitle) %></p>
+  <% end %>
+</div>

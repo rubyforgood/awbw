@@ -1,0 +1,49 @@
+<%# Centered event-details block shared by the reminder email and the admin
+    "reminder sent" FYI. Dates/times mirror the registration form details panel
+    (a single hyphenated range for multi-day events), rendered in the given time
+    zone. Locals: event (decorated), time_zone. %>
+<div style="text-align: center; background-color: #f3f4f6; border-radius: 6px; padding: 24px; margin: 16px 0;">
+  <% if event.respond_to?(:pre_title) && event.pre_title.present? %>
+    <p style="font-size: 14px; font-weight: 600; color: #374151; margin: 0 0 4px; font-family: 'Telefon Bold', sans-serif;">
+      <%= event.pre_title %>
+    </p>
+  <% end %>
+
+  <h2 style="font-size: 28px; font-weight: bold; color: #166534; margin: 0 0 16px; font-family: Lato, sans-serif;">
+    <%= event.title %>
+  </h2>
+
+  <% Time.use_zone(time_zone) do %>
+    <% if event_dates_detail_label(event.object).present? %>
+      <p style="font-size: 22px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 4px; font-family: Lato, sans-serif;">
+        <%= event_dates_detail_label(event.object) %>
+      </p>
+    <% end %>
+
+    <% if event_times_label(event.object).present? %>
+      <p style="font-size: 18px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
+        <%= event_times_label(event.object) %>
+      </p>
+    <% end %>
+  <% end %>
+
+  <% if event.labelled_cost.present? %>
+    <p style="font-size: 18px; font-weight: bold; color: #1e3a8c; text-transform: uppercase; margin: 0 0 8px; font-family: Lato, sans-serif;">
+      <%= event.labelled_cost %>
+    </p>
+  <% end %>
+
+  <% if event_location_label(event.object).present? %>
+    <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
+      <%= event_location_label(event.object) %>
+    </p>
+  <% end %>
+
+  <%# Virtual events show the event's label (e.g. "Zoom") as plain text — the
+      join link lives on the ticket/event pages, not in the reminder. %>
+  <% if event_platform_label(event.object).present? %>
+    <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
+      <%= event_platform_label(event.object) %>
+    </p>
+  <% end %>
+</div>

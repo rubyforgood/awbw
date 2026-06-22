@@ -37,6 +37,38 @@ RSpec.describe "/organizations", type: :request do
       get organizations_url
       expect(response).to be_successful
     end
+
+    it "shows single-letter program status badges per organization" do
+      create(:organization, name: "Brand New Org", organization_status: organization_status)
+
+      ongoing_org = create(:organization, name: "Ongoing Org", organization_status: organization_status)
+      create(:affiliation, organization: ongoing_org, person: create(:person), title: "Facilitator")
+
+      reinstate_org = create(:organization, name: "Reinstate Org", organization_status: organization_status)
+      create(:affiliation, organization: reinstate_org, person: create(:person), title: "Facilitator", end_date: 1.year.ago.to_date)
+
+      get organizations_url, headers: { "Turbo-Frame" => "organization_results" }
+
+      expect(response).to be_successful
+      page = Capybara.string(response.body)
+      expect(page).to have_css("span[title='New']", text: "N")
+      expect(page).to have_css("span[title='Ongoing']", text: "O")
+      expect(page).to have_css("span[title='Reinstated']", text: "R")
+    end
+
+    it "renders the results frame with deduped age groups from affiliated people" do
+      organization = Organization.create!(valid_attributes)
+      age_type = create(:category_type, name: "AgeRange", published: true)
+      teen = create(:category, :published, category_type: age_type, name: "13-17")
+      person = create(:person)
+      create(:affiliation, organization: organization, person: person)
+      person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+
+      get organizations_url, headers: { "Turbo-Frame" => "organization_results" }
+
+      expect(response).to be_successful
+      expect(response.body).to include("13-17")
+    end
   end
 
   describe "GET /show" do
@@ -67,6 +99,57 @@ RSpec.describe "/organizations", type: :request do
     end
   end
 
+  describe "sector displays" do
+    let!(:organization_with_sectors) do
+      affiliated_sector_1 = create(:sector, name: "Affiliated Sector 1")
+      affiliated_sector_2 = create(:sector, name: "Affiliated Sector 2")
+      person_1 = create(:person)
+      person_2 = create(:person)
+      create(:sectorable_item, sector: affiliated_sector_1, sectorable: person_1)
+      create(:sectorable_item, sector: affiliated_sector_2, sectorable: person_2)
+
+      org = create(:organization, organization_status: organization_status)
+      create(:sectorable_item, sector: create(:sector, name: "Direct Sector 1"), sectorable: org)
+      create(:sectorable_item, sector: create(:sector, name: "Direct Sector 2"), sectorable: org)
+      create(:affiliation, organization: org, person: person_1, position: :default)
+      create(:affiliation, organization: org, person: person_2, position: :default)
+      org
+    end
+
+    it "truncates sectors to the first 3 with a 'more' indicator on the show page" do
+      get organization_url(organization_with_sectors)
+
+      page = Capybara.string(response.body)
+      all_sector_names = organization_with_sectors.all_sectors.map(&:name).sort
+      expect(all_sector_names.length).to be > 3
+      all_sector_names.first(3).each { |name| expect(page).to have_content(name) }
+      expect(page).not_to have_content(all_sector_names[3])
+      expect(page).to have_content(/\+?[0-9]+ more|\.\.\./i)
+    end
+
+    it "lists all sectors with per-sector people counts on the populations served page" do
+      get populations_served_organization_url(organization_with_sectors)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_content("Sector Distribution")
+      expect(page).to have_content(organization_with_sectors.name)
+
+      organization_with_sectors.all_sectors.map(&:name).each do |name|
+        expect(page).to have_content(name)
+      end
+
+      people = organization_with_sectors.users.includes(person: :sectors).map(&:person).compact
+      expected_counts = Hash.new(0)
+      people.each do |person|
+        primary_sector = person.sectors.first
+        expected_counts[primary_sector.name] += 1 if primary_sector
+      end
+      expected_counts.each do |_sector_name, count|
+        expect(page).to have_content("#{count} #{count == 1 ? 'person' : 'people'}")
+      end
+    end
+  end
+
   describe "GET /new" do
     it "renders a successful response" do
       get new_organization_url
@@ -92,6 +175,17 @@ RSpec.describe "/organizations", type: :request do
       create(:monthly_report, organization: organization)
       get edit_organization_url(organization)
       expect(response.body).to include("Monthly reports")
+    end
+
+    it "shows the program status in the affiliations section" do
+      organization = Organization.create!(valid_attributes)
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator")
+
+      get edit_organization_url(organization)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_content("Program status")
+      expect(page).to have_css("span[title='Ongoing']", text: "O")
     end
   end
 
@@ -152,6 +246,25 @@ RSpec.describe "/organizations", type: :request do
         organization = Organization.create!(valid_attributes)
         patch organization_url(organization), params: { organization: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
+    context "linking an affiliation to an organization address" do
+      it "saves the chosen organization_address_id on the affiliation" do
+        organization = Organization.create!(valid_attributes)
+        address = create(:address, addressable: organization)
+        person = create(:person)
+        affiliation = create(:affiliation, organization: organization, person: person)
+
+        patch organization_url(organization), params: {
+          organization: {
+            affiliations_attributes: {
+              "0" => { id: affiliation.id, person_id: person.id, organization_address_id: address.id }
+            }
+          }
+        }
+
+        expect(affiliation.reload.organization_address_id).to eq(address.id)
       end
     end
   end

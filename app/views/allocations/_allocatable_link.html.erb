@@ -1,10 +1,11 @@
 <%# Polymorphic "Allocated to" cell for the allocations index — a clickable
     descriptor that works for any allocatable type, linking through when a route
     exists (e.g. an event registration jumps to its admin page). Locals:
-    allocation. ---%>
+    allocation; optional return_params appended to the linked path so the
+    destination can return to the origin (e.g. a bulk payment tray). ---%>
 <% allocatable = allocation.allocatable %>
 <% if allocatable %>
-  <% descriptor = allocatable_descriptor(allocatable) %>
+  <% descriptor = allocatable_descriptor(allocatable, return_params: local_assigns.fetch(:return_params, {})) %>
   <% if descriptor[:path] %>
     <%= link_to descriptor[:path], class: "group inline-flex max-w-xs items-center gap-1.5", data: { turbo_frame: "_top" } do %>
       <span class="min-w-0">

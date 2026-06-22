@@ -1,28 +1,47 @@
 class Sector < ApplicationRecord
   include NameFilterable, Publishable
+  # Canonical sector tags, in display order. "Other" is kept at the end
+  # as the catch-all free-text fallback for additional sectors (see
+  # OTHER_SECTOR_NAME below) — it isn't a selectable tag itself. Descriptions for
+  # these (the parenthetical clarifications) live in db/seeds.rb.
   SECTOR_TYPES = [
-    "Child Abuse",
-    "Community Oppression/Violence",
-    "Criminal/Legal",
-    "Disability",
+    "Batterers Intervention",
+    "Child Abuse/Neglect",
+    "Climate/Environmental",
+    "Community Building",
+    "Community Violence",
+    "Court/Legal System",
+    "Disability Services",
     "Domestic Violence",
-    "Education/Schools",
+    "Education",
     "Foster Care/Adoption",
-    "Homeless",
+    "Fundraising/Donor Engagement",
+    "Grief/Loss",
+    "Health/Medical",
+    "Homelessness",
     "Human Trafficking",
     "Immigration",
     "Incarceration",
     "Indigenous/Tribal Nation",
     "LGBTQIA+",
     "Mental Health",
-    "Reproductive",
+    "Military/Veterans",
+    "Private Practice/Sole Proprietor",
+    "Racial/Social Justice",
+    "Religious/Faith-Based",
+    "Reproductive Services",
     "Restorative/Transformative Justice",
+    "Self-Care/Personal Growth",
     "Sexual Assault",
-    "Student",
-    "Substance Use",
-    "Veterans & Military",
+    "Staff/Organizational Development",
+    "Substance Use/Recovery",
+    "Systems/Policy Change",
     "Other"
   ]
+
+  # The catch-all sector. Offered for "additional" sectors but not as a
+  # respondent's single "primary" sector.
+  OTHER_SECTOR_NAME = "Other"
 
   STORY_DISPLAY_TEXT = "Which sectors does this story fit into?"
   VIDEO_DISPLAY_TEXT = "Which sectors apply?"
@@ -44,7 +63,21 @@ class Sector < ApplicationRecord
   scope :sector_name, ->(sector_name) {
     sector_name.present? ? where("sectors.name LIKE ?", "%#{sector_name}%") : all }
   scope :sector_ids, ->(ids) { where(id: ids.to_s.split("-").map(&:to_i)) }
+  scope :sector_names_all, ->(names) do
+    return all if names.blank?
+    parsed = Array(names).flat_map { |n| n.to_s.split("--") }.map(&:strip).reject(&:blank?).map(&:downcase)
+    return all if parsed.empty?
+    where("LOWER(sectors.name) IN (?)", parsed)
+  end
+  scope :excluding_other, -> { where.not(name: OTHER_SECTOR_NAME) }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
+  scope :taggings_presence, ->(value) do
+    case value
+    when "with" then has_taggings
+    when "without" then where.missing(:sectorable_items)
+    else all
+    end
+  end
   scope :has_published_taggings, -> {
     subqueries = Tag::TAGGABLE_META.map do |_key, data|
       klass = data[:klass]
@@ -64,6 +97,7 @@ class Sector < ApplicationRecord
     filtered = filtered.sector_ids(params[:sector_ids]) if params[:sector_ids].present?
     filtered = filtered.published if params[:published] == "true"
     filtered = filtered.where(published: false) if params[:published] == "false"
+    filtered = filtered.taggings_presence(params[:has_taggings])
     filtered
   end
 

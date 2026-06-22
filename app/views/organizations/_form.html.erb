@@ -1,4 +1,4 @@
-<%= simple_form_for(@organization, html: { data: { controller: "affiliation-dates" } }) do |f| %>
+<%= simple_form_for(@organization, html: { data: { controller: "affiliation-dates affiliation-facilitator-warning" } }) do |f| %>
   <%= render 'shared/errors', resource: @organization if @organization.errors.any? %>
   <%= render "duplicate_organizations_warning" %>
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>
@@ -70,23 +70,24 @@
 
   <!-- Profile-specific Categories (e.g. Workshop Settings) -->
   <% if @org_categories_grouped.present? %>
+    <% primary_age_ids = @organization.primary_age_category_ids %>
     <div class="form-group space-y-4 mb-8">
+      <%# Ensures the primary-age param is always submitted so unchecking every
+          toggle clears the primary flags. %>
+      <%= hidden_field_tag "organization[primary_age_category_ids][]", "" %>
       <% @org_categories_grouped.each do |type, cats| %>
+        <% is_age = type.name == "AgeRange" %>
         <div class="font-semibold text-gray-700 mb-2"><%= type.display_label %></div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+          <% if is_age %>
+            <p class="text-sm text-gray-500 mb-3">Check every age group served, then mark the primary ones.</p>
+          <% end %>
           <div class="flex flex-wrap gap-3">
             <% cats.each do |category| %>
-              <% id = "organization_category_ids_#{category.id}" %>
-              <label for="<%= id %>"
-                     class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                <%= hidden_field_tag "organization[category_ids][]", "" %>
-                <%= check_box_tag "organization[category_ids][]",
-                                  category.id,
-                                  @organization.category_ids.include?(category.id),
-                                  id: id,
-                                  class: "h-4 w-4 text-blue-600 rounded" %>
-                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
-              </label>
+              <%= render "shared/category_checkbox", param_key: "organization", category: category,
+                         checked: @organization.category_ids.include?(category.id),
+                         is_age: is_age,
+                         primary_checked: is_age && primary_age_ids.include?(category.id) %>
             <% end %>
           </div>
         </div>
@@ -141,7 +142,7 @@
       <%= f.input :website_url,
                   label: "Website URL #{website_warning}".html_safe,
                   as: :string,
-                  hint: "Enter full URL: https:// or http://".html_safe,
+                  hint: "Invalid URLs won't be clickable in Portal".html_safe,
                   wrapper_html: { id: "website-url-field" },
                   input_html: {
                     class: "rounded-md #{"bg-red-200" if website_warning.present? } border-gray-300
@@ -246,7 +247,7 @@
     </div>
   </div>
 
-  <div class="form-group space-y-4 mb-8">
+  <div id="affiliations" class="form-group space-y-4 mb-8 scroll-mt-20">
     <div class="font-semibold text-gray-700 mb-2">
       Affiliations
     </div>
@@ -309,6 +310,18 @@
           </div>
           <div class="pt-1">
             <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><% if org_fac_ended %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active facilitator affiliations"></i><% end %><%= org_fac_start&.strftime("%b %Y") || "—" %><%= " – #{org_fac_ended.strftime('%b %Y')}" if org_fac_ended %></span>
+          </div>
+        </div>
+        <div class="shrink-0 relative group cursor-help">
+          <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
+            Program status <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
+          </label>
+          <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
+            <p><span class="font-medium">New</span> — no facilitator affiliations yet. <span class="font-medium">Ongoing</span> — has an active facilitator. <span class="font-medium">Reinstate</span> — had facilitators but all have ended.</p>
+          </div>
+          <div class="pt-1 flex items-center gap-2">
+            <%= org_decorated.program_status_badge %>
+            <span class="text-gray-900 font-medium"><%= f.object.program_status %></span>
           </div>
         </div>
       </div>

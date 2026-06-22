@@ -20,7 +20,7 @@
       <dl class="space-y-3">
         <% @scholarship_answers.each do |field, response| %>
           <div>
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400"><%= field.name %></dt>
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400"><%= display_question_label(field, response) %></dt>
             <dd class="mt-0.5 text-sm text-gray-900 whitespace-pre-line"><%= display_response_text(field, response) %></dd>
           </div>
         <% end %>

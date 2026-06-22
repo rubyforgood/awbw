@@ -10,9 +10,13 @@ class EventRegistration < ApplicationRecord
   has_many :allocations, as: :allocatable
   has_many :scholarships, -> { distinct },
     through: :allocations, source: :source, source_type: "Scholarship"
+  has_many :checklist_completions, class_name: "EventRegistrationChecklistCompletion", dependent: :destroy
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, reject_if: proc { |attrs| attrs["email_subject"].blank? }
+  # Lets the registration edit form edit the registrant's shout-out text (which
+  # lives on the Person) inline, alongside the registration's own shout-out flag.
+  accepts_nested_attributes_for :registrant
 
   before_create :generate_slug
   after_create :snapshot_registrant_organizations
@@ -22,11 +26,29 @@ class EventRegistration < ApplicationRecord
   INACTIVE_STATUSES = %w[ cancelled no_show ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
 
+  # Manual onboarding checklist steps shown on the event's Onboarding tab. Each is
+  # an audited boolean (stored as a row in event_registration_checklist_completions,
+  # capturing who completed it and when). The keys double as the param/column keys
+  # the toggle endpoint accepts. Adding/removing a step here needs no migration.
+  CHECKLIST_STEPS = {
+    "set_up_in_mailchimp" => "Mailchimp",
+    "set_up_in_cms" => "CMS"
+  }.freeze
+
+  # Per-day attendance booleans on event_registrations. Plain (un-audited) columns,
+  # only the first event.day_count of them are shown on the Onboarding tab.
+  DAY_FIELDS = (1..5).map { |day| "completed_day_#{day}" }.freeze
+
+  # Default price the registrant owes per requested continuing-education hour.
+  # The CE summary on the registration form multiplies it by ce_hours_requested.
+  CE_HOURLY_RATE_DOLLARS = 25
+
   # Validations
   validates :registrant_id, uniqueness: { scope: :event_id }
   validates :event_id, presence: true
   validates :status, inclusion: { in: ATTENDANCE_STATUSES }, allow_nil: false
   validates :slug, uniqueness: true, allow_nil: true
+  validates :ce_hours_requested, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   # Scopes
   scope :registrant_name, ->(registrant_name) { joins(:registrant).where(
@@ -37,6 +59,7 @@ class EventRegistration < ApplicationRecord
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
+  scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
   scope :attendance_status, ->(status) { where(status: status) }
   scope :registrant_state, ->(state) {
@@ -119,6 +142,7 @@ class EventRegistration < ApplicationRecord
     case value
     when "paid" then paid_in_full
     when "unpaid" then not_paid_in_full
+    when "intends_to_pay" then where(intends_to_pay: true)
     else all
     end
   }
@@ -179,8 +203,41 @@ class EventRegistration < ApplicationRecord
     paid_in_full?
   end
 
+  # True when the registrant should be granted access to ticket materials
+  # (training links, etc.) even though they haven't paid in full yet. Admins
+  # flip the `intends_to_pay` flag when someone commits to paying after the
+  # deadline so they aren't locked out in the meantime. This does NOT mark the
+  # registration as paid — payment status still shows as due.
+  #
+  # This is the single seam for "may this registrant reach paid content?":
+  # any payment-gated resource (the videoconference join link today, recordings
+  # or downloads in the future) should gate on this, NOT on `paid?`. Reporting
+  # surfaces (rosters, CSV exports, dashboard metrics) must keep using `paid?` /
+  # `paid_in_full?` so they still reflect the real balance owed.
+  def payment_access_granted?
+    paid? || intends_to_pay?
+  end
+
+  # Human-readable payment status for rosters and CSV exports. Assumes the event
+  # has a cost — callers show nothing for free events.
+  def payment_status_label
+    return "Paid" if paid_in_full?
+    return "Intends to pay" if intends_to_pay?
+    "Due"
+  end
+
   def scholarship?
     scholarships.exists?
+  end
+
+  # Noun phrase distinguishing a scholarship-requested registration from a
+  # standard one in email subjects and notification labels (e.g.
+  # "event scholarship registration" vs "event registration"). Driven by the
+  # `scholarship_requested` flag, which is set at registration time, so it's
+  # reliable when the confirmation email goes out (before any Scholarship
+  # record exists).
+  def registration_subject_noun
+    scholarship_requested? ? "event scholarship registration" : "event registration"
   end
 
   def scholarship_tasks_met?
@@ -188,7 +245,28 @@ class EventRegistration < ApplicationRecord
     scholarships.all?(&:tasks_completed?)
   end
 
+  def attended?
+    status == "attended"
+  end
+
+  # True once the registrant has earned Facilitator Portal access: they completed
+  # both training days (attended) and paid their training fee. Stays false (greying
+  # the portal callout) until then.
+  def portal_access?
+    attended? && paid_in_full?
+  end
+
+  # The certificate of completion unlocks once the training has happened, the
+  # registrant attended, and any scholarship tasks are complete.
+  def certificate_available?
+    event.end_date.present? && event.end_date.past? && attended? && scholarship_tasks_met?
+  end
+
+  # These read from the loaded `allocations` association so callers that preload
+  # it (e.g. the registrants roster and onboarding matrix) pay no per-row queries;
+  # callers that don't load the association once and reuse it across these methods.
   def allocations_sum
+    return allocations.to_a.sum(&:amount) if allocations.loaded?
     allocations.sum(:amount)
   end
 
@@ -202,6 +280,7 @@ class EventRegistration < ApplicationRecord
   end
 
   def payments_sum
+    return allocations.to_a.select { |a| a.source_type == Payment.polymorphic_name }.sum(&:amount) if allocations.loaded?
     allocations.where(source_type: Payment.polymorphic_name).sum(:amount)
   end
 
@@ -209,8 +288,43 @@ class EventRegistration < ApplicationRecord
     !paid_in_full? && payments_sum.to_i.positive?
   end
 
+  def discounted?
+    return allocations.to_a.any? { |a| a.source_type == "Discount" } if allocations.loaded?
+    allocations.where(source_type: "Discount").exists?
+  end
+
+  # Total comp/discount coverage (excludes payments and scholarships).
+  def discount_sum
+    return allocations.to_a.select { |a| a.source_type == "Discount" }.sum(&:amount) if allocations.loaded?
+    allocations.where(source_type: "Discount").sum(:amount)
+  end
+
+  # True when the registrant has supplied a CE license number.
+  def ce_license_provided?
+    ce_license_number.present?
+  end
+
+  # What the registrant owes for their requested CE hours, in cents, at the
+  # default hourly rate. Zero when no hours were requested.
+  def ce_amount_owed_cents
+    ce_hours_requested.to_i * CE_HOURLY_RATE_DOLLARS * 100
+  end
+
   def joinable?
-    active? && paid?
+    active? && payment_access_granted? && event.videoconference_window_open?
+  end
+
+  # Bucket the registrant's login account into one of four states for the bulk
+  # reminder filters. Precedence matters: a confirmed, unlocked, active account
+  # has access regardless of when it was invited; a still-pending account counts
+  # as "invited" only while it hasn't gained access. Returns one of
+  # "none", "has_access", "invited", "no_access".
+  def account_status
+    account = registrant&.user
+    return "none" if account.nil?
+    return "has_access" if account.has_access?
+    return "invited" if account.welcome_instructions_sent_at.present?
+    "no_access"
   end
 
   def attendance_status_label
@@ -223,6 +337,34 @@ class EventRegistration < ApplicationRecord
     when "no_show" then "No show"
     else status.humanize
     end
+  end
+
+  # The completion record for a checklist step, or nil. Reads from the loaded
+  # association so the Onboarding matrix can preload completions and avoid N+1.
+  def checklist_completion_for(step)
+    checklist_completions.detect { |completion| completion.step == step.to_s }
+  end
+
+  def checklist_step_completed?(step)
+    checklist_completion_for(step).present?
+  end
+
+  def day_completed?(day)
+    DAY_FIELDS.include?("completed_day_#{day}") && public_send("completed_day_#{day}")
+  end
+
+  # Program status(es) for THIS registration only: classify each organization
+  # linked to the registration as of the training date (the 1st of the event's
+  # month), excluding the registrant's own facilitator affiliation to that org so
+  # the status reflects whether the *org* was already a facilitator program when
+  # they joined. Distinct, so one linked org shows one badge — unlike the
+  # registrant-wide rollup, this ignores affiliations to other organizations.
+  def program_statuses
+    reference_date = (event&.start_date&.to_date || Date.current).beginning_of_month
+    organizations.filter_map do |organization|
+      own = registrant.affiliations.find { |affiliation| affiliation.organization_id == organization.id && affiliation.facilitator? }
+      organization.facilitator_status_on(reference_date, excluding_affiliation_id: own&.id)
+    end.uniq
   end
 
   remote_searchable_by :registrant,

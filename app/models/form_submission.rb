@@ -1,16 +1,36 @@
 class FormSubmission < ApplicationRecord
   belongs_to :person
   belongs_to :form
+  belongs_to :event, optional: true
   has_many :form_answers, dependent: :destroy
-  has_many :payments
+  has_one :payment
 
   accepts_nested_attributes_for :form_answers
 
-  # The event this submission belongs to, resolved through the join role that
-  # matches the submission's own role (e.g. a "bulk_payment" submission maps to
-  # the event_form with role "bulk_payment").
-  def event
-    form.events.find_by(event_forms: { role: role })
+  scope :bulk_payment, -> { where(role: "bulk_payment") }
+
+  validates :slug, uniqueness: true, allow_nil: true
+
+  # Bulk payment submissions are reachable by their payer (who has no account)
+  # through a public, slug-based ticket URL. Other roles are reached by id.
+  before_create :generate_slug, if: :bulk_payment?
+
+  def self.generate_unique_slug
+    loop do
+      slug = SecureRandom.urlsafe_base64(16)
+      break slug unless exists?(slug: slug)
+    end
+  end
+
+  def bulk_payment?
+    role == "bulk_payment"
+  end
+
+  # The event this submission belongs to: the directly stored one, or — for
+  # submissions created before event_id existed — resolved through the form's
+  # matching join role.
+  def resolved_event
+    event || form.events.find_by(event_forms: { role: role })
   end
 
   # Answers keyed by their field's identifier. Bulk payment (and similar) forms
@@ -32,5 +52,24 @@ class FormSubmission < ApplicationRecord
     parsed.is_a?(Array) ? parsed : []
   rescue JSON::ParserError
     []
+  end
+
+  # Number of attendees the payer submitted, falling back to the size of the
+  # attendees list when an explicit count is absent.
+  def bulk_payment_attendee_count
+    count = answers_by_identifier["number_of_attendees"].to_i
+    count.positive? ? count : bulk_payment_attendees.size
+  end
+
+  # Expected total for the submission (event cost times attendee count), so the
+  # amount can be shown even before a payment record lands.
+  def bulk_payment_amount_cents(event)
+    event.cost_cents.to_i * bulk_payment_attendee_count
+  end
+
+  private
+
+  def generate_slug
+    self.slug ||= self.class.generate_unique_slug
   end
 end

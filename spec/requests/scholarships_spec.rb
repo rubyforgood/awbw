@@ -24,10 +24,10 @@ RSpec.describe "Scholarships", type: :request do
 
       expect(response.body).to include("scholarship-preview")
       expect(response.body).to include("scholarship-preview-target=\"amountBox\"")
-      # Tasks completed → the $50.00 amount is allocated to the registration.
-      expect(response.body).to include("$50.00 allocated to registration")
-      # Event cost $100.00 with $50.00 allocated leaves $50.00 owed.
-      expect(response.body).to include("$50.00")
+      # Tasks completed → the $50 amount is allocated to the registration.
+      expect(response.body).to include("$50 allocated to registration")
+      # Event cost $100 with $50 allocated leaves $50 owed.
+      expect(response.body).to include("$50")
     end
 
     it "renders the scholarship amount field with a non-negative minimum" do
@@ -101,6 +101,15 @@ RSpec.describe "Scholarships", type: :request do
     end
   end
 
+  describe "PATCH /scholarships/:id from the recipients page Edit link" do
+    it "returns to the recipients page, scrolled to the participant card" do
+      patch scholarship_path(scholarship, return_to: "recipients", participant: registration.slug),
+            params: { scholarship: { amount_dollars: "40" } }
+
+      expect(response).to redirect_to(recipients_event_path(event, anchor: "participant-#{registration.slug}"))
+    end
+  end
+
   describe "POST /scholarships from the registration Add link" do
     it "returns to the event registration edit page on create (symmetric with View)" do
       expect {
@@ -109,6 +118,39 @@ RSpec.describe "Scholarships", type: :request do
       }.to change(Scholarship, :count).by(1)
 
       expect(response).to redirect_to(edit_event_registration_path(registration))
+    end
+  end
+
+  describe "back link follows the page the user came from" do
+    it "links the new page back to the registrants roster when return_to=registrants" do
+      get new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants")
+
+      expect(response.body).to include("href=\"#{registrants_event_path(event)}\"")
+      expect(response.body).not_to include("href=\"#{edit_event_registration_path(registration)}\"")
+    end
+
+    it "links the new page back to the registration when return_to=registration" do
+      get new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registration")
+
+      expect(response.body).to include("href=\"#{edit_event_registration_path(registration)}\"")
+    end
+
+    it "links the edit page back to the registrants roster when return_to=registrants" do
+      get edit_scholarship_path(scholarship, return_to: "registrants")
+
+      expect(response.body).to include("href=\"#{registrants_event_path(event)}\"")
+    end
+
+    it "links the edit page back to the registration when return_to=registration" do
+      get edit_scholarship_path(scholarship, return_to: "registration")
+
+      expect(response.body).to include("href=\"#{edit_event_registration_path(registration)}\"")
+    end
+
+    it "links the edit page back to the recipients page when return_to=recipients" do
+      get edit_scholarship_path(scholarship, return_to: "recipients", participant: registration.slug)
+
+      expect(response.body).to include("href=\"#{recipients_event_path(event, anchor: "participant-#{registration.slug}")}\"")
     end
   end
 
@@ -152,6 +194,12 @@ RSpec.describe "Scholarships", type: :request do
 
       expect(response).to redirect_to(registrants_event_path(event))
       expect(flash[:notice]).to eq("Scholarship removed.")
+    end
+
+    it "returns to the recipients page when deleted from there" do
+      delete scholarship_path(scholarship, return_to: "recipients", participant: registration.slug)
+
+      expect(response).to redirect_to(recipients_event_path(event, anchor: "participant-#{registration.slug}"))
     end
   end
 
@@ -200,6 +248,64 @@ RSpec.describe "Scholarships", type: :request do
         expect(response).to redirect_to(root_path)
         expect(scholarship.reload.tasks_completed?).to be(true)
       end
+    end
+  end
+end
+
+RSpec.describe "GET /scholarships (index)", type: :request do
+  let(:admin) { create(:user, :admin) }
+
+  describe "authorization" do
+    it "redirects non-admins away from the index" do
+      sign_in create(:user)
+      get scholarships_path
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
+  context "as an admin" do
+    before { sign_in admin }
+
+    it "renders a grid grouped by funder and grant, with each derived column" do
+      org = create(:organization, name: "Prevail")
+      create(:address, addressable: org, city: "Stockton", state: "CA")
+      recipient = create(:person, first_name: "Carmen", last_name: "Gomez")
+      create(:affiliation, person: recipient, organization: org, title: "Facilitator")
+      training = create(:event, title: "TAC251", facilitator_training: true)
+      create(:event_registration, registrant: recipient, event: training, status: "attended")
+
+      donor = create(:organization, name: "JDI Foundation")
+      grant = create(:grant, name: "JDI", donor: donor, amount_cents: 1_000_000)
+      create(:scholarship, grant: grant, recipient: recipient, amount_cents: 150_000)
+
+      get scholarships_path
+
+      expect(response).to be_successful
+      expect(response.body).to include("JDI Foundation")  # funder group
+      expect(response.body).to include("JDI")             # grant group
+      expect(response.body).to include("Carmen Gomez")    # recipient
+      expect(response.body).to include("Prevail")         # program (org via facilitator affiliation)
+      expect(response.body).to include("Stockton, CA")    # program location
+      expect(response.body).to include("TAC251")          # attended facilitator training
+      expect(response.body).to include("New")             # program status — first facilitator for the org
+    end
+
+    it "collects grant-free scholarships under an Unfunded group" do
+      create(:scholarship, grant: nil, recipient: create(:person, first_name: "Jane", last_name: "Doe"))
+
+      get scholarships_path
+
+      expect(response.body).to include("Unfunded")
+      expect(response.body).to include("Jane Doe")
+    end
+
+    it "links a grant group's grant back to the scholarship index via from_scholarships" do
+      grant = create(:grant, name: "Marisla")
+      create(:scholarship, grant: grant)
+
+      get scholarships_path
+
+      expect(response.body).to include(grant_path(grant, from_scholarships: true))
     end
   end
 end

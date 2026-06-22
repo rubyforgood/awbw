@@ -22,11 +22,61 @@ RSpec.describe Organization do
     it { should allow_value("").for(:email) }
     it { should allow_value(nil).for(:email) }
     it { should_not allow_value("not-an-email").for(:email).with_message("must be a valid email address") }
+
+    it "stores the website_url verbatim without requiring a scheme" do
+      org = build(:organization, website_url: "awbw.org")
+      org.valid?
+      expect(org.errors[:website_url]).to be_empty
+      expect(org.website_url).to eq("awbw.org")
+    end
+  end
+
+  describe "#website_link_url" do
+    it "prepends https:// to a bare domain" do
+      org = build(:organization, website_url: "awbw.org")
+      expect(org.website_link_url).to eq("https://awbw.org")
+    end
+
+    it "leaves an existing scheme unchanged" do
+      org = build(:organization, website_url: "http://awbw.org")
+      expect(org.website_link_url).to eq("http://awbw.org")
+    end
+
+    it "trims surrounding whitespace" do
+      org = build(:organization, website_url: "  awbw.org  ")
+      expect(org.website_link_url).to eq("https://awbw.org")
+    end
+
+    it "is nil when blank" do
+      expect(build(:organization, website_url: "").website_link_url).to be_nil
+      expect(build(:organization, website_url: nil).website_link_url).to be_nil
+    end
+
+    it "is nil when the value can't form a usable web address" do
+      expect(build(:organization, website_url: "not a url").website_link_url).to be_nil
+    end
   end
 
   it 'is valid with valid attributes' do
     # Note: Factory needs associations uncommented for create
     # expect(build(:organization)).to be_valid
+  end
+
+  describe "#city_state" do
+    it "joins locality and state with a comma" do
+      org = create(:organization)
+      org.addresses.destroy_all
+      create(:address, addressable: org, locality: "Los Angeles", state: "CA")
+
+      expect(org.reload.city_state).to eq("Los Angeles, CA")
+    end
+
+    it "omits the comma when there is no locality or state" do
+      org = create(:organization)
+      org.addresses.destroy_all
+
+      expect(org.reload.city_state).to eq("")
+    end
   end
 
   describe '#facilitator_status' do
@@ -60,6 +110,33 @@ RSpec.describe Organization do
       create(:affiliation, organization: organization, title: "Volunteer",
              start_date: Date.new(2020, 1, 1), end_date: nil)
       expect(organization.facilitator_status(current)).to eq(:new)
+    end
+  end
+
+  describe '#facilitator_status_on' do
+    let(:organization) { create(:organization) }
+    let(:reference_date) { Date.new(2026, 1, 1) }
+
+    it 'is :new when the org has no facilitator affiliation before the date' do
+      expect(organization.facilitator_status_on(reference_date)).to eq(:new)
+    end
+
+    it 'is :ongoing when an earlier facilitator affiliation is still active on the date' do
+      create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2024, 1, 1), end_date: nil)
+      expect(organization.facilitator_status_on(reference_date)).to eq(:ongoing)
+    end
+
+    it 'is :reinstated when all earlier facilitator affiliations ended before the date' do
+      create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2022, 1, 1), end_date: Date.new(2023, 1, 1))
+      expect(organization.facilitator_status_on(reference_date)).to eq(:reinstated)
+    end
+
+    it 'can exclude a specific affiliation from the classification' do
+      own = create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2020, 1, 1), end_date: nil)
+      expect(organization.facilitator_status_on(reference_date, excluding_affiliation_id: own.id)).to eq(:new)
     end
   end
 
@@ -183,6 +260,108 @@ RSpec.describe Organization do
         expect(results).to include(active_org)
         expect(results).not_to include(inactive_org)
       end
+    end
+  end
+
+  describe "age groups served" do
+    let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+    let!(:young) { create(:category, :published, category_type: age_type, name: "3-5") }
+    let!(:teen) { create(:category, :published, category_type: age_type, name: "13-17") }
+    let!(:adult) { create(:category, :published, category_type: age_type, name: "18+") }
+    let(:organization) { create(:organization) }
+    let(:person_a) { create(:person) }
+    let(:person_b) { create(:person) }
+
+    before do
+      create(:affiliation, organization: organization, person: person_a)
+      create(:affiliation, organization: organization, person: person_b)
+    end
+
+    it "aggregates and dedupes age groups across affiliated people and the org itself" do
+      organization.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [])
+      person_a.tag_age_groups(primary_ids: [ young.id ], additional_ids: [ teen.id ])
+      person_b.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
+
+      expect(organization.all_primary_age_groups).to contain_exactly(young, adult)
+      expect(organization.all_additional_age_groups).to contain_exactly(teen)
+    end
+
+    it "treats a group that is primary for any member as primary, never additional" do
+      person_a.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      person_b.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
+
+      expect(organization.all_primary_age_groups).to contain_exactly(teen)
+      expect(organization.all_additional_age_groups).to be_empty
+    end
+  end
+end
+
+RSpec.describe Organization, "scholarship index helpers" do
+  describe "#program_location" do
+    it "returns the City, State of the first active address" do
+      org = create(:organization)
+      create(:address, addressable: org, city: "Stockton", state: "CA")
+
+      expect(org.program_location).to eq("Stockton, CA")
+    end
+
+    it "is nil without an active address" do
+      expect(create(:organization).program_location).to be_nil
+    end
+  end
+
+  describe "#program_status" do
+    let(:org) { create(:organization) }
+    let(:recipient) { create(:person) }
+
+    it "is New when the recipient is the org's only facilitator" do
+      create(:affiliation, person: recipient, organization: org, title: "Facilitator")
+
+      expect(org.reload.program_status(recipient)).to eq("New")
+    end
+
+    it "is Ongoing when another facilitator already serves the org" do
+      create(:affiliation, person: recipient, organization: org, title: "Facilitator")
+      create(:affiliation, person: create(:person), organization: org, title: "Facilitator")
+
+      expect(org.reload.program_status(recipient)).to eq("Ongoing")
+    end
+
+    it "is Reinstate when the org's facilitator affiliations have all lapsed" do
+      create(:affiliation, person: recipient, organization: org, title: "Facilitator", end_date: 1.year.ago.to_date)
+
+      expect(org.reload.program_status(recipient)).to eq("Reinstate")
+    end
+
+    it "is New when the org has no facilitator affiliations" do
+      expect(org.program_status(recipient)).to eq("New")
+    end
+  end
+
+  describe ".program_statuses_by_id" do
+    it "buckets each org by facilitator history, keyed by id" do
+      new_org = create(:organization)
+
+      ongoing_org = create(:organization)
+      create(:affiliation, organization: ongoing_org, person: create(:person), title: "Facilitator")
+
+      reinstate_org = create(:organization)
+      create(:affiliation, organization: reinstate_org, person: create(:person), title: "Facilitator", end_date: 1.year.ago.to_date)
+
+      ids = [ new_org.id, ongoing_org.id, reinstate_org.id ]
+
+      expect(Organization.program_statuses_by_id(ids)).to eq(
+        new_org.id => :new,
+        ongoing_org.id => :ongoing,
+        reinstate_org.id => :reinstated
+      )
+    end
+
+    it "treats a non-facilitator affiliation as New" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Member")
+
+      expect(Organization.program_statuses_by_id([ org.id ])).to eq(org.id => :new)
     end
   end
 end

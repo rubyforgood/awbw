@@ -26,6 +26,7 @@ class Notification < ApplicationRecord
     event_registration_confirmation_fyi
     event_registration_cancelled
     event_registration_cancelled_fyi
+    event_registration_reminder
     bulk_payment_confirmation
     bulk_payment_confirmation_fyi
     idea_submitted
@@ -71,15 +72,19 @@ class Notification < ApplicationRecord
   EMAIL_TOPICS = [
     [ "Admin FYI (all)", "[FYI]" ],
     [ "Admin FYI: event registration confirmed", "[FYI] New event registration" ],
+    [ "Admin FYI: event scholarship registration confirmed", "[FYI] New event scholarship registration" ],
     [ "Admin FYI: event registration cancelled", "[FYI] Event registration cancelled" ],
+    [ "Admin FYI: event scholarship registration cancelled", "[FYI] Event scholarship registration cancelled" ],
     [ "Admin FYI: bulk payment", "[FYI] New bulk payment" ],
     [ "Admin FYI: idea submitted", "submission by" ],
     [ "Admin FYI: password reset", "[FYI] New password reset" ],
     [ "Admin FYI: workshop log submission", "New WorkshopLog submission" ],
     [ "Admin FYI: contact form submission", "contact form submission" ],
     [ "Contact: form confirmation", "We received your message" ],
-    [ "Event: event registration cancelled", "Event registration cancelled" ],
-    [ "Event: event registration confirmed", "Event registration confirmed" ],
+    [ "Event registration cancelled", "Event registration cancelled" ],
+    [ "Event scholarship registration cancelled", "Event scholarship registration cancelled" ],
+    [ "Event registration received", "Event registration received" ],
+    [ "Event scholarship registration received", "Event scholarship registration received" ],
     [ "Bulk payment: confirmation", "Bulk payment received" ],
     [ "Idea: confirmation (all)", "has been received" ],
     [ "Idea: confirmation: workshop log", "workshop log has been received" ],

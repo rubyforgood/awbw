@@ -383,4 +383,94 @@ RSpec.describe Person, type: :model do
       expect(Person.published).not_to include(not_searchable_with_active)
     end
   end
+
+  describe "Other form responses" do
+    let(:person) { create(:person) }
+    let(:form) { create(:form) }
+    let(:submission) { create(:form_submission, person: person, form: form) }
+
+    def answer(identifier, value)
+      field = create(:form_field, form: form, field_identifier: identifier)
+      create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+    end
+
+    describe "#other_sector_responses" do
+      # Exercises the legacy "service area" field identifiers on purpose — they
+      # must still resolve via FormField::SECTOR_FIELD_IDENTIFIERS.
+      it "returns free-text Other values from primary sector fields" do
+        answer("primary_service_area", "5, Other: Equine therapy")
+        answer("primary_service_area_single", "Other: Music therapy")
+
+        expect(person.other_sector_responses).to contain_exactly("Equine therapy", "Music therapy")
+      end
+
+      it "ignores answers without an Other value" do
+        answer("primary_service_area", "5, 12")
+
+        expect(person.other_sector_responses).to be_empty
+      end
+
+      it "does not pull from unrelated fields" do
+        answer("primary_age_group", "Other: School")
+
+        expect(person.other_sector_responses).to be_empty
+      end
+    end
+
+    describe "#other_workshop_setting_responses" do
+      it "returns free-text Other values from the category-backed fields" do
+        answer("primary_age_group", "3, Other: Toddlers")
+
+        expect(person.other_workshop_setting_responses)
+          .to contain_exactly("Toddlers")
+      end
+
+      it "does not pull from the service area fields" do
+        answer("primary_service_area", "Other: Equine therapy")
+
+        expect(person.other_workshop_setting_responses).to be_empty
+      end
+    end
+  end
+end
+
+RSpec.describe Person, "scholarship index helpers" do
+  let(:person) { create(:person) }
+
+  describe "#program_organization" do
+    it "returns the organization on the recipient's facilitator affiliation" do
+      org = create(:organization, name: "Prevail")
+      create(:affiliation, person: person, organization: org, title: "Facilitator")
+
+      expect(person.program_organization).to eq(org)
+    end
+
+    it "prefers an active facilitator affiliation over a lapsed one" do
+      lapsed_org = create(:organization, name: "Old Program")
+      active_org = create(:organization, name: "Current Program")
+      create(:affiliation, person: person, organization: lapsed_org, title: "Facilitator", end_date: 1.year.ago.to_date)
+      create(:affiliation, person: person, organization: active_org, title: "Facilitator")
+
+      expect(person.program_organization).to eq(active_org)
+    end
+
+    it "ignores non-facilitator affiliations" do
+      create(:affiliation, person: person, organization: create(:organization), title: "Board Member")
+
+      expect(person.program_organization).to be_nil
+    end
+  end
+
+  describe "#completed_facilitator_trainings" do
+    it "returns only attended facilitator-training events" do
+      training = create(:event, title: "TAC251", facilitator_training: true)
+      other_training = create(:event, title: "TAC252", facilitator_training: true)
+      non_training = create(:event, title: "Webinar", facilitator_training: false)
+      create(:event_registration, registrant: person, event: training, status: "attended")
+      create(:event_registration, registrant: person, event: other_training, status: "registered")
+      create(:event_registration, registrant: person, event: non_training, status: "attended")
+
+      expect(person.completed_facilitator_trainings).to contain_exactly(training)
+    end
+  end
 end

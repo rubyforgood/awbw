@@ -197,6 +197,18 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#registration_subject_noun" do
+    it "returns the scholarship phrase when a scholarship was requested" do
+      reg = create(:event_registration, scholarship_requested: true)
+      expect(reg.registration_subject_noun).to eq("event scholarship registration")
+    end
+
+    it "returns the plain phrase when no scholarship was requested" do
+      reg = create(:event_registration, scholarship_requested: false)
+      expect(reg.registration_subject_noun).to eq("event registration")
+    end
+  end
+
   describe "#scholarship_tasks_met?" do
     it "returns true when no scholarship exists" do
       reg = create(:event_registration)
@@ -219,7 +231,7 @@ RSpec.describe EventRegistration, type: :model do
   end
 
   describe "#joinable?" do
-    let(:event) { create(:event, cost_cents: 1099) }
+    let(:event) { create(:event, cost_cents: 1099, start_date: 1.hour.ago, end_date: 1.hour.from_now) }
     let(:user) { create(:user, :with_person) }
 
     it "returns true for active, paid, non-scholarship registration" do
@@ -256,9 +268,21 @@ RSpec.describe EventRegistration, type: :model do
     end
 
     it "returns true for free event with active registration" do
-      free_event = create(:event, cost_cents: 0)
+      free_event = create(:event, cost_cents: 0, start_date: 1.hour.ago, end_date: 1.hour.from_now)
       reg = create(:event_registration, event: free_event, registrant: user.person)
       expect(reg).to be_joinable
+    end
+
+    it "returns false when the event has not entered the join window yet" do
+      upcoming = create(:event, cost_cents: 0, start_date: 31.minutes.from_now, end_date: 2.hours.from_now)
+      reg = create(:event_registration, event: upcoming, registrant: user.person)
+      expect(reg).not_to be_joinable
+    end
+
+    it "returns false once the event's join window has closed" do
+      finished = create(:event, cost_cents: 0, start_date: 2.hours.ago, end_date: 31.minutes.ago)
+      reg = create(:event_registration, event: finished, registrant: user.person)
+      expect(reg).not_to be_joinable
     end
 
     it "returns true for partial scholarship + partial payment covering full cost" do
@@ -277,6 +301,50 @@ RSpec.describe EventRegistration, type: :model do
       payment = create(:payment, person: user.person, amount_cents: 100, amount_cents_remaining: nil)
       create(:allocation, source: payment, allocatable: reg, amount: 100)
       expect(reg).not_to be_joinable
+    end
+
+    it "returns true for an unpaid registration flagged intends_to_pay" do
+      reg = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      expect(reg).not_to be_paid_in_full
+      expect(reg).to be_joinable
+    end
+
+    it "returns false for an unpaid, cancelled registration even when intends_to_pay" do
+      reg = create(:event_registration, event: event, registrant: user.person, status: "cancelled", intends_to_pay: true)
+      expect(reg).not_to be_joinable
+    end
+  end
+
+  describe "#payment_access_granted?" do
+    let(:event) { create(:event, cost_cents: 1099) }
+    let(:user) { create(:user, :with_person) }
+
+    it "is true when paid in full" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      payment = create(:payment, person: user.person, amount_cents: 1099, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1099)
+      expect(reg.payment_access_granted?).to be true
+    end
+
+    it "is true when unpaid but flagged intends_to_pay" do
+      reg = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      expect(reg.payment_access_granted?).to be true
+    end
+
+    it "is false when unpaid and not flagged" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      expect(reg.payment_access_granted?).to be false
+    end
+  end
+
+  describe ".payment_status scope" do
+    let(:event) { create(:event, cost_cents: 1099) }
+    let(:user) { create(:user, :with_person) }
+
+    it "filters to registrations flagged intends_to_pay" do
+      intends = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      create(:event_registration, event: event, registrant: create(:person))
+      expect(EventRegistration.payment_status("intends_to_pay")).to contain_exactly(intends)
     end
   end
 
@@ -346,6 +414,59 @@ RSpec.describe EventRegistration, type: :model do
       free_event = create(:event, cost_cents: 0)
       reg = create(:event_registration, event: free_event, registrant: user.person)
       expect(reg).not_to be_partially_paid
+    end
+  end
+
+  describe "#discounted?" do
+    let(:event) { create(:event, cost_cents: 1000) }
+    let(:user) { create(:user, :with_person) }
+
+    it "returns true when a discount allocation exists" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      discount = Discount.create!(amount_cents: 400)
+      create(:allocation, source: discount, allocatable: reg, amount: 400)
+      expect(reg).to be_discounted
+    end
+
+    it "returns false when only a payment covers part of the cost" do
+      reg = create(:event_registration, event: event, registrant: user.person)
+      payment = create(:payment, person: user.person, amount_cents: 400, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 400)
+      expect(reg).not_to be_discounted
+    end
+  end
+
+  describe "continuing education" do
+    let(:reg) { create(:event_registration) }
+
+    describe "#ce_amount_owed_cents" do
+      it "multiplies requested hours by the default hourly rate" do
+        reg.ce_hours_requested = 4
+        expect(reg.ce_amount_owed_cents).to eq(4 * EventRegistration::CE_HOURLY_RATE_DOLLARS * 100)
+      end
+
+      it "is zero when no hours are requested" do
+        reg.ce_hours_requested = nil
+        expect(reg.ce_amount_owed_cents).to eq(0)
+      end
+    end
+
+    describe "#ce_license_provided?" do
+      it "is true only when a license number is present" do
+        reg.ce_license_number = "LIC-123"
+        expect(reg).to be_ce_license_provided
+        reg.ce_license_number = ""
+        expect(reg).not_to be_ce_license_provided
+      end
+    end
+
+    describe "ce_hours_requested validation" do
+      it "rejects negative or non-integer hours but allows nil" do
+        reg.ce_hours_requested = nil
+        expect(reg).to be_valid
+        reg.ce_hours_requested = -1
+        expect(reg).not_to be_valid
+      end
     end
   end
 
@@ -485,6 +606,128 @@ RSpec.describe EventRegistration, type: :model do
     it "generates unique slugs" do
       slugs = 10.times.map { create(:event_registration).slug }
       expect(slugs.uniq.size).to eq(10)
+    end
+  end
+
+  describe "#account_status" do
+    def registration_for(person)
+      create(:event_registration, registrant: person)
+    end
+
+    it "is none when the registrant has no user account" do
+      expect(registration_for(create(:person, user: nil)).account_status).to eq("none")
+    end
+
+    it "is has_access for a confirmed, unlocked, active account" do
+      expect(registration_for(create(:person)).account_status).to eq("has_access")
+    end
+
+    it "is invited when the account is pending but was sent a welcome" do
+      person = create(:person)
+      person.user.update!(confirmed_at: nil, welcome_instructions_sent_at: Time.current)
+      expect(registration_for(person).account_status).to eq("invited")
+    end
+
+    it "is no_access when the account cannot sign in and has no pending invite" do
+      person = create(:person)
+      person.user.update!(confirmed_at: nil, welcome_instructions_sent_at: nil)
+      expect(registration_for(person).account_status).to eq("no_access")
+    end
+  end
+
+  describe "#program_statuses" do
+    let(:registration) { create(:event_registration) }
+    let(:linked_org) { create(:organization, name: "Registration Org") }
+    let(:other_org) { create(:organization, name: "Other Org") }
+
+    it "classifies only the organization linked to the registration" do
+      create(:event_registration_organization, event_registration: registration, organization: linked_org)
+      # An unrelated facilitator affiliation to a different org must be ignored.
+      create(:affiliation, organization: other_org, person: registration.registrant,
+             title: "Facilitator", start_date: Date.current)
+
+      expect(registration.reload.program_statuses).to eq([ :new ])
+    end
+
+    it "is ongoing when the linked org already had an active facilitator, excluding the registrant's own" do
+      create(:event_registration_organization, event_registration: registration, organization: linked_org)
+      create(:affiliation, organization: linked_org, title: "Facilitator",
+             start_date: 2.years.ago, end_date: nil)
+      create(:affiliation, organization: linked_org, person: registration.registrant,
+             title: "Facilitator", start_date: Date.current)
+
+      expect(registration.reload.program_statuses).to eq([ :ongoing ])
+    end
+  end
+
+  describe "onboarding checklist" do
+    let(:registration) { create(:event_registration) }
+    let(:step) { EventRegistration::CHECKLIST_STEPS.keys.first }
+
+    it "reports a step as completed once a completion row exists" do
+      expect(registration.checklist_step_completed?(step)).to be(false)
+      create(:event_registration_checklist_completion, event_registration: registration, step: step)
+      registration.reload
+      expect(registration.checklist_step_completed?(step)).to be(true)
+    end
+
+    it "exposes the completion record for a step" do
+      completion = create(:event_registration_checklist_completion, event_registration: registration, step: step)
+      expect(registration.reload.checklist_completion_for(step)).to eq(completion)
+    end
+  end
+
+  describe "#payments_sum" do
+    it "counts only payment allocations, excluding scholarship" do
+      event = create(:event, cost_cents: 3_000)
+      reg = create(:event_registration, event: event)
+      payment = create(:payment, amount_cents: 1_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1_000)
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 1_500)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1_500)
+
+      reg.reload
+      expect(reg.payments_sum).to eq(1_000)        # payment only
+      expect(reg.allocations_sum).to eq(2_500)     # payment + scholarship
+    end
+  end
+
+  describe "#discount_sum" do
+    it "counts only discount allocations, excluding payment and scholarship" do
+      event = create(:event, cost_cents: 3_000)
+      reg = create(:event_registration, event: event)
+      payment = create(:payment, amount_cents: 1_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1_000)
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 1_000)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1_000)
+      create(:allocation, source: create(:discount, amount_cents: 800), allocatable: reg, amount: 800)
+
+      reg.reload
+      expect(reg.discount_sum).to eq(800)
+    end
+  end
+
+  describe "payment reads from a preloaded allocations association" do
+    it "issues no per-row queries when allocations are preloaded" do
+      event = create(:event, cost_cents: 1_000)
+      reg = create(:event_registration, event: event)
+      payment = create(:payment, amount_cents: 1_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1_000)
+
+      preloaded = EventRegistration.includes(:allocations, :event).find(reg.id)
+
+      queries = []
+      subscriber = ->(*, payload) { queries << payload[:sql] unless payload[:name] == "SCHEMA" }
+      ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
+        preloaded.allocations_sum
+        preloaded.payments_sum
+        preloaded.discounted?
+        preloaded.paid_in_full?
+        preloaded.partially_paid?
+      end
+
+      expect(queries).to be_empty
+      expect(preloaded.paid_in_full?).to be(true)
     end
   end
 end

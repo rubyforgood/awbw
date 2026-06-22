@@ -14,6 +14,44 @@ module ApplicationHelper
     sanitize(text.to_s, tags: FORM_LABEL_TAGS, attributes: FORM_LABEL_ATTRIBUTES)
   end
 
+  # Render an admin-authored custom message included in a reminder email with the
+  # same safe subset of HTML as form labels (bold, italics, links, lists, line
+  # breaks). Reuses form_label_html so the allowlist — and its XSS scrubbing —
+  # stays in one place. Available to mailer views via `helper ApplicationHelper`.
+  def reminder_message_html(text)
+    form_label_html(text)
+  end
+
+  # The day-relative phrase appended to the default reminder message: " today",
+  # " tomorrow", " in N days", or "" when the day count isn't known. Leads with a
+  # space so it can be concatenated directly after "...event". The day count is
+  # wrapped in <strong> (the message field renders sanitized HTML), so it lands
+  # bold in the email.
+  def reminder_days_phrase(days_until_event)
+    return "" unless days_until_event.is_a?(Integer)
+    case days_until_event
+    when 0 then " <strong>today</strong>"
+    when 1 then " <strong>tomorrow</strong>"
+    else " in <strong>#{days_until_event} days</strong>"
+    end
+  end
+
+  # Default text pre-filled into the editable reminder message on the bulk
+  # reminder page (admins can edit or clear it). The day count is resolved when
+  # the page renders — it's event-level, so the same for every recipient.
+  def default_reminder_message(days_until_event)
+    organization = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    "This is a reminder that you're registered for the following #{organization} event#{reminder_days_phrase(days_until_event)}."
+  end
+
+  # Default subject line pre-filled into the editable subject field on the bulk
+  # reminder page (admins can edit it). Mirrors the mailer's fallback subject; the
+  # event date is event-level, resolved here in the app default time zone.
+  def default_reminder_subject(event)
+    date_suffix = event.start_date.present? ? " – #{event.start_date.in_time_zone.strftime('%B %-d, %Y')}" : ""
+    "AWBW Portal: Reminder: #{event.title}#{date_suffix}"
+  end
+
   # Tokens an admin can drop into a form header; each is filled from the event the
   # form is rendered for (see form_header_html). A standalone registration form is
   # shared across events, so the header can't hard-code event specifics. Each entry:
@@ -165,38 +203,42 @@ module ApplicationHelper
     "h-5 w-1 rounded-full bg-[linear-gradient(to_bottom,#ec4899,#f97316,#22c55e,#3b82f6,#8b5cf6)]"
   end
 
-  # Category types backing the professional form fields whose options are
-  # sourced dynamically (from Sector/Category data) rather than from the
-  # field's own stored answer options.
-  DYNAMIC_FIELD_CATEGORY_TYPES = {
-    "workshop_environments" => "WorkshopEnvironment",
-    "client_life_experiences" => "StoryPopulation",
-    "primary_age_group" => "AgeRange"
-  }.freeze
-
   # Returns the selectable options for a form field as [ label, value, description ]
   # tuples (description is nil for sectors and present only for categories that have
   # one), or nil when the field has no dynamic source (callers fall back to the
   # field's own stored answer options). Shared by the public form's radio and
   # checkbox rendering so a dynamic field renders the same options regardless
-  # of which single/multiple choice type it was set to.
+  # of which single/multiple choice type it was set to. The set of valid submission
+  # values for these is mirrored by FormField#allowed_answer_values.
   def dynamic_form_field_options(field)
     case field.field_identifier
-    when "primary_service_area", "primary_service_area_single"
-      Sector.published.order(:name).map { |sector| [ sector.name, sector.id.to_s ] }
-    when *DYNAMIC_FIELD_CATEGORY_TYPES.keys
-      type = CategoryType.find_by(name: DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
-      (type&.categories&.published&.order(:position, :name) || []).map { |category| [ category.name, category.id.to_s, category.description ] }
+    when *FormField::SECTOR_FIELD_IDENTIFIERS
+      field.sector_options.map { |sector| [ sector.name, sector.id.to_s, sector.description ] }
+    when *FormField::DYNAMIC_FIELD_CATEGORY_TYPES.keys
+      field.dynamic_categories.map { |category| [ category.name, category.id.to_s, category.description ] }
     end
+  end
+
+  # True when a dropdown field carries an "Other" option that the public form
+  # strips (dropdowns have no free-text input). Checks the field's effective
+  # options — dynamic sources (sectors/categories) as well as author-managed
+  # stored options — so the editor and preview warn wherever "Other" would
+  # silently disappear.
+  def dropdown_hides_other?(field)
+    return false unless field.answer_type == "single_select_dropdown"
+
+    options = dynamic_form_field_options(field) ||
+      field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name ] }
+    options.any? { |label, _| FormField.other_option?(label) }
   end
 
   # Describes where a dynamic-option field's choices come from, for the form
   # editor badge: a sentence-case label and a link to the filtered admin list
   # that manages those options. Returns nil for fields with stored options.
   def form_field_option_source(field)
-    if field.field_identifier.in?(%w[primary_service_area primary_service_area_single])
+    if field.field_identifier.in?(FormField::SECTOR_FIELD_IDENTIFIERS)
       { label: "Sectors", path: sectors_path }
-    elsif (type_name = DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
+    elsif (type_name = FormField::DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
       type = CategoryType.find_by(name: type_name)
       return unless type
       { label: "#{type.name.underscore.humanize} categories", path: categories_path(category_type_id: type.id) }
@@ -307,11 +349,13 @@ module ApplicationHelper
 
   # Where to view a form submission. When the submitter has a public event
   # registration, send the viewer to their registration details page (the public
-  # "ticket"/details view, keyed by the registration slug). Otherwise — bulk
-  # payments and event-less submissions, which have no registration — fall back
-  # to the form submission show page.
+  # "ticket"/details view, keyed by the registration slug). The event is resolved
+  # directly, or indirectly through the form's matching join role for older
+  # submissions without a stored event. Otherwise — bulk payments and event-less
+  # submissions, which have no registration — fall back to the form submission
+  # show page.
   def form_submission_link_path(submission)
-    event = submission.event
+    event = submission.resolved_event
     registration = event && submission.person.event_registrations.find_by(event: event)
     return event_public_registration_path(event, reg: registration.slug) if registration&.slug.present?
     form_submission_path(submission)
@@ -439,9 +483,7 @@ module ApplicationHelper
   # Currency for an amount given in cents, dropping the cents when the amount is
   # a whole number of dollars: 150000 → "$1,500", 75050 → "$750.50".
   def dollars_from_cents(cents)
-    cents = cents.to_i
-    precision = (cents % 100).zero? ? 0 : 2
-    number_to_currency(cents / 100.0, precision: precision)
+    MoneyFormatter.dollars_from_cents(cents)
   end
 
   def navbar_bg_class

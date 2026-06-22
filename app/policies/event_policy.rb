@@ -83,6 +83,10 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
+  def invoice?
+    manage?
+  end
+
   def preview_reminder?
     manage?
   end
@@ -104,8 +108,13 @@ class EventPolicy < ApplicationPolicy
                   :pre_title,
                   :videoconference_url,
                   :videoconference_label,
+                  :videoconference_passcode,
                   :rhino_header,
                   :rhino_description,
+                  :event_details,
+                  :event_details_label,
+                  :ce_hours_details,
+                  :ce_hours_details_label,
                   :autoshow_cost,
                   :autoshow_date,
                   :autoshow_location,
@@ -124,16 +133,19 @@ class EventPolicy < ApplicationPolicy
                   :hint_registration_cost,
                   :pre_title,
                   :pre_date_text,
+                  :facilitator_training,
                   :featured,
-                  :start_date, :end_date,
-                  :registration_close_date,
+                  :start_date, :start_date_date, :start_date_time,
+                  :end_date, :end_date_date, :end_date_time,
+                  :registration_close_date, :registration_close_date_date, :registration_close_date_time,
                   :published,
                   :publicly_visible,
                   :publicly_featured,
                   category_ids: [],
                   sector_ids: [],
                   primary_asset_attributes: [ :id, :file, :_destroy ],
-                  gallery_assets_attributes: [ :id, :file, :_destroy ]
+                  gallery_assets_attributes: [ :id, :file, :_destroy ],
+                  registration_ticket_callouts_attributes: [ :id, :title, :subtitle, :description, :callout_type, :icon_class, :color_class, :payment_access_gated, :resource_id, :_destroy ]
         ]
 
     permitted.prepend(:ga4_snippet, :gtm_head_snippet, :gtm_body_snippet) if admin?
@@ -142,6 +154,8 @@ class EventPolicy < ApplicationPolicy
   end
 
   alias_rule :preview?, to: :edit?
+  alias_rule :details?, to: :show?
+  alias_rule :ce_hours?, to: :show?
 
   private
 

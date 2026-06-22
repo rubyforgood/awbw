@@ -23,6 +23,38 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#videoconference_room" do
+    it "pulls the Zoom meeting ID from the join URL and groups the digits" do
+      event = build(:event, videoconference_url: "https://awbw-org.zoom.us/j/88285411273").decorate
+      expect(event.videoconference_room).to eq({ label: "Meeting ID", value: "882 8541 1273" })
+    end
+
+    it "ignores a Zoom pwd query param" do
+      event = build(:event, videoconference_url: "https://us02web.zoom.us/j/1234567890?pwd=abc123").decorate
+      expect(event.videoconference_room).to eq({ label: "Meeting ID", value: "123 456 7890" })
+    end
+
+    it "pulls the meeting code from a Google Meet URL" do
+      event = build(:event, videoconference_url: "https://meet.google.com/abc-defg-hij").decorate
+      expect(event.videoconference_room).to eq({ label: "Meeting code", value: "abc-defg-hij" })
+    end
+
+    it "returns nil for an unrecognized platform" do
+      event = build(:event, videoconference_url: "https://example.com/room/42").decorate
+      expect(event.videoconference_room).to be_nil
+    end
+
+    it "returns nil when there is no URL" do
+      event = build(:event, videoconference_url: nil).decorate
+      expect(event.videoconference_room).to be_nil
+    end
+
+    it "returns nil for an invalid URL" do
+      event = build(:event, videoconference_url: "not a url").decorate
+      expect(event.videoconference_room).to be_nil
+    end
+  end
+
   describe "#multi_day?" do
     it "is true when start and end fall on different days" do
       event = build(:event, start_date: Time.zone.local(2026, 7, 23, 9), end_date: Time.zone.local(2026, 7, 24, 16)).decorate
@@ -92,6 +124,11 @@ RSpec.describe EventDecorator do
       event = build(:event, cost_cents: 2505).decorate
       expect(event.labelled_cost).to eq("Cost: $25.05")
     end
+
+    it "adds a thousands separator for large amounts" do
+      event = build(:event, cost_cents: 150_000).decorate
+      expect(event.labelled_cost).to eq("Cost: $1,500")
+    end
   end
 
   describe "#calendar_links" do
@@ -120,6 +157,34 @@ RSpec.describe EventDecorator do
 
       yahoo = links.find { |a| a.text == "Yahoo" }
       expect(yahoo["href"]).to include("desc=#{desc_encoded}")
+    end
+
+    it "embeds the join link, meeting ID, and passcode in the calendar description" do
+      event = create(:event,
+                      videoconference_url: "https://awbw.zoom.us/j/88285411273",
+                      videoconference_passcode: "secret123")
+      decorated = event.decorate
+
+      doc = Nokogiri::HTML.fragment(decorated.calendar_links)
+      apple = doc.css("a").find { |a| a.text == "Apple" }
+
+      expect(apple["href"]).to include("Join on Zoom: https://awbw.zoom.us/j/88285411273")
+      expect(apple["href"]).to include("Meeting ID: 882 8541 1273")
+      expect(apple["href"]).to include("Passcode: secret123")
+    end
+  end
+
+  describe "#times" do
+    it "shows a multi-day event as a date range with a single daily time range" do
+      event = build(:event, start_date: Time.zone.local(2026, 4, 21, 9), end_date: Time.zone.local(2026, 4, 23, 16, 30)).decorate
+      tz = Time.zone.local(2026, 4, 21, 9).strftime("%Z")
+      expect(event.times(display_day: true, display_date: true)).to eq("Tue-Thu, Apr 21-23 @ 9 am - 4:30 pm #{tz}")
+    end
+
+    it "shows a cross-month multi-day event with both months" do
+      event = build(:event, start_date: Time.zone.local(2026, 4, 30, 9), end_date: Time.zone.local(2026, 5, 2, 16, 30)).decorate
+      tz = Time.zone.local(2026, 4, 30, 9).strftime("%Z")
+      expect(event.times(display_day: true, display_date: true)).to eq("Thu-Sat, Apr 30 - May 2 @ 9 am - 4:30 pm #{tz}")
     end
   end
 end

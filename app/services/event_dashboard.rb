@@ -43,8 +43,13 @@ class EventDashboard
 
   # Professional-info answers shown in each recipient's header. The view falls
   # back to the person's profile (sectors / age-range tags) when these aren't on
-  # file as form answers.
-  HEADER_ANSWER_IDENTIFIERS = %w[primary_service_area primary_age_group].freeze
+  # file as form answers. Sector answers are normalized under the "sector" key
+  # (see #header_answers_by_applicant) so the view reads one key regardless of
+  # which sector field identifier the answer was stored under.
+  HEADER_ANSWER_IDENTIFIERS = (FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + %w[primary_age_group]).freeze
+
+  # The key sector answers are filed under in the per-applicant header hash.
+  HEADER_SECTOR_KEY = "sector".freeze
 
   # Active registrants who requested a scholarship for this event, as Person
   # records sorted by display name. Sectors, age-range tags, and affiliations are
@@ -53,7 +58,9 @@ class EventDashboard
   def scholarship_applicants
     @scholarship_applicants ||= Person
       .where(id: scholarship_applicant_ids)
-      .includes(:sectors, { categories: :category_type }, { affiliations: :organization })
+      .includes(:sectors, { categories: :category_type },
+                { categorizable_items: { category: :category_type } },
+                { affiliations: :organization })
       .sort_by(&:name)
   end
 
@@ -68,31 +75,45 @@ class EventDashboard
       .transform_values { |answers| dedupe_answers(answers) }
   end
 
-  # primary_service_area / primary_age_group answers for the recipients page
-  # header, keyed by Person id then by field identifier (one answer each). Same
-  # cross-submission gathering as scholarship_answers_by_applicant.
+  # Sector / primary_age_group answers for the recipients page header, keyed by
+  # Person id then by header key (one answer each). Sector answers (whichever
+  # sector field identifier they used) are filed under HEADER_SECTOR_KEY so the
+  # view reads a single, stable key. Same cross-submission gathering as
+  # scholarship_answers_by_applicant.
   def header_answers_by_applicant
     @header_answers_by_applicant ||= applicant_answers_for(HEADER_ANSWER_IDENTIFIERS)
-      .transform_values { |answers| answers.index_by { |answer| answer.form_field&.field_identifier } }
+      .transform_values { |answers| answers.index_by { |answer| header_answer_key(answer.form_field&.field_identifier) } }
   end
 
-  # A scholarship "shout out": a recipient paired with their affiliated
-  # organization and that organization's bio, for the recognition block on the
-  # recipients page.
-  Shoutout = Struct.new(:recipient, :organization, :bio, keyword_init: true)
+  # Normalizes a header answer's field identifier to its lookup key: every sector
+  # field collapses to HEADER_SECTOR_KEY; other identifiers pass through.
+  def header_answer_key(identifier)
+    identifier.in?(FormField::SECTOR_FIELD_IDENTIFIERS) ? HEADER_SECTOR_KEY : identifier
+  end
 
-  # Shout outs for the recipients page: each scholarship recipient whose
-  # affiliated organization has a bio on file, paired with that organization and
-  # its description. Affiliations and organizations are already preloaded on
-  # scholarship_applicants. Recipients without an affiliated org, or whose org
-  # has no bio, are omitted.
-  def scholarship_shoutouts
-    @scholarship_shoutouts ||= scholarship_applicants.filter_map do |person|
+  # A "shout out": a registrant the admin opted in (shoutout on their
+  # registration) paired with the shout-out text from their profile and their
+  # affiliated organization (if any), for the recognition block on the
+  # recipients page.
+  Shoutout = Struct.new(:recipient, :organization, :text, :sector, :age_group, keyword_init: true)
+
+  # Shout outs for the recipients page: each active registrant the admin flagged
+  # for a shout-out who also has shout-out text on their profile, paired with that
+  # text, their first active affiliated organization (if any), and their primary
+  # sector / age group (from their profile) for the parenthetical after their name.
+  # Flagged registrants with blank shout-out text are omitted; org/sector/age are optional.
+  def shoutouts
+    @shoutouts ||= shoutout_registrants.filter_map do |person|
+      text = person.shoutout_text.to_s.strip.presence
+      next unless text
       organization = person.affiliations.reject(&:inactive?).filter_map(&:organization).first
-      next unless organization
-      bio = organization.description.to_s.strip.presence
-      next unless bio
-      Shoutout.new(recipient: person, organization: organization, bio: bio)
+      Shoutout.new(
+        recipient: person,
+        organization: organization,
+        text: text,
+        sector: primary_sector_name_for(person),
+        age_group: age_group_text_for(person)
+      )
     end
   end
 
@@ -168,7 +189,13 @@ class EventDashboard
   end
 
   def grand_total_cents
-    registration_subtotal_cents + scholarship_total_cents + cont_ed_total_cents
+    registration_subtotal_cents + scholarship_total_cents + cont_ed_total_cents + unallocated_bulk_payment_cents
+  end
+
+  # Money received through this event's bulk payment submissions that hasn't been
+  # allocated to a registration yet — cash on hand still waiting to be applied.
+  def unallocated_bulk_payment_cents
+    bulk_payments.sum(:amount_cents_remaining)
   end
 
   # Cash actually collected from registrants: registration payments received plus
@@ -332,26 +359,26 @@ class EventDashboard
   end
 
   # Every sector tagged on registrants (primary + additional), backing the
-  # "All service areas" chart. The "Primary service area" chart instead uses
+  # "All sectors" chart. The "Primary sector" chart instead uses
   # #primary_sectors / #primary_sector_counts, which read only the dropdown.
   def sectors
     @sectors ||= Sector.where(id: registrant_sector_ids).order(:name)
   end
 
-  # Sectors registrants named as their single primary service area (the
-  # registration dropdown), ordered for the "Primary service area" chart.
+  # Sectors registrants named as their single primary sector (the
+  # registration dropdown), ordered for the "Primary sector" chart.
   def primary_sectors
     @primary_sectors ||= Sector.where(id: primary_sector_counts.keys).order(:name)
   end
 
-  # Distinct-registrant count per sector named as the primary service area.
+  # Distinct-registrant count per sector named as the primary sector.
   def primary_sector_counts
     @primary_sector_counts ||= primary_sector_registrant_ids_by_sector.transform_values(&:size)
   end
 
   # Registrant ids per primary sector, for the chart's per-row drill-in links.
   def primary_sector_registrant_ids_by_sector
-    @primary_sector_registrant_ids_by_sector ||= primary_service_area_rows
+    @primary_sector_registrant_ids_by_sector ||= primary_sector_rows
       .group_by(&:last)
       .transform_values { |rows| rows.map(&:first).uniq }
   end
@@ -374,7 +401,7 @@ class EventDashboard
       .pluck(:sectorable_id)
   end
 
-  # Distinct sectors registrants named as their primary service area, and distinct
+  # Distinct sectors registrants named as their primary sector, and distinct
   # sectors that appear as an additional (non-primary) tag. These OVERLAP — a
   # sector can be primary for one registrant and additional for another, so the
   # two counts can each be up to the sectors total and may sum to more than it.
@@ -622,10 +649,15 @@ class EventDashboard
   # new.
   def program_status_for(organization)
     reference = registrant_affiliations_by_org[organization.id]
+      &.select(&:facilitator?)
       &.min_by { |affiliation| affiliation.start_date || Date.current }
-    reference ||= organization.affiliations.facilitators.where.not(start_date: nil).order(:start_date).first
-    return :new unless reference
-    organization.facilitator_status(reference)
+    return organization.facilitator_status(reference) if reference
+
+    # The registrant has no facilitator affiliation to this org yet (admins create
+    # those manually after the fact). Classify the org as of today rather than
+    # treating it as new by default, so an org that already has an active
+    # facilitator reads as :ongoing and a lapsed one as :reinstated.
+    organization.facilitator_status_on(Date.current)
   end
 
   # This event's active registrants' active affiliations, grouped by organization
@@ -639,6 +671,34 @@ class EventDashboard
 
   def scholarship_applicant_ids
     @scholarship_applicant_ids ||= active_registrations.where(scholarship_requested: true).pluck(:registrant_id)
+  end
+
+  # Registrant (Person) ids behind active registrations that opted into a
+  # shout-out — the candidates for the recipients page shout-out block.
+  def shoutout_registrant_ids
+    @shoutout_registrant_ids ||= active_registrations.where(shoutout: true).pluck(:registrant_id)
+  end
+
+  # People who opted into a shout-out, sorted by display name, with affiliations,
+  # organizations, sectors, and age-range categories preloaded for the shout-out
+  # block (org link + the primary sector / age-group parenthetical).
+  def shoutout_registrants
+    @shoutout_registrants ||= Person
+      .where(id: shoutout_registrant_ids)
+      .includes({ affiliations: :organization }, { sectorable_items: :sector }, { categories: :category_type })
+      .sort_by(&:name)
+  end
+
+  # The person's primary sector: the sector they marked primary, falling
+  # back to their first sector alphabetically. Nil when they have none.
+  def primary_sector_name_for(person)
+    person.sectorable_items_primary_first.first&.sector&.name
+  end
+
+  # The person's age group(s) served, from their AgeRange profile tags, ", "-joined.
+  # Nil when they have none.
+  def age_group_text_for(person)
+    person.categories.select { |category| category.category_type&.name == "AgeRange" }.map(&:name).join(", ").presence
   end
 
   # Ids of every form submission the applicants made for this event's forms —
@@ -678,6 +738,16 @@ class EventDashboard
 
   def allocated_by_registration
     @allocated_by_registration ||= registration_allocations.group(:allocatable_id).sum(:amount)
+  end
+
+  # Payments tied to this event's bulk payment form submissions. Scoped by the
+  # submission's own event_id (matching the bulk payments page) rather than the
+  # shared form's event_forms, so a form reused across events doesn't pull in
+  # other events' submissions.
+  def bulk_payments
+    @bulk_payments ||= Payment.where(
+      form_submission_id: event.form_submissions.where(role: "bulk_payment").select(:id)
+    )
   end
 
   def scholarships
@@ -774,18 +844,18 @@ class EventDashboard
       .uniq
   end
 
-  # Distinct sector ids registrants named as their primary service area, limited
+  # Distinct sector ids registrants named as their primary sector, limited
   # to sectors actually represented among registrants.
   def primary_sector_ids
-    @primary_sector_ids ||= primary_service_area_rows.map(&:last).uniq & registrant_sector_ids
+    @primary_sector_ids ||= primary_sector_rows.map(&:last).uniq & registrant_sector_ids
   end
 
   # Distinct sectors a registrant has as a tag without having named that sector as
-  # their own primary service area. Overlaps primary_sector_ids when a sector is
+  # their own primary sector. Overlaps primary_sector_ids when a sector is
   # primary for one registrant and additional for another.
   def additional_sector_ids
     @additional_sector_ids ||= begin
-      primary_pairs = primary_service_area_rows.to_set
+      primary_pairs = primary_sector_rows.to_set
       registrant_sector_pairs.reject { |pair| primary_pairs.include?(pair) }.map(&:last).uniq
     end
   end
@@ -798,11 +868,11 @@ class EventDashboard
       .pluck(:sectorable_id, :sector_id)
   end
 
-  # [ person_id, sector_id ] pairs from registrants' primary service area answers.
-  # Read from the single-select dropdown ("primary_service_area_single"); the
-  # checkbox "primary_service_area" field collects ADDITIONAL service areas.
-  def primary_service_area_rows
-    field = registration_form_field("primary_service_area_single")
+  # [ person_id, sector_id ] pairs from registrants' primary sector answers.
+  # Read from the single-select dropdown (PRIMARY_SECTOR_FIELD_IDENTIFIERS); the
+  # multi-select checkbox field collects the Additional sectors.
+  def primary_sector_rows
+    field = registration_form_field(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
     return [] unless field
 
     FormAnswer

@@ -22,7 +22,7 @@
   amounts_by_registrant_id = local_assigns.fetch(:amounts_by_registrant_id, nil)
 %>
 <div class="flex items-start gap-1.5">
-  <details class="flex-1 min-w-0">
+  <details class="group/row flex-1 min-w-0">
     <summary class="flex items-center justify-between gap-2 rounded px-1 -mx-1 py-1 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden hover:bg-gray-50">
       <span class="flex items-center gap-1.5 text-xs font-medium text-gray-500">
         <% if icon_bg.present? %>
@@ -36,8 +36,8 @@
         <%= label %>
       </span>
       <span class="flex items-center gap-2">
-        <span class="text-sm font-semibold tabular-nums <%= amount_color %>"><%= number_to_currency(amount_cents / 100.0) %></span>
-        <i class="fa-solid fa-chevron-down text-[10px] text-gray-300 transition-transform [[open]_&]:rotate-180"></i>
+        <span class="text-sm font-semibold tabular-nums <%= amount_color %>"><%= dollars_from_cents(amount_cents) %></span>
+        <i class="fa-solid fa-chevron-down text-[10px] text-gray-300 transition-transform group-open/row:rotate-180"></i>
       </span>
     </summary>
     <% if registrants.any? %>
@@ -49,7 +49,7 @@
                   class: "truncate min-w-0 hover:underline" %>
             <% person_cents = amounts_by_registrant_id&.[](registrant.id) %>
             <% if person_cents %>
-              <span class="shrink-0 tabular-nums text-gray-500"><%= number_to_currency(person_cents / 100.0) %></span>
+              <span class="shrink-0 tabular-nums text-gray-500"><%= dollars_from_cents(person_cents) %></span>
             <% end %>
           </li>
         <% end %>

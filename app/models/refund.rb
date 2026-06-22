@@ -1,4 +1,5 @@
 class Refund < ApplicationRecord
+  has_paper_trail
   METHODS = %w[check cash stripe].freeze
 
   belongs_to :refundable, polymorphic: true

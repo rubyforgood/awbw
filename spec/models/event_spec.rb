@@ -8,6 +8,24 @@ RSpec.describe Event, type: :model do
     it { should validate_numericality_of(:cost_cents).is_greater_than_or_equal_to(0).allow_nil }
   end
 
+  describe "destroying with form submissions" do
+    it "is blocked and keeps the submission when the event has one" do
+      event = create(:event)
+      create(:form_submission, :with_event, event: event)
+
+      expect(event.destroy).to be(false)
+      expect(event.errors[:base]).to be_present
+      expect(Event.exists?(event.id)).to be(true)
+    end
+
+    it "is allowed when the event has no submissions" do
+      event = create(:event)
+
+      expect(event.destroy).to be_truthy
+      expect(Event.exists?(event.id)).to be(false)
+    end
+  end
+
   describe "staff uniqueness on update" do
     it "rejects two staff rows for the same person added in one update" do
       event = create(:event)
@@ -40,6 +58,33 @@ RSpec.describe Event, type: :model do
     it "returns false when end_date is in the future" do
       event = build(:event, end_date: 1.day.from_now)
       expect(event.ended?).to be false
+    end
+  end
+
+  describe "#videoconference_window_open?" do
+    it "returns false more than 30 minutes before the start" do
+      event = build(:event, start_date: 31.minutes.from_now, end_date: 2.hours.from_now)
+      expect(event.videoconference_window_open?).to be false
+    end
+
+    it "returns true within 30 minutes before the start" do
+      event = build(:event, start_date: 29.minutes.from_now, end_date: 2.hours.from_now)
+      expect(event.videoconference_window_open?).to be true
+    end
+
+    it "returns true while the event is in progress" do
+      event = build(:event, start_date: 1.hour.ago, end_date: 1.hour.from_now)
+      expect(event.videoconference_window_open?).to be true
+    end
+
+    it "returns true within 30 minutes after the end" do
+      event = build(:event, start_date: 2.hours.ago, end_date: 29.minutes.ago)
+      expect(event.videoconference_window_open?).to be true
+    end
+
+    it "returns false more than 30 minutes after the end" do
+      event = build(:event, start_date: 2.hours.ago, end_date: 31.minutes.ago)
+      expect(event.videoconference_window_open?).to be false
     end
   end
 

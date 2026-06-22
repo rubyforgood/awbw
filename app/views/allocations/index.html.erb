@@ -5,7 +5,20 @@
       scholarship page (back link, centered title with event/registrant context). ---- %>
   <div class="mx-auto max-w-5xl <%= DomainTheme.bg_class_for(:payments) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
     <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
-      <% if @allocatable.is_a?(EventRegistration) %>
+      <% if @allocatable.is_a?(EventRegistration) && params[:return_to] == "bulk_payments" %>
+        <%# Re-expand the originating submission's row and scroll to it on return. %>
+        <%= link_to bulk_payments_return_path(@allocatable.event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> Bulk payments
+        <% end %>
+      <% elsif @allocatable.is_a?(EventRegistration) && params[:return_to] == "registrants" %>
+        <%= link_to registrants_event_path(@allocatable.event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
+        <% end %>
+      <% elsif @allocatable.is_a?(EventRegistration) && params[:return_to] == "onboarding" %>
+        <%= link_to onboarding_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
+        <% end %>
+      <% elsif @allocatable.is_a?(EventRegistration) %>
         <%= link_to edit_event_registration_path(@allocatable), class: "text-sm text-gray-500 hover:text-gray-700" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Registration
         <% end %>

@@ -69,6 +69,7 @@ gem "solid_cache"
 # Payments
 gem "pay", "~> 11.4"
 gem "stripe", "~> 18.0"
+gem "paper_trail", "~> 17.0"
 
 group :development do
   gem "rubocop-rails-omakase", require: false
@@ -85,7 +86,6 @@ group :development, :test do
   gem "bundler-audit", require: false
   gem "capybara", "~> 3.36"
   gem "dotenv-rails"
-  gem "faker"
   gem "factory_bot_rails"
   gem "launchy"
   gem "listen"
@@ -99,6 +99,12 @@ group :development, :test do
   gem "shoulda-matchers", require: false
   gem "debug", "~> 1.11"
   gem "bullet"
+end
+
+# Faker also needs to load on staging: the dev sample-data seeds (db/seeds/dev)
+# call Faker, and db:seed:dev is run on staging to populate demo data.
+group :development, :test, :staging do
+  gem "faker"
 end
 
 gem "rack-mini-profiler", "~> 4.0"

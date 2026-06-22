@@ -10,7 +10,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
     let(:person) { create(:person, first_name: "Pat", last_name: "Payer", email: "pat@example.com") }
     let(:submission) do
-      s = FormSubmission.create!(form: form, person: person, role: "bulk_payment")
+      s = FormSubmission.create!(form: form, person: person, event: event, role: "bulk_payment")
       s.form_answers.create!(form_field: form.form_fields.find_by(field_identifier: "number_of_attendees"), submitted_answer: "4")
       s
     end
@@ -22,6 +22,29 @@ RSpec.describe NotificationMailer, type: :mailer do
 
     it "names the payer in the subject" do
       expect(described_class.bulk_payment_confirmation_fyi(notification).subject).to include("Pat Payer")
+    end
+  end
+
+  describe "#event_registration_confirmation_fyi" do
+    let(:notification) { create(:notification, kind: "event_registration_confirmation_fyi", noticeable: event_registration) }
+
+    context "when a scholarship was not requested" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: false) }
+
+      it "labels the subject as a plain event registration" do
+        subject = described_class.event_registration_confirmation_fyi(notification).subject
+        expect(subject).to include("New event registration by")
+        expect(subject).not_to include("scholarship")
+      end
+    end
+
+    context "when a scholarship was requested" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: true) }
+
+      it "labels the subject as an event scholarship registration" do
+        subject = described_class.event_registration_confirmation_fyi(notification).subject
+        expect(subject).to include("New event scholarship registration by")
+      end
     end
   end
 

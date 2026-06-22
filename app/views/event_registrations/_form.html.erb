@@ -206,7 +206,10 @@
 
         <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
 
-        <%# ---- CE status — placeholder scaffold for future continuing-education tracking (no-op for now) ---- %>
+        <%# ---- CE credits — toggled "Requested" flag, plus the registrant's CE
+            details (license number + requested hours) and what they owe at the
+            default hourly rate, recomputed live by the ce-credit-requested
+            controller. The details collapse when CE isn't requested. ---- %>
         <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
@@ -215,10 +218,11 @@
             <h2 class="text-sm font-semibold text-gray-700">CE credits</h2>
           </div>
 
-          <div class="space-y-3 p-4">
-            <label class="flex items-center gap-2.5 cursor-pointer"
-                   data-controller="ce-credit-requested"
-                   data-ce-credit-requested-initial-value="<%= f.object.ce_credit_requested %>">
+          <div class="space-y-3 p-4"
+               data-controller="ce-credit-requested"
+               data-ce-credit-requested-initial-value="<%= f.object.ce_credit_requested %>"
+               data-ce-credit-requested-rate-value="<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>">
+            <label class="flex items-center gap-2.5 cursor-pointer">
               <input type="hidden" name="event_registration[ce_credit_requested]" value="0" autocomplete="off">
               <input type="checkbox"
                      name="event_registration[ce_credit_requested]"
@@ -231,8 +235,38 @@
               <span class="text-sm font-medium text-gray-700">Requested</span>
             </label>
 
-            <div class="flex items-center gap-2 border-t border-gray-100 pt-3">
-              <span class="text-sm font-semibold text-gray-900 tabular-nums">$0.00</span>
+            <div data-ce-credit-requested-target="details" class="space-y-3 border-t border-gray-100 pt-3 <%= "hidden" unless f.object.ce_credit_requested %>">
+              <div>
+                <div class="mb-1 flex items-center justify-between gap-2">
+                  <label class="text-xs font-medium text-gray-500" for="event_registration_ce_license_number">License number</label>
+                  <span data-ce-credit-requested-target="licenseBadge"
+                        class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.65rem] font-medium <%= f.object.ce_license_provided? ? "bg-teal-50 text-teal-700" : "bg-gray-100 text-gray-500" %>">
+                    <i class="fa-solid <%= f.object.ce_license_provided? ? "fa-circle-check" : "fa-circle-minus" %> text-[0.55rem]"></i>
+                    <%= f.object.ce_license_provided? ? "Provided" : "Not provided" %>
+                  </span>
+                </div>
+                <%= f.text_field :ce_license_number,
+                      class: "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none",
+                      placeholder: "Not provided",
+                      data: { "ce-credit-requested-target": "license", action: "input->ce-credit-requested#refresh" } %>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-xs font-medium text-gray-500" for="event_registration_ce_hours_requested">CE hours requested</label>
+                <%= f.number_field :ce_hours_requested,
+                      min: 0, step: 1,
+                      class: "w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm tabular-nums focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none",
+                      placeholder: "0",
+                      data: { "ce-credit-requested-target": "hours", action: "input->ce-credit-requested#refresh" } %>
+              </div>
+
+              <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+                <span class="text-sm text-gray-500">
+                  Amount owed
+                  <span class="text-xs text-gray-400">($<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>/hr)</span>
+                </span>
+                <span data-ce-credit-requested-target="amount" class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(f.object.ce_amount_owed_cents) %></span>
+              </div>
             </div>
           </div>
         </section>
@@ -300,6 +334,47 @@
           </div>
         </div>
       </section>
+
+      <%# ---- Shout out — admin opts this registrant into the recipients page
+          shout-out block and edits the text shown there. The text lives on the
+          registrant's profile (Person#shoutout_text); editing it here updates
+          their profile via nested attributes. ---- %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
+            <i class="fa-solid fa-bullhorn"></i>
+          </span>
+          <h2 class="text-sm font-semibold text-gray-700">Shout out</h2>
+        </div>
+
+        <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+          <label class="flex shrink-0 items-center gap-2.5 cursor-pointer">
+            <input type="hidden" name="event_registration[shoutout]" value="0" autocomplete="off">
+            <input type="checkbox"
+                   name="event_registration[shoutout]"
+                   value="1"
+                   <%= "checked" if f.object.shoutout? %>
+                   class="sr-only peer">
+            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-300"></span>
+            <span class="text-sm font-medium text-gray-700">Feature on the recipients page</span>
+          </label>
+
+          <div class="flex-1">
+            <%= f.simple_fields_for :registrant do |rf| %>
+              <%= rf.input :shoutout_text,
+                    label: "Shout-out text",
+                    label_html: { class: "sr-only" },
+                    as: :string,
+                    placeholder: "Shown beneath their name on the recipients page",
+                    wrapper_html: { class: "mb-0" },
+                    input_html: {
+                      maxlength: 1650,
+                      class: "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:outline-none"
+                    } %>
+            <% end %>
+          </div>
+        </div>
+      </section>
     <% else %>
       <%# ---- New registration: pick the event and registrant ---- %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -361,6 +436,7 @@
       <% cancel_path = case params[:return_to]
                        when "registrants" then registrants_event_path(event_registration.event)
                        when "index" then event_registrations_path
+                       when "preview_reminder" then preview_reminder_event_path(event_registration.event)
                        else allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
                        end %>
 

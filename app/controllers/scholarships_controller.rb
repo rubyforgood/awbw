@@ -2,6 +2,21 @@ class ScholarshipsController < ApplicationController
   before_action :set_scholarship, only: [ :show, :edit, :update, :destroy, :toggle_tasks ]
   before_action :set_grant, only: [ :new, :create ]
 
+  def index
+    authorize! Scholarship
+    # Eager-load everything the grid derives so each row's funder, program,
+    # location, training, and status cells add no per-row queries:
+    #   * grant → donor for the funder grouping;
+    #   * recipient → affiliations → organization → addresses for program/location/status;
+    #   * recipient → event_registrations → event for the attended-training column.
+    scholarships = authorized_scope(Scholarship.all).includes(
+      { grant: :donor },
+      { recipient: [ { affiliations: { organization: :addresses } }, { event_registrations: :event } ] }
+    )
+    @funder_groups = ScholarshipsGrouping.new(scholarships).funder_groups
+    @scholarships_count = scholarships.size
+  end
+
   def show
     @scholarship = Scholarship.find(params[:id])
     authorize! @scholarship
@@ -136,10 +151,18 @@ class ScholarshipsController < ApplicationController
 
     if @allocatable.respond_to?(:event)
       return edit_event_registration_path(@allocatable) if params[:return_to] == "registration"
+      return recipients_return_path(@allocatable.event) if params[:return_to] == "recipients"
+      return helpers.onboarding_event_row_path(@allocatable.event, @allocatable.id) if params[:return_to] == "onboarding"
       return registrants_event_path(@allocatable.event)
     end
 
     edit_scholarship_path(@scholarship)
+  end
+
+  # Return to the recipients roster, scrolling back to the participant card the
+  # Edit link was opened from (its slug rides along in the participant param).
+  def recipients_return_path(event)
+    recipients_event_path(event, anchor: ("participant-#{params[:participant]}" if params[:participant].present?))
   end
 
   # After destroying, leave the scholarship entirely: back to the grant when that
@@ -148,7 +171,11 @@ class ScholarshipsController < ApplicationController
     return grant_return_path(grant) if grant_context?(grant)
 
     event = @allocatable.try(:event)
-    return registrants_event_path(event) if event
+    if event
+      return recipients_return_path(event) if params[:return_to] == "recipients"
+      return helpers.onboarding_event_row_path(event, @allocatable.id) if params[:return_to] == "onboarding" && @allocatable.respond_to?(:id)
+      return registrants_event_path(event)
+    end
     return grant_path(grant) if grant
 
     root_path

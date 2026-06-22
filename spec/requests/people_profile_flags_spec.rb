@@ -21,7 +21,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
     profile_show_member_since: "Facilitator since",
     profile_show_phone: "555-123-4567",
     profile_show_affiliations: "Affiliations",
-    profile_show_sectors: "mb-3\">Primary sector</h2>",
+    profile_show_sectors: "mb-3\">Sectors</h2>",
     profile_show_bio: "mb-3\">Bio</h2>",
     profile_show_workshops: "mb-3\">Workshops authored</h2>",
     profile_show_workshop_variations: "Workshop variations authored",
@@ -59,6 +59,36 @@ RSpec.describe "Person profile flag visibility", type: :request do
           get person_path(person)
           expect(response.body).to include(marker)
         end
+      end
+    end
+  end
+
+  describe "#profile_show_credentials" do
+    before { person.update!(credentials: "LCSW") }
+
+    context "when false" do
+      before { person.update!(profile_show_credentials: false) }
+
+      it "hides credentials on own profile" do
+        sign_in owner_user
+        get person_path(person)
+        expect(response.body).not_to include("LCSW")
+      end
+    end
+
+    context "when true" do
+      before { person.update!(profile_show_credentials: true) }
+
+      it "shows credentials as a suffix on own profile" do
+        sign_in owner_user
+        get person_path(person)
+        expect(response.body).to include("LCSW")
+      end
+
+      it "shows credentials when admin views profile" do
+        sign_in admin
+        get person_path(person)
+        expect(response.body).to include("LCSW")
       end
     end
   end

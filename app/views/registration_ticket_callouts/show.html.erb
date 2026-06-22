@@ -1,0 +1,22 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "#{@callout.title} — #{@event.title}") %>
+<% reg_slug = params[:reg].presence %>
+<% back_path = reg_slug ? registration_ticket_path(reg_slug) : nil %>
+<% resource = @callout.resource&.decorate %>
+<%= render layout: "events/callouts/callout_page", locals: { title: @callout.title, back_path: back_path } do %>
+  <% if @callout.subtitle.present? %>
+    <p class="text-base text-gray-500 mb-4"><%= @callout.subtitle %></p>
+  <% end %>
+
+  <% if @callout.description.present? %>
+    <div class="rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700">
+      <%= form_label_html(@callout.description) %>
+    </div>
+  <% end %>
+
+  <% if resource %>
+    <div class="mt-6">
+      <%= render "events/callouts/resource_body", resource: resource %>
+    </div>
+  <% end %>
+<% end %>

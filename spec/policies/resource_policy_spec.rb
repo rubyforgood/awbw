@@ -93,6 +93,17 @@ RSpec.describe ResourcePolicy, type: :policy do
         expect(policy_for(record: published_resource, user: guest_user))
           .not_to be_allowed_to(:show?)
       end
+
+      it "can still reach a publicly visible resource that is hidden from search" do
+        hidden_public_resource = build_stubbed(
+          :resource,
+          published: false,
+          publicly_visible: true,
+          hidden_from_search: true
+        )
+        expect(policy_for(record: hidden_public_resource, user: guest_user))
+          .to be_allowed_to(:show?)
+      end
     end
   end
 
@@ -173,6 +184,31 @@ RSpec.describe ResourcePolicy, type: :policy do
         scope  = policy.apply_scope(Resource.all, type: :active_record_relation)
 
         expect(scope).to contain_exactly(public_record)
+      end
+    end
+
+    context "resources hidden from search" do
+      let!(:hidden_public_record) { create(:resource, :publicly_visible, :published, :hidden_from_search) }
+
+      it "admin still sees hidden resources" do
+        policy = described_class.new(Resource, user: admin_user)
+        scope  = policy.apply_scope(Resource.all, type: :active_record_relation)
+
+        expect(scope).to include(hidden_public_record)
+      end
+
+      it "regular user does not see hidden resources" do
+        policy = described_class.new(Resource, user: regular_user)
+        scope  = policy.apply_scope(Resource.all, type: :active_record_relation)
+
+        expect(scope).not_to include(hidden_public_record)
+      end
+
+      it "guest does not see hidden resources" do
+        policy = described_class.new(Resource, user: guest_user)
+        scope  = policy.apply_scope(Resource.all, type: :active_record_relation)
+
+        expect(scope).not_to include(hidden_public_record)
       end
     end
   end

@@ -1,4 +1,4 @@
-<%# locals: (field:, value: nil, label: nil, show_option_source: false) %>
+<%# locals: (field:, value: nil, label: nil, show_option_source: false, show_dropdown_warning: false) %>
 <% return if field.group_header? %>
 
 <% error = @field_errors&.dig(field.id) %>
@@ -18,8 +18,14 @@
     <% end %>
   </div>
 
-  <% if field.hint_text.present? %>
-    <p class="text-xs text-gray-500 mb-1.5"><%= field.hint_text %></p>
+  <% if field.subtitle.present? %>
+    <p class="rich-label text-xs text-gray-500 mb-1.5"><%= form_label_html(field.subtitle) %></p>
+  <% end %>
+
+  <%# Author-only guidance, shown as part of the dropdown's hint area so it sits
+      inside this field's bottom margin rather than butting against the next one. %>
+  <% if show_dropdown_warning %>
+    <%= render "forms/dropdown_other_warning", field: field %>
   <% end %>
 
   <% field_name = "public_registration[form_fields][#{field.id}]" %>
@@ -68,94 +74,106 @@
               <%= "required" if field.required %>><%= value %></textarea>
 
   <% when "single_select_radio" %>
-    <%# Dynamic fields (e.g. primary_service_area) source options from Sector/Category
+    <%# Dynamic fields (e.g. additional_sectors) source options from Sector/Category
         data and store none of their own, so fall back to those when present. %>
     <% radio_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
-    <% has_other = radio_options.any? { |option_label, option_value| other_option?(option_label) } %>
-    <%= tag.div class: "flex flex-wrap gap-2.5 mt-1", data: (has_other ? { controller: "other-option", action: "change->other-option#update" } : {}) do %>
+    <% has_specify = radio_options.any? { |option_label, _option_value| specify_placeholder(option_label, field).present? } %>
+    <%= tag.div class: "flex flex-wrap gap-2.5 mt-1", data: (has_specify ? { controller: "specify-option", action: "change->specify-option#update" } : {}) do %>
       <% radio_options.each do |option_label, option_value, option_description| %>
-        <% is_other = other_option?(option_label) %>
+        <% placeholder = specify_placeholder(option_label, field) %>
+        <% is_specify = placeholder.present? %>
         <label class="flex flex-col gap-1 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <span class="flex items-center gap-2">
             <input type="radio"
                    name="<%= field_name %>"
-                   value="<%= is_other ? "Other" : option_value %>"
+                   value="<%= is_specify ? option_label : option_value %>"
                    class="text-blue-600 focus:ring-blue-500"
-                   <%= "data-other-option-target=\"control\"".html_safe if is_other %>
-                   <%= "checked" if (is_other ? other_option_selected?(value) : value == option_value) || (value.blank? && field.field_identifier == "interested_in_more" && option_value == "Yes") %>
+                   <%= "data-specify-option-target=\"control\"".html_safe if is_specify %>
+                   <%= "checked" if (is_specify ? specify_option_selected?(option_label, value) : value == option_value) || (value.blank? && field.field_identifier == "interested_in_more" && option_value == "Yes") %>
                    <%= "required" if field.required %>>
             <%= option_label %>
           </span>
           <% if option_description.present? %>
             <span class="pl-6 text-xs font-normal text-gray-500"><%= option_description %></span>
           <% end %>
-          <% if is_other %>
+          <% if is_specify %>
             <input type="text"
-                   placeholder="Please specify"
-                   value="<%= other_option_text(value) %>"
-                   data-other-option-target="text"
-                   data-action="input->other-option#typed"
-                   class="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 <%= "hidden" unless other_option_selected?(value) %>">
+                   placeholder="<%= placeholder %>"
+                   value="<%= specify_option_text(option_label, value) %>"
+                   data-specify-option-target="text"
+                   data-action="input->specify-option#typed"
+                   class="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 <%= "hidden" unless specify_option_selected?(option_label, value) %>">
           <% end %>
         </label>
       <% end %>
     <% end %>
 
   <% when "single_select_dropdown" %>
-    <%# Dynamic fields (e.g. primary_service_area_single) source options from
+    <%# Dynamic fields (e.g. primary_sector_single) source options from
         Sector/Category data; everything else uses the field's own stored options. %>
-    <% dropdown_options = dynamic_form_field_options(field) ||
-         field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
+    <%# Dropdowns have no free-text input, so the "Other" option is omitted here.
+        Named specify options keep meaning as a bare choice, so they stay. %>
+    <% dropdown_options = (dynamic_form_field_options(field) ||
+         field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] })
+         .reject { |option_label, _| FormField.other_option?(option_label) } %>
     <select name="<%= field_name %>"
             id="<%= field_id %>"
             class="<%= input_classes %>"
             <%= "required" if field.required %>>
       <option value="">Select one</option>
-      <% dropdown_options.each do |option_label, option_value| %>
-        <option value="<%= option_value %>" <%= "selected" if value == option_value %>><%= option_label %></option>
+      <%# A dropdown can't show subtext, so an option's description is folded into
+          the label as "Name (description)". %>
+      <% dropdown_options.each do |option_label, option_value, option_description| %>
+        <% display_label = option_description.present? ? "#{option_label} (#{option_description})" : option_label %>
+        <option value="<%= option_value %>" <%= "selected" if value == option_value %>><%= display_label %></option>
       <% end %>
     </select>
 
   <% when "multi_select_checkbox" %>
     <% checkbox_name = "public_registration[form_fields][#{field.id}][]" %>
     <% selected_values = Array(value) %>
-    <%# Dynamic fields (e.g. primary_service_area) source options from Sector/Category
-        data; everything else uses the field's own stored answer options. Category
-        options carry an optional description, shown as subtext under the label. %>
+    <%# Dynamic fields (e.g. additional_sectors) source options from Sector/Category
+        data; everything else uses the field's own stored answer options. Sector and
+        Category options carry an optional description, shown as subtext under the label. %>
     <% checkbox_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
-    <% has_other = checkbox_options.any? { |option_label, option_value| other_option?(option_label) } %>
+    <% has_specify = checkbox_options.any? { |option_label, _option_value| specify_placeholder(option_label, field).present? } %>
     <%# Multi-column (not grid) so a sorted option list reads straight down each
         column then onto the next, rather than zig-zagging across rows. %>
-    <%= tag.div class: "columns-1 sm:columns-2 gap-2.5 mt-1", data: (has_other ? { controller: "other-option", action: "change->other-option#update" } : {}) do %>
+    <%= tag.div class: "columns-1 sm:columns-2 gap-2.5 mt-1", data: (has_specify ? { controller: "specify-option", action: "change->specify-option#update" } : {}) do %>
       <% checkbox_options.each do |option_label, option_value, option_description| %>
-        <% is_other = other_option?(option_label) %>
+        <% placeholder = specify_placeholder(option_label, field) %>
+        <% is_specify = placeholder.present? %>
         <label class="flex flex-col gap-1 mb-2.5 break-inside-avoid rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
           <span class="flex items-center gap-2">
             <input type="checkbox"
                    name="<%= checkbox_name %>"
-                   value="<%= is_other ? "Other" : option_value %>"
+                   value="<%= is_specify ? option_label : option_value %>"
                    class="rounded text-blue-600 focus:ring-blue-500"
-                   <%= "data-other-option-target=\"control\"".html_safe if is_other %>
-                   <%= "checked" if is_other ? other_option_selected?(value) : selected_values.include?(option_value) %>>
+                   <%= "data-specify-option-target=\"control\"".html_safe if is_specify %>
+                   <%= "checked" if is_specify ? specify_option_selected?(option_label, value) : selected_values.include?(option_value) %>>
             <%= option_label %>
           </span>
           <% if option_description.present? %>
             <span class="pl-6 text-xs font-normal text-gray-500"><%= option_description %></span>
           <% end %>
-          <% if is_other %>
+          <% if is_specify %>
             <input type="text"
-                   placeholder="Please specify"
-                   value="<%= other_option_text(value) %>"
-                   data-other-option-target="text"
-                   data-action="input->other-option#typed"
-                   class="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 <%= "hidden" unless other_option_selected?(value) %>">
+                   placeholder="<%= placeholder %>"
+                   value="<%= specify_option_text(option_label, value) %>"
+                   data-specify-option-target="text"
+                   data-action="input->specify-option#typed"
+                   class="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 <%= "hidden" unless specify_option_selected?(option_label, value) %>">
           <% end %>
         </label>
       <% end %>
     <% end %>
 
+  <% end %>
+
+  <% if field.hint_text.present? %>
+    <p class="rich-label text-xs text-gray-500 mt-1.5"><%= form_label_html(field.hint_text) %></p>
   <% end %>
 
   <% if field.free_form_text? && field.min_words.to_i.positive? %>

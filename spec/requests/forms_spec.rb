@@ -165,6 +165,33 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("+ Add option")
     end
 
+    it "shows payment-method options read-only (no editable inputs) without the admin override" do
+      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+      payment_field = form.form_fields.find_by(field_identifier: "payment_method")
+      expect(payment_field).to be_present
+
+      get edit_form_path(form)
+
+      # The options are still shown...
+      FormBuilderService::PAYMENT_METHOD_OPTIONS.each do |option|
+        expect(response.body).to include(option)
+      end
+      # ...but not as editable inputs, and they can't be added/removed.
+      expect(response.body).not_to match(/payment_method.{0,600}\[option_name\]/m)
+      expect(response.body).not_to match(/payment_method.{0,600}\+ Add option/m)
+      # A note explains why they're locked.
+      expect(response.body).to include("tied to system logic")
+    end
+
+    it "renders payment-method options as editable inputs with ?admin=true" do
+      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+
+      get edit_form_path(form, admin: "true")
+
+      expect(response.body).to include("[option_name]")
+      expect(response.body).to include("+ Add option")
+    end
+
     it "shows an option-source badge linking to the managed list for dynamic fields" do
       type = CategoryType.create!(name: "AgeRange", published: true)
       form = create(:form, :standalone)
@@ -211,7 +238,44 @@ RSpec.describe "Forms", type: :request do
 
       get edit_form_path(form)
 
-      expect(response.body).to include("[hint_text]")
+      expect(response.body).to include("[subtitle]")
+    end
+
+    it "warns that the Other option is hidden on a dropdown field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown, name: "Favorite color")
+      [ "Red", "Other" ].each_with_index do |name, i|
+        option = create(:answer_option, name: name, position: i)
+        create(:form_field_answer_option, form_field: field, answer_option: option)
+      end
+
+      get edit_form_path(form)
+
+      expect(response.body).to include("The \"Other\" option is hidden on dropdown fields")
+    end
+
+    it "warns when a dynamic (category-backed) dropdown sources an Other option" do
+      category_type = create(:category_type, name: "AgeRange")
+      create(:category, :published, category_type: category_type, name: "3-5")
+      create(:category, :published, category_type: category_type, name: "Other")
+      form = create(:form, :standalone)
+      create(:form_field, form: form, answer_type: :single_select_dropdown,
+             field_identifier: "primary_age_group", name: "Primary Age Group(s) Served")
+
+      get edit_form_path(form)
+
+      expect(response.body).to include("The \"Other\" option is hidden on dropdown fields")
+    end
+
+    it "does not warn about Other on a dropdown field without an Other option" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown, name: "Favorite color")
+      option = create(:answer_option, name: "Red", position: 0)
+      create(:form_field_answer_option, form_field: field, answer_option: option)
+
+      get edit_form_path(form)
+
+      expect(response.body).not_to include("The \"Other\" option is hidden on dropdown fields")
     end
   end
 
@@ -263,14 +327,47 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("<em>Your name</em>")
     end
 
+    it "warns that the Other option is hidden on a dropdown field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, answer_type: :single_select_dropdown, name: "Favorite color")
+      [ "Red", "Other" ].each_with_index do |name, i|
+        option = create(:answer_option, name: name, position: i)
+        create(:form_field_answer_option, form_field: field, answer_option: option)
+      end
+
+      get form_path(form)
+
+      expect(response.body).to include("The \"Other\" option is hidden on dropdown fields")
+    end
+
     it "renders a section header's subtext under the heading" do
       form = create(:form, :standalone)
-      create(:form_field, form: form, answer_type: :group_header, name: "Contact info", hint_text: "Tell us how to reach you")
+      create(:form_field, form: form, answer_type: :group_header, name: "Contact info", subtitle: "Tell us how to reach you")
 
       get form_path(form)
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Tell us how to reach you")
+    end
+
+    it "renders a field's subtitle as sanitized HTML under the label" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, name: "Email", subtitle: %(We'll <strong>never</strong> share it))
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("We'll <strong>never</strong> share it")
+    end
+
+    it "renders a field's hint text as sanitized HTML below the input" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, name: "Phone", hint_text: %(Include your <em>area code</em>))
+
+      get form_path(form)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Include your <em>area code</em>")
     end
 
     it "renders the form header HTML under the title" do
@@ -330,9 +427,19 @@ RSpec.describe "Forms", type: :request do
       form = create(:form, :standalone)
       header = create(:form_field, form: form, answer_type: :group_header, name: "Contact info")
       patch form_path(form), params: {
-        form: { form_fields_attributes: { "0" => { id: header.id, hint_text: "Tell us how to reach you" } } }
+        form: { form_fields_attributes: { "0" => { id: header.id, subtitle: "Tell us how to reach you" } } }
       }
-      expect(header.reload.hint_text).to eq("Tell us how to reach you")
+      expect(header.reload.subtitle).to eq("Tell us how to reach you")
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "saves the hint text for a field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, name: "Phone")
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { id: field.id, hint_text: "Include your area code" } } }
+      }
+      expect(field.reload.hint_text).to eq("Include your area code")
       expect(response).to redirect_to(edit_form_path(form))
     end
 
@@ -344,6 +451,22 @@ RSpec.describe "Forms", type: :request do
       form.reload
       expect(form.hide_answered_person_questions).to be true
       expect(form.hide_answered_form_questions).to be true
+    end
+
+    it "appends a newly added field to the bottom of the list, not the top" do
+      form = create(:form, :standalone)
+      first = create(:form_field, form: form, name: "First", position: 1)
+      second = create(:form_field, form: form, name: "Second", position: 2)
+
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { name: "Brand new", answer_type: "free_form_input_one_line" } } }
+      }
+      expect(response).to redirect_to(edit_form_path(form))
+
+      new_field = form.form_fields.find_by(name: "Brand new")
+      expect(new_field.position).to be > second.position
+      ordered = form.form_fields.reorder(position: :asc).pluck(:name)
+      expect(ordered).to eq([ first.name, second.name, "Brand new" ])
     end
 
     it "saves a long, multi-sentence question name" do

@@ -31,10 +31,22 @@
     <% if scholarship %>
       <div class="space-y-2">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-semibold text-gray-900 tabular-nums">$<%= "%.2f" % (scholarship.amount_cents.to_f / 100) %></span>
+          <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(scholarship.amount_cents) %></span>
           <%= new_tab_link "Edit", edit_scholarship_path(scholarship, return_to: "registration"),
                       class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline" %>
         </div>
+
+        <% if scholarship.grant&.funder_name.present? %>
+          <p class="text-xs text-gray-500">
+            Funded by
+            <% if scholarship.grant.donor %>
+              <%= link_to scholarship.grant.funder_name, polymorphic_path(scholarship.grant.donor),
+                          class: "font-medium text-gray-700 hover:underline" %>
+            <% else %>
+              <span class="font-medium text-gray-700"><%= scholarship.grant.funder_name %></span>
+            <% end %>
+          </p>
+        <% end %>
 
         <div class="flex flex-wrap items-center gap-1.5">
           <% if scholarship.tasks_completed? %>

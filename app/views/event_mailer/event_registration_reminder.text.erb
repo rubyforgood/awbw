@@ -2,19 +2,21 @@ Event reminder
 
 Hello <%= @person.full_name %>,
 
-This is a reminder that you're registered for the following event<%= @days_until_event.is_a?(Integer) ? (@days_until_event == 0 ? " today" : @days_until_event == 1 ? " tomorrow" : " in #{@days_until_event} days") : "" %>:
+<% if @custom_message.present? %>
+<%= strip_tags(@custom_message).strip %>
 
-<% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
+<% end %><% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
 <%= @event.pre_title %>
 <% end %><%= @event.title %>
-<% Time.use_zone(@time_zone) { %><%= @event.times(display_day: true, display_date: true) %><% } %>
-
-<% if @event.location.present? %>
-Location: <%= @event.location.name %>
+<% Time.use_zone(@time_zone) do %><% if event_dates_detail_label(@event.object).present? %><%= event_dates_detail_label(@event.object) %>
+<% end %><% if event_times_label(@event.object).present? %><%= event_times_label(@event.object) %>
+<% end %><% end %>
+<% if event_location_label(@event.object).present? %>
+Location: <%= event_location_label(@event.object) %>
 <% end %>
 
-<% if @event.videoconference_url.present? %>
-Videoconference URL: <%= @event.videoconference_url %>
+<% if event_platform_label(@event.object).present? %>
+<%= event_platform_label(@event.object) %>
 <% end %>
 
 <% if @event.labelled_cost.present? %>
@@ -22,11 +24,9 @@ Videoconference URL: <%= @event.videoconference_url %>
 <% end %>
 
 <% if @event_registration.slug.present? %>
-View your ticket:
+View your ticket for event details, directions, and calendar links:
 <%= registration_ticket_url(@event_registration.slug) %>
-
-<% end %>View the event page:
-<%= @event_url %>
+<% end %>
 
 --
 This is an automated reminder from <%= @organization_name %>.

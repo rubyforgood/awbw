@@ -99,7 +99,7 @@ module EventRegistrationServices
     end
 
     def create_form_submission(person)
-      submission = FormSubmission.create!(person: person, form: @form, role: "bulk_payment")
+      submission = FormSubmission.create!(person: person, form: @form, event: @event, role: "bulk_payment")
       save_form_answers(submission)
       submission
     end

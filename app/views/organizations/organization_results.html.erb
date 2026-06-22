@@ -7,8 +7,12 @@
         <table class="min-w-full border border-gray-200 rounded divide-y divide-gray-200">
           <thead class="bg-gray-100">
           <tr>
+            <% if allowed_to?(:manage?, Organization) %>
+              <th class="admin-only bg-blue-100 px-4 py-2 text-center text-sm font-semibold text-gray-700">Program</th>
+            <% end %>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Designations</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Age group(s)</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliated since</th>
             <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">People (<%= number_with_delimiter(@active_people_count) %>)</th>
             <% if allowed_to?(:manage?, Organization) %>
@@ -19,8 +23,14 @@
 
           <tbody class="divide-y divide-gray-100">
           <% @organizations.each do |organization| %>
-            <% cache [organization, @affiliated_since[organization.id], @active_people_counts[organization.id], current_user.super_user?] do %>
+            <% cache [organization, @affiliated_since[organization.id], @active_people_counts[organization.id], @program_statuses&.dig(organization.id), current_user.super_user?] do %>
             <tr class="hover:bg-gray-50 transition">
+              <% if allowed_to?(:manage?, Organization) %>
+                <td class="admin-only bg-blue-100 px-4 py-2 text-center">
+                  <%= organization.decorate.program_status_badge(@program_statuses&.dig(organization.id)) || content_tag(:span, "—", class: "text-gray-300") %>
+                </td>
+              <% end %>
+
               <td class="px-4 py-2">
                 <% status_label = organization.published? ? nil : organization.organization_status&.name %>
                 <%= organization_profile_button(organization, truncate_at: 30, subtitle: organization.organization_locality, label: status_label, data: { turbo_frame: "_top" }) %>
@@ -38,6 +48,16 @@
                     <%= render "sectors/tagging_label", sector: sector %>
                   <% end %>
                 </div>
+              </td>
+
+              <td class="px-4 py-2 text-sm">
+                <% primary_age = organization.all_primary_age_groups %>
+                <% additional_age = organization.all_additional_age_groups %>
+                <% if primary_age.any? || additional_age.any? %>
+                  <%= render "shared/age_group_tags", primary: primary_age, additional: additional_age, compact: true %>
+                <% else %>
+                  <span class="text-gray-400">--</span>
+                <% end %>
               </td>
 
               <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">

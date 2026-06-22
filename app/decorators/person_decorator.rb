@@ -30,6 +30,18 @@ class PersonDecorator < ApplicationDecorator
     affiliations.maximum(:end_date)
   end
 
+  # Org names where this person is currently an active facilitator. Filters the
+  # affiliations in Ruby (rather than re-querying via the .facilitators.active
+  # scopes) so list pages that preload `affiliations: :organization` pay no
+  # per-row query cost.
+  def active_facilitator_organization_names
+    affiliations
+      .select { |affiliation| affiliation.facilitator? && affiliation.active? }
+      .filter_map { |affiliation| affiliation.organization&.name }
+      .uniq
+      .sort
+  end
+
   def facilitation_end_date
     facilitator_affiliations = affiliations.facilitators
     return nil if facilitator_affiliations.active.exists?

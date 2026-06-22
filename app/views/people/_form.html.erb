@@ -1,5 +1,5 @@
 <%= simple_form_for @person, html: { multipart: true, class: "space-y-8",
-                                          data: { controller: "dirty-form affiliation-dates" } } do |f| %>
+                                          data: { controller: "dirty-form affiliation-dates affiliation-facilitator-warning" } } do |f| %>
   <%= render 'shared/errors', resource: @person if @person.errors.any? %>
   <%= render "duplicate_people_warning" %>
 
@@ -7,6 +7,14 @@
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
   <% user_id = @user&.id || @person&.user&.id %>
   <%= hidden_field_tag :user_id, user_id if user_id %>
+
+  <%# Carry the origin context through the save so #update can return the admin
+      to where they came from (e.g. the registration org-linking page). %>
+  <% if params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
+    <%= hidden_field_tag :return_to, "registration_link" %>
+    <%= hidden_field_tag :event_registration_id, params[:event_registration_id] %>
+    <%= hidden_field_tag :link_org_return_to, params[:link_org_return_to] if params[:link_org_return_to].present? %>
+  <% end %>
 
   <div class="flex flex-col md:flex-row gap-8 items-start">
     <div class="w-full md:w-3/4">
@@ -130,30 +138,38 @@
                                       .reject { |_, id| (@current_sector_ids || []).include?(id) },
                                               show_admin_flags: true } },
                                   class: "btn btn-secondary-outline" %>
+      <%= render "people/other_responses", responses: @person.other_sector_responses %>
     </div>
   </div>
 
   <!-- Profile-specific Categories -->
   <% if @person_categories_grouped.present? %>
+    <% primary_age_ids = @person.primary_age_category_ids %>
     <div class="form-group space-y-4">
+      <%# Ensures the primary-age param is always submitted so unchecking every
+          toggle clears the primary flags. %>
+      <%= hidden_field_tag "person[primary_age_category_ids][]", "" %>
       <% @person_categories_grouped.each do |type, cats| %>
+        <% is_age = type.name == "AgeRange" %>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
           <h3 class="font-semibold text-gray-700 mb-3"><%= type.display_label %></h3>
+          <% if is_age %>
+            <p class="text-sm text-gray-500 mb-3">Check every age group served, then mark the primary ones.</p>
+          <% end %>
           <div class="flex flex-wrap gap-3">
             <% cats.each do |category| %>
-              <% id = "person_category_ids_#{category.id}" %>
-              <label for="<%= id %>"
-                     class="flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                <%= hidden_field_tag "person[category_ids][]", "" %>
-                <%= check_box_tag "person[category_ids][]",
-                                  category.id,
-                                  @person.category_ids.include?(category.id),
-                                  id: id,
-                                  class: "h-4 w-4 text-blue-600 rounded" %>
-                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
-              </label>
+              <%= render "shared/category_checkbox", param_key: "person", category: category,
+                         checked: @person.category_ids.include?(category.id),
+                         is_age: is_age,
+                         primary_checked: is_age && primary_age_ids.include?(category.id) %>
             <% end %>
           </div>
+        </div>
+      <% end %>
+      <% workshop_other = @person.other_workshop_setting_responses %>
+      <% if workshop_other.any? %>
+        <div class="flex flex-wrap gap-2">
+          <%= render "people/other_responses", responses: workshop_other %>
         </div>
       <% end %>
     </div>
@@ -162,7 +178,7 @@
   <!-- Organization Affiliations -->
   <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
   <% decorated = person.decorate %>
-  <div class="form-group space-y-4">
+  <div id="affiliations" class="form-group space-y-4 scroll-mt-4">
     <div class="font-semibold text-gray-700 mb-2">
       Affiliations<span class="text-sm font-normal text-gray-500"> (only editable by admins)</span>
     </div>
@@ -272,15 +288,31 @@
   </div>
 
   <!-- PERSON FIELDS -->
-  <%= f.input :bio,
-              as: :text,
-              input_html: {
-                rows: 2,
-                maxlength: 1650,
-                class: "w-full rounded-md border-gray-300 shadow-sm
-                    focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-              },
-              hint: "Maximum 250 characters" %>
+  <%# Bio and Shout-out share one row, each half width. %>
+  <div class="flex flex-col sm:flex-row gap-6 items-start">
+    <%= f.input :bio,
+                wrapper_html: { class: "w-full sm:w-1/2" },
+                as: :text,
+                input_html: {
+                  rows: 2,
+                  maxlength: 1650,
+                  class: "w-full rounded-md border-gray-300 shadow-sm
+                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                },
+                hint: "Maximum 250 characters" %>
+
+    <%= f.input :shoutout_text,
+                label: "Shout-out",
+                wrapper_html: { class: "w-full sm:w-1/2" },
+                as: :text,
+                input_html: {
+                  rows: 2,
+                  maxlength: 1650,
+                  class: "w-full rounded-md border-gray-300 shadow-sm
+                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                },
+                hint: "Shown on an event's scholarship recipients page when this person opts into a shout-out" %>
+  </div>
 
   <div class="flex flex-col lg:flex-row gap-6 items-start">
     <div class="w-full lg:w-auto rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm lg:flex-1">
@@ -332,6 +364,13 @@
                       input_html: { class: "w-full" },
                       wrapper_html: { class: "w-full" } %>
         </div>
+
+        <div class="w-full sm:w-36">
+          <%= f.input :credentials,
+                      label: "Credentials",
+                      input_html: { class: "w-full" },
+                      wrapper_html: { class: "w-full" } %>
+        </div>
       </div>
     </div>
   </div>
@@ -374,6 +413,8 @@
                       ["Last Name Only", "last_name_only"]
                     ],
                     selected: f.object.display_name_preference || "full_name" %>
+
+          <%= f.input :profile_show_credentials, label: "Show credentials" %>
 
           <%= f.input :profile_show_pronouns, label: "Show pronouns" %>
         </div>

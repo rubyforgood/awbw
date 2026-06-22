@@ -1,4 +1,7 @@
 class PaymentsController < ApplicationController
+  # authorize! calls use with: PaymentPolicy explicitly because @payment uses STI
+  # (CashPayment, CheckPayment, ExternalProcessorPayment), and ActionPolicy would
+  # otherwise look up a policy by the subclass name (e.g. ExternalProcessorPaymentPolicy).
   PERMITTED_PAYMENT_TYPES = %w[CashPayment CheckPayment ExternalProcessorPayment].freeze
   def index
     authorize!
@@ -48,7 +51,7 @@ class PaymentsController < ApplicationController
 
         process_allocation!(@payment, allocatable)
 
-        flash[:notice] = "Allocation created. $#{'%.2f' % @payment.reload.remaining_dollars} remaining on payment."
+        flash[:notice] = "Allocation created. #{helpers.dollars_from_cents(@payment.reload.amount_cents_remaining)} remaining on payment."
         redirect_path = allocations_path(allocatable_sgid: allocatable.to_sgid.to_s)
       else
         @payment = payment_class.new(payment_params.except(:allocatable_sgid, :type))
@@ -83,6 +86,80 @@ class PaymentsController < ApplicationController
     authorize! @payment, with: PaymentPolicy
   end
 
+  def edit
+    @payment = Payment.find(params[:id])
+    authorize! @payment, with: PaymentPolicy
+  end
+
+  def update
+    @payment = Payment.find(params[:id])
+    authorize! @payment, with: PaymentPolicy
+
+    if @payment.update(edit_payment_params)
+      redirect_to payment_path(@payment), notice: "Payment was successfully updated."
+    else
+      flash.now[:alert] = @payment.errors.full_messages.join(", ")
+      render :edit, status: :unprocessable_content
+    end
+  end
+
+  def new_checkout_link
+    authorize!
+  end
+
+  def create_checkout_link
+    authorize!
+    amount_cents = (params[:amount_dollars].to_d * 100).to_i
+
+    if amount_cents <= 0
+      flash.now[:alert] = "Amount must be greater than $0.00"
+      render :new_checkout_link, status: :unprocessable_content
+      return
+    end
+
+    description = params[:description].presence || "Custom Stripe Payment"
+
+    checkout_session = Stripe::Checkout::Session.create(
+      mode: "payment",
+      line_items: [ {
+        price_data: {
+          currency: "usd",
+          product_data: { name: description },
+          unit_amount: amount_cents
+        },
+        quantity: 1
+      } ],
+      payment_intent_data: {
+        description: description
+      },
+      custom_fields: [
+        {
+          key: "first_name",
+          label: { type: "custom", custom: "First name" },
+          type: "text",
+          optional: false
+        },
+        {
+          key: "last_name",
+          label: { type: "custom", custom: "Last name" },
+          type: "text",
+          optional: false
+        },
+        {
+          key: "organization",
+          label: { type: "custom", custom: "Organization" },
+          type: "text",
+          optional: true
+        }
+      ],
+      success_url: root_url,
+      cancel_url: root_url
+    )
+
+    @checkout_url = checkout_session.url
+    render :new_checkout_link
+  end
+
   def allocation_form
     authorize!
     payment_type = params[:type].presence
@@ -112,7 +189,7 @@ class PaymentsController < ApplicationController
   end
 
   def payment_params
-    params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :amount_dollars, :currency, :check_number, :memo, :allocatable_sgid)
+    params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :payer_sgid, :additional_designation_sgid, :amount_dollars, :currency, :check_number, :memo, :allocatable_sgid)
   end
 
   def locate_allocatable
@@ -172,6 +249,10 @@ class PaymentsController < ApplicationController
     else
       payment_amount
     end
+  end
+
+  def edit_payment_params
+    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id, :payer_sgid, :additional_designation_sgid)
   end
 
   def redirect_path_for(allocatable)

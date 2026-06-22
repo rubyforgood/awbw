@@ -66,7 +66,7 @@
             <% if allocated_cents > 0 %>
               <span class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-100 px-2 py-0.5 text-[0.65rem] font-medium text-fuchsia-700">
                 <i class="fa-solid fa-circle-check text-[0.55rem]"></i>
-                $<%= "%.2f" % (allocated_cents.to_f / 100) %> allocated to registration
+                <%= dollars_from_cents(allocated_cents) %> allocated to registration
               </span>
             <% else %>
               <span class="text-xs text-gray-500">$0 allocated to registration</span>
@@ -239,6 +239,10 @@
 <%# ---- Footer actions ---- %>
 <% cancel_path = if grant_nav
      params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)
+   elsif @allocatable.respond_to?(:event) && params[:return_to] == "recipients"
+     recipients_event_path(@allocatable.event, anchor: ("participant-#{params[:participant]}" if params[:participant].present?))
+   elsif @allocatable.respond_to?(:event) && params[:return_to] == "onboarding"
+     onboarding_event_row_path(@allocatable.event, @allocatable.id)
    elsif @allocatable.respond_to?(:event)
      params[:return_to] == "registration" ? edit_event_registration_path(@allocatable) : registrants_event_path(@allocatable.event)
    elsif grant.present?
@@ -250,7 +254,7 @@
   <% if f.object.persisted? %>
     <%# turbo: true re-enables Turbo for this link since the surrounding form sets
         turbo: false — turbo_method: :delete needs Turbo to issue the DELETE. %>
-    <%= link_to scholarship_path(f.object, return_to: params[:return_to].presence),
+    <%= link_to scholarship_path(f.object, return_to: params[:return_to].presence, participant: params[:participant].presence),
                 class: "btn btn-danger-outline",
                 data: { turbo: true, turbo_method: :delete, turbo_confirm: "Remove this scholarship?" } do %>
       <i class="fa-solid fa-trash-can"></i>

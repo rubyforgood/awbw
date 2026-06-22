@@ -3,11 +3,20 @@
 # dev events that share them, event registrations for named scenarios, and form submissions.
 # Named people are looked up when present (e.g. after `rake db:seed:people_profiles`).
 
+# Faker is installed but not auto-required on staging, where the app runs as
+# RAILS_ENV=production and Bundler.require only loads the production group.
+require "faker"
+
 puts "Creating standalone registration forms…"
 unless Form.standalone.exists?(name: "Training Registration Form")
+  # Sections are built in this order (not the canonical SECTIONS order) so the
+  # seeded form reads top-to-bottom like the real AWBW Facilitator Training form:
+  # Your Information → Mailing Address → Your Organization → Participant
+  # Information → About You → Payment → Consent. The CE and "Additional forms"
+  # magic questions are appended below and slotted into place by reorder.
   FormBuilderService.new(
     name: "Training Registration Form",
-    sections: %i[person_identifier professional_info payment],
+    sections: %i[person_identifier person_contact_info professional_info person_background marketing payment consent],
     role: "registration"
   ).call
 end
@@ -87,18 +96,42 @@ if scholarship_form.header.blank?
   HTML
 end
 
-# Ensure the professional section (Primary Age Group(s) Served, Primary Service
-# Area, etc.) exists even on a registration form seeded before it was added — the
-# event Background charts aggregate answers to those questions.
-if registration_form.form_fields.where(field_identifier: "primary_age_group").none?
-  FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :professional_info ])
+# The two "Your goals" essays carry a 250-word minimum on the real form. Set it
+# on the seeded scholarship form so the public form shows the "Minimum of 250
+# words" hint and enforces it on submit. Idempotent: only sets when not already set.
+scholarship_form.form_fields
+  .where(field_identifier: %w[impact_description implementation_plan], min_words: [ nil, 0 ])
+  .update_all(min_words: 250)
+
+# Rename the generic section headers FormBuilderService creates to the AWBW
+# Facilitator Training wording, and add the subtitles shown on the real form.
+# Idempotent: each rename only matches the default name, so a re-seed (or an admin
+# edit) is left alone.
+rename_registration_header = ->(from, to, subtitle: nil) do
+  header = registration_form.form_fields.find_by(answer_type: :group_header, name: from)
+  header&.update!(name: to, subtitle: subtitle)
 end
+rename_registration_header.call("Contact Information", "Your Information")
+rename_registration_header.call("Mailing Address", "Primary Mailing Address",
+                                subtitle: "For mailing raffle prizes, incentives, and important announcements")
+rename_registration_header.call("Organization Information", "Your Organization",
+                                subtitle: "If your organization has a website, please put your organization name as it appears on the website. " \
+                                          "If you're not associated with an organization, please provide a name for your art program.")
+rename_registration_header.call("Professional Information", "Participant Information")
+rename_registration_header.call("Background Information", "About You")
+
+# The real form folds the "How did you hear" / "What motivated you" questions in
+# under the "About You" heading, with no separate Marketing header and no
+# "interested in learning more?" question. Drop both so the seeded form matches.
+registration_form.form_fields.where(answer_type: :group_header, name: "Marketing").destroy_all
+registration_form.form_fields.where(field_identifier: "interested_in_more").destroy_all
 
 # The CE-interest "magic question": a single Yes/No whose answer drives the
 # resulting registration's ce_credit_requested flag (see
 # EventRegistrationServices::PublicRegistration). Seeded straight onto the form
 # with its own section so the form builder's add/remove-section logic leaves it
-# alone, and carrying the well-known field_identifier the service keys off.
+# alone, and carrying the well-known field_identifier the service keys off. A
+# follow-on license-number question mirrors the real form's CE block.
 ce_identifier = EventRegistrationServices::PublicRegistration::CE_CREDIT_INTEREST_IDENTIFIER
 if registration_form.form_fields.where(field_identifier: ce_identifier).none?
   next_position = (registration_form.form_fields.maximum(:position) || 0) + 1
@@ -112,7 +145,7 @@ if registration_form.form_fields.where(field_identifier: ce_identifier).none?
     visibility: :always_ask
   )
   ce_field = registration_form.form_fields.create!(
-    name: "Might you be seeking continuing education (CE) hours for attending this training?",
+    name: "Do you plan to use Continuing Education (CE) hours for this course?",
     answer_type: :single_select_radio,
     status: :active,
     position: next_position + 1,
@@ -121,13 +154,78 @@ if registration_form.form_fields.where(field_identifier: ce_identifier).none?
     section: "continuing_education",
     visibility: :always_ask,
     width: :full,
-    hint_text: "CE hours are available for select trainings. Let us know and our team will follow up with details."
+    subtitle: "CE hours are available for select trainings. Let us know and our team will follow up with details."
   )
   %w[Yes No].each_with_index do |opt, idx|
     ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
     ce_field.form_field_answer_options.create!(answer_option: ao)
   end
+  registration_form.form_fields.create!(
+    name: "If seeking CE hours, what is your LMFT, LCSW, LPCC or LEP license number?",
+    answer_type: :free_form_input_one_line,
+    status: :active,
+    position: next_position + 2,
+    required: false,
+    field_identifier: "ce_license_number",
+    section: "continuing_education",
+    visibility: :always_ask,
+    width: :full
+  )
 end
+
+# The "Additional forms" question: a multi-select whose checked options drive the
+# resulting registration's invoice_requested / w9_requested flags (see
+# EventRegistrationServices::PublicRegistration). The digital ticket reads those
+# flags to surface the matching downloads. Seeded onto its own section, like the
+# CE question above, so the form builder's add/remove-section logic leaves it
+# alone, and carrying the well-known field_identifier the service keys off. The
+# W-9/Invoice option names must match the service's ADDITIONAL_FORMS_* constants;
+# "No forms needed" is an inert opt-out the service ignores.
+additional_forms_identifier = EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_IDENTIFIER
+if registration_form.form_fields.where(field_identifier: additional_forms_identifier).none?
+  next_position = (registration_form.form_fields.maximum(:position) || 0) + 1
+  registration_form.form_fields.create!(
+    name: "Additional forms",
+    answer_type: :group_header,
+    status: :active,
+    position: next_position,
+    required: false,
+    section: "additional_forms",
+    visibility: :always_ask
+  )
+  additional_forms_field = registration_form.form_fields.create!(
+    name: "Do you need either of the following?",
+    answer_type: :multi_select_checkbox,
+    status: :active,
+    position: next_position + 1,
+    required: false,
+    field_identifier: additional_forms_identifier,
+    section: "additional_forms",
+    visibility: :always_ask,
+    width: :full,
+    subtitle: "If selected, these will be available on your digital registration ticket."
+  )
+  [
+    EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_W9,
+    EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_INVOICE,
+    "No forms needed"
+  ].each_with_index do |opt, idx|
+    ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
+    additional_forms_field.form_field_answer_options.create!(answer_option: ao)
+  end
+end
+
+# Renumber the form's fields so the appended CE block sits between "About You" and
+# "Payment Information", and "Additional forms" sits between payment and consent —
+# the order the real form uses. Idempotent: re-running lands on the same order.
+registration_section_order = %w[
+  person_identifier person_contact_info professional background marketing
+  continuing_education payment additional_forms consent
+]
+registration_section_rank = registration_section_order.each_with_index.to_h
+registration_form.form_fields.reorder(:position).to_a.each_with_index
+  .sort_by { |field, index| [ registration_section_rank.fetch(field.section, registration_section_rank.size), index ] }
+  .each_with_index { |(field, _index), position| field.update_column(:position, position + 1) }
 
 # Each entry: [title, form_type, cost_cents, scholarship?, visibility, span_days]
 # form_type: :long, :short, or :none. span_days (optional) makes a multi-day event.
@@ -183,7 +281,7 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
   # find_or_create_by! only sets these on create, so without this an existing DB
   # keeps stale dates/cost and neither the index ordering, the multi-day span, nor
   # the registration fee would update.
-  event.update!(start_date: start_date, end_date: end_date, registration_close_date: registration_close, cost_cents: cost_cents)
+  event.update!(start_date: start_date, end_date: end_date, registration_close_date: registration_close, cost_cents: cost_cents, facilitator_training: title.match?(/training/i))
 
   if registerable
     EventForm.find_or_create_by!(event: event, role: "registration") do |ef|
@@ -212,13 +310,356 @@ end
 # so the seeded data demonstrates those grey parentheticals on its registration
 # page. force-set on re-seed, mirroring the date/cost refresh above.
 Event.find_by(title: "AWBW Facilitator Training")&.update!(
-  videoconference_url: "https://awbw-org.zoom.us/j/0000000000",
+  videoconference_url: "https://awbw-org.zoom.us/j/88285411273",
   videoconference_label: "Zoom",
+  videoconference_passcode: "awbwmarch",
   autoshow_registration_details: true,
   hint_dates: "must attend both days",
   hint_times: "both days",
   hint_registration_cost: "due within 3 weeks of registration"
 )
+
+# Seed the "Before you attend" details — the materials/art-supply info that used to
+# live in a long confirmation email and that registrants routinely missed. Shown on
+# its own ticket-linked page (and via the prominent amber call-out on the ticket).
+# A custom label demonstrates that the heading is admin-editable. Only set when
+# blank so admin edits survive a re-seed.
+flagship = Event.find_by(title: "AWBW Facilitator Training")
+
+# Make the flagship training the admin's favorite event so the admin dashboard
+# has a sensible default highlighted event after seeding.
+admin_user.update!(favorite_event: flagship) if admin_user && flagship
+
+if flagship && flagship.event_details.blank?
+  flagship.update!(event_details_label: "Art supplies & what to bring", event_details: <<~HTML.strip)
+    <p>Thank you for registering to join us for AWBW's Art Facilitator Training!</p>
+    <p>Below you'll find information about the art supplies used in each of the five hands-on workshops included in the training, along with optional printable workshop worksheets. We're sharing these materials in advance in case you'd like to gather supplies or print resources ahead of time.</p>
+    <p>You will receive additional training information as we get closer to the training dates.</p>
+    <p>Have a question? <a href="/contact_us">Reach out through our contact form</a> and we'll be happy to help.</p>
+    <p>We will be facilitating five hands-on art workshops, all of which can be done with paper, writing utensils (crayons, colored pencils, markers, etc.) and scissors.</p>
+    <ul>
+      <li>You'll receive printable workshop worksheets once your training fees are paid — printing them is optional.</li>
+      <li>You're welcome to use any art supplies you like: oil/chalk pastels, paints, watercolors, collage materials, etc.</li>
+      <li>You may want a journal or lined paper for writing.</li>
+    </ul>
+    <p>The lists below, grouped by workshop, are <strong>optional</strong> supplies you may want on hand. We'll demonstrate how to use them during the training.</p>
+    <h3>Workshop 1</h3>
+    <ul>
+      <li>Clear glass stones</li>
+      <li>Pendant settings (cabochon settings and swivel hooks to hold the glass stones)</li>
+      <li>Hole punch to create paper circles — we recommend a 1.25" circle punch</li>
+      <li>Paper for circles — white and/or colored cardstock, or printmaking paper painted with acrylics</li>
+      <li>Glue to adhere paper circles to the glass stones — we recommend Aleene's Clear Gel Tacky Glue</li>
+      <li>Clear packing tape</li>
+    </ul>
+    <h3>Workshop 2</h3>
+    <ul>
+      <li>Rough &amp; Ready Shrinky Dink paper</li>
+      <li>Permanent markers</li>
+      <li>Colored pencils (we recommend Prismacolor)</li>
+      <li>A hole punch (single or three-hole is fine)</li>
+      <li>Thin ribbon or wire (1/8 in. or thinner)</li>
+      <li>An oven to cook the shrink paper (a toaster oven — not a toaster — works well)</li>
+    </ul>
+    <h3>Workshop 3</h3>
+    <ul>
+      <li>A glue stick (used in workshops 3 &amp; 5)</li>
+      <li>Scotch tape</li>
+      <li>Two copies of the dice handout (sent after fees are paid), printed on cardstock</li>
+    </ul>
+    <h3>Workshop 4</h3>
+    <ul>
+      <li>Oil-based pastels (we recommend Cray-Pas)</li>
+      <li>Card/heavy stock or watercolor paper</li>
+      <li>Watercolors (we recommend Prang)</li>
+      <li>Cups for water</li>
+      <li>Paintbrush</li>
+      <li>Painter's tape</li>
+    </ul>
+    <h3>Workshop 5</h3>
+    <ul>
+      <li>Card/heavy stock paper</li>
+      <li>Collage materials</li>
+    </ul>
+  HTML
+end
+
+# Seed the "CE hours" details — the continuing-education requirements, payment,
+# and sign-in rules that used to live in a long CE confirmation email. Shown on its
+# own ticket-linked page (and via the prominent indigo call-out on the ticket) for
+# registrants who requested CE credit. A custom label demonstrates that the heading
+# is admin-editable. Only set when blank so admin edits survive a re-seed.
+if flagship && flagship.ce_hours_details.blank?
+  flagship.update!(ce_hours_details_label: "Continuing education", ce_hours_details: <<~HTML.strip)
+    <p>This training is approved by the California Association of Marriage and Family Therapists (CAMFT, provider #000000) for <strong>12 CE hours</strong>. AWBW is approved to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs.</p>
+    <h3>Before the training</h3>
+    <ul>
+      <li>Provide your license type and license number when you register — we cannot issue a CE certificate without it.</li>
+      <li>CE hours carry a separate $25 processing fee, payable with your registration.</li>
+    </ul>
+    <h3>During the training</h3>
+    <ul>
+      <li>You must sign in and out each day. CE hours are awarded only for full attendance — partial credit is not available.</li>
+      <li>Arrive on time; late arrivals or early departures may forfeit CE eligibility.</li>
+    </ul>
+    <h3>After the training</h3>
+    <ul>
+      <li>Complete the post-training evaluation within one week.</li>
+      <li>Your CE certificate will be emailed within three weeks of the training.</li>
+    </ul>
+    <p>Questions about continuing education? Reach out and our team will follow up with details.</p>
+  HTML
+end
+
+# The trauma-informed training also offers CE hours, with the default label.
+trauma = Event.find_by(title: "Facilitator Training: Trauma-Informed Art Practices")
+if trauma && trauma.ce_hours_details.blank?
+  trauma.update!(ce_hours_details: <<~HTML.strip)
+    <p>This training is approved by CAMFT (provider #000000) for <strong>18 CE hours</strong> across its three days.</p>
+    <ul>
+      <li>Provide your license type and number at registration; a $25 CE processing fee applies.</li>
+      <li>Daily sign-in/sign-out is required — CE hours are awarded for full attendance only.</li>
+      <li>Complete the post-training evaluation to receive your certificate within three weeks.</li>
+    </ul>
+  HTML
+end
+
+# Seed example registration ticket callouts on the art workshop — admin-configured
+# call-outs that show on the registration ticket and each link to their own page.
+# Demonstrates both types (reference reading + an action), custom colours/icons, a
+# subtitle, and a paid-only callout that stays hidden until the registration is paid.
+# Idempotent: only seeded when the workshop has no callouts yet, so admin edits survive.
+art_workshop = Event.find_by(title: "Mindful Art for Survivors Workshop")
+if art_workshop && art_workshop.registration_ticket_callouts.none?
+  art_workshop.registration_ticket_callouts.create!(
+    [
+      {
+        title: "What to bring",
+        subtitle: "A short list of optional supplies",
+        callout_type: "reference",
+        color_class: "green",
+        icon_class: "fa-solid fa-palette",
+        position: 1,
+        description: <<~HTML.strip
+          <p>Everything is provided, but you're welcome to bring your own supplies if you'd like.</p>
+          <ul>
+            <li>A journal or sketchbook</li>
+            <li>Your favourite pens, markers, or colored pencils</li>
+            <li>A water bottle and anything that helps you feel comfortable</li>
+          </ul>
+        HTML
+      },
+      {
+        title: "Studio location & parking",
+        subtitle: "Getting here on the day",
+        callout_type: "reference",
+        color_class: "amber",
+        icon_class: "fa-solid fa-location-dot",
+        position: 2,
+        description: <<~HTML.strip
+          <p>The studio is on the second floor — take the elevator near the main entrance.</p>
+          <p>Street parking is free after 10am. There is also a paid lot directly across the street.</p>
+        HTML
+      },
+      {
+        title: "Download your workbook",
+        subtitle: "Available once your spot is paid",
+        callout_type: "action",
+        color_class: "blue",
+        icon_class: "fa-solid fa-file-pdf",
+        payment_access_gated: true,
+        position: 3,
+        description: <<~HTML.strip
+          <p>Thanks for completing your payment! Your printable workbook is ready.</p>
+          <p>Printing it is optional — we'll have copies available at the studio too.</p>
+        HTML
+      }
+    ]
+  )
+end
+
+# Reusable registration-ticket callout "components" drawn from the real AWBW
+# facilitator-training emails. Each entry is one callout; events pick the subset
+# they need from COMPONENT_CALLOUTS below. The flagship training shows all of
+# them (so the ticket exercises every colour, icon, type, and the paid-only gate);
+# other trainings mix and match a generic subset. `payment_access_gated` callouts stay
+# hidden until the registration is paid. Idempotent: an event is only seeded when
+# it has no callouts yet, so admin edits survive a re-seed.
+# NOTE: These seeded admin RegistrationTicketCallouts are superseded by the
+# code-defined MagicTicketCallouts (payment, CE, scholarship, art supplies, forms,
+# handouts, portal, videoconference, FAQ, certificate), which now render on every
+# ticket. The block below is kept for reference but disabled — remove the
+# =begin/=end to re-enable seeded admin callouts.
+=begin
+component_callouts = {
+  art_supply_info: {
+    title: "Art supply info",
+    subtitle: "Optional supplies for the five hands-on workshops",
+    callout_type: "reference", color_class: "amber", icon_class: "fa-solid fa-palette",
+    description: <<~HTML.strip
+      <p>We'll facilitate five hands-on art workshops, all of which can be done with paper, writing utensils (crayons, colored pencils, markers, etc.) and scissors.</p>
+      <ul>
+        <li>Use any art supplies you like — oil/chalk pastels, paints, watercolors, collage materials, etc.</li>
+        <li>You may want a journal or lined paper for writing.</li>
+      </ul>
+      <p>The list below, grouped by workshop, is <strong>optional</strong> — we'll demonstrate how to use everything at the training.</p>
+      <ul>
+        <li><strong>Workshop 1:</strong> clear glass stones; cabochon settings and swivel hooks; a 1" circle punch; white/colored cardstock or printmaking paper; Aleene's Clear Gel Tacky Glue; packing tape; scissors.</li>
+        <li><strong>Workshop 2:</strong> Rough &amp; Ready Shrinky Dink paper; permanent markers; Prismacolor colored pencils; a hole punch; thin ribbon or wire; an oven (a toaster oven, not a toaster).</li>
+        <li><strong>Workshop 3:</strong> a glue stick; scotch tape; two copies of the dice handout printed on cardstock.</li>
+        <li><strong>Workshop 4:</strong> Cray-Pas oil pastels; card/heavy stock or watercolor paper; Prang watercolors; cups for water; a paintbrush; painter's tape.</li>
+        <li><strong>Workshop 5:</strong> card/heavy stock paper; collage materials; tissue paper.</li>
+      </ul>
+    HTML
+  },
+  training_workshop_worksheets: {
+    title: "Training workshop worksheets",
+    subtitle: "Print these before the training (optional)",
+    callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-file-lines",
+    payment_access_gated: true,
+    description: <<~HTML.strip
+      <p>You're welcome to print the 2-day training workshop worksheets to use as you create — printing is optional.</p>
+      <p>Your worksheets are available now that your training fee is paid.</p>
+    HTML
+  },
+  aha_moments_worksheet: {
+    title: "AHA Moments worksheet",
+    subtitle: "Capture your reflections as you create",
+    callout_type: "action", color_class: "green", icon_class: "fa-solid fa-lightbulb",
+    description: <<~HTML.strip
+      <p>We encourage you to print the AHA Moments worksheet to capture your thoughts about how the art workshops may shift things for you personally — and how you might use them to serve others.</p>
+    HTML
+  },
+  participation_requirements: {
+    title: "Participation requirements",
+    subtitle: "Both full days are required for certification",
+    callout_type: "reference", color_class: "purple", icon_class: "fa-solid fa-certificate",
+    description: <<~HTML.strip
+      <p>Participating in <strong>both full training days</strong> (9am–4:30pm Pacific Time each day) is required to receive certification as an AWBW facilitator.</p>
+      <p>If you're unable to attend both full days, please <a href="/contact_us">let us know</a> as soon as possible.</p>
+    HTML
+  },
+  letter_to_supervisors: {
+    title: "Letter to supervisors",
+    subtitle: "Share to request release time",
+    callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-file-arrow-down",
+    description: <<~HTML.strip
+      <p>We recommend sharing a letter with your supervisor (if applicable) to request relief from other duties during the two training days — being fully relieved helps you stay present.</p>
+      <p>The letter is available to download and share.</p>
+    HTML
+  },
+  ce_hours: {
+    title: "Continuing education (CE) hours",
+    subtitle: "Requirements, fee, and sign-in rules",
+    callout_type: "reference", color_class: "indigo", icon_class: "fa-solid fa-graduation-cap",
+    description: <<~HTML.strip
+      <p>Licensed LMFTs, LCSWs, LPCCs, and LEPs can earn up to <strong>12 Continuing Education hours</strong> for the training.</p>
+      <ul>
+        <li>Let us know by Monday, July 20 so we can send the required materials.</li>
+        <li>CE hour fee: $120 ($10 per hour).</li>
+        <li>You must be on time each day; payment is due by 9:00 AM PT on July 22.</li>
+      </ul>
+    HTML
+  },
+  facilitator_portal: {
+    title: "Facilitator Portal access",
+    subtitle: "Available once attendance & payment are complete",
+    callout_type: "reference", color_class: "rose", icon_class: "fa-solid fa-right-to-bracket",
+    payment_access_gated: true,
+    description: <<~HTML.strip
+      <p>Access to the Facilitator Portal is provided once your attendance requirements are met and your training fee is paid.</p>
+      <p>You're all set — watch for your portal invitation.</p>
+    HTML
+  },
+  add_to_calendar: {
+    title: "Add to your calendar",
+    subtitle: "Save both training days",
+    callout_type: "action", color_class: "green", icon_class: "fa-solid fa-calendar-plus",
+    description: <<~HTML.strip
+      <p>Save both training days to your calendar so you don't miss a moment — you'll find an add-to-calendar link at the bottom of this ticket too.</p>
+    HTML
+  },
+  self_care_engagement: {
+    title: "Self-care & engagement",
+    subtitle: "Be on your own device and care for yourself",
+    callout_type: "reference", color_class: "rose", icon_class: "fa-solid fa-heart",
+    description: <<~HTML.strip
+      <p>Please log on at 8:50am Pacific Time so we can start promptly at 9am.</p>
+      <ul>
+        <li>This training is interactive — come ready to participate and connect.</li>
+        <li>If possible, <strong>be on your own individual device</strong> and keep your camera on; you're welcome to turn it off for personal needs.</li>
+        <li>It's important to <strong>practice self-care</strong> — have water, snacks, and whatever helps you feel comfortable nearby.</li>
+      </ul>
+    HTML
+  },
+  all_training_handouts: {
+    title: "All training handouts",
+    subtitle: "Agenda, worksheets, and resources in one place",
+    callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-folder-open",
+    payment_access_gated: true,
+    description: <<~HTML.strip
+      <p>All of the handouts for the training — including the agenda for both days and the art workshop worksheets — are available in one place.</p>
+    HTML
+  },
+  inviting_responding_sharing: {
+    title: "Inviting & responding to sharing",
+    subtitle: "Holding space in breakout rooms",
+    callout_type: "reference", color_class: "purple", icon_class: "fa-solid fa-comments",
+    description: <<~HTML.strip
+      <p>Throughout the training you'll be invited to hold space, share, and witness others. This resource offers guidance on doing so with openness and care during breakout rooms.</p>
+      <p>Sharing is part of the art — together we co-create a space where everyone feels supported.</p>
+    HTML
+  },
+  training_agenda: {
+    title: "Training agenda",
+    subtitle: "What to expect across the two days",
+    callout_type: "reference", color_class: "amber", icon_class: "fa-solid fa-calendar-days",
+    description: <<~HTML.strip
+      <p>Our agenda covers both training days, including an hour-long food break around 12:00pm PT each day.</p>
+    HTML
+  },
+  zoom_connection_info: {
+    title: "Zoom connection info",
+    subtitle: "Join link, meeting ID, and passcode",
+    callout_type: "action", color_class: "blue", icon_class: "fa-solid fa-video",
+    payment_access_gated: true,
+    description: <<~HTML.strip
+      <p>Join us on Zoom for both training days. You'll find the join link in this ticket's videoconference section.</p>
+      <ul>
+        <li><strong>Meeting ID:</strong> 882 8541 1273</li>
+        <li><strong>Passcode:</strong> awbwmarch</li>
+      </ul>
+      <p>Please update Zoom to the latest version beforehand to avoid delays getting in.</p>
+    HTML
+  },
+  questions_next_steps: {
+    title: "Questions & next steps",
+    subtitle: "More details are on the way",
+    callout_type: "reference", color_class: "gray", icon_class: "fa-solid fa-envelope",
+    description: <<~HTML.strip
+      <p>You'll receive more details as we get closer to the training dates.</p>
+      <p>In the meantime, please <a href="/contact_us">reach out</a> with any questions — we're always happy to help. We look forward to creating and connecting with you!</p>
+    HTML
+  }
+}
+
+# The flagship training (event 1) gets every component; the trauma-informed
+# training gets a generic subset that doesn't assume the five-workshop supplies.
+callouts_by_event = {
+  "AWBW Facilitator Training" => component_callouts.keys,
+  "Facilitator Training: Trauma-Informed Art Practices" =>
+    %i[participation_requirements letter_to_supervisors add_to_calendar self_care_engagement questions_next_steps]
+}
+
+callouts_by_event.each do |event_title, component_keys|
+  event = Event.find_by(title: event_title)
+  next unless event && event.registration_ticket_callouts.none?
+
+  component_keys.each_with_index do |key, i|
+    event.registration_ticket_callouts.create!(component_callouts.fetch(key).merge(position: i + 1))
+  end
+end
+=end
 
 puts "Creating Event Registrations…"
 
@@ -234,6 +675,7 @@ rosa_dlc = Person.find_by(first_name: "Rosa", last_name: "De La Cruz")
 mario_j = Person.find_by(first_name: "Mario", last_name: "Johnson") # no user
 angel_g = Person.find_by(first_name: "Angel", last_name: "Garcia") # no user
 linda_w = Person.find_by(first_name: "Linda", last_name: "Williams") # no user
+aisha_person = User.find_by(email: "aisha.user@example.com")&.person
 
 # Events by name for clarity
 facilitator_training = Event.find_by(title: "AWBW Facilitator Training")
@@ -281,18 +723,22 @@ end
 registrations_data = []
 
 # --- Facilitator Training: multiple registrations from different people, extended form ---
-# Amy: registered, with form submission, scholarship recipient
-# Maria Johnson: registered, with form submission (has user)
+# Amy: registered, with form submission, scholarship recipient, requested W-9 and invoice
+# Maria Johnson: registered, with form submission (has user), requested an invoice
 # Anna Garcia: attended, with form submission (has user)
 # Mario Johnson: registered, no form submission (no user)
 # Kim Davis: cancelled (has user)
+# Aisha: registered, intends to pay — no payment recorded, but access is granted
+#   so she can reach her training materials (the intends_to_pay scenario). Pairs
+#   with Amy on this same event, who DOES have payments, for side-by-side review.
 if facilitator_training
   [
-    { person: amy_person, status: "registered", scholarship_requested: true },
-    { person: maria_j, status: "registered" },
-    { person: anna_g, status: "attended" },
+    { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true, ce_credit_requested: true },
+    { person: maria_j, status: "registered", invoice_requested: true, ce_credit_requested: true, intends_to_pay: true },
+    { person: anna_g, status: "attended", ce_credit_requested: true, intends_to_pay: true },
     { person: mario_j, status: "registered" },
-    { person: kim_d, status: "cancelled" }
+    { person: kim_d, status: "cancelled" },
+    { person: aisha_person, status: "registered", intends_to_pay: true }
   ].each do |data|
     next unless data[:person]
     registrations_data << data.merge(event: facilitator_training)
@@ -300,14 +746,14 @@ if facilitator_training
 end
 
 # --- Trauma Training: extended form, scholarship ---
-# Sarah Smith: registered with form (has user)
+# Sarah Smith: registered with form (has user), requested an invoice
 # Jessica Brown: registered with form, scholarship (has user)
 # Angel Garcia: registered, no form (no user)
 # Linda Williams: no_show (no user)
 if trauma_training
   [
-    { person: sarah_s, status: "registered" },
-    { person: jessica_b, status: "registered", scholarship_requested: true },
+    { person: sarah_s, status: "registered", invoice_requested: true, ce_credit_requested: true },
+    { person: jessica_b, status: "registered", scholarship_requested: true, ce_credit_requested: true },
     { person: angel_g, status: "registered" },
     { person: linda_w, status: "no_show" }
   ].each do |data|
@@ -365,14 +811,17 @@ end
 # Create all registrations
 registrations_data.each do |data|
   next unless data[:event] && data[:person]
-  next if EventRegistration.exists?(event: data[:event], registrant: data[:person])
 
-  EventRegistration.create!(
-    event: data[:event],
-    registrant: data[:person],
-    status: data[:status] || "registered",
-    scholarship_requested: data[:scholarship_requested] || false
-  )
+  registration = EventRegistration.find_or_initialize_by(event: data[:event], registrant: data[:person])
+  registration.status = data[:status] || "registered" if registration.new_record?
+  registration.scholarship_requested ||= data[:scholarship_requested] || false
+  # Keep the request flags in sync on re-seed so the named scenarios survive an
+  # existing DB (find_or_initialize no longer recreates these registrations).
+  registration.w9_requested = data[:w9_requested] || false
+  registration.invoice_requested = data[:invoice_requested] || false
+  registration.ce_credit_requested = data[:ce_credit_requested] || false
+  registration.intends_to_pay = data[:intends_to_pay] || false
+  registration.save!
 end
 
 # Give the flagship training its demo cohort: top up to 10 active registrants with
@@ -418,11 +867,15 @@ end
 
 puts "Tagging registrants with life experiences and workshop settings…"
 # The background page charts registrants' StoryPopulation (life experiences) and
-# WorkshopEnvironment (settings) tags — the same tags public registration writes
-# from the "Client life experiences" and "Workshop environments" checkboxes (see
-# PublicRegistration#assign_tags). The seed form submissions above only fill text
-# fields, so without this the data-rich trainings' background charts are empty.
-# Tag each active registrant with a deterministic spread so re-seeding is idempotent.
+# WorkshopEnvironment (settings) tags. Public registration no longer collects these
+# (the "Workshop settings" and "Client life experiences" questions were removed), but
+# the charts are retained for historical data and admin-applied tags, so seed a
+# deterministic spread here so older trainings' background charts aren't empty.
+#
+# These tags live on the Person, not per-registration, so anyone registered for the
+# flagship "AWBW Facilitator Training" (event #1) would surface on its charts too.
+# Keep event #1 clean by never tagging its registrants, and by stripping any such
+# tags a prior seed left on them.
 life_experience_categories = Category.joins(:category_type)
   .where(category_types: { name: "StoryPopulation" })
   .order(:name).to_a
@@ -437,10 +890,17 @@ pick_categories = ->(categories, i, offset) do
   [ categories[i % categories.size], categories[(i + offset) % categories.size] ]
 end
 
-[ facilitator_training, trauma_training ].compact.each do |evt|
+flagship_registrant_ids = facilitator_training&.event_registrations&.active&.pluck(:registrant_id) || []
+CategorizableItem.joins(category: :category_type)
+  .where(categorizable_type: "Person", categorizable_id: flagship_registrant_ids)
+  .where(category_types: { name: [ "WorkshopEnvironment", "StoryPopulation" ] })
+  .destroy_all
+
+[ trauma_training, wellness_day, youth_day, mindful_art, virtual_session, roundtable, family_day ].compact.each do |evt|
   evt.event_registrations.active.includes(:registrant).each_with_index do |registration, i|
     person = registration.registrant
     next unless person
+    next if flagship_registrant_ids.include?(person.id)
 
     # Each registrant gets two life experiences and two settings, offset by their
     # position so the charts show a realistic spread across categories.
@@ -463,8 +923,8 @@ if facilitator_training
   reg_form = facilitator_training.registration_form
   if reg_form
     # People with users who filled out the form
-    [ amy_person, maria_j, anna_g ].compact.each do |person|
-      form_submissions << { person: person, form: reg_form }
+    [ amy_person, maria_j, anna_g, aisha_person ].compact.each do |person|
+      form_submissions << { person: person, form: reg_form, event: facilitator_training }
     end
     # Mario Johnson (no user) did NOT fill out the form — registration without form submission
   end
@@ -476,10 +936,10 @@ if trauma_training
   if reg_form
     # Sarah Smith (has user) and Jessica Brown (has user) filled out forms
     [ sarah_s, jessica_b ].compact.each do |person|
-      form_submissions << { person: person, form: reg_form }
+      form_submissions << { person: person, form: reg_form, event: trauma_training }
     end
     # Angel Garcia (no user) filled out the form — person without user + form
-    form_submissions << { person: angel_g, form: reg_form } if angel_g
+    form_submissions << { person: angel_g, form: reg_form, event: trauma_training } if angel_g
     # Linda Williams (no user) did NOT fill out the form
   end
 end
@@ -490,10 +950,10 @@ if wellness_day
   if reg_form
     # People with users
     [ amy_person, maria_j, sarah_s, jessica_b, kim_d ].compact.each do |person|
-      form_submissions << { person: person, form: reg_form }
+      form_submissions << { person: person, form: reg_form, event: wellness_day }
     end
     # Rosa (has user) filled it out too
-    form_submissions << { person: rosa_dlc, form: reg_form } if rosa_dlc
+    form_submissions << { person: rosa_dlc, form: reg_form, event: wellness_day } if rosa_dlc
     # Lisa Williams (has user) registered but didn't fill out the form — person with user + no form
   end
 end
@@ -501,20 +961,20 @@ end
 # Mindful Art (short form, has scholarship) — Amy filled out the form
 if mindful_art
   reg_form = mindful_art.registration_form
-  form_submissions << { person: amy_person, form: reg_form } if reg_form && amy_person
+  form_submissions << { person: amy_person, form: reg_form, event: mindful_art } if reg_form && amy_person
 end
 
 # Youth Day (short form) — Maria filled it out
 if youth_day
   reg_form = youth_day.registration_form
-  form_submissions << { person: maria_j, form: reg_form } if reg_form && maria_j
+  form_submissions << { person: maria_j, form: reg_form, event: youth_day } if reg_form && maria_j
 end
 
 # Virtual Session (short form) — Amy (has user) registered but no form submission — person with user + no form
 # Family Day (short form) — Rosa filled it out
 if family_day
   reg_form = family_day.registration_form
-  form_submissions << { person: rosa_dlc, form: reg_form } if reg_form && rosa_dlc
+  form_submissions << { person: rosa_dlc, form: reg_form, event: family_day } if reg_form && rosa_dlc
 end
 
 # Create all form submissions with sample field responses
@@ -522,10 +982,14 @@ form_submissions.each do |data|
   next unless data[:person] && data[:form]
   next if FormSubmission.exists?(person: data[:person], form: data[:form])
 
-  pf = FormSubmission.create!(person: data[:person], form: data[:form])
+  pf = FormSubmission.create!(person: data[:person], form: data[:form], event: data[:event])
 
   # Fill in required text fields with sample data
   data[:form].form_fields.where(answer_type: [ :free_form_input_one_line, :free_form_input_paragraph ]).each do |field|
+    # Organization Name + Position / Title are seeded later with org-matching values
+    # (record_organization_answers), so leave them blank here.
+    next if %w[agency_name agency_position].include?(field.field_identifier)
+
     sample_text = case field.field_identifier
     when "first_name" then data[:person].first_name
     when "last_name" then data[:person].last_name
@@ -538,7 +1002,6 @@ form_submissions.each do |data|
     when "agency_organization_name" then Faker::Company.name
     when "position_title" then "Facilitator"
     when "agency_website" then "https://example.org"
-    when "racial_ethnic_identity" then "Prefer not to say"
     when "secondary_email" then data[:person].email_2
     when "preferred_nickname" then data[:person].first_name
     when "pronouns" then [ "she/her", "he/him", "they/them" ].sample
@@ -559,39 +1022,133 @@ form_submissions.each do |data|
   end
 end
 
-puts "Recording professional answers (age group / service area) on registration submissions…"
-# The Background page charts the registrants' "Primary Age Group(s) Served" and
-# "Primary Service Area(s)" registration answers. Public registration stores
-# these checkbox answers as ", "-joined category / sector ids (see
-# PublicRegistration#save_form_answers + assign_tags); seed them the same way so
-# the charts have data. Age group is read from the form answers; service area is
-# read from SectorableItem tags, so write both. Idempotent: skips a field already
-# answered on a submission, and only enriches people who have a submission (so the
-# "registered but didn't fill the form" scenarios stay answer-free).
+puts "Giving Amy a free-text \"Other\" answer on her Facilitator Training submission…"
+# Demo data for the "Other" chip on the person profile + edit pages: a registrant
+# who picked the "Other" option (folded into "Other: <text>") on a sector-backed
+# field (Additional sectors). The free-text value can't be a Sector record, so it
+# only surfaces via Person#other_sector_responses.
+# Seeded before the professional-answer enrichment below so the additional_sectors
+# value survives its "skip if already answered" guard. Idempotent.
+if facilitator_training && amy_person
+  amy_submission = FormSubmission.find_by(person: amy_person, form: facilitator_training.registration_form)
+  if amy_submission
+    {
+      "additional_sectors" => "Other: Equine-assisted therapy"
+    }.each do |identifier, value|
+      field = amy_submission.form.form_fields.find_by(field_identifier: identifier)
+      next unless field
+      answer = amy_submission.form_answers.find_or_initialize_by(form_field: field)
+      answer.update!(submitted_answer: value, question_name_when_answered: field.name)
+    end
+  end
+end
+
+puts "Recording professional answers (age group / sector) on registration submissions…"
+# The Background page charts the registrants' age-group and sector registration
+# answers. Public registration stores these as ", "-joined category / sector ids
+# (see PublicRegistration#save_form_answers + assign_tags); seed them the same way
+# so the charts have data. The age-group and primary-sector charts read the form
+# answers; the All-sectors chart reads SectorableItem tags, so write both.
+# Idempotent: skips a field already answered on a submission, and only enriches
+# people who have a submission (so the "registered but didn't fill the form"
+# scenarios stay answer-free).
 age_range_categories = Category.age_ranges.published.order(:position, :name).to_a
-service_area_sectors = Sector.published.order(:name).to_a
+# Exclude the catch-all "Other" sector: it's the free-text fallback registrants
+# type into (surfaced via Person#other_sector_responses), not a selectable
+# sector. Seeding it as a sector tag would list "Other" as a real sector.
+selectable_sectors = Sector.published.excluding_other.order(:name).to_a
 
 record_professional_answers = ->(submission, i) do
   person = submission.person
   form = submission.form
 
+  # Primary age group is a single-select dropdown, so store one AgeRange category id.
   age_field = form.form_fields.find_by(field_identifier: "primary_age_group")
-  ages = pick_categories.call(age_range_categories, i, 2)
-  if age_field && ages.present? && submission.form_answers.where(form_field: age_field).none?
+  age = age_range_categories[i % age_range_categories.size] if age_range_categories.any?
+  if age_field && age && submission.form_answers.where(form_field: age_field).none?
     submission.form_answers.create!(form_field: age_field,
-                                    submitted_answer: ages.map(&:id).join(", "),
+                                    submitted_answer: age.id.to_s,
                                     question_name_when_answered: age_field.name)
   end
 
-  service_field = form.form_fields.find_by(field_identifier: "primary_service_area")
-  sectors = service_area_sectors.empty? ? [] : [ service_area_sectors[i % service_area_sectors.size], service_area_sectors[(i + 4) % service_area_sectors.size] ].uniq
-  if service_field && sectors.present? && submission.form_answers.where(form_field: service_field).none?
-    submission.form_answers.create!(form_field: service_field,
-                                    submitted_answer: sectors.map(&:id).join(", "),
-                                    question_name_when_answered: service_field.name)
+  sectors = selectable_sectors.empty? ? [] : [ selectable_sectors[i % selectable_sectors.size], selectable_sectors[(i + 4) % selectable_sectors.size] ].uniq
+  primary_sector = sectors.first
+  additional_sectors = sectors.drop(1)
+
+  # Mirror the registration form's two sector fields: the single-select primary
+  # sector dropdown and the multi-select additional sectors checkboxes.
+  primary_field = form.form_fields.find_by(field_identifier: "primary_sector_single")
+  if primary_field && primary_sector && submission.form_answers.where(form_field: primary_field).none?
+    submission.form_answers.create!(form_field: primary_field,
+                                    submitted_answer: primary_sector.id.to_s,
+                                    question_name_when_answered: primary_field.name)
   end
-  # Service area chart reads SectorableItem tags, mirroring assign_tags.
-  sectors.each { |sector| SectorableItem.find_or_create_by!(sector: sector, sectorable: person) }
+  additional_field = form.form_fields.find_by(field_identifier: "additional_sectors")
+  if additional_field && additional_sectors.present? && submission.form_answers.where(form_field: additional_field).none?
+    submission.form_answers.create!(form_field: additional_field,
+                                    submitted_answer: additional_sectors.map(&:id).join(", "),
+                                    question_name_when_answered: additional_field.name)
+  end
+
+  # Tag the person with the same primary/additional split assign_tags applies, so
+  # the All-sectors chart has data and the recipients page + profile crown a single
+  # primary that matches the form. Idempotent (a person enriched once per event).
+  person.tag_sectors(primary_ids: [ primary_sector&.id ].compact, additional_ids: additional_sectors.map(&:id))
+end
+
+# Real orgs (minus the AWBW house org) to link registrations against and match on,
+# plus a spread of plausible job titles for the "Position / Title" answer.
+org_answer_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
+job_titles = [ "Facilitator", "Program Director", "Counselor", "Art Therapist",
+               "Case Manager", "Volunteer Coordinator", "Executive Director", "Social Worker" ]
+# Plausible, domain-appropriate org names that intentionally do NOT match any seeded
+# org, so a registrant typing one produces a realistic "Pending" mismatch chip.
+unmatched_org_names = [ "Riverside Healing Arts Collective", "Westview Community Healing",
+                        "Lakeside Survivor Support Network", "Cedar Grove Family Services",
+                        "Harbor Light Crisis Center", "Meadowbrook Wellness Coalition" ]
+
+# Give a registrant's submission the "Organization Name" + "Position / Title" answers
+# the registrants page reads: link a real org to the registration and submit a name
+# that USUALLY matches it, but every 4th enriched registrant types a different
+# organization so the "Pending" mismatch chip has visible volume. The mismatch counter
+# only advances when an org answer is actually written (registrants with submissions are
+# sparse), so the ~1-in-4 ratio holds regardless of how many registrants are skipped.
+# Idempotent: skips an already-answered field and reuses an existing linked org.
+org_answer_index = 0
+record_organization_answers = ->(registration, submission, i) do
+  person = registration.registrant
+  form = submission.form
+
+  # A title on most submissions, but leave roughly one in five blank so dev data
+  # exercises both registration/linking outcomes: a job + Facilitator affiliation
+  # when a title was given, and a Facilitator-only affiliation when it wasn't.
+  position_field = form.form_fields.find_by(field_identifier: "agency_position")
+  if position_field && i % 5 != 4 && submission.form_answers.where(form_field: position_field).none?
+    submission.form_answers.create!(form_field: position_field,
+                                    submitted_answer: job_titles[i % job_titles.size],
+                                    question_name_when_answered: position_field.name)
+  end
+
+  agency_field = form.form_fields.find_by(field_identifier: "agency_name")
+  next unless agency_field && org_answer_orgs.any?
+  next if submission.form_answers.where(form_field: agency_field).any?
+
+  linked_org = registration.organizations.first
+  unless linked_org
+    linked_org = org_answer_orgs[i % org_answer_orgs.size]
+    Affiliation.find_or_create_by!(person: person, organization: linked_org) do |aff|
+      aff.title = job_titles[i % job_titles.size]
+      aff.start_date = Date.current
+    end
+    registration.event_registration_organizations.find_or_create_by!(organization: linked_org)
+  end
+
+  mismatch = org_answer_index % 4 == 3
+  typed_name = mismatch ? unmatched_org_names[org_answer_index / 4 % unmatched_org_names.size] : linked_org.name
+  org_answer_index += 1
+  submission.form_answers.create!(form_field: agency_field,
+                                  submitted_answer: typed_name,
+                                  question_name_when_answered: agency_field.name)
 end
 
 # Give the flagship cohort registration submissions so its Background charts have
@@ -600,7 +1157,9 @@ if facilitator_training && (reg_form = facilitator_training.registration_form)
   facilitator_training.event_registrations.active.includes(:registrant).each do |registration|
     person = registration.registrant
     next unless person&.email.to_s.start_with?("facilitator.cohort.")
-    FormSubmission.find_or_create_by!(person: person, form: reg_form)
+    FormSubmission.find_or_create_by!(person: person, form: reg_form) do |fs|
+      fs.event = facilitator_training
+    end
   end
 end
 
@@ -616,6 +1175,7 @@ end
     next unless submission
 
     record_professional_answers.call(submission, i)
+    record_organization_answers.call(registration, submission, i)
   end
 end
 
@@ -716,31 +1276,27 @@ if facilitator_training
   end
 end
 
-puts "Adding shout-out bios to scholarship recipients' organizations…"
-# The recipients page "Shout out scholarship programs" section pairs each
-# scholarship recipient with their affiliated organization and that org's bio
-# (description). Seed orgs ship without a description, so the section renders
-# empty. Back-fill a realistic, hard-coded bio onto each scholarship recipient's
-# program — only when blank, so any real data is preserved. update_columns skips
-# validations/callbacks, which is fine for seed back-fill.
-shoutout_bios = [
-  "Provides trauma-informed art workshops and wraparound support to survivors of domestic violence and their children.",
-  "Offers emergency shelter, counseling, and economic-empowerment programs that help families rebuild after abuse.",
-  "Runs community-based healing circles and advocacy services for survivors across historically underserved neighborhoods.",
-  "Delivers culturally responsive crisis intervention, legal advocacy, and long-term recovery programming.",
-  "Supports survivors through safe housing, peer support, and creative-expression programming for all ages.",
-  "Champions prevention education and survivor-led programming to break cycles of violence in the community."
+puts "Featuring scholarship recipients with shout-outs…"
+# The recipients page "Shout outs" block features registrants the admin opted in
+# (EventRegistration#shoutout) whose profile carries shout-out text
+# (Person#shoutout_text). Seed people ship without either, so the block renders
+# empty. Opt in each scholarship recipient on the data-rich trainings and give
+# them realistic shout-out text — only filling blank text, so real data is
+# preserved. update_columns skips validations/callbacks, fine for seed back-fill.
+shoutout_texts = [
+  "Grateful for the chance to bring trauma-informed art workshops to the survivors and children we serve.",
+  "This training helps me give emergency-shelter families a creative way to begin rebuilding after abuse.",
+  "Proud to run community healing circles for survivors across our historically underserved neighborhoods.",
+  "Honored to deliver culturally responsive crisis intervention and long-term recovery programming.",
+  "Art has become our community's safest room — thank you for helping us hold that space for all ages.",
+  "Determined to keep survivor-led prevention work breaking cycles of violence where I live."
 ]
 
-recipient_orgs = [ facilitator_training, trauma_training ].compact
-  .flat_map { |evt| EventDashboard.new(evt).scholarship_applicants }
-  .uniq
-  .filter_map { |person| person.affiliations.reject(&:inactive?).filter_map(&:organization).first }
-  .uniq(&:id)
-
-recipient_orgs.each_with_index do |org, i|
-  next if org.description.present?
-  org.update_columns(description: shoutout_bios[i % shoutout_bios.size])
+[ facilitator_training, trauma_training ].compact.each do |evt|
+  EventDashboard.new(evt).scholarship_applicants.each_with_index do |person, i|
+    person.update_columns(shoutout_text: shoutout_texts[i % shoutout_texts.size]) if person.shoutout_text.blank?
+    evt.event_registrations.active.find_by(registrant: person)&.update_columns(shoutout: true)
+  end
 end
 
 puts "Recording school districts on registrant addresses…"
@@ -760,5 +1316,200 @@ school_district_names = [ "Los Angeles Unified", "Garden Grove Unified", "Compto
     next unless address.country.blank? || address.country == "United States"
 
     address.update!(district: school_district_names[(i / 2) % school_district_names.size])
+  end
+end
+
+puts "Creating organization-link demo registrants on the flagship training…"
+# Exercises every state of the registrants Organization column and the Link
+# Organization editor: linked org(s), the amber "Pending" chip (the registrant
+# typed an agency name that is not linked to an org), and the grey "None" chip
+# (nothing submitted). Deterministic, clearly-named people so each state is easy
+# to spot in the browser at the flagship event's registrants page. Runs last so
+# the earlier affiliation backfill / form-fill passes leave these registrants
+# exactly as configured here.
+if facilitator_training && registration_form
+  # "Pending" only exists when the form has the Organization Name field,
+  # which lives in the person_contact_info section the dev form otherwise omits.
+  unless registration_form.form_fields.exists?(field_identifier: "agency_name")
+    FormBuilderService.update_sections!(
+      registration_form,
+      (registration_form.sections || []).map(&:to_sym) | [ :person_contact_info ]
+    )
+  end
+  agency_field = registration_form.form_fields.find_by(field_identifier: "agency_name")
+  agency_position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
+
+  # Real, existing orgs to link against / match on (skip the AWBW house org).
+  demo_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
+  matched_org = demo_orgs.first
+  # A partial of the matched org's name (its words minus the first) shares words
+  # with it but isn't an exact match — drives a fuzzy "Suggested matches" hit
+  # (case 11). Nil when the org name is a single word (no partial to take).
+  fuzzy_agency = matched_org&.name.to_s.split.length.to_i > 1 ? matched_org.name.split.drop(1).join(" ") : nil
+
+  # Several orgs that share a word ("Riverside"), so typing just that word surfaces
+  # a handful of fuzzy "Suggested matches" at once (case 9). find_or_create so
+  # re-seeding doesn't pile up duplicates.
+  active_status = OrganizationStatus.find_by(name: "Active")
+  fuzzy_match_word = "Riverside"
+  [
+    "Riverside Counseling Center",
+    "Riverside Family Services",
+    "Riverside Trauma Recovery",
+    "Riverside Youth Outreach",
+    "Riverside Wellness Collective"
+  ].each do |org_name|
+    org = Organization.find_or_create_by!(name: org_name) { |o| o.organization_status = active_status }
+    # Give each a location so the fuzzy "Suggested matches" list shows city/state.
+    org.addresses.create!(street_address: "100 Demo Way", city: "Riverside", locality: "Riverside", state: "CA", zip_code: "92501", primary: true) if org.addresses.none?
+  end
+
+  link_org = ->(registration, organization) do
+    Affiliation.find_or_create_by!(person: registration.registrant, organization: organization) do |aff|
+      aff.title = "Facilitator"
+      aff.start_date = Date.current
+    end
+    registration.event_registration_organizations.find_or_create_by!(organization: organization)
+  end
+
+  submit_agency_name = ->(registration, value) do
+    submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form)
+    if agency_field
+      answer = submission.form_answers.find_or_initialize_by(form_field: agency_field)
+      answer.update!(submitted_answer: value.to_s, question_name_when_answered: agency_field.name)
+    end
+  end
+
+  # Recreate from scratch each run so re-seeding refreshes labels and link state.
+  Person.where("email LIKE ? OR email LIKE ?",
+    "orgchip.demo.%@seed.example.com", "affdemo.%@seed.example.com").find_each(&:destroy)
+
+  # Each scenario => one registrant. :orgs link real orgs (→ chip shows links);
+  # :agency stores a submitted name. A typed name matching an existing org is linked
+  # (as registration does), so "Pending" only shows for names not among the linked
+  # orgs — on its own (case 3) or alongside linked orgs (case 5). "None" = nothing typed.
+  # Case 8 is the stale edge case: a typed name that matches an existing org but was
+  # never linked (e.g. the org was created after the person registered) — it reads as
+  # "Pending", and the editor offers that org as a one-click match to select.
+  # Numbers are zero-padded so the registrants list (sorted by name) shows them in
+  # order 01..11 rather than 1, 10, 11, 2, 3…
+  scenarios = [
+    { last: "01 Linked one org",       orgs: demo_orgs.first(1) },
+    { last: "02 Linked three orgs",    orgs: demo_orgs.first(3) },
+    { last: "03 Pending no match",     agency: "Riverside Healing Arts Collective" },
+    { last: "04 Matched name auto-linked", orgs: demo_orgs.first(1), agency: matched_org&.name },
+    { last: "05 Mixed linked + pending", orgs: demo_orgs.first(1), agency: "Westview Community Healing" },
+    { last: "06 None blank typed",     agency: "" },
+    { last: "07 None nothing typed" },
+    { last: "08 Pending matches existing org", agency: matched_org&.name }
+  ]
+  # Case 9: a single word shared by several orgs — not an exact match, so it shows
+  # a "Create and link" row plus a handful of orgs under fuzzy "Suggested matches".
+  # Includes a job title so the submission detail shows a position too.
+  scenarios << { last: "09 Fuzzy match suggestions", agency: fuzzy_match_word, position: "Lead Facilitator" }
+
+  scenarios.each_with_index do |scenario, i|
+    person = Person.create!(
+      email: "orgchip.demo.#{i + 1}@seed.example.com",
+      first_name: "Org Demo",
+      last_name: scenario[:last]
+    )
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) do |reg|
+      reg.status = "registered"
+    end
+
+    Array(scenario[:orgs]).each { |org| link_org.call(registration, org) }
+    submit_agency_name.call(registration, scenario[:agency]) if scenario.key?(:agency)
+    if scenario[:position].present? && agency_position_field
+      submission = FormSubmission.find_or_create_by!(person: person, form: registration_form)
+      answer = submission.form_answers.find_or_initialize_by(form_field: agency_position_field)
+      answer.update!(submitted_answer: scenario[:position], question_name_when_answered: agency_position_field.name)
+    end
+  end
+
+  # Demo 10: a registrant with more than one registration-form submission, each
+  # naming a different org we don't have — exercises the per-submission "View
+  # submission #N" links and one "Create and link" row per distinct submitted org.
+  if agency_field
+    demo_multi = Person.create!(
+      email: "orgchip.demo.10@seed.example.com",
+      first_name: "Org Demo",
+      last_name: "10 Multiple submissions"
+    )
+    EventRegistration.find_or_create_by!(event: facilitator_training, registrant: demo_multi) do |reg|
+      reg.status = "registered"
+    end
+    [ "Greenfield Survivor Services", "Harbor Light Counseling" ].each do |org_name|
+      submission = FormSubmission.create!(person: demo_multi, form: registration_form, event: facilitator_training)
+      submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
+    end
+  end
+
+  # Demo 11: fuzzy matching AND multiple submissions together — two submissions,
+  # each naming a partial of a different existing org. Exercises multiple "View
+  # submission #N" links, a "Create and link" row per partial, and the fuzzy
+  # "Suggested matches" list (driven by the first/primary submission).
+  fuzzy_agency_2 = demo_orgs[1]&.name.to_s.split.length.to_i > 1 ? demo_orgs[1].name.split.drop(1).join(" ") : nil
+  if agency_field && fuzzy_agency.present? && fuzzy_agency_2.present?
+    demo_fuzzy_multi = Person.create!(
+      email: "orgchip.demo.11@seed.example.com",
+      first_name: "Org Demo",
+      last_name: "11 Fuzzy + multiple submissions"
+    )
+    EventRegistration.find_or_create_by!(event: facilitator_training, registrant: demo_fuzzy_multi) do |reg|
+      reg.status = "registered"
+    end
+    [ fuzzy_agency, fuzzy_agency_2 ].each do |org_name|
+      submission = FormSubmission.create!(person: demo_fuzzy_multi, form: registration_form, event: facilitator_training)
+      submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
+    end
+  end
+
+  # --- Affiliation-status demo: two affiliations per org (a real job title plus the
+  # Facilitator role that gates AWBW-active), plus the position typed on the form, so
+  # the org-link editor's affiliation pills can be seen across their states. ---
+  position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
+  submit_field = ->(registration, field, value) do
+    if field
+      submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form)
+      answer = submission.form_answers.find_or_initialize_by(form_field: field)
+      answer.update!(submitted_answer: value.to_s, question_name_when_answered: field.name)
+    end
+  end
+  add_affiliation = ->(person, organization, title:, end_date: nil) do
+    Affiliation.find_or_create_by!(person: person, organization: organization, title: title) do |aff|
+      aff.start_date = Date.current - 1.year
+      aff.end_date = end_date
+    end
+  end
+
+  aff_org = demo_orgs.first
+  other_org = demo_orgs[1] || demo_orgs.first
+
+  aff_scenarios = [
+    { last: "A1 Title matches form",      job: "Counselor", position: "Counselor", facilitator_end: nil },
+    { last: "A2 Title differs from form", job: "Counselor", position: "Director",  facilitator_end: nil },
+    { last: "A3 Facilitator inactive",    job: "Counselor", position: "Counselor", facilitator_end: Date.current - 1.month }
+  ]
+
+  aff_scenarios.each_with_index do |scenario, i|
+    next unless aff_org
+    person = Person.create!(email: "affdemo.#{i + 1}@seed.example.com", first_name: "Demo Affiliation", last_name: scenario[:last])
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    registration.event_registration_organizations.find_or_create_by!(organization: aff_org)
+    add_affiliation.call(person, aff_org, title: scenario[:job])
+    add_affiliation.call(person, aff_org, title: "Facilitator", end_date: scenario[:facilitator_end])
+    submit_field.call(registration, agency_field, aff_org.name)
+    submit_field.call(registration, position_field, scenario[:position])
+  end
+
+  # An affiliation to an org NOT linked to the registration → shows under the
+  # registrant's "other affiliations" section.
+  if aff_org && other_org
+    person = Person.create!(email: "affdemo.4@seed.example.com", first_name: "Demo Affiliation", last_name: "A4 Other affiliation")
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    registration.event_registration_organizations.find_or_create_by!(organization: aff_org)
+    add_affiliation.call(person, aff_org, title: "Facilitator")
+    add_affiliation.call(person, other_org, title: "Board Member")
   end
 end

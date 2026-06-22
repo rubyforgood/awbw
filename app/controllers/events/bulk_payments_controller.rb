@@ -1,7 +1,7 @@
 module Events
   class BulkPaymentsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create, :show ]
-    before_action :set_event
+    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :resend_confirmation ]
+    before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
 
     rescue_from ActionController::InvalidAuthenticityToken do
@@ -44,7 +44,7 @@ module Events
           checkout_session = create_stripe_checkout_session(result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
         else
-          redirect_to event_bulk_payment_path(@event, submission_id: result.form_submission.id),
+          redirect_to bulk_payment_ticket_path(result.form_submission.slug),
                       notice: "Your bulk payment information has been submitted."
         end
       else
@@ -56,11 +56,57 @@ module Events
       end
     end
 
+    # View of the submitted bulk payment form, rendering the same partial either
+    # way. Mirrors PublicRegistrations#show: the payer reaches it publicly by slug
+    # (?reg=), while admins (e.g. from the dashboard, including legacy submissions
+    # with no slug) reach it by id (?submission_id=).
     def show
+      if params[:reg].present?
+        authorize! :bulk_payment, to: :show?
+        # where.not(slug: nil) keeps a blank reg from matching a slugless record.
+        @submission = FormSubmission.bulk_payment.where.not(slug: nil)
+                                    .find_by!(slug: params[:reg], event_id: @event.id)
+      else
+        @submission = FormSubmission.bulk_payment.find_by!(id: params[:submission_id], event_id: @event.id)
+        authorize! @submission, to: :show?
+      end
+
+      @event = @event.decorate
+    end
+
+    # Public, slug-based ticket for the payer. Shows the event details, the
+    # registrants they paid for, and the submitted form — but none of the
+    # per-person admin actions found on the bulk payments dashboard.
+    def ticket
+      authorize! :bulk_payment, to: :ticket?
+
+      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      @payment = @submission.payment
+      @event = @submission.event.decorate
+    end
+
+    # Re-sends the payer their bulk payment confirmation email (the one carrying
+    # the ticket link). Reachable by the payer from the ticket.
+    def resend_confirmation
       authorize! :bulk_payment, to: :show?
 
-      @submission = FormSubmission.find(params[:submission_id])
-      @event = @event.decorate
+      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      payer_email = @submission.person.preferred_email.presence ||
+                    @submission.answers_by_identifier["payer_email"]&.strip
+
+      if payer_email.present?
+        NotificationServices::CreateNotification.call(
+          noticeable: @submission,
+          kind: :bulk_payment_confirmation,
+          recipient_role: :person,
+          recipient_email: payer_email,
+          notification_type: 0
+        )
+        redirect_to bulk_payment_ticket_path(@submission.slug), notice: "Confirmation email sent."
+      else
+        redirect_to bulk_payment_ticket_path(@submission.slug),
+                    alert: "No email address on file to send the confirmation to."
+      end
     end
 
     private
@@ -130,8 +176,8 @@ module Events
           },
           quantity: qty
         } ],
-        success_url: event_bulk_payment_url(@event, submission_id: submission.id, checkout: "success"),
-        cancel_url: event_bulk_payment_url(@event, submission_id: submission.id, checkout: "cancelled")
+        success_url: bulk_payment_ticket_url(submission.slug, checkout: "success"),
+        cancel_url: bulk_payment_ticket_url(submission.slug, checkout: "cancelled")
       )
     end
   end

@@ -1,5 +1,5 @@
 class Person < ApplicationRecord
-  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable
+  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable
 
   pay_customer default_payment_processor: :stripe
 
@@ -192,6 +192,27 @@ class Person < ApplicationRecord
       .first&.organization
   end
 
+  # The organization a person facilitates for — the org on their (active, most
+  # recent) facilitator affiliation. This is the "program" a scholarship serves.
+  # Falls back to any facilitator affiliation when none is currently active.
+  # Selects in memory so a preloaded affiliations association (the scholarship
+  # index eager-loads it) is reused rather than re-queried per recipient.
+  def program_organization
+    facilitator_affiliations = affiliations.select(&:facilitator?)
+    active = facilitator_affiliations.select(&:active?).max_by(&:updated_at)
+    (active || facilitator_affiliations.max_by(&:updated_at))&.organization
+  end
+
+  # Facilitator-training events ("TACs") this person registered for and
+  # completed (attended). Drives the training column on the scholarship index.
+  # Filters in memory to reuse a preloaded event_registrations → event chain.
+  def completed_facilitator_trainings
+    event_registrations
+      .select { |r| r.status == "attended" && r.event&.facilitator_training? }
+      .filter_map(&:event)
+      .uniq
+  end
+
   def preferred_email
     user&.email.presence || email.presence || email_2.presence
   end
@@ -207,7 +228,31 @@ class Person < ApplicationRecord
     }
   end
 
+  # Field identifiers whose "Other" free text maps onto the category-backed
+  # profile fields shown on the edit page.
+  OTHER_WORKSHOP_SETTING_IDENTIFIERS = %w[primary_age_group additional_age_group].freeze
+
+  # Free-text "Other" sectors the person typed on registration forms.
+  # They can't be Sector records, so they're surfaced beside the sector tags.
+  def other_sector_responses
+    other_form_responses(FormField::SECTOR_FIELD_IDENTIFIERS)
+  end
+
+  # Free-text "Other" workshop settings (category-backed fields) from forms.
+  def other_workshop_setting_responses
+    other_form_responses(OTHER_WORKSHOP_SETTING_IDENTIFIERS)
+  end
+
   private
+
+  def other_form_responses(identifiers)
+    form_submissions
+      .joins(form_answers: :form_field)
+      .where(form_fields: { field_identifier: identifiers })
+      .pluck("form_answers.submitted_answer")
+      .flat_map { |answer| OtherOption.texts(answer) }
+      .uniq
+  end
 
   def strip_whitespace
     self.first_name = first_name&.strip

@@ -7,7 +7,11 @@ class OrganizationsController < ApplicationController
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(Organization.includes(:windows_type, :organization_status, :sectors, :addresses, logo_attachment: :blob))
+      base_scope = authorized_scope(Organization.includes(
+        :windows_type, :organization_status, :sectors, :addresses,
+        { categorizable_items: { category: :category_type } },
+        logo_attachment: :blob
+      ))
       filtered = base_scope.search_by_params(params).order(:name)
       @organizations_count = filtered.count
       @active_people_count = Affiliation.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
@@ -21,6 +25,7 @@ class OrganizationsController < ApplicationController
                                                 .group(:organization_id)
                                                 .distinct
                                                 .count(:person_id)
+      @program_statuses = Organization.program_statuses_by_id(org_ids)
 
       render :organization_results
     else
@@ -31,6 +36,15 @@ class OrganizationsController < ApplicationController
 
   def show
     authorize! @organization
+
+    if turbo_frame_request? && params[:section] == "events"
+      events = Event.where(id: @organization.event_registrations.active.select(:event_id))
+                    .includes(:primary_asset)
+                    .order(start_date: :desc)
+                    .paginate(page: params[:page], per_page: 9)
+      return render partial: "organizations/sections/events", locals: { organization: @organization, events: events }
+    end
+
     track_view(@organization)
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
@@ -225,6 +239,7 @@ class OrganizationsController < ApplicationController
         :title,
         :start_date,
         :end_date,
+        :organization_address_id,
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],

@@ -4,18 +4,22 @@ RSpec.describe FormSubmission do
   describe "associations" do
     it { should belong_to(:person) }
     it { should belong_to(:form) }
+    it { should belong_to(:event).optional }
     it { should have_many(:form_answers).dependent(:destroy) }
     it { should accept_nested_attributes_for(:form_answers) }
   end
 
-  describe "#event" do
-    it "returns the event whose join role matches the submission role" do
-      event = create(:event)
-      form = create(:form)
-      event.event_forms.create!(form: form, role: "bulk_payment")
-      submission = create(:form_submission, form: form, role: "bulk_payment")
+  describe "slug" do
+    it "generates a unique slug for bulk payment submissions" do
+      submission = create(:form_submission, role: "bulk_payment")
 
-      expect(submission.event).to eq(event)
+      expect(submission.slug).to be_present
+    end
+
+    it "leaves the slug blank for other submission roles" do
+      submission = create(:form_submission, role: "registration")
+
+      expect(submission.slug).to be_nil
     end
   end
 
@@ -45,6 +49,35 @@ RSpec.describe FormSubmission do
       submission.form_answers.create!(form_field: field, submitted_answer: "not json")
 
       expect(submission.bulk_payment_attendees).to eq([])
+    end
+  end
+
+  describe "#bulk_payment_amount_cents" do
+    let(:event) { create(:event, cost_cents: 2500) }
+    let(:form) { create(:form) }
+    let(:submission) { create(:form_submission, form: form) }
+
+    it "multiplies the event cost by the number of attendees submitted" do
+      field = create(:form_field, form: form, field_identifier: "number_of_attendees", name: "Attendees")
+      submission.form_answers.create!(form_field: field, submitted_answer: "3")
+
+      expect(submission.bulk_payment_amount_cents(event)).to eq(7500)
+    end
+
+    it "falls back to the count of submitted attendees when no count is given" do
+      field = create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees")
+      submission.form_answers.create!(form_field: field,
+                                      submitted_answer: [ { first_name: "A" }, { first_name: "B" } ].to_json)
+
+      expect(submission.bulk_payment_amount_cents(event)).to eq(5000)
+    end
+
+    it "returns zero when the event has no cost" do
+      free_event = create(:event, cost_cents: 0)
+      field = create(:form_field, form: form, field_identifier: "number_of_attendees", name: "Attendees")
+      submission.form_answers.create!(form_field: field, submitted_answer: "3")
+
+      expect(submission.bulk_payment_amount_cents(free_event)).to eq(0)
     end
   end
 end

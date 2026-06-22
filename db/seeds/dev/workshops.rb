@@ -367,6 +367,48 @@ workshops.each do |workshop|
 end
 puts "Done assigning categories and sectors."
 
+# A few unpublished (non-canonical) sectors that still carry taggings, so the
+# taggings admin has data exercising the "tagged but hidden" state. The base
+# db/seeds.rb only creates the canonical SECTOR_TYPES; these are dev-only and
+# stay unpublished (they're not on the canonical list).
+puts "Creating unpublished sectors with taggings…"
+workshop_pool = Workshop.all.to_a
+[ "Animal-Assisted Therapy", "School Counseling", "Youth Mentorship" ].each do |sector_name|
+  sector = Sector.where("LOWER(name) = LOWER(?)", sector_name).first_or_create!(name: sector_name)
+  sector.update!(published: false)
+
+  workshop_pool.sample(rand(2..4)).each do |workshop|
+    SectorableItem.find_or_create_by!(
+      sector_id: sector.id,
+      sectorable_type: "Workshop",
+      sectorable_id: workshop.id
+    )
+  end
+end
+puts "Done creating unpublished sectors with taggings."
+
+# A few unpublished (non-canonical) categories that still carry taggings, so the
+# taggings admin has data exercising the "tagged but hidden" state for categories
+# too. The base db/seeds.rb only creates canonical categories; these are dev-only,
+# attached to an existing type so they group correctly on the tags page, and stay
+# unpublished (they're not on any canonical list).
+puts "Creating unpublished categories with taggings…"
+art_type = CategoryType.where("LOWER(name) = LOWER(?)", "ArtType").first_or_create!(name: "ArtType", published: true)
+[ "Sand Art", "Found-Object Sculpture", "Shadow Puppetry" ].each do |category_name|
+  category = Category.where("LOWER(name) = LOWER(?)", category_name)
+                     .first_or_create!(name: category_name, category_type: art_type)
+  category.update!(published: false)
+
+  workshop_pool.sample(rand(2..4)).each do |workshop|
+    CategorizableItem.find_or_create_by!(
+      category_id: category.id,
+      categorizable_type: "Workshop",
+      categorizable_id: workshop.id
+    )
+  end
+end
+puts "Done creating unpublished categories with taggings."
+
 puts "Creating Workshop Variations…"
 # rubocop:disable Style/PercentLiteralDelimiters
 variations = [

@@ -6,8 +6,8 @@
     <% if @payment.present? %>
       <div class="mb-4 p-4 bg-gray-50 rounded-lg">
         <p class="text-sm font-medium text-gray-700">For Payment</p>
-        <p class="text-lg text-gray-900">$<%= "%.2f" % @payment.amount_dollars %></p>
-        <p class="text-sm text-gray-500">Remaining: $<%= "%.2f" % @payment.remaining_dollars %></p>
+        <p class="text-lg text-gray-900"><%= dollars_from_cents(@payment.amount_cents) %></p>
+        <p class="text-sm text-gray-500">Remaining: <%= dollars_from_cents(@payment.amount_cents_remaining) %></p>
       </div>
     <% else %>
       <div class="mb-4 p-4 bg-red-50 rounded-lg">

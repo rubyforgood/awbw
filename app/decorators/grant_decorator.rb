@@ -1,14 +1,14 @@
 class GrantDecorator < ApplicationDecorator
   def amount
-    h.number_to_currency(object.amount_dollars)
+    h.dollars_from_cents(object.amount_cents)
   end
 
   def allocated
-    h.number_to_currency(object.scholarships_total_cents.to_d / 100)
+    h.dollars_from_cents(object.scholarships_total_cents)
   end
 
   def remaining
-    h.number_to_currency(object.remaining_dollars)
+    h.dollars_from_cents(object.remaining_cents)
   end
 
   def application_deadline
@@ -64,37 +64,17 @@ class GrantDecorator < ApplicationDecorator
   # Short human-readable remaining balance for the grant picker, e.g. "$750" or
   # "$12.5k". The picker bolds this as the figure that matters most.
   def remaining_compact
-    compact_amount(object.remaining_dollars)
+    MoneyFormatter.compact_from_cents(object.remaining_cents)
   end
 
   # Short human-readable total donation for the grant picker, e.g. "$10k".
   def amount_compact
-    compact_amount(object.amount_dollars)
+    MoneyFormatter.compact_from_cents(object.amount_cents)
   end
 
   # Plain-text remaining-of-total summary (e.g. "$750 of $12.5k available"),
   # used as the picker pill's accessible title/tooltip.
   def funds_remaining_summary
     "#{remaining_compact} of #{amount_compact} available"
-  end
-
-  private
-
-  # Abbreviate dollar amounts: plain under $1k ("$750"), k for thousands
-  # ("$12.5k"), m for millions ("$1.2m"). One decimal place, trailing .0 dropped.
-  def compact_amount(dollars)
-    amount = dollars.to_d
-    if amount >= 1_000_000
-      "$#{trim_decimal(amount / 1_000_000)}m"
-    elsif amount >= 1_000
-      "$#{trim_decimal(amount / 1_000)}k"
-    else
-      "$#{amount.to_i}"
-    end
-  end
-
-  def trim_decimal(value)
-    rounded = value.round(1)
-    rounded.frac.zero? ? rounded.to_i.to_s : rounded.to_s("F")
   end
 end

@@ -28,7 +28,7 @@
                 <%= scholarship.recipient&.full_name || "Unknown recipient" %>
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                <%= number_to_currency(scholarship.amount_dollars) %>
+                <%= dollars_from_cents(scholarship.amount_cents) %>
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-center">
                 <% if scholarship.tasks_completed? %>

@@ -43,6 +43,10 @@ export default class extends Controller {
       }
       .remote-select-container {
         position: relative;
+        width: 100%;
+      }
+      .remote-select-container .ts-wrapper {
+        width: 100%;
       }
       .remote-select-container .remote-select-icon {
         position: absolute;

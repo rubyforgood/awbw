@@ -3,6 +3,10 @@ class Event < ApplicationRecord
   include ActionText::Attachable
   include RemoteSearchable
 
+  # Grace window on either side of the event during which the videoconference
+  # link is available to paid registrants.
+  VIDEOCONFERENCE_JOIN_BUFFER = 30.minutes
+
   has_rich_text :rhino_header
   has_rich_text :rhino_description
 
@@ -12,6 +16,12 @@ class Event < ApplicationRecord
   has_many :event_registrations, dependent: :destroy
   has_many :event_staffs, dependent: :destroy
   has_many :event_forms, dependent: :destroy
+  has_many :registration_ticket_callouts, -> { ordered }, dependent: :destroy, inverse_of: :event
+  # Block destroying an event that has submissions (registrations, scholarship
+  # applications, payments). Submissions that were never tied to an event are
+  # unaffected. Destroying instead would orphan the payments that hang off a
+  # submission (payments have an FK to form_submissions and no dependent rule).
+  has_many :form_submissions, dependent: :restrict_with_error
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
@@ -30,9 +40,12 @@ class Event < ApplicationRecord
 
   accepts_nested_attributes_for :event_staffs, allow_destroy: true,
     reject_if: proc { |attrs| attrs["person_id"].blank? }
+  accepts_nested_attributes_for :registration_ticket_callouts, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["title"].blank? }
 
   # Callbacks
   after_commit :build_public_registration_form, if: :public_registration_just_enabled?
+  before_validation :merge_date_time_fields
 
   # Validations
   validates_presence_of :title, :start_date, :end_date
@@ -70,6 +83,9 @@ class Event < ApplicationRecord
   scope :registerable, -> { where("registration_close_date IS NULL OR registration_close_date >= ?", Time.current) }
   scope :using_form, ->(form_id) { joins(:event_forms).where(event_forms: { form_id: form_id }).distinct }
   scope :staffed_by, ->(person) { joins(:event_staffs).where(event_staffs: { person_id: person }).distinct }
+  # Events flagged as facilitator trainings (the "TAC" a scholarship recipient
+  # attends). Drives the scholarship index's training column.
+  scope :facilitator_trainings, -> { where(facilitator_training: true) }
 
   def self.search_by_params(params)
     stories = is_a?(ActiveRecord::Relation) ? self : all
@@ -114,8 +130,24 @@ class Event < ApplicationRecord
     end_date < Time.current
   end
 
+  def videoconference_window_open?
+    return false unless start_date && end_date
+    now = Time.current
+    now >= start_date - VIDEOCONFERENCE_JOIN_BUFFER && now <= end_date + VIDEOCONFERENCE_JOIN_BUFFER
+  end
+
   def registerable?
     !ended? && (registration_close_date.nil? || registration_close_date >= Time.current)
+  end
+
+  # How many calendar days the event spans (inclusive), clamped to 1..5 — drives
+  # how many per-day attendance columns the Onboarding tab shows.
+  def day_count
+    return 1 if start_date.blank?
+
+    last_day = (end_date.presence || start_date).to_date
+    span = (last_day - start_date.to_date).to_i + 1
+    span.clamp(1, 5)
   end
 
   def time_title
@@ -132,6 +164,48 @@ class Event < ApplicationRecord
 
   def name
     title
+  end
+
+  # Heading shown on the ticket call-out and the details page. Falls back to the
+  # default even when an admin clears it, so the section never renders unlabelled.
+  def event_details_label
+    super.presence || "Before you attend"
+  end
+
+  # Heading shown on the CE hours ticket call-out and its details page. Falls
+  # back to the default even when an admin clears it, so the section never
+  # renders unlabelled.
+  def ce_hours_details_label
+    super.presence || "CE hours"
+  end
+
+  # Virtual attributes for date/time inputs (Firefox datetime-local compat)
+  attr_writer :start_date_date, :start_date_time,
+              :end_date_date, :end_date_time,
+              :registration_close_date_date, :registration_close_date_time
+
+  def start_date_date
+    @start_date_date || start_date&.strftime("%Y-%m-%d")
+  end
+
+  def start_date_time
+    @start_date_time || start_date&.strftime("%H:%M")
+  end
+
+  def end_date_date
+    @end_date_date || end_date&.strftime("%Y-%m-%d")
+  end
+
+  def end_date_time
+    @end_date_time || end_date&.strftime("%H:%M")
+  end
+
+  def registration_close_date_date
+    @registration_close_date_date || registration_close_date&.strftime("%Y-%m-%d")
+  end
+
+  def registration_close_date_time
+    @registration_close_date_time || registration_close_date&.strftime("%H:%M")
   end
 
   # Virtual attribute for cost in dollars (converts to/from cost_cents)
@@ -166,6 +240,25 @@ class Event < ApplicationRecord
   end
 
   private
+
+  def merge_date_time_fields
+    merge_date_time(:start_date)
+    merge_date_time(:end_date)
+    merge_date_time(:registration_close_date)
+  end
+
+  def merge_date_time(field)
+    date_val = send(:"#{field}_date")
+    time_val = send(:"#{field}_time")
+    self[field] = build_datetime(date_val, time_val)
+  end
+
+  def build_datetime(date_str, time_str)
+    return nil if date_str.blank? && time_str.blank?
+    return Time.zone.parse(date_str) if date_str.present? && time_str.blank?
+    return Time.zone.parse("2000-01-01 #{time_str}") if date_str.blank? && time_str.present?
+    Time.zone.parse("#{date_str} #{time_str}")
+  end
 
   def registration_form_required_when_publicly_registerable
     return unless public_registration_enabled?

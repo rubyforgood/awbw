@@ -1,4 +1,4 @@
-<h1>Event registration confirmed</h1>
+<h1>Event registration received</h1>
 
 <div style="margin-top: 36px; text-align: left;">
   <p>
@@ -40,6 +40,13 @@
       <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
         <a href="<%= @event.videoconference_url %>" style="color: #374151; text-decoration: underline;">Join us on <%= @event.decorate.videoconference_domain %></a>
       </p>
+      <% vc_room = @event.decorate.videoconference_room %>
+      <% if vc_room %>
+        <p style="font-size: 14px; color: #6b7280; margin: 0 0 4px;"><%= vc_room[:label] %>: <%= vc_room[:value] %></p>
+      <% end %>
+      <% if @event.videoconference_passcode.present? %>
+        <p style="font-size: 14px; color: #6b7280; margin: 0 0 8px;">Passcode: <%= @event.videoconference_passcode %></p>
+      <% end %>
     <% end %>
 
     <% if @event.registration_close_date %>
@@ -60,12 +67,11 @@
 </div>
 
 <p>
-  Visit the event page for updates, directions, or calendar links:
+  Your ticket has everything you need — event details, calendar links, and options to manage your registration:
 </p>
 
 <p>
   <% if @event_registration.persisted? %>
     <a href="<%= registration_ticket_url(@event_registration.slug) %>" class="button">View ticket</a>
   <% end %>
-  <a href="<%= @event_url %>" class="button">View event</a>
 </p>

@@ -29,6 +29,12 @@ facilitator_training = Event.find_by(title: "AWBW Facilitator Training")
 # Reused below to surface non-flagship applicants and print the per-event summary.
 scholarship_events = Event.joins(:event_forms).where(event_forms: { role: "scholarship" }).distinct.to_a
 
+# These are AWBW facilitator trainings (the "TAC" a recipient attends). Flag them
+# so the scholarship index's training column has data to show.
+(scholarship_events + [ facilitator_training ]).compact.uniq.each do |event|
+  event.update!(facilitator_training: true) unless event.facilitator_training?
+end
+
 # --- Grants (funding sources) ----------------------------------------------
 # Create the grants up front so the event-allocated scholarships below can be
 # drawn from them (recipients page → donor name). Grants cap the total
@@ -137,7 +143,7 @@ end
 # scholarship submission). Recipients are flagged scholarship_requested so they
 # appear on that page. Reasonable answers to every scholarship question, inspired
 # by actual recipient responses, are cycled across recipients for variety, along
-# with a matching primary service area, age group, and a non-facilitator agency
+# with a matching primary sector, age group, and a non-facilitator agency
 # affiliation (title + organization) so the recipient header renders like the real
 # export.
 puts "Seeding Scholarship application answers…"
@@ -158,8 +164,9 @@ scholarship_answer_sets = [
     "additional_comments" =>
       "Thank you for considering my application. A scholarship is the only way my small agency can send me to this training right now, " \
       "and the ripple effect on the survivors we serve would be immediate.",
-    "service_area" => "Sexual Assault",
-    "age_group" => "18+",
+    "scholarship_contribution" => "Our agency can contribute about $250 toward the cost.",
+    "sector" => "Sexual Assault",
+    "age_group" => "Adults (18+)",
     "title" => "Prevention, Education, and Outreach Specialist"
   },
   {
@@ -174,7 +181,8 @@ scholarship_answer_sets = [
       "I envision the shared making and witnessing reducing isolation and helping members feel they aren't alone in their experience.",
     "additional_comments" =>
       "I've wanted formal facilitation training for years but our continuing-education budget was cut. This scholarship would change that.",
-    "service_area" => "Mental Health",
+    "scholarship_contribution" => "I could personally cover roughly $150.",
+    "sector" => "Mental Health",
     "age_group" => "Mixed-age groups",
     "title" => "Behavioral Health Clinician"
   },
@@ -190,8 +198,9 @@ scholarship_answer_sets = [
       "I envision it giving teens a consistent place to process their week and build confidence through finishing something that's theirs.",
     "additional_comments" =>
       "Our program serves families at no cost, so outside funding for my training is what makes this possible. Thank you.",
-    "service_area" => "Child Abuse",
-    "age_group" => "6-12",
+    "scholarship_contribution" => "Unfortunately we can't contribute anything at this time.",
+    "sector" => "Child Abuse/Neglect",
+    "age_group" => "Children (0-12)",
     "title" => "Youth Program Coordinator"
   },
   {
@@ -206,8 +215,9 @@ scholarship_answer_sets = [
       "I envision it strengthening the group's sense of community and giving members a tangible reminder of how far they've come.",
     "additional_comments" =>
       "I'm so grateful for this opportunity. Investing in me is investing in everyone I'll go on to support.",
-    "service_area" => "Domestic Violence",
-    "age_group" => "18+",
+    "scholarship_contribution" => "I'm able to pay up to $100 out of pocket.",
+    "sector" => "Domestic Violence",
+    "age_group" => "Adults (18+)",
     "title" => "Peer Support Specialist"
   }
 ]
@@ -220,14 +230,14 @@ scholarship_form = Form.standalone.find_by(role: "scholarship")
 scholarship_fields = scholarship_form ? scholarship_form.form_fields.where.not(answer_type: :group_header).to_a : []
 
 # Make sure the registration form asks the professional questions, so each
-# recipient's primary service area and age group are captured as registration
+# recipient's primary sector and age group are captured as registration
 # answers — the recipients page reads those first, then falls back to the
 # person's profile (sectors / age-range tags).
 registration_form = Form.standalone.find_by(role: "registration")
-if registration_form && registration_form.form_fields.where(field_identifier: "primary_service_area").none?
+if registration_form && registration_form.form_fields.where(field_identifier: "additional_sectors").none?
   FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :professional_info ])
 end
-service_area_field = registration_form&.form_fields&.find_by(field_identifier: "primary_service_area")
+sector_field = registration_form&.form_fields&.find_by(field_identifier: "additional_sectors")
 age_group_field = registration_form&.form_fields&.find_by(field_identifier: "primary_age_group")
 
 # Existing dev organizations (excluding AWBW itself) to affiliate recipients
@@ -237,9 +247,9 @@ recipient_orgs = Organization.where.not(name: "A Window Between Worlds").order(:
 # Capture the recipient's professional answers on their registration submission,
 # storing the sector / age-range ids the professional fields expect.
 attach_header_answers = ->(submission, set) do
-  sector = Sector.published.find_by(name: set["service_area"])
-  if service_area_field && sector && submission.form_answers.where(form_field: service_area_field).none?
-    submission.form_answers.create!(form_field: service_area_field, submitted_answer: sector.id.to_s, question_name_when_answered: service_area_field.name)
+  sector = Sector.published.find_by(name: set["sector"])
+  if sector_field && sector && submission.form_answers.where(form_field: sector_field).none?
+    submission.form_answers.create!(form_field: sector_field, submitted_answer: sector.id.to_s, question_name_when_answered: sector_field.name)
   end
 
   age_category = Category.age_ranges.published.find_by(name: set["age_group"])
@@ -259,6 +269,37 @@ ensure_recipient_affiliation = ->(person, event, set, org) do
   person.affiliations.create!(organization: org, title: set["title"], start_date: start_date)
 end
 
+# Rotating real-ish City/State pairs so program orgs have a location to show on
+# the scholarship index (the "Program Location" column reads the org's address).
+address_samples = [
+  [ "Los Angeles", "CA" ], [ "Stockton", "CA" ], [ "Portland", "OR" ], [ "Newport", "VT" ],
+  [ "Bangor", "ME" ], [ "Austin", "TX" ], [ "Chicago", "IL" ], [ "Brooklyn", "NY" ]
+]
+
+# Give an org a primary active address when it has none, so its facilitators'
+# scholarships show a location. Idempotent: skips orgs that already have one.
+ensure_org_address = ->(org) do
+  return unless org
+  return if org.addresses.active.exists?
+
+  city, state = address_samples[org.id % address_samples.length]
+  org.addresses.create!(locality: "Unknown", city: city, state: state,
+                        street_address: "#{100 + (org.id % 900)} Main St", zip_code: "90001", primary: true)
+end
+
+# Also give the recipient a facilitator affiliation at the same org — this is the
+# "program" the scholarship index reports (Person#program_organization), distinct
+# from the agency role above — and make sure that org carries an address so the
+# location column has data. Skips anyone who already facilitates somewhere.
+ensure_facilitator_affiliation = ->(person, event, org) do
+  return unless org
+  ensure_org_address.(org)
+  return if person.affiliations.any?(&:facilitator?)
+
+  start_date = (event.start_date || Time.current).to_date - 1.year
+  person.affiliations.create!(organization: org, title: "Facilitator", start_date: start_date)
+end
+
 # Ensure the recipient has a registration submission (no recipient should have
 # only a scholarship submission), creating a minimal one with their identity
 # fields when missing — most cohort registrants were generated without a form.
@@ -266,7 +307,9 @@ ensure_registration_submission = ->(person, event) do
   reg_form = event.registration_form
   return unless reg_form
 
-  submission = FormSubmission.find_or_create_by!(person: person, form: reg_form)
+  submission = FormSubmission.find_or_create_by!(person: person, form: reg_form) do |fs|
+    fs.event = event
+  end
   reg_form.form_fields.where.not(answer_type: :group_header).each do |field|
     value = case field.field_identifier
     when "first_name" then person.first_name
@@ -309,10 +352,20 @@ setup_recipient = ->(registration, second_form:) do
 
   reg_submission = ensure_registration_submission.(person, event)
   attach_header_answers.(reg_submission, set) if reg_submission
-  ensure_recipient_affiliation.(person, event, set, recipient_orgs[application_index % recipient_orgs.length]) if recipient_orgs.any?
+  if recipient_orgs.any?
+    org = recipient_orgs[application_index % recipient_orgs.length]
+    ensure_recipient_affiliation.(person, event, set, org)
+    ensure_facilitator_affiliation.(person, event, org)
+  end
+
+  # Mark attendance so the scholarship index shows the recipient completed the
+  # facilitator training ("TAC"). The award amount/allocation is unaffected.
+  registration.update!(status: "attended") unless registration.status == "attended"
 
   if second_form && scholarship_form
-    separate = FormSubmission.find_or_create_by!(person: person, form: scholarship_form, role: "scholarship")
+    separate = FormSubmission.find_or_create_by!(person: person, form: scholarship_form, role: "scholarship") do |fs|
+      fs.event = event
+    end
     attach_scholarship_answers.(separate, set)
   elsif reg_submission
     attach_scholarship_answers.(reg_submission, set)
@@ -416,6 +469,49 @@ grant_plans.each do |(name, _donor_type, _donor_name, _amount_cents, awards, _el
   end
 
   puts "  #{grant.name}: #{grant.scholarships.count} scholarships, remaining #{grant.remaining_dollars}"
+end
+
+# --- Index demo states: multi-grant funder + Reinstate ---------------------
+# The awards above leave three of the index's distinctive states unexercised:
+# a funder holding more than one grant (the reason for the funder → grant
+# nesting), and the "Reinstate" program status. Seed a second grant under an
+# existing funder, with two recipients whose program orgs carry addresses — the
+# second's facilitator affiliation is lapsed, so its org reads as "Reinstate".
+# Idempotent: keyed on the sibling grant's name and its having no awards yet.
+puts "Seeding scholarship index demo states (multi-grant funder, Reinstate)…"
+
+anchor_grant = grants.first
+if anchor_grant && recipient_orgs.any?
+  sibling = Grant.find_or_create_by!(name: "#{anchor_grant.name} (2026)") do |g|
+    g.donor = anchor_grant.donor
+    g.amount_cents = 600_000
+    g.application_deadline = Date.current + 60
+    g.funds_received_on = Date.current - 10
+    g.eligibility_criteria = anchor_grant.eligibility_criteria
+    g.tasks = anchor_grant.tasks
+  end
+
+  if sibling.scholarships.none?
+    # People and orgs with no facilitator yet, so each program's status is
+    # deterministic rather than depending on who else was seeded against the org.
+    demo_people = grant_recipient_pool.reject { |p| p.affiliations.any?(&:facilitator?) }.first(2)
+    demo_orgs = recipient_orgs.select { |o| o.affiliations.none?(&:facilitator?) }.first(2)
+
+    demo_people.each_with_index do |person, i|
+      amount = i.zero? ? 150_000 : 100_000
+      next if sibling.remaining_cents < amount
+
+      org = demo_orgs[i] || recipient_orgs[i % recipient_orgs.length]
+      ensure_org_address.(org)
+      lapsed = i.odd? # the second recipient's affiliation has ended → "Reinstate"
+      attrs = { organization: org, title: "Facilitator", start_date: Date.current - 2.years }
+      attrs[:end_date] = Date.current - 2.months if lapsed
+      person.affiliations.create!(**attrs)
+      Scholarship.create!(recipient: person, grant: sibling, amount_cents: amount, tasks_completed: i.even?)
+    end
+  end
+
+  puts "  #{sibling.funder_name}: now funds #{Grant.where(donor: anchor_grant.donor).count} grants"
 end
 
 puts "  Scholarship seeds complete!"
