@@ -125,6 +125,11 @@ RSpec.describe "People authorization", type: :request do
         get edit_person_path(other_person)
         expect(response).to have_http_status(:ok)
       end
+
+      it "shows the racial/ethnic identity field" do
+        get edit_person_path(other_person)
+        expect(response.body).to include("person[racial_ethnic_identity]")
+      end
     end
   end
 
@@ -145,6 +150,11 @@ RSpec.describe "People authorization", type: :request do
         patch person_path(other_person), params: { person: { first_name: "Updated" } }
         expect(response).to redirect_to(person_path(other_person))
         expect(other_person.reload.first_name).to eq("Updated")
+      end
+
+      it "updates the racial/ethnic identity" do
+        patch person_path(other_person), params: { person: { racial_ethnic_identity: "Asian" } }
+        expect(other_person.reload.racial_ethnic_identity).to eq("Asian")
       end
     end
   end

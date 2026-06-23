@@ -44,6 +44,7 @@ module EventRegistrationServices
     def call
       ActiveRecord::Base.transaction do
         person = find_or_create_person
+        sync_person_profile(person)
 
         create_mailing_address(person) if field_value("mailing_city").present?
         create_phone_contact(person) if field_value("phone").present?
@@ -164,6 +165,24 @@ module EventRegistrationServices
         .where("LOWER(last_name) = ? AND LOWER(email) = ?", last_name.downcase, email.downcase)
         .where("LOWER(first_name) IN (:names) OR LOWER(COALESCE(legal_first_name, '')) IN (:names)", names: first_names)
         .first
+    end
+
+    # Populate the structured columns that the registration form collects but that
+    # we historically stored only as form answers. A non-blank submitted value
+    # overwrites whatever was on file: the latest registration is treated as the
+    # freshest source of truth, and the prior value is preserved in the audit trail
+    # — every model includes AhoyTrackable, whose after_update logs an Ahoy::Event
+    # capturing the change. A blank answer never clobbers existing data.
+    def sync_person_profile(person)
+      apply_value(person, :racial_ethnic_identity, field_value("racial_ethnic_identity"))
+    end
+
+    # Write value onto attribute when a non-blank value was submitted, overwriting
+    # any existing value. A no-op when the value is unchanged (update! records no
+    # change, so no spurious audit event).
+    def apply_value(record, attribute, value)
+      return if value.blank?
+      record.update!(attribute => value.strip)
     end
 
     def create_mailing_address(person)
