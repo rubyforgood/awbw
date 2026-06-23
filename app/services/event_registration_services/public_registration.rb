@@ -64,6 +64,7 @@ module EventRegistrationServices
           existing.update!(ce_credit_requested: true, ce_hours_requested: ce_hours_requested) if ce_credit_requested?
           existing.update!(w9_requested: true) if w9_requested?
           existing.update!(invoice_requested: true) if invoice_requested?
+          apply_value(existing, :expected_payment_method, field_value("payment_method"))
           if existing.status == "cancelled"
             existing.update!(status: "registered")
             send_notifications(existing)
@@ -178,6 +179,25 @@ module EventRegistrationServices
     # capturing the change. A blank answer never clobbers existing data.
     def sync_person_profile(person)
       apply_value(person, :racial_ethnic_identity, field_value("racial_ethnic_identity"))
+      record_mailing_list_consent(person)
+    end
+
+    # Consent is opt-in only and recorded once. An affirmative answer grants
+    # consent (stamping the time and where it came from) when none is on file; we
+    # never clear it from here — withdrawal is a separate, deliberate action — and
+    # we don't keep re-stamping a registrant who already consented.
+    def record_mailing_list_consent(person)
+      return if person.mailing_list_consent_at.present?
+      return unless mailing_list_consent_given?
+
+      person.update!(
+        mailing_list_consent_at: Time.current,
+        mailing_list_consent_source: "Registration: #{@event.title}"
+      )
+    end
+
+    def mailing_list_consent_given?
+      Array(field_value("communication_consent")).any? { |value| value.to_s.strip.present? }
     end
 
     def sync_organization_profile(organization)
@@ -342,7 +362,8 @@ module EventRegistrationServices
         ce_credit_requested: ce_credit_requested?,
         ce_hours_requested: ce_hours_requested,
         w9_requested: w9_requested?,
-        invoice_requested: invoice_requested?
+        invoice_requested: invoice_requested?,
+        expected_payment_method: field_value("payment_method")&.strip.presence
       )
     end
 

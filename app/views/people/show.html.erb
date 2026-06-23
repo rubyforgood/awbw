@@ -172,6 +172,19 @@
               <p class="text-gray-700"><%= @person.racial_ethnic_identity %></p>
             </div>
           <% end %>
+          <!-- Mailing list consent (admin only) -->
+          <% if allowed_to?(:manage?, Person) %>
+            <div class="md:col-span-2 p-3 admin-only bg-blue-100 rounded-lg">
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Mailing list consent</h2>
+              <% if @person.mailing_list_consent_at.present? %>
+                <p class="text-gray-700">
+                  Consented <%= @person.mailing_list_consent_at.to_date.to_fs(:long) %><%= " — #{@person.mailing_list_consent_source}" if @person.mailing_list_consent_source.present? %>
+                </p>
+              <% else %>
+                <p class="text-gray-500 italic">No consent on file.</p>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
       <!-- Bio -->

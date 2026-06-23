@@ -130,6 +130,69 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "expected payment method" do
+    it "records the chosen payment method on a new registration" do
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("payment_method") => "Check"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(EventRegistration.last.expected_payment_method).to eq("Check")
+    end
+
+    it "updates the expected payment method when an existing registrant re-registers" do
+      person = create(:person, first_name: "Pat", last_name: "Doe", email: "pat@example.com")
+      create(:event_registration, event: event, registrant: person, expected_payment_method: "Check")
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("payment_method") => "Credit card (now)"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(event.event_registrations.find_by(registrant: person).expected_payment_method).to eq("Credit card (now)")
+    end
+  end
+
+  describe "mailing list consent" do
+    it "stamps the consent time and source when the registrant opts in" do
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "Yes" ]
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by!(email: "coco@example.com")
+
+      expect(person.mailing_list_consent_at).to be_present
+      expect(person.mailing_list_consent_source).to include(event.title)
+    end
+
+    it "does not record consent when the box is left unchecked" do
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "" ]
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(Person.find_by!(email: "coco@example.com").mailing_list_consent_at).to be_nil
+    end
+
+    it "never re-stamps or clears consent already on file" do
+      original = 1.year.ago
+      create(:person, first_name: "Coco", last_name: "Lee", email: "coco@example.com",
+                      mailing_list_consent_at: original, mailing_list_consent_source: "Earlier")
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "Yes" ]
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by!(email: "coco@example.com")
+
+      expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
+      expect(person.mailing_list_consent_source).to eq("Earlier")
+    end
+  end
+
   describe "matching an existing registrant by name" do
     it "matches a person stored under a nickname when the registrant types their legal first name" do
       existing = create(:person, first_name: "Bob", legal_first_name: "Robert",

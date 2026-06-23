@@ -224,6 +224,16 @@ RSpec.describe "EventRegistrations", type: :request do
       end
     end
 
+    describe "GET /event_registrations/:id/edit" do
+      it "shows the registrant's expected payment method when present" do
+        existing_registration.update!(expected_payment_method: "Check")
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Expected payment method").and include("Check")
+      end
+    end
+
     describe "PATCH /event_registrations/:id" do
       it "can update registration" do
         patch event_registration_path(existing_registration),

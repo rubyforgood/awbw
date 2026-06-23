@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_22_202122) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_23_001313) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -473,6 +473,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_22_202122) do
     t.boolean "completed_day_5", default: false, null: false
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.string "expected_payment_method"
     t.text "fee_note"
     t.boolean "intends_to_pay", default: false, null: false
     t.boolean "invoice_requested", default: false, null: false
@@ -962,6 +963,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_22_202122) do
     t.string "license_number"
     t.string "license_type"
     t.string "linked_in_url"
+    t.datetime "mailing_list_consent_at"
+    t.string "mailing_list_consent_source"
     t.date "member_since"
     t.text "notes"
     t.boolean "profile_is_searchable", default: true, null: false

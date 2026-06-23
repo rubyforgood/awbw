@@ -96,6 +96,10 @@ RSpec.describe "People authorization", type: :request do
         get person_path(other_person)
         expect(response.body).to include("Multi-racial")
       end
+
+      it "shows the mailing list consent status" do
+        expect(response.body).to include("No consent on file")
+      end
     end
 
     context "as the owner" do
@@ -116,6 +120,10 @@ RSpec.describe "People authorization", type: :request do
         regular_user.person.update!(racial_ethnic_identity: "Multi-racial")
         get person_path(regular_user.person)
         expect(response.body).not_to include("Multi-racial")
+      end
+
+      it "hides the mailing list consent status from the owner" do
+        expect(response.body).not_to include("No consent on file")
       end
     end
   end
