@@ -4,12 +4,17 @@
     Resource. Shared by the registrant resource viewer and admin callouts that link
     a resource. %>
 <% if resource.downloadable_asset&.file&.attached? %>
-  <div class="flex justify-end mb-4">
+  <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 mb-4">
+    <% unless resource.single_page_pdf? %>
+      <span class="text-xs text-gray-500">The preview shows the first page only — download to get all pages.</span>
+    <% end %>
     <%= link_to resource_download_path(resource), download: true, class: "btn btn-utility" do %>
       Download <i class="fa-solid fa-download"></i>
     <% end %>
   </div>
 <% end %>
+
+<p class="text-xs text-gray-400 mb-3">The preview below may take a moment to load.</p>
 
 <%= render "assets/display_assets",
            resource: resource, file: resource.display_image,

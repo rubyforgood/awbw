@@ -69,6 +69,12 @@ hidden_resources = [
     body: "A letter trainees can share with supervisors to request release time for the training.",
     filename: "letter_to_supervisors.pdf",
     kind: "Form"
+  },
+  {
+    title: "W-9",
+    body: "AWBW's W-9 tax form for trainees' records.",
+    filename: "w9.pdf",
+    kind: "Form"
   }
 ]
 
