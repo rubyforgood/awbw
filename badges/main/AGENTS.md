@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~78 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~28 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~29 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
 | `app/models/concerns/` | Shared model modules | 15 concerns |
 
@@ -181,6 +181,7 @@ end
 ### Business Logic
 
 - `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total)
+- `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas

@@ -606,6 +606,32 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       end
     end
 
+    context "when the scholarship answers were captured on the registration submission" do
+      let(:scholarship_form) { create(:form, role: "scholarship") }
+      let!(:scholarship_field) do
+        create(:form_field, form: scholarship_form, section: "scholarship",
+               answer_type: :free_form_input_paragraph, name: "Why do you need a scholarship?", required: false)
+      end
+
+      before do
+        EventForm.create!(event: event, form: scholarship_form, role: "scholarship")
+        # No separate scholarship submission — the answer hangs off the
+        # registration submission, on a scholarship-form field.
+        reg_submission = FormSubmission.find_by(person: person, form: form)
+        reg_submission.form_answers.create!(form_field: scholarship_field,
+                                            submitted_answer: "Our agency training budget was cut.")
+      end
+
+      it "still surfaces them in the scholarship application card" do
+        get event_public_registration_path(event, person_id: person.id)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Scholarship application")
+        expect(response.body).to include("Why do you need a scholarship?")
+        expect(response.body).to include("Our agency training budget was cut.")
+      end
+    end
+
     it "does not render a scholarship section when there is no scholarship submission" do
       get event_public_registration_path(event, person_id: person.id)
 

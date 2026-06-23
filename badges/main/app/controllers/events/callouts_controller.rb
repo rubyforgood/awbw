@@ -41,6 +41,7 @@ module Events
       end
 
       @scholarship = @event_registration.scholarships.first
+      @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
     end
 
     # CE hours status: requested hours, amount owed, and license number.

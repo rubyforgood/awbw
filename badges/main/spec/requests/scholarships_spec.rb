@@ -53,6 +53,21 @@ RSpec.describe "Scholarships", type: :request do
       expect(response.body).to include(event_public_registration_path(event, reg: registration.slug))
     end
 
+    it "shows answers submitted on the event's dedicated scholarship form" do
+      scholarship_form = create(:form, name: "Scholarship Application")
+      create(:event_form, event: event, form: scholarship_form, role: "scholarship")
+      field = create(:form_field, form: scholarship_form, section: "scholarship",
+                     name: "How much can you contribute?", answer_type: :free_form_input_one_line)
+      submission = create(:form_submission, person: registration.registrant, form: scholarship_form, role: "scholarship")
+      create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "$250")
+
+      get edit_scholarship_path(scholarship)
+
+      expect(response.body).to include("Form submission")
+      expect(response.body).to include("How much can you contribute?")
+      expect(response.body).to include("$250")
+    end
+
     it "renders the shared event header: event link, training date, and a profile-linked recipient" do
       get edit_scholarship_path(scholarship)
 
