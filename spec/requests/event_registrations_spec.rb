@@ -224,6 +224,18 @@ RSpec.describe "EventRegistrations", type: :request do
       end
     end
 
+    describe "GET /event_registrations/:id/edit" do
+      it "renders the expected payment method as an editable select with the registrant's answer selected" do
+        existing_registration.update!(expected_payment_method: "Check")
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Expected payment method")
+        expect(response.body).to include("name=\"event_registration[expected_payment_method]\"")
+        expect(response.body).to include("<option selected=\"selected\" value=\"Check\">Check</option>")
+      end
+    end
+
     describe "PATCH /event_registrations/:id" do
       it "can update registration" do
         patch event_registration_path(existing_registration),
@@ -260,6 +272,22 @@ RSpec.describe "EventRegistrations", type: :request do
 
         expect(existing_registration.reload.shoutout).to be(true)
         expect(existing_registration.registrant.reload.shoutout_text).to eq("Grateful to bring art to survivors.")
+      end
+
+      it "records an admin-set expected payment method even when the form was never filled out" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { expected_payment_method: "Check" } }
+
+        expect(existing_registration.reload.expected_payment_method).to eq("Check")
+      end
+
+      it "clears the expected payment method when set back to not specified" do
+        existing_registration.update!(expected_payment_method: "Check")
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { expected_payment_method: "" } }
+
+        expect(existing_registration.reload.expected_payment_method).to be_blank
       end
     end
 

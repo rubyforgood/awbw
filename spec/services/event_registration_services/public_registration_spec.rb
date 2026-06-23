@@ -87,6 +87,30 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "expected payment method" do
+    it "records the chosen payment method on a new registration" do
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("payment_method") => "Check"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(EventRegistration.last.expected_payment_method).to eq("Check")
+    end
+
+    it "updates the expected payment method when an existing registrant re-registers" do
+      person = create(:person, first_name: "Pat", last_name: "Doe", email: "pat@example.com")
+      create(:event_registration, event: event, registrant: person, expected_payment_method: "Check")
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("payment_method") => "Credit card (now)"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(event.event_registrations.find_by(registrant: person).expected_payment_method).to eq("Credit card (now)")
+    end
+  end
+
   describe "mailing list consent" do
     it "stamps the consent time and source when the registrant opts in" do
       params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
