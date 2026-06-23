@@ -19,6 +19,37 @@ RSpec.describe Grant, type: :model do
     it "is valid with a person donor" do
       expect(build(:grant, :donated_by_person)).to be_valid
     end
+
+    describe "amount cannot drop below scholarships already issued" do
+      it "is invalid when the amount is reduced below the total awarded" do
+        grant = create(:grant, amount_cents: 100_000)
+        create(:scholarship, grant:, amount_cents: 60_000)
+
+        grant.amount_cents = 50_000
+        expect(grant).not_to be_valid
+        expect(grant.errors[:amount_cents]).to include("can't be less than the $600 already awarded in scholarships")
+      end
+
+      it "is valid when the amount equals the total awarded" do
+        grant = create(:grant, amount_cents: 100_000)
+        create(:scholarship, grant:, amount_cents: 60_000)
+
+        grant.amount_cents = 60_000
+        expect(grant).to be_valid
+      end
+
+      it "is valid when the amount stays above the total awarded" do
+        grant = create(:grant, amount_cents: 100_000)
+        create(:scholarship, grant:, amount_cents: 60_000)
+
+        grant.amount_cents = 70_000
+        expect(grant).to be_valid
+      end
+
+      it "is valid for a new grant with no scholarships" do
+        expect(build(:grant, amount_cents: 0)).to be_valid
+      end
+    end
   end
 
   describe "money accessors" do
