@@ -19,7 +19,6 @@ class EventRegistration < ApplicationRecord
   accepts_nested_attributes_for :registrant
 
   before_create :generate_slug
-  after_create :snapshot_registrant_organizations
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
@@ -406,17 +405,6 @@ class EventRegistration < ApplicationRecord
   end
 
   private
-
-  # Link each organization the registrant is actively affiliated with — but only
-  # once. A registrant can hold several active affiliations to the same org (e.g.
-  # different titles), so we dedupe the organization ids first; creating a second
-  # row for the same org would fail the uniqueness validation and leave an invalid
-  # record in the in-memory collection that breaks the next save of the registration.
-  def snapshot_registrant_organizations
-    registrant.affiliations.active.distinct.pluck(:organization_id).each do |organization_id|
-      event_registration_organizations.create(organization_id: organization_id)
-    end
-  end
 
   def generate_slug
     loop do
