@@ -615,6 +615,20 @@ RSpec.describe EventRegistration, type: :model do
       reg = create(:event_registration, registrant: person)
       expect(reg.organizations).to be_empty
     end
+
+    it "links an organization once even with multiple active affiliations to it" do
+      org = create(:organization)
+      person = create(:person)
+      create(:affiliation, person: person, organization: org, title: "Facilitator")
+      create(:affiliation, person: person, organization: org, title: "Program Director")
+
+      reg = create(:event_registration, registrant: person)
+
+      expect(reg.organizations).to contain_exactly(org)
+      # A duplicate org left an invalid record in the in-memory collection, which
+      # blew up later saves (e.g. recording a Stripe checkout session id).
+      expect { reg.update!(checkout_session_id: "cs_test_123") }.not_to raise_error
+    end
   end
 
   describe "slug" do
