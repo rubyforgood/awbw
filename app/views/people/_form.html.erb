@@ -380,11 +380,20 @@
 
     <% if allowed_to?(:manage?, Person) %>
       <div class="w-full lg:w-auto rounded-lg border border-gray-200 admin-only bg-blue-100 p-4 shadow-sm">
-        <div class="w-full sm:w-64">
-          <%= f.input :racial_ethnic_identity,
-                      label: "Racial/ethnic identity",
-                      input_html: { class: "w-full" },
-                      wrapper_html: { class: "w-full" } %>
+        <div class="flex flex-col sm:flex-row gap-6 items-start">
+          <div class="w-full sm:w-64">
+            <%= f.input :racial_ethnic_identity,
+                        label: "Racial/ethnic identity",
+                        input_html: { class: "w-full" },
+                        wrapper_html: { class: "w-full" } %>
+          </div>
+
+          <div class="w-full sm:w-64">
+            <%= f.input :filemaker_code,
+                        label: "FileMaker code",
+                        input_html: { class: "w-full" },
+                        wrapper_html: { class: "w-full" } %>
+          </div>
         </div>
       </div>
     <% end %>

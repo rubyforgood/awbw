@@ -130,6 +130,11 @@ RSpec.describe "People authorization", type: :request do
         get edit_person_path(other_person)
         expect(response.body).to include("person[racial_ethnic_identity]")
       end
+
+      it "shows the FileMaker code field" do
+        get edit_person_path(other_person)
+        expect(response.body).to include("person[filemaker_code]")
+      end
     end
   end
 
@@ -155,6 +160,11 @@ RSpec.describe "People authorization", type: :request do
       it "updates the racial/ethnic identity" do
         patch person_path(other_person), params: { person: { racial_ethnic_identity: "Asian" } }
         expect(other_person.reload.racial_ethnic_identity).to eq("Asian")
+      end
+
+      it "updates the FileMaker code" do
+        patch person_path(other_person), params: { person: { filemaker_code: "FM-123" } }
+        expect(other_person.reload.filemaker_code).to eq("FM-123")
       end
     end
   end
