@@ -124,6 +124,26 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Eligibility criteria")
       expect(response.body).to include("Tasks to complete")
     end
+
+    it "links to the registrant's form responses when a submission is on file" do
+      registration.update!(scholarship_requested: true)
+      form = create(:form)
+      create(:event_form, event: event, form: form, role: "registration")
+      create(:form_submission, :with_event, event: event, person: registration.registrant, form: form)
+
+      get registration_scholarship_path(registration.slug)
+
+      expect(response.body).to include("Review your form responses")
+      expect(response.body).to include(event_public_registration_path(event, reg: registration.slug))
+    end
+
+    it "omits the form-responses link when the registrant has no submission" do
+      registration.update!(scholarship_requested: true)
+
+      get registration_scholarship_path(registration.slug)
+
+      expect(response.body).not_to include("Review your form responses")
+    end
   end
 
   describe "GET /registration/:slug/faq" do

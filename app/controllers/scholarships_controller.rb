@@ -181,23 +181,18 @@ class ScholarshipsController < ApplicationController
     root_path
   end
 
-  # Pull the recipient's scholarship-section answers from the event's
-  # registration form submission, plus a link to the full public submission.
+  # Pull the recipient's scholarship-application answers — wherever they were
+  # captured (dedicated scholarship form, embedded registration section, or
+  # against the registration submission) — plus a link to the full submission.
   def load_scholarship_submission
     return unless @allocatable.respond_to?(:event)
 
     @event = @allocatable.event
-    form = @event&.registration_form
-    return unless form
+    return unless @event
 
-    @form_submission = form.form_submissions.find_by(person: @scholarship.recipient)
-    answers = @form_submission ? @form_submission.form_answers.index_by(&:form_field_id) : {}
-
-    @scholarship_answers = form.form_fields
-      .select { |field| field.section == "scholarship" || field.scholarship_only? }
-      .reject { |field| field.group_header? || field.no_user_input? }
-      .sort_by { |field| field.position.to_i }
-      .map { |field| [ field, answers[field.id] ] }
+    application = ScholarshipApplication.new(event: @event, person: @scholarship.recipient)
+    @form_submission = application.submission
+    @scholarship_answers = application.answer_pairs
   end
 
   def locate_allocatable
