@@ -171,21 +171,24 @@ module Events
       @event.registration_form
     end
 
-    # Surface the separate scholarship-form application (its own role: "scholarship"
-    # submission) on the view-submission page when the registrant filled it out.
-    # Only set when answers are actually on file so the view renders nothing for
-    # plain registrations.
+    # Surface the dedicated scholarship form's application in its own card on the
+    # view-submission page when the registrant filled it out. Answers are gathered
+    # by field identifier (they may live on the scholarship submission or on the
+    # registration submission), so a registrant who answered the questions while
+    # registering still sees them. Only set when answers are on file, so plain
+    # registrations render nothing. Embedded-section scholarship questions need no
+    # separate card — they already render inline with the registration answers.
     def load_scholarship_submission(person)
       scholarship_form = @event.scholarship_form
       return unless scholarship_form
 
-      submission = scholarship_form.form_submissions.find_by(person: person, role: "scholarship")
-      return unless submission&.form_answers&.exists?
+      application = ScholarshipApplication.new(event: @event, person: person)
+      return unless application.answered?
 
-      @scholarship_submission = submission
+      @scholarship_submission = application.submission
       @scholarship_form = scholarship_form
       @scholarship_fields = scholarship_form.form_fields.reorder(position: :asc)
-      @scholarship_responses = submission.form_answers.index_by(&:form_field_id)
+      @scholarship_responses = application.answers_by_field_id
     end
 
     def scholarship_mode?
