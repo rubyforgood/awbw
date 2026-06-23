@@ -384,6 +384,21 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Healthcare")
     end
 
+    it "renders the agency website as a text input so bare domains pass validation" do
+      website_field = create(:form_field, form: form, answer_type: :free_form_input_one_line,
+             field_identifier: "agency_website", name: "Organization website", required: false)
+
+      get new_event_public_registration_path(event)
+
+      input_id = "public_registration_form_fields_#{website_field.id}"
+      website_input = response.body[/<input[^>]*id="#{input_id}"[^>]*>/]
+      # type="url" makes browsers reject bare domains like "awbw.org"; a text
+      # input with inputmode="url" keeps the URL keyboard without that rejection.
+      expect(website_input).to include('type="text"')
+      expect(website_input).to include('inputmode="url"')
+      expect(website_input).not_to include('type="url"')
+    end
+
     it "shows the maximum character hint below the field" do
       create(:form_field, form: form, answer_type: :free_form_input_paragraph,
              name: "Bio", required: false, max_characters: 250)
