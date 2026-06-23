@@ -78,6 +78,24 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("$1,500")
     end
 
+    it "defaults the eyebrow to the ticket" do
+      get registration_invoice_path(registration.slug)
+      expect(response.body).to include(registration_ticket_path(registration.slug))
+      expect(response.body).to include("Back to ticket")
+    end
+
+    it "returns to the forms callout when reached from forms" do
+      get registration_invoice_path(registration.slug, return_to: "forms")
+      expect(response.body).to include(registration_forms_path(registration.slug))
+      expect(response.body).to include("Back to forms")
+    end
+
+    it "returns to the payment callout when reached from payment" do
+      get registration_invoice_path(registration.slug, return_to: "payment")
+      expect(response.body).to include(registration_payment_path(registration.slug))
+      expect(response.body).to include("Back to payment")
+    end
+
     context "as a guest" do
       before { sign_out user }
 
@@ -227,7 +245,7 @@ RSpec.describe "Events::Registrations", type: :request do
       get registration_forms_path(registration.slug)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("/documents/awbw-w9.pdf")
-      expect(response.body).to include(registration_invoice_path(registration.slug))
+      expect(response.body).to include(registration_invoice_path(registration.slug, return_to: "forms"))
     end
 
     it "links to the letter-to-supervisors resource page below them when present, returning to forms" do
@@ -276,7 +294,7 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response).to have_http_status(:success)
     end
 
-    it "returns to the handouts callout when reached from handouts" do
+    it "returns to the handouts callout with a 'Handouts detail' header when reached from handouts" do
       resource = create(:resource, title: "AHA Moments", kind: "Handout")
 
       get registration_resource_path(registration.slug, resource, return_to: "handouts")
@@ -284,15 +302,19 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include(registration_handouts_path(registration.slug))
       expect(response.body).to include("Back to handouts")
       expect(response.body).not_to include("Back to ticket")
+      expect(response.body).to include("Handouts detail")
+      expect(response.body).to include("AHA Moments")
     end
 
-    it "returns to the forms callout when reached from forms" do
+    it "returns to the forms callout with a 'Forms detail' header when reached from forms" do
       resource = create(:resource, title: "Letter to Supervisors", kind: "Form")
 
       get registration_resource_path(registration.slug, resource, return_to: "forms")
 
       expect(response.body).to include(registration_forms_path(registration.slug))
       expect(response.body).to include("Back to forms")
+      expect(response.body).to include("Forms detail")
+      expect(response.body).to include("Letter to Supervisors")
     end
   end
 

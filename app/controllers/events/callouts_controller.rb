@@ -112,7 +112,7 @@ module Events
                       href: "/documents/awbw-w9.pdf", trailing_icon: "fa-solid fa-download"),
         resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
                       subtitle: "Itemized invoice for this registration",
-                      href: registration_invoice_path(@event_registration.slug))
+                      href: registration_invoice_path(@event_registration.slug, return_to: "forms"))
       ]
       letter = Resource.find_by(title: "Letter to Supervisors")
       if letter

@@ -1,15 +1,20 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "#{@resource.title} — #{@event.title}") %>
-<%# Eyebrow returns to the callout the registrant came from (handouts/forms),
-    falling back to the ticket when reached directly. %>
-<% back_path, back_label = case params[:return_to]
+<%# Eyebrow and header reflect the callout the registrant came from
+    (handouts/forms): the header reads "Handouts detail" / "Forms detail" with
+    the resource's own title shown inside the card. Reached directly, it falls
+    back to the ticket eyebrow and the resource title as the header. %>
+<% back_path, back_label, detail_label = case params[:return_to]
    when "handouts"
-     [ registration_handouts_path(@event_registration.slug), "Back to handouts" ]
+     [ registration_handouts_path(@event_registration.slug), "Back to handouts", "Handouts detail" ]
    when "forms"
-     [ registration_forms_path(@event_registration.slug), "Back to forms" ]
+     [ registration_forms_path(@event_registration.slug), "Back to forms", "Forms detail" ]
    else
-     [ registration_ticket_path(@event_registration.slug), "Back to ticket" ]
+     [ registration_ticket_path(@event_registration.slug), "Back to ticket", nil ]
    end %>
-<%= render layout: "events/callouts/callout_page", locals: { title: @resource.title, back_path: back_path, back_label: back_label } do %>
+<%= render layout: "events/callouts/callout_page", locals: { title: detail_label || @resource.title, back_path: back_path, back_label: back_label } do %>
+  <% if detail_label %>
+    <h2 class="text-lg font-semibold text-gray-800 mb-4"><%= @resource.title %></h2>
+  <% end %>
   <%= render "events/callouts/resource_body", resource: @resource %>
 <% end %>
