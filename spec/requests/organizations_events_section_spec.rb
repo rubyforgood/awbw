@@ -12,12 +12,15 @@ RSpec.describe "Organization profile events-attended section", type: :request do
         headers: { "Turbo-Frame" => "organization_events_section" }
   end
 
-  # A registration snapshots the registrant's active org affiliations on create,
-  # which is what links the event to the organization profile.
+  # A registration is linked to the organization the registrant submitted on the
+  # form (or that an admin connected), which is what surfaces the event on the
+  # organization profile.
   def register(event:, status: "registered")
     person = create(:person)
     create(:affiliation, organization: organization, person: person)
-    create(:event_registration, registrant: person, event: event, status: status)
+    registration = create(:event_registration, registrant: person, event: event, status: status)
+    registration.event_registration_organizations.create!(organization: organization)
+    registration
   end
 
   it "shows events members are actively registered for" do

@@ -51,6 +51,51 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "registration organizations" do
+    let!(:organization) { create(:organization, name: "Helping Hands") }
+
+    def register_with_org(org_name)
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => org_name
+      )
+      described_class.call(event: event, form: form, form_params: params)
+      event.event_registrations.find_by!(registrant: Person.find_by(email: "sam@example.com"))
+    end
+
+    it "connects only the organization submitted through the form" do
+      registration = register_with_org("Helping Hands")
+
+      expect(registration.organizations).to contain_exactly(organization)
+    end
+
+    it "does not connect the registrant's other active affiliations" do
+      person = create(:person, email: "sam@example.com", last_name: "Rowe", first_name: "Sam")
+      other_org = create(:organization, name: "Unrelated Org")
+      create(:affiliation, person: person, organization: other_org)
+
+      registration = register_with_org("Helping Hands")
+
+      expect(registration.organizations).to contain_exactly(organization)
+    end
+
+    it "connects no organizations when none is submitted" do
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com")
+      described_class.call(event: event, form: form, form_params: params)
+      registration = event.event_registrations.find_by!(registrant: Person.find_by(email: "sam@example.com"))
+
+      expect(registration.organizations).to be_empty
+    end
+
+    it "adds the new org to the same registration when the registrant applies again" do
+      second_org = create(:organization, name: "Second Org")
+      first = register_with_org("Helping Hands")
+      second = register_with_org("Second Org")
+
+      expect(second).to eq(first)
+      expect(first.organizations).to contain_exactly(organization, second_org)
+    end
+  end
+
   describe "racial/ethnic identity" do
     it "stores the racial/ethnic identity on a new registrant" do
       params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(

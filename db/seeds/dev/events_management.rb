@@ -835,15 +835,17 @@ if lisa_w && roundtable
   registrations_data << { person: lisa_w, event: roundtable, status: "incomplete_attendance" }
 end
 
-# --- People with multiple active affiliations — ensures org snapshots get exercised ---
+# --- People with multiple active affiliations — exercise a registration linked to
+# one of the registrant's orgs (the org they registered with), not all of them ---
 mariana_j = Person.find_by(first_name: "Mariana", last_name: "Johnson")
 samuel_s = Person.find_by(first_name: "Samuel", last_name: "Smith")
 lisa_wn = Person.find_by(first_name: "Lisa", last_name: "Williamson")
 kim_dv = Person.find_by(first_name: "Kim", last_name: "Davidson")
 sarah_d = Person.find_by(first_name: "Sarah", last_name: "Davis")
 
-{ mariana_j => youth_day, samuel_s => mindful_art, lisa_wn => virtual_session,
-  kim_dv => family_day, sarah_d => roundtable }.each do |person, evt|
+multi_affiliation_registrations = { mariana_j => youth_day, samuel_s => mindful_art,
+  lisa_wn => virtual_session, kim_dv => family_day, sarah_d => roundtable }
+multi_affiliation_registrations.each do |person, evt|
   next unless person && evt
   registrations_data << { person: person, event: evt, status: "registered" }
 end
@@ -869,6 +871,17 @@ registrations_data.each do |data|
   registration.ce_credit_requested = data[:ce_credit_requested] || false
   registration.intends_to_pay = data[:intends_to_pay] || false
   registration.save!
+end
+
+# Connect each multi-affiliation registrant's registration to a single one of
+# their orgs — mirroring a real registration, which links only the org submitted
+# on the form, not every active affiliation.
+multi_affiliation_registrations.each do |person, evt|
+  next unless person && evt
+  org = person.affiliations.active.first&.organization
+  next unless org
+  registration = EventRegistration.find_by(event: evt, registrant: person)
+  registration&.event_registration_organizations&.find_or_create_by!(organization: org)
 end
 
 # Give the flagship training its demo cohort: top up to 10 active registrants with
@@ -1569,5 +1582,33 @@ if facilitator_training && registration_form
     registration.event_registration_organizations.find_or_create_by!(organization: aff_org)
     add_affiliation.call(person, aff_org, title: "Facilitator")
     add_affiliation.call(person, other_org, title: "Board Member")
+  end
+
+  # The two ways a single registration ends up with more than one org. A
+  # registration no longer snapshots every affiliation, so multiple orgs are
+  # always deliberate — these two demos show each path side by side.
+
+  # A5: the registrant submitted one org on the form, then an admin linked a
+  # second org by hand → two linked orgs but a single submission.
+  if aff_org && other_org
+    person = Person.create!(email: "affdemo.5@seed.example.com", first_name: "Demo Affiliation", last_name: "A5 Admin-linked second org")
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    submit_field.call(registration, agency_field, aff_org.name)
+    link_org.call(registration, aff_org)
+    # Admin adds the second org later — no matching submission (mirrors the
+    # select/create_organization controller path: affiliation + connection).
+    link_org.call(registration, other_org)
+  end
+
+  # A6: the registrant applied twice, each submission naming a different org →
+  # two submissions, each adding its single org, so the registration links both.
+  if aff_org && other_org
+    person = Person.create!(email: "affdemo.6@seed.example.com", first_name: "Demo Affiliation", last_name: "A6 Applied twice, two orgs")
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    [ aff_org, other_org ].each do |org|
+      submission = FormSubmission.create!(person: person, form: registration_form, event: facilitator_training)
+      submission.form_answers.create!(form_field: agency_field, submitted_answer: org.name, question_name_when_answered: agency_field.name) if agency_field
+      link_org.call(registration, org)
+    end
   end
 end

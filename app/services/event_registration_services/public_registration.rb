@@ -71,12 +71,14 @@ module EventRegistrationServices
             existing.update!(status: "registered")
             send_notifications(existing)
           end
+          connect_organization(existing, organization)
           submission = update_form_submission(person)
           save_scholarship_submission(person)
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
         event_registration = create_event_registration(person)
+        connect_organization(event_registration, organization)
         submission = create_form_submission(person)
         save_scholarship_submission(person)
 
@@ -286,6 +288,18 @@ module EventRegistrationServices
       return nil if name.blank?
 
       Organization.find_by(name: name)
+    end
+
+    # Connect only the one organization the registrant submitted on this form —
+    # not every organization they're affiliated with. A registration accrues
+    # multiple orgs only deliberately: an admin links extra ones from the edit
+    # page, or the registrant applies again with a different org (each submission
+    # adds its single org to the same registration via find_or_create_by!).
+    def connect_organization(event_registration, organization)
+      return unless organization
+
+      event_registration.event_registration_organizations
+        .find_or_create_by!(organization: organization)
     end
 
     def create_affiliation(person, organization)
