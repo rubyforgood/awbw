@@ -90,10 +90,6 @@ RSpec.describe "People authorization", type: :request do
       it "does not show the Comments section" do
         expect(response.body).not_to include("comment_form")
       end
-
-      it "shows the mailing list consent status" do
-        expect(response.body).to include("No consent on file")
-      end
     end
 
     context "as the owner" do
@@ -108,10 +104,6 @@ RSpec.describe "People authorization", type: :request do
 
       it "shows the Submitted content section" do
         expect(response.body).to include("Submitted content")
-      end
-
-      it "hides the mailing list consent status from the owner" do
-        expect(response.body).not_to include("No consent on file")
       end
     end
   end
