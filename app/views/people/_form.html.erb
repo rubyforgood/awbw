@@ -395,6 +395,16 @@
                         wrapper_html: { class: "w-full" } %>
           </div>
         </div>
+
+        <div class="w-full">
+          <%= f.input :mailing_list_consented,
+                      as: :boolean,
+                      label: "Consented to mailing list",
+                      hint: f.object.mailing_list_consent_at.present? ?
+                              "Consented #{f.object.mailing_list_consent_at.to_date.to_fs(:long)} (#{f.object.mailing_list_consent_source}). Uncheck to withdraw." :
+                              "No consent on file. Check to record consent.",
+                      wrapper_html: { class: "w-full" } %>
+        </div>
       </div>
     <% end %>
   </div>

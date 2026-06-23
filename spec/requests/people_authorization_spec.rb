@@ -166,6 +166,21 @@ RSpec.describe "People authorization", type: :request do
         patch person_path(other_person), params: { person: { filemaker_code: "FM-123" } }
         expect(other_person.reload.filemaker_code).to eq("FM-123")
       end
+
+      it "withdraws mailing list consent when the box is unchecked" do
+        other_person.update!(mailing_list_consent_at: Time.current, mailing_list_consent_source: "Registration: X")
+
+        patch person_path(other_person), params: { person: { mailing_list_consented: "0" } }
+
+        expect(other_person.reload.mailing_list_consent_at).to be_nil
+        expect(other_person.mailing_list_consent_source).to be_nil
+      end
+
+      it "records mailing list consent when the box is checked" do
+        patch person_path(other_person), params: { person: { mailing_list_consented: "1" } }
+
+        expect(other_person.reload.mailing_list_consent_at).to be_present
+      end
     end
   end
 end

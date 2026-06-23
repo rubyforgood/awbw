@@ -138,6 +138,28 @@ class Person < ApplicationRecord
     sectors.pluck(:name)
   end
 
+  # Virtual checkbox for the admin person form. Presence of a consent timestamp is
+  # the source of truth; this lets an admin grant or withdraw consent. Withdrawing
+  # clears both the timestamp and its source; granting (when none is on file)
+  # stamps the time and records that an admin did it. Re-checking an existing
+  # consent leaves the original timestamp/source intact.
+  def mailing_list_consented
+    mailing_list_consent_at.present?
+  end
+
+  def mailing_list_consented=(value)
+    consented = ActiveModel::Type::Boolean.new.cast(value)
+
+    if consented
+      return if mailing_list_consent_at.present?
+      self.mailing_list_consent_at = Time.current
+      self.mailing_list_consent_source = "Admin update"
+    else
+      self.mailing_list_consent_at = nil
+      self.mailing_list_consent_source = nil
+    end
+  end
+
   def name
     case display_name_preference
     when "full_name"

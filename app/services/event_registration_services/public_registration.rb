@@ -45,6 +45,7 @@ module EventRegistrationServices
       ActiveRecord::Base.transaction do
         person = find_or_create_person
         sync_person_profile(person)
+        record_mailing_list_consent(person)
 
         create_mailing_address(person) if field_value("mailing_city").present?
         create_phone_contact(person) if field_value("phone").present?
@@ -183,6 +184,31 @@ module EventRegistrationServices
     def apply_value(record, attribute, value)
       return if value.blank?
       record.update!(attribute => value.strip)
+    end
+
+    # Consent is opt-in only and recorded once. An affirmative answer grants
+    # consent (stamping the time and where it came from) when none is on file; we
+    # never clear it from here — withdrawal is a separate, deliberate action — and
+    # we don't keep re-stamping a registrant who already consented.
+    def record_mailing_list_consent(person)
+      return if person.mailing_list_consent_at.present?
+      return unless mailing_list_consent_given?
+
+      person.update!(
+        mailing_list_consent_at: Time.current,
+        mailing_list_consent_source: mailing_list_consent_source
+      )
+    end
+
+    def mailing_list_consent_given?
+      Array(field_value("communication_consent")).any? { |value| value.to_s.strip.present? }
+    end
+
+    # Identify the event by start date *and* title — many trainings share a title,
+    # so the leading date is what makes the consent source traceable to one event,
+    # e.g. "2026-06-23 Facilitator Training registration".
+    def mailing_list_consent_source
+      [ @event.start_date&.to_date&.iso8601, "#{@event.title} registration" ].compact.join(" ")
     end
 
     def create_mailing_address(person)
