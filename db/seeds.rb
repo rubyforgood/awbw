@@ -148,6 +148,11 @@ OrganizationObligation::OBLIGATION_TYPES.each do |obligation_type|
   OrganizationObligation.where(name: obligation_type).first_or_create!
 end
 
+puts "Creating OrganizationTypes…"
+OrganizationType::DEFAULT_NAMES.each do |type_name|
+  find_or_create_by_name!(OrganizationType, type_name).update!(published: true)
+end
+
 puts "Creating Sectors…"
 # Optional descriptions clarify a sector on the public registration form: shown as
 # subtext under the checkbox in the additional sectors list, and folded into

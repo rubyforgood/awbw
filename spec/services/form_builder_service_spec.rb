@@ -78,6 +78,19 @@ RSpec.describe FormBuilderService do
           "501c3/nonprofit", "For-profit", "Government agency", "Other (please specify below)"
         )
       end
+
+      context "when organization types are published" do
+        before do
+          create(:organization_type, :published, name: "Co-op")
+          create(:organization_type, :published, name: "Faith-based")
+          create(:organization_type, :unpublished, name: "Hidden")
+        end
+
+        it "offers the published organization type names" do
+          field = form.form_fields.find_by(field_identifier: "agency_type")
+          expect(field.answer_options.pluck(:name)).to contain_exactly("Co-op", "Faith-based")
+        end
+      end
     end
 
     context "scholarship section" do

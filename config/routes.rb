@@ -190,6 +190,7 @@ Rails.application.routes.draw do
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses
+  resources :organization_types
   resources :affiliations, only: :destroy
   resources :quotes
 

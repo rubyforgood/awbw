@@ -101,7 +101,8 @@ This codebase (Rails 8.1)
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
-| `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
+| `Organization` | Groups with affiliations, addresses, logos via ActiveStorage; `belongs_to :organization_type` |
+| `OrganizationType` | Admin-managed "base data" classification (Publishable, e.g. "501c3/nonprofit"); supplies the organization form and public registration dropdown options |
 | `Grant` | Donated funds (polymorphic `donor`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
 | `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
 | `ProfessionalLicense` | A license a `Person` holds (`number`, `kind`, `issuing_state`, `expires_on`); a null `number` is a placeholder. `find_or_create_for` keeps one license per (person, number) |

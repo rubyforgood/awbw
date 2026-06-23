@@ -11,6 +11,7 @@ module DomainTheme
     events:                   :blue,
     people:                   :sky,
     organizations:            :emerald,
+    organization_types:       :emerald,
     quotes:                   :slate,
     grants:                   :green,
 

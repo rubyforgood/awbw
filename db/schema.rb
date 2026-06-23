@@ -802,6 +802,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_023519) do
     t.index ["published"], name: "index_organization_statuses_on_published"
   end
 
+  create_table "organization_types", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name"
+    t.boolean "published", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["published"], name: "index_organization_types_on_published"
+  end
+
   create_table "organizations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "agency_type"
     t.string "agency_type_other"
@@ -818,6 +827,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_023519) do
     t.string "name"
     t.text "notes", size: :long
     t.integer "organization_status_id"
+    t.bigint "organization_type_id"
     t.boolean "profile_show_description", default: true, null: false
     t.boolean "profile_show_email", default: true, null: false
     t.boolean "profile_show_events_registered", default: true, null: false
@@ -833,6 +843,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_023519) do
     t.integer "windows_type_id"
     t.index ["location_id"], name: "index_organizations_on_location_id"
     t.index ["organization_status_id"], name: "index_organizations_on_organization_status_id"
+    t.index ["organization_type_id"], name: "index_organizations_on_organization_type_id"
     t.index ["windows_type_id"], name: "index_organizations_on_windows_type_id"
   end
 
@@ -1717,6 +1728,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_023519) do
   add_foreign_key "notifications", "users", column: "sender_id"
   add_foreign_key "organizations", "locations"
   add_foreign_key "organizations", "organization_statuses"
+  add_foreign_key "organizations", "organization_types"
   add_foreign_key "organizations", "windows_types"
   add_foreign_key "pay_charges", "pay_customers", column: "customer_id"
   add_foreign_key "pay_charges", "pay_subscriptions", column: "subscription_id"

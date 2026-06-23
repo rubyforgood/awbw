@@ -1,0 +1,99 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:organization_types) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="space-y-6">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-semibold text-gray-900">
+            Organization types (<%= @count_display %>)
+          </h1>
+          <div class="flex gap-2">
+            <%= link_to "New #{OrganizationType.model_name.human.downcase}",
+                        new_organization_type_path,
+                        class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+          </div>
+        </div>
+
+        <%= render "search_boxes" %>
+
+        <!-- Table -->
+        <div class="rounded-xl bg-white p-6">
+          <div class="overflow-x-auto">
+            <% if @organization_types.any? %>
+              <table class="w-full table-fixed border-collapse border border-gray-200">
+                <thead class="bg-gray-100">
+                <tr>
+                  <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/3">
+                    Name
+                  </th>
+
+                  <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/6">
+                    Published
+                  </th>
+
+                  <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/6">
+                    Organizations
+                  </th>
+
+                  <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">
+                    Actions
+                  </th>
+                </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-200">
+                <% @organization_types.each do |organization_type| %>
+                  <tr class=" <%= "bg-gray-200" unless organization_type.published? %>
+                    <%= organization_type.published? ? "hover:bg-gray-100" : "hover:bg-gray-50" %> transition-colors duration-150">
+
+                    <td class="px-4 py-2 text-md text-gray-800 truncate font-bold">
+                      <%= organization_type.name %>
+                      <% if organization_type.description.present? %>
+                        <i class="fa-solid fa-circle-info ml-1 text-sm font-normal text-gray-400 hover:text-blue-600 cursor-help"
+                           title="<%= organization_type.description %>"></i>
+                      <% end %>
+                    </td>
+
+                    <td class="px-4 py-2 text-center">
+                      <% if organization_type.published? %>
+                        <span class="inline-block px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded">
+                          Yes
+                        </span>
+                      <% else %>
+                        <span class="inline-block px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-200 rounded">
+                          No
+                        </span>
+                      <% end %>
+                    </td>
+
+                    <td class="px-4 py-2 text-center text-sm text-gray-700">
+                      <%= @organization_counts[organization_type.id].to_i %>
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="px-4 py-2 text-center">
+                      <%= link_to "Edit",
+                                  edit_organization_type_path(organization_type),
+                                  class: "btn btn-secondary-outline whitespace-nowrap" %>
+                    </td>
+
+                  </tr>
+                <% end %>
+                </tbody>
+              </table>
+            <% else %>
+              <!-- Empty state -->
+              <p class="text-gray-500 text-center py-6">
+                No <%= OrganizationType.model_name.human.pluralize.downcase %> found.
+              </p>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination flex justify-center mt-12">
+          <%= tailwind_paginate @organization_types %>
+        </div>
+
+  </div>
+</div>

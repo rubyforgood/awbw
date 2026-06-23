@@ -8,7 +8,7 @@ class OrganizationsController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(Organization.includes(
-        :windows_type, :organization_status, :sectors, :addresses,
+        :windows_type, :organization_status, :organization_type, :sectors, :addresses,
         { categorizable_items: { category: :category_type } },
         logo_attachment: :blob
       ))
@@ -208,7 +208,7 @@ class OrganizationsController < ApplicationController
 
   def set_organization
     @organization = Organization.includes(
-      :organization_status, :windows_type, :addresses,
+      :organization_status, :organization_type, :windows_type, :addresses,
       :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
@@ -220,7 +220,7 @@ class OrganizationsController < ApplicationController
   def organization_params
     params.require(:organization).permit(
       :name, :description, :start_date, :end_date, :mission_vision_values,
-      :agency_type, :agency_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
+      :organization_type_id, :agency_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
       :organization_status_id, :location_id, :windows_type_id,
       :profile_show_sectors, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
