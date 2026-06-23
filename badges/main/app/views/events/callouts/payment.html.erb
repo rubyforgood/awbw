@@ -35,7 +35,7 @@
                     class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
     </div>
 
-    <%= link_to registration_invoice_path(@event_registration.slug), target: "_blank", rel: "noopener",
+    <%= link_to registration_invoice_path(@event_registration.slug, return_to: "payment"), target: "_blank", rel: "noopener",
                   class: "mt-10 flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
       <i class="fa-solid fa-file-invoice-dollar text-gray-400 text-xl shrink-0"></i>
 

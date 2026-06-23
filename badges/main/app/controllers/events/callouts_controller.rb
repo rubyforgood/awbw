@@ -48,15 +48,15 @@ module Events
     def ce
     end
 
-    # Forms page: callout-card links to the W-9 (when requested), invoice (when
-    # requested), and the letter to supervisors resource — each opens in a new tab.
+    # Forms page: callout-card links to the W-9 and letter-to-supervisors
+    # resource pages (when seeded) and the invoice, each returning to forms.
     def forms
       @form_cards = build_form_cards
     end
 
     # Handouts page: callout-card links to the training worksheet/handout
     # resources, in display order, each opening its own registrant resource page
-    # (PDF preview + download, with a back-to-ticket eyebrow).
+    # (PDF preview + download, with a back-to-handouts eyebrow).
     def handouts
       by_title = Resource.where(title: HANDOUT_RESOURCE_TITLES).index_by(&:title)
       @handout_cards = HANDOUT_RESOURCE_TITLES.filter_map do |title|
@@ -64,7 +64,7 @@ module Events
         next unless resource
         resource_card(icon: "fa-solid fa-file-pdf", title: resource.title,
                       subtitle: "Open this training resource",
-                      href: registration_resource_path(@event_registration.slug, resource), target: nil)
+                      href: registration_resource_path(@event_registration.slug, resource, return_to: "handouts"), target: nil)
       end
     end
 
@@ -103,22 +103,25 @@ module Events
       @event = @event_registration.event
     end
 
-    # Builds the callout-card links shown on the forms page. The W-9 and invoice
-    # are always available; the letter to supervisors follows when seeded.
+    # Builds the callout-card links shown on the forms page. The W-9 and the
+    # letter to supervisors open in their own resource page (preview + download)
+    # when seeded; the invoice is always available.
     def build_form_cards
-      cards = [
-        resource_card(icon: "fa-solid fa-file-pdf", title: "Download W-9",
-                      subtitle: "AWBW's W-9 tax form for your records",
-                      href: "/documents/awbw-w9.pdf", trailing_icon: "fa-solid fa-download"),
-        resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
-                      subtitle: "Itemized invoice for this registration",
-                      href: registration_invoice_path(@event_registration.slug))
-      ]
+      cards = []
+      w9 = Resource.find_by(title: "W-9")
+      if w9
+        cards << resource_card(icon: "fa-solid fa-file-pdf", title: "W-9",
+                               subtitle: "AWBW's W-9 tax form for your records",
+                               href: registration_resource_path(@event_registration.slug, w9, return_to: "forms"), target: nil)
+      end
+      cards << resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
+                             subtitle: "Itemized invoice for this registration",
+                             href: registration_invoice_path(@event_registration.slug, return_to: "forms"))
       letter = Resource.find_by(title: "Letter to Supervisors")
       if letter
         cards << resource_card(icon: "fa-solid fa-file-arrow-down", title: "Letter to supervisors",
                                subtitle: "Share to request release time",
-                               href: registration_resource_path(@event_registration.slug, letter), target: nil)
+                               href: registration_resource_path(@event_registration.slug, letter, return_to: "forms"), target: nil)
       end
       cards
     end
