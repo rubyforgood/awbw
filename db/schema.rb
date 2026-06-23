@@ -963,6 +963,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_104203) do
     t.string "license_number"
     t.string "license_type"
     t.string "linked_in_url"
+    t.datetime "mailing_list_consent_at"
+    t.string "mailing_list_consent_source"
     t.date "member_since"
     t.text "notes"
     t.boolean "profile_is_searchable", default: true, null: false

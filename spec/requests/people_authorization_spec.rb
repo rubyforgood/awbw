@@ -90,6 +90,10 @@ RSpec.describe "People authorization", type: :request do
       it "does not show the Comments section" do
         expect(response.body).not_to include("comment_form")
       end
+
+      it "shows the mailing list consent status" do
+        expect(response.body).to include("No consent on file")
+      end
     end
 
     context "as the owner" do
@@ -104,6 +108,10 @@ RSpec.describe "People authorization", type: :request do
 
       it "shows the Submitted content section" do
         expect(response.body).to include("Submitted content")
+      end
+
+      it "hides the mailing list consent status from the owner" do
+        expect(response.body).not_to include("No consent on file")
       end
     end
   end
@@ -165,6 +173,21 @@ RSpec.describe "People authorization", type: :request do
       it "updates the FileMaker code" do
         patch person_path(other_person), params: { person: { filemaker_code: "FM-123" } }
         expect(other_person.reload.filemaker_code).to eq("FM-123")
+      end
+
+      it "withdraws mailing list consent when the box is unchecked" do
+        other_person.update!(mailing_list_consent_at: Time.current, mailing_list_consent_source: "Registration: X")
+
+        patch person_path(other_person), params: { person: { mailing_list_consented: "0" } }
+
+        expect(other_person.reload.mailing_list_consent_at).to be_nil
+        expect(other_person.mailing_list_consent_source).to be_nil
+      end
+
+      it "records mailing list consent when the box is checked" do
+        patch person_path(other_person), params: { person: { mailing_list_consented: "1" } }
+
+        expect(other_person.reload.mailing_list_consent_at).to be_present
       end
     end
   end
