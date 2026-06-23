@@ -513,6 +513,16 @@
   </div>
 
   <% if f.object.persisted? %>
+    <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
+    <div class="form-group space-y-4 mb-8">
+      <div class="font-semibold text-gray-700 mb-2">
+        Associated records
+      </div>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+        <%= render "associated_records", person: person %>
+      </div>
+    </div>
+
     <!-- Notifications -->
     <% if allowed_to?(:index?, with: NotificationPolicy) %>
       <%= render "notifications", f: f %>
