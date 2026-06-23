@@ -7,8 +7,12 @@ class AddOrganizationTypeToOrganizations < ActiveRecord::Migration[8.0]
     "501c3/nonprofit",
     "For-profit",
     "Government agency",
-    "Other (please specify below)"
+    "Other"
   ].freeze
+
+  # Legacy `agency_type` strings that should map onto a renamed type, so existing
+  # organizations that picked the old wording still land on the right record.
+  LEGACY_ALIASES = { "Other (please specify below)" => "Other" }.freeze
 
   def up
     unless column_exists?(:organizations, :organization_type_id)
@@ -25,7 +29,8 @@ class AddOrganizationTypeToOrganizations < ActiveRecord::Migration[8.0]
     end
 
     organization.where.not(agency_type: [ nil, "" ]).find_each do |org|
-      match = org_type.where("LOWER(name) = LOWER(?)", org.agency_type).first
+      name = LEGACY_ALIASES[org.agency_type] || org.agency_type
+      match = org_type.where("LOWER(name) = LOWER(?)", name).first
       org.update_columns(organization_type_id: match.id) if match
     end
   end

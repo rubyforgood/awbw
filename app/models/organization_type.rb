@@ -9,7 +9,7 @@ class OrganizationType < ApplicationRecord
     "501c3/nonprofit",
     "For-profit",
     "Government agency",
-    "Other (please specify below)"
+    "Other"
   ].freeze
 
   has_many :organizations, dependent: :nullify
@@ -17,7 +17,7 @@ class OrganizationType < ApplicationRecord
   validates :name, presence: true, uniqueness: { case_sensitive: false }
 
   # Names sort cleanly: digits precede letters, so "501c3/nonprofit" leads and
-  # "Other (please specify below)" trails — exactly the intended display order.
+  # "Other" trails — exactly the intended display order.
   scope :ordered, -> { order(:name) }
   scope :name_contains, ->(term) { term.present? ? where("name LIKE ?", "%#{sanitize_sql_like(term)}%") : all }
 

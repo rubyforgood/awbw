@@ -75,7 +75,7 @@ RSpec.describe FormBuilderService do
       it "offers the agency type as the four organization classifications" do
         field = form.form_fields.find_by(field_identifier: "agency_type")
         expect(field.answer_options.pluck(:name)).to contain_exactly(
-          "501c3/nonprofit", "For-profit", "Government agency", "Other (please specify below)"
+          "501c3/nonprofit", "For-profit", "Government agency", "Other"
         )
       end
 
