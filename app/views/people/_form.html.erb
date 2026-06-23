@@ -288,30 +288,49 @@
   </div>
 
   <!-- PERSON FIELDS -->
-  <%# Bio and Shout-out share one row, each half width. %>
-  <div class="flex flex-col sm:flex-row gap-6 items-start">
-    <%= f.input :bio,
-                wrapper_html: { class: "w-full sm:w-1/2" },
-                as: :text,
-                input_html: {
-                  rows: 2,
-                  maxlength: 1650,
-                  class: "w-full rounded-md border-gray-300 shadow-sm
-                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                },
-                hint: "Maximum 250 characters" %>
+  <div class="form-group space-y-4">
+    <div class="font-semibold text-gray-700 mb-2">
+      Background
+    </div>
 
-    <%= f.input :shoutout_text,
-                label: "Shout-out",
-                wrapper_html: { class: "w-full sm:w-1/2" },
-                as: :text,
-                input_html: {
-                  rows: 2,
-                  maxlength: 1650,
-                  class: "w-full rounded-md border-gray-300 shadow-sm
-                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                },
-                hint: "Shown on an event's scholarship recipients page when this person opts into a shout-out" %>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+      <%# Bio and Shout-out share one row, each half width. %>
+      <div class="flex flex-col sm:flex-row gap-6 items-start">
+        <div class="w-full sm:w-1/2 space-y-4">
+          <%= f.input :bio,
+                      wrapper_html: { class: "w-full" },
+                      as: :text,
+                      input_html: {
+                        rows: 2,
+                        maxlength: 1650,
+                        class: "w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      },
+                      hint: "Maximum 250 characters" %>
+
+          <% if allowed_to?(:manage?, Person) %>
+            <div class="w-full admin-only bg-blue-100 rounded-lg p-2">
+              <%= f.input :racial_ethnic_identity,
+                          label: "Racial/ethnic identity",
+                          input_html: { class: "w-full" },
+                          wrapper_html: { class: "w-full" } %>
+            </div>
+          <% end %>
+        </div>
+
+        <%= f.input :shoutout_text,
+                    label: "Shout-out",
+                    wrapper_html: { class: "w-full sm:w-1/2" },
+                    as: :text,
+                    input_html: {
+                      rows: 2,
+                      maxlength: 1650,
+                      class: "w-full rounded-md border-gray-300 shadow-sm
+                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    },
+                    hint: "Shown on an event's scholarship recipients page when this person opts into a shout-out" %>
+      </div>
+    </div>
   </div>
 
   <div class="flex flex-col lg:flex-row gap-6 items-start">
@@ -352,8 +371,8 @@
     <div class="w-full lg:w-auto rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
       <div class="flex flex-col sm:flex-row gap-6 items-start">
         <div class="w-full sm:w-36">
-          <%= f.input :license_number,
-                      label: "License number",
+          <%= f.input :credentials,
+                      label: "Credentials",
                       input_html: { class: "w-full" },
                       wrapper_html: { class: "w-full" } %>
         </div>
@@ -366,20 +385,11 @@
         </div>
 
         <div class="w-full sm:w-36">
-          <%= f.input :credentials,
-                      label: "Credentials",
+          <%= f.input :license_number,
+                      label: "License number",
                       input_html: { class: "w-full" },
                       wrapper_html: { class: "w-full" } %>
         </div>
-
-        <% if allowed_to?(:manage?, Person) %>
-          <div class="w-full sm:w-64 admin-only bg-blue-100 rounded-lg p-2">
-            <%= f.input :racial_ethnic_identity,
-                        label: "Racial/ethnic identity",
-                        input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full" } %>
-          </div>
-        <% end %>
       </div>
     </div>
   </div>
