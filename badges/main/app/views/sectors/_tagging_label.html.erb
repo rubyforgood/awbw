@@ -6,6 +6,15 @@
 
 <% is_primary ||= false %>
 
+<%# Optional max-width class (e.g. "max-w-[200px]"). When set, the chip caps its
+    width and truncates the name with an ellipsis; the full name stays available
+    via the link's title tooltip. Off by default so other callers are unchanged. %>
+<% max_width ||= nil %>
+
+<%# Compact shrinks the chip to match the age-range chips in dense table cells. %>
+<% compact ||= false %>
+<% chip_size = compact ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm" %>
+
 <%# Tags hidden from the public (unpublished) are only ever shown to admins, so
     they read as a muted grey chip with an eye-slash icon — the same "hidden" cue
     used on password fields — to flag at a glance what the public can't see. %>
@@ -36,16 +45,17 @@
 
 <% if sector %>
   <%= link_to taggings_path(sector_names_all: sector.name),
+    title: sector.name,
     data: { turbo_frame: "_top", sector_name: sector.name, controller: "tag-link-loading", action: "click->tag-link-loading#showSpinner" },
               class: "inline-flex items-center
+                      #{ max_width } #{ "min-w-0" if max_width }
                       rounded-md
                       border #{ border_class } hover:#{ border_hover_class }
                       #{ bg_color } hover:#{ bg_hover_color }
                       #{ text_color }
-                      px-3 py-1
-                      text-sm font-medium
+                      #{ chip_size } font-medium
                       transition" do %>
-    <span data-tag-link-loading-target="text"><% if is_hidden %><%= render "shared/hidden_tag_icon" %><% end %><% if is_primary %><i class="fa-solid fa-star mr-1 text-xs text-amber-400" aria-hidden="true" title="Primary sector"></i><% end %><%= sector.name %><% if display_leader && is_leader %><span class="ml-1 text-xs text-indigo-600">(Leader)</span><% end %></span>
+    <span data-tag-link-loading-target="text" class="<%= "truncate min-w-0" if max_width %>"><% if is_hidden %><%= render "shared/hidden_tag_icon" %><% end %><% if is_primary %><i class="fa-solid fa-star mr-1 text-xs text-amber-400" aria-hidden="true" title="Primary sector"></i><% end %><%= sector.name %><% if display_leader && is_leader %><span class="ml-1 text-xs text-indigo-600">(Leader)</span><% end %></span>
     <span data-tag-link-loading-target="spinner" class="hidden"><i class="fa-solid fa-spinner animate-spin" aria-hidden="true"></i></span>
   <% end %>
 <% end %>
