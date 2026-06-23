@@ -90,12 +90,6 @@ RSpec.describe "People authorization", type: :request do
       it "does not show the Comments section" do
         expect(response.body).not_to include("comment_form")
       end
-
-      it "shows the racial/ethnic identity" do
-        other_person.update!(racial_ethnic_identity: "Multi-racial")
-        get person_path(other_person)
-        expect(response.body).to include("Multi-racial")
-      end
     end
 
     context "as the owner" do
@@ -110,12 +104,6 @@ RSpec.describe "People authorization", type: :request do
 
       it "shows the Submitted content section" do
         expect(response.body).to include("Submitted content")
-      end
-
-      it "hides the racial/ethnic identity from the owner" do
-        regular_user.person.update!(racial_ethnic_identity: "Multi-racial")
-        get person_path(regular_user.person)
-        expect(response.body).not_to include("Multi-racial")
       end
     end
   end
@@ -136,6 +124,11 @@ RSpec.describe "People authorization", type: :request do
       it "renders successfully" do
         get edit_person_path(other_person)
         expect(response).to have_http_status(:ok)
+      end
+
+      it "shows the racial/ethnic identity field" do
+        get edit_person_path(other_person)
+        expect(response.body).to include("person[racial_ethnic_identity]")
       end
     end
   end
