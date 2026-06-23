@@ -330,6 +330,7 @@ class EventRegistrationsController < ApplicationController
       :scholarship_requested,
       :shoutout,
       :intends_to_pay,
+      :expected_payment_method,
       :ce_credit_requested,
       :ce_hours_requested,
       :ce_license_number,

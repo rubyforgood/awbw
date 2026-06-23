@@ -473,6 +473,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_104203) do
     t.boolean "completed_day_5", default: false, null: false
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.string "expected_payment_method"
     t.text "fee_note"
     t.boolean "intends_to_pay", default: false, null: false
     t.boolean "invoice_requested", default: false, null: false
