@@ -1583,4 +1583,32 @@ if facilitator_training && registration_form
     add_affiliation.call(person, aff_org, title: "Facilitator")
     add_affiliation.call(person, other_org, title: "Board Member")
   end
+
+  # The two ways a single registration ends up with more than one org. A
+  # registration no longer snapshots every affiliation, so multiple orgs are
+  # always deliberate — these two demos show each path side by side.
+
+  # A5: the registrant submitted one org on the form, then an admin linked a
+  # second org by hand → two linked orgs but a single submission.
+  if aff_org && other_org
+    person = Person.create!(email: "affdemo.5@seed.example.com", first_name: "Demo Affiliation", last_name: "A5 Admin-linked second org")
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    submit_field.call(registration, agency_field, aff_org.name)
+    link_org.call(registration, aff_org)
+    # Admin adds the second org later — no matching submission (mirrors the
+    # select/create_organization controller path: affiliation + connection).
+    link_org.call(registration, other_org)
+  end
+
+  # A6: the registrant applied twice, each submission naming a different org →
+  # two submissions, each adding its single org, so the registration links both.
+  if aff_org && other_org
+    person = Person.create!(email: "affdemo.6@seed.example.com", first_name: "Demo Affiliation", last_name: "A6 Applied twice, two orgs")
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    [ aff_org, other_org ].each do |org|
+      submission = FormSubmission.create!(person: person, form: registration_form, event: facilitator_training)
+      submission.form_answers.create!(form_field: agency_field, submitted_answer: org.name, question_name_when_answered: agency_field.name) if agency_field
+      link_org.call(registration, org)
+    end
+  end
 end
