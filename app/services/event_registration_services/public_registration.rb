@@ -196,12 +196,11 @@ module EventRegistrationServices
       )
     end
 
-    # Identify the event by title *and* start date — many trainings share a title,
-    # so the date is what makes the consent source traceable to one event.
+    # Identify the event by start date *and* title — many trainings share a title,
+    # so the leading date is what makes the consent source traceable to one event,
+    # e.g. "2026-06-23 Facilitator Training registration".
     def mailing_list_consent_source
-      label = "Registration: #{@event.title}"
-      label += " (#{@event.start_date.to_date.to_fs(:long)})" if @event.start_date.present?
-      label
+      [ @event.start_date&.to_date&.iso8601, "#{@event.title} registration" ].compact.join(" ")
     end
 
     def mailing_list_consent_given?

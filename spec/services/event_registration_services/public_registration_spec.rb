@@ -164,8 +164,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       person = Person.find_by!(email: "coco@example.com")
 
       expect(person.mailing_list_consent_at).to be_present
-      expect(person.mailing_list_consent_source).to include(event.title)
-      expect(person.mailing_list_consent_source).to include(event.start_date.to_date.to_fs(:long))
+      expect(person.mailing_list_consent_source).to eq("#{event.start_date.to_date.iso8601} #{event.title} registration")
     end
 
     it "does not record consent when the box is left unchecked" do
