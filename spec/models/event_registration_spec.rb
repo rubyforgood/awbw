@@ -571,63 +571,14 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
-  describe "snapshot_registrant_organizations" do
-    it "copies active affiliations to the registration on create" do
+  describe "registration organizations" do
+    it "does not auto-connect the registrant's affiliations on create" do
       org = create(:organization)
       person = create(:person)
       create(:affiliation, person: person, organization: org)
 
       reg = create(:event_registration, registrant: person)
-      expect(reg.organizations).to include(org)
-    end
-
-    it "copies multiple active affiliations" do
-      org1 = create(:organization)
-      org2 = create(:organization)
-      person = create(:person)
-      create(:affiliation, person: person, organization: org1)
-      create(:affiliation, person: person, organization: org2)
-
-      reg = create(:event_registration, registrant: person)
-      expect(reg.organizations).to contain_exactly(org1, org2)
-    end
-
-    it "skips inactive affiliations" do
-      org = create(:organization)
-      person = create(:person)
-      create(:affiliation, person: person, organization: org, inactive: true)
-
-      reg = create(:event_registration, registrant: person)
       expect(reg.organizations).to be_empty
-    end
-
-    it "skips affiliations with past end dates" do
-      org = create(:organization)
-      person = create(:person)
-      create(:affiliation, person: person, organization: org, end_date: 1.day.ago)
-
-      reg = create(:event_registration, registrant: person)
-      expect(reg.organizations).to be_empty
-    end
-
-    it "creates no records when registrant has no affiliations" do
-      person = create(:person)
-      reg = create(:event_registration, registrant: person)
-      expect(reg.organizations).to be_empty
-    end
-
-    it "links an organization once even with multiple active affiliations to it" do
-      org = create(:organization)
-      person = create(:person)
-      create(:affiliation, person: person, organization: org, title: "Facilitator")
-      create(:affiliation, person: person, organization: org, title: "Program Director")
-
-      reg = create(:event_registration, registrant: person)
-
-      expect(reg.organizations).to contain_exactly(org)
-      # A duplicate org left an invalid record in the in-memory collection, which
-      # blew up later saves (e.g. recording a Stripe checkout session id).
-      expect { reg.update!(checkout_session_id: "cs_test_123") }.not_to raise_error
     end
   end
 

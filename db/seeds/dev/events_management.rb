@@ -835,15 +835,17 @@ if lisa_w && roundtable
   registrations_data << { person: lisa_w, event: roundtable, status: "incomplete_attendance" }
 end
 
-# --- People with multiple active affiliations — ensures org snapshots get exercised ---
+# --- People with multiple active affiliations — exercise a registration linked to
+# one of the registrant's orgs (the org they registered with), not all of them ---
 mariana_j = Person.find_by(first_name: "Mariana", last_name: "Johnson")
 samuel_s = Person.find_by(first_name: "Samuel", last_name: "Smith")
 lisa_wn = Person.find_by(first_name: "Lisa", last_name: "Williamson")
 kim_dv = Person.find_by(first_name: "Kim", last_name: "Davidson")
 sarah_d = Person.find_by(first_name: "Sarah", last_name: "Davis")
 
-{ mariana_j => youth_day, samuel_s => mindful_art, lisa_wn => virtual_session,
-  kim_dv => family_day, sarah_d => roundtable }.each do |person, evt|
+multi_affiliation_registrations = { mariana_j => youth_day, samuel_s => mindful_art,
+  lisa_wn => virtual_session, kim_dv => family_day, sarah_d => roundtable }
+multi_affiliation_registrations.each do |person, evt|
   next unless person && evt
   registrations_data << { person: person, event: evt, status: "registered" }
 end
@@ -869,6 +871,17 @@ registrations_data.each do |data|
   registration.ce_credit_requested = data[:ce_credit_requested] || false
   registration.intends_to_pay = data[:intends_to_pay] || false
   registration.save!
+end
+
+# Connect each multi-affiliation registrant's registration to a single one of
+# their orgs — mirroring a real registration, which links only the org submitted
+# on the form, not every active affiliation.
+multi_affiliation_registrations.each do |person, evt|
+  next unless person && evt
+  org = person.affiliations.active.first&.organization
+  next unless org
+  registration = EventRegistration.find_by(event: evt, registrant: person)
+  registration&.event_registration_organizations&.find_or_create_by!(organization: org)
 end
 
 # Give the flagship training its demo cohort: top up to 10 active registrants with
