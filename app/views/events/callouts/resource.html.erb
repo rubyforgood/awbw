@@ -1,5 +1,15 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "#{@resource.title} — #{@event.title}") %>
-<%= render layout: "events/callouts/callout_page", locals: { title: @resource.title } do %>
+<%# Eyebrow returns to the callout the registrant came from (handouts/forms),
+    falling back to the ticket when reached directly. %>
+<% back_path, back_label = case params[:return_to]
+   when "handouts"
+     [ registration_handouts_path(@event_registration.slug), "Back to handouts" ]
+   when "forms"
+     [ registration_forms_path(@event_registration.slug), "Back to forms" ]
+   else
+     [ registration_ticket_path(@event_registration.slug), "Back to ticket" ]
+   end %>
+<%= render layout: "events/callouts/callout_page", locals: { title: @resource.title, back_path: back_path, back_label: back_label } do %>
   <%= render "events/callouts/resource_body", resource: @resource %>
 <% end %>

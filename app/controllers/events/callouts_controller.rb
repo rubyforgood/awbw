@@ -56,7 +56,7 @@ module Events
 
     # Handouts page: callout-card links to the training worksheet/handout
     # resources, in display order, each opening its own registrant resource page
-    # (PDF preview + download, with a back-to-ticket eyebrow).
+    # (PDF preview + download, with a back-to-handouts eyebrow).
     def handouts
       by_title = Resource.where(title: HANDOUT_RESOURCE_TITLES).index_by(&:title)
       @handout_cards = HANDOUT_RESOURCE_TITLES.filter_map do |title|
@@ -64,7 +64,7 @@ module Events
         next unless resource
         resource_card(icon: "fa-solid fa-file-pdf", title: resource.title,
                       subtitle: "Open this training resource",
-                      href: registration_resource_path(@event_registration.slug, resource), target: nil)
+                      href: registration_resource_path(@event_registration.slug, resource, return_to: "handouts"), target: nil)
       end
     end
 
@@ -118,7 +118,7 @@ module Events
       if letter
         cards << resource_card(icon: "fa-solid fa-file-arrow-down", title: "Letter to supervisors",
                                subtitle: "Share to request release time",
-                               href: registration_resource_path(@event_registration.slug, letter), target: nil)
+                               href: registration_resource_path(@event_registration.slug, letter, return_to: "forms"), target: nil)
       end
       cards
     end

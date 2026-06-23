@@ -230,21 +230,21 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include(registration_invoice_path(registration.slug))
     end
 
-    it "links to the letter-to-supervisors resource page below them when present" do
+    it "links to the letter-to-supervisors resource page below them when present, returning to forms" do
       letter = create(:resource, title: "Letter to Supervisors", kind: "Form")
       get registration_forms_path(registration.slug)
-      expect(response.body.index("/documents/awbw-w9.pdf")).to be < response.body.index(registration_resource_path(registration.slug, letter))
+      expect(response.body.index("/documents/awbw-w9.pdf")).to be < response.body.index(registration_resource_path(registration.slug, letter, return_to: "forms"))
     end
   end
 
   describe "GET /registration/:slug/handouts" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "links each handout to its registrant resource page" do
+    it "links each handout to its registrant resource page, returning to handouts" do
       handout = create(:resource, title: "AHA Moments", kind: "Handout")
       get registration_handouts_path(registration.slug)
       expect(response).to have_http_status(:success)
-      expect(response.body).to include(registration_resource_path(registration.slug, handout))
+      expect(response.body).to include(registration_resource_path(registration.slug, handout, return_to: "handouts"))
     end
 
     it "shows a placeholder when no handouts are present" do
@@ -274,6 +274,25 @@ RSpec.describe "Events::Registrations", type: :request do
       get registration_resource_path(registration.slug, resource)
 
       expect(response).to have_http_status(:success)
+    end
+
+    it "returns to the handouts callout when reached from handouts" do
+      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+
+      get registration_resource_path(registration.slug, resource, return_to: "handouts")
+
+      expect(response.body).to include(registration_handouts_path(registration.slug))
+      expect(response.body).to include("Back to handouts")
+      expect(response.body).not_to include("Back to ticket")
+    end
+
+    it "returns to the forms callout when reached from forms" do
+      resource = create(:resource, title: "Letter to Supervisors", kind: "Form")
+
+      get registration_resource_path(registration.slug, resource, return_to: "forms")
+
+      expect(response.body).to include(registration_forms_path(registration.slug))
+      expect(response.body).to include("Back to forms")
     end
   end
 
