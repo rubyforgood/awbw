@@ -187,17 +187,37 @@ class ScholarshipsController < ApplicationController
     return unless @allocatable.respond_to?(:event)
 
     @event = @allocatable.event
-    form = @event&.registration_form
+    return unless @event
+
+    form, fields = scholarship_form_and_fields
     return unless form
 
-    @form_submission = form.form_submissions.find_by(person: @scholarship.recipient)
+    @form_submission = scholarship_submission_for(form)
     answers = @form_submission ? @form_submission.form_answers.index_by(&:form_field_id) : {}
 
-    @scholarship_answers = form.form_fields
-      .select { |field| field.section == "scholarship" || field.scholarship_only? }
+    @scholarship_answers = fields
       .reject { |field| field.group_header? || field.no_user_input? }
       .sort_by { |field| field.position.to_i }
       .map { |field| [ field, answers[field.id] ] }
+  end
+
+  # The scholarship questions live on the event's dedicated scholarship form
+  # (role: "scholarship") when one is linked; older events embed them in a
+  # "scholarship" section of the registration form instead. Prefer the former,
+  # fall back to the latter so both layouts surface the answers.
+  def scholarship_form_and_fields
+    if (scholarship_form = @event.scholarship_form)
+      [ scholarship_form, scholarship_form.form_fields.to_a ]
+    elsif (registration_form = @event.registration_form)
+      [ registration_form, registration_form.form_fields.select { |field| field.section == "scholarship" || field.scholarship_only? } ]
+    else
+      [ nil, [] ]
+    end
+  end
+
+  def scholarship_submission_for(form)
+    form.form_submissions.find_by(person: @scholarship.recipient, role: "scholarship") ||
+      form.form_submissions.find_by(person: @scholarship.recipient)
   end
 
   def locate_allocatable
