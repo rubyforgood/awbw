@@ -312,6 +312,20 @@
                       label: "Credentials",
                       input_html: { class: "w-full" },
                       wrapper_html: { class: "w-full" } %>
+        </div>
+
+        <div class="w-full sm:w-1/2 space-y-4">
+          <%= f.input :shoutout_text,
+                      label: "Shout-out",
+                      wrapper_html: { class: "w-full" },
+                      as: :text,
+                      input_html: {
+                        rows: 2,
+                        maxlength: 1650,
+                        class: "w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      },
+                      hint: "Shown on an event's scholarship recipients page when this person opts into a shout-out" %>
 
           <div class="flex flex-col sm:flex-row gap-4 items-start">
             <%= f.input :license_type,
@@ -325,18 +339,6 @@
                         wrapper_html: { class: "w-full sm:w-1/2" } %>
           </div>
         </div>
-
-        <%= f.input :shoutout_text,
-                    label: "Shout-out",
-                    wrapper_html: { class: "w-full sm:w-1/2" },
-                    as: :text,
-                    input_html: {
-                      rows: 2,
-                      maxlength: 1650,
-                      class: "w-full rounded-md border-gray-300 shadow-sm
-                          focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                    },
-                    hint: "Shown on an event's scholarship recipients page when this person opts into a shout-out" %>
       </div>
     </div>
   </div>
