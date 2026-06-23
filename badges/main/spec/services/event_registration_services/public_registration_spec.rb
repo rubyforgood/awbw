@@ -87,6 +87,45 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "mailing list consent" do
+    it "stamps the consent time and source when the registrant opts in" do
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "Yes" ]
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by!(email: "coco@example.com")
+
+      expect(person.mailing_list_consent_at).to be_present
+      expect(person.mailing_list_consent_source).to eq("#{event.start_date.to_date.iso8601} #{event.title} registration")
+    end
+
+    it "does not record consent when the box is left unchecked" do
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "" ]
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(Person.find_by!(email: "coco@example.com").mailing_list_consent_at).to be_nil
+    end
+
+    it "never re-stamps or clears consent already on file" do
+      original = 1.year.ago
+      create(:person, first_name: "Coco", last_name: "Lee", email: "coco@example.com",
+                      mailing_list_consent_at: original, mailing_list_consent_source: "Earlier")
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "Yes" ]
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by!(email: "coco@example.com")
+
+      expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
+      expect(person.mailing_list_consent_source).to eq("Earlier")
+    end
+  end
+
   describe "matching an existing registrant by name" do
     it "matches a person stored under a nickname when the registrant types their legal first name" do
       existing = create(:person, first_name: "Bob", legal_first_name: "Robert",
