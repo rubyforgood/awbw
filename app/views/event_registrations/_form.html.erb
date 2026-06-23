@@ -291,12 +291,6 @@
           <% end %>
         </div>
       <% end %>
-      <% if f.object.expected_payment_method.present? %>
-        <div class="mt-3 text-xs text-gray-500">
-          Expected payment method:
-          <span class="font-medium text-gray-700"><%= f.object.expected_payment_method %></span>
-        </div>
-      <% end %>
       <%= render "payment_history", event_registration: f.object %>
 
       <% if allowed_to?(:index?, with: NotificationPolicy) %>
