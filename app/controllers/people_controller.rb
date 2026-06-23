@@ -394,6 +394,7 @@ class PeopleController < ApplicationController
       :license_number,
       :license_type,
       :credentials,
+      :racial_ethnic_identity,
       :bio, :shoutout_text, :notes,
       :display_name_preference,
       :pronouns,

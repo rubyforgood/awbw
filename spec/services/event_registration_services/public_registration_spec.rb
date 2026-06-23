@@ -51,6 +51,42 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "racial/ethnic identity" do
+    it "stores the racial/ethnic identity on a new registrant" do
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => "Asian"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(Person.find_by!(email: "ada@example.com").racial_ethnic_identity).to eq("Asian")
+    end
+
+    it "overwrites a racial/ethnic identity already on file with the latest answer" do
+      existing = create(:person, first_name: "Ada", last_name: "Lin",
+                                 email: "ada@example.com", racial_ethnic_identity: "Multi-racial")
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => "Asian"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(existing.reload.racial_ethnic_identity).to eq("Asian")
+    end
+
+    it "leaves a racial/ethnic identity on file untouched when the answer is blank" do
+      existing = create(:person, first_name: "Ada", last_name: "Lin",
+                                 email: "ada@example.com", racial_ethnic_identity: "Multi-racial")
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => ""
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(existing.reload.racial_ethnic_identity).to eq("Multi-racial")
+    end
+  end
+
   describe "matching an existing registrant by name" do
     it "matches a person stored under a nickname when the registrant types their legal first name" do
       existing = create(:person, first_name: "Bob", legal_first_name: "Robert",
