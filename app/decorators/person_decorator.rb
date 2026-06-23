@@ -84,7 +84,10 @@ class PersonDecorator < ApplicationDecorator
   end
 
   def affiliated_since_date
-    @affiliated_since_date ||= affiliations.minimum(:start_date)
+    # Compute in Ruby from the (eager-loaded) association so list pages that
+    # preload affiliations don't fire a MIN(start_date) query per row.
+    # `.minimum` would ignore the loaded records and hit the DB every time.
+    @affiliated_since_date ||= affiliations.filter_map(&:start_date).min
   end
 
   private
