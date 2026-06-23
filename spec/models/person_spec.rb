@@ -432,6 +432,36 @@ RSpec.describe Person, type: :model do
       end
     end
   end
+
+  describe "#mailing_list_consented=" do
+    it "stamps consent and a source when granted with none on file" do
+      person = build(:person, mailing_list_consent_at: nil)
+
+      person.mailing_list_consented = "1"
+
+      expect(person.mailing_list_consent_at).to be_present
+      expect(person.mailing_list_consent_source).to eq("Admin update")
+    end
+
+    it "preserves the original timestamp and source when re-checked" do
+      original = 1.year.ago
+      person = build(:person, mailing_list_consent_at: original, mailing_list_consent_source: "Registration: X")
+
+      person.mailing_list_consented = "1"
+
+      expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
+      expect(person.mailing_list_consent_source).to eq("Registration: X")
+    end
+
+    it "clears the timestamp and source when withdrawn" do
+      person = build(:person, mailing_list_consent_at: Time.current, mailing_list_consent_source: "Registration: X")
+
+      person.mailing_list_consented = "0"
+
+      expect(person.mailing_list_consent_at).to be_nil
+      expect(person.mailing_list_consent_source).to be_nil
+    end
+  end
 end
 
 RSpec.describe Person, "scholarship index helpers" do

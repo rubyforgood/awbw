@@ -192,8 +192,16 @@ module EventRegistrationServices
 
       person.update!(
         mailing_list_consent_at: Time.current,
-        mailing_list_consent_source: "Registration: #{@event.title}"
+        mailing_list_consent_source: mailing_list_consent_source
       )
+    end
+
+    # Identify the event by title *and* start date — many trainings share a title,
+    # so the date is what makes the consent source traceable to one event.
+    def mailing_list_consent_source
+      label = "Registration: #{@event.title}"
+      label += " (#{@event.start_date.to_date.to_fs(:long)})" if @event.start_date.present?
+      label
     end
 
     def mailing_list_consent_given?
