@@ -24,6 +24,12 @@
       </div>
     </div>
 
+    <% if @recipient %>
+      <div class="mb-4 flex items-center gap-2 text-sm text-gray-600">
+        <span>Filtered to <span class="font-medium text-gray-900"><%= @recipient.name %></span></span>
+        <%= link_to "Clear", scholarships_path, class: "text-blue-600 hover:underline" %>
+      </div>
+    <% end %>
     <% if @funder_groups.any? %>
       <div class="space-y-4">
         <%= render partial: "funder_group", collection: @funder_groups, as: :funder_group %>

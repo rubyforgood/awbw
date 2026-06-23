@@ -256,7 +256,9 @@ module ApplicationHelper
     people:              "fa-user",
     organizations:       "fa-building",
     workshops:           "fa-chalkboard-user",
-    resources:           "fa-book"
+    resources:           "fa-book",
+    scholarships:        "fa-graduation-cap",
+    notifications:       "fa-bell"
   }.freeze
 
   # Themed card-style link to a filtered index. The collection drives the
