@@ -308,14 +308,10 @@
                       },
                       hint: "Maximum 250 characters" %>
 
-          <% if allowed_to?(:manage?, Person) %>
-            <div class="w-full admin-only bg-blue-100 rounded-lg p-2">
-              <%= f.input :racial_ethnic_identity,
-                          label: "Racial/ethnic identity",
-                          input_html: { class: "w-full" },
-                          wrapper_html: { class: "w-full" } %>
-            </div>
-          <% end %>
+          <%= f.input :credentials,
+                      label: "Credentials",
+                      input_html: { class: "w-full" },
+                      wrapper_html: { class: "w-full" } %>
         </div>
 
         <%= f.input :shoutout_text,
@@ -370,12 +366,14 @@
 
     <div class="w-full lg:w-auto rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
       <div class="flex flex-col sm:flex-row gap-6 items-start">
-        <div class="w-full sm:w-36">
-          <%= f.input :credentials,
-                      label: "Credentials",
-                      input_html: { class: "w-full" },
-                      wrapper_html: { class: "w-full" } %>
-        </div>
+        <% if allowed_to?(:manage?, Person) %>
+          <div class="w-full sm:w-64 admin-only bg-blue-100 rounded-lg p-2">
+            <%= f.input :racial_ethnic_identity,
+                        label: "Racial/ethnic identity",
+                        input_html: { class: "w-full" },
+                        wrapper_html: { class: "w-full" } %>
+          </div>
+        <% end %>
 
         <div class="w-full sm:w-36">
           <%= f.input :license_type,
