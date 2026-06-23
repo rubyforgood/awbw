@@ -1,0 +1,17 @@
+<%# Renders a resource's main display. A PDF opens in the browser's built-in
+    inline viewer (scrollable, all pages) — every major browser ships one — with
+    the first-page/image preview as the fallback child for the rare client that
+    can't. Anything else (images, etc.) renders through the shared asset
+    pipeline. `resource` is a decorated Resource. %>
+<% display = resource.display_image %>
+<% if display.respond_to?(:attached?) && display.attached? && display.content_type == "application/pdf" %>
+  <object data="<%= rails_blob_path(display, disposition: :inline) %>" type="application/pdf"
+          class="w-full h-[80vh] rounded-lg border border-gray-200"
+          aria-label="<%= resource.title %> (PDF preview)">
+    <%= render "assets/display_assets",
+               resource: resource, file: display, variant: :hero, link: true %>
+  </object>
+<% else %>
+  <%= render "assets/display_assets",
+             resource: resource, file: display, variant: :hero, link: true %>
+<% end %>
