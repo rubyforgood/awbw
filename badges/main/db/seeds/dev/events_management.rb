@@ -103,6 +103,13 @@ scholarship_form.form_fields
   .where(field_identifier: %w[impact_description implementation_plan], min_words: [ nil, 0 ])
   .update_all(min_words: 250)
 
+# The real scholarship form heads its first section "Partial Scholarship
+# Application" (see the scholarship screenshots). Idempotent — only renames the
+# default header.
+scholarship_form.form_fields
+  .where(answer_type: :group_header, name: "Scholarship Application")
+  .update_all(name: "Partial Scholarship Application")
+
 # Rename the generic section headers FormBuilderService creates to the AWBW
 # Facilitator Training wording, and add the subtitles shown on the real form.
 # Idempotent: each rename only matches the default name, so a re-seed (or an admin
@@ -126,6 +133,28 @@ rename_registration_header.call("Background Information", "About You")
 registration_form.form_fields.where(answer_type: :group_header, name: "Marketing").destroy_all
 registration_form.form_fields.where(field_identifier: "interested_in_more").destroy_all
 
+# Match the public AWBW form's field set, labels, and order (see the registration
+# screenshots): it labels the primary email "Primary Email", omits the optional
+# Preferred Nickname / Pronouns questions, and lists "What motivated you" before
+# "How did you hear". Idempotent — each clause only matches the default state.
+registration_form.form_fields
+  .where(field_identifier: "primary_email", name: "Email").update_all(name: "Primary Email")
+registration_form.form_fields.where(field_identifier: %w[nickname pronouns]).destroy_all
+
+motivation_field = registration_form.form_fields.find_by(field_identifier: "training_motivation")
+referral_field = registration_form.form_fields.find_by(field_identifier: "referral_source")
+if motivation_field && referral_field && motivation_field.position > referral_field.position
+  motivation_position = motivation_field.position
+  motivation_field.update_column(:position, referral_field.position)
+  referral_field.update_column(:position, motivation_position)
+end
+
+# The real form notes the payment timing under the "Payment Information" heading.
+registration_form.form_fields
+  .where(answer_type: :group_header, name: "Payment Information", subtitle: [ nil, "" ])
+  .update_all(subtitle: "Payments are due no more than three weeks after your registration date. " \
+                        "Training details will be sent after payments are received.")
+
 # The CE-interest "magic question": a single Yes/No whose answer drives the
 # resulting registration's ce_credit_requested flag (see
 # EventRegistrationServices::PublicRegistration). Seeded straight onto the form
@@ -145,7 +174,7 @@ if registration_form.form_fields.where(field_identifier: ce_identifier).none?
     visibility: :always_ask
   )
   ce_field = registration_form.form_fields.create!(
-    name: "Do you plan to use Continuing Education (CE) hours for this course?",
+    name: "Do you seek Continuing Education (CE) hours for this training?",
     answer_type: :single_select_radio,
     status: :active,
     position: next_position + 1,
@@ -153,8 +182,7 @@ if registration_form.form_fields.where(field_identifier: ce_identifier).none?
     field_identifier: ce_identifier,
     section: "continuing_education",
     visibility: :always_ask,
-    width: :full,
-    subtitle: "CE hours are available for select trainings. Let us know and our team will follow up with details."
+    width: :full
   )
   %w[Yes No].each_with_index do |opt, idx|
     ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
@@ -169,9 +197,28 @@ if registration_form.form_fields.where(field_identifier: ce_identifier).none?
     field_identifier: "ce_license_number",
     section: "continuing_education",
     visibility: :always_ask,
-    width: :full
+    width: :full,
+    subtitle: "Acceptance of continuing education hours is determined by each individual state board separately, " \
+              "and AWBW cannot guarantee your specific state board will accept them. Participants are responsible " \
+              "for confirming whether the hours meet the requirements for their specific license and state."
   )
 end
+
+# Bring an already-seeded CE block up to the current wording (these only run when
+# the field exists from an earlier seed, since the create above skips them then).
+# Idempotent — each clause only matches the prior default copy.
+registration_form.form_fields
+  .where(field_identifier: ce_identifier, name: "Do you plan to use Continuing Education (CE) hours for this course?")
+  .update_all(name: "Do you seek Continuing Education (CE) hours for this training?")
+registration_form.form_fields
+  .where(field_identifier: ce_identifier,
+         subtitle: "CE hours are available for select trainings. Let us know and our team will follow up with details.")
+  .update_all(subtitle: nil)
+registration_form.form_fields
+  .where(field_identifier: "ce_license_number", subtitle: [ nil, "" ])
+  .update_all(subtitle: "Acceptance of continuing education hours is determined by each individual state board separately, " \
+                        "and AWBW cannot guarantee your specific state board will accept them. Participants are responsible " \
+                        "for confirming whether the hours meet the requirements for their specific license and state.")
 
 # The "Additional forms" question: a multi-select whose checked options drive the
 # resulting registration's invoice_requested / w9_requested flags (see
