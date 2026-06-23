@@ -407,9 +407,14 @@ class EventRegistration < ApplicationRecord
 
   private
 
+  # Link each organization the registrant is actively affiliated with — but only
+  # once. A registrant can hold several active affiliations to the same org (e.g.
+  # different titles), so we dedupe the organization ids first; creating a second
+  # row for the same org would fail the uniqueness validation and leave an invalid
+  # record in the in-memory collection that breaks the next save of the registration.
   def snapshot_registrant_organizations
-    registrant.affiliations.active.includes(:organization).find_each do |aff|
-      event_registration_organizations.create(organization: aff.organization)
+    registrant.affiliations.active.distinct.pluck(:organization_id).each do |organization_id|
+      event_registration_organizations.create(organization_id: organization_id)
     end
   end
 
