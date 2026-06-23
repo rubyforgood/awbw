@@ -126,6 +126,99 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "structured contact and organization data" do
+    it "stores the mailing country on a new registrant's address" do
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("mailing_street") => "1 Main St",
+        field_id("mailing_city") => "Oakland",
+        field_id("mailing_state") => "CA",
+        field_id("mailing_zip") => "94601",
+        field_id("mailing_country") => "USA"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by!(email: "ada@example.com")
+
+      expect(person.addresses.find_by(primary: true).country).to eq("USA")
+    end
+
+    context "with a matched organization" do
+      let!(:organization) { create(:organization, name: "Helping Hands") }
+
+      def register_with_org(extra)
+        params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+          field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+        ).merge(extra)
+        described_class.call(event: event, form: form, form_params: params)
+      end
+
+      it "fills website, agency type, and address country" do
+        register_with_org(
+          field_id("agency_website") => "helpinghands.org",
+          field_id("agency_type") => "501c3/nonprofit",
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501",
+          field_id("agency_country") => "USA"
+        )
+        organization.reload
+
+        expect(organization.agency_type).to eq("501c3/nonprofit")
+        expect(organization.website_url).to include("helpinghands.org")
+        expect(organization.addresses.find_by(primary: true).country).to eq("USA")
+      end
+
+      it "overwrites an existing website with the latest answer" do
+        organization.update!(website_url: "https://existing.org")
+
+        register_with_org(field_id("agency_website") => "helpinghands.org")
+
+        expect(organization.reload.website_url).to include("helpinghands.org")
+      end
+
+      it "stores the org address as a work address" do
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(organization.addresses.last.address_type).to eq("work")
+      end
+
+      it "makes the first org address primary" do
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(organization.addresses.find_by(city: "Reno")).to be_primary
+      end
+
+      it "does not demote the org's existing primary when another registrant adds an address" do
+        existing = organization.addresses.create!(
+          street_address: "1 First St", city: "Tahoe", state: "CA", zip_code: "96150",
+          locality: "Unknown", address_type: "work", primary: true
+        )
+
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(existing.reload).to be_primary
+        expect(existing).not_to be_inactive
+        expect(organization.addresses.find_by(city: "Reno")).not_to be_primary
+      end
+    end
+  end
+
   describe "matching an existing registrant by name" do
     it "matches a person stored under a nickname when the registrant types their legal first name" do
       existing = create(:person, first_name: "Bob", legal_first_name: "Robert",

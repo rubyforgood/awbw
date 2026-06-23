@@ -51,8 +51,11 @@ module EventRegistrationServices
         create_phone_contact(person) if field_value("phone").present?
 
         organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
-        create_affiliation(person, organization) if organization
-        create_agency_address(organization) if organization && field_value("agency_city").present?
+        if organization
+          create_affiliation(person, organization)
+          sync_organization_profile(organization)
+          create_agency_address(organization) if field_value("agency_city").present?
+        end
 
         assign_tags(person, organization)
 
@@ -178,6 +181,11 @@ module EventRegistrationServices
       apply_value(person, :racial_ethnic_identity, field_value("racial_ethnic_identity"))
     end
 
+    def sync_organization_profile(organization)
+      apply_value(organization, :website_url, field_value("agency_website"))
+      apply_value(organization, :agency_type, field_value("agency_type"))
+    end
+
     # Write value onto attribute when a non-blank value was submitted, overwriting
     # any existing value. A no-op when the value is unchanged (update! records no
     # change, so no spurious audit event).
@@ -227,6 +235,7 @@ module EventRegistrationServices
           primary: true,
           inactive: false
         )
+        apply_value(existing, :country, field_value("mailing_country"))
         return existing
       end
 
@@ -237,6 +246,7 @@ module EventRegistrationServices
         city: new_city,
         state: new_state,
         zip_code: field_value("mailing_zip"),
+        country: field_value("mailing_country")&.strip,
         locality: "Unknown",
         address_type: field_value("mailing_address_type")&.downcase || "unknown",
         primary: true
@@ -294,26 +304,31 @@ module EventRegistrationServices
         new_city&.downcase, new_state&.downcase.to_s
       )
 
+      # Unlike a person's mailing address, an organization accumulates work
+      # addresses from every registrant, so we never demote its existing primary:
+      # a registrant's address becomes primary only when the org has none yet.
+      make_primary = organization.addresses.active.where(primary: true).none?
+
       if existing
         existing.update!(
           street_address: field_value("agency_street"),
           zip_code: field_value("agency_zip"),
-          primary: true,
+          primary: existing.primary? || make_primary,
           inactive: false
         )
+        apply_value(existing, :country, field_value("agency_country"))
         return existing
       end
-
-      organization.addresses.where(primary: true).update_all(primary: false, inactive: true)
 
       organization.addresses.create!(
         street_address: field_value("agency_street"),
         city: new_city,
         state: new_state,
         zip_code: field_value("agency_zip"),
+        country: field_value("agency_country")&.strip,
         locality: "Unknown",
         address_type: "work",
-        primary: true
+        primary: make_primary
       )
     end
 
