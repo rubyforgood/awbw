@@ -78,6 +78,24 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("$1,500")
     end
 
+    it "defaults the eyebrow to the ticket" do
+      get registration_invoice_path(registration.slug)
+      expect(response.body).to include(registration_ticket_path(registration.slug))
+      expect(response.body).to include("Back to ticket")
+    end
+
+    it "returns to the forms callout when reached from forms" do
+      get registration_invoice_path(registration.slug, return_to: "forms")
+      expect(response.body).to include(registration_forms_path(registration.slug))
+      expect(response.body).to include("Back to forms")
+    end
+
+    it "returns to the payment callout when reached from payment" do
+      get registration_invoice_path(registration.slug, return_to: "payment")
+      expect(response.body).to include(registration_payment_path(registration.slug))
+      expect(response.body).to include("Back to payment")
+    end
+
     context "as a guest" do
       before { sign_out user }
 
@@ -223,28 +241,34 @@ RSpec.describe "Events::Registrations", type: :request do
   describe "GET /registration/:slug/forms" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "always links to the W-9 and invoice" do
+    it "always links to the invoice, returning to forms" do
       get registration_forms_path(registration.slug)
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("/documents/awbw-w9.pdf")
-      expect(response.body).to include(registration_invoice_path(registration.slug))
+      expect(response.body).to include(registration_invoice_path(registration.slug, return_to: "forms"))
     end
 
-    it "links to the letter-to-supervisors resource page below them when present" do
+    it "links the W-9 to its resource page when present, returning to forms" do
+      w9 = create(:resource, title: "W-9", kind: "Form")
+      get registration_forms_path(registration.slug)
+      expect(response.body).to include(registration_resource_path(registration.slug, w9, return_to: "forms"))
+      expect(response.body).not_to include("/documents/awbw-w9.pdf")
+    end
+
+    it "links to the letter-to-supervisors resource page below the invoice when present, returning to forms" do
       letter = create(:resource, title: "Letter to Supervisors", kind: "Form")
       get registration_forms_path(registration.slug)
-      expect(response.body.index("/documents/awbw-w9.pdf")).to be < response.body.index(registration_resource_path(registration.slug, letter))
+      expect(response.body.index(registration_invoice_path(registration.slug, return_to: "forms"))).to be < response.body.index(registration_resource_path(registration.slug, letter, return_to: "forms"))
     end
   end
 
   describe "GET /registration/:slug/handouts" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "links each handout to its registrant resource page" do
+    it "links each handout to its registrant resource page, returning to handouts" do
       handout = create(:resource, title: "AHA Moments", kind: "Handout")
       get registration_handouts_path(registration.slug)
       expect(response).to have_http_status(:success)
-      expect(response.body).to include(registration_resource_path(registration.slug, handout))
+      expect(response.body).to include(registration_resource_path(registration.slug, handout, return_to: "handouts"))
     end
 
     it "shows a placeholder when no handouts are present" do
@@ -268,12 +292,53 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include(resource_download_path(resource))
     end
 
+    it "prompts to download for all pages on a multi-page resource" do
+      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+      create(:downloadable_asset, owner: resource)
+
+      get registration_resource_path(registration.slug, resource)
+
+      expect(response.body).to include("download to get all pages")
+    end
+
+    it "omits the all-pages prompt on a known single-page resource" do
+      resource = create(:resource, title: "W-9", kind: "Form")
+      create(:downloadable_asset, owner: resource)
+
+      get registration_resource_path(registration.slug, resource)
+
+      expect(response.body).not_to include("download to get all pages")
+    end
+
     it "is reachable by slug without logging in" do
       resource = create(:resource, title: "AHA Moments", kind: "Handout")
 
       get registration_resource_path(registration.slug, resource)
 
       expect(response).to have_http_status(:success)
+    end
+
+    it "returns to the handouts callout with a 'Handouts detail' header when reached from handouts" do
+      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+
+      get registration_resource_path(registration.slug, resource, return_to: "handouts")
+
+      expect(response.body).to include(registration_handouts_path(registration.slug))
+      expect(response.body).to include("Back to handouts")
+      expect(response.body).not_to include("Back to ticket")
+      expect(response.body).to include("Handouts detail")
+      expect(response.body).to include("AHA Moments")
+    end
+
+    it "returns to the forms callout with a 'Forms detail' header when reached from forms" do
+      resource = create(:resource, title: "Letter to Supervisors", kind: "Form")
+
+      get registration_resource_path(registration.slug, resource, return_to: "forms")
+
+      expect(response.body).to include(registration_forms_path(registration.slug))
+      expect(response.body).to include("Back to forms")
+      expect(response.body).to include("Forms detail")
+      expect(response.body).to include("Letter to Supervisors")
     end
   end
 
