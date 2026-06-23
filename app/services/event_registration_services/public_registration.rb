@@ -304,18 +304,21 @@ module EventRegistrationServices
         new_city&.downcase, new_state&.downcase.to_s
       )
 
+      # Unlike a person's mailing address, an organization accumulates work
+      # addresses from every registrant, so we never demote its existing primary:
+      # a registrant's address becomes primary only when the org has none yet.
+      make_primary = organization.addresses.active.where(primary: true).none?
+
       if existing
         existing.update!(
           street_address: field_value("agency_street"),
           zip_code: field_value("agency_zip"),
-          primary: true,
+          primary: existing.primary? || make_primary,
           inactive: false
         )
         apply_value(existing, :country, field_value("agency_country"))
         return existing
       end
-
-      organization.addresses.where(primary: true).update_all(primary: false, inactive: true)
 
       organization.addresses.create!(
         street_address: field_value("agency_street"),
@@ -325,7 +328,7 @@ module EventRegistrationServices
         country: field_value("agency_country")&.strip,
         locality: "Unknown",
         address_type: "work",
-        primary: true
+        primary: make_primary
       )
     end
 

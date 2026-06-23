@@ -176,6 +176,46 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
         expect(organization.reload.website_url).to include("helpinghands.org")
       end
+
+      it "stores the org address as a work address" do
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(organization.addresses.last.address_type).to eq("work")
+      end
+
+      it "makes the first org address primary" do
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(organization.addresses.find_by(city: "Reno")).to be_primary
+      end
+
+      it "does not demote the org's existing primary when another registrant adds an address" do
+        existing = organization.addresses.create!(
+          street_address: "1 First St", city: "Tahoe", state: "CA", zip_code: "96150",
+          locality: "Unknown", address_type: "work", primary: true
+        )
+
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(existing.reload).to be_primary
+        expect(existing).not_to be_inactive
+        expect(organization.addresses.find_by(city: "Reno")).not_to be_primary
+      end
     end
   end
 
