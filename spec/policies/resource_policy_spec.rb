@@ -135,19 +135,51 @@ RSpec.describe ResourcePolicy, type: :policy do
   # -----------------------------------------
 
   describe "#download?" do
-    it "allows admin" do
-      expect(policy_for(record: private_resource, user: admin_user))
-        .to be_allowed_to(:download?)
+    context "admin" do
+      it "can download anything" do
+        expect(policy_for(record: private_resource, user: admin_user))
+          .to be_allowed_to(:download?)
+      end
     end
 
-    it "allows regular user" do
-      expect(policy_for(record: private_resource, user: regular_user))
-        .to be_allowed_to(:download?)
+    context "regular user" do
+      it "can download published resource" do
+        expect(policy_for(record: published_resource, user: regular_user))
+          .to be_allowed_to(:download?)
+      end
+
+      it "cannot download private resource" do
+        expect(policy_for(record: private_resource, user: regular_user))
+          .not_to be_allowed_to(:download?)
+      end
+
+      it "can download publicly visible resource" do
+        expect(policy_for(record: public_resource, user: regular_user))
+          .to be_allowed_to(:download?)
+      end
     end
 
-    it "allows guest" do
-      expect(policy_for(record: private_resource, user: guest_user))
-        .to be_allowed_to(:download?)
+    context "guest" do
+      it "can download publicly visible resource" do
+        expect(policy_for(record: public_resource, user: guest_user))
+          .to be_allowed_to(:download?)
+      end
+
+      it "cannot download published-only resource" do
+        expect(policy_for(record: published_resource, user: guest_user))
+          .not_to be_allowed_to(:download?)
+      end
+
+      it "can download a publicly visible resource that is hidden from search" do
+        hidden_public_resource = build_stubbed(
+          :resource,
+          published: false,
+          publicly_visible: true,
+          hidden_from_search: true
+        )
+        expect(policy_for(record: hidden_public_resource, user: guest_user))
+          .to be_allowed_to(:download?)
+      end
     end
   end
 
