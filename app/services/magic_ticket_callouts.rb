@@ -45,7 +45,7 @@ class MagicTicketCallouts
       EditorCard.new(:ce_hours, "fa-solid fa-graduation-cap", "teal", event.ce_hours_details_label, "Continuing education — requirements & how to request", "When a registrant requests CE credit", nil),
       EditorCard.new(:event_details, "fa-solid fa-palette", "blue", event.event_details_label, "Important info for this event — please read", "When the content below is filled in", nil),
       EditorCard.new(nil, "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
-      EditorCard.new(nil, "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and letter to supervisors", "Always shown", "Items link to their relevant resources."),
+      EditorCard.new(nil, "fa-solid fa-file-lines", "blue", "Forms", "W-9 and invoice", "Always shown", "Items link to their relevant resources."),
       EditorCard.new(nil, "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "Always shown", "Items link to their relevant resources."),
       EditorCard.new(nil, "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "Always shown", nil),
       EditorCard.new(nil, "fa-solid fa-right-to-bracket", "gray", "Facilitator Portal access", "Sign in once the training is complete", "Always shown", nil)
@@ -172,12 +172,12 @@ class MagicTicketCallouts
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
-  # Always-present. Its page links to the W-9 (when requested), invoice (when
-  # requested), and the letter to supervisors.
+  # Always-present. Its page links to the W-9 (when requested) and invoice
+  # (when requested).
   def forms_card
     Card.new(icon_class: "fa-solid fa-file-lines", color: "blue",
              title: "Forms",
-             subtitle: "W-9, invoice, and letter to supervisors",
+             subtitle: "W-9 and invoice",
              href: registration_forms_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end

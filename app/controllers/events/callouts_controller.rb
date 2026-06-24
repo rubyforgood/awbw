@@ -15,7 +15,8 @@ module Events
       "2-Day AWBW Facilitator Training Worksheets & Handouts",
       "AWBW Training Workshop Worksheets",
       "AHA Moments",
-      "Inviting and Responding to Participants' Sharing"
+      "Inviting and Responding to Participants' Sharing",
+      "Letter to Supervisors"
     ].freeze
 
     # Payment page: the full allocation ledger with the running balance due.
@@ -103,9 +104,9 @@ module Events
       @event = @event_registration.event
     end
 
-    # Builds the callout-card links shown on the forms page. The W-9 and the
-    # letter to supervisors open in their own resource page (preview + download)
-    # when seeded; the invoice is always available.
+    # Builds the callout-card links shown on the forms page. The W-9 opens in
+    # its own resource page (preview + download) when seeded; the invoice is
+    # always available.
     def build_form_cards
       cards = []
       w9 = Resource.find_by(title: "W-9")
@@ -117,12 +118,6 @@ module Events
       cards << resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
                              subtitle: "Itemized invoice for this registration",
                              href: registration_invoice_path(@event_registration.slug, return_to: "forms"))
-      letter = Resource.find_by(title: "Letter to Supervisors")
-      if letter
-        cards << resource_card(icon: "fa-solid fa-file-arrow-down", title: "Letter to supervisors",
-                               subtitle: "Share to request release time",
-                               href: registration_resource_path(@event_registration.slug, letter, return_to: "forms"), target: nil)
-      end
       cards
     end
 

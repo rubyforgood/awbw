@@ -51,7 +51,7 @@ RSpec.describe "Events::Registrations", type: :request do
       it "renders the consolidated magic callout cards" do
         get registration_ticket_path(registration.slug)
         expect(response.body).to include("view your balance")
-        expect(response.body).to include("W-9, invoice, and letter to supervisors")
+        expect(response.body).to include("W-9 and invoice")
         expect(response.body).to include("Worksheets and resources for the training")
         expect(response.body).to include("Frequently asked questions")
       end
