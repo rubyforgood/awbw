@@ -163,6 +163,7 @@ Rails.application.routes.draw do
     resource :public_registration, only: [ :new, :create, :show ], module: :events
     resource :bulk_payment, only: [ :new, :create, :show ], module: :events
     resource :invoice, only: [ :show ], module: :events
+    get "form_submissions/:person_id", to: "events/form_submissions#show", as: :event_form_submissions
   end
   resources :people do
     collection do

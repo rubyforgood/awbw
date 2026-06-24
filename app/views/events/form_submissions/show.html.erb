@@ -1,0 +1,60 @@
+<div class="max-w-5xl mx-auto px-4 pt-4">
+  <%= link_to registrants_event_path(@event), class: "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700" do %>
+    &larr; Back to registrants
+  <% end %>
+
+  <h1 class="text-lg font-semibold text-gray-800 mt-3">
+    <%= @person.name %> &mdash; <%= @event.title %>
+  </h1>
+</div>
+
+<div class="max-w-5xl mx-auto pb-12 pt-4 px-4 space-y-10">
+  <% @form_submissions.each do |submission| %>
+    <% form_fields = submission.form.form_fields.reorder(position: :asc) %>
+    <% responses = submission.form_answers.index_by(&:form_field_id) %>
+
+    <div>
+      <div class="pb-1.5 border-b-2 border-gray-300 mb-5">
+        <h2 class="text-lg font-semibold text-gray-900"><%= submission.form.name %></h2>
+        <p class="text-xs text-gray-500">Submitted <%= submission.created_at.strftime("%B %d, %Y at %l:%M %P") %></p>
+      </div>
+
+      <% sections = [] %>
+      <% current = nil %>
+
+      <% form_fields.each do |field| %>
+        <% next if field.field_identifier == "bulk_payment_attendees" %>
+        <% next if field.group_header? && field.name == "Attendees" %>
+
+        <% if field.group_header? %>
+          <% sections << current if current && current[:fields].any? %>
+          <% current = { name: field.name, fields: [] } %>
+        <% else %>
+          <% response = responses[field.id] %>
+          <% next if response.nil? %>
+          <% current ||= { name: nil, fields: [] } %>
+          <% current[:fields] << [field, response] %>
+        <% end %>
+      <% end %>
+      <% sections << current if current && current[:fields].any? %>
+
+      <% sections.each do |section| %>
+        <% if section[:name].present? %>
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-5 mb-2"><%= section[:name] %></h3>
+        <% end %>
+        <div class="divide-y divide-gray-100">
+          <% section[:fields].each do |field, response| %>
+            <div class="flex gap-4 py-1.5">
+              <div class="w-1/3 shrink-0 text-xs text-gray-500"><%= display_question_label(field, response) %></div>
+              <div class="text-sm text-gray-900 whitespace-pre-line"><%= display_response_text(field, response) %></div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @form_submissions.empty? %>
+    <p class="text-sm text-gray-500">No form submissions found for this person.</p>
+  <% end %>
+</div>
