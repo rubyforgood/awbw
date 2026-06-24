@@ -25,6 +25,46 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#event_registration_confirmation_fyi" do
+    let(:notification) { create(:notification, kind: "event_registration_confirmation_fyi", noticeable: event_registration) }
+
+    context "when a scholarship was not requested" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: false) }
+
+      it "labels the subject as a plain event registration" do
+        subject = described_class.event_registration_confirmation_fyi(notification).subject
+        expect(subject).to include("New event registration by")
+        expect(subject).not_to include("scholarship")
+      end
+    end
+
+    context "when a scholarship was requested" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: true) }
+
+      it "labels the subject as an event scholarship registration" do
+        subject = described_class.event_registration_confirmation_fyi(notification).subject
+        expect(subject).to include("New event scholarship registration by")
+      end
+    end
+
+    context "for a virtual event" do
+      let(:event) { create(:event, videoconference_url: "https://zoom.us/j/123", videoconference_label: "Zoom", videoconference_passcode: "secret123") }
+      let(:event_registration) { create(:event_registration, event: event) }
+
+      it "shows the platform label as plain text" do
+        body = described_class.event_registration_confirmation_fyi(notification).body.encoded
+        expect(body).to include("Zoom")
+      end
+
+      it "does not include the join link, meeting ID, or passcode" do
+        body = described_class.event_registration_confirmation_fyi(notification).body.encoded
+        expect(body).not_to include("https://zoom.us/j/123")
+        expect(body).not_to include("secret123")
+        expect(body).not_to include("Meeting ID")
+      end
+    end
+  end
+
   describe "#report_submitted_fyi" do
     let(:notification) { create(:notification, kind: :report_submitted_fyi) }
 

@@ -2,7 +2,7 @@ class EventRegistrationsController < ApplicationController
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
-  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding ]
 
   def index
     authorize!
@@ -95,6 +95,7 @@ class EventRegistrationsController < ApplicationController
           when "index" then redirect_to event_registrations_path, notice: "Registration was successfully updated.", status: :see_other
           when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
           when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
+          when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: "Registration was successfully updated.", status: :see_other
           else
             # No explicit origin: keep admins in the management context (the
             # roster) rather than dropping them on the public registration show.
@@ -114,6 +115,32 @@ class EventRegistrationsController < ApplicationController
           render :edit, status: :unprocessable_content
         end
       end
+    end
+  end
+
+  # Inline toggle/edit of a single onboarding column from the event's Onboarding
+  # matrix. `field` is one of EventRegistration::CHECKLIST_STEPS (audited row),
+  # EventRegistration::DAY_FIELDS (plain boolean), or "fee_note" (free text).
+  def update_onboarding
+    authorize! @event_registration, to: :update_onboarding?
+    @field = params[:field].to_s
+    @day_count = @event_registration.event.day_count
+    completed = ActiveModel::Type::Boolean.new.cast(params[:value])
+
+    if @field == "fee_note"
+      @event_registration.update(fee_note: params[:value])
+    elsif EventRegistration::DAY_FIELDS.include?(@field)
+      @event_registration.update(@field => completed)
+    elsif EventRegistration::CHECKLIST_STEPS.key?(@field)
+      toggle_checklist_step(@field, completed)
+      @event_registration.checklist_completions.reload
+    else
+      return head :unprocessable_content
+    end
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id) }
     end
   end
 
@@ -155,19 +182,23 @@ class EventRegistrationsController < ApplicationController
     # whether each linked org is also an active/inactive affiliation (removing a
     # link here leaves the affiliation untouched).
     @affiliations_by_org = @person.affiliations.group_by(&:organization_id)
-    @submitted_org_name = find_submitted_agency_name(@event_registration)
-    # Whether an org with the submitted name already exists — if so, there's
-    # nothing to create (the admin links the existing one), so the "Create org
-    # & link" button is hidden.
-    @submitted_org_exists = @submitted_org_name.present? &&
-      Organization.where("LOWER(name) = ?", @submitted_org_name.strip.downcase).exists?
-    # The job title/position the registrant typed on the form, to compare against
-    # the title on any existing affiliation for a linked org.
-    @submitted_position = find_submitted_answer(@event_registration, "agency_position")
-    # The registrant's submission of the event's registration form, so we can link
-    # out to the public-facing form view.
-    reg_form = @event_registration.event.registration_form
-    @form_submission = reg_form && @person.form_submissions.find_by(form: reg_form)
+    # Every registration-form submission and the org/title the registrant entered
+    # on each. Normally there's one, but a registrant can have more (legacy or
+    # duplicate data), so we surface them all rather than silently picking one.
+    @submitted_entries = registration_submission_entries(@event_registration)
+    @form_submission = @submitted_entries.first&.fetch(:submission)
+    # The "primary" submitted org/title — the first submission that named an org
+    # (else the first submission) — drives the suggested-match and comparison logic.
+    primary = @submitted_entries.find { |entry| entry[:org_name].present? } || @submitted_entries.first
+    @submitted_org_name = primary && primary[:org_name]
+    @submitted_position = primary && primary[:position]
+    # Each distinct submitted org name that isn't already in the database gets its
+    # own "Create and link" row, so every typed-but-missing org can be resolved.
+    submitted_names = @submitted_entries.filter_map { |entry| entry[:org_name].presence&.strip }.uniq { |name| name.downcase }
+    existing_names = submitted_names.any? ?
+      Organization.where("LOWER(name) IN (?)", submitted_names.map(&:downcase)).pluck(Arel.sql("LOWER(name)")).map(&:to_s).to_set :
+      Set.new
+    @creatable_org_names = submitted_names.reject { |name| existing_names.include?(name.downcase) }
     @potential_matches = if @submitted_org_name.present?
       Organization.remote_search(@submitted_org_name).where.not(id: @linked_organizations.ids).limit(10)
     else
@@ -181,7 +212,12 @@ class EventRegistrationsController < ApplicationController
     @person = @event_registration.registrant
     organization = Organization.find(params[:organization_id])
 
-    Affiliation.find_or_create_by!(person: @person, organization: organization)
+    AffiliationServices::CreateFromRegistration.call(
+      person: @person,
+      organization: organization,
+      job_title: submitted_position(@event_registration),
+      training_date: @event_registration.event.start_date
+    )
 
     @event_registration.event_registration_organizations
       .find_or_create_by!(organization: organization)
@@ -193,9 +229,13 @@ class EventRegistrationsController < ApplicationController
     @event_registration = EventRegistration.find(params[:id])
     authorize! @event_registration, to: :create_organization?
     @person = @event_registration.registrant
-    # Build the org from the name the registrant typed on the form, so the button
-    # can't be used to create an arbitrary org — it only resolves the pending name.
-    name = find_submitted_agency_name(@event_registration)
+    # Build the org from a name the registrant actually typed on the form, so the
+    # button can't be used to create an arbitrary org — it only resolves a pending
+    # submitted name. A specific name is passed when there are several submissions;
+    # otherwise default to the first submitted name.
+    submitted_names = submitted_agency_names(@event_registration)
+    requested = params[:organization_name].presence
+    name = requested ? submitted_names.find { |submitted| submitted.casecmp?(requested) } : submitted_names.first
     if name.blank?
       redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), alert: "No submitted organization name to create from."
       return
@@ -205,7 +245,12 @@ class EventRegistrationsController < ApplicationController
     existing = Organization.where("LOWER(name) = ?", name.strip.downcase).first
     organization = existing || Organization.create!(name: name.strip, organization_status: OrganizationStatus.find_by(name: "Active"))
 
-    Affiliation.find_or_create_by!(person: @person, organization: organization)
+    AffiliationServices::CreateFromRegistration.call(
+      person: @person,
+      organization: organization,
+      job_title: submitted_position(@event_registration),
+      training_date: @event_registration.event.start_date
+    )
     @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
 
     notice = existing ? "#{organization.name} linked." : "#{organization.name} created and linked."
@@ -217,10 +262,12 @@ class EventRegistrationsController < ApplicationController
     authorize! @event_registration, to: :unlink_organization?
     organization = Organization.find(params[:organization_id])
 
-    # Removes only the registration-scoped link; the person's global affiliation is left intact.
+    # Intentional UX choice: "Unlink" only removes the org from this registration and
+    # deliberately leaves the person's global Affiliation intact. Affiliations are managed
+    # on the Person record, not here — the Unlink button's confirm dialog warns about this.
     @event_registration.event_registration_organizations.where(organization_id: organization.id).destroy_all
 
-    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} removed from this registration."
+    redirect_to link_organization_event_registration_path(@event_registration, return_to: params[:return_to].presence), notice: "#{organization.name} unlinked from this registration."
   end
 
   def destroy
@@ -234,6 +281,7 @@ class EventRegistrationsController < ApplicationController
 
     case params[:return_to]
     when "registrants" then redirect_to registrants_event_path(event)
+    when "onboarding" then redirect_to onboarding_event_path(event)
     else redirect_to event_registrations_path
     end
   end
@@ -264,6 +312,17 @@ class EventRegistrationsController < ApplicationController
     @event_registration = EventRegistration.includes({ registrant: [ :user, { affiliations: :organization } ] }, { event: [ :location, :event_forms ] }, :organizations, comments: [ :created_by, :updated_by ]).find(params[:id])
   end
 
+  # Creates the audited completion row for a checklist step (recording who/when),
+  # or removes it — so an unchecked step leaves no trace.
+  def toggle_checklist_step(step, completed)
+    completion = @event_registration.checklist_completions.find_by(step: step)
+    if completed && completion.nil?
+      @event_registration.checklist_completions.create(step: step, completed_by: current_user, completed_at: Time.current)
+    elsif !completed && completion
+      completion.destroy
+    end
+  end
+
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
@@ -271,9 +330,12 @@ class EventRegistrationsController < ApplicationController
       :scholarship_requested,
       :shoutout,
       :intends_to_pay,
+      :expected_payment_method,
       :ce_credit_requested,
       :ce_hours_requested,
       :ce_license_number,
+      :fee_note,
+      *EventRegistration::DAY_FIELDS,
       organization_ids: [],
       registrant_attributes: [ :id, :shoutout_text ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
@@ -314,22 +376,56 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
-  def find_submitted_agency_name(registration)
-    find_submitted_answer(registration, "agency_name")
+  # Each registration-form submission with the org name and position the registrant
+  # entered on it: [{ submission:, org_name:, position: }], oldest first.
+  def registration_submission_entries(registration)
+    form = registration.event.registration_form
+    return [] unless form
+
+    field_ids = form.form_fields
+      .where(field_identifier: %w[agency_name agency_position])
+      .pluck(:field_identifier, :id).to_h
+    name_field_id = field_ids["agency_name"]
+    position_field_id = field_ids["agency_position"]
+
+    entries = registration.registrant.form_submissions
+      .where(form: form)
+      .order(:created_at)
+      .includes(:form_answers)
+      .map do |submission|
+        answers = submission.form_answers.index_by(&:form_field_id)
+        {
+          submission: submission,
+          org_name: name_field_id && answers[name_field_id]&.submitted_answer,
+          position: position_field_id && answers[position_field_id]&.submitted_answer
+        }
+      end
+
+    # Attach the matching DB org (if any) for each submitted name, so the view can
+    # show its city/state next to the answer. Batched to avoid a query per entry.
+    names = entries.filter_map { |entry| entry[:org_name].presence&.strip&.downcase }.uniq
+    orgs_by_name = names.any? ?
+      Organization.where("LOWER(name) IN (?)", names).index_by { |org| org.name.to_s.downcase } :
+      {}
+    entries.each { |entry| entry[:organization] = entry[:org_name].present? ? orgs_by_name[entry[:org_name].strip.downcase] : nil }
+    entries
   end
 
-  def find_submitted_answer(registration, field_identifier)
-    form = registration.event.registration_form
-    return nil unless form
+  # Distinct, non-blank org names the registrant typed across their registration-form
+  # submissions (case-insensitive dedupe, first spelling wins).
+  def submitted_agency_names(registration)
+    registration_submission_entries(registration)
+      .filter_map { |entry| entry[:org_name].presence&.strip }
+      .uniq { |name| name.downcase }
+  end
 
-    field = form.form_fields.find_by(field_identifier: field_identifier)
-    return nil unless field
-
-    FormAnswer
-      .joins(form_submission: :person)
-      .find_by(
-        form_submissions: { person_id: registration.registrant_id, form_id: form.id },
-        form_field_id: field.id
-      )&.submitted_answer
+  # The job title/position the registrant typed for their organization on the
+  # registration form. Uses the same "primary" submission as link_organization
+  # (the first submission that named an org, else the first), so the title applied
+  # when linking matches what the editor shows.
+  def submitted_position(registration)
+    entries = registration_submission_entries(registration)
+    primary = entries.find { |entry| entry[:org_name].present? } || entries.first
+    primary && primary[:position]
   end
 end

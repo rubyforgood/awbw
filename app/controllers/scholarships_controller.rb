@@ -151,10 +151,18 @@ class ScholarshipsController < ApplicationController
 
     if @allocatable.respond_to?(:event)
       return edit_event_registration_path(@allocatable) if params[:return_to] == "registration"
+      return recipients_return_path(@allocatable.event) if params[:return_to] == "recipients"
+      return helpers.onboarding_event_row_path(@allocatable.event, @allocatable.id) if params[:return_to] == "onboarding"
       return registrants_event_path(@allocatable.event)
     end
 
     edit_scholarship_path(@scholarship)
+  end
+
+  # Return to the recipients roster, scrolling back to the participant card the
+  # Edit link was opened from (its slug rides along in the participant param).
+  def recipients_return_path(event)
+    recipients_event_path(event, anchor: ("participant-#{params[:participant]}" if params[:participant].present?))
   end
 
   # After destroying, leave the scholarship entirely: back to the grant when that
@@ -163,29 +171,28 @@ class ScholarshipsController < ApplicationController
     return grant_return_path(grant) if grant_context?(grant)
 
     event = @allocatable.try(:event)
-    return registrants_event_path(event) if event
+    if event
+      return recipients_return_path(event) if params[:return_to] == "recipients"
+      return helpers.onboarding_event_row_path(event, @allocatable.id) if params[:return_to] == "onboarding" && @allocatable.respond_to?(:id)
+      return registrants_event_path(event)
+    end
     return grant_path(grant) if grant
 
     root_path
   end
 
-  # Pull the recipient's scholarship-section answers from the event's
-  # registration form submission, plus a link to the full public submission.
+  # Pull the recipient's scholarship-application answers — wherever they were
+  # captured (dedicated scholarship form, embedded registration section, or
+  # against the registration submission) — plus a link to the full submission.
   def load_scholarship_submission
     return unless @allocatable.respond_to?(:event)
 
     @event = @allocatable.event
-    form = @event&.registration_form
-    return unless form
+    return unless @event
 
-    @form_submission = form.form_submissions.find_by(person: @scholarship.recipient)
-    answers = @form_submission ? @form_submission.form_answers.index_by(&:form_field_id) : {}
-
-    @scholarship_answers = form.form_fields
-      .select { |field| field.section == "scholarship" || field.scholarship_only? }
-      .reject { |field| field.group_header? || field.no_user_input? }
-      .sort_by { |field| field.position.to_i }
-      .map { |field| [ field, answers[field.id] ] }
+    application = ScholarshipApplication.new(event: @event, person: @scholarship.recipient)
+    @form_submission = application.submission
+    @scholarship_answers = application.answer_pairs
   end
 
   def locate_allocatable

@@ -8,9 +8,13 @@ class EventInvoice
   ISSUER_EMAIL = "info@awbw.org".freeze
   PAYABLE_TO_NOTE = "Please make checks payable to A Window Between Worlds".freeze
 
-  LineItem = Struct.new(:date, :description, :quantity, :unit_price_cents, keyword_init: true) do
+  LineItem = Struct.new(:date, :description, :quantity, :unit_price_cents, :details, keyword_init: true) do
     def amount_cents
       unit_price_cents.to_i * quantity.to_i
+    end
+
+    def details
+      self[:details] || []
     end
   end
 
@@ -94,11 +98,25 @@ class EventInvoice
           date: submission.created_at.to_date,
           description: event&.title,
           quantity: quantity,
-          unit_price_cents: event&.cost_cents.to_i
+          unit_price_cents: event&.cost_cents.to_i,
+          details: attendee_detail_lines(submission)
         )
       ]
     )
   end
+
+  # One "First Last — email" line per attendee the payer entered on the bulk
+  # payment form, so the invoice spells out who the payment covers. Either field
+  # may be blank, so each line falls back to whichever part is present.
+  def self.attendee_detail_lines(submission)
+    submission.bulk_payment_attendees.filter_map do |attendee|
+      name = [ attendee["first_name"], attendee["last_name"] ]
+        .map { |part| part.to_s.strip.presence }.compact.join(" ")
+      email = attendee["email"].to_s.strip.presence
+      [ name.presence, email ].compact.join(" — ").presence
+    end
+  end
+  private_class_method :attendee_detail_lines
 
   def initialize(event:, number:, date:, client_id:, bill_to_name:,
                  bill_to_address_lines:, bill_to_email:, attention:, line_items:,

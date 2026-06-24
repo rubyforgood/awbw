@@ -456,14 +456,16 @@ RSpec.describe EventDashboard do
       expect(dashboard.scholarship_answers_by_applicant[embedded_applicant.id].size).to eq(1)
     end
 
-    it "gathers header (service area / age group) answers keyed by applicant and identifier" do
+    it "gathers header (sector / age group) answers keyed by applicant, sector answers under the normalized sector key" do
+      # Use a legacy "service area" identifier to confirm it still resolves under
+      # the normalized sector key alongside the current "sector" identifiers.
       service_field = create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
       reg_submission = FormSubmission.find_by(person: embedded_applicant, form: registration_form)
       create(:form_answer, form_submission: reg_submission, form_field: service_field, submitted_answer: "5")
 
       header = dashboard.header_answers_by_applicant
 
-      expect(header[embedded_applicant.id]["primary_service_area"].submitted_answer).to eq("5")
+      expect(header[embedded_applicant.id][EventDashboard::HEADER_SECTOR_KEY].submitted_answer).to eq("5")
       expect(header).not_to have_key(non_applicant.id)
     end
 
@@ -753,6 +755,44 @@ RSpec.describe EventDashboard do
 
     it "keeps the breakdown total equal to the organization count" do
       expect(dashboard.program_status_counts.values.sum).to eq(dashboard.organization_count)
+    end
+  end
+
+  # Admins create facilitator affiliations manually after registration, so a
+  # registrant frequently has none yet. The org must still be classified by its
+  # own history as of today rather than defaulting to :new.
+  context "program-status when the registrant has no facilitator affiliation yet" do
+    let(:event) { create(:event) }
+    let(:person) { create(:person) }
+
+    before do
+      create(:event_registration_organization, event_registration: registration, organization: org)
+    end
+
+    let(:registration) { create(:event_registration, event: event, registrant: person, status: "registered") }
+
+    context "an org that already has an active facilitator" do
+      let(:org) { create(:organization, name: "Established Agency") }
+
+      before do
+        create(:affiliation, organization: org, title: "Facilitator", start_date: 2.years.ago, end_date: nil)
+      end
+
+      it "classifies the org as ongoing, not new" do
+        expect(dashboard.program_statuses_by_registrant[person.id]).to eq([ :ongoing ])
+      end
+    end
+
+    context "an org whose only facilitator affiliation has lapsed" do
+      let(:org) { create(:organization, name: "Lapsed Agency") }
+
+      before do
+        create(:affiliation, organization: org, title: "Facilitator", start_date: 5.years.ago, end_date: 4.years.ago)
+      end
+
+      it "classifies the org as reinstated" do
+        expect(dashboard.program_statuses_by_registrant[person.id]).to eq([ :reinstated ])
+      end
     end
   end
 

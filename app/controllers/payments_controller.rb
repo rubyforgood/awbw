@@ -98,6 +98,7 @@ class PaymentsController < ApplicationController
     if @payment.update(edit_payment_params)
       redirect_to payment_path(@payment), notice: "Payment was successfully updated."
     else
+      flash.now[:alert] = @payment.errors.full_messages.join(", ")
       render :edit, status: :unprocessable_content
     end
   end
@@ -188,7 +189,7 @@ class PaymentsController < ApplicationController
   end
 
   def payment_params
-    params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :amount_dollars, :currency, :check_number, :memo, :allocatable_sgid)
+    params.require(:payment).permit(:type, :payer_type, :person_id, :organization_id, :payer_sgid, :additional_designation_sgid, :amount_dollars, :currency, :check_number, :memo, :allocatable_sgid)
   end
 
   def locate_allocatable
@@ -251,7 +252,7 @@ class PaymentsController < ApplicationController
   end
 
   def edit_payment_params
-    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id)
+    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id, :payer_sgid, :additional_designation_sgid)
   end
 
   def redirect_path_for(allocatable)

@@ -1,6 +1,10 @@
 # Resource seeds (dev-only) - run on their own via `rake db:seed:resources`, or as
 # part of `rake db:seed:dev`.
 
+# Faker is installed but not auto-required on staging, where the app runs as
+# RAILS_ENV=production and Bundler.require only loads the production group.
+require "faker"
+
 puts "Creating Resources…"
 10.times do |i|
   kind = Resource::PUBLISHED_KINDS.sample
@@ -49,6 +53,28 @@ hidden_resources = [
     title: "AHA Moments",
     body: "A facilitation worksheet for capturing insights and reflections during AWBW art workshops.",
     filename: "aha_moments.pdf"
+  },
+  {
+    title: "2-Day AWBW Facilitator Training Worksheets & Handouts",
+    body: "The complete packet of worksheets and handouts for the 2-day AWBW Facilitator Training.",
+    filename: "two_day_training_worksheets_and_handouts.pdf"
+  },
+  {
+    title: "Inviting and Responding to Participants' Sharing",
+    body: "Guidance for holding space and responding to participant sharing in breakout rooms.",
+    filename: "inviting_and_responding_to_sharing.pdf"
+  },
+  {
+    title: "Letter to Supervisors",
+    body: "A letter trainees can share with supervisors to request release time for the training.",
+    filename: "letter_to_supervisors.pdf",
+    kind: "Form"
+  },
+  {
+    title: "W-9",
+    body: "AWBW's W-9 tax form for trainees' records.",
+    filename: "w9.pdf",
+    kind: "Form"
   }
 ]
 
@@ -57,7 +83,7 @@ hidden_resources.each do |attrs|
     body: attrs[:body],
     rhino_body: attrs[:body],
     agency: "A Window Between Worlds",
-    kind: "Handout",
+    kind: attrs.fetch(:kind, "Handout"),
     inactive: false,
     published: true,
     publicly_visible: true,

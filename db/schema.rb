@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_23_104203) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -109,6 +109,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.date "end_date"
     t.string "filemaker_code"
     t.boolean "inactive", default: false, null: false
+    t.bigint "organization_address_id"
     t.integer "organization_agency_id"
     t.integer "organization_id", null: false
     t.bigint "person_id", null: false
@@ -118,6 +119,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
+    t.index ["organization_address_id"], name: "index_affiliations_on_organization_address_id"
     t.index ["organization_agency_id"], name: "index_affiliations_on_organization_agency_id"
     t.index ["organization_id"], name: "index_affiliations_on_organization_id"
     t.index ["person_id"], name: "index_affiliations_on_person_id"
@@ -437,6 +439,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.index ["form_id"], name: "index_event_forms_on_form_id"
   end
 
+  create_table "event_registration_checklist_completions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.integer "completed_by_id"
+    t.datetime "created_at", null: false
+    t.bigint "event_registration_id", null: false
+    t.string "step", null: false
+    t.datetime "updated_at", null: false
+    t.index ["completed_by_id"], name: "idx_on_completed_by_id_047522ef9d"
+    t.index ["event_registration_id", "step"], name: "index_checklist_completions_on_registration_and_step", unique: true
+    t.index ["event_registration_id"], name: "idx_on_event_registration_id_e5177f655c"
+  end
+
   create_table "event_registration_organizations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "event_registration_id", null: false
@@ -452,8 +466,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.integer "ce_hours_requested"
     t.string "ce_license_number"
     t.string "checkout_session_id"
+    t.boolean "completed_day_1", default: false, null: false
+    t.boolean "completed_day_2", default: false, null: false
+    t.boolean "completed_day_3", default: false, null: false
+    t.boolean "completed_day_4", default: false, null: false
+    t.boolean "completed_day_5", default: false, null: false
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.string "expected_payment_method"
+    t.text "fee_note"
     t.boolean "intends_to_pay", default: false, null: false
     t.boolean "invoice_requested", default: false, null: false
     t.boolean "payment_unresolved"
@@ -523,11 +544,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
     t.datetime "registration_close_date", precision: nil
+    t.text "short_description"
     t.boolean "signed_in_one_click_enabled", default: false, null: false
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
     t.string "videoconference_label", default: "Virtual event"
+    t.string "videoconference_passcode"
     t.string "videoconference_url"
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
     t.index ["facilitator_training"], name: "index_events_on_facilitator_training"
@@ -925,6 +948,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.boolean "blog_contributor", default: false, null: false
     t.datetime "created_at", null: false
     t.integer "created_by_id"
+    t.string "credentials"
     t.date "date_of_birth"
     t.string "display_name_preference"
     t.string "email"
@@ -932,6 +956,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.string "email_2_type"
     t.string "email_type"
     t.string "facebook_url"
+    t.string "filemaker_code"
     t.string "first_name", null: false
     t.string "instagram_url"
     t.string "last_name", null: false
@@ -939,11 +964,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.string "license_number"
     t.string "license_type"
     t.string "linked_in_url"
+    t.datetime "mailing_list_consent_at"
+    t.string "mailing_list_consent_source"
     t.date "member_since"
     t.text "notes"
     t.boolean "profile_is_searchable", default: true, null: false
     t.boolean "profile_show_affiliations", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
+    t.boolean "profile_show_credentials", default: true, null: false
     t.boolean "profile_show_email", default: true, null: false
     t.boolean "profile_show_events_registered", default: true, null: false
     t.boolean "profile_show_member_since", default: true, null: false
@@ -959,6 +987,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.boolean "profile_show_workshop_variations", default: true, null: false
     t.boolean "profile_show_workshops", default: true, null: false
     t.string "pronouns"
+    t.string "racial_ethnic_identity"
     t.text "shoutout_text"
     t.string "twitter_url"
     t.datetime "updated_at", null: false
@@ -1025,11 +1054,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
     t.string "icon_class"
     t.boolean "payment_access_gated", default: false, null: false
     t.integer "position", null: false
+    t.integer "resource_id"
     t.string "subtitle"
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["event_id", "position"], name: "index_registration_ticket_callouts_on_event_id_and_position"
     t.index ["event_id"], name: "index_registration_ticket_callouts_on_event_id"
+    t.index ["resource_id"], name: "index_registration_ticket_callouts_on_resource_id"
   end
 
   create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1594,6 +1625,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
   add_foreign_key "action_text_mentions", "action_text_rich_texts"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "affiliations", "addresses", column: "organization_address_id", on_delete: :nullify
   add_foreign_key "affiliations", "organizations"
   add_foreign_key "affiliations", "organizations", column: "organization_agency_id"
   add_foreign_key "affiliations", "people"
@@ -1623,6 +1655,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
   add_foreign_key "contact_methods", "addresses"
   add_foreign_key "event_forms", "events"
   add_foreign_key "event_forms", "forms"
+  add_foreign_key "event_registration_checklist_completions", "event_registrations"
+  add_foreign_key "event_registration_checklist_completions", "users", column: "completed_by_id"
   add_foreign_key "event_registration_organizations", "event_registrations"
   add_foreign_key "event_registration_organizations", "organizations"
   add_foreign_key "event_registrations", "events"
@@ -1661,6 +1695,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_182729) do
   add_foreign_key "quotable_item_quotes", "quotes"
   add_foreign_key "quotes", "workshops"
   add_foreign_key "registration_ticket_callouts", "events"
+  add_foreign_key "registration_ticket_callouts", "resources", on_delete: :nullify
   add_foreign_key "report_form_field_answers", "answer_options"
   add_foreign_key "report_form_field_answers", "form_fields"
   add_foreign_key "report_form_field_answers", "reports"

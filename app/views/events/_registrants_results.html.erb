@@ -86,7 +86,7 @@
 
                   <div class="flex items-center gap-1">
                     <div class="w-52 min-w-0">
-                      <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
+                      <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }, path_params: { return_to: "registrants", event_id: @event.id }) %>
                     </div>
 
                     <% if event_form_ids.any? && (submissions = form_submissions[person.id]) %>
@@ -113,19 +113,6 @@
                       <i class="fa-solid fa-triangle-exclamation text-amber-500" title="Multiple registrants share this email address — this may cause login conflicts"></i>
                     <% end %>
                   </div>
-
-                  <%# Organizations where this person is an active facilitator —
-                      distinct from the registration's linked orgs (next column). %>
-                  <% facilitator_orgs = person.decorate.active_facilitator_organization_names %>
-                  <% if facilitator_orgs.any? %>
-                    <div class="mt-1 flex flex-wrap gap-1">
-                      <% facilitator_orgs.each do |org_name| %>
-                        <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-purple-50 text-purple-700 border-purple-200" title="Active facilitator at <%= org_name %>">
-                          <i class="fa-solid fa-chalkboard-user text-[0.6rem]"></i><%= org_name %>
-                        </span>
-                      <% end %>
-                    </div>
-                  <% end %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-800">
@@ -136,7 +123,7 @@
                       attention; a name matching a linked org is already resolved. %>
                   <% needs_linking = submitted_org_name.present? && linked_org_names.exclude?(submitted_org_name.downcase) %>
                   <% editor_path = link_organization_event_registration_path(registration, return_to: "registrants") %>
-                  <% pill_classes = "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 hover:opacity-80" %>
+                  <% pill_classes = "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 transition hover:opacity-80 hover:shadow-sm" %>
                   <div class="flex flex-wrap gap-1.5">
                     <% linked_orgs.each do |org| %>
                       <%= link_to editor_path,
@@ -171,7 +158,7 @@
                   <% if (s = registration.scholarships.first) %>
                     <% if s.tasks_completed? %>
                       <%= link_to edit_scholarship_path(s, return_to: "registrants"),
-                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200 hover:opacity-80",
+                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200 transition hover:opacity-80 hover:shadow-sm",
                                   data: { turbo_frame: "_top" } do %>
                         <i class="fas fa-graduation-cap"></i>
                         <span>Completed</span>
@@ -179,7 +166,7 @@
                       <% end %>
                     <% else %>
                       <%= link_to edit_scholarship_path(s, return_to: "registrants"),
-                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-blue-50 text-blue-700 border-blue-200 hover:opacity-80",
+                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-blue-50 text-blue-700 border-blue-200 transition hover:opacity-80 hover:shadow-sm",
                                   data: { turbo_frame: "_top" } do %>
                         <i class="fas fa-graduation-cap"></i>
                         <span>Recipient</span>
@@ -189,7 +176,7 @@
                   <% else %>
                     <% if registration.scholarship_requested? %>
                       <%= link_to new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
-                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200 hover:opacity-80",
+                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200 transition hover:opacity-80 hover:shadow-sm",
                                   data: { turbo_frame: "_top" } do %>
                         <i class="fas fa-graduation-cap"></i>
                         <span>Requested</span>
@@ -197,7 +184,7 @@
                       <% end %>
                     <% else %>
                       <%= link_to new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
-                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-gray-50 text-gray-400 border-gray-200 hover:opacity-80",
+                                  class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-gray-50 text-gray-400 border-gray-200 transition hover:opacity-80 hover:shadow-sm",
                                   data: { turbo_frame: "_top" } do %>
                         <i class="fas fa-graduation-cap"></i>
                         <span>Create</span>
@@ -232,21 +219,21 @@
                        else
                          "fa-circle-exclamation"
                        end %>
+                    <% badge_title = if is_paid
+                         "Paid in full"
+                       elsif is_discounted
+                         "Discounted · #{dollars_from_cents(due_cents)} due"
+                       elsif is_partial
+                         "Partial payment · #{dollars_from_cents(due_cents)} due"
+                       else
+                         "#{dollars_from_cents(due_cents)} due"
+                       end %>
+                    <% badge_title = "#{badge_title} · Intends to pay" if !is_paid && registration.intends_to_pay? %>
 
-                    <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"), class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 #{badge_classes} hover:opacity-80", data: { turbo_frame: "_top" } do %>
+                    <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"), title: badge_title, class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 #{badge_classes} transition hover:opacity-80 hover:shadow-sm", data: { turbo_frame: "_top" } do %>
                       <i class="fas <%= badge_icon %>"></i>
                       <% if is_paid %>
                         <span>Paid</span>
-                      <% elsif is_discounted %>
-                        <span class="flex flex-col leading-tight text-left">
-                          <span>Discounted</span>
-                          <span><%= dollars_from_cents(due_cents) %> due</span>
-                        </span>
-                      <% elsif is_partial %>
-                        <span class="flex flex-col leading-tight text-left">
-                          <span>Partial payment</span>
-                          <span><%= dollars_from_cents(due_cents) %> due</span>
-                        </span>
                       <% else %>
                         <span><%= dollars_from_cents(due_cents) %> due</span>
                       <% end %>

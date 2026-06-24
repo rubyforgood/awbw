@@ -30,7 +30,7 @@
   <% link_base = "inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm font-medium shadow-sm transition-colors" %>
   <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
     <% if @event.event_forms.registration.exists? %>
-      <%= link_to new_event_public_registration_path(@event, as_visitor: true), target: "_blank", rel: "noopener noreferrer",
+      <%= link_to new_event_public_registration_path(@event), target: "_blank", rel: "noopener noreferrer",
             class: "#{link_base} #{DomainTheme.border_class_for(:events, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:events, intensity: 300)} hover:bg-gray-50" do %>
         <i class="fa-solid fa-clipboard-list <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
         Public registration form
@@ -39,7 +39,7 @@
     <% end %>
 
     <% if @event.event_forms.registration.exists? && @event.scholarship_form %>
-      <%= link_to new_event_public_registration_path(@event, scholarship_requested: true, as_visitor: true), target: "_blank", rel: "noopener noreferrer",
+      <%= link_to new_event_public_registration_path(@event, scholarship_requested: true), target: "_blank", rel: "noopener noreferrer",
             class: "#{link_base} #{DomainTheme.border_class_for(:scholarships, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:scholarships, intensity: 300)} hover:bg-gray-50" do %>
         <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"></i>
         Scholarship form
@@ -54,6 +54,14 @@
         Bulk payment form
         <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
       <% end %>
+    <% end %>
+
+    <%# Admin-only preview of the registration ticket with every option enabled. %>
+    <%= link_to sample_ticket_event_path(@event), target: "_blank", rel: "noopener noreferrer",
+          class: "#{link_base} border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50" do %>
+      <i class="fa-solid fa-ticket text-gray-500"></i>
+      Sample ticket
+      <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
     <% end %>
   </div>
 
@@ -327,7 +335,10 @@
                   <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
                 <% end %>
                 <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "flex items-center justify-between gap-2 flex-1 min-w-0 rounded px-1 py-0.5 hover:bg-gray-50", title: "Registrants from #{organization.name}" do %>
-                  <span class="truncate min-w-0"><%= organization.name %></span>
+                  <span class="flex items-center gap-1.5 min-w-0">
+                    <%= organization.decorate.program_status_badge(@dashboard.program_status_by_organization[organization.id]) %>
+                    <span class="truncate min-w-0"><%= organization.name %></span>
+                  </span>
                   <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.organization_counts.fetch(organization.id, 0) %></span>
                 <% end %>
               </li>

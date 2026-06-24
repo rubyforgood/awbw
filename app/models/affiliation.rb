@@ -1,16 +1,33 @@
 class Affiliation < ApplicationRecord
-  belongs_to :organization
+  # Standing title given to the "facilitator affiliation" we create on registration
+  # and org linking. Matches the `facilitators` scope / `facilitator?` predicate
+  # (both treat exactly "Facilitator" as canonical).
+  FACILITATOR_TITLE = "Facilitator".freeze
+
+  belongs_to :organization, inverse_of: :affiliations
   belongs_to :person, touch: true
+  # Which of the organization's addresses this person is affiliated with (optional).
+  belongs_to :organization_address, class_name: "Address", optional: true
 
   # Validations
   validates_presence_of :organization_id
+  validate :organization_address_belongs_to_organization
 
-  scope :active, -> {
+  # Not flagged inactive and not past its end date. Includes affiliations whose
+  # start_date is still in the future (e.g. a Facilitator affiliation dated to an
+  # upcoming training's month) — they are "pending" but counted here.
+  scope :active_or_pending, -> {
     where(inactive: false)
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)
   }
 
-  scope :facilitators, -> { where("title LIKE ?", "%facilitator%") }
+  scope :active, -> { active_or_pending }
+
+  # Only the exact, case-sensitive title "Facilitator" counts — variants like
+  # "Lead Facilitator" or "facilitator" are deliberately excluded. BINARY forces
+  # a case-sensitive comparison under MySQL's default case-insensitive collation;
+  # TRIM mirrors the in-memory #facilitator? strip so stray whitespace still matches.
+  scope :facilitators, -> { where("BINARY TRIM(title) = ?", "Facilitator") }
 
   before_validation :skip_if_duplicate
   before_save :set_inactive_from_dates
@@ -20,8 +37,12 @@ class Affiliation < ApplicationRecord
   after_destroy :sync_organization_affiliation_dates
 
   # Methods
+  # A facilitator affiliation is one whose title is *exactly* "Facilitator"
+  # (trimmed, case-sensitive). Variants like "Lead Facilitator" or "facilitator"
+  # are deliberately excluded. Mirrors the .facilitators scope so in-memory and
+  # SQL checks agree.
   def facilitator?
-    title.to_s.downcase.include?("facilitator")
+    title.to_s.strip == "Facilitator"
   end
 
   # Current: not flagged inactive and not past its end date. Mirrors the `active`
@@ -36,6 +57,16 @@ class Affiliation < ApplicationRecord
   end
 
   private
+
+  # The linked address must be one of this affiliation's organization's own
+  # addresses — not a stray address or another org's / person's address.
+  def organization_address_belongs_to_organization
+    return if organization_address.blank?
+
+    valid = organization_address.addressable_type == "Organization" &&
+            organization_address.addressable_id == organization_id
+    errors.add(:organization_address_id, "must be an address of this organization") unless valid
+  end
 
   def skip_if_duplicate
     scope = Affiliation.where(

@@ -54,7 +54,7 @@ class PeopleController < ApplicationController
         @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
       when "events"
-        @event_registrations = @person.event_registrations.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
+        @event_registrations = @person.event_registrations.active.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
       when "workshop_ideas"
         @workshop_ideas = @person.user&.workshop_ideas_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
@@ -152,7 +152,7 @@ class PeopleController < ApplicationController
       { avatar_attachment: :blob },
       { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
-      affiliations: { organization: :logo_attachment }
+      affiliations: { organization: [ :logo_attachment, :addresses ] }
     ).find(params[:id]).decorate
     authorize! @person
     set_form_variables
@@ -211,7 +211,7 @@ class PeopleController < ApplicationController
 
     if @person.save
       assign_associations(@person) if params.dig(:person, :category_ids)
-      redirect_to @person, notice: "Person was successfully updated."
+      redirect_to person_update_return_path, notice: "Person was successfully updated."
     else
       set_form_variables
       render :edit, status: :unprocessable_content
@@ -370,6 +370,17 @@ class PeopleController < ApplicationController
     }
   end
 
+  # Where to send the admin after a successful update. Defaults to the person's
+  # profile, but returns to the registration org-linking page when the edit was
+  # opened from one of its linked-org cards (preserving that page's own return_to).
+  def person_update_return_path
+    if params[:return_to] == "registration_link" && params[:event_registration_id].present?
+      link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence)
+    else
+      @person
+    end
+  end
+
   # Only allow a list of trusted parameters through.
   def person_params
     params.require(:person).permit(
@@ -382,12 +393,17 @@ class PeopleController < ApplicationController
       :date_of_birth,
       :license_number,
       :license_type,
+      :credentials,
+      :racial_ethnic_identity,
+      :filemaker_code,
+      :mailing_list_consented,
       :bio, :shoutout_text, :notes,
       :display_name_preference,
       :pronouns,
       :profile_show_name_preference,
       :profile_is_searchable,
       :profile_show_pronouns,
+      :profile_show_credentials,
       :profile_show_bio,
       :profile_show_email,
       :profile_show_phone,
@@ -471,6 +487,7 @@ class PeopleController < ApplicationController
         :primary_contact,
         :start_date,
         :end_date,
+        :organization_address_id,
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],

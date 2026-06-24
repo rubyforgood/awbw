@@ -17,12 +17,40 @@ RSpec.describe EventMailer, type: :mailer do
       expect(mail.subject).to include(event_registration.event.title)
     end
 
+    context "when a scholarship was not requested" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: false) }
+
+      it "labels the subject as a plain event registration" do
+        expect(mail.subject).to include("Event registration received")
+        expect(mail.subject).not_to include("scholarship")
+      end
+    end
+
+    context "when a scholarship was requested" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: true) }
+
+      it "labels the subject as an event scholarship registration" do
+        expect(mail.subject).to include("Event scholarship registration received")
+      end
+    end
+
     it "includes the event title in the body" do
       expect(mail.body.encoded).to include(event_registration.event.title)
     end
 
     it "includes the registrant name in the body" do
       expect(mail.body.encoded).to include(event_registration.registrant.full_name)
+    end
+
+    it "links to the registrant's ticket" do
+      expect(mail.body.encoded).to include("/registration/#{event_registration.slug}")
+    end
+
+    it "offers only the ticket call to action, not a separate event link" do
+      body = mail.body.encoded
+
+      expect(body).to include("View ticket")
+      expect(body).not_to include("View event")
     end
 
     context "when the event has a rhino_description" do
@@ -43,6 +71,23 @@ RSpec.describe EventMailer, type: :mailer do
 
       it "does not include the Details section" do
         expect(mail.body.encoded).not_to include("<strong>Details</strong>")
+      end
+    end
+
+    context "for a virtual event" do
+      let(:event) { create(:event, videoconference_url: "https://zoom.us/j/123", videoconference_label: "Zoom", videoconference_passcode: "secret123") }
+      let(:event_registration) { create(:event_registration, event: event) }
+
+      it "shows the platform label as plain text" do
+        expect(mail.html_part.body.encoded).to include("Zoom")
+        expect(mail.text_part.body.encoded).to include("Zoom")
+      end
+
+      it "does not include the join link, meeting ID, or passcode" do
+        body = mail.body.encoded
+        expect(body).not_to include("https://zoom.us/j/123")
+        expect(body).not_to include("secret123")
+        expect(body).not_to include("Meeting ID")
       end
     end
   end
@@ -79,6 +124,11 @@ RSpec.describe EventMailer, type: :mailer do
       body = mail.body.encoded
       expect(body).to include("4")
       expect(body).to include("Check")
+    end
+
+    it "includes the submitted payment total in the body" do
+      # Event cost (1099¢) × 4 attendees = $43.96
+      expect(mail.body.encoded).to include("$43.96")
     end
   end
 

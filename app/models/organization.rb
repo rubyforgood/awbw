@@ -6,7 +6,7 @@ class Organization < ApplicationRecord
   belongs_to :windows_type, optional: true
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
-  has_many :affiliations, dependent: :restrict_with_error
+  has_many :affiliations, dependent: :restrict_with_error, inverse_of: :organization
   has_many :event_registration_organizations, dependent: :restrict_with_error
   has_many :event_registrations, through: :event_registration_organizations
   has_many :people, through: :affiliations
@@ -38,7 +38,6 @@ class Organization < ApplicationRecord
   validates :name, presence: true
   validates :organization_status_id, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true
-  validates :website_url, format: { with: /\Ahttps?:\/\/\S+\z/i, message: "must start with http:// or https://" }, allow_blank: true
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
 
   # Nested attributes
@@ -122,12 +121,23 @@ class Organization < ApplicationRecord
   #   :reinstated — the organization had facilitator affiliation(s) before, but
   #                 they all ended before the reference one started (a lapse)
   def facilitator_status(current_affiliation)
-    reference_start = current_affiliation.start_date || Date.current
+    facilitator_status_on(current_affiliation.start_date, excluding_affiliation_id: current_affiliation.id)
+  end
+
+  # Classifies this organization relative to a reference DATE rather than a
+  # reference affiliation — used when a registrant has no facilitator affiliation
+  # yet (admins create those manually), so we ask "if they got one today, would
+  # this org be new/ongoing/reinstated?":
+  #   :new        — the org has no facilitator affiliation starting before the date
+  #   :ongoing    — an earlier facilitator affiliation is still active on the date
+  #   :reinstated — earlier facilitator affiliation(s) existed but all ended first
+  def facilitator_status_on(reference_date, excluding_affiliation_id: nil)
+    reference_start = reference_date || Date.current
 
     earlier = affiliations.facilitators
-      .where.not(id: current_affiliation.id)
       .where.not(start_date: nil)
       .where("affiliations.start_date < ?", reference_start)
+    earlier = earlier.where.not(id: excluding_affiliation_id) if excluding_affiliation_id
 
     return :new unless earlier.exists?
 
@@ -187,6 +197,21 @@ class Organization < ApplicationRecord
     prior.any? ? "Ongoing" : "New"
   end
 
+  # Bulk program status (:new / :ongoing / :reinstated) for the given org ids,
+  # keyed by id — the recipient-less form of #program_status, computed with
+  # aggregate queries so list pages avoid loading each org's affiliations. An org
+  # with no facilitator affiliations is :new; with facilitators but none
+  # currently active it is :reinstated; otherwise :ongoing.
+  def self.program_statuses_by_id(org_ids)
+    facilitator_scope = Affiliation.facilitators.where(organization_id: org_ids)
+    with_facilitators = facilitator_scope.distinct.pluck(:organization_id).to_set
+    with_active = facilitator_scope.active.distinct.pluck(:organization_id).to_set
+    org_ids.index_with do |id|
+      next :new if with_facilitators.exclude?(id)
+      with_active.include?(id) ? :ongoing : :reinstated
+    end
+  end
+
   def type_name
     "#{name} #{ " (#{windows_type.short_name})" if windows_type}"
   end
@@ -241,6 +266,18 @@ class Organization < ApplicationRecord
   end
 
   remote_searchable_by :name
+
+  # Returns the website as a clickable, scheme-qualified URL — prepending
+  # https:// to a bare domain like "awbw.org" — or nil when the value is blank or
+  # not a usable web address. Drives the external links on the org profile and
+  # recipients pages without forcing users to type a scheme.
+  def website_link_url
+    return if website_url.blank?
+    candidate = website_url.strip
+    candidate = "https://#{candidate}" unless candidate.match?(/\Ahttps?:\/\//i)
+    uri = URI.parse(candidate) rescue nil
+    candidate if uri.is_a?(URI::HTTP) && uri.host.present?
+  end
 
   private
 

@@ -82,7 +82,7 @@
             <% end %>
           <% end %>
           <% if @organization.profile_show_website? && @organization.website_url.present? %>
-            <% safe_url = URI.parse(@organization.website_url).to_s rescue nil %>
+            <% safe_url = @organization.website_link_url %>
             <% if safe_url.present? %>
               <span class="text-gray-600">
                 🌎 <%= link_to @organization.website_url, safe_url,
@@ -218,22 +218,17 @@
           <%# end %>
         </div>
       <% end %>
-      <!-- Events registered -->
+      <!-- Events attended -->
     <% if @organization.profile_show_events_registered? %>
       <div class="mt-10">
         <h2 class="text-lg font-semibold text-gray-800 mb-2">
-          Events hosted
+          Events attended
         </h2>
-        <%# if Event.all.any? %>
-        <%# Event.all.each do |event| %>
-          <%# event_name = "#{event.title} - #{event.start_date.strftime("%b %Y") rescue nil}" %>
-          <%#= link_to event_name, event_path(event), class: "btn btn-secondary-outline" %>
-          <%# end %>
-          <%# else %>
-          <p class="text-gray-500 italic">No events recorded.</p>
-          <%# end %>
-        </div>
-      <% end %>
+        <%= turbo_frame_tag "organization_events_section", src: organization_path(@organization, section: "events"), loading: :lazy do %>
+          <p class="text-gray-500 italic">Loading events...</p>
+        <% end %>
+      </div>
+    <% end %>
     <hr class="my-8 border-gray-200">
     <% if allowed_to?(:show_workshop_logs?, @organization) %>
         <div class="organization-only <%= DomainTheme.bg_class_for(:user_only) %>

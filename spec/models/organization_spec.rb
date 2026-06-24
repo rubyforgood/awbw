@@ -22,6 +22,39 @@ RSpec.describe Organization do
     it { should allow_value("").for(:email) }
     it { should allow_value(nil).for(:email) }
     it { should_not allow_value("not-an-email").for(:email).with_message("must be a valid email address") }
+
+    it "stores the website_url verbatim without requiring a scheme" do
+      org = build(:organization, website_url: "awbw.org")
+      org.valid?
+      expect(org.errors[:website_url]).to be_empty
+      expect(org.website_url).to eq("awbw.org")
+    end
+  end
+
+  describe "#website_link_url" do
+    it "prepends https:// to a bare domain" do
+      org = build(:organization, website_url: "awbw.org")
+      expect(org.website_link_url).to eq("https://awbw.org")
+    end
+
+    it "leaves an existing scheme unchanged" do
+      org = build(:organization, website_url: "http://awbw.org")
+      expect(org.website_link_url).to eq("http://awbw.org")
+    end
+
+    it "trims surrounding whitespace" do
+      org = build(:organization, website_url: "  awbw.org  ")
+      expect(org.website_link_url).to eq("https://awbw.org")
+    end
+
+    it "is nil when blank" do
+      expect(build(:organization, website_url: "").website_link_url).to be_nil
+      expect(build(:organization, website_url: nil).website_link_url).to be_nil
+    end
+
+    it "is nil when the value can't form a usable web address" do
+      expect(build(:organization, website_url: "not a url").website_link_url).to be_nil
+    end
   end
 
   it 'is valid with valid attributes' do
@@ -77,6 +110,33 @@ RSpec.describe Organization do
       create(:affiliation, organization: organization, title: "Volunteer",
              start_date: Date.new(2020, 1, 1), end_date: nil)
       expect(organization.facilitator_status(current)).to eq(:new)
+    end
+  end
+
+  describe '#facilitator_status_on' do
+    let(:organization) { create(:organization) }
+    let(:reference_date) { Date.new(2026, 1, 1) }
+
+    it 'is :new when the org has no facilitator affiliation before the date' do
+      expect(organization.facilitator_status_on(reference_date)).to eq(:new)
+    end
+
+    it 'is :ongoing when an earlier facilitator affiliation is still active on the date' do
+      create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2024, 1, 1), end_date: nil)
+      expect(organization.facilitator_status_on(reference_date)).to eq(:ongoing)
+    end
+
+    it 'is :reinstated when all earlier facilitator affiliations ended before the date' do
+      create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2022, 1, 1), end_date: Date.new(2023, 1, 1))
+      expect(organization.facilitator_status_on(reference_date)).to eq(:reinstated)
+    end
+
+    it 'can exclude a specific affiliation from the classification' do
+      own = create(:affiliation, organization: organization, title: "Facilitator",
+             start_date: Date.new(2020, 1, 1), end_date: nil)
+      expect(organization.facilitator_status_on(reference_date, excluding_affiliation_id: own.id)).to eq(:new)
     end
   end
 
@@ -275,6 +335,33 @@ RSpec.describe Organization, "scholarship index helpers" do
 
     it "is New when the org has no facilitator affiliations" do
       expect(org.program_status(recipient)).to eq("New")
+    end
+  end
+
+  describe ".program_statuses_by_id" do
+    it "buckets each org by facilitator history, keyed by id" do
+      new_org = create(:organization)
+
+      ongoing_org = create(:organization)
+      create(:affiliation, organization: ongoing_org, person: create(:person), title: "Facilitator")
+
+      reinstate_org = create(:organization)
+      create(:affiliation, organization: reinstate_org, person: create(:person), title: "Facilitator", end_date: 1.year.ago.to_date)
+
+      ids = [ new_org.id, ongoing_org.id, reinstate_org.id ]
+
+      expect(Organization.program_statuses_by_id(ids)).to eq(
+        new_org.id => :new,
+        ongoing_org.id => :ongoing,
+        reinstate_org.id => :reinstated
+      )
+    end
+
+    it "treats a non-facilitator affiliation as New" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Member")
+
+      expect(Organization.program_statuses_by_id([ org.id ])).to eq(org.id => :new)
     end
   end
 end

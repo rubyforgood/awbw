@@ -4,6 +4,9 @@ class Address < ApplicationRecord
   CONTACT_TYPES = [ nil, "work", "personal", "mailing", "unknown" ].freeze
 
   belongs_to :addressable, polymorphic: true, touch: true
+  # Affiliations that point to this address as their organization address. Nullify
+  # the link rather than block deletion when an org address is removed.
+  has_many :affiliations, foreign_key: :organization_address_id, dependent: :nullify, inverse_of: :organization_address
 
   validates :locality, presence: true
   validates :city, presence: true

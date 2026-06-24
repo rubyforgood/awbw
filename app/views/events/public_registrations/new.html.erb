@@ -85,8 +85,10 @@
       <% end %>
       <%= render "forms/header", form: @form, event: @event %>
 
+      <%# The error flash band carries the form-errors controller so it scrolls
+          itself into view on connect after a failed submit. %>
       <% if flash[:alert] %>
-        <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 mb-6">
+        <div role="alert" class="scroll-mt-24 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 mb-6" data-controller="form-errors">
           <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
           <span><%= flash[:alert] %></span>
         </div>

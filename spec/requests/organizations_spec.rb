@@ -38,6 +38,24 @@ RSpec.describe "/organizations", type: :request do
       expect(response).to be_successful
     end
 
+    it "shows single-letter program status badges per organization" do
+      create(:organization, name: "Brand New Org", organization_status: organization_status)
+
+      ongoing_org = create(:organization, name: "Ongoing Org", organization_status: organization_status)
+      create(:affiliation, organization: ongoing_org, person: create(:person), title: "Facilitator")
+
+      reinstate_org = create(:organization, name: "Reinstate Org", organization_status: organization_status)
+      create(:affiliation, organization: reinstate_org, person: create(:person), title: "Facilitator", end_date: 1.year.ago.to_date)
+
+      get organizations_url, headers: { "Turbo-Frame" => "organization_results" }
+
+      expect(response).to be_successful
+      page = Capybara.string(response.body)
+      expect(page).to have_css("span[title='New']", text: "N")
+      expect(page).to have_css("span[title='Ongoing']", text: "O")
+      expect(page).to have_css("span[title='Reinstated']", text: "R")
+    end
+
     it "renders the results frame with deduped age groups from affiliated people" do
       organization = Organization.create!(valid_attributes)
       age_type = create(:category_type, name: "AgeRange", published: true)
@@ -158,6 +176,17 @@ RSpec.describe "/organizations", type: :request do
       get edit_organization_url(organization)
       expect(response.body).to include("Monthly reports")
     end
+
+    it "shows the program status in the affiliations section" do
+      organization = Organization.create!(valid_attributes)
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator")
+
+      get edit_organization_url(organization)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_content("Program status")
+      expect(page).to have_css("span[title='Ongoing']", text: "O")
+    end
   end
 
   describe "POST /create" do
@@ -217,6 +246,25 @@ RSpec.describe "/organizations", type: :request do
         organization = Organization.create!(valid_attributes)
         patch organization_url(organization), params: { organization: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
+    context "linking an affiliation to an organization address" do
+      it "saves the chosen organization_address_id on the affiliation" do
+        organization = Organization.create!(valid_attributes)
+        address = create(:address, addressable: organization)
+        person = create(:person)
+        affiliation = create(:affiliation, organization: organization, person: person)
+
+        patch organization_url(organization), params: {
+          organization: {
+            affiliations_attributes: {
+              "0" => { id: affiliation.id, person_id: person.id, organization_address_id: address.id }
+            }
+          }
+        }
+
+        expect(affiliation.reload.organization_address_id).to eq(address.id)
       end
     end
   end

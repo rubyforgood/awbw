@@ -43,8 +43,13 @@ class EventDashboard
 
   # Professional-info answers shown in each recipient's header. The view falls
   # back to the person's profile (sectors / age-range tags) when these aren't on
-  # file as form answers.
-  HEADER_ANSWER_IDENTIFIERS = %w[primary_service_area primary_age_group].freeze
+  # file as form answers. Sector answers are normalized under the "sector" key
+  # (see #header_answers_by_applicant) so the view reads one key regardless of
+  # which sector field identifier the answer was stored under.
+  HEADER_ANSWER_IDENTIFIERS = (FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS + %w[primary_age_group]).freeze
+
+  # The key sector answers are filed under in the per-applicant header hash.
+  HEADER_SECTOR_KEY = "sector".freeze
 
   # Active registrants who requested a scholarship for this event, as Person
   # records sorted by display name. Sectors, age-range tags, and affiliations are
@@ -70,12 +75,20 @@ class EventDashboard
       .transform_values { |answers| dedupe_answers(answers) }
   end
 
-  # primary_service_area / primary_age_group answers for the recipients page
-  # header, keyed by Person id then by field identifier (one answer each). Same
-  # cross-submission gathering as scholarship_answers_by_applicant.
+  # Sector / primary_age_group answers for the recipients page header, keyed by
+  # Person id then by header key (one answer each). Sector answers (whichever
+  # sector field identifier they used) are filed under HEADER_SECTOR_KEY so the
+  # view reads a single, stable key. Same cross-submission gathering as
+  # scholarship_answers_by_applicant.
   def header_answers_by_applicant
     @header_answers_by_applicant ||= applicant_answers_for(HEADER_ANSWER_IDENTIFIERS)
-      .transform_values { |answers| answers.index_by { |answer| answer.form_field&.field_identifier } }
+      .transform_values { |answers| answers.index_by { |answer| header_answer_key(answer.form_field&.field_identifier) } }
+  end
+
+  # Normalizes a header answer's field identifier to its lookup key: every sector
+  # field collapses to HEADER_SECTOR_KEY; other identifiers pass through.
+  def header_answer_key(identifier)
+    identifier.in?(FormField::SECTOR_FIELD_IDENTIFIERS) ? HEADER_SECTOR_KEY : identifier
   end
 
   # A "shout out": a registrant the admin opted in (shoutout on their
@@ -365,7 +378,7 @@ class EventDashboard
 
   # Registrant ids per primary sector, for the chart's per-row drill-in links.
   def primary_sector_registrant_ids_by_sector
-    @primary_sector_registrant_ids_by_sector ||= primary_service_area_rows
+    @primary_sector_registrant_ids_by_sector ||= primary_sector_rows
       .group_by(&:last)
       .transform_values { |rows| rows.map(&:first).uniq }
   end
@@ -636,10 +649,15 @@ class EventDashboard
   # new.
   def program_status_for(organization)
     reference = registrant_affiliations_by_org[organization.id]
+      &.select(&:facilitator?)
       &.min_by { |affiliation| affiliation.start_date || Date.current }
-    reference ||= organization.affiliations.facilitators.where.not(start_date: nil).order(:start_date).first
-    return :new unless reference
-    organization.facilitator_status(reference)
+    return organization.facilitator_status(reference) if reference
+
+    # The registrant has no facilitator affiliation to this org yet (admins create
+    # those manually after the fact). Classify the org as of today rather than
+    # treating it as new by default, so an org that already has an active
+    # facilitator reads as :ongoing and a lapsed one as :reinstated.
+    organization.facilitator_status_on(Date.current)
   end
 
   # This event's active registrants' active affiliations, grouped by organization
@@ -671,7 +689,7 @@ class EventDashboard
       .sort_by(&:name)
   end
 
-  # The person's primary service area: the sector they marked primary, falling
+  # The person's primary sector: the sector they marked primary, falling
   # back to their first sector alphabetically. Nil when they have none.
   def primary_sector_name_for(person)
     person.sectorable_items_primary_first.first&.sector&.name
@@ -829,7 +847,7 @@ class EventDashboard
   # Distinct sector ids registrants named as their primary sector, limited
   # to sectors actually represented among registrants.
   def primary_sector_ids
-    @primary_sector_ids ||= primary_service_area_rows.map(&:last).uniq & registrant_sector_ids
+    @primary_sector_ids ||= primary_sector_rows.map(&:last).uniq & registrant_sector_ids
   end
 
   # Distinct sectors a registrant has as a tag without having named that sector as
@@ -837,7 +855,7 @@ class EventDashboard
   # primary for one registrant and additional for another.
   def additional_sector_ids
     @additional_sector_ids ||= begin
-      primary_pairs = primary_service_area_rows.to_set
+      primary_pairs = primary_sector_rows.to_set
       registrant_sector_pairs.reject { |pair| primary_pairs.include?(pair) }.map(&:last).uniq
     end
   end
@@ -851,10 +869,10 @@ class EventDashboard
   end
 
   # [ person_id, sector_id ] pairs from registrants' primary sector answers.
-  # Read from the single-select dropdown ("primary_service_area_single"); the
-  # checkbox "primary_service_area" field collects the Additional sectors.
-  def primary_service_area_rows
-    field = registration_form_field("primary_service_area_single")
+  # Read from the single-select dropdown (PRIMARY_SECTOR_FIELD_IDENTIFIERS); the
+  # multi-select checkbox field collects the Additional sectors.
+  def primary_sector_rows
+    field = registration_form_field(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
     return [] unless field
 
     FormAnswer

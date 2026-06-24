@@ -5,6 +5,27 @@ class EventDecorator < ApplicationDecorator
     URI.parse(videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call"
   end
 
+  # The meeting room pulled out of the join URL so registrants can dial in
+  # manually: the numeric ID for Zoom (".../j/1234567890") or the meeting code
+  # for Google Meet ("meet.google.com/abc-defg-hij"). Returns a { label:, value: }
+  # hash, or nil when the URL is blank or the platform isn't recognized.
+  def videoconference_room
+    return if videoconference_url.blank?
+
+    uri = URI.parse(videoconference_url)
+    host = uri.host.to_s.downcase
+
+    if host.end_with?("zoom.us")
+      id = uri.path[%r{/(?:j|wc/join|wc)/(\d+)}, 1]
+      id && { label: "Meeting ID", value: format_zoom_meeting_id(id) }
+    elsif host == "meet.google.com"
+      code = uri.path.delete_prefix("/").presence
+      code && { label: "Meeting code", value: code }
+    end
+  rescue URI::InvalidURIError
+    nil
+  end
+
   def display_image
     return primary_asset.file if primary_asset&.file&.attached?
 
@@ -41,33 +62,48 @@ class EventDecorator < ApplicationDecorator
     length ? description&.truncate(length) : description
   end
 
-  def calendar_links
+  # `show_videoconference_details` controls whether the join link/ID/passcode are
+  # carried into the calendar entry. Callers with a registration pass that
+  # registrant's gate (date + paid/intends); the default falls back to the
+  # event-level date gate for registration-less contexts.
+  def calendar_links(show_videoconference_details: object.videoconference_details_visible?)
     start_time   = object.start_date.utc.strftime("%Y%m%dT%H%M%SZ")
     end_time     = object.end_date.utc.strftime("%Y%m%dT%H%M%SZ")
     title_encoded = ERB::Util.url_encode(object.title)
 
-    has_url      = object.videoconference_url.present?
+    # The join URL doubles as the calendar location, so withhold it from there
+    # too until the details may be shared — a physical location (if any) takes
+    # its place, otherwise the entry is left without a location.
+    has_url      = object.videoconference_url.present? && show_videoconference_details
     has_location = object.location.present?
     location_name = has_location ? object.location.name : nil
 
     # If both: URL in location field, physical location in description
     # If only URL: URL in location field
     # If only location: location in location field
-    event_description = object.rhino_description.to_plain_text
+    # Prefer the admin-authored short description; fall back to a flattened
+    # version of the rich show-page description when it's blank.
+    event_description = object.short_description.presence || object.rhino_description.to_plain_text
 
     if has_url && has_location
       cal_location = object.videoconference_url
-      description  = "#{location_name}\n\n#{event_description}"
+      base_description = "#{location_name}\n\n#{event_description}"
     elsif has_url
       cal_location = object.videoconference_url
-      description  = event_description
+      base_description = event_description
     elsif has_location
       cal_location = location_name
-      description  = event_description
+      base_description = event_description
     else
       cal_location = nil
-      description  = event_description
+      base_description = event_description
     end
+
+    # Carry the join link, meeting ID/code, and passcode into the calendar entry
+    # so registrants have everything they need to connect straight from the event
+    # — but only once the details may be shared (date + paid/intends).
+    vc_details = videoconference_calendar_details if show_videoconference_details
+    description = [ vc_details, base_description ].compact_blank.join("\n\n")
 
     desc_encoded     = ERB::Util.url_encode(description)
     location_encoded = ERB::Util.url_encode(cal_location.to_s)
@@ -157,15 +193,6 @@ class EventDecorator < ApplicationDecorator
       t
     end
 
-    parts_for = lambda do |d, prefix: nil|
-      parts = []
-      parts << wrap.call(prefix, muted) if prefix
-      parts << "#{day.call(d)}, " if display_day
-      parts << "#{date.call(d)} @ " if display_date
-      parts << format_time.call(d)
-      h.safe_join(parts)
-    end
-
     tz_display = wrap.call(" #{tz_abbr}", muted)
 
     # --------------------------------------------------
@@ -199,20 +226,26 @@ class EventDecorator < ApplicationDecorator
     end
 
     # --------------------------------------------------
-    # DIFFERENT DAY → two lines
+    # DIFFERENT DAY → date range + per-day time range
+    # The event runs the same hours each day, so we show the date span and a
+    # single start-end time (e.g. "Mon-Wed, Apr 21-23 @ 9 am - 4:30 pm PST")
+    # rather than a continuous range that would imply an overnight event.
     # --------------------------------------------------
     if s.to_date != e.to_date
-      if inline
-        return h.safe_join(
-          [ parts_for.call(s), h.safe_join([ parts_for.call(e), tz_display ]) ],
-          " - "
-        )
+      date_part = if s.month == e.month && s.year == e.year
+        "#{date.call(s)}-#{e.strftime('%-d')}"
+      elsif s.year == e.year
+        "#{date.call(s)} - #{date.call(e)}"
       else
-        return h.safe_join(
-          [ parts_for.call(s), h.safe_join([ parts_for.call(e), tz_display ]) ],
-          h.tag.br
-        )
+        "#{s.strftime('%b %-d, %Y')} - #{e.strftime('%b %-d, %Y')}"
       end
+
+      parts = []
+      parts << "#{day.call(s)}-#{day.call(e)}, " if display_day
+      parts << "#{date_part} @ " if display_date
+      parts << "#{format_time.call(s)} - #{format_time.call(e)}"
+      parts << tz_display
+      return h.safe_join(parts)
     end
 
     # --------------------------------------------------
@@ -265,10 +298,7 @@ class EventDecorator < ApplicationDecorator
     return if cost_cents.blank?
     return "Free event" if cost_cents.zero?
 
-    dollars = cost_cents / 100
-    cents   = cost_cents % 100
-    formatted = cents.zero? ? "$#{dollars}" : "$#{dollars}.#{cents.to_s.rjust(2, '0')}"
-    "Cost: #{formatted}"
+    "Cost: #{MoneyFormatter.dollars_from_cents(cost_cents)}"
   end
 
   def content
@@ -295,6 +325,31 @@ class EventDecorator < ApplicationDecorator
   end
 
   private
+
+  # The videoconference connection block (join link, meeting ID/code, passcode)
+  # as plain text for embedding in calendar entries. Nil when there's no link.
+  # Whether it's actually embedded is the caller's call (see #calendar_links).
+  def videoconference_calendar_details
+    return if videoconference_url.blank?
+
+    lines = [ "Join on #{videoconference_domain}: #{videoconference_url}" ]
+    if (room = videoconference_room)
+      lines << "#{room[:label]}: #{room[:value]}"
+    end
+    lines << "Passcode: #{videoconference_passcode}" if videoconference_passcode.present?
+    lines.join("\n")
+  end
+
+  # Group Zoom meeting-ID digits the way Zoom's own UI does so they're easy to
+  # read aloud/type (e.g. "88285411273" → "882 8541 1273"). Unknown lengths are
+  # returned unchanged.
+  def format_zoom_meeting_id(id)
+    case id.length
+    when 11 then id.sub(/\A(\d{3})(\d{4})(\d{4})\z/, '\1 \2 \3')
+    when 10 then id.sub(/\A(\d{3})(\d{3})(\d{4})\z/, '\1 \2 \3')
+    else id
+    end
+  end
 
   def header_image
     return unless object.rhino_header.body.present?

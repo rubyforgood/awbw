@@ -12,6 +12,13 @@
            hover:bg-white hover:text-primary;
   }
 
+  /* The brand-red "pay" / register action button. Carries its own border/bg so
+     the invert-on-hover works without inline styles overriding it. */
+  .btn-accent {
+    @apply border-2 border-accent bg-accent text-white
+           hover:bg-white hover:text-accent;
+  }
+
   .btn-secondary {
     @apply border border-secondary bg-secondary text-white
            hover:bg-white hover:text-secondary;

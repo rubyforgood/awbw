@@ -67,7 +67,16 @@
       <% invoice.line_items.each do |item| %>
         <tr class="border-b border-gray-100">
           <td class="py-2 pr-3 whitespace-nowrap align-top"><%= item.date&.strftime("%m/%d/%y") %></td>
-          <td class="py-2 pr-3 align-top"><%= item.description %></td>
+          <td class="py-2 pr-3 align-top">
+            <%= item.description %>
+            <% if item.details.any? %>
+              <ul class="mt-1 text-xs text-gray-500 leading-relaxed">
+                <% item.details.each do |detail| %>
+                  <li><%= detail %></li>
+                <% end %>
+              </ul>
+            <% end %>
+          </td>
           <td class="py-2 px-3 text-right tabular-nums align-top"><%= item.quantity %></td>
           <td class="py-2 px-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(item.unit_price_cents) %></td>
           <td class="py-2 pl-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(item.amount_cents) %></td>

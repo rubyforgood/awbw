@@ -4,13 +4,13 @@ class RegistrationTicketCalloutsController < ApplicationController
 
   # Public detail page for a single registration ticket callout, linked from the
   # call-out on the registration ticket (mirrors the events#details / #ce_hours
-  # pages). When the callout has no description there is nothing to read, so fall
-  # back to the event page.
+  # pages). With no description and no linked resource there is nothing to show,
+  # so fall back to the event page.
   def show
-    authorize! @event, to: :show?
     @callout = @event.registration_ticket_callouts.find(params[:id])
+    authorize! @callout, to: :show?
 
-    if @callout.description.blank?
+    if @callout.description.blank? && @callout.resource.nil?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
     end
@@ -22,8 +22,8 @@ class RegistrationTicketCalloutsController < ApplicationController
   # new 1-based position for a single moved callout; the positioning gem reflows
   # the rest. Only event managers can reorder (matches editing the event).
   def update
-    authorize! @event, to: :manage?
     @callout = @event.registration_ticket_callouts.find(params[:id])
+    authorize! @callout, to: :update?
 
     if @callout.update(callout_params)
       head :ok

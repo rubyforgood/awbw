@@ -14,61 +14,75 @@
   <% end %>
 
   <div class="flex-1 min-w-0 space-y-3">
-    <div class="flex items-center gap-3">
-      <i class="w-6 shrink-0 text-center text-xl" data-callout-preview-target="leadingIcon" aria-hidden="true"></i>
+    <%# Two columns that collapse to one as the viewport narrows: the call-out's
+        identity (title + presentation) on the left, its page content on the right. %>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <%# LEFT: title, subtitle, and presentation (type, colour, icon) %>
+      <div class="flex items-start gap-3 min-w-0">
+        <i class="w-6 shrink-0 text-center text-xl pt-6" data-callout-preview-target="leadingIcon" aria-hidden="true"></i>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-w-0">
+        <div class="flex-1 min-w-0 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <%= f.label :title, "Title", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.text_field :title, required: true, placeholder: "e.g. Parking & directions",
+                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+            </div>
+            <div>
+              <%= f.label :subtitle, "Subtitle", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.text_field :subtitle, placeholder: "Short line shown under the title on the ticket",
+                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <%= f.label :callout_type, "Type", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.select :callout_type,
+                    RegistrationTicketCallout::CALLOUT_TYPES.map { |t| [ t.humanize, t ] },
+                    {},
+                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                    data: { callout_preview_target: "typeSelect", action: "callout-preview#update" } %>
+            </div>
+            <div>
+              <%= f.label :color_class, "Colour", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.select :color_class,
+                    DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
+                    { include_blank: "Default (by type)" },
+                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                    data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>
+            </div>
+            <div>
+              <%= f.label :icon_class, "Icon", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.text_field :icon_class, placeholder: "fa-solid fa-car",
+                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono",
+                    data: { callout_preview_target: "iconInput", action: "callout-preview#update" } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <%# RIGHT: the call-out's own page — its text and an optional linked resource %>
+      <div class="min-w-0 space-y-3">
         <div>
-          <%= f.label :title, "Title", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-          <%= f.text_field :title, required: true, placeholder: "e.g. Parking & directions",
+          <%= f.label :description, "Callout page text", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+          <p class="text-xs text-gray-500 mb-1">Shown on its own page. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Leave blank to keep the call-out from linking anywhere.</p>
+          <%= f.text_area :description, rows: 4,
+                placeholder: "e.g. <p>Enter through the north lot…</p>",
+                class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
+        </div>
+
+        <div>
+          <%= f.label :resource_id, "Linked resource", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+          <p class="text-xs text-gray-500 mb-1">Optional. Shows the resource below the content on the call-out's page (PDF first-page preview, etc.), with a download button when the resource has a downloadable file.</p>
+          <%= f.collection_select :resource_id, Resource.order(:title), :id, :title,
+                { include_blank: "None" },
                 class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
         </div>
-        <div>
-          <%= f.label :subtitle, "Subtitle", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-          <%= f.text_field :subtitle, placeholder: "Short line shown under the title on the ticket",
-                class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
-        </div>
-      </div>
-
-      <div class="w-6 shrink-0 text-center text-gray-300" data-callout-preview-target="arrow" aria-hidden="true" title="Links to its own page on the ticket">
-        <i class="fa-solid fa-arrow-right"></i>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pl-9 pr-9">
-      <div>
-        <%= f.label :callout_type, "Type", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-        <%= f.select :callout_type,
-              RegistrationTicketCallout::CALLOUT_TYPES.map { |t| [ t.humanize, t ] },
-              {},
-              class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
-              data: { callout_preview_target: "typeSelect", action: "callout-preview#update" } %>
-      </div>
-      <div>
-        <%= f.label :icon_class, "Icon", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-        <%= f.text_field :icon_class, placeholder: "fa-solid fa-car",
-              class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono",
-              data: { callout_preview_target: "iconInput", action: "callout-preview#update" } %>
-      </div>
-      <div>
-        <%= f.label :color_class, "Colour", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-        <%= f.select :color_class,
-              DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
-              { include_blank: "Default (by type)" },
-              class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
-              data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>
-      </div>
-    </div>
-
-    <div class="pl-9 pr-9">
-      <%= f.label :description, "Content", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-      <p class="text-xs text-gray-500 mb-1">Shown on its own page. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Leave blank to keep the call-out from linking anywhere.</p>
-      <%= f.text_area :description, rows: 4,
-            placeholder: "e.g. <p>Enter through the north lot…</p>",
-            class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
-    </div>
-
-    <div class="flex items-center justify-between pl-9 pr-9">
+    <div class="flex flex-wrap items-center justify-between gap-2">
       <label class="flex items-center gap-2 text-sm text-gray-600">
         <%= f.check_box :payment_access_gated, class: "rounded border-gray-300 text-purple-600" %>
         Only show once payment is made or committed

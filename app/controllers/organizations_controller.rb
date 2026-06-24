@@ -25,6 +25,7 @@ class OrganizationsController < ApplicationController
                                                 .group(:organization_id)
                                                 .distinct
                                                 .count(:person_id)
+      @program_statuses = Organization.program_statuses_by_id(org_ids)
 
       render :organization_results
     else
@@ -35,6 +36,15 @@ class OrganizationsController < ApplicationController
 
   def show
     authorize! @organization
+
+    if turbo_frame_request? && params[:section] == "events"
+      events = Event.where(id: @organization.event_registrations.active.select(:event_id))
+                    .includes(:primary_asset)
+                    .order(start_date: :desc)
+                    .paginate(page: params[:page], per_page: 9)
+      return render partial: "organizations/sections/events", locals: { organization: @organization, events: events }
+    end
+
     track_view(@organization)
 
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
@@ -229,6 +239,7 @@ class OrganizationsController < ApplicationController
         :title,
         :start_date,
         :end_date,
+        :organization_address_id,
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],

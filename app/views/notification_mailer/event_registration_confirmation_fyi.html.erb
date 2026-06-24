@@ -43,9 +43,11 @@
     </p>
   <% end %>
 
-  <% if @event.videoconference_url.present? %>
+  <%# Virtual events show only the platform label (e.g. "Zoom") — the join link,
+      meeting ID, and passcode are withheld and live on the ticket pages. %>
+  <% if event_platform_label(@event).present? %>
     <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
-      <a href="<%= @event.videoconference_url %>" style="color: #374151; text-decoration: underline;">Join us on <%= @event.decorate.videoconference_domain %></a>
+      <%= event_platform_label(@event) %>
     </p>
   <% end %>
 </div>

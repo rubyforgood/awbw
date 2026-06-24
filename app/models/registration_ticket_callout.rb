@@ -11,7 +11,17 @@ class RegistrationTicketCallout < ApplicationRecord
   DEFAULT_ICONS = { "action" => "fa-solid fa-arrow-right", "reference" => "fa-solid fa-circle-info" }.freeze
   DEFAULT_COLORS = { "action" => "orange", "reference" => "indigo" }.freeze
 
+  # New callouts start with the arrow icon pre-filled (the "action" default) so
+  # admins see a sensible value rather than an empty field. Loaded records keep
+  # their stored value; a blank one still falls back via #display_icon_class.
+  attribute :icon_class, :string, default: -> { DEFAULT_ICONS["action"] }
+
   belongs_to :event
+
+  # Optionally links the callout to a Resource. When present, the callout's
+  # detail page renders the resource's display (PDF first-page preview, etc.)
+  # and a download button beneath the callout's own title/subtitle/content.
+  belongs_to :resource, optional: true
 
   # Per-event ordering, drag-reordered after save via the shared `sortable`
   # Stimulus controller (a per-row PUT to #update). The gem reflows the other

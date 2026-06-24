@@ -48,12 +48,12 @@
         html_type = case field.field_identifier
                      when /email(?!_type)/ then "email"
                      when "phone" then "tel"
-                     when "agency_website" then "url"
                      else
                        field.number_integer? ? "number" : "text"
                      end
         extra_attrs = []
         extra_attrs << 'min="1" step="1" pattern="[0-9]*" inputmode="numeric"' if field.number_integer?
+        extra_attrs << 'inputmode="url"' if field.field_identifier == "agency_website"
         extra_attrs << %(maxlength="#{field.effective_max_characters}") if field.effective_max_characters
       %>
       <input type="<%= html_type %>"
@@ -74,7 +74,7 @@
               <%= "required" if field.required %>><%= value %></textarea>
 
   <% when "single_select_radio" %>
-    <%# Dynamic fields (e.g. primary_service_area) source options from Sector/Category
+    <%# Dynamic fields (e.g. additional_sectors) source options from Sector/Category
         data and store none of their own, so fall back to those when present. %>
     <% radio_options = dynamic_form_field_options(field) ||
          field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
@@ -110,7 +110,7 @@
     <% end %>
 
   <% when "single_select_dropdown" %>
-    <%# Dynamic fields (e.g. primary_service_area_single) source options from
+    <%# Dynamic fields (e.g. primary_sector_single) source options from
         Sector/Category data; everything else uses the field's own stored options. %>
     <%# Dropdowns have no free-text input, so the "Other" option is omitted here.
         Named specify options keep meaning as a bare choice, so they stay. %>
@@ -133,7 +133,7 @@
   <% when "multi_select_checkbox" %>
     <% checkbox_name = "public_registration[form_fields][#{field.id}][]" %>
     <% selected_values = Array(value) %>
-    <%# Dynamic fields (e.g. primary_service_area) source options from Sector/Category
+    <%# Dynamic fields (e.g. additional_sectors) source options from Sector/Category
         data; everything else uses the field's own stored answer options. Sector and
         Category options carry an optional description, shown as subtext under the label. %>
     <% checkbox_options = dynamic_form_field_options(field) ||

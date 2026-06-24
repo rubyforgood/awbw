@@ -27,20 +27,21 @@
   </div>
 
   <% if @dashboard.scholarship_applicants.any? %>
-    <div data-controller="expandable-cards scholarship-status-toggle">
+    <div data-controller="expandable-cards scholarship-status-toggle"
+         data-scholarship-status-toggle-shown-value="true">
       <%# Controls — show/hide scholarship status for all recipients, and expand/collapse all %>
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4 print:hidden">
         <%# Show / hide each recipient's awarded amount + tasks-completed status %>
-        <button type="button" role="switch" aria-checked="false"
+        <button type="button" role="switch" aria-checked="true"
                 data-action="scholarship-status-toggle#toggle"
                 data-scholarship-status-toggle-target="switch"
                 class="group inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800">
-          <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-gray-300 transition-colors"
+          <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-fuchsia-600 transition-colors"
                 data-scholarship-status-toggle-target="track">
-            <span class="inline-block h-4 w-4 translate-x-0.5 transform rounded-full bg-white shadow transition-transform"
+            <span class="inline-block h-4 w-4 translate-x-[1.125rem] transform rounded-full bg-white shadow transition-transform"
                   data-scholarship-status-toggle-target="knob"></span>
           </span>
-          <span data-scholarship-status-toggle-target="label">Show scholarship status</span>
+          <span data-scholarship-status-toggle-target="label">Hide scholarship status</span>
         </button>
         <%# Expand / collapse all %>
         <button type="button" data-action="expandable-cards#toggleAll"
@@ -55,10 +56,10 @@
         <% participant_slug = @dashboard.registration_slug_by_registrant[person.id] %>
         <% answers = (answers_by_applicant[person.id] || []).reject { |a| a.form_field&.field_identifier == "scholarship_eligibility" } %>
         <% header = header_answers[person.id] || {} %>
-        <% service_area_answer = header["primary_service_area"] %>
+        <% sector_answer = header[EventDashboard::HEADER_SECTOR_KEY] %>
         <% age_group_answer = header["primary_age_group"] %>
         <%# Prefer the registrant's form answers; fall back to their profile data. %>
-        <% service_area_text = resolve_answer_text(service_area_answer&.form_field, service_area_answer&.submitted_answer).presence || person.sectors.map(&:name).join(", ").presence %>
+        <% sector_text = resolve_answer_text(sector_answer&.form_field, sector_answer&.submitted_answer).presence || person.sectors.map(&:name).join(", ").presence %>
         <% age_group_text = resolve_answer_text(age_group_answer&.form_field, age_group_answer&.submitted_answer).presence || person.categories.select { |c| c.category_type&.name == "AgeRange" }.map(&:name).join(", ").presence %>
         <%# The affiliation active at the time of the event, excluding facilitator roles. %>
         <% recipient_affiliations = person.affiliations.select { |a|
@@ -124,7 +125,7 @@
                 </div>
 
                 <%# Serves / Ages — parallel with the name %>
-                <% if has_sectors || service_area_text.present? || has_age_groups || age_group_text.present? %>
+                <% if has_sectors || sector_text.present? || has_age_groups || age_group_text.present? %>
                   <div class="flex flex-wrap items-center gap-x-8 gap-y-2">
                     <% if has_sectors %>
                       <div class="flex flex-wrap items-center gap-2">
@@ -133,10 +134,10 @@
                           <%= render "sectors/tagging_label", sector: si.sector, is_primary: si.is_primary? %>
                         <% end %>
                       </div>
-                    <% elsif service_area_text.present? %>
+                    <% elsif sector_text.present? %>
                       <div class="text-sm text-gray-600">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Serves</span>
-                        <%= service_area_text %>
+                        <%= sector_text %>
                       </div>
                     <% end %>
                     <% if has_age_groups %>
@@ -161,7 +162,7 @@
               stays visible regardless of the card's expand/collapse state. %>
           <% scholarship = @dashboard.scholarship_by_recipient[person.id] %>
           <% if scholarship %>
-            <div class="hidden px-5 py-3 border-b <%= DomainTheme.border_class_for(:scholarships) %> bg-gray-50"
+            <div class="px-5 py-3 border-b <%= DomainTheme.border_class_for(:scholarships) %> bg-gray-50"
                  data-scholarship-status-toggle-target="status">
               <div class="flex flex-wrap items-center gap-3">
                 <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Scholarship</span>
@@ -176,6 +177,14 @@
                   </span>
                 <% end %>
                 <%= render "scholarships/tasks_status", scholarship: scholarship %>
+                <% if allowed_to?(:edit?, scholarship) %>
+                  <%= link_to edit_scholarship_path(scholarship, return_to: "recipients", participant: participant_slug),
+                              class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                              target: "_blank", rel: "noopener" do %>
+                    Edit
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+                  <% end %>
+                <% end %>
               </div>
             </div>
           <% end %>
@@ -220,7 +229,7 @@
                 otherwise to its profile page. %>
             <div class="sm:col-span-1">
               <% if (organization = shoutout.organization) %>
-                <% website = organization.website_url.presence && (URI.parse(organization.website_url).to_s rescue nil) %>
+                <% website = organization.website_link_url %>
                 <% if website %>
                   <%= link_to organization.name, website, target: "_blank", rel: "noopener noreferrer", class: org_link_class %>
                 <% else %>

@@ -1,0 +1,32 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Videoconference — #{@event.title}") %>
+<%= render layout: "events/callouts/callout_page", locals: { title: "Videoconference" } do %>
+  <div class="space-y-6">
+    <% if @event.videoconference_url.present? %>
+      <% if @event_registration.videoconference_details_visible? %>
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Join link</p>
+          <%= link_to @event.videoconference_url, target: "_blank", rel: "noopener",
+                      class: "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700" do %>
+            <i class="fa-solid fa-video"></i> Join on <%= @event.videoconference_domain %>
+          <% end %>
+          <p class="mt-2 text-xs text-gray-500 break-all"><%= @event.videoconference_url %></p>
+          <%= render "events/videoconference_connection", event: @event %>
+        </div>
+      <% elsif !@event_registration.payment_access_granted? %>
+        <div class="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          The videoconference link unlocks once your payment is on file. Make your payment from your ticket to gain access.
+        </div>
+      <% else %>
+        <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-600">
+          The videoconference link will be available here about a week before the event.
+        </div>
+      <% end %>
+    <% end %>
+
+    <div class="border-t border-gray-100 pt-5">
+      <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Add to your calendar</p>
+      <div class="flex flex-wrap gap-1 items-center text-sm text-blue-600 font-medium"><%= @event.calendar_links(show_videoconference_details: @event_registration.videoconference_details_visible?) %></div>
+    </div>
+  </div>
+<% end %>

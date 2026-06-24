@@ -165,6 +165,33 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("+ Add option")
     end
 
+    it "shows payment-method options read-only (no editable inputs) without the admin override" do
+      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+      payment_field = form.form_fields.find_by(field_identifier: "payment_method")
+      expect(payment_field).to be_present
+
+      get edit_form_path(form)
+
+      # The options are still shown...
+      FormBuilderService::PAYMENT_METHOD_OPTIONS.each do |option|
+        expect(response.body).to include(option)
+      end
+      # ...but not as editable inputs, and they can't be added/removed.
+      expect(response.body).not_to match(/payment_method.{0,600}\[option_name\]/m)
+      expect(response.body).not_to match(/payment_method.{0,600}\+ Add option/m)
+      # A note explains why they're locked.
+      expect(response.body).to include("tied to system logic")
+    end
+
+    it "renders payment-method options as editable inputs with ?admin=true" do
+      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+
+      get edit_form_path(form, admin: "true")
+
+      expect(response.body).to include("[option_name]")
+      expect(response.body).to include("+ Add option")
+    end
+
     it "shows an option-source badge linking to the managed list for dynamic fields" do
       type = CategoryType.create!(name: "AgeRange", published: true)
       form = create(:form, :standalone)
@@ -413,6 +440,16 @@ RSpec.describe "Forms", type: :request do
         form: { form_fields_attributes: { "0" => { id: field.id, hint_text: "Include your area code" } } }
       }
       expect(field.reload.hint_text).to eq("Include your area code")
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
+    it "saves the field_identifier for a field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, name: "Pick a payment method")
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { id: field.id, field_identifier: "payment_method" } } }
+      }
+      expect(field.reload.field_identifier).to eq("payment_method")
       expect(response).to redirect_to(edit_form_path(form))
     end
 

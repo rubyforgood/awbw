@@ -47,6 +47,7 @@ module Events
       if @field_errors.any?
         @form_fields = visible_form_fields
         @event = @event.decorate
+        flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
         render :new, status: :unprocessable_content
         return
       end
@@ -58,7 +59,9 @@ module Events
         form: @form,
         form_params: registration_params,
         scholarship_requested: @scholarship,
-        person: current_user&.person
+        person: current_user&.person,
+        scholarship_form: @scholarship_form,
+        scholarship_params: scholarship_params
       )
 
       if result.success?
@@ -74,7 +77,8 @@ module Events
       else
         @form_fields = visible_form_fields
         @event = @event.decorate
-        flash.now[:alert] = result.errors.join(", ")
+        flash.now[:error] = result.errors.join(", ")
+        flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
         render :new, status: :unprocessable_content
       end
     end
@@ -99,7 +103,15 @@ module Events
         return
       end
 
-      @form_submission = @form.form_submissions.find_by(person: person)
+      # A specific submission can be requested by id (a registrant may have more
+      # than one); scope it to this form and person so the id can't reach another
+      # person's submission. Otherwise show their first submission for the form.
+      submissions = @form.form_submissions.where(person: person)
+      @form_submission = if params[:form_submission_id].present?
+        submissions.find_by(id: params[:form_submission_id])
+      else
+        submissions.first
+      end
       unless @form_submission
         redirect_to event_path(@event), alert: "No registration form submission found."
         return
@@ -107,6 +119,9 @@ module Events
 
       @form_fields = visible_form_fields
       @responses = @form_submission.form_answers.index_by(&:form_field_id)
+
+      load_scholarship_submission(person)
+
       @event = @event.decorate
     end
 
@@ -156,6 +171,26 @@ module Events
       @event.registration_form
     end
 
+    # Surface the dedicated scholarship form's application in its own card on the
+    # view-submission page when the registrant filled it out. Answers are gathered
+    # by field identifier (they may live on the scholarship submission or on the
+    # registration submission), so a registrant who answered the questions while
+    # registering still sees them. Only set when answers are on file, so plain
+    # registrations render nothing. Embedded-section scholarship questions need no
+    # separate card — they already render inline with the registration answers.
+    def load_scholarship_submission(person)
+      scholarship_form = @event.scholarship_form
+      return unless scholarship_form
+
+      application = ScholarshipApplication.new(event: @event, person: person)
+      return unless application.answered?
+
+      @scholarship_submission = application.submission
+      @scholarship_form = scholarship_form
+      @scholarship_fields = scholarship_form.form_fields.reorder(position: :asc)
+      @scholarship_responses = application.answers_by_field_id
+    end
+
     def scholarship_mode?
       params[:scholarship_requested] == "true"
     end
@@ -171,28 +206,6 @@ module Events
       end
 
       [ registration, scholarship ]
-    end
-
-    def create_or_update_scholarship_submission(person, scholarship_params)
-      scholarship_form = @event.scholarship_form
-      return unless scholarship_form
-
-      submission = FormSubmission.find_or_create_by!(
-        person: person, form: scholarship_form, role: "scholarship"
-      ) do |record|
-        record.event = @event
-      end
-
-      scholarship_params.each do |field_id, raw_value|
-        field = scholarship_form.form_fields.find_by(id: field_id)
-        next unless field
-        next if field.group_header?
-
-        text = raw_value.is_a?(Array) ? raw_value.reject(&:blank?).join(", ") : raw_value.to_s
-
-        record = submission.form_answers.find_or_initialize_by(form_field: field)
-        record.update!(submitted_answer: text, question_name_when_answered: field.name)
-      end
     end
 
     def visible_form_fields

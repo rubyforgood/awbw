@@ -1,13 +1,14 @@
 class Sector < ApplicationRecord
   include NameFilterable, Publishable
-  # Canonical service-area sector tags, in display order. "Other" is kept at the end
-  # as the catch-all free-text fallback for additional service areas (see
+  # Canonical sector tags, in display order. "Other" is kept at the end
+  # as the catch-all free-text fallback for additional sectors (see
   # OTHER_SECTOR_NAME below) — it isn't a selectable tag itself. Descriptions for
   # these (the parenthetical clarifications) live in db/seeds.rb.
   SECTOR_TYPES = [
     "Batterers Intervention",
     "Child Abuse/Neglect",
     "Climate/Environmental",
+    "Community Building",
     "Community Violence",
     "Court/Legal System",
     "Disability Services",
@@ -27,7 +28,7 @@ class Sector < ApplicationRecord
     "Military/Veterans",
     "Private Practice/Sole Proprietor",
     "Racial/Social Justice",
-    "Religious/Faith Based",
+    "Religious/Faith-Based",
     "Reproductive Services",
     "Restorative/Transformative Justice",
     "Self-Care/Personal Growth",
@@ -38,8 +39,8 @@ class Sector < ApplicationRecord
     "Other"
   ]
 
-  # The catch-all sector. Offered for "additional" service areas but not as a
-  # respondent's single "primary" service area.
+  # The catch-all sector. Offered for "additional" sectors but not as a
+  # respondent's single "primary" sector.
   OTHER_SECTOR_NAME = "Other"
 
   STORY_DISPLAY_TEXT = "Which sectors does this story fit into?"
@@ -70,6 +71,13 @@ class Sector < ApplicationRecord
   end
   scope :excluding_other, -> { where.not(name: OTHER_SECTOR_NAME) }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
+  scope :taggings_presence, ->(value) do
+    case value
+    when "with" then has_taggings
+    when "without" then where.missing(:sectorable_items)
+    else all
+    end
+  end
   scope :has_published_taggings, -> {
     subqueries = Tag::TAGGABLE_META.map do |_key, data|
       klass = data[:klass]
@@ -89,6 +97,7 @@ class Sector < ApplicationRecord
     filtered = filtered.sector_ids(params[:sector_ids]) if params[:sector_ids].present?
     filtered = filtered.published if params[:published] == "true"
     filtered = filtered.where(published: false) if params[:published] == "false"
+    filtered = filtered.taggings_presence(params[:has_taggings])
     filtered
   end
 

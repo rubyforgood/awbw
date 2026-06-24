@@ -7,7 +7,6 @@ class EventMailer < ApplicationMailer
     @notification_type = "Event registration confirmation"
 
     @time_zone = @person.user&.time_zone || Time.zone.name
-    @event_url = event_url(@event, reg: @event_registration.slug)
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
     @organization_website  = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
@@ -15,7 +14,7 @@ class EventMailer < ApplicationMailer
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW Portal: Event registration confirmed for #{@event.title}"
+      subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} received for #{@event.title}"
     )
   end
 
@@ -25,6 +24,9 @@ class EventMailer < ApplicationMailer
     @event = form_submission.event&.decorate
     @answers = form_submission.answers_by_identifier
     @attendees = form_submission.bulk_payment_attendees
+    # Expected total (event cost × attendee count), shown even before a payment
+    # record lands. Mirrors the ticket page; omitted when there's no event/cost.
+    @total_cents = form_submission.event && form_submission.bulk_payment_amount_cents(form_submission.event)
 
     @notification_type = "Bulk payment confirmation"
 
@@ -108,7 +110,7 @@ class EventMailer < ApplicationMailer
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW Portal: Event registration cancelled for #{@event.title}"
+      subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} cancelled for #{@event.title}"
     )
   end
 end

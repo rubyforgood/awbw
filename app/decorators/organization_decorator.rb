@@ -1,4 +1,49 @@
 class OrganizationDecorator < ApplicationDecorator
+  # Canonical program status => DomainTheme colour key. Keeping these as theme
+  # keys means the palette lives in DomainTheme::COLORS (green / blue / purple —
+  # amber is reserved for warnings) rather than hard-coded utilities here.
+  PROGRAM_STATUS_THEME_KEYS = {
+    new: :program_new,
+    ongoing: :program_ongoing,
+    reinstated: :program_reinstated
+  }.freeze
+
+  # Normalize either the :new/:ongoing/:reinstated symbol (EventDashboard / index
+  # controller) or the "New"/"Ongoing"/"Reinstate" string (Organization#program_status)
+  # to the canonical symbol; nil when blank or unrecognized.
+  def self.program_status_key(status)
+    return if status.blank?
+
+    key = status.to_s.downcase.start_with?("reinstat") ? :reinstated : status.to_s.downcase.to_sym
+    key if PROGRAM_STATUS_THEME_KEYS.key?(key)
+  end
+
+  # Pill bg/text/border classes for a program status, built from the DomainTheme
+  # swatch so the colours stay consistent with the rest of the app.
+  def self.program_status_classes(status)
+    key = program_status_key(status)
+    return unless key
+
+    theme_key = PROGRAM_STATUS_THEME_KEYS[key]
+    [
+      DomainTheme.bg_class_for(theme_key, intensity: 100),
+      DomainTheme.text_class_for(theme_key, intensity: 700),
+      DomainTheme.border_class_for(theme_key, intensity: 200)
+    ].join(" ")
+  end
+
+  # Compact single-letter program-status badge (N / O / R) with the full label as
+  # a tooltip. Defaults to this org's own #program_status; pass a precomputed
+  # status on list pages (index / dashboard) to avoid loading affiliations per row.
+  def program_status_badge(status = object.program_status)
+    key = self.class.program_status_key(status)
+    return unless key
+
+    h.content_tag(:span, key.to_s.first.upcase,
+                  title: key.to_s.titleize,
+                  class: "inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full border text-xs font-semibold #{self.class.program_status_classes(status)}")
+  end
+
   def detail(length: nil)
     length ? description&.truncate(length) : description
   end
@@ -22,11 +67,11 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   def facilitator_since_date
-    @facilitator_since_date ||= affiliations.where("title LIKE ?", "%Facilitator%").minimum(:start_date)
+    @facilitator_since_date ||= affiliations.facilitators.minimum(:start_date)
   end
 
   def facilitation_end_date
-    facilitator_affiliations = affiliations.where("title LIKE ?", "%Facilitator%")
+    facilitator_affiliations = affiliations.facilitators
     return nil if facilitator_affiliations.active.exists?
     facilitator_affiliations.maximum(:end_date)
   end

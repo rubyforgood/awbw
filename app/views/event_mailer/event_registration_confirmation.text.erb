@@ -1,4 +1,4 @@
-Event registration confirmed
+Event registration received
 
 Hello <%= @person.full_name %>,
 
@@ -12,8 +12,8 @@ This message confirms your registration for the following event:
 Location: <%= @event.location.name %>
 <% end %>
 
-<% if @event.videoconference_url.present? %>
-Videoconference URL: <%= @event.videoconference_url %>
+<% if event_platform_label(@event).present? %>
+Videoconference: <%= event_platform_label(@event) %>
 <% end %>
 
 <% if @event.labelled_cost.present? %>
@@ -27,9 +27,6 @@ Videoconference URL: <%= @event.videoconference_url %>
 
 View your ticket:
 <%= registration_ticket_url(@event_registration.slug) %>
-
-View the event page:
-<%= @event_url %>
 
 <% if @event.registration_close_date %>
   Registration closes on

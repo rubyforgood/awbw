@@ -1,13 +1,13 @@
 import { application } from "./application"
 
+import AddressSelectController from "./address_select_controller"
+application.register("address-select", AddressSelectController)
+
 import AffiliationDatesController from "./affiliation_dates_controller"
 application.register("affiliation-dates", AffiliationDatesController)
 
 import AffiliationFacilitatorWarningController from "./affiliation_facilitator_warning_controller"
 application.register("affiliation-facilitator-warning", AffiliationFacilitatorWarningController)
-
-import AffiliationTitleEditController from "./affiliation_title_edit_controller"
-application.register("affiliation-title-edit", AffiliationTitleEditController)
 
 import AllocationRefController from "./allocation_ref_controller"
 application.register("allocation-ref", AllocationRefController)
@@ -83,6 +83,9 @@ application.register("file-preview", FilePreviewController)
 
 import FieldOptionsController from "./field_options_controller"
 application.register("field-options", FieldOptionsController)
+
+import FormErrorsController from "./form_errors_controller"
+application.register("form-errors", FormErrorsController)
 
 import FormFieldsSortableController from "./form_fields_sortable_controller"
 application.register("form-fields-sortable", FormFieldsSortableController)

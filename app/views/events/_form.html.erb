@@ -176,21 +176,13 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <%= f.input :videoconference_url,
-                      label: "Videoconference URL",
-                      as: :url,
-                      input_html: {
-                        placeholder: "https://…",
-                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                      } %>
-          <%= f.input :videoconference_label,
-                      label: "Videoconference label",
-                      input_html: {
-                        placeholder: "Virtual event",
-                        class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                      } %>
-        </div>
+        <%= f.input :videoconference_url,
+                    label: "Videoconference URL",
+                    as: :url,
+                    input_html: {
+                      placeholder: "https://…",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    } %>
 
         <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
           <%= f.input :location_id,
@@ -205,6 +197,32 @@
                       } %>
         </div>
       </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <%= f.input :videoconference_label,
+                    label: "Videoconference label",
+                    input_html: {
+                      placeholder: "Virtual event",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    } %>
+        <%= f.input :videoconference_passcode,
+                    label: "Videoconference passcode",
+                    hint: "Shown alongside the join link. The meeting ID/code is read from the URL automatically.",
+                    input_html: {
+                      placeholder: "e.g. 123456",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    } %>
+      </div>
+
+      <%= f.input :short_description,
+                  label: "Short description",
+                  as: :text,
+                  hint: "Plain-text blurb for the \"Add to calendar\" links. Calendars don't render HTML — leave blank to fall back to the page description.",
+                  input_html: {
+                    rows: 3,
+                    placeholder: "Short description for calendar entries…",
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                  } %>
 
     </div>
 
@@ -246,7 +264,7 @@
           data-action="dropdown#toggle"
           data-reveal-section-target="toggle"
           data-dropdown-payload-param='[{"registration_form_section":"hidden"}, {"registration_form_arrow":"rotate-180"}, {"registration_form_button":"rounded-t-md rounded-md"}]'>
-          Registration Form
+          Form settings
           <i id="registration_form_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300 rotate-180"></i>
         </button>
 
@@ -419,82 +437,11 @@
       </div>
     </div>
 
-    <%# ---- BEFORE YOU ATTEND (ticket call-out + details page) ---- %>
-    <div class="ticket-details-section" data-controller="dropdown">
-      <button
-        type="button"
-        id="ticket_details_button"
-        class="
-          flex items-center justify-between cursor-pointer w-full
-          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
-        data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"ticket_details":"hidden"}, {"ticket_details_arrow":"rotate-180"}, {"ticket_details_button":"rounded-md rounded-t-md"}]'>
-        Before you attend
-        <i id="ticket_details_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
-      </button>
-
-      <div id="ticket_details" class="hidden border border-gray-300 p-4 rounded-b-md">
-        <p class="text-sm text-gray-500 mb-4">Extra info shown on the registration ticket as a prominent call-out linking to its own details page — for materials, supplies, what to bring, and policies (the kind of thing that used to live in a long confirmation email).</p>
-
-        <div class="form-group">
-          <%= f.label :event_details_label, "Details section label", class: "block font-medium mb-1 text-gray-700" %>
-          <%= f.text_field :event_details_label,
-                       placeholder: "Before you attend",
-                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-          <p class="text-gray-500 text-sm mt-1">Heading for the details call-out on the ticket and the details page (e.g. "Before you attend", "Art supplies &amp; materials").</p>
-        </div>
-
-        <div class="form-group mt-6">
-          <%= f.label :event_details, "Details content", class: "block font-medium mb-1 text-gray-700" %>
-          <p class="text-xs text-gray-500 mb-1">
-            Materials, supplies, what to bring, and policies — shown on its own page linked prominently from the ticket. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.
-          </p>
-          <%= f.text_area :event_details, rows: 8,
-                placeholder: "e.g. <h3>Workshop 1</h3><ul><li>Clear glass stones</li></ul>",
-                class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono" %>
-        </div>
-      </div>
-    </div>
-
-    <%# ---- CE HOURS (ticket call-out + details page) ---- %>
-    <div class="ce-hours-section" data-controller="dropdown">
-      <button
-        type="button"
-        id="ce_hours_button"
-        class="
-          flex items-center justify-between cursor-pointer w-full
-          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
-        data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"ce_hours_details":"hidden"}, {"ce_hours_arrow":"rotate-180"}, {"ce_hours_button":"rounded-md rounded-t-md"}]'>
-        CE hours
-        <i id="ce_hours_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
-      </button>
-
-      <div id="ce_hours_details" class="hidden border border-gray-300 p-4 rounded-b-md">
-        <p class="text-sm text-gray-500 mb-4">Continuing education info shown on the registration ticket as a prominent call-out linking to its own details page — CAMFT approval, license-number and payment requirements, sign-in rules, and the post-training evaluation (the kind of thing that used to live in a long CE confirmation email).</p>
-
-        <div class="form-group">
-          <%= f.label :ce_hours_details_label, "CE hours section label", class: "block font-medium mb-1 text-gray-700" %>
-          <%= f.text_field :ce_hours_details_label,
-                       placeholder: "CE hours",
-                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-          <p class="text-gray-500 text-sm mt-1">Heading for the CE hours call-out on the ticket and the details page (e.g. "CE hours", "Continuing education").</p>
-        </div>
-
-        <div class="form-group mt-6">
-          <%= f.label :ce_hours_details, "CE hours content", class: "block font-medium mb-1 text-gray-700" %>
-          <p class="text-xs text-gray-500 mb-1">
-            CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked prominently from the ticket. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.
-          </p>
-          <%= f.text_area :ce_hours_details, rows: 8,
-                placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><h3>Before the training</h3><ul><li>Email your license number</li></ul>",
-                class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono" %>
-        </div>
-      </div>
-    </div>
-
-    <%# ---- REGISTRATION TICKET CALLOUTS (custom ticket call-outs, drag to reorder) ---- %>
-    <div class="registration-ticket-callouts-section" data-controller="dropdown">
+    <%# ---- REGISTRATION TICKET CALLOUTS (built-in + custom ticket call-outs) ---- %>
+    <%# ?expand=callouts (from the ticket's "Edit event" link) auto-opens this
+        section via a dropdown expand target; scroll-mt keeps the anchor clear of
+        any sticky chrome. %>
+    <div id="registration_ticket_callouts" class="registration-ticket-callouts-section scroll-mt-24" data-controller="dropdown">
       <button
         type="button"
         id="registration_ticket_callouts_button"
@@ -502,13 +449,52 @@
           flex items-center justify-between cursor-pointer w-full
           bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
         data-action="dropdown#toggle"
+        <%== 'data-dropdown-target="expand"' if params[:expand] == "callouts" %>
         data-dropdown-payload-param='[{"registration_ticket_callouts_panel":"hidden"}, {"registration_ticket_callouts_arrow":"rotate-180"}, {"registration_ticket_callouts_button":"rounded-md rounded-t-md"}]'>
         Registration ticket callouts
         <i id="registration_ticket_callouts_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
       </button>
 
       <div id="registration_ticket_callouts_panel" class="hidden border border-gray-300 p-4 rounded-b-md">
-        <p class="text-sm text-gray-500 mb-4">Custom call-outs shown on the registration ticket — each links to its own page. Use them for actions (forms to download, balances to pay) or reference reading (parking, policies, what to bring). New callouts save in the order shown; drag the handle to reorder saved callouts.</p>
+        <p class="text-sm text-gray-500 mb-4">Call-outs shown on the registration ticket — each links to its own page. The built-in cards below are managed by the app, which decides when each appears; a few (shown in colour, with fields) let you edit their text here, while the rest (greyed out) are preview-only. Below them, add your own call-outs for actions (forms to download, balances to pay) or reference reading (parking, policies, what to bring). New custom callouts save in the order shown; drag the handle to reorder saved callouts.</p>
+
+        <%# Built-in cards, shown above custom callouts in the order they appear on
+            the ticket. The two editable ones (CE hours, art supplies) carry their
+            ticket colour and editable text; the rest are greyed-out previews of
+            cards the app controls, so the full ticket context is visible here. %>
+        <div class="space-y-3 mb-3">
+          <% MagicTicketCallouts.editor_cards(@event).each do |card| %>
+            <% case card.key %>
+            <% when :ce_hours %>
+              <%= render "events/builtin_callout_card", f: f, card: card,
+                    label_field: :ce_hours_details_label, content_field: :ce_hours_details,
+                    title_placeholder: "CE hours",
+                    content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
+                    content_placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><h3>Before the training</h3><ul><li>Email your license number</li></ul>" %>
+            <% when :event_details %>
+              <%= render "events/builtin_callout_card", f: f, card: card,
+                    label_field: :event_details_label, content_field: :event_details,
+                    title_placeholder: "Before you attend",
+                    content_help: "Materials, supplies, what to bring, and policies — shown on its own page linked from the ticket. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
+                    content_placeholder: "e.g. <h3>Workshop 1</h3><ul><li>Clear glass stones</li></ul>" %>
+            <% else %>
+              <div class="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 opacity-70">
+                <i class="<%= card.icon_class %> <%= card.theme[:icon] %> w-6 shrink-0 text-center text-xl pt-0.5" aria-hidden="true"></i>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-2 mb-0.5">
+                    <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-500">Built in</span>
+                    <span class="text-xs text-gray-400"><%= card.visibility %></span>
+                  </div>
+                  <p class="font-semibold text-gray-500"><%= card.title %></p>
+                  <p class="text-sm text-gray-400"><%= card.subtitle %></p>
+                  <% if card.note.present? %>
+                    <p class="text-xs text-gray-400 italic mt-0.5"><%= card.note %></p>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
 
         <div id="registration_ticket_callouts_list" class="space-y-3"
              data-controller="sortable"

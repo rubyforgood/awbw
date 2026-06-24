@@ -22,6 +22,7 @@ namespace :db do
       payments
       scholarships
       bulk_payments
+      legacy_form_identifiers
     ]
 
     desc "Generate representative sample data for development"
@@ -115,6 +116,11 @@ namespace :db do
     desc "Seed bulk payment demo submissions, payments, and allocations (dev only)"
     task bulk_payments: :environment do
       load Rails.root.join("db/seeds/dev/bulk_payments.rb")
+    end
+
+    desc "Seed registration forms using legacy professional-field identifiers (dev only)"
+    task legacy_form_identifiers: :environment do
+      load Rails.root.join("db/seeds/dev/legacy_form_identifiers.rb")
     end
   end
 end

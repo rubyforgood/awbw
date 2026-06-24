@@ -88,6 +88,28 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#videoconference_details_visible?" do
+    it "returns false when there is no start_date" do
+      event = build(:event, start_date: nil)
+      expect(event.videoconference_details_visible?).to be false
+    end
+
+    it "returns false more than a week before the start" do
+      event = build(:event, start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours)
+      expect(event.videoconference_details_visible?).to be false
+    end
+
+    it "returns true within a week of the start" do
+      event = build(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      expect(event.videoconference_details_visible?).to be true
+    end
+
+    it "returns true once the event has started" do
+      event = build(:event, start_date: 1.hour.ago, end_date: 1.hour.from_now)
+      expect(event.videoconference_details_visible?).to be true
+    end
+  end
+
   describe "#registerable?" do
     it "returns true when registration_close_date is in the future" do
       event = build(:event, published: true, registration_close_date: 5.days.from_now)

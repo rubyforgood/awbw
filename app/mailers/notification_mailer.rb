@@ -12,7 +12,7 @@ class NotificationMailer < ApplicationMailer
 
     # Send email to the admin
     mail(
-      subject: "#{FYI_PREFIX} New event registration by #{@person.full_name} to #{@event.title}"
+      subject: "#{FYI_PREFIX} New #{@event_registration.registration_subject_noun} by #{@person.full_name} to #{@event.title}"
     )
   end
 
@@ -23,7 +23,7 @@ class NotificationMailer < ApplicationMailer
     @notification_type = "Event registration cancellation"
 
     mail(
-      subject: "#{FYI_PREFIX} Event registration cancelled by #{@person.full_name} for #{@event.title}"
+      subject: "#{FYI_PREFIX} #{@event_registration.registration_subject_noun.capitalize} cancelled by #{@person.full_name} for #{@event.title}"
     )
   end
 

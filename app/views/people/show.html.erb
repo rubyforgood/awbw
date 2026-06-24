@@ -1,4 +1,13 @@
 <% content_for(:page_bg_class, "admin-or-owner-or-authsearchable") %>
+<%# Returned from a registrant's profile link on the event registrants page. Shown
+    above the profile topper; needs event_id since the profile isn't event-scoped. %>
+<% if params[:return_to] == "registrants" && params[:event_id].present? %>
+  <div class="mb-3">
+    <%= link_to registrants_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to registrants
+    <% end %>
+  </div>
+<% end %>
 <div class="admin-or-owner <%#= DomainTheme.bg_class_for(:people) %> border border-gray-200 rounded-xl shadow overflow-hidden">
   <!-- Person header banner -->
   <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people, intensity: 300) %> px-8 py-3">
@@ -54,7 +63,7 @@
       </div>
       <div class="flex-1 text-center md:text-left">
         <h1 class="text-3xl font-bold text-gray-900">
-          <%= @person.name %>
+          <%= @person.name %><% if @person.credentials.present? && @person.profile_show_credentials? %><span class="font-normal">, <%= @person.credentials %></span><% end %>
           <% if @person.pronouns.present? && @person.profile_show_pronouns? %>
             <span class="text-gray-500 font-normal text-base italic">(<%= @person.pronouns %>)</span>
           <% end %>
@@ -128,10 +137,10 @@
                 chip, followed by the additional sectors alphabetically and any
                 free-text "Other" responses. %>
             <% sectorable_items = @person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
-            <% other_service_areas = @person.other_service_area_responses %>
+            <% other_sectors = @person.other_sector_responses %>
             <div class="md:col-span-2 p-3">
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Sectors</h2>
-              <% if sectorable_items.any? || other_service_areas.any? %>
+              <% if sectorable_items.any? || other_sectors.any? %>
                 <div class="flex flex-wrap gap-2">
                   <% sectorable_items.each do |si| %>
                     <%= render "sectors/tagging_label",
@@ -140,7 +149,7 @@
                                  display_leader: true,
                                  is_leader: si.is_leader %>
                   <% end %>
-                  <%= render "people/other_responses", responses: other_service_areas %>
+                  <%= render "people/other_responses", responses: other_sectors %>
                 </div>
               <% else %>
                 <p class="text-gray-500 italic">None selected.</p>
@@ -222,11 +231,11 @@
             Participation history
           </h2>
         </div>
-        <!-- Events registered -->
+        <!-- Events attended -->
         <div class="section-content px-3 sm:px-4 py-4 sm:py-6 space-y-8 sm:space-y-10">
           <% if @person.profile_show_events_registered? %>
             <div class="p-3">
-              <h2 class="text-lg font-semibold text-gray-800 mb-3">Events registered</h2>
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Events attended</h2>
               <%= turbo_frame_tag "person_events_section", src: person_path(@person, section: "events"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading events...</p>
               <% end %>

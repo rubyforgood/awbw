@@ -23,9 +23,9 @@ Event date
   <%= @event.location.name %>
 <% end %>
 
-<% if @event.videoconference_url.present? %>
-  Videoconference URL
-  <%= @event.videoconference_url %>
+<% if event_platform_label(@event).present? %>
+  Videoconference
+  <%= event_platform_label(@event) %>
 <% end %>
 
 <% if @event.labelled_cost.present? %>

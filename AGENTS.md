@@ -48,8 +48,8 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~75 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~26 files |
+| `app/models/` | ActiveRecord models | ~78 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~29 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
 | `app/models/concerns/` | Shared model modules | 15 concerns |
 
@@ -57,12 +57,12 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~69 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~70 files |
 | `app/views/` | ERB templates | ~504 files |
 | `app/decorators/` | Draper decorators for view logic | ~38 files |
 | `app/policies/` | ActionPolicy authorization rules | ~49 files |
 | `app/presenters/` | Presentation objects | 3 files |
-| `app/helpers/` | View helpers | ~20 files |
+| `app/helpers/` | View helpers | ~24 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (71) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (74) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -96,6 +96,7 @@ This codebase (Rails 8.1)
 | `Workshop` | Core content: rich text fields, categories, sectors, bookmarks, variations |
 | `Event` | Events with registrations, featured/published states |
 | `EventStaff` | Join model connecting `Person` to `Event` as staff (title, `expected_to_attend`); drives the "Meet the staff" roster and "My events" |
+| `EventRegistrationChecklistCompletion` | Audited completion row for one manual onboarding step on an `EventRegistration` (`step` from `EventRegistration::CHECKLIST_STEPS`, `completed_by` User, `completed_at`); row-exists = done. Powers the event Onboarding tab's checkbox matrix |
 | `RegistrationTicketCallout` | Admin-configured call-outs shown on an event's registration ticket (title, subtitle, HTML description, `callout_type` action/reference, icon/colour, `payment_access_gated` — only shown once the registrant has `payment_access_granted?` (paid or intends to pay), draggable `position` via the positioning gem); each links to its own public detail page |
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
@@ -180,6 +181,7 @@ end
 ### Business Logic
 
 - `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total)
+- `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration
 - `WorkshopVariationFromIdeaService` — Variation creation from ideas
@@ -197,6 +199,11 @@ end
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
 - `ReminderRecipientFilter` — Decides which event registrations stay checked on the bulk reminder page given the admin's filters (matches in memory, returns matching ids)
+- `MagicTicketCallouts` — Code-defined ("magic") ticket callout cards (payment, certificate, scholarship, CE hours, art supplies, forms, handouts, portal, videoconference, FAQ), each with its own visibility rule; rendered through the same `_callout_card` partial as admin-configured `RegistrationTicketCallout`s. Their public show pages live under `app/views/events/callouts/` and are served by `Events::CalloutsController` (slug-authorized, no login)
+
+### Affiliations
+
+- `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation
 
 ### Notifications
 
@@ -260,8 +267,8 @@ end
 
 ### Stimulus Controllers
 
+- `address_select` — Compact numbered picker linking an affiliation to an org address
 - `affiliation_dates` — Recalculate affiliation date ranges
-- `affiliation_title_edit` — Inline-edit an affiliation title pill on the org-link editor
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state

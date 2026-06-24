@@ -242,10 +242,18 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 
 ## PRs
 
-- **Push to a draft PR early** — push commits and create a draft PR (`gh pr create --draft`) as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
-- After completing work, **mark the PR ready** using `gh pr ready`
+- **Always create PRs as drafts** — every PR starts in draft (`gh pr create --draft`), no exceptions. Never open a PR ready for review, and never promote it. Only the user runs `gh pr ready`, manually and intentionally, when they decide the work is ready.
+- **Push to a draft PR early** — create the draft PR as soon as work begins, rather than keeping changes in a local branch. Push on every commit.
+  - **In a new Conductor workspace, do this immediately** — as the first step of any task, make an initial commit on the workspace branch and open the draft PR right away (before the work is done), then keep pushing on every commit as you go. Don't wait until there's a finished change to show.
+- **Never take a PR out of draft** — do not run `gh pr ready` or otherwise remove draft status, even after the work looks complete. Leave the PR in draft; the user promotes it manually and intentionally when they decide it's ready.
 - **Do not rename branches after creating a PR** — deleting the old remote branch auto-closes the PR on GitHub, and the head ref cannot be changed after creation
 - Use `docs/pull_request_template.md` for PR description structure
+- **Remove the `Closes …` line when there's no ticket** — it's a template placeholder. Keep it (with a real issue link) only when the PR closes a tracked ticket; otherwise drop the line entirely rather than leaving the placeholder.
+- **Keep descriptions as short as possible** — a few terse bullets, not paragraphs. Cut anything a reviewer can see from the diff; only keep what explains *why*.
+- **Start the description with a review-depth tag** on its own single line, prefixed with `🤖 PR, suggested 👤 review level: `, followed by a blank line, then the rest of the description. The tag is the prefix, the icon, the level name, and the short note on what that level means — e.g. `🤖 PR, suggested 👤 review level: 👀 Skim — view-only: markup/copy/styling, no logic or data changes`. Always spell out the meaning inline; never post the icon and name alone. The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
+  - **👀 Skim** — view-only: markup/copy/styling, no logic or data changes
+  - **📖 Read** — light-logic: small, contained logic changes with low blast radius
+  - **🔬 Inspect** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes
@@ -309,6 +317,7 @@ See `ai/` directory for executable scripts:
 | Command | What it does |
 |---|---|
 | `ai/recap` | Session recap: accomplishments + unresolved items (see above) |
+| `ai/review` | Code review: agent reviews the workspace diff, posts inline comments, and gives a Recap + Risks + Outstanding decisions summary (runs the `ai-review` skill) |
 | `ai/test [args]` | Run RSpec |
 | `ai/lint` | Rubocop on all files |
 | `ai/lint --fix` | Auto-fix lint issues |
@@ -319,4 +328,4 @@ See `ai/` directory for executable scripts:
 | `ai/seed` | Load the full dev sample dataset (`db:seed:dev`) into the workspace DB |
 | `ai/security` | Security scan: Brakeman + bundler-audit (mirrors CI) |
 
-> **"ai <name>" means the `ai/` script of that name** (e.g. "ai test" → `ai/test`, "ai security" → `ai/security`) — shell scripts in `ai/`, not slash-command skills. If a referenced `ai/<name>` script doesn't exist, ask what's intended rather than substituting a similarly named skill. (`ai/recap` is special — it triggers the agent **Session recap** behavior above, not a real script's output; never confuse it with the `/audit` design skill or the `ai/security` scan.)
+> **"ai <name>" means the `ai/` script of that name** (e.g. "ai test" → `ai/test`, "ai security" → `ai/security`) — shell scripts in `ai/`, not slash-command skills. If a referenced `ai/<name>` script doesn't exist, ask what's intended rather than substituting a similarly named skill. Two are special — they print a trigger word, and the agent does the work directly rather than producing script output: (1) **"ai recap"** triggers the **Session recap** behavior above; never confuse it with the `/audit` design skill or the `ai/security` scan. (2) **"ai review"** (`ai/review`) triggers the **`ai-review` skill** — review the current workspace diff, post one inline comment per qualifying bug, then give a Recap + Risks + Outstanding decisions summary; it is not the `/audit` skill or the `/code-review` / `/review` skills.
