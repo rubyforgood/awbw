@@ -64,7 +64,7 @@ module Events
         resource = by_title[title]
         next unless resource
         resource_card(icon: "fa-solid fa-file-pdf", title: resource.title,
-                      subtitle: "Open this training resource",
+                      subtitle: resource.rhino_body&.to_plain_text.presence || "Open this training resource",
                       href: registration_resource_path(@event_registration.slug, resource, return_to: "handouts"), target: nil)
       end
     end
