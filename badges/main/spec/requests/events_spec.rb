@@ -1135,10 +1135,12 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(bulk_payments_event_path(event))
       end
 
-      it "omits the bulk payments term when nothing is unallocated" do
+      it "shows the bulk payments term at zero when nothing is unallocated" do
         get dashboard_event_path(event)
 
         expect(response.body).not_to include("Unallocated bulk payments")
+        expect(response.body).to include("Bulk payments")
+        expect(response.body).to include(bulk_payments_event_path(event))
       end
     end
 
