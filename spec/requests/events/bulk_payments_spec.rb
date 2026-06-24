@@ -116,7 +116,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
 
       expect(response).to have_http_status(:redirect)
       expect(response.location).to match(%r{/bulk_payment/})
-      expect(flash[:notice]).to eq("Your bulk payment information has been submitted.")
+      expect(flash[:notice]).to eq("Your payment information has been submitted.")
     end
 
     it "does not redirect to Stripe when event is free" do
@@ -179,7 +179,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
         get_show
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Bulk payment submission")
+        expect(response.body).to include("Payment submission")
         expect(response.body).to include("Northside Shelter")
       end
 
@@ -218,7 +218,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
         get event_bulk_payment_path(event, submission_id: submission.id, return_to: "bulk_payments")
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Bulk payment submission")
+        expect(response.body).to include("Payment submission")
         expect(response.body).to include("Northside Shelter")
         expect(response.body).not_to include("Back to ticket")
         expect(response.body).to include("Back to bulk payments")
@@ -261,7 +261,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
       get_ticket
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Bulk payment ticket")
+      expect(response.body).to include("Payment ticket")
       expect(response.body).to include("Spring Workshop")
     end
 
