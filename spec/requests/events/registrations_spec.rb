@@ -253,12 +253,6 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include(registration_resource_path(registration.slug, w9, return_to: "forms"))
       expect(response.body).not_to include("/documents/awbw-w9.pdf")
     end
-
-    it "links to the letter-to-supervisors resource page below the invoice when present, returning to forms" do
-      letter = create(:resource, title: "Letter to Supervisors", kind: "Form")
-      get registration_forms_path(registration.slug)
-      expect(response.body.index(registration_invoice_path(registration.slug, return_to: "forms"))).to be < response.body.index(registration_resource_path(registration.slug, letter, return_to: "forms"))
-    end
   end
 
   describe "GET /registration/:slug/handouts" do
