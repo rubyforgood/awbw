@@ -31,9 +31,9 @@
         reminder-preview drives the live message/subject preview as the admin types. %>
     <%= form_with url: confirm_reminder_event_path(@event), method: :post, data: { controller: "reminder-preview", turbo: false } do |f| %>
       <%= render "events/reminder_recipients" %>
-      <div class="mt-10 mb-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-2 pb-2 border-b border-gray-200">Email draft</h2>
-        <div class="pl-4 sm:pl-6 space-y-6">
+      <div class="my-10 bg-white border border-gray-200 rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Email draft</h2>
+        <div class="space-y-6">
           <div>
             <h3 class="font-semibold text-gray-700 mb-2">Subject</h3>
             <p class="text-gray-600 mb-2">
