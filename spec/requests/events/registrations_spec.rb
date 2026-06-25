@@ -283,7 +283,7 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("AHA Moments")
       expect(response.body).to include(registration_ticket_path(registration.slug))
-      expect(response.body).to include(resource_download_path(resource))
+      expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
     end
 
     it "prompts to download for all pages on a multi-page resource" do
