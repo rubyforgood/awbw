@@ -19,6 +19,19 @@ module Events
       "Letter to Supervisors"
     ].freeze
 
+    HANDOUT_SUBTITLES = {
+      "2-Day AWBW Facilitator Training Worksheets & Handouts" =>
+        "List of resources and worksheets we will reference and utilize during the training. You do not need to print them out, it may be helpful for you to access the links during the training.",
+      "AWBW Training Workshop Worksheets" =>
+        "Worksheets you can create on during all 5 of the art workshops at the training. Any art materials are welcomed during creation.",
+      "AHA Moments" =>
+        "Worksheet you can use to reflect on the workshop, its impact, and how you'd like to apply it.",
+      "Inviting and Responding to Participants' Sharing" =>
+        "A resource to invite and support sharing, active listening, and connection during breakout rooms.",
+      "Letter to Supervisors" =>
+        "Letter you can share to help relieve you from competing responsibilities during the two training days. So you can secure the time and space needed to fully engage in the training."
+    }.freeze
+
     # Payment page: the full allocation ledger with the running balance due.
     def payment
       @allocations = @event_registration.allocations.includes(:source).order(:created_at)
@@ -64,7 +77,7 @@ module Events
         resource = by_title[title]
         next unless resource
         resource_card(icon: "fa-solid fa-file-pdf", title: resource.title,
-                      subtitle: resource.rhino_body&.to_plain_text.presence || "Open this training resource",
+                      subtitle: HANDOUT_SUBTITLES[resource.title] || "Open this training resource",
                       href: registration_resource_path(@event_registration.slug, resource, return_to: "handouts"), target: nil)
       end
     end
