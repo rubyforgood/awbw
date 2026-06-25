@@ -93,7 +93,6 @@ RSpec.describe ResourcePolicy, type: :policy do
         expect(policy_for(record: published_resource, user: guest_user))
           .not_to be_allowed_to(:show?)
       end
-
     end
   end
 
@@ -159,7 +158,6 @@ RSpec.describe ResourcePolicy, type: :policy do
         expect(policy_for(record: published_resource, user: guest_user))
           .not_to be_allowed_to(:download?)
       end
-
     end
   end
 
