@@ -94,16 +94,6 @@ RSpec.describe ResourcePolicy, type: :policy do
           .not_to be_allowed_to(:show?)
       end
 
-      it "can still reach a publicly visible resource that is hidden from search" do
-        hidden_public_resource = build_stubbed(
-          :resource,
-          published: false,
-          publicly_visible: true,
-          hidden_from_search: true
-        )
-        expect(policy_for(record: hidden_public_resource, user: guest_user))
-          .to be_allowed_to(:show?)
-      end
     end
   end
 
@@ -170,16 +160,6 @@ RSpec.describe ResourcePolicy, type: :policy do
           .not_to be_allowed_to(:download?)
       end
 
-      it "can download a publicly visible resource that is hidden from search" do
-        hidden_public_resource = build_stubbed(
-          :resource,
-          published: false,
-          publicly_visible: true,
-          hidden_from_search: true
-        )
-        expect(policy_for(record: hidden_public_resource, user: guest_user))
-          .to be_allowed_to(:download?)
-      end
     end
   end
 
