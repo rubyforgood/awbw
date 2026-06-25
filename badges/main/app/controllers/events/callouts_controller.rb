@@ -14,7 +14,7 @@ module Events
     HANDOUT_RESOURCE_TITLES = [
       "2-Day AWBW Facilitator Training Worksheets & Handouts",
       "AWBW Training Workshop Worksheets",
-      "AHA Moments",
+      "Aha Moments",
       "Inviting and Responding to Participants' Sharing",
       "Letter to Supervisors"
     ].freeze
@@ -24,7 +24,7 @@ module Events
         "List of resources and worksheets we will reference and utilize during the training. You do not need to print them out, it may be helpful for you to access the links during the training.",
       "AWBW Training Workshop Worksheets" =>
         "Worksheets you can create on during all 5 of the art workshops at the training. Any art materials are welcomed during creation.",
-      "AHA Moments" =>
+      "Aha Moments" =>
         "Worksheet you can use to reflect on the workshop, its impact, and how you'd like to apply it.",
       "Inviting and Responding to Participants' Sharing" =>
         "A resource to invite and support sharing, active listening, and connection during breakout rooms.",
