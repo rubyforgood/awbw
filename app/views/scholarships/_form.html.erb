@@ -60,7 +60,7 @@
           <label class="flex items-center gap-2.5 cursor-pointer">
             <span class="text-xs font-medium text-gray-600">Tasks completed</span>
             <%= f.check_box :tasks_completed, class: "sr-only peer" %>
-            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
           </label>
           <div data-scholarship-preview-target="allocatedHint">
             <% if allocated_cents > 0 %>
@@ -104,7 +104,7 @@
           <%= f.label :tasks_completed, "Tasks completed", class: "block text-sm font-medium text-gray-700 mb-1" %>
           <label class="flex h-[2.625rem] items-center gap-2.5 cursor-pointer">
             <%= f.check_box :tasks_completed, class: "sr-only peer" %>
-            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
             <span class="text-sm text-gray-400 peer-checked:hidden">Not yet</span>
             <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Completed</span>
           </label>
