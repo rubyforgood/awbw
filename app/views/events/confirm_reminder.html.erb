@@ -8,7 +8,7 @@
   </div>
 
   <div class="mb-6">
-    <h1 class="text-2xl font-semibold text-gray-900">Send reminder emails</h1>
+    <h1 class="text-2xl font-semibold text-gray-900">Send bulk emails</h1>
     <p class="text-gray-600 mt-1">
       <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
     </p>
@@ -30,7 +30,7 @@
 
     <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Comma-separated</h3>
     <p class="text-sm text-gray-700 mb-4 break-words">
-      <%= @event_registrations.map { |reg| reg.registrant.full_name }.join(", ") %>
+      <%= @event_registrations.map { |reg| reg.registrant.preferred_email }.join(", ") %>
     </p>
 
     <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Full list</h3>
