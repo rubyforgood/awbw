@@ -259,7 +259,7 @@ RSpec.describe "Events::Registrations", type: :request do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     it "links each handout to its registrant resource page, returning to handouts" do
-      handout = create(:resource, title: "AHA Moments", kind: "Handout")
+      handout = create(:resource, title: "Aha Moments", kind: "Handout")
       get registration_handouts_path(registration.slug)
       expect(response).to have_http_status(:success)
       expect(response.body).to include(registration_resource_path(registration.slug, handout, return_to: "handouts"))
@@ -275,19 +275,19 @@ RSpec.describe "Events::Registrations", type: :request do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     it "renders the resource with a back-to-ticket link and a download button" do
-      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+      resource = create(:resource, title: "Aha Moments", kind: "Handout")
       create(:downloadable_asset, owner: resource)
 
       get registration_resource_path(registration.slug, resource)
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("AHA Moments")
+      expect(response.body).to include("Aha Moments")
       expect(response.body).to include(registration_ticket_path(registration.slug))
-      expect(response.body).to include(resource_download_path(resource))
+      expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
     end
 
     it "prompts to download for all pages on a multi-page resource" do
-      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+      resource = create(:resource, title: "Aha Moments", kind: "Handout")
       create(:downloadable_asset, owner: resource)
 
       get registration_resource_path(registration.slug, resource)
@@ -305,7 +305,7 @@ RSpec.describe "Events::Registrations", type: :request do
     end
 
     it "is reachable by slug without logging in" do
-      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+      resource = create(:resource, title: "Aha Moments", kind: "Handout")
 
       get registration_resource_path(registration.slug, resource)
 
@@ -313,7 +313,7 @@ RSpec.describe "Events::Registrations", type: :request do
     end
 
     it "returns to the handouts callout with a 'Handouts detail' header when reached from handouts" do
-      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+      resource = create(:resource, title: "Aha Moments", kind: "Handout")
 
       get registration_resource_path(registration.slug, resource, return_to: "handouts")
 
@@ -321,7 +321,7 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Back to handouts")
       expect(response.body).not_to include("Back to ticket")
       expect(response.body).to include("Handouts detail")
-      expect(response.body).to include("AHA Moments")
+      expect(response.body).to include("Aha Moments")
     end
 
     it "returns to the forms callout with a 'Forms detail' header when reached from forms" do
