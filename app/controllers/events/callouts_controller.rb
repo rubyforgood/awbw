@@ -1,6 +1,6 @@
 module Events
   # Public show pages for a registration ticket's magic callouts (payment, CE,
-  # scholarship, forms, handouts, portal, videoconference, FAQ, certificate).
+  # scholarship, forms, handouts, videoconference, FAQ, certificate).
   # Each is reachable by the registration slug — the slug is the authorization,
   # so no login is required (mirrors the public ticket/invoice pages).
   class CalloutsController < ApplicationController
@@ -75,10 +75,6 @@ module Events
     # ticket context.
     def resource
       @resource = Resource.find(params[:resource_id]).decorate
-    end
-
-    # Facilitator Portal access info, with a link to the home screen.
-    def portal
     end
 
     # Videoconference page: the join link and add-to-calendar options.

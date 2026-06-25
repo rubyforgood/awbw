@@ -47,8 +47,7 @@ class MagicTicketCallouts
       EditorCard.new(nil, "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
       EditorCard.new(nil, "fa-solid fa-file-lines", "blue", "Forms", "W-9 and invoice", "Always shown", "Items link to their relevant resources."),
       EditorCard.new(nil, "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "Always shown", "Items link to their relevant resources."),
-      EditorCard.new(nil, "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "Always shown", nil),
-      EditorCard.new(nil, "fa-solid fa-right-to-bracket", "gray", "Facilitator Portal access", "Sign in once the training is complete", "Always shown", nil)
+      EditorCard.new(nil, "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "Always shown", nil)
     ]
   end
 
@@ -61,7 +60,7 @@ class MagicTicketCallouts
   def cards
     [ payment_card, certificate_card, scholarship_status_card, ce_hours_card,
       event_details_card, videoconference_card, forms_card, handouts_card,
-      faq_card, portal_card ].compact
+      faq_card ].compact
   end
 
   private
@@ -172,6 +171,16 @@ class MagicTicketCallouts
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
+  # Shown only when the event has a videoconference URL set.
+  def videoconference_card
+    return if event.videoconference_url.blank?
+    Card.new(icon_class: "fa-solid fa-video", color: "blue",
+             title: "Videoconference",
+             subtitle: registration.videoconference_details_visible? ? "Join link and add to your calendar" : "Unlocks once payment is on file",
+             href: registration_videoconference_path(registration.slug),
+             target: nil, trailing_icon: "fa-solid fa-arrow-right")
+  end
+
   # Always-present. Its page links to the W-9 (when requested) and invoice
   # (when requested).
   def forms_card
@@ -188,28 +197,6 @@ class MagicTicketCallouts
              title: "Handouts",
              subtitle: "Worksheets and resources for the training",
              href: registration_handouts_path(registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-arrow-right")
-  end
-
-  # Always-present, shown last. Greyed out until the registrant can reach the
-  # portal (completed the training with a usable account), then turns active (green).
-  def portal_card
-    access = registration.portal_access?
-    Card.new(icon_class: "fa-solid fa-right-to-bracket", color: access ? "green" : "gray",
-             title: "Facilitator Portal access",
-             subtitle: access ? "Sign in to the Facilitator Portal" : "Complete both training days and pay your training fee to be granted access",
-             href: registration_portal_path(registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-arrow-right")
-  end
-
-  # Shown when the event has a videoconference link. Its page has the join link
-  # and the add-to-calendar options.
-  def videoconference_card
-    return if event.videoconference_url.blank?
-    Card.new(icon_class: "fa-solid fa-video", color: "blue",
-             title: "Videoconference",
-             subtitle: "Join link and how to add it to your calendar",
-             href: registration_videoconference_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 

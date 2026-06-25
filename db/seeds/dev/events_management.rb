@@ -608,16 +608,6 @@ component_callouts = {
       </ul>
     HTML
   },
-  facilitator_portal: {
-    title: "Facilitator Portal access",
-    subtitle: "Available once attendance & payment are complete",
-    callout_type: "reference", color_class: "rose", icon_class: "fa-solid fa-right-to-bracket",
-    payment_access_gated: true,
-    description: <<~HTML.strip
-      <p>Access to the Facilitator Portal is provided once your attendance requirements are met and your training fee is paid.</p>
-      <p>You're all set — watch for your portal invitation.</p>
-    HTML
-  },
   add_to_calendar: {
     title: "Add to your calendar",
     subtitle: "Save both training days",
