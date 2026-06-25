@@ -287,30 +287,15 @@ class EventsController < ApplicationController
       return
     end
 
-    person_id = params[:person_id].presence
-    organization_id = params[:organization_id].presence
-
-    if organization_id.present? && person_id.blank?
-      payer_type = "Organization"
-    elsif person_id.present? && organization_id.blank?
-      payer_type = "Person"
-    elsif person_id.present? && organization_id.present?
-      payer_type = params[:payer_type].presence || "Organization"
-    else
-      person_id = submission.person_id
-      payer_type = "Person"
-    end
-
     payment = submission.build_payment(
-      person_id: person_id,
-      organization_id: organization_id,
-      payer_type: payer_type,
       amount_cents: (params[:amount_dollars].to_d * 100).to_i,
       currency: params[:currency].presence || "usd",
       type: payment_type,
       check_number: params[:check_number].presence,
       memo: params[:memo].presence
     )
+    payment.payer_sgid = params[:payer_sgid]
+    payment.additional_designation_sgid = params[:additional_designation_sgid]
 
     if payment.save
       @payment = payment
