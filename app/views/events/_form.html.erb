@@ -365,12 +365,12 @@
                       <%= f.text_field :hint_registration_cost,
                                    placeholder: "e.g. due within 3 weeks of registration",
                                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-                    </div>
                   </div>
-                  <p class="text-xs text-gray-400">Shown in grey beside the Dates, Time, and Fee rows on the details panel.</p>
                 </div>
+                <p class="text-xs text-gray-400">Shown in grey beside the Dates, Time, and Fee rows on the details panel.</p>
               </div>
-              <div>
+            </div>
+            <div>
                 <label class="flex items-center gap-2 cursor-pointer">
                   <%= check_box_tag "event[scholarship_enabled]", "1", resubmitted ? params.dig(:event, :scholarship_enabled) == "1" : @event.scholarship_form.present? %>
                   <span class="text-sm font-medium text-gray-700">Enable scholarship application</span>
@@ -489,6 +489,33 @@
                   <p class="text-sm text-gray-400"><%= card.subtitle %></p>
                   <% if card.note.present? %>
                     <p class="text-xs text-gray-400 italic mt-0.5"><%= card.note %></p>
+                  <% end %>
+                  <% if card.title == "Handouts" %>
+                    <div class="mt-2 space-y-1">
+                      <% ["2-Day AWBW Facilitator Training Worksheets & Handouts",
+                          "AWBW Training Workshop Worksheets",
+                          "AHA Moments",
+                          "Inviting and Responding to Participants' Sharing",
+                          "Letter to Supervisors"].each do |t| %>
+                        <% resource = Resource.find_by(title: t) %>
+                        <% if resource %>
+                          <%= link_to edit_resource_path(resource),
+                                      class: "text-xs text-blue-600 hover:text-blue-800 underline block" do %>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> <%= resource.title %>
+                          <% end %>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  <% elsif card.title == "Forms" %>
+                    <% w9 = Resource.find_by(title: "W-9") %>
+                    <% if w9 %>
+                      <div class="mt-2">
+                        <%= link_to edit_resource_path(w9),
+                                    class: "text-xs text-blue-600 hover:text-blue-800 underline" do %>
+                          <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> W-9
+                        <% end %>
+                      </div>
+                    <% end %>
                   <% end %>
                 </div>
               </div>

@@ -248,13 +248,6 @@ class EventRegistration < ApplicationRecord
     status == "attended"
   end
 
-  # True once the registrant has earned Facilitator Portal access: they completed
-  # both training days (attended) and paid their training fee. Stays false (greying
-  # the portal callout) until then.
-  def portal_access?
-    attended? && paid_in_full?
-  end
-
   # The certificate of completion unlocks once the training has happened, the
   # registrant attended, and any scholarship tasks are complete.
   def certificate_available?

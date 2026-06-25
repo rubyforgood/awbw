@@ -204,7 +204,6 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/callouts/forms.html.erb"            => "public",
     "app/views/events/callouts/handouts.html.erb"         => "public",
     "app/views/events/callouts/resource.html.erb"         => "public",
-    "app/views/events/callouts/portal.html.erb"           => "public",
     "app/views/events/callouts/videoconference.html.erb"  => "public",
     "app/views/events/details.html.erb"                   => "public",
     "app/views/events/ce_hours.html.erb"                  => "public",

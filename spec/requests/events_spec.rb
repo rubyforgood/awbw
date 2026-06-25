@@ -229,7 +229,6 @@ RSpec.describe "Events", type: :request do
 
     it "previews the app-controlled built-in callouts (greyed, non-editable)" do
       get edit_event_path(event)
-      expect(response.body).to include("Facilitator Portal access")
       expect(response.body).to include("Frequently asked questions")
     end
   end
