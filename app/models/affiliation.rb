@@ -31,9 +31,9 @@ class Affiliation < ApplicationRecord
 
   before_validation :skip_if_duplicate
   before_save :set_inactive_from_dates
-  after_save :deactivate_organization_if_no_active_people
+  after_save :sync_organization_status_with_affiliations
   after_save :sync_organization_affiliation_dates
-  after_destroy :deactivate_organization_if_no_active_people
+  after_destroy :sync_organization_status_with_affiliations
   after_destroy :sync_organization_affiliation_dates
 
   # Methods
@@ -107,9 +107,17 @@ class Affiliation < ApplicationRecord
     org.update_columns(updates) if updates.any?
   end
 
-  def deactivate_organization_if_no_active_people
-    return if organization.affiliations.active.exists?
+  # Org status tracks active *Facilitator* affiliations specifically (mirroring the
+  # form's status indicator) — a non-facilitator affiliation does not keep an org active.
+  def sync_organization_status_with_affiliations
+    if organization.affiliations.facilitators.active.exists?
+      reactivate_organization_if_inactive
+    else
+      deactivate_organization_if_no_active_people
+    end
+  end
 
+  def deactivate_organization_if_no_active_people
     inactive_status = OrganizationStatus.find_by(name: "Inactive")
     return unless inactive_status
     return if organization.organization_status_id == inactive_status.id
@@ -123,6 +131,26 @@ class Affiliation < ApplicationRecord
       resource_title: organization.name,
       change: "status_set_to_inactive",
       reason: "no_active_affiliations"
+    )
+  end
+
+  # Only flip back from "Inactive" — the status the deactivation callback sets.
+  # Leave Pending/Reinstate/Unknown (and Active) untouched.
+  def reactivate_organization_if_inactive
+    inactive_status = OrganizationStatus.find_by(name: "Inactive")
+    active_status = OrganizationStatus.find_by(name: "Active")
+    return unless inactive_status && active_status
+    return unless organization.organization_status_id == inactive_status.id
+
+    organization.update_column(:organization_status_id, active_status.id)
+
+    Ahoy::Tracker.new(user: Current.user).track(
+      "autochange.organization",
+      resource_type: "Organization",
+      resource_id: organization.id,
+      resource_title: organization.name,
+      change: "status_set_to_active",
+      reason: "regained_active_affiliation"
     )
   end
 end
