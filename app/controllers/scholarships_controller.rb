@@ -35,6 +35,7 @@ class ScholarshipsController < ApplicationController
     @scholarship = Scholarship.new(recipient: @allocatable.registrant)
     @grants = Grant.selectable_for(@scholarship)
     authorize! @scholarship
+    load_scholarship_submission
   end
 
   def create
