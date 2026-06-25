@@ -130,6 +130,46 @@ RSpec.describe Affiliation do
     end
   end
 
+  describe '#sync_organization_status_with_affiliations' do
+    let!(:active_status) { OrganizationStatus.find_or_create_by!(name: "Active") }
+    let!(:inactive_status) { OrganizationStatus.find_or_create_by!(name: "Inactive") }
+
+    it 'sets the organization to Inactive when its last active affiliation goes inactive' do
+      org = create(:organization, organization_status: active_status)
+      affiliation = create(:affiliation, organization: org, inactive: false, end_date: nil)
+
+      affiliation.update!(inactive: true)
+
+      expect(org.reload.organization_status).to eq(inactive_status)
+    end
+
+    it 'sets an Inactive organization back to Active when it regains an active affiliation' do
+      org = create(:organization, organization_status: inactive_status)
+
+      create(:affiliation, organization: org, inactive: false, end_date: nil)
+
+      expect(org.reload.organization_status).to eq(active_status)
+    end
+
+    it 'ignores non-facilitator affiliations when deciding status' do
+      org = create(:organization, organization_status: active_status)
+      create(:affiliation, organization: org, title: "Volunteer", inactive: false, end_date: nil)
+
+      expect(org.reload.organization_status).to eq(inactive_status)
+    end
+
+    %w[Pending Reinstate Unknown].each do |status_name|
+      it "leaves a #{status_name} organization untouched when it regains an active affiliation" do
+        status = OrganizationStatus.find_or_create_by!(name: status_name)
+        org = create(:organization, organization_status: status)
+
+        create(:affiliation, organization: org, inactive: false, end_date: nil)
+
+        expect(org.reload.organization_status).to eq(status)
+      end
+    end
+  end
+
   describe '#set_inactive_from_dates' do
     let(:op) { create(:affiliation, inactive: false, end_date: nil) }
 
