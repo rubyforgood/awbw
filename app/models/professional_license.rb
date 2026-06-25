@@ -27,7 +27,7 @@ class ProfessionalLicense < ApplicationRecord
     expires_on.present? && expires_on.past?
   end
 
-  def label
+  def name
     [ kind, number ].compact_blank.join(" ").presence || "License (number pending)"
   end
 end
