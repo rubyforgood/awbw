@@ -192,6 +192,14 @@ class Event < ApplicationRecord
     super.presence || "CE hours"
   end
 
+  # What a registrant owes to earn this training's CE hours: the available hours
+  # times the per-hour rate. Zero when the event grants no CE hours.
+  def ce_amount_owed_cents
+    return 0 if ce_hours.blank?
+
+    (ce_hours * ContinuingEducationRegistration::HOURLY_RATE_DOLLARS * 100).round
+  end
+
   # Virtual attributes for date/time inputs (Firefox datetime-local compat)
   attr_writer :start_date_date, :start_date_time,
               :end_date_date, :end_date_time,

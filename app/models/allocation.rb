@@ -12,13 +12,20 @@ class Allocation < ApplicationRecord
 
   validate :reverted_requires_positive_amount, :negative_cannot_be_reverted
   validate :validate_event_registration_cost, if: -> { allocatable_type == "EventRegistration" }
+  validate :validate_ce_registration_cost, if: -> { allocatable_type == "ContinuingEducationRegistration" }
 
   after_create :adjust_source_remaining
+  after_create :sync_ce_registration_status
 
   def adjust_source_remaining
     return unless source.is_a?(Payment)
 
     source.update!(amount_cents_remaining: source.amount_cents_remaining - amount)
+  end
+
+  # Keep a CE registration's requested↔paid status in step with its payments.
+  def sync_ce_registration_status
+    allocatable.sync_payment_status! if allocatable.is_a?(ContinuingEducationRegistration)
   end
 
   def reverted?
@@ -105,6 +112,29 @@ class Allocation < ApplicationRecord
       elsif other_total + amount > cost_cents
         remaining = cost_cents - other_total
         errors.add(:base, "Cannot allocate more than remaining event cost. Remaining: #{MoneyFormatter.dollars_from_cents(remaining)}")
+      end
+    end
+  end
+
+  def validate_ce_registration_cost
+    ce_reg = allocatable
+    return unless ce_reg.is_a?(ContinuingEducationRegistration)
+
+    cost_cents = ce_reg.amount_cents.to_i
+    if cost_cents <= 0
+      errors.add(:base, "Cannot allocate to a CE registration with no cost.")
+      return
+    end
+
+    other_total = ce_reg.allocations.sum(:amount)
+    other_total -= amount_was if persisted?
+
+    if amount.to_i > 0
+      if other_total >= cost_cents
+        errors.add(:base, "CE registration is already fully paid.")
+      elsif other_total + amount > cost_cents
+        remaining = cost_cents - other_total
+        errors.add(:base, "Cannot allocate more than remaining CE cost. Remaining: #{MoneyFormatter.dollars_from_cents(remaining)}")
       end
     end
   end

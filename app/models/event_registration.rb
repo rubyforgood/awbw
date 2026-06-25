@@ -8,6 +8,7 @@ class EventRegistration < ApplicationRecord
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :organizations, through: :event_registration_organizations
   has_many :allocations, as: :allocatable
+  has_many :continuing_education_registrations, dependent: :destroy
   has_many :scholarships, -> { distinct },
     through: :allocations, source: :source, source_type: "Scholarship"
   has_many :checklist_completions, class_name: "EventRegistrationChecklistCompletion", dependent: :destroy

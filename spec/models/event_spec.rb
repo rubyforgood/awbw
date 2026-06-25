@@ -315,4 +315,15 @@ RSpec.describe Event, type: :model do
       expect(results).not_to include(art_event, music_event)
     end
   end
+
+  describe "#ce_amount_owed_cents" do
+    it "multiplies the available CE hours by the hourly rate" do
+      event = build(:event, ce_hours: 6)
+      expect(event.ce_amount_owed_cents).to eq(6 * ContinuingEducationRegistration::HOURLY_RATE_DOLLARS * 100)
+    end
+
+    it "is zero when the event grants no CE hours" do
+      expect(build(:event, ce_hours: nil).ce_amount_owed_cents).to eq(0)
+    end
+  end
 end

@@ -116,6 +116,8 @@ class EventPolicy < ApplicationPolicy
                   :event_details_label,
                   :ce_hours_details,
                   :ce_hours_details_label,
+                  :ce_hours_eligible,
+                  :ce_hours,
                   :autoshow_cost,
                   :autoshow_date,
                   :autoshow_location,
