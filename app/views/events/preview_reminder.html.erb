@@ -37,7 +37,7 @@
           The subject line recipients will see. Edit it as you like — leave it as is to use the default.
         </p>
         <%= text_field_tag :custom_subject, @custom_subject,
-              class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm",
+              class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm bg-white",
               data: { reminder_preview_target: "subjectInput", action: "input->reminder-preview#updateSubject" } %>
       </div>
       <div class="mb-6">
@@ -50,7 +50,7 @@
         </p>
         <%= text_area_tag :custom_message, @custom_message,
               rows: 4,
-              class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono",
+              class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono bg-white",
               data: { reminder_preview_target: "input", action: "input->reminder-preview#update" } %>
       </div>
       <% if @reminder_preview_html.present? %>
