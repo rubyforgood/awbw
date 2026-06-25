@@ -17,7 +17,11 @@ module EventRegistrationServices
     def call
       ActiveRecord::Base.transaction do
         person = find_or_create_person
+        # Backfill after the phone-contact guard: create_phone_contact should only
+        # fire for a phone the payer actually typed, not one we copied from their
+        # own profile (which would needlessly rewrite their contact methods).
         create_phone_contact(person) if field_value("payer_phone").present?
+        backfill_payer_fields(person)
         submission = create_form_submission(person)
         send_notifications(submission, person)
         Result.new(success?: true, form_submission: submission, errors: [])
@@ -48,6 +52,34 @@ module EventRegistrationServices
         recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
         notification_type: 0
       )
+    end
+
+    # Logged-in payers don't see the logged_out_only payer fields, so those keys
+    # never reach @form_params and the payer's identity would be missing from the
+    # saved form answers. Backfill them from the known person, without clobbering
+    # anything that was actually submitted.
+    def backfill_payer_fields(person)
+      {
+        "payer_first_name" => person.first_name,
+        "payer_last_name" => person.last_name,
+        "payer_email" => person.preferred_email,
+        "payer_phone" => person.phone_number,
+        "payer_organization" => payer_organization_name(person)
+      }.each do |key, value|
+        next if value.blank?
+
+        field = @form.form_fields.find_by(field_identifier: key)
+        next unless field
+        next if @form_params[field.id.to_s].present?
+
+        @form_params[field.id.to_s] = value
+      end
+    end
+
+    # Prefer the org the payer facilitates for, falling back to their most recent
+    # active affiliation when they have no facilitator affiliation.
+    def payer_organization_name(person)
+      (person.program_organization || person.primary_organization)&.name
     end
 
     def field_value(key)
