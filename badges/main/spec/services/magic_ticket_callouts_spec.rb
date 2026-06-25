@@ -15,7 +15,7 @@ RSpec.describe MagicTicketCallouts do
   describe "#cards" do
     it "shows the always-present cards for a bare paid-cost registration" do
       expect(card_titles(registration)).to eq([
-        "Make your payment", "Forms", "Handouts", "Frequently asked questions", "Facilitator Portal access"
+        "Make your payment", "Forms", "Handouts", "Frequently asked questions"
       ])
     end
 
@@ -43,14 +43,6 @@ RSpec.describe MagicTicketCallouts do
       event.update!(ce_hours_details: "6 hours", videoconference_url: "https://example.zoom.us/j/1")
       trailing = described_class.new(registration).cards.map(&:trailing_icon).uniq
       expect(trailing).to eq([ "fa-solid fa-arrow-right" ])
-    end
-
-    it "greys the portal card until the registrant attends and pays" do
-      expect(card(registration, "Facilitator Portal access").theme).to eq(DomainTheme.swatch("gray"))
-
-      registration.update!(status: "attended")
-      create(:allocation, allocatable: registration, amount: event.cost_cents)
-      expect(card(registration, "Facilitator Portal access").theme).to eq(DomainTheme.swatch("green"))
     end
 
     it "shows the certificate card only once it is available" do
@@ -138,8 +130,7 @@ RSpec.describe MagicTicketCallouts do
         "Videoconference",
         "Forms",
         "Handouts",
-        "Frequently asked questions",
-        "Facilitator Portal access"
+        "Frequently asked questions"
       ])
     end
   end

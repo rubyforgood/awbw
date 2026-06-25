@@ -51,7 +51,7 @@ RSpec.describe "Events::Registrations", type: :request do
       it "renders the consolidated magic callout cards" do
         get registration_ticket_path(registration.slug)
         expect(response.body).to include("view your balance")
-        expect(response.body).to include("W-9, invoice, and letter to supervisors")
+        expect(response.body).to include("W-9 and invoice")
         expect(response.body).to include("Worksheets and resources for the training")
         expect(response.body).to include("Frequently asked questions")
       end
@@ -253,12 +253,6 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include(registration_resource_path(registration.slug, w9, return_to: "forms"))
       expect(response.body).not_to include("/documents/awbw-w9.pdf")
     end
-
-    it "links to the letter-to-supervisors resource page below the invoice when present, returning to forms" do
-      letter = create(:resource, title: "Letter to Supervisors", kind: "Form")
-      get registration_forms_path(registration.slug)
-      expect(response.body.index(registration_invoice_path(registration.slug, return_to: "forms"))).to be < response.body.index(registration_resource_path(registration.slug, letter, return_to: "forms"))
-    end
   end
 
   describe "GET /registration/:slug/handouts" do
@@ -339,25 +333,6 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Back to forms")
       expect(response.body).to include("Forms detail")
       expect(response.body).to include("Letter to Supervisors")
-    end
-  end
-
-  describe "GET /registration/:slug/portal" do
-    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
-
-    it "shows the attendance and payment requirements, no home link until granted" do
-      get registration_portal_path(registration.slug)
-      expect(response).to have_http_status(:success)
-      expect(response.body).to include("Attended both training days")
-      expect(response.body).to include("Training fee paid")
-      expect(response.body).not_to include("Go to the home screen")
-    end
-
-    it "shows the home-screen link once attendance and payment are met" do
-      registration.update!(status: "attended")
-      create(:allocation, allocatable: registration, amount: event.cost_cents)
-      get registration_portal_path(registration.slug)
-      expect(response.body).to include("Go to the home screen")
     end
   end
 
