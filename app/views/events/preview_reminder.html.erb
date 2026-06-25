@@ -52,14 +52,14 @@
                   rows: 4,
                   class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono bg-white",
                   data: { reminder_preview_target: "input", action: "input->reminder-preview#update" } %>
-            <p class="text-xs text-gray-500 mt-1">
+            <p class="text-xs text-gray-400 mt-1.5">
               Accepts basic HTML — bold, italics, links, lists, and line breaks.
             </p>
           </div>
         </div>
       </div>
       <% if @reminder_preview_html.present? %>
-        <div class="mb-6">
+        <div class="mt-12 mb-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">Preview (sample registrant)</h2>
           <div class="border border-gray-200 rounded-lg bg-white overflow-hidden">
             <div class="border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700">
