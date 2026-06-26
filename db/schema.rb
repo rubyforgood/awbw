@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_26_162253) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_26_165811) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -423,15 +423,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_162253) do
   end
 
   create_table "continuing_education_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.integer "amount_cents", default: 0, null: false
     t.datetime "certificate_sent_at"
+    t.integer "cost_cents", default: 0, null: false
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
     t.bigint "event_registration_id", null: false
     t.decimal "hours", precision: 5, scale: 2, default: "0.0", null: false
     t.datetime "issued_at"
     t.bigint "professional_license_id", null: false
-    t.integer "rate_cents", default: 2500, null: false
     t.string "status", default: "requested", null: false
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"

@@ -32,12 +32,23 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg.hours).to eq(8)
     end
 
-    it "recomputes amount_cents from editable (fractional) hours on save" do
+    it "recomputes cost_cents from editable (fractional) hours on save" do
       ce_reg = create(:continuing_education_registration, hours: 6)
-      expect(ce_reg.amount_cents).to eq(6 * 2500)
+      expect(ce_reg.cost_cents).to eq(6 * 2500)
 
       ce_reg.update!(hours: 1.5)
-      expect(ce_reg.amount_cents).to eq(3750)
+      expect(ce_reg.cost_cents).to eq(3750)
+    end
+
+    it "prices cost_cents from the event's per-hour CE cost override" do
+      event = create(:event, ce_hour_cost_cents: 4000)
+      registration = create(:event_registration, event: event)
+
+      ce_reg = create(:continuing_education_registration,
+        event_registration: registration, hours: 6,
+        professional_license: create(:professional_license, person: registration.registrant))
+
+      expect(ce_reg.cost_cents).to eq(6 * 4000)
     end
   end
 

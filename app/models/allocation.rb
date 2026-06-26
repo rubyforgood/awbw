@@ -120,7 +120,7 @@ class Allocation < ApplicationRecord
     ce_reg = allocatable
     return unless ce_reg.is_a?(ContinuingEducationRegistration)
 
-    cost_cents = ce_reg.amount_cents.to_i
+    cost_cents = ce_reg.cost_cents.to_i
     if cost_cents <= 0
       errors.add(:base, "Cannot allocate to a CE registration with no cost.")
       return

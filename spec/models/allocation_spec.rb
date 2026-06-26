@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe Allocation, type: :model do
   describe "validations" do
     describe "validate_ce_registration_cost" do
-      let(:ce_reg) { create(:continuing_education_registration, hours: 4) } # amount_cents 10_000
+      let(:ce_reg) { create(:continuing_education_registration, hours: 4) } # cost_cents 10_000
       let(:payment) { create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000) }
 
       it "is valid when amount is within the CE cost" do

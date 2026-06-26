@@ -18,14 +18,14 @@ class ContinuingEducationRegistration < ApplicationRecord
   STATUSES = %w[ requested paid issued unawarded ].freeze
 
   before_validation :default_hours_from_event, on: :create
-  before_save :calculate_amount
+  before_save :calculate_cost, if: -> { new_record? || hours_changed? }
 
   validates :status, inclusion: { in: STATUSES }
   validates :hours, numericality: { greater_than_or_equal_to: 0 }
   validate :license_belongs_to_registrant
 
   def amount_owed_cents
-    [ amount_cents - paid_cents, 0 ].max
+    [ cost_cents - paid_cents, 0 ].max
   end
 
   def paid_cents
@@ -36,7 +36,7 @@ class ContinuingEducationRegistration < ApplicationRecord
   end
 
   def paid_in_full?
-    paid_cents >= amount_cents
+    paid_cents >= cost_cents
   end
 
   # Advance requested↔paid to track real payments without clobbering a later
@@ -54,8 +54,17 @@ class ContinuingEducationRegistration < ApplicationRecord
     self.hours = event_registration&.event&.ce_hours if hours.blank? || hours.zero?
   end
 
-  def calculate_amount
-    self.amount_cents = (hours.to_d * rate_cents).round
+  # Snapshot the total cost from the event's per-hour CE rate. Recomputed only on
+  # create or when hours change, so an admin editing the event rate later never
+  # silently re-prices a registration that's already been billed or paid.
+  def calculate_cost
+    self.cost_cents = (hours.to_d * ce_rate_cents).round
+  end
+
+  # Per-hour CE price (cents) from the event, falling back to the default rate
+  # when there's no event yet (e.g. an in-memory build).
+  def ce_rate_cents
+    event_registration&.event&.ce_hour_cost_cents || ContinuingEducationRegistration::HOURLY_RATE_DOLLARS * 100
   end
 
   def license_belongs_to_registrant
