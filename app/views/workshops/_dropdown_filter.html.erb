@@ -40,8 +40,10 @@
           params.dig(param_name, item.id.to_s).to_s == item.id.to_s,
           id: "#{param_name}_#{item.id}",
           class: "category-checkbox" %>
+          <%# Render the label as stored — sector names carry intentional casing
+              (e.g. "LGBTQIA+", "Child Abuse/Neglect") that .humanize would flatten. %>
           <%= label_tag "#{param_name}_#{item.id}",
-          item.public_send(label_method).humanize,
+          item.public_send(label_method),
           class: "text-sm text-gray-700" %>
         </div>
       <% end %>
