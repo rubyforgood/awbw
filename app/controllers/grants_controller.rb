@@ -4,11 +4,16 @@ class GrantsController < ApplicationController
 
   def index
     authorize!
-    @grants = authorized_scope(Grant.all)
+    # The full page renders only the header, filters, and an empty results frame;
+    # the frame's src request (turbo_frame_request?) loads the filtered rows.
+    return render :index unless turbo_frame_request?
+
+    @grants = filter_grants(authorized_scope(Grant.all))
                 .includes(:donor, scholarships: { allocation: :allocatable })
                 .by_deadline
                 .page(params[:page])
     track_index_intent(Grant, @grants, params)
+    render :index_lazy
   end
 
   def show
@@ -74,6 +79,38 @@ class GrantsController < ApplicationController
   end
 
   private
+
+  # Narrow the index by the optional filter inputs. Each filter is a no-op when
+  # its param is blank or unrecognized, so combinations stack cleanly.
+  def filter_grants(scope)
+    scope = scope.where("grants.name LIKE ?", "%#{Grant.sanitize_sql_like(params[:name])}%") if params[:name].present?
+    scope = filter_by_donor_name(scope, params[:donor_name]) if params[:donor_name].present?
+
+    scope = case params[:funds]
+    when "available" then scope.with_funds_remaining
+    when "none" then scope.fully_issued
+    else scope
+    end
+
+    scope = scope.where(donor_type: params[:donor_type]) if Grant::DONOR_TYPES.include?(params[:donor_type])
+
+    case params[:tasks]
+    when "completed" then scope.all_tasks_completed
+    when "outstanding" then scope.tasks_outstanding
+    else scope
+    end
+  end
+
+  # Match grants whose polymorphic donor (Organization or Person) name contains
+  # the query. Resolve matching donor ids per type, then OR the two sides so the
+  # other active filters on `scope` apply to both.
+  def filter_by_donor_name(scope, query)
+    like = "%#{Grant.sanitize_sql_like(query)}%"
+    org_ids = Organization.where("name LIKE ?", like).pluck(:id)
+    person_ids = Person.where("first_name LIKE :q OR last_name LIKE :q OR CONCAT(first_name, ' ', last_name) LIKE :q", q: like).pluck(:id)
+    scope.where(donor_type: "Organization", donor_id: org_ids)
+         .or(scope.where(donor_type: "Person", donor_id: person_ids))
+  end
 
   def set_grant
     @grant = Grant.find(params[:id])
