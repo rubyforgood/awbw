@@ -471,6 +471,14 @@
                     title_placeholder: "CE hours",
                     content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
                     content_placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><h3>Before the training</h3><ul><li>Email your license number</li></ul>" %>
+              <div class="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
+                <label class="flex items-center gap-2 text-sm text-gray-700">
+                  Cost per CE hour
+                  <span class="text-gray-400">$</span>
+                  <%= f.number_field :ce_hour_cost, min: 0, step: 1,
+                        class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
+                </label>
+              </div>
             <% when :event_details %>
               <%= render "events/builtin_callout_card", f: f, card: card,
                     label_field: :event_details_label, content_field: :event_details,
