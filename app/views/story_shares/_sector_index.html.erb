@@ -3,7 +3,9 @@
 
     <!-- Section Title -->
     <h1 class="text-2xl font-bold text-red-700 mb-6">
-      <%= params[:sector_names_all].to_s.titleize %>
+      <%# Sector names carry intentional casing ("LGBTQIA+", "Self-Care/Personal
+          Growth"); render them as stored rather than running .titleize. %>
+      <%= @sector_names_all.to_sentence %>
     </h1>
 
     <% if @stories_by_sector.first.second.any? %>
