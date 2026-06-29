@@ -47,6 +47,7 @@ When changing a model or controller, check whether these related files need upda
 - Prefer early returns and guard clauses
 - Avoid unnecessary and/or complex conditionals
 - Prefer constants and scopes over magic strings
+- Avoid Rails `enum` — prefer plain string columns constrained by a constant + `validates inclusion`
 - Use safe navigation (`&.`) where appropriate
 - Use `presence` over blank checks
 - Use `Arel.sql` for raw SQL in order clauses

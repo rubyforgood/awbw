@@ -9,6 +9,7 @@ class Person < ApplicationRecord
   has_one :user, inverse_of: :person, dependent: :nullify
   has_many :affiliations, dependent: :destroy
   has_many :organizations, through: :affiliations
+  has_many :professional_licenses, dependent: :destroy
   has_many :communal_reports, through: :organizations, source: :reports
   has_many :windows_types, through: :organizations
 

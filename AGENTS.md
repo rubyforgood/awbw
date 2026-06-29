@@ -51,7 +51,7 @@ This codebase (Rails 8.1)
 | `app/models/` | ActiveRecord models | ~78 files |
 | `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~29 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
-| `app/models/concerns/` | Shared model modules | 15 concerns |
+| `app/models/concerns/` | Shared model modules | 16 concerns |
 
 ### Presentation
 
@@ -104,6 +104,8 @@ This codebase (Rails 8.1)
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
 | `Grant` | Donated funds (polymorphic `donor`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
 | `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
+| `ProfessionalLicense` | A license a `Person` holds (`number`, `kind`, `issuing_state`, `expires_on`); a null `number` is a placeholder. `find_or_create_for` keeps one license per (person, number) |
+| `ContinuingEducationRegistration` | A registrant's CE for one event against one `ProfessionalLicense`; billable `allocatable` (`Registerable`) with stored `hours` + `cost_cents` (default from the event). Payment is computed (no stored status); the certificate is delivered via `certificate_sent_at` and gated by its own `certificate_available?` |
 | `Report` | STI base class for MonthlyReport |
 | `WorkshopLog` | Standalone model for workshop log submissions (attendance, form fields) |
 
@@ -133,6 +135,7 @@ This codebase (Rails 8.1)
 | `NameFilterable` | Name-based filtering |
 | `Publishable` | `published`, `publicly_visible` scopes |
 | `PunctuationStrippable` | Strips punctuation from strings |
+| `Registerable` | Shared payment (`allocations_sum`/`paid?`/`remaining_cost`/…) + certificate (`certificate_sent?`, `mark_certificate_sent!`) interface for `EventRegistration` and `ContinuingEducationRegistration`; includers supply `cost_cents` + their own `certificate_available?` |
 | `RemoteSearchable` | AJAX remote search by column |
 | `RichTextSearchable` | Full-text search on ActionText rich_text fields |
 | `SectorsTaggable` | Enforces a single primary sector for sector-tagged owners |

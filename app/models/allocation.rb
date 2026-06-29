@@ -12,6 +12,7 @@ class Allocation < ApplicationRecord
 
   validate :reverted_requires_positive_amount, :negative_cannot_be_reverted
   validate :validate_event_registration_cost, if: -> { allocatable_type == "EventRegistration" }
+  validate :validate_ce_registration_cost, if: -> { allocatable_type == "ContinuingEducationRegistration" }
 
   after_create :adjust_source_remaining
 
@@ -88,8 +89,6 @@ class Allocation < ApplicationRecord
 
   def validate_event_registration_cost
     event_reg = allocatable
-    return unless event_reg.is_a?(EventRegistration)
-
     cost_cents = event_reg.event.cost_cents
     if cost_cents.blank?
       errors.add(:base, "Cannot allocate to a free event.")
@@ -105,6 +104,31 @@ class Allocation < ApplicationRecord
       elsif other_total + amount > cost_cents
         remaining = cost_cents - other_total
         errors.add(:base, "Cannot allocate more than remaining event cost. Remaining: #{MoneyFormatter.dollars_from_cents(remaining)}")
+      end
+    end
+  end
+
+  def validate_ce_registration_cost
+    ce_reg = allocatable
+    # cost_cents is a non-null, default-0 column, so `<= 0` (not `.blank?`, as in
+    # the event variant whose cost is nullable) is the right "no cost" test. A
+    # zero-cost CE accepts no allocations even though CE#paid_in_full? reports it
+    # as paid — that asymmetry is deliberate, see CE#paid_in_full?.
+    cost_cents = ce_reg.cost_cents.to_i
+    if cost_cents <= 0
+      errors.add(:base, "Cannot allocate to a CE registration with no cost.")
+      return
+    end
+
+    other_total = ce_reg.allocations_sum
+    other_total -= amount_was if persisted?
+
+    if amount.to_i > 0
+      if other_total >= cost_cents
+        errors.add(:base, "CE registration is already fully paid.")
+      elsif other_total + amount > cost_cents
+        remaining = cost_cents - other_total
+        errors.add(:base, "Cannot allocate more than remaining CE cost. Remaining: #{MoneyFormatter.dollars_from_cents(remaining)}")
       end
     end
   end
