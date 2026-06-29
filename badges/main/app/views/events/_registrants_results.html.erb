@@ -118,10 +118,10 @@
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <% linked_orgs = registration.organizations %>
                   <% submitted_org_name = submitted_org_names[registration.registrant_id].to_s.strip %>
-                  <% linked_org_names = linked_orgs.map { |org| org.name.to_s.strip.downcase } %>
-                  <%# A submitted name not represented among the linked orgs still needs admin
-                      attention; a name matching a linked org is already resolved. %>
-                  <% needs_linking = submitted_org_name.present? && linked_org_names.exclude?(submitted_org_name.downcase) %>
+                  <%# A submitted org name needs admin attention only while nothing is linked
+                      yet; once an admin links any org they've made the call, so a non-matching
+                      submitted name is no longer treated as pending. %>
+                  <% needs_linking = submitted_org_name.present? && linked_orgs.none? %>
                   <% editor_path = link_organization_event_registration_path(registration, return_to: "registrants") %>
                   <% pill_classes = "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 transition hover:opacity-80 hover:shadow-sm" %>
                   <div class="flex flex-wrap gap-1.5">

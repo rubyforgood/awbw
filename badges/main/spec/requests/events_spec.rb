@@ -591,14 +591,14 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include(">Pending<")
       end
 
-      it "shows the linked org AND a 'Pending' chip when the submitted name is not among the linked orgs" do
+      it "does not show a 'Pending' chip when an org is linked, even if the submitted name differs" do
         create(:event_registration_organization, event_registration: registration, organization: organization)
         submit_agency_name("A Different Unlisted Agency")
 
         get registrants_event_path(event)
 
         expect(response.body).to include(organization.name)
-        expect(response.body).to include(">Pending<")
+        expect(response.body).not_to include(">Pending<")
       end
 
       it "does not show 'Pending' when the submitted name matches a linked org" do
