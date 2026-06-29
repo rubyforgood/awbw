@@ -27,7 +27,6 @@
       <%# No license picker here — saving creates the record against the registrant's
           license (or an empty placeholder). The license is then shown below and
           editable on the CE registration's own page. %>
-      <p class="text-xs text-gray-400">Saving with this on creates the CE registration.</p>
     <% else %>
       <% license_number = ce_registration.professional_license&.number %>
       <div class="space-y-2">
