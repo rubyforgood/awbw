@@ -315,4 +315,36 @@ RSpec.describe Event, type: :model do
       expect(results).not_to include(art_event, music_event)
     end
   end
+
+  describe "#ce_hours_cost (dollars)" do
+    it "is nil when no cost is set" do
+      expect(build(:event, ce_hours_cost_cents: nil).ce_hours_cost).to be_nil
+    end
+
+    it "reads the stored cost back in dollars" do
+      expect(build(:event, ce_hours_cost_cents: 15_000).ce_hours_cost).to eq(150)
+    end
+
+    it "converts a dollar amount to cents on assignment" do
+      expect(build(:event, ce_hours_cost: 150).ce_hours_cost_cents).to eq(15_000)
+    end
+
+    it "clears the cents when assigned blank" do
+      expect(build(:event, ce_hours_cost: "").ce_hours_cost_cents).to be_nil
+    end
+  end
+
+  describe "#ce_eligible?" do
+    it "is true when the event offers a positive number of CE hours" do
+      expect(build(:event, ce_hours_offered: 6)).to be_ce_eligible
+    end
+
+    it "is false when no CE hours are offered" do
+      expect(build(:event, ce_hours_offered: nil)).not_to be_ce_eligible
+    end
+
+    it "is false when CE hours are zero" do
+      expect(build(:event, ce_hours_offered: 0)).not_to be_ce_eligible
+    end
+  end
 end

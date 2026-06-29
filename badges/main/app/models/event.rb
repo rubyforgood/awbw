@@ -236,6 +236,29 @@ class Event < ApplicationRecord
     end
   end
 
+  # Virtual attribute for the total CE cost in dollars (converts to/from
+  # ce_hours_cost_cents), mirroring #cost.
+  def ce_hours_cost
+    return nil if ce_hours_cost_cents.nil?
+    ce_hours_cost_cents / 100.0
+  end
+
+  def ce_hours_cost=(dollar_amount)
+    if dollar_amount.blank?
+      self.ce_hours_cost_cents = nil
+    else
+      dollar_amount = dollar_amount.to_s.gsub(/[^\d.]/, "").to_f
+      self.ce_hours_cost_cents = (dollar_amount * 100).round
+    end
+  end
+
+  # An event grants CE credit when it offers a positive number of hours. Derived
+  # from ce_hours_offered rather than a separate stored flag, so there's a single
+  # source of truth.
+  def ce_eligible?
+    ce_hours_offered.to_f.positive?
+  end
+
   def attachable_content_type
     "application/vnd.active_record.event"
   end

@@ -1,5 +1,6 @@
 class EventRegistration < ApplicationRecord
   include RemoteSearchable
+  include Registerable
 
   belongs_to :registrant, class_name: "Person"
   belongs_to :event
@@ -8,6 +9,7 @@ class EventRegistration < ApplicationRecord
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :organizations, through: :event_registration_organizations
   has_many :allocations, as: :allocatable
+  has_many :continuing_education_registrations, dependent: :destroy
   has_many :scholarships, -> { distinct },
     through: :allocations, source: :source, source_type: "Scholarship"
   has_many :checklist_completions, class_name: "EventRegistrationChecklistCompletion", dependent: :destroy
@@ -198,10 +200,6 @@ class EventRegistration < ApplicationRecord
     # checked_in_at.present?
   end
 
-  def paid?
-    paid_in_full?
-  end
-
   # True when the registrant should be granted access to ticket materials
   # (training links, etc.) even though they haven't paid in full yet. Admins
   # flip the `intends_to_pay` flag when someone commits to paying after the
@@ -210,11 +208,11 @@ class EventRegistration < ApplicationRecord
   #
   # This is the single seam for "may this registrant reach paid content?":
   # any payment-gated resource (the videoconference join link today, recordings
-  # or downloads in the future) should gate on this, NOT on `paid?`. Reporting
-  # surfaces (rosters, CSV exports, dashboard metrics) must keep using `paid?` /
+  # or downloads in the future) should gate on this, NOT on `paid_in_full?`.
+  # Reporting surfaces (rosters, CSV exports, dashboard metrics) must keep using
   # `paid_in_full?` so they still reflect the real balance owed.
   def payment_access_granted?
-    paid? || intends_to_pay?
+    paid_in_full? || intends_to_pay?
   end
 
   # Human-readable payment status for rosters and CSV exports. Assumes the event
@@ -254,41 +252,9 @@ class EventRegistration < ApplicationRecord
     event.end_date.present? && event.end_date.past? && attended? && scholarship_tasks_met?
   end
 
-  # These read from the loaded `allocations` association so callers that preload
-  # it (e.g. the registrants roster and onboarding matrix) pay no per-row queries;
-  # callers that don't load the association once and reuse it across these methods.
-  def allocations_sum
-    return allocations.to_a.sum(&:amount) if allocations.loaded?
-    allocations.sum(:amount)
-  end
-
-  def remaining_cost
-    [ event.cost_cents - allocations_sum, 0 ].max
-  end
-
-  def paid_in_full?
-    return true if event.cost_cents.to_i <= 0
-    allocations_sum >= event.cost_cents.to_i
-  end
-
-  def payments_sum
-    return allocations.to_a.select { |a| a.source_type == Payment.polymorphic_name }.sum(&:amount) if allocations.loaded?
-    allocations.where(source_type: Payment.polymorphic_name).sum(:amount)
-  end
-
-  def partially_paid?
-    !paid_in_full? && payments_sum.to_i.positive?
-  end
-
-  def discounted?
-    return allocations.to_a.any? { |a| a.source_type == "Discount" } if allocations.loaded?
-    allocations.where(source_type: "Discount").exists?
-  end
-
-  # Total comp/discount coverage (excludes payments and scholarships).
-  def discount_sum
-    return allocations.to_a.select { |a| a.source_type == "Discount" }.sum(&:amount) if allocations.loaded?
-    allocations.where(source_type: "Discount").sum(:amount)
+  # Cost source for the Registerable payment interface: the event's price.
+  def cost_cents
+    event.cost_cents
   end
 
   # True when the registrant has supplied a CE license number.
