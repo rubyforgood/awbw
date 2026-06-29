@@ -293,19 +293,36 @@ RSpec.describe "Events::Registrations", type: :request do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     it "shows status, cost, and the license number on file" do
-      registration.update!(ce_credit_requested: true, ce_hours_requested: 6, ce_license_number: "LIC123")
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
+      license = create(:professional_license, person: registration.registrant, number: "LIC123")
+      create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
       get registration_ce_path(registration.slug)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Requested")
-      expect(response.body).to include("Hours requested")
+      expect(response.body).to include("Hours")
       expect(response.body).to include("$150")
       expect(response.body).to include("LIC123")
     end
 
     it "notes when the license number is not yet on file" do
-      registration.update!(ce_credit_requested: true, ce_hours_requested: 6, ce_license_number: nil)
+      license = create(:professional_license, :placeholder, person: registration.registrant)
+      create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
       get registration_ce_path(registration.slug)
-      expect(response.body).to include("We don't have your license number on file yet.")
+      expect(response.body).to include("Not on file yet.")
+    end
+  end
+
+  describe "POST /registration/:slug/ce/license" do
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    it "saves a license number entered on the callout" do
+      license = create(:professional_license, :placeholder, person: registration.registrant)
+      create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
+
+      post registration_ce_license_path(registration.slug), params: { license_number: "LMFT 7788" }
+
+      expect(response).to redirect_to(registration_ce_path(registration.slug))
+      expect(registration.continuing_education_registrations.first.professional_license.number).to eq("LMFT 7788")
     end
   end
 

@@ -155,8 +155,8 @@ registration_form.form_fields
   .update_all(subtitle: "Payments are due no more than three weeks after your registration date. " \
                         "Training details will be sent after payments are received.")
 
-# The CE-interest "magic question": a single Yes/No whose answer drives the
-# resulting registration's ce_credit_requested flag (see
+# The CE-interest "magic question": a single Yes/No whose "Yes" creates the
+# registration's ContinuingEducationRegistration (see
 # EventRegistrationServices::PublicRegistration). Seeded straight onto the form
 # with its own section so the form builder's add/remove-section logic leaves it
 # alone, and carrying the well-known field_identifier the service keys off. A
@@ -769,10 +769,11 @@ registrations_data = []
 #   so she can reach her training materials (the intends_to_pay scenario). Pairs
 #   with Amy on this same event, who DOES have payments, for side-by-side review.
 if facilitator_training
+  facilitator_training.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
   [
-    { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true, ce_credit_requested: true },
+    { person: amy_person, status: "registered", scholarship_requested: true, w9_requested: true, invoice_requested: true, ce_credit_requested: true, ce_license_number: "LMFT 90210" },
     { person: maria_j, status: "registered", invoice_requested: true, ce_credit_requested: true, intends_to_pay: true },
-    { person: anna_g, status: "attended", ce_credit_requested: true, intends_to_pay: true },
+    { person: anna_g, status: "attended", ce_credit_requested: true, intends_to_pay: true, ce_license_number: "LCSW 11223", ce_status: "issued" },
     { person: mario_j, status: "registered" },
     { person: kim_d, status: "cancelled" },
     { person: aisha_person, status: "registered", intends_to_pay: true }
@@ -788,8 +789,9 @@ end
 # Angel Garcia: registered, no form (no user)
 # Linda Williams: no_show (no user)
 if trauma_training
+  trauma_training.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
   [
-    { person: sarah_s, status: "registered", invoice_requested: true, ce_credit_requested: true },
+    { person: sarah_s, status: "registered", invoice_requested: true, ce_credit_requested: true, ce_license_number: "LPCC 44556" },
     { person: jessica_b, status: "registered", scholarship_requested: true, ce_credit_requested: true },
     { person: angel_g, status: "registered" },
     { person: linda_w, status: "no_show" }
@@ -858,9 +860,17 @@ registrations_data.each do |data|
   # existing DB (find_or_initialize no longer recreates these registrations).
   registration.w9_requested = data[:w9_requested] || false
   registration.invoice_requested = data[:invoice_requested] || false
-  registration.ce_credit_requested = data[:ce_credit_requested] || false
   registration.intends_to_pay = data[:intends_to_pay] || false
   registration.save!
+
+  # CE opt-in becomes a ContinuingEducationRegistration against the registrant's
+  # license (a placeholder when no number is seeded). Hours come from the event.
+  if data[:ce_credit_requested] && registration.continuing_education_registrations.none?
+    license = ProfessionalLicense.find_or_create_for(person: data[:person], number: data[:ce_license_number])
+    ce_registration = registration.continuing_education_registrations.create!(professional_license: license)
+    # "issued" in the seed data means the CE certificate was delivered.
+    ce_registration.mark_certificate_sent! if data[:ce_status] == "issued"
+  end
 end
 
 # Connect each multi-affiliation registrant's registration to a single one of

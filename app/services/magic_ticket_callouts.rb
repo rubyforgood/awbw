@@ -119,8 +119,8 @@ class MagicTicketCallouts
   # they have, becoming a reference card once requested with hours and a license
   # number on file. Shown when the event offers CE or the registrant asked for it.
   def ce_hours_card
-    return unless registration.ce_credit_requested?
-    complete = registration.ce_hours_requested.present? && registration.ce_license_provided?
+    return unless registration.ce_requested?
+    complete = registration.ce_license_provided?
     Card.new(icon_class: "fa-solid fa-graduation-cap", color: "teal",
              title: event.ce_hours_details_label,
              subtitle: ce_hours_subtitle,
@@ -133,8 +133,8 @@ class MagicTicketCallouts
   end
 
   def ce_hours_subtitle
-    return "#{registration.ce_hours_requested} hours" if registration.ce_hours_requested.present?
-    "Continuing education credit"
+    hours = ContinuingEducationRegistration.format_hours(event.ce_hours_offered)
+    hours.present? ? "#{hours} hours" : "Continuing education credit"
   end
 
   # Teal "$X due" once hours + license are on file and money is owed; otherwise an
@@ -153,11 +153,9 @@ class MagicTicketCallouts
     amount_cents.positive? ? "#{amount} · #{needed}" : needed
   end
 
+  # Hours are set by the event now, so the only thing a requesting registrant can
+  # still be missing is their license number.
   def ce_missing_text
-    missing_hours = registration.ce_hours_requested.blank?
-    missing_license = !registration.ce_license_provided?
-    return "Hours & license number needed" if missing_hours && missing_license
-    return "Hours needed" if missing_hours
     "License number needed"
   end
 

@@ -479,9 +479,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_184214) do
   end
 
   create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.boolean "ce_credit_requested", default: false, null: false
-    t.integer "ce_hours_requested"
-    t.string "ce_license_number"
     t.datetime "certificate_sent_at"
     t.string "checkout_session_id"
     t.boolean "completed_day_1", default: false, null: false

@@ -323,41 +323,68 @@ RSpec.describe EventRegistration, type: :model do
     end
 
     describe ".ce_status" do
-      let!(:complete_ce) do
-        create(:event_registration, event: event, ce_credit_requested: true, ce_license_number: "ABC123", ce_hours_requested: 3).tap do |r|
-          create(:allocation, source: create(:payment, amount_cents: event.cost_cents, amount_cents_remaining: event.cost_cents),
-                              allocatable: r, amount: event.cost_cents)
+      let(:ce_cost) { 15_000 }
+      # Known license, fully paid (certificate not yet issued).
+      let!(:paid_ce) do
+        create(:event_registration, event: event).tap do |r|
+          cer = create(:continuing_education_registration, event_registration: r, cost_cents: ce_cost)
+          create(:allocation, source: create(:payment, amount_cents: ce_cost, amount_cents_remaining: ce_cost),
+                              allocatable: cer, amount: ce_cost)
         end
       end
-      let!(:missing_ce) { create(:event_registration, event: event, ce_credit_requested: true) }
-      let!(:no_ce) { create(:event_registration, event: event, ce_credit_requested: false) }
+      # Known license, unpaid.
+      let!(:requested_ce) do
+        create(:event_registration, event: event).tap do |r|
+          create(:continuing_education_registration, event_registration: r, cost_cents: ce_cost)
+        end
+      end
+      # CE registration sitting on a placeholder (numberless) license.
+      let!(:needs_license_ce) do
+        create(:event_registration, event: event).tap do |r|
+          license = create(:professional_license, :placeholder, person: r.registrant)
+          create(:continuing_education_registration, event_registration: r, professional_license: license, cost_cents: ce_cost)
+        end
+      end
+      # Certificate delivered.
+      let!(:issued_ce) do
+        create(:event_registration, event: event).tap do |r|
+          create(:continuing_education_registration, event_registration: r, cost_cents: ce_cost, certificate_sent_at: Time.current)
+        end
+      end
+      let!(:no_ce) { create(:event_registration, event: event) }
 
-      it "maps 'requested' to anyone who asked for CE credit" do
-        results = EventRegistration.ce_status("requested")
-        expect(results).to include(complete_ce, missing_ce)
-        expect(results).not_to include(no_ce)
+      it "maps 'needs_license' to CE on a placeholder license" do
+        results = EventRegistration.ce_status("needs_license")
+        expect(results).to include(needs_license_ce)
+        expect(results).not_to include(paid_ce, requested_ce, no_ce)
       end
 
-      it "maps 'license_not_provided' to CE requests missing a license number" do
-        results = EventRegistration.ce_status("license_not_provided")
-        expect(results).to include(missing_ce)
-        expect(results).not_to include(complete_ce, no_ce)
-      end
-
-      it "maps 'hours_not_provided' to CE requests missing hours" do
-        results = EventRegistration.ce_status("hours_not_provided")
-        expect(results).to include(missing_ce)
-        expect(results).not_to include(complete_ce, no_ce)
-      end
-
-      it "maps 'paid' to CE requests that are paid in full" do
+      it "maps 'paid' to fully paid CE registrations" do
         results = EventRegistration.ce_status("paid")
-        expect(results).to include(complete_ce)
-        expect(results).not_to include(missing_ce, no_ce)
+        expect(results).to include(paid_ce)
+        expect(results).not_to include(requested_ce, no_ce)
+      end
+
+      it "maps 'requested' to CE registrations not yet paid" do
+        results = EventRegistration.ce_status("requested")
+        expect(results).to include(requested_ce, needs_license_ce)
+        expect(results).not_to include(paid_ce, no_ce)
+      end
+
+      it "maps 'issued' to CE registrations with a delivered certificate" do
+        results = EventRegistration.ce_status("issued")
+        expect(results).to include(issued_ce)
+        expect(results).not_to include(requested_ce, no_ce)
+      end
+
+      it "maps 'not_issued' to CE registrations without a delivered certificate" do
+        results = EventRegistration.ce_status("not_issued")
+        expect(results).to include(paid_ce, requested_ce)
+        expect(results).not_to include(issued_ce, no_ce)
       end
 
       it "returns an unfiltered relation for unknown values" do
-        expect(EventRegistration.ce_status("bogus")).to include(complete_ce, missing_ce, no_ce)
+        expect(EventRegistration.ce_status("bogus")).to include(paid_ce, requested_ce, no_ce)
       end
     end
 
@@ -718,33 +745,39 @@ RSpec.describe EventRegistration, type: :model do
   describe "continuing education" do
     let(:reg) { create(:event_registration) }
 
+    def add_ce(number: "LIC-123", hours: 4, cost_cents: 15_000)
+      license = create(:professional_license, person: reg.registrant, number: number)
+      create(:continuing_education_registration, event_registration: reg, professional_license: license, hours: hours, cost_cents: cost_cents)
+    end
+
     describe "#ce_amount_owed_cents" do
-      it "multiplies requested hours by the default hourly rate" do
-        reg.ce_hours_requested = 4
-        expect(reg.ce_amount_owed_cents).to eq(4 * EventRegistration::CE_HOURLY_RATE_DOLLARS * 100)
+      it "sums the cost across the registration's CE registrations" do
+        add_ce(cost_cents: 10_000)
+        expect(reg.ce_amount_owed_cents).to eq(10_000)
       end
 
-      it "is zero when no hours are requested" do
-        reg.ce_hours_requested = nil
+      it "is zero when no CE is requested" do
         expect(reg.ce_amount_owed_cents).to eq(0)
       end
     end
 
-    describe "#ce_license_provided?" do
-      it "is true only when a license number is present" do
-        reg.ce_license_number = "LIC-123"
-        expect(reg).to be_ce_license_provided
-        reg.ce_license_number = ""
-        expect(reg).not_to be_ce_license_provided
+    describe "#ce_requested?" do
+      it "is true only once a CE registration exists" do
+        expect(reg).not_to be_ce_requested
+        add_ce
+        expect(reg.reload).to be_ce_requested
       end
     end
 
-    describe "ce_hours_requested validation" do
-      it "rejects negative or non-integer hours but allows nil" do
-        reg.ce_hours_requested = nil
-        expect(reg).to be_valid
-        reg.ce_hours_requested = -1
-        expect(reg).not_to be_valid
+    describe "#ce_license_provided?" do
+      it "is true only when every CE registration has a known license number" do
+        add_ce(number: "LIC-123")
+        expect(reg.reload).to be_ce_license_provided
+      end
+
+      it "is false when a CE registration sits on a placeholder license" do
+        add_ce(number: nil)
+        expect(reg.reload).not_to be_ce_license_provided
       end
     end
   end

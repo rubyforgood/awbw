@@ -186,5 +186,28 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(queries).to be_empty
       expect(preloaded.paid_in_full?).to be(true)
     end
+
+    it "reports discounted? and discount_sum like an event registration" do
+      ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
+      expect(ce_reg.discounted?).to be(false)
+      expect(ce_reg.discount_sum).to eq(0)
+
+      create(:allocation, source: create(:discount, amount_cents: 4_000), allocatable: ce_reg, amount: 4_000)
+
+      expect(ce_reg.discounted?).to be(true)
+      expect(ce_reg.discount_sum).to eq(4_000)
+    end
+
+    it "labels payment status Due → Partial → Paid" do
+      ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
+      expect(ce_reg.payment_status_label).to eq("Due")
+
+      payment = create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000)
+      create(:allocation, source: payment, allocatable: ce_reg, amount: 4_000)
+      expect(ce_reg.payment_status_label).to eq("Partial")
+
+      create(:allocation, source: payment, allocatable: ce_reg, amount: 6_000)
+      expect(ce_reg.payment_status_label).to eq("Paid")
+    end
   end
 end

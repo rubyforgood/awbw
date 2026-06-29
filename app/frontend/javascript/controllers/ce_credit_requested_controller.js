@@ -1,15 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Drives the CE-credit box on the registration form. Mounted on the <section>
-// so it can tint the whole card to signal save state: amber while the choice is
-// pending (changed but not yet saved), the continuing-education theme color once
-// it matches the stored "on" value, neutral gray when stored as off — the
-// "Requested" toggle and the card share that color. While "Requested" is on it
-// reveals the CE details (license number + hours) and keeps the "Provided" badge
-// and amount-owed total ($rate × hours) in sync as the admin edits them.
+// Drives the CE-credit box on the registration form. Colors the "Requested"
+// toggle to signal save state: amber while the choice is pending (changed but
+// not yet saved), the continuing-education theme color once it matches the
+// stored "on" value, neutral gray when stored as off. While "Requested" is on it
+// reveals the CE details (license number, hours, cost) and keeps the "Provided"
+// badge in sync as the admin edits the license number.
 export default class extends Controller {
-  static targets = ["checkbox", "track", "details", "license", "licenseBadge", "hours", "amount"]
-  static values = { initial: Boolean, rate: Number }
+  static targets = ["checkbox", "track", "details", "license", "licenseBadge"]
+  static values = { initial: Boolean }
 
   connect() {
     this.refresh()
@@ -33,7 +32,6 @@ export default class extends Controller {
     if (this.hasDetailsTarget) this.detailsTarget.classList.toggle("hidden", !checked)
 
     this.updateLicenseBadge()
-    this.updateAmount()
   }
 
   updateLicenseBadge() {
@@ -47,16 +45,5 @@ export default class extends Controller {
     this.licenseBadgeTarget.innerHTML = provided
       ? '<i class="fa-solid fa-circle-check text-[0.55rem]"></i> Provided'
       : '<i class="fa-solid fa-circle-minus text-[0.55rem]"></i> Not provided'
-  }
-
-  updateAmount() {
-    if (!this.hasHoursTarget || !this.hasAmountTarget) return
-
-    const hours = Math.max(0, parseInt(this.hoursTarget.value, 10) || 0)
-    const owed = hours * this.rateValue
-    // Mirror the dollars_from_cents helper: drop the cents when the amount is a
-    // whole number of dollars, keep two decimals otherwise.
-    const fractionDigits = Number.isInteger(owed) ? 0 : 2
-    this.amountTarget.textContent = `$${owed.toLocaleString("en-US", { minimumFractionDigits: fractionDigits, maximumFractionDigits: 2 })}`
   }
 }

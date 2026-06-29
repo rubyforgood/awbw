@@ -68,14 +68,10 @@ class FormField < ApplicationRecord
 
   # Specify options scoped to a single field by its field_identifier, rather than
   # to an option label everywhere it appears (SPECIFY_OPTION_PLACEHOLDERS). The
-  # CE-interest question's "Yes" reveals a "How many CE hours?" box that only
-  # makes sense there — a bare "Yes" anywhere else must stay a plain choice. The
-  # typed value folds into the answer as "Yes: <hours>", which the registration
-  # service parses onto EventRegistration#ce_hours_requested. The identifier
-  # matches EventRegistrationServices::PublicRegistration::CE_CREDIT_INTEREST_IDENTIFIER.
-  FIELD_SPECIFY_OPTION_PLACEHOLDERS = {
-    "ce_credit_interest" => { "Yes" => "How many CE hours?" }
-  }.freeze
+  # CE-interest question once revealed a "How many CE hours?" box here, but CE
+  # hours now come from the event, so the question is a plain Yes/No. Kept as the
+  # general mechanism for any future field-scoped specify box.
+  FIELD_SPECIFY_OPTION_PLACEHOLDERS = {}.freeze
 
   # Fallback character ceilings applied when a free-form field has no explicit
   # max_characters set. This is a safety net against pathological submissions

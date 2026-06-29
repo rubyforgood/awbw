@@ -60,6 +60,7 @@ class EventRegistrationsController < ApplicationController
     authorize! @event_registration
 
     if @event_registration.save
+      reconcile_ce_registration if params[:ce].present?
       respond_to do |format|
         format.html {
           redirect_to confirm_event_registration_path(@event_registration, return_to: params[:return_to])
@@ -87,6 +88,7 @@ class EventRegistrationsController < ApplicationController
     @event_registration.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
 
     if @event_registration.save
+      reconcile_ce_registration if params[:ce].present?
       respond_to do |format|
         format.turbo_stream
         format.html {
@@ -318,6 +320,32 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
+  # Reconcile the admin CE section (posted under the `ce` namespace) into the
+  # registration's CE registration + professional license. Creating/updating CE is
+  # open to anyone who can edit the registration (admin or owner); the registrant's
+  # (single) CE registration is found-or-built against the licence for the typed
+  # number, with the editable hours applied. Removing CE is a delete, so it's
+  # gated to admins and never cascades away a CE registration that already carries
+  # payments or discounts.
+  def reconcile_ce_registration
+    ce = params[:ce]
+    unless ActiveModel::Type::Boolean.new.cast(ce[:requested])
+      if allowed_to?(:manage?, with: EventRegistrationPolicy)
+        @event_registration.continuing_education_registrations.where.missing(:allocations).destroy_all
+      end
+      return
+    end
+
+    license = ProfessionalLicense.find_or_create_for(
+      person: @event_registration.registrant, number: ce[:license_number].to_s.strip.presence
+    )
+    ce_registration = @event_registration.continuing_education_registrations.first_or_initialize
+    ce_registration.professional_license = license
+    ce_registration.hours = ce[:hours] if ce[:hours].present?
+    ce_registration.cost_cents = (ce[:cost].to_d * 100).round if ce[:cost].present?
+    ce_registration.save!
+  end
+
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
@@ -326,9 +354,6 @@ class EventRegistrationsController < ApplicationController
       :shoutout,
       :intends_to_pay,
       :expected_payment_method,
-      :ce_credit_requested,
-      :ce_hours_requested,
-      :ce_license_number,
       :fee_note,
       *EventRegistration::DAY_FIELDS,
       organization_ids: [],

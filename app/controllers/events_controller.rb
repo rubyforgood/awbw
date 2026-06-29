@@ -75,11 +75,9 @@ class EventsController < ApplicationController
       invoice_requested: @show_all_options,
       scholarship_requested: @show_all_options,
       shoutout: @show_all_options,
-      ce_credit_requested: @show_all_options,
-      ce_hours_requested: @show_all_options ? 6 : nil,
-      ce_license_number: @show_all_options ? "SAMPLE-12345" : nil,
       created_at: Time.current
     )
+    build_sample_ce_registration if @show_all_options
   end
 
   def background
@@ -150,7 +148,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, registrant: [ :user, { affiliations: :organization } ])
+      .includes(:checklist_completions, :organizations, :allocations, :scholarships, :comments, { continuing_education_registrations: :professional_license }, registrant: [ :user, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
 
@@ -204,7 +202,7 @@ class EventsController < ApplicationController
   def ce_hours
     authorize! @event, to: :ce_hours?
 
-    if @event.ce_hours_details.blank?
+    unless @event.ce_eligible?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
     end
@@ -529,6 +527,18 @@ class EventsController < ApplicationController
 
   private
 
+  # Build (unsaved) a CE registration on the sample ticket so the "Show all
+  # options" preview renders a populated CE card. Mirrors a complete, paid-looking
+  # CE record without touching the database.
+  def build_sample_ce_registration
+    license = ProfessionalLicense.new(person: @event_registration.registrant, number: "SAMPLE-12345")
+    @event_registration.continuing_education_registrations.build(
+      professional_license: license,
+      hours: @event.ce_hours_offered || 6,
+      cost_cents: @event.ce_hours_cost_cents || 15_000
+    )
+  end
+
   # The registrations the admin checked on the recipient picker, narrowed to those
   # we can actually email. Shared by the confirm interstitial and the send action
   # so both operate on exactly the same set.
@@ -659,11 +669,11 @@ class EventsController < ApplicationController
     row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
     row << onboarding_scholarship_tasks_csv(registration)
     if include_ce
-      ce_hours = registration.ce_hours_requested.to_i
-      row << (registration.ce_credit_requested? ? "Yes" : "No")
-      row << (ce_hours.positive? ? ce_hours : "")
+      ce_hours = registration.ce_hours_total
+      row << (registration.ce_requested? ? "Yes" : "No")
+      row << (ce_hours.positive? ? ContinuingEducationRegistration.format_hours(ce_hours) : "")
       row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
-      row << registration.ce_license_number.to_s
+      row << registration.ce_license_numbers.join("; ")
     end
     EventRegistration::CHECKLIST_STEPS.each_key do |step|
       row << (registration.checklist_step_completed?(step) ? "Yes" : "No")

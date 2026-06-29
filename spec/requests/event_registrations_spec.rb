@@ -34,6 +34,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include(existing_registration.registrant.first_name)
       end
 
+      it "filters registrations by ce_status" do
+        needs_license = create(:event_registration)
+        placeholder = create(:professional_license, :placeholder, person: needs_license.registrant)
+        create(:continuing_education_registration, event_registration: needs_license, professional_license: placeholder)
+
+        get event_registrations_path(ce_status: "needs_license")
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(needs_license.registrant.first_name)
+        expect(response.body).not_to include(existing_registration.registrant.first_name)
+      end
+
       it "exports CSV with headers and data only (no captions)" do
         get event_registrations_path, params: { format: :csv }
 
@@ -305,20 +316,21 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
 
-      it "updates the CE credit requested flag" do
+      it "creates a CE registration when CE is requested" do
         patch event_registration_path(existing_registration),
-              params: { event_registration: { ce_credit_requested: "1" } }
+              params: { event_registration: { status: existing_registration.status }, ce: { requested: "1" } }
 
-        expect(existing_registration.reload.ce_credit_requested).to be(true)
+        expect(existing_registration.reload.continuing_education_registrations.count).to eq(1)
       end
 
-      it "updates the CE hours and license number" do
+      it "sets the hours and license number on the CE registration" do
         patch event_registration_path(existing_registration),
-              params: { event_registration: { ce_credit_requested: "1", ce_hours_requested: "5", ce_license_number: "LIC-987" } }
+              params: { event_registration: { status: existing_registration.status },
+                        ce: { requested: "1", hours: "5", license_number: "LIC-987" } }
 
-        existing_registration.reload
-        expect(existing_registration.ce_hours_requested).to eq(5)
-        expect(existing_registration.ce_license_number).to eq("LIC-987")
+        ce_registration = existing_registration.reload.continuing_education_registrations.first
+        expect(ce_registration.hours).to eq(5)
+        expect(ce_registration.professional_license.number).to eq("LIC-987")
       end
 
       it "sets the shout-out flag and stores the shout-out text on the registrant" do

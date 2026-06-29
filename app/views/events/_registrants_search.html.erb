@@ -36,7 +36,7 @@
 
     <% if @ce_eligible %>
       <%= render "events/filter_select", param: :ce_status, label: "CE status",
-            options: [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
+            options: [ [ "Needs license", "needs_license" ], [ "Requested", "requested" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
             selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
     <% end %>
 
@@ -82,5 +82,4 @@
                   class: "btn btn-utility",
                   data: { action: "collection#clearAndSubmit" } %>
     </div>
-  </div>
 <% end %>
