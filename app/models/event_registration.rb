@@ -208,11 +208,11 @@ class EventRegistration < ApplicationRecord
   #
   # This is the single seam for "may this registrant reach paid content?":
   # any payment-gated resource (the videoconference join link today, recordings
-  # or downloads in the future) should gate on this, NOT on `paid?`. Reporting
-  # surfaces (rosters, CSV exports, dashboard metrics) must keep using `paid?` /
+  # or downloads in the future) should gate on this, NOT on `paid_in_full?`.
+  # Reporting surfaces (rosters, CSV exports, dashboard metrics) must keep using
   # `paid_in_full?` so they still reflect the real balance owed.
   def payment_access_granted?
-    paid? || intends_to_pay?
+    paid_in_full? || intends_to_pay?
   end
 
   # Human-readable payment status for rosters and CSV exports. Assumes the event

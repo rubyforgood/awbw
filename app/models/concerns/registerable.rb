@@ -48,10 +48,6 @@ module Registerable
     allocations_sum >= cost_cents.to_i
   end
 
-  def paid?
-    paid_in_full?
-  end
-
   def partially_paid?
     !paid_in_full? && payments_sum.to_i.positive?
   end

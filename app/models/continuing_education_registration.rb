@@ -17,7 +17,7 @@ class ContinuingEducationRegistration < ApplicationRecord
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :license_belongs_to_registrant
 
-  # Payment interface (allocations_sum / paid? / remaining_cost / …) comes from
+  # Payment interface (allocations_sum / paid_in_full? / remaining_cost / …) comes from
   # Registerable, driven by this record's own cost_cents column.
 
   # CE certificate eligibility — its own rule (not shared): the event grants CE,
@@ -26,13 +26,13 @@ class ContinuingEducationRegistration < ApplicationRecord
     event = event_registration&.event
     return false unless event&.ce_eligible?
 
-    event.end_date&.past? && event_registration.attended? && paid?
+    event.end_date&.past? && event_registration.attended? && paid_in_full?
   end
 
   private
 
   # Snapshot the hours offered and total cost from the event when they aren't set
-  # explicitly. Both are plain stored values — no per-hour rate is multiplied out.
+  # explicitly.
   def default_from_event
     event = event_registration&.event
     self.hours = event.ce_hours_offered if event&.ce_hours_offered && (hours.blank? || hours.zero?)

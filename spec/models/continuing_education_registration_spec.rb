@@ -100,11 +100,10 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       create(:allocation, source: scholarship, allocatable: reg, amount: amount)
     end
 
-    describe "#paid_in_full? / #paid?" do
+    describe "#paid_in_full?" do
       it "is paid when the registration is zero-cost" do
         zero = create(:continuing_education_registration, cost_cents: 0)
         expect(zero).to be_paid_in_full
-        expect(zero.paid?).to be(true)
       end
 
       it "is paid when a scholarship covers the cost" do

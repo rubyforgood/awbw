@@ -89,8 +89,6 @@ class Allocation < ApplicationRecord
 
   def validate_event_registration_cost
     event_reg = allocatable
-    return unless event_reg.is_a?(EventRegistration)
-
     cost_cents = event_reg.event.cost_cents
     if cost_cents.blank?
       errors.add(:base, "Cannot allocate to a free event.")
@@ -112,8 +110,6 @@ class Allocation < ApplicationRecord
 
   def validate_ce_registration_cost
     ce_reg = allocatable
-    return unless ce_reg.is_a?(ContinuingEducationRegistration)
-
     # cost_cents is a non-null, default-0 column, so `<= 0` (not `.blank?`, as in
     # the event variant whose cost is nullable) is the right "no cost" test. A
     # zero-cost CE accepts no allocations even though CE#paid_in_full? reports it

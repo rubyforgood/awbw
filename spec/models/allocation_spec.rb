@@ -92,10 +92,10 @@ RSpec.describe Allocation, type: :model do
         expect(allocation.errors[:base]).to include(a_string_starting_with("Cannot allocate more than remaining"))
       end
 
-      it "skips validation when allocatable is not an EventRegistration" do
-        allocation = build(:allocation, source: payment, allocatable: registration, amount: 5_000)
-        allow(allocation).to receive(:allocatable).and_return(nil)
-        allocation.send(:validate_event_registration_cost)
+      it "does not run the event-cost validation for a non-EventRegistration allocatable" do
+        ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
+        allocation = build(:allocation, source: payment, allocatable: ce_reg, amount: 5_000)
+        expect(allocation).to be_valid
         expect(allocation.errors[:base]).to be_empty
       end
     end
