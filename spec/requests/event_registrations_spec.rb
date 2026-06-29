@@ -574,6 +574,24 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("No registration form was submitted")
         end
 
+        it "shows a 'Pending' badge next to the submitted org when nothing is linked" do
+          existing_registration.event_registration_organizations.destroy_all
+          submit_form(org_name: "Riverside Healing Arts Collective")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Riverside Healing Arts Collective")
+          expect(response.body).to include(">Pending<")
+        end
+
+        it "does not show the 'Pending' badge once an organization is linked" do
+          submit_form(org_name: "Riverside Healing Arts Collective")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).not_to include(">Pending<")
+        end
+
         it "shows 'Create org & link' when the submitted org has no existing match" do
           submit_form(org_name: "Brand New Unlisted Org")
 
