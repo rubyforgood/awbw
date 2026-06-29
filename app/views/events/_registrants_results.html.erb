@@ -282,8 +282,8 @@
                       <% ce_title = "CE license number not provided" %>
                     <% elsif !cer.paid_in_full? %>
                       <% ce_classes = "bg-amber-50 text-amber-700 border-amber-200" %>
-                      <% ce_text = "#{dollars_from_cents(cer.remaining_cost)} due" %>
-                      <% ce_title = "CE payment due" %>
+                      <% ce_text = "Filed" %>
+                      <% ce_title = "CE license filed — #{dollars_from_cents(cer.remaining_cost)} due" %>
                     <% else %>
                       <% ce_classes = "bg-blue-50 text-blue-700 border-blue-200" %>
                       <% ce_text = "Recipient" %>

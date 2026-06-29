@@ -962,12 +962,12 @@ RSpec.describe "Events", type: :request do
       expect(ce_chip_text).to eq("No license #")
     end
 
-    it "shows the CE amount due once a license is on file but unpaid" do
+    it "shows Filed once a license is on file but the CE balance is unpaid" do
       reg = create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
       create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
         professional_license: create(:professional_license, person: person))
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("$150 due")
+      expect(ce_chip_text).to eq("Filed")
     end
 
     it "shows Recipient when the CE balance is paid" do
