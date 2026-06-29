@@ -10,7 +10,7 @@
   }
   sort_link = ->(column, label) {
     link_to stories_path(sort_base.merge(sort: column, direction: (@sort == column && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-            data: { turbo_frame: "story_results" },
+            data: { turbo_frame: "stories_results" },
             class: "inline-flex items-center gap-1 text-gray-700 hover:text-gray-900" do
       concat label
       concat content_tag(:i, "", class: "fa-solid #{sort_icon.call(column)} text-xs opacity-70")
