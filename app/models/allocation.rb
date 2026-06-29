@@ -15,17 +15,11 @@ class Allocation < ApplicationRecord
   validate :validate_ce_registration_cost, if: -> { allocatable_type == "ContinuingEducationRegistration" }
 
   after_create :adjust_source_remaining
-  after_create :sync_ce_registration_status
 
   def adjust_source_remaining
     return unless source.is_a?(Payment)
 
     source.update!(amount_cents_remaining: source.amount_cents_remaining - amount)
-  end
-
-  # Keep a CE registration's requested↔paid status in step with its payments.
-  def sync_ce_registration_status
-    allocatable.sync_payment_status! if allocatable.is_a?(ContinuingEducationRegistration)
   end
 
   def reverted?
