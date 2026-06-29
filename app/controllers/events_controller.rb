@@ -331,8 +331,11 @@ class EventsController < ApplicationController
 
     # Filters keep every registrant in the list and only flag who still matches,
     # so the recipient checkboxes pre-check the matched set rather than removing
-    # rows. See app/views/events/_reminder_recipients.html.erb.
-    recipient_filter = ReminderRecipientFilter.new(@event_registrations, params)
+    # rows. See app/views/events/_reminder_recipients.html.erb. The dropdown
+    # filters reuse the registrants-roster scopes (via the event), so both pages
+    # stay in sync; @dashboard supplies the state/county options.
+    @dashboard = EventDashboard.new(@event)
+    recipient_filter = ReminderRecipientFilter.new(@event_registrations, params, event: @event)
     @matched_ids = recipient_filter.matched_ids
     @filtering = recipient_filter.filtering?
 

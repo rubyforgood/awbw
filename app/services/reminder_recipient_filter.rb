@@ -6,18 +6,26 @@
 # like scholarships, grants, organizations, comments and the registrant's user
 # account without extra per-filter SQL.
 class ReminderRecipientFilter
-  FILTER_KEYS = %i[
-    name reg_org grantor comment email payment_status scholarship_status
-    account_status ce_status
+  # Free-text inputs matched in memory against the loaded registrations.
+  TEXT_KEYS = %i[ name reg_org grantor comment email ].freeze
+  # Dropdown filters shared with the registrants roster. They reuse the
+  # EventRegistration scopes (run once as a query) so both pages stay in sync —
+  # same param names, options, and semantics.
+  DROPDOWN_KEYS = %i[
+    attendance_status payment_status ce_status scholarship comment_status
+    org_status account_status state county
   ].freeze
+  FILTER_KEYS = (TEXT_KEYS + DROPDOWN_KEYS).freeze
 
-  def initialize(event_registrations, params)
+  def initialize(event_registrations, params, event: nil)
     @event_registrations = event_registrations
     @params = params
+    @event = event || event_registrations.first&.event
   end
 
   def matched_ids
-    @event_registrations.select { |reg| matches?(reg) }.map(&:id).to_set
+    text_matched = @event_registrations.select { |reg| matches_text?(reg) }.map(&:id).to_set
+    text_matched & dropdown_matched_ids
   end
 
   # True when at least one filter is narrowing the list. The view uses this to
@@ -29,16 +37,31 @@ class ReminderRecipientFilter
 
   private
 
-  def matches?(reg)
+  def matches_text?(reg)
     matches_name?(reg) &&
       matches_reg_org?(reg) &&
       matches_grantor?(reg) &&
       matches_comment?(reg) &&
-      matches_email?(reg) &&
-      matches_payment_status?(reg) &&
-      matches_scholarship_status?(reg) &&
-      matches_account_status?(reg) &&
-      matches_ce_status?(reg)
+      matches_email?(reg)
+  end
+
+  # Apply the registrants-roster scopes for whichever dropdowns are set, then
+  # return the matching ids. With no dropdown filter this is every registration,
+  # so the text-match set passes through unchanged.
+  def dropdown_matched_ids
+    return @event_registrations.map(&:id).to_set if @event.nil?
+
+    scope = @event.event_registrations
+    scope = scope.attendance_status(@params[:attendance_status]) if @params[:attendance_status].present?
+    scope = scope.payment_status(@params[:payment_status]) if @params[:payment_status].present?
+    scope = scope.ce_status(@params[:ce_status]) if @params[:ce_status].present?
+    scope = scope.scholarship_status(@params[:scholarship]) if @params[:scholarship].present?
+    scope = scope.comment_status(@params[:comment_status]) if @params[:comment_status].present?
+    scope = scope.organization_status(@params[:org_status], @event) if @params[:org_status].present?
+    scope = scope.account_status(@params[:account_status]) if @params[:account_status].present?
+    scope = scope.registrant_state(@params[:state]) if @params[:state].present?
+    scope = scope.registrant_county(@params[:county]) if @params[:county].present?
+    scope.pluck(:id).to_set
   end
 
   def matches_name?(reg)
@@ -81,46 +104,6 @@ class ReminderRecipientFilter
     person = reg.registrant
     [ person.preferred_email, person.email, person.email_2, person.user&.email ]
       .compact_blank.map(&:downcase)
-  end
-
-  def matches_payment_status?(reg)
-    case @params[:payment_status].presence
-    when "paid" then reg.paid_in_full?
-    when "unpaid" then reg.event.cost_cents.to_i > 0 && !reg.paid_in_full?
-    when "intends_to_pay" then reg.intends_to_pay?
-    when "paid_or_intends" then reg.payment_access_granted?
-    else true
-    end
-  end
-
-  def matches_scholarship_status?(reg)
-    case @params[:scholarship_status].presence
-    when "requested" then reg.scholarship_requested?
-    when "allocated" then reg.scholarships.any?
-    when "tasks_completed"
-      reg.scholarships.any? && reg.scholarships.all?(&:tasks_completed?)
-    else true
-    end
-  end
-
-  def matches_account_status?(reg)
-    status = @params[:account_status].presence
-    return true if status.blank?
-    reg.account_status == status
-  end
-
-  # CE sub-statuses (missing license / missing hours) only make sense for someone
-  # who actually requested CE credit, so they're gated on that. "paid" has no
-  # CE-specific payment record yet, so it falls back to the registrant being paid
-  # in full.
-  def matches_ce_status?(reg)
-    case @params[:ce_status].presence
-    when "requested" then reg.ce_credit_requested?
-    when "license_not_provided" then reg.ce_credit_requested? && !reg.ce_license_provided?
-    when "hours_not_provided" then reg.ce_credit_requested? && reg.ce_hours_requested.to_i <= 0
-    when "paid" then reg.ce_credit_requested? && reg.paid_in_full?
-    else true
-    end
   end
 
   # Text filters accept several values separated by "--" and match a registrant

@@ -32,23 +32,56 @@
     </div>
   </div>
 
+  <%# Record-status filters — the same set (params/options) as the registrants
+      roster so the two stay in sync and filters can carry between the pages. %>
   <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4">
+    <%= render "events/filter_select", param: :attendance_status, label: "Attendance status",
+          options: EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
+          selected: params[:attendance_status], blank: "All statuses", field_class: field_class %>
+
     <% if @event.cost_cents.to_i > 0 %>
       <%= render "events/filter_select", param: :payment_status, label: "Payment",
-            options: [ [ "Paid", "paid" ], [ "Due", "unpaid" ], [ "Intends to pay", "intends_to_pay" ], [ "Paid + intends", "paid_or_intends" ] ],
+            options: [ [ "Due", "unpaid" ], [ "Paid", "paid" ], [ "Intends to pay", "intends_to_pay" ] ],
             selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
     <% end %>
-    <%= render "events/filter_select", param: :scholarship_status, label: "Scholarship",
-          options: [ [ "Requested", "requested" ], [ "Allocated", "allocated" ], [ "Tasks completed", "tasks_completed" ] ],
-          selected: params[:scholarship_status], blank: "Any scholarship status", field_class: field_class %>
+
     <% if @ce_eligible %>
-      <%= render "events/filter_select", param: :ce_status, label: "CE",
+      <%= render "events/filter_select", param: :ce_status, label: "CE status",
             options: [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
             selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
     <% end %>
+
+    <% if @event.cost_cents.to_i > 0 %>
+      <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
+            options: [ [ "All recipients", "yes" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ] ],
+            selected: params[:scholarship], blank: "All registrants", field_class: field_class %>
+    <% end %>
+  </div>
+
+  <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mt-4">
+    <%= render "events/filter_select", param: :org_status, label: "Organization",
+          options: [ [ "Pending", "pending" ], [ "Linked", "linked" ] ],
+          selected: params[:org_status], blank: "All organizations", field_class: field_class %>
+
+    <%= render "events/filter_select", param: :comment_status, label: "Comments",
+          options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
+          selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
+
     <%= render "events/filter_select", param: :account_status, label: "User account",
           options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
           selected: params[:account_status], blank: "Any account status", field_class: field_class %>
+
+    <% if @dashboard&.states&.any? %>
+      <%= render "events/filter_select", param: :state, label: "State",
+            options: @dashboard.states, selected: params[:state], blank: "All states", field_class: field_class, wrapper_class: "w-full md:w-32" %>
+    <% end %>
+
+    <% if @dashboard&.counties&.any? %>
+      <%= render "events/filter_select", param: :county, label: "County",
+            options: @dashboard.counties.map { |state, county| [ "#{state} - #{county}", "#{state}|#{county}" ] },
+            selected: params[:county], blank: "All counties", field_class: field_class %>
+    <% end %>
+
     <div class="w-full md:w-auto md:ml-auto flex justify-end">
       <%= link_to "Clear filters", preview_reminder_event_path(@event),
             class: "btn btn-utility",
