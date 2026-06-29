@@ -195,6 +195,31 @@ it needs a `page_bg_class` and register it:**
 - **Match neighboring pages.** Use the same marker as sibling views with the same authorization
   level rather than inventing a new value.
 
+## Lazy index/filter frames
+
+Filterable index pages load their rows lazily in a Turbo frame so changing a
+filter swaps just the results, not the whole page (grants, people, users,
+organizations, stories, community_news, video_recordings, monthly_reports,
+bookmarks, payments, resources, workshops, notifications, allocations all follow
+this). Match the existing pattern:
+
+- `index.html.erb` renders the header, the filter/search form, and a skeleton
+  inside `<%= turbo_frame_tag :<resource>_results, src: result_src, data: { turbo: "temporary" } %>`.
+- The controller `index` branches on `turbo_frame_request?`: the frame request
+  builds the filtered/paginated scope and renders the results view; otherwise it
+  renders the full `index`.
+- **Name the frame-response view after its Turbo frame tag id** — the
+  `turbo_frame_tag` id, the controller render target, and the view filename are
+  one shared `<resource>_results` token (e.g. `turbo_frame_tag :grants_results` ←
+  `render :grants_results` ← `app/views/grants/grants_results.html.erb`). This
+  keeps the view discoverable from the frame tag, and `_results` reflects that the
+  frame holds the filtered result set. **Never name it `index_lazy`** — that old
+  name has been removed.
+- **Never change a frame tag id to rename a view.** Turbo matches on the id, so
+  it must stay identical across `index.html.erb`, the results view, the filter
+  form's `data-turbo-frame`, request-spec `Turbo-Frame` headers, and
+  `turbo-frame#…` view-spec selectors. Only the filename and render target change.
+
 ## JavaScript
 
 - ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
