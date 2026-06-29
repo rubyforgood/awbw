@@ -113,6 +113,42 @@ RSpec.describe Grant, type: :model do
     end
   end
 
+  describe ".fully_issued" do
+    it "includes fully-allocated grants and excludes ones with funds left" do
+      has_funds = create(:grant, amount_cents: 100_000)
+      create(:scholarship, grant: has_funds, amount_cents: 40_000)
+      exhausted = create(:grant, amount_cents: 30_000)
+      create(:scholarship, grant: exhausted, amount_cents: 30_000)
+
+      expect(Grant.fully_issued).to contain_exactly(exhausted)
+    end
+  end
+
+  describe "task-completion scopes" do
+    it "separates all-completed grants from those with outstanding tasks" do
+      all_done = create(:grant)
+      create(:scholarship, grant: all_done, tasks_completed: true)
+      mixed = create(:grant)
+      create(:scholarship, grant: mixed, tasks_completed: true)
+      create(:scholarship, grant: mixed, tasks_completed: false)
+      no_scholarships = create(:grant)
+
+      expect(Grant.all_tasks_completed).to contain_exactly(all_done)
+      expect(Grant.tasks_outstanding).to contain_exactly(mixed)
+      expect(Grant.all_tasks_completed).not_to include(no_scholarships)
+    end
+
+    it "ignores grant-less scholarships when computing completion" do
+      # A grant-less, incomplete scholarship has a NULL grant_id. Left in the
+      # NOT IN subquery it would make all_tasks_completed match nothing.
+      create(:scholarship, grant: nil, tasks_completed: false)
+      all_done = create(:grant)
+      create(:scholarship, grant: all_done, tasks_completed: true)
+
+      expect(Grant.all_tasks_completed).to contain_exactly(all_done)
+    end
+  end
+
   describe ".selectable_for" do
     it "lists grants with funds remaining" do
       with_funds = create(:grant, amount_cents: 100_000)
