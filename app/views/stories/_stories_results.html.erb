@@ -1,4 +1,4 @@
-<%= turbo_stream.replace("story_count", partial: "story_count") %>
+<%= turbo_stream.replace("stories_count", partial: "stories_count") %>
 <%
   sort_base = params.permit(:title, :query, :published, :year, :number_of_items_per_page).to_h.symbolize_keys
   sort_icon = ->(column) {
