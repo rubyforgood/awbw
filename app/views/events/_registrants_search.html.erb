@@ -8,11 +8,11 @@
 
   <%= hidden_field_tag :status_filter, params[:status_filter].presence || "active" %>
 
-  <%# Row 1: keyword input + record-status filters, ordered to match the table
-      columns (CE, Scholarship, Payment). The dropdowns render via the shared
-      events/filter_select partial (also used by the reminder filters). %>
+  <%# Row 1: keyword input + record-status filters. Keyword flexes to fill the row;
+      the dropdowns render via the shared events/filter_select partial (also used
+      by the reminder filters). %>
   <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4">
-    <div class="w-full md:flex-1 md:min-w-[48rem]">
+    <div class="w-full md:flex-1 md:min-w-[16rem]">
       <%= label_tag :keyword, "Keyword", class: label_class %>
       <div class="relative">
         <%= text_field_tag :keyword, params[:keyword], class: field_class,
@@ -28,6 +28,12 @@
           options: EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
           selected: params[:attendance_status], blank: "All statuses", field_class: field_class %>
 
+    <% if @event.cost_cents.to_i > 0 %>
+      <%= render "events/filter_select", param: :payment_status, label: "Payment",
+            options: [ [ "Due", "unpaid" ], [ "Paid", "paid" ], [ "Intends to pay", "intends_to_pay" ] ],
+            selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
+    <% end %>
+
     <% if @ce_eligible %>
       <%= render "events/filter_select", param: :ce_status, label: "CE status",
             options: [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
@@ -38,10 +44,6 @@
       <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
             options: [ [ "All recipients", "yes" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ] ],
             selected: params[:scholarship], blank: "All registrants", field_class: field_class %>
-
-      <%= render "events/filter_select", param: :payment_status, label: "Payment",
-            options: [ [ "Due", "unpaid" ], [ "Paid", "paid" ], [ "Intends to pay", "intends_to_pay" ] ],
-            selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
     <% end %>
   </div>
 
