@@ -16,4 +16,12 @@ class WindowsType < ApplicationRecord
 
   validates :name, presence: true
   validates :short_name, presence: true
+
+  # AgeRange categories tagged on this windows type, read from already-loaded
+  # categorizable_items (no query) so the organizations index can compare them
+  # against an org's age-range tags without an N+1. Use the :age_ranges
+  # association when you want them ordered and don't already have the items loaded.
+  def tagged_age_range_categories
+    categorizable_items.map(&:category).compact.select { |category| category.category_type&.name == "AgeRange" }
+  end
 end

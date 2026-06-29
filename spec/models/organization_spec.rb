@@ -294,6 +294,76 @@ RSpec.describe Organization do
       expect(organization.all_additional_age_groups).to be_empty
     end
   end
+
+  describe "age-range filtering and windows-audience fallback" do
+    let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+    let!(:children) { create(:category, :published, category_type: age_type, name: "Children (0-12)") }
+    let!(:teens) { create(:category, :published, category_type: age_type, name: "Teens (13-17)") }
+    let!(:adults) { create(:category, :published, category_type: age_type, name: "Adults (18+)") }
+
+    # Windows audiences with their semantic age-range coverage.
+    let(:children_audience) { create(:windows_type, :children).tap { |wt| wt.categories = [ children, teens ] } }
+    let(:adult_audience) { create(:windows_type, :adult).tap { |wt| wt.categories = [ adults ] } }
+
+    describe ".age_range_names" do
+      it "matches orgs tagged with the age range on the org itself" do
+        org = create(:organization)
+        org.tag_age_groups(primary_ids: [ teens.id ], additional_ids: [])
+        other = create(:organization)
+
+        results = Organization.age_range_names("Teens (13-17)")
+        expect(results).to include(org)
+        expect(results).not_to include(other)
+      end
+
+      it "matches orgs tagged with the age range through an affiliated person" do
+        org = create(:organization)
+        person = create(:person)
+        create(:affiliation, organization: org, person: person)
+        person.tag_age_groups(primary_ids: [ children.id ], additional_ids: [])
+
+        expect(Organization.age_range_names("Children (0-12)")).to include(org)
+      end
+
+      it "matches orgs whose windows audience covers the age range even with no age tags" do
+        org = create(:organization, windows_type: adult_audience)
+
+        expect(org.all_primary_age_groups).to be_empty
+        expect(Organization.age_range_names("Adults (18+)")).to include(org)
+      end
+
+      it "excludes orgs whose windows audience does not cover the age range and that lack the tag" do
+        org = create(:organization, windows_type: adult_audience)
+
+        expect(Organization.age_range_names("Children (0-12)")).not_to include(org)
+      end
+    end
+
+    describe "#windows_audience_unreflected_by_age_tags?" do
+      it "is false when the org has no windows type" do
+        expect(create(:organization, windows_type: nil).windows_audience_unreflected_by_age_tags?).to be(false)
+      end
+
+      it "is true when the org has a windows type but no age tags" do
+        org = create(:organization, windows_type: adult_audience)
+        expect(org.windows_audience_unreflected_by_age_tags?).to be(true)
+      end
+
+      it "is true when the age tags omit an age range the windows audience covers" do
+        org = create(:organization, windows_type: children_audience)
+        org.tag_age_groups(primary_ids: [ children.id ], additional_ids: [])
+
+        expect(org.windows_audience_unreflected_by_age_tags?).to be(true)
+      end
+
+      it "is false when the age tags already reflect every age range the windows audience covers" do
+        org = create(:organization, windows_type: adult_audience)
+        org.tag_age_groups(primary_ids: [ adults.id ], additional_ids: [])
+
+        expect(org.windows_audience_unreflected_by_age_tags?).to be(false)
+      end
+    end
+  end
 end
 
 RSpec.describe Organization, "scholarship index helpers" do

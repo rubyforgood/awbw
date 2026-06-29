@@ -91,6 +91,26 @@ class Organization < ApplicationRecord
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
   scope :published, -> { active }
+  # Filters by AgeRange category name(s), powering the unified "Age range" column
+  # on the index. An org matches a selected age range when EITHER it (or an
+  # affiliated person) is tagged with that age range, OR its windows audience
+  # semantically covers it. The windows-type leg keeps orgs that carry a windows
+  # audience but no age-range tags — or tags that disagree with it — in results.
+  scope :age_range_names, ->(names) do
+    return all if names.blank?
+    parsed = Array(names).flat_map { |n| n.to_s.split("--") }.map(&:strip).reject(&:blank?).map(&:downcase)
+    return all if parsed.empty?
+
+    category_ids = Category.age_ranges.where("LOWER(categories.name) IN (?)", parsed).select(:id)
+    org_tagged = CategorizableItem.where(categorizable_type: "Organization", category_id: category_ids).select(:categorizable_id)
+    person_tagged = CategorizableItem.where(categorizable_type: "Person", category_id: category_ids).select(:categorizable_id)
+    via_affiliations = Affiliation.where(person_id: person_tagged).select(:organization_id)
+    windows_type_ids = WindowsType.joins(:categorizable_items)
+                                  .where(categorizable_items: { category_id: category_ids })
+                                  .select(:id)
+
+    where(id: org_tagged).or(where(id: via_affiliations)).or(where(windows_type_id: windows_type_ids))
+  end
 
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
@@ -98,7 +118,7 @@ class Organization < ApplicationRecord
     organizations = organizations.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     organizations = organizations.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     organizations = organizations.address(params[:address]) if params[:address].present?
-    organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
+    organizations = organizations.age_range_names(params[:age_range_name]) if params[:age_range_name].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
     organizations = organizations.where(organization_status_id: params[:organization_status_id]) if params[:organization_status_id].present?
     organizations
@@ -263,6 +283,17 @@ class Organization < ApplicationRecord
 
   def all_additional_age_groups
     collect_age_groups(:additional_age_groups) - all_primary_age_groups
+  end
+
+  # Whether the windows audience adds age information the org's age-range tags
+  # don't already convey — drives the fallback windows-type badge in the index's
+  # age range column. True when the org has a windows type and either carries no
+  # age-range tags at all, or its tags omit an age range that windows type covers.
+  def windows_audience_unreflected_by_age_tags?
+    return false unless windows_type
+    tagged = all_primary_age_groups + all_additional_age_groups
+    return true if tagged.empty?
+    windows_type.tagged_age_range_categories.any? { |category| tagged.exclude?(category) }
   end
 
   remote_searchable_by :name

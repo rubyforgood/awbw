@@ -8,7 +8,8 @@ class OrganizationsController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(Organization.includes(
-        :windows_type, :organization_status, :sectors, :addresses,
+        :organization_status, :sectors, :addresses,
+        { windows_type: { categorizable_items: { category: :category_type } } },
         { categorizable_items: { category: :category_type } },
         logo_attachment: :blob
       ))
@@ -189,6 +190,7 @@ class OrganizationsController < ApplicationController
 
   def set_index_variables
     @organization_statuses = OrganizationStatus.all
+    @age_range_categories = Category.age_ranges.published.ordered_by_position_and_name
   end
 
   def populations_served
