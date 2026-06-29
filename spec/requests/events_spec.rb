@@ -750,23 +750,25 @@ RSpec.describe "Events", type: :request do
     context "registration form icon" do
       let(:reg_form) { create(:form, :standalone, name: "Registration Form") }
 
-      it "shows green icon when person submitted the current registration form" do
+      it "shows a blue outline form icon when person submitted the current registration form" do
         create(:event_form, event: event, form: reg_form, role: "registration")
         create(:form_submission, person: person, form: reg_form)
 
         get registrants_event_path(event)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include('fa-solid fa-file-lines')
+        expect(response.body).to include('fa-regular fa-file-lines')
+        expect(response.body).to include('text-blue-600')
       end
 
-      it "shows gray icon when person has not submitted any form" do
+      it "reserves an empty slot (no icon) when person has not submitted, keeping later icons aligned" do
         create(:event_form, event: event, form: reg_form, role: "registration")
 
         get registrants_event_path(event)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include('fa-regular fa-file-lines')
+        expect(response.body).not_to include('fa-file-lines')
+        expect(response.body).to include('inline-flex w-4 justify-center')
       end
 
       it "does not show any form icon when event has no forms" do
