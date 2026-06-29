@@ -4,16 +4,19 @@ class GrantsController < ApplicationController
 
   def index
     authorize!
+
     # The full page renders only the header, filters, and an empty results frame;
     # the frame's src request (turbo_frame_request?) loads the filtered rows.
-    return render :index unless turbo_frame_request?
-
-    @grants = filter_grants(authorized_scope(Grant.all))
-                .includes(:donor, scholarships: { allocation: :allocatable })
-                .by_deadline
-                .page(params[:page])
-    track_index_intent(Grant, @grants, params)
-    render :index_lazy
+    if turbo_frame_request?
+      @grants = filter_grants(authorized_scope(Grant.all))
+                  .includes(:donor, scholarships: { allocation: :allocatable })
+                  .by_deadline
+                  .page(params[:page])
+      track_index_intent(Grant, @grants, params)
+      render :grant_results
+    else
+      render :index
+    end
   end
 
   def show
