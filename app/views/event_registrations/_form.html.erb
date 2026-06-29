@@ -213,82 +213,9 @@
 
         <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
 
-        <%# ---- CE credits — toggled "Requested" flag, plus the registrant's CE
-            details (license number + requested hours) and what they owe at the
-            default hourly rate, recomputed live by the ce-credit-requested
-            controller. The details collapse when CE isn't requested. ---- %>
-        <section class="overflow-hidden rounded-xl border shadow-sm transition-colors <%= f.object.ce_credit_requested ? "border-teal-200 bg-teal-50" : "border-gray-200 bg-white" %>"
-                 data-controller="ce-credit-requested"
-                 data-ce-credit-requested-initial-value="<%= f.object.ce_credit_requested %>"
-                 data-ce-credit-requested-rate-value="<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>">
-          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
-              <i class="fa-solid fa-certificate"></i>
-            </span>
-            <h2 class="text-sm font-semibold text-gray-700">CE credits</h2>
-          </div>
-
-          <% ce_reg = f.object.continuing_education_registrations.first %>
-          <% ce_requested = f.object.ce_requested? %>
-          <% ce_license = ce_reg&.professional_license&.number %>
-          <% ce_hours_value = ce_reg&.hours || f.object.event&.ce_hours_offered %>
-          <% ce_cost_value = ce_reg&.cost_cents || f.object.event&.ce_hours_cost_cents %>
-          <%# CE is stored as its own ContinuingEducationRegistration(s), so these
-              inputs post under a separate `ce` namespace and the controller
-              reconciles them into a registration + professional license. Hours and
-              cost are stored values (defaulting from the event), not a derived total. ---- %>
-          <div class="space-y-3 p-4"
-               data-controller="ce-credit-requested"
-               data-ce-credit-requested-initial-value="<%= ce_requested %>">
-            <label class="flex items-center gap-2.5 cursor-pointer">
-              <input type="hidden" name="ce[requested]" value="0" autocomplete="off">
-              <input type="checkbox"
-                     name="ce[requested]"
-                     value="1"
-                     <%= "checked" if ce_requested %>
-                     data-ce-credit-requested-target="checkbox"
-                     data-action="ce-credit-requested#refresh"
-                     class="sr-only peer">
-              <span data-ce-credit-requested-target="track" class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
-              <span class="text-sm font-medium text-gray-700">Requested</span>
-            </label>
-
-            <div data-ce-credit-requested-target="details" class="space-y-3 border-t border-gray-100 pt-3 <%= "hidden" unless ce_requested %>">
-              <div>
-                <div class="mb-1 flex items-center justify-between gap-2">
-                  <label class="text-xs font-medium text-gray-500" for="ce_license_number">License number</label>
-                  <span data-ce-credit-requested-target="licenseBadge"
-                        class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.65rem] font-medium <%= ce_license.present? ? "bg-teal-50 text-teal-700" : "bg-gray-100 text-gray-500" %>">
-                    <i class="fa-solid <%= ce_license.present? ? "fa-circle-check" : "fa-circle-minus" %> text-[0.55rem]"></i>
-                    <%= ce_license.present? ? "Provided" : "Not provided" %>
-                  </span>
-                </div>
-                <input type="text" name="ce[license_number]" id="ce_license_number" value="<%= ce_license %>"
-                       class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none"
-                       placeholder="Not provided"
-                       data-ce-credit-requested-target="license"
-                       data-action="input->ce-credit-requested#refresh">
-              </div>
-
-              <div class="flex flex-wrap gap-4">
-                <div>
-                  <label class="mb-1 block text-xs font-medium text-gray-500" for="ce_hours">CE hours</label>
-                  <input type="number" name="ce[hours]" id="ce_hours" min="0" step="0.25"
-                         value="<%= ContinuingEducationRegistration.format_hours(ce_hours_value) %>"
-                         class="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm tabular-nums focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none"
-                         placeholder="0">
-                </div>
-                <div>
-                  <label class="mb-1 block text-xs font-medium text-gray-500" for="ce_cost">Cost ($)</label>
-                  <input type="number" name="ce[cost]" id="ce_cost" min="0" step="0.01"
-                         value="<%= ce_cost_value.present? ? (ce_cost_value.to_d / 100) : nil %>"
-                         class="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm tabular-nums focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none"
-                         placeholder="0">
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <% if f.object.event&.ce_eligible? %>
+          <%= render "continuing_education", event_registration: f.object, ce_registration: f.object.continuing_education_registrations.first %>
+        <% end %>
       </div>
 
       <% if f.object.payment_unresolved? %>

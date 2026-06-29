@@ -381,6 +381,7 @@ module EventRegistrationServices
       @event.event_registrations.create!(
         registrant: person,
         scholarship_requested: @scholarship_requested,
+        ce_requested: ce_credit_requested?,
         w9_requested: w9_requested?,
         invoice_requested: invoice_requested?,
         expected_payment_method: field_value("payment_method")&.strip.presence

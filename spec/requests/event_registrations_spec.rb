@@ -316,21 +316,29 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
 
-      it "creates a CE registration when CE is requested" do
+      it "creates a CE registration stub when the ce_requested flag is set" do
+        event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
         patch event_registration_path(existing_registration),
-              params: { event_registration: { status: existing_registration.status }, ce: { requested: "1" } }
-
-        expect(existing_registration.reload.continuing_education_registrations.count).to eq(1)
-      end
-
-      it "sets the hours and license number on the CE registration" do
-        patch event_registration_path(existing_registration),
-              params: { event_registration: { status: existing_registration.status },
-                        ce: { requested: "1", hours: "5", license_number: "LIC-987" } }
+              params: { event_registration: { status: existing_registration.status, ce_requested: "1" } }
 
         ce_registration = existing_registration.reload.continuing_education_registrations.first
-        expect(ce_registration.hours).to eq(5)
-        expect(ce_registration.professional_license.number).to eq("LIC-987")
+        expect(ce_registration).to be_present
+        # Hours/cost default from the event; the license is a placeholder until set.
+        expect(ce_registration.hours).to eq(6)
+        expect(ce_registration.professional_license.number).to be_nil
+      end
+
+      it "creates the CE registration against the selected existing license" do
+        event.update!(ce_hours_offered: 6)
+        registrant = existing_registration.registrant
+        create(:professional_license, person: registrant, number: "LIC-111")
+        chosen = create(:professional_license, person: registrant, number: "LIC-987")
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { status: existing_registration.status, ce_requested: "1" },
+                        ce: { professional_license_id: chosen.id } }
+
+        expect(existing_registration.reload.continuing_education_registrations.first.professional_license).to eq(chosen)
       end
 
       it "sets the shout-out flag and stores the shout-out text on the registrant" do

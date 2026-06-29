@@ -1,0 +1,78 @@
+<%# ---- Continuing education — mirrors the scholarship card. "Requested" is a plain
+    flag saved with the form; saving it on (when none exists) creates a CE
+    registration stub, which is then filled in on its own edit page. Once a record
+    exists the toggle is gone and we show the record + an Edit link. Only rendered
+    for CE-eligible events. ---- %>
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-teal-600">
+      <i class="fa-solid fa-certificate"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700">Continuing education</h2>
+  </div>
+
+  <div class="space-y-3 p-4">
+    <% unless ce_registration %>
+      <label class="flex items-center gap-2.5 cursor-pointer">
+        <input type="hidden" name="event_registration[ce_requested]" value="0" autocomplete="off">
+        <input type="checkbox"
+               name="event_registration[ce_requested]"
+               value="1"
+               <%= "checked" if event_registration.ce_requested? %>
+               class="sr-only peer">
+        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
+        <span class="text-sm font-medium text-gray-700">Requested</span>
+      </label>
+
+      <% licenses = event_registration.registrant&.professional_licenses.to_a %>
+      <% if licenses.any? %>
+        <div class="border-t border-gray-100 pt-3">
+          <label class="mb-1 block text-xs font-medium text-gray-500" for="ce_professional_license_id">License for the CE registration</label>
+          <%= select_tag "ce[professional_license_id]",
+                options_for_select(licenses.map { |license| [ license.name, license.id ] }),
+                id: "ce_professional_license_id",
+                class: "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+        </div>
+      <% end %>
+      <p class="text-xs text-gray-400">Saving with this on creates the CE registration<%= " against the selected license" if licenses.any? %>.</p>
+    <% else %>
+      <% license_number = ce_registration.professional_license&.number %>
+      <div class="space-y-2">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(ce_registration.cost_cents) %></span>
+          <span class="text-xs text-gray-400">·</span>
+          <span class="text-sm text-gray-600"><%= ContinuingEducationRegistration.format_hours(ce_registration.hours) || "0" %> hrs</span>
+          <%= link_to edit_continuing_education_registration_path(ce_registration, return_to: "registration"),
+                      class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                      target: "_blank", rel: "noopener" do %>
+            Edit
+            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+          <% end %>
+        </div>
+
+        <p class="text-xs text-gray-500">
+          License:
+          <% if license_number.present? %>
+            <span class="font-medium text-gray-700"><%= license_number %></span>
+          <% else %>
+            <span class="font-medium text-amber-700">Needs license</span>
+          <% end %>
+        </p>
+
+        <div class="flex flex-wrap items-center gap-1.5">
+          <% if ce_registration.certificate_sent_at.present? %>
+            <span class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
+              <i class="fa-solid fa-circle-check"></i>
+              Certificate issued
+            </span>
+          <% else %>
+            <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+              <i class="fa-solid fa-clock"></i>
+              Not issued
+            </span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>

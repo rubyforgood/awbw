@@ -761,11 +761,11 @@ RSpec.describe EventRegistration, type: :model do
       end
     end
 
-    describe "#ce_requested?" do
+    describe "#ce_registered?" do
       it "is true only once a CE registration exists" do
-        expect(reg).not_to be_ce_requested
+        expect(reg).not_to be_ce_registered
         add_ce
-        expect(reg.reload).to be_ce_requested
+        expect(reg.reload).to be_ce_registered
       end
     end
 

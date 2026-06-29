@@ -382,7 +382,11 @@ class EventRegistration < ApplicationRecord
   # CE is now tracked as one or more ContinuingEducationRegistration records,
   # each against a professional license. These aggregate across them so callers
   # (callouts, onboarding, CSV) read a single registration-level figure.
-  def ce_requested?
+  #
+  # `ce_requested?` is the stored intent flag (column); `ce_registered?` is whether
+  # a CE registration record actually exists. They align in the normal flow (the
+  # toggle creates the record), but the readers below key off the record.
+  def ce_registered?
     if ce_registrations_in_memory?
       return continuing_education_registrations.any?
     end
@@ -401,7 +405,7 @@ class EventRegistration < ApplicationRecord
   # a placeholder. "Needs license" takes precedence (it's the actionable state),
   # then certificate issuance, then payment.
   def ce_status_label
-    return unless ce_requested?
+    return unless ce_registered?
     return "Needs license" unless ce_license_provided?
     return "Issued" if continuing_education_registrations.all? { |c| c.certificate_sent_at.present? }
     return "Paid" if ce_paid_in_full?
@@ -417,14 +421,14 @@ class EventRegistration < ApplicationRecord
 
   # True only when every CE registration has a known license number on file.
   def ce_license_provided?
-    return false unless ce_requested?
+    return false unless ce_registered?
 
     continuing_education_registrations.all? { |c| c.professional_license&.number_known? }
   end
 
-  # True when CE is requested and every CE registration is fully paid.
+  # True when a CE registration exists and every one is fully paid.
   def ce_paid_in_full?
-    return false unless ce_requested?
+    return false unless ce_registered?
 
     continuing_education_registrations.all?(&:paid_in_full?)
   end

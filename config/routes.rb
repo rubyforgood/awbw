@@ -118,6 +118,9 @@ Rails.application.routes.draw do
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
     member { patch :toggle_tasks }
   end
+  resources :continuing_education_registrations, only: [ :edit, :update, :destroy ] do
+    member { patch :toggle_certificate }
+  end
   resources :discounts, only: [ :create, :show, :destroy ] do
     collection do
       post :allocation_form

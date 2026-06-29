@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "#{@event.ce_hours_details_label} — #{@event.title}") %>
 <%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_details_label } do %>
-  <% if @event_registration.ce_requested? %>
+  <% if @event_registration.ce_registered? %>
     <% ce_registration = @event_registration.continuing_education_registrations.first %>
     <% license_number = ce_registration&.professional_license&.number %>
     <div class="flex flex-wrap items-center justify-between gap-3">

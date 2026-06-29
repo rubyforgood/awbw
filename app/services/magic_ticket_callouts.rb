@@ -119,7 +119,7 @@ class MagicTicketCallouts
   # they have, becoming a reference card once requested with hours and a license
   # number on file. Shown when the event offers CE or the registrant asked for it.
   def ce_hours_card
-    return unless registration.ce_requested?
+    return unless registration.ce_registered?
     complete = registration.ce_license_provided?
     Card.new(icon_class: "fa-solid fa-graduation-cap", color: "teal",
              title: event.ce_hours_details_label,
