@@ -167,7 +167,7 @@ GEM
       unaccent (~> 0.3)
     country_select (11.0.0)
       countries (> 6.0, < 9.0)
-    crass (1.0.6)
+    crass (1.0.7)
     css_parser (2.2.0)
       addressable
     csv (3.3.5)
@@ -883,7 +883,7 @@ CHECKSUMS
   coolline (0.5.0) sha256=217ad208d49b752ef31c24be1aec1cdc199893afd8ae7bc9d10335e5c76dccea
   countries (8.1.0) sha256=4d6b318b8e906f1f769d5c021c13a418d33e917dc96ceb625a91d8e7ab2d192e
   country_select (11.0.0) sha256=0ab0a385fa70eadc71473af4b21b9b4d09f75660cc1c282a5bf6ec873719204b
-  crass (1.0.6) sha256=dc516022a56e7b3b156099abc81b6d2b08ea1ed12676ac7a5657617f012bd45d
+  crass (1.0.7) sha256=94868719948664c89ddcaf0a37c65048413dfcb1c869470a5f7a7ceb5390b295
   css_parser (2.2.0) sha256=23d1b247d7bc78cb2f2fe54629fb755e68d3004f1d1bd5c66d5096d42bff6325
   csv (3.3.5) sha256=6e5134ac3383ef728b7f02725d9872934f523cb40b961479f69cf3afa6c8e73f
   date (3.5.1) sha256=750d06384d7b9c15d562c76291407d89e368dda4d4fff957eb94962d325a0dc0
