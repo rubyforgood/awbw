@@ -13,7 +13,7 @@ class GrantsController < ApplicationController
                   .by_deadline
                   .page(params[:page])
       track_index_intent(Grant, @grants, params)
-      render :grants_results
+      render :index_lazy
     else
       render :index
     end
