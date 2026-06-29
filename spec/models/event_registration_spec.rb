@@ -50,6 +50,51 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#sync_attendance_status_to_days!" do
+    # A two-day event: start and end one day apart → day_count == 2.
+    let(:event) { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }
+    let(:registration) { create(:event_registration, event: event, status: "registered") }
+
+    it "flips registered → attended when all days are complete" do
+      registration.update!(completed_day_1: true, completed_day_2: true)
+      expect(registration.sync_attendance_status_to_days!).to be(true)
+      expect(registration.reload.status).to eq("attended")
+    end
+
+    it "flips to incomplete_attendance when only some days are complete" do
+      registration.update!(completed_day_1: true)
+      expect(registration.sync_attendance_status_to_days!).to be(true)
+      expect(registration.reload.status).to eq("incomplete_attendance")
+    end
+
+    it "rolls back to registered when no days are complete" do
+      registration.update!(status: "attended", completed_day_1: false, completed_day_2: false)
+      expect(registration.sync_attendance_status_to_days!).to be(true)
+      expect(registration.reload.status).to eq("registered")
+    end
+
+    it "treats a one-day event as registered/attended with no partial state" do
+      one_day = create(:event, start_date: 12.days.from_now, end_date: 12.days.from_now)
+      reg = create(:event_registration, event: one_day, status: "registered", completed_day_1: true)
+      expect(reg.sync_attendance_status_to_days!).to be(true)
+      expect(reg.reload.status).to eq("attended")
+    end
+
+    it "returns false and leaves the status untouched when it already matches" do
+      registration.update!(completed_day_1: true, completed_day_2: true, status: "attended")
+      expect(registration.sync_attendance_status_to_days!).to be(false)
+      expect(registration.reload.status).to eq("attended")
+    end
+
+    it "never overrides a deliberate inactive status (cancelled / no_show)" do
+      %w[ cancelled no_show ].each do |inactive|
+        reg = create(:event_registration, event: event, status: inactive, completed_day_1: true, completed_day_2: true)
+        expect(reg.sync_attendance_status_to_days!).to be(false)
+        expect(reg.reload.status).to eq(inactive)
+      end
+    end
+  end
+
   describe ".registrant_ids" do
     it "returns registrations for the registrants in a hyphenated id list" do
       person_a = create(:person)

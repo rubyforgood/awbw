@@ -321,6 +321,35 @@ class EventRegistration < ApplicationRecord
     DAY_FIELDS.include?("completed_day_#{day}") && public_send("completed_day_#{day}")
   end
 
+  # How many of the event's in-range days (the first event.day_count of them) are
+  # marked complete on this registration.
+  def completed_day_count
+    DAY_FIELDS.first(event.day_count).count { |field| public_send(field) }
+  end
+
+  # The attendance status implied purely by how many days are marked complete:
+  # none → registered, all → attended, some-but-not-all → incomplete_attendance.
+  # (A one-day event has no partial state: 0 → registered, 1 → attended.)
+  def attendance_status_for_days
+    completed = completed_day_count
+    return "registered" if completed.zero?
+    return "attended" if completed >= event.day_count
+    "incomplete_attendance"
+  end
+
+  # Realign the attendance status to match the completed-day count after a day
+  # checkbox is toggled on the Onboarding matrix. Only auto-managed while the
+  # registration is in an active status — cancelled and no_show are deliberate
+  # manual states we never override by toggling a day. Returns true if the status
+  # actually changed.
+  def sync_attendance_status_to_days!
+    return false unless status.in?(ACTIVE_STATUSES)
+    derived = attendance_status_for_days
+    return false if derived == status
+    update!(status: derived)
+    true
+  end
+
   # Program status(es) for THIS registration only: classify each organization
   # linked to the registration as of the training date (the 1st of the event's
   # month), excluding the registrant's own facilitator affiliation to that org so
