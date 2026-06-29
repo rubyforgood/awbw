@@ -177,7 +177,7 @@
               <% person = registration.registrant %>
 
               <% highlighted = params[:highlight].to_s == registration.id.to_s %>
-              <tr id="<%= registrant_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-400" : "hover:bg-gray-50" %>">
+              <tr id="<%= registrant_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "hover:bg-gray-50" %>">
                 <td class="px-4 py-2" data-sort-first="<%= person.first_name.to_s.downcase %>" data-sort-last="<%= person.last_name.to_s.downcase %>">
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 
@@ -281,11 +281,11 @@
                       <% ce_text = "No license #" %>
                       <% ce_title = "CE license number not provided" %>
                     <% elsif !cer.paid_in_full? %>
-                      <% ce_classes = "bg-amber-50 text-amber-700 border-amber-200" %>
+                      <% ce_classes = "bg-blue-50 text-blue-700 border-blue-200" %>
                       <% ce_text = "Filed" %>
                       <% ce_title = "CE license filed — #{dollars_from_cents(cer.remaining_cost)} due" %>
                     <% else %>
-                      <% ce_classes = "bg-blue-50 text-blue-700 border-blue-200" %>
+                      <% ce_classes = "bg-green-50 text-green-700 border-green-200" %>
                       <% ce_text = "Recipient" %>
                       <% ce_title = "CE paid" %>
                     <% end %>

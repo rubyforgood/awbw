@@ -8,13 +8,13 @@
 <% new_scholarship_link = new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "onboarding") %>
 <% align_class = { "left" => "text-left", "center" => "text-center", "right" => "text-right" } %>
 <% highlighted = params[:highlight].to_s == registration.id.to_s %>
-<tr id="<%= onboarding_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-400" : "hover:bg-gray-50" %>">
+<tr id="<%= onboarding_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "hover:bg-gray-50" %>">
   <% columns.each do |column| %>
     <% td_classes = [ "px-4 py-2 text-sm", align_class[column[:align]] ]
        if column[:sticky]
          # The row's inset ring is painted over by this sticky cell, so re-draw the
          # highlight border on the cell itself (same ring utility as the row).
-         td_classes << (highlighted ? "sticky left-0 bg-yellow-50 ring-2 ring-inset ring-yellow-400" : "sticky left-0 bg-white")
+         td_classes << (highlighted ? "sticky left-0 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "sticky left-0 bg-white")
        end %>
     <% case column[:kind]
        when :first_name %>

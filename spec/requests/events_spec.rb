@@ -1082,7 +1082,7 @@ RSpec.describe "Events", type: :request do
       get onboarding_event_path(event, highlight: registration.id)
 
       expect(response.body).to include("id=\"onboarding-row-#{registration.id}\"")
-      expect(response.body).to include("ring-yellow-400")
+      expect(response.body).to include("ring-yellow-500")
     end
 
     it "shows an Onboarding back-link to the row on registration edit" do
