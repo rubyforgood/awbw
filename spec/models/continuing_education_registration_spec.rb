@@ -75,4 +75,25 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg.reload.status).to eq("issued")
     end
   end
+
+  describe "allocatable payment interface" do
+    it "counts a discount as coverage toward paid_in_full?, like an event registration" do
+      ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
+      create(:allocation, source: create(:discount, amount_cents: 10_000), allocatable: ce_reg, amount: 10_000)
+
+      expect(ce_reg).to be_paid_in_full
+      expect(ce_reg.remaining_cost).to eq(0)
+      expect(ce_reg.payments_sum).to eq(0)
+    end
+
+    it "remaining_cost subtracts all allocations and payments_sum counts only cash" do
+      ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
+      payment = create(:payment, amount_cents: 6_000, amount_cents_remaining: 6_000)
+      create(:allocation, source: payment, allocatable: ce_reg, amount: 6_000)
+
+      expect(ce_reg.remaining_cost).to eq(4_000)
+      expect(ce_reg.payments_sum).to eq(6_000)
+      expect(ce_reg).to be_partially_paid
+    end
+  end
 end

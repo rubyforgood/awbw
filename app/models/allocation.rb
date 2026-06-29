@@ -126,7 +126,7 @@ class Allocation < ApplicationRecord
       return
     end
 
-    other_total = ce_reg.allocations.sum(:amount)
+    other_total = ce_reg.allocations_sum
     other_total -= amount_was if persisted?
 
     if amount.to_i > 0

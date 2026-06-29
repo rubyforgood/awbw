@@ -20,19 +20,29 @@ class ContinuingEducationRegistration < ApplicationRecord
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :license_belongs_to_registrant
 
-  def amount_owed_cents
-    [ cost_cents - paid_cents, 0 ].max
+  # Allocatable payment interface — mirrors EventRegistration so a CE registration
+  # behaves the same way wherever allocations are summed. "Covered" counts every
+  # allocation (payments, discounts, scholarships); payments_sum is cash only.
+  def allocations_sum
+    return allocations.to_a.sum(&:amount) if allocations.loaded?
+    allocations.sum(:amount)
   end
 
-  def paid_cents
-    if allocations.loaded?
-      return allocations.select { |a| a.source_type == "Payment" }.sum(&:amount)
-    end
-    allocations.where(source_type: "Payment").sum(:amount)
+  def payments_sum
+    return allocations.to_a.select { |a| a.source_type == Payment.polymorphic_name }.sum(&:amount) if allocations.loaded?
+    allocations.where(source_type: Payment.polymorphic_name).sum(:amount)
+  end
+
+  def remaining_cost
+    [ cost_cents - allocations_sum, 0 ].max
   end
 
   def paid_in_full?
-    paid_cents >= cost_cents
+    allocations_sum >= cost_cents.to_i
+  end
+
+  def partially_paid?
+    !paid_in_full? && payments_sum.to_i.positive?
   end
 
   # Advance requested↔paid to track real payments without clobbering a later
