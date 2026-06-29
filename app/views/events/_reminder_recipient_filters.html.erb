@@ -55,7 +55,7 @@
             ),
             include_blank: "Any scholarship status", class: select_class %>
     </div>
-    <% if @offers_ce %>
+    <% if @ce_eligible %>
       <div>
         <%= label_tag :ce_status, "CE", class: label_class %>
         <%= select_tag :ce_status,

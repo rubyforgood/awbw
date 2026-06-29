@@ -57,7 +57,7 @@
     </div>
   <% end %>
 
-  <% if @offers_ce %>
+  <% if @ce_eligible %>
     <div class="w-full md:w-48">
       <%= label_tag :ce_status, "CE status", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= select_tag :ce_status,

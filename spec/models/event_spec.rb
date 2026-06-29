@@ -261,29 +261,6 @@ RSpec.describe Event, type: :model do
     end
   end
 
-  describe "#offers_ce?" do
-    let(:ce_identifier) { EventRegistrationServices::PublicRegistration::CE_CREDIT_INTEREST_IDENTIFIER }
-
-    it "is true when the registration form has the CE-interest question" do
-      form = create(:form)
-      event = create(:event)
-      create(:event_form, event: event, form: form, role: "registration")
-      create(:form_field, form: form, field_identifier: ce_identifier)
-      expect(event.offers_ce?).to be true
-    end
-
-    it "is false when the registration form lacks the CE-interest question" do
-      form = create(:form, :with_fields)
-      event = create(:event)
-      create(:event_form, event: event, form: form, role: "registration")
-      expect(event.offers_ce?).to be false
-    end
-
-    it "is false when no registration form is linked" do
-      expect(create(:event).offers_ce?).to be false
-    end
-  end
-
   describe "#one_click_for_signed_in?" do
     it "is true when no registration form is linked" do
       event = create(:event)

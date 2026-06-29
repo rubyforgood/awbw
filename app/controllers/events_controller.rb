@@ -106,7 +106,7 @@ class EventsController < ApplicationController
 
     @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
     @dashboard = EventDashboard.new(@event)
-    @offers_ce = @event.offers_ce?
+    @ce_eligible = @event.ce_eligible?
 
     emails = @event_registrations.map { |r| r.registrant.preferred_email&.downcase }.compact
     @duplicate_emails = emails.tally.select { |_, count| count > 1 }.keys.to_set
@@ -316,7 +316,7 @@ class EventsController < ApplicationController
   def preview_reminder
     authorize! @event
     @event = @event.decorate
-    @offers_ce = @event.offers_ce?
+    @ce_eligible = @event.ce_eligible?
     @event_registrations = @event.event_registrations
       .includes(
         :event, :organizations, :comments,
@@ -538,7 +538,7 @@ class EventsController < ApplicationController
   def event_registrations_csv_string
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
-    include_ce = @event.offers_ce?
+    include_ce = @event.ce_eligible?
     headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Intends to pay", "Payment total" ]
     headers << "CE status" if include_ce
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
@@ -576,7 +576,7 @@ class EventsController < ApplicationController
   def onboarding_csv_string
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
-    include_ce = @event.offers_ce?
+    include_ce = @event.ce_eligible?
     day_count = @event.day_count
     headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
     headers += [ "Payment status", "Fees due", "Paid amount" ] if cost_required

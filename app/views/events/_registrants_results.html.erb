@@ -16,7 +16,7 @@
       </nav>
 
       <div class="flex items-center gap-4">
-        <% if @offers_ce %>
+        <% if @ce_eligible %>
           <label class="inline-flex items-center gap-2 cursor-pointer select-none"
                  data-controller="column-toggle" data-column-toggle-group-value="ce">
             <span class="text-sm text-gray-500">CE status</span>
@@ -62,7 +62,7 @@
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <% payment_col = @event.cost_cents.to_i > 0 %>
-        <% ce_col = @offers_ce %>
+        <% ce_col = @ce_eligible %>
         <% extra_cols = (payment_col ? 1 : 0) + (ce_col ? 1 : 0) %>
         <% ce_index = payment_col ? 4 : 3 %>
         <% date_index = 4 + extra_cols %>

@@ -5,12 +5,10 @@ RSpec.describe "Events", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:event) { create(:event) }
 
-  # Attaches a registration form carrying the seeded CE-interest question so the
-  # event reports `offers_ce?`, which gates every CE column/filter/export.
+  # Makes the event CE-eligible (offers a positive number of CE hours), which
+  # gates every CE column/filter/export.
   def offer_ce!(target_event)
-    form = create(:form)
-    create(:event_form, event: target_event, form: form, role: "registration")
-    create(:form_field, form: form, field_identifier: "ce_credit_interest")
+    target_event.update!(ce_hours_offered: 6)
     target_event
   end
 
