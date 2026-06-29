@@ -1,0 +1,18 @@
+<%# Shared labeled <select> used by the registrants roster filters and the bulk
+    reminder recipient filters, so the two stay visually identical. Only the
+    dropdowns are shared — each page keeps its own text inputs and decides which
+    selects (and options) to render. Locals:
+      param        – select name/id (Symbol)
+      label        – field label
+      options      – array passed to options_for_select
+      selected     – currently selected value
+      blank        – include_blank placeholder label
+      field_class  – Tailwind classes for the <select>
+      wrapper_class – optional wrapper width (defaults to the roster's w-48) %>
+<div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-48") %>">
+  <%= label_tag param, label, class: "block text-sm font-medium text-gray-700 mb-1" %>
+  <%= select_tag param,
+                 options_for_select(options, selected),
+                 include_blank: blank,
+                 class: field_class %>
+</div>

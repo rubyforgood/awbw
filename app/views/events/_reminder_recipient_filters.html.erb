@@ -36,45 +36,21 @@
 
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
     <% if @event.cost_cents.to_i > 0 %>
-      <div>
-        <%= label_tag :payment_status, "Payment", class: label_class %>
-        <%= select_tag :payment_status,
-              options_for_select(
-                [ [ "Paid", "paid" ], [ "Due", "unpaid" ], [ "Intends to pay", "intends_to_pay" ], [ "Paid + intends", "paid_or_intends" ] ],
-                params[:payment_status]
-              ),
-              include_blank: "Any payment status", class: select_class %>
-      </div>
+      <%= render "events/filter_select", param: :payment_status, label: "Payment",
+            options: [ [ "Paid", "paid" ], [ "Due", "unpaid" ], [ "Intends to pay", "intends_to_pay" ], [ "Paid + intends", "paid_or_intends" ] ],
+            selected: params[:payment_status], blank: "Any payment status", field_class: select_class, wrapper_class: "" %>
     <% end %>
-    <div>
-      <%= label_tag :scholarship_status, "Scholarship", class: label_class %>
-      <%= select_tag :scholarship_status,
-            options_for_select(
-              [ [ "Requested", "requested" ], [ "Allocated", "allocated" ], [ "Tasks completed", "tasks_completed" ] ],
-              params[:scholarship_status]
-            ),
-            include_blank: "Any scholarship status", class: select_class %>
-    </div>
+    <%= render "events/filter_select", param: :scholarship_status, label: "Scholarship",
+          options: [ [ "Requested", "requested" ], [ "Allocated", "allocated" ], [ "Tasks completed", "tasks_completed" ] ],
+          selected: params[:scholarship_status], blank: "Any scholarship status", field_class: select_class, wrapper_class: "" %>
     <% if @ce_eligible %>
-      <div>
-        <%= label_tag :ce_status, "CE", class: label_class %>
-        <%= select_tag :ce_status,
-              options_for_select(
-                [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
-                params[:ce_status]
-              ),
-              include_blank: "Any CE status", class: select_class %>
-      </div>
+      <%= render "events/filter_select", param: :ce_status, label: "CE",
+            options: [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
+            selected: params[:ce_status], blank: "Any CE status", field_class: select_class, wrapper_class: "" %>
     <% end %>
-    <div>
-      <%= label_tag :account_status, "User account", class: label_class %>
-      <%= select_tag :account_status,
-            options_for_select(
-              [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
-              params[:account_status]
-            ),
-            include_blank: "Any account status", class: select_class %>
-    </div>
+    <%= render "events/filter_select", param: :account_status, label: "User account",
+          options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
+          selected: params[:account_status], blank: "Any account status", field_class: select_class, wrapper_class: "" %>
     <div class="flex items-end">
       <%= link_to "Clear filters", preview_reminder_event_path(@event),
             class: "btn btn-utility-outline",
