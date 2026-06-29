@@ -2,8 +2,9 @@
 <%# Returned from a registrant's profile link on the event registrants page. Shown
     above the profile topper; needs event_id since the profile isn't event-scoped. %>
 <% if params[:return_to] == "registrants" && params[:event_id].present? %>
+  <% back_registration = @person.event_registrations.find_by(event_id: params[:event_id]) %>
   <div class="mb-3">
-    <%= link_to registrants_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+    <%= link_to(back_registration ? registrants_event_row_path(params[:event_id], back_registration.id) : registrants_event_path(params[:event_id]), class: "text-sm text-gray-500 hover:text-gray-700") do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to registrants
     <% end %>
   </div>

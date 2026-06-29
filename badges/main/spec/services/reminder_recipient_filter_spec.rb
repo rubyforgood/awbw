@@ -110,30 +110,27 @@ RSpec.describe ReminderRecipientFilter do
       it "filters intends-to-pay registrants" do
         expect(matched({ payment_status: "intends_to_pay" }, [ paid, due, intends ])).to eq([ intends.id ].to_set)
       end
-
-      it "filters paid + intends registrants" do
-        expect(matched({ payment_status: "paid_or_intends" }, [ paid, due, intends ])).to eq([ paid.id, intends.id ].to_set)
-      end
     end
 
-    context "scholarship status" do
-      let!(:requested) { registration.tap { |r| r.update!(scholarship_requested: true) } }
+    # Shares the registrants-roster `scholarship` filter (yes/complete/incomplete).
+    context "scholarship" do
+      let!(:none) { registration.tap { |r| r.update!(scholarship_requested: true) } }
       let!(:allocated) { registration(first_name: "Alloc").tap { |r| award_scholarship(r) } }
       let!(:completed) { registration(first_name: "Done").tap { |r| award_scholarship(r, tasks_completed: true) } }
 
-      it "filters requested" do
-        expect(matched({ scholarship_status: "requested" }, [ requested, allocated, completed ]))
-          .to eq([ requested.id ].to_set)
-      end
-
-      it "filters allocated" do
-        expect(matched({ scholarship_status: "allocated" }, [ requested, allocated, completed ]))
+      it "filters all recipients" do
+        expect(matched({ scholarship: "yes" }, [ none, allocated, completed ]))
           .to eq([ allocated.id, completed.id ].to_set)
       end
 
-      it "filters tasks completed" do
-        expect(matched({ scholarship_status: "tasks_completed" }, [ requested, allocated, completed ]))
+      it "filters tasks complete" do
+        expect(matched({ scholarship: "complete" }, [ none, allocated, completed ]))
           .to eq([ completed.id ].to_set)
+      end
+
+      it "filters tasks not complete" do
+        expect(matched({ scholarship: "incomplete" }, [ none, allocated, completed ]))
+          .to eq([ allocated.id ].to_set)
       end
     end
 
