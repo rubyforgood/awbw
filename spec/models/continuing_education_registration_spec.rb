@@ -95,5 +95,15 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg.payments_sum).to eq(6_000)
       expect(ce_reg).to be_partially_paid
     end
+
+    it "answers #paid? like #paid_in_full?, matching EventRegistration" do
+      ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
+      expect(ce_reg.paid?).to be(false)
+
+      payment = create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000)
+      create(:allocation, source: payment, allocatable: ce_reg, amount: 10_000)
+
+      expect(ce_reg.paid?).to be(true)
+    end
   end
 end

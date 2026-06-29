@@ -41,6 +41,12 @@ class ContinuingEducationRegistration < ApplicationRecord
     allocations_sum >= cost_cents.to_i
   end
 
+  # Public-facing payment predicate, mirroring EventRegistration#paid? so a CE
+  # registration answers the same message wherever allocatables are treated alike.
+  def paid?
+    paid_in_full?
+  end
+
   def partially_paid?
     !paid_in_full? && payments_sum.to_i.positive?
   end
