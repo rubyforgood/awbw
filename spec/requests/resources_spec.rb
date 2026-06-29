@@ -48,7 +48,7 @@ RSpec.describe "/resources", type: :request do
     end
 
     it "includes hidden resources for an admin" do
-      get resources_url, headers: { "Turbo-Frame" => "resource_results" }
+      get resources_url, headers: { "Turbo-Frame" => "resources_results" }
 
       expect(response.body).to include("Visible In Search")
       expect(response.body).to include("Hidden From Search")
@@ -56,7 +56,7 @@ RSpec.describe "/resources", type: :request do
 
     it "excludes hidden resources for a guest" do
       sign_out user
-      get resources_url, headers: { "Turbo-Frame" => "resource_results" }
+      get resources_url, headers: { "Turbo-Frame" => "resources_results" }
 
       expect(response.body).to include("Visible In Search")
       expect(response.body).not_to include("Hidden From Search")

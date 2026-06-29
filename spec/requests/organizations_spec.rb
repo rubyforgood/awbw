@@ -47,7 +47,7 @@ RSpec.describe "/organizations", type: :request do
       reinstate_org = create(:organization, name: "Reinstate Org", organization_status: organization_status)
       create(:affiliation, organization: reinstate_org, person: create(:person), title: "Facilitator", end_date: 1.year.ago.to_date)
 
-      get organizations_url, headers: { "Turbo-Frame" => "organization_results" }
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
 
       expect(response).to be_successful
       page = Capybara.string(response.body)
@@ -64,7 +64,7 @@ RSpec.describe "/organizations", type: :request do
       create(:affiliation, organization: organization, person: person)
       person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
 
-      get organizations_url, headers: { "Turbo-Frame" => "organization_results" }
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
 
       expect(response).to be_successful
       expect(response.body).to include("13-17")

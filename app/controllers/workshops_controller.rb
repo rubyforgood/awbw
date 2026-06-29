@@ -20,7 +20,7 @@ class WorkshopsController < ApplicationController
                                                             created_by: [ :person ], primary_asset: [ :file_attachment ]))
                                                   .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
-      render :workshop_results
+      render :workshops_results
     else
       @sort = params[:sort].presence || "title"
       render :index
