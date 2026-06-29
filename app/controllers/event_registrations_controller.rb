@@ -359,19 +359,12 @@ class EventRegistrationsController < ApplicationController
     flash[:notice] = "CE registration removed."
   end
 
-  # License a brand-new CE registration attaches to: the one the admin picked, else
-  # the registrant's only license, else a placeholder (number pending).
+  # License a brand-new CE registration attaches to: the registrant's existing
+  # license, else an empty placeholder (number pending). Which license is used
+  # (and its number) is then changeable on the CE registration's edit page.
   def ce_license_for_create
-    licenses = @event_registration.registrant.professional_licenses
-    picked = params.dig(:ce, :professional_license_id).presence
-    return licenses.find_by(id: picked) || placeholder_license if picked
-    return licenses.first if licenses.count == 1
-
-    placeholder_license
-  end
-
-  def placeholder_license
-    ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
+    @event_registration.registrant.professional_licenses.first ||
+      ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
   end
 
   # Strong parameters

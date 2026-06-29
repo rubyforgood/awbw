@@ -24,20 +24,10 @@
         <span class="text-sm font-medium text-gray-700">Requested</span>
       </label>
 
-      <%# Only ask which license when there's a real choice (>1 on file). With one,
-          the controller uses it; with none, it creates an empty (placeholder)
-          license to fill in later. %>
-      <% licenses = event_registration.registrant&.professional_licenses.to_a %>
-      <% if licenses.size > 1 %>
-        <div class="border-t border-gray-100 pt-3">
-          <label class="mb-1 block text-xs font-medium text-gray-500" for="ce_professional_license_id">License for the CE registration</label>
-          <%= select_tag "ce[professional_license_id]",
-                options_for_select(licenses.map { |license| [ license.name, license.id ] }),
-                id: "ce_professional_license_id",
-                class: "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
-        </div>
-      <% end %>
-      <p class="text-xs text-gray-400">Saving with this on creates the CE registration<%= " against the selected license" if licenses.size > 1 %>.</p>
+      <%# No license picker here — saving creates the record against the registrant's
+          license (or an empty placeholder). The license is then shown below and
+          editable on the CE registration's own page. %>
+      <p class="text-xs text-gray-400">Saving with this on creates the CE registration.</p>
     <% else %>
       <% license_number = ce_registration.professional_license&.number %>
       <div class="space-y-2">
