@@ -9,19 +9,15 @@ class ContinuingEducationRegistration < ApplicationRecord
   has_many :allocations, as: :allocatable, dependent: :destroy
   has_many :payments, through: :allocations, source: :source, source_type: "Payment"
 
-  # Default amount a registrant owes per CE hour. The training's ce_hours is
-  # multiplied by this to bill the registration.
-  HOURLY_RATE_DOLLARS = 25
-
   # Fulfillment lifecycle. Plain strings (no enum, per project convention):
   #   requested → paid (auto, on full payment) → issued (admin), or unawarded.
   STATUSES = %w[ requested paid issued unawarded ].freeze
 
-  before_validation :default_hours_from_event, on: :create
-  before_save :calculate_cost, if: -> { new_record? || hours_changed? }
+  before_validation :default_from_event, on: :create
 
   validates :status, inclusion: { in: STATUSES }
   validates :hours, numericality: { greater_than_or_equal_to: 0 }
+  validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :license_belongs_to_registrant
 
   def amount_owed_cents
@@ -50,21 +46,12 @@ class ContinuingEducationRegistration < ApplicationRecord
 
   private
 
-  def default_hours_from_event
-    self.hours = event_registration&.event&.ce_hours if hours.blank? || hours.zero?
-  end
-
-  # Snapshot the total cost from the event's per-hour CE rate. Recomputed only on
-  # create or when hours change, so an admin editing the event rate later never
-  # silently re-prices a registration that's already been billed or paid.
-  def calculate_cost
-    self.cost_cents = (hours.to_d * ce_rate_cents).round
-  end
-
-  # Per-hour CE price (cents) from the event, falling back to the default rate
-  # when there's no event yet (e.g. an in-memory build).
-  def ce_rate_cents
-    event_registration&.event&.ce_hour_cost_cents || ContinuingEducationRegistration::HOURLY_RATE_DOLLARS * 100
+  # Snapshot the hours offered and total cost from the event when they aren't set
+  # explicitly. Both are plain stored values — no per-hour rate is multiplied out.
+  def default_from_event
+    event = event_registration&.event
+    self.hours = event.ce_hours_available if event&.ce_hours_available && (hours.blank? || hours.zero?)
+    self.cost_cents = event.ce_hours_cost_cents if event&.ce_hours_cost_cents && (cost_cents.blank? || cost_cents.zero?)
   end
 
   def license_belongs_to_registrant

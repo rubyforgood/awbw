@@ -192,21 +192,6 @@ class Event < ApplicationRecord
     super.presence || "CE hours"
   end
 
-  # Per-hour CE price in cents. Falls back to the standard rate when no per-event
-  # override is set, so new and existing events both bill the default until an
-  # admin changes it.
-  def ce_hour_cost_cents
-    super || ContinuingEducationRegistration::HOURLY_RATE_DOLLARS * 100
-  end
-
-  # What a registrant owes to earn this training's CE hours: the available hours
-  # times the per-hour rate. Zero when the event grants no CE hours.
-  def ce_amount_owed_cents
-    return 0 if ce_hours.blank?
-
-    (ce_hours * ce_hour_cost_cents).round
-  end
-
   # Virtual attributes for date/time inputs (Firefox datetime-local compat)
   attr_writer :start_date_date, :start_date_time,
               :end_date_date, :end_date_time,
@@ -251,19 +236,19 @@ class Event < ApplicationRecord
     end
   end
 
-  # Virtual attribute for the CE hourly cost in dollars (converts to/from
-  # ce_hour_cost_cents), mirroring #cost. Reads back the default rate when unset
-  # so the event form shows the standard rate for new and existing events.
-  def ce_hour_cost
-    ce_hour_cost_cents / 100.0
+  # Virtual attribute for the total CE cost in dollars (converts to/from
+  # ce_hours_cost_cents), mirroring #cost.
+  def ce_hours_cost
+    return nil if ce_hours_cost_cents.nil?
+    ce_hours_cost_cents / 100.0
   end
 
-  def ce_hour_cost=(dollar_amount)
+  def ce_hours_cost=(dollar_amount)
     if dollar_amount.blank?
-      self.ce_hour_cost_cents = nil
+      self.ce_hours_cost_cents = nil
     else
       dollar_amount = dollar_amount.to_s.gsub(/[^\d.]/, "").to_f
-      self.ce_hour_cost_cents = (dollar_amount * 100).round
+      self.ce_hours_cost_cents = (dollar_amount * 100).round
     end
   end
 

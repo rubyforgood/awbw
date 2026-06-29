@@ -316,39 +316,21 @@ RSpec.describe Event, type: :model do
     end
   end
 
-  describe "#ce_hour_cost_cents" do
-    it "falls back to the standard rate when no per-event override is set" do
-      expect(build(:event, ce_hour_cost_cents: nil).ce_hour_cost_cents).to eq(ContinuingEducationRegistration::HOURLY_RATE_DOLLARS * 100)
+  describe "#ce_hours_cost (dollars)" do
+    it "is nil when no cost is set" do
+      expect(build(:event, ce_hours_cost_cents: nil).ce_hours_cost).to be_nil
     end
 
-    it "uses the per-event override when set" do
-      expect(build(:event, ce_hour_cost_cents: 4000).ce_hour_cost_cents).to eq(4000)
-    end
-  end
-
-  describe "#ce_hour_cost (dollars)" do
-    it "reads back the standard rate in dollars when unset" do
-      expect(build(:event, ce_hour_cost_cents: nil).ce_hour_cost).to eq(ContinuingEducationRegistration::HOURLY_RATE_DOLLARS)
+    it "reads the stored cost back in dollars" do
+      expect(build(:event, ce_hours_cost_cents: 15_000).ce_hours_cost).to eq(150)
     end
 
     it "converts a dollar amount to cents on assignment" do
-      expect(build(:event, ce_hour_cost: 40).ce_hour_cost_cents).to eq(4000)
-    end
-  end
-
-  describe "#ce_amount_owed_cents" do
-    it "multiplies the available CE hours by the hourly rate" do
-      event = build(:event, ce_hours: 6)
-      expect(event.ce_amount_owed_cents).to eq(6 * ContinuingEducationRegistration::HOURLY_RATE_DOLLARS * 100)
+      expect(build(:event, ce_hours_cost: 150).ce_hours_cost_cents).to eq(15_000)
     end
 
-    it "uses the per-event hourly cost override" do
-      event = build(:event, ce_hours: 6, ce_hour_cost: 40)
-      expect(event.ce_amount_owed_cents).to eq(6 * 40 * 100)
-    end
-
-    it "is zero when the event grants no CE hours" do
-      expect(build(:event, ce_hours: nil).ce_amount_owed_cents).to eq(0)
+    it "clears the cents when assigned blank" do
+      expect(build(:event, ce_hours_cost: "").ce_hours_cost_cents).to be_nil
     end
   end
 end
