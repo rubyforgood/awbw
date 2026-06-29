@@ -673,5 +673,22 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
         expect(response.body).not_to include("Back to linked organizations")
       end
     end
+
+    context "when viewed from the admin registrants roster" do
+      let(:admin) { create(:user, :admin) }
+      let!(:registration) { create(:event_registration, event: event, registrant: person) }
+
+      before { sign_in admin }
+
+      it "returns the eyebrow to the registrant's row instead of the ticket" do
+        get event_public_registration_path(event, person_id: person.id,
+          return_to: "registrants", return_registration_id: registration.id)
+
+        expect(response.body).to include("Back to registrants")
+        expect(response.body).to include("registrant-row-#{registration.id}")
+        expect(response.body).to include("highlight=#{registration.id}")
+        expect(response.body).not_to include("Back to ticket")
+      end
+    end
   end
 end

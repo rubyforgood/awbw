@@ -690,7 +690,6 @@ RSpec.describe "Events", type: :request do
       it "shows the due amount and no paid amount when nothing has been paid" do
         get registrants_event_path(event)
 
-        expect(response.body).to include("fa-circle-exclamation")
         expect(response.body).to include("$10 due")
         expect(response.body).not_to include("Partial")
       end
@@ -701,7 +700,6 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include("fa-circle-half-stroke")
         expect(response.body).to include("Partial payment · $6 due")
         expect(response.body).not_to include(">Partial payment<")
         expect(response.body).to include("$6 due")
@@ -713,7 +711,6 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include("fa-circle-exclamation")
         expect(response.body).to include("$6 due")
         expect(response.body).not_to include("Partial")
       end
@@ -724,7 +721,6 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include("fa-circle-check")
         expect(response.body).to include(">Paid</span>")
       end
 
@@ -872,10 +868,13 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include('data-column-toggle-group-value="ce"')
     end
 
-    it "renders the CE status column hidden by default, behind its toggle" do
+    it "renders the CE status column on by default, with a toggle to hide it" do
       get registrants_event_path(event)
-      # The CE column markers carry the `hidden` class until the toggle reveals them.
-      expect(response.body).to match(/class="[^"]*hidden[^"]*"[^>]*data-column-toggle-col="ce"/)
+      # CE column markers render visible (no `hidden` class) since the toggle defaults on…
+      expect(response.body).to include('data-column-toggle-col="ce"')
+      expect(response.body).not_to match(/class="[^"]*\bhidden\b[^"]*"[^>]*data-column-toggle-col="ce"/)
+      # …and the toggle switch shows its on-state.
+      expect(response.body).to include('data-column-toggle-group-value="ce"')
     end
 
     it "filters to all CE requests" do

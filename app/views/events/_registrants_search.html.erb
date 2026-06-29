@@ -1,7 +1,7 @@
 <%= form_with url: registrants_event_path(@event), method: :get,
   data: { controller: "collection", turbo_frame: "registrants_results" },
   autocomplete: "off",
-  class: "flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mb-6" do %>
+  class: "flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mb-6 bg-white border border-gray-200 rounded-xl shadow-sm p-4" do %>
 
   <%= hidden_field_tag :status_filter, params[:status_filter].presence || "active" %>
 
@@ -31,6 +31,20 @@
             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
   </div>
 
+  <% if @ce_eligible %>
+    <div class="w-full md:w-48">
+      <%= label_tag :ce_status, "CE status", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :ce_status,
+                     options_for_select(
+                       [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
+                       params[:ce_status]
+                     ),
+                     include_blank: "Any CE status",
+                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
+              focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+    </div>
+  <% end %>
+
   <% if @event.cost_cents.to_i > 0 %>
     <div class="w-full md:w-48">
       <%= label_tag :payment_status, "Payment", class: "block text-sm font-medium text-gray-700 mb-1" %>
@@ -52,20 +66,6 @@
                        params[:scholarship]
                      ),
                      include_blank: "All registrants",
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
-              focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-    </div>
-  <% end %>
-
-  <% if @ce_eligible %>
-    <div class="w-full md:w-48">
-      <%= label_tag :ce_status, "CE status", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= select_tag :ce_status,
-                     options_for_select(
-                       [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
-                       params[:ce_status]
-                     ),
-                     include_blank: "Any CE status",
                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
               focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
     </div>
