@@ -142,7 +142,7 @@
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 
                   <div class="flex items-center gap-1">
-                    <div class="w-40 min-w-0">
+                    <div class="w-44 min-w-0">
                       <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }, path_params: { return_to: "registrants", event_id: @event.id }, compact: true) %>
                     </div>
 
@@ -179,14 +179,14 @@
                       submitted name is no longer treated as pending. %>
                   <% needs_linking = submitted_org_name.present? && linked_orgs.none? %>
                   <% editor_path = link_organization_event_registration_path(registration, return_to: "registrants") %>
-                  <% pill_classes = "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 transition hover:opacity-80 hover:shadow-sm" %>
+                  <% pill_classes = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 transition hover:opacity-80 hover:shadow-sm" %>
                   <div class="flex flex-wrap gap-1.5">
                     <% linked_orgs.each do |org| %>
                       <%= link_to editor_path,
                                   title: org.name,
                                   class: "#{pill_classes} bg-gray-50 text-gray-500 border-gray-200",
                                   data: { turbo_frame: "_top" } do %>
-                        <span><%= truncate(org.name, length: 52) %></span>
+                        <span><%= truncate(org.name, length: 31) %></span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                       <% end %>
                     <% end %>
