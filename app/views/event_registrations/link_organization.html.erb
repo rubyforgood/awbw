@@ -54,7 +54,7 @@
                   <i class="fa-solid fa-file-lines"></i>
                 <% end %>
                 <div class="min-w-0">
-                  <p class="text-base text-gray-800">Organization: <strong><%= entry[:org_name].presence || "—" %></strong><% if entry[:organization]&.city_state.present? %> <span class="text-sm text-gray-500">· <%= entry[:organization].city_state %></span><% end %></p>
+                  <p class="text-base text-gray-800">Organization: <strong><%= entry[:org_name].presence || "—" %></strong><% if entry[:organization]&.city_state.present? %> <span class="text-sm text-gray-500">· <%= entry[:organization].city_state %></span><% end %><%# Mirror the roster's amber "Pending" chip so it's clear why this registrant was flagged — shown only while nothing is linked. %><% if entry[:org_name].present? && @linked_organizations.none? %> <span class="ml-1 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700" title="The registrant submitted this organization, but none is linked to the registration yet."><i class="fa-solid fa-circle-exclamation text-[0.65rem]"></i>Pending</span><% end %></p>
                   <p class="text-base text-gray-800">Position / title: <strong><%= entry[:position].presence || "—" %></strong></p>
                 </div>
               </li>
