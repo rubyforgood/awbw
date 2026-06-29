@@ -562,6 +562,13 @@ RSpec.describe "Events", type: :request do
     context "organization column" do
       let(:organization) { create(:organization, name: "Helping Hands") }
 
+      # Scopes assertions to the registrant's org cell so generic words like
+      # "None" in unrelated filter dropdowns don't cause false matches.
+      def org_cell_text
+        Nokogiri::HTML(response.body)
+          .at_css("tr#registrant-row-#{registration.id} td[data-column-toggle-col='organization']")&.text&.squish
+      end
+
       # Stores a submitted "agency_name" answer for the registrant, mirroring what
       # public registration captures, so the Pending/None chip logic has data.
       def submit_agency_name(name)
@@ -587,15 +594,15 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include(">Pending<")
-        expect(response.body).not_to include(">None<")
+        expect(org_cell_text).to include("Pending")
+        expect(org_cell_text).not_to include("None")
       end
 
       it "shows a 'None' chip when a registrant has no linked org and submitted nothing" do
         get registrants_event_path(event)
 
-        expect(response.body).to include(">None<")
-        expect(response.body).not_to include(">Pending<")
+        expect(org_cell_text).to include("None")
+        expect(org_cell_text).not_to include("Pending")
       end
 
       it "does not show a 'Pending' chip when an org is linked, even if the submitted name differs" do
@@ -604,8 +611,8 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include(organization.name)
-        expect(response.body).not_to include(">Pending<")
+        expect(org_cell_text).to include(organization.name)
+        expect(org_cell_text).not_to include("Pending")
       end
 
       it "does not show 'Pending' when the submitted name matches a linked org" do
@@ -614,8 +621,8 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include(organization.name)
-        expect(response.body).not_to include(">Pending<")
+        expect(org_cell_text).to include(organization.name)
+        expect(org_cell_text).not_to include("Pending")
       end
     end
 
@@ -923,6 +930,57 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /events/:id/registrants CE status column states" do
+    let(:event) { offer_ce!(create(:event, cost_cents: 1_000)) }
+    let(:person) { create(:person, first_name: "Cee", last_name: "Ee") }
+
+    before { sign_in admin }
+
+    # The CE chip is the only content of the CE column cell, so its squished text
+    # is the chip label (the trailing link arrow icon contributes no text).
+    def ce_chip_text
+      Nokogiri::HTML(response.body).at_css('td[data-column-toggle-col="ce"]')&.text&.squish
+    end
+
+    it "shows Create when CE was not requested" do
+      create(:event_registration, event: event, registrant: person, ce_credit_requested: false)
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("Create")
+    end
+
+    it "shows Requested when requested but no CE registration record exists yet" do
+      create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("Requested")
+    end
+
+    it "shows No license # once a CE record exists without a license number" do
+      reg = create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+      create(:continuing_education_registration, event_registration: reg,
+        professional_license: create(:professional_license, :placeholder, person: person))
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("No license #")
+    end
+
+    it "shows the CE amount due once a license is on file but unpaid" do
+      reg = create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+      create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
+        professional_license: create(:professional_license, person: person))
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("$150 due")
+    end
+
+    it "shows Recipient when the CE balance is paid" do
+      reg = create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+      cer = create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
+        professional_license: create(:professional_license, person: person))
+      create(:allocation, source: create(:payment, amount_cents: 15_000, amount_cents_remaining: 15_000),
+        allocatable: cer, amount: 15_000)
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("Recipient")
+    end
+  end
+
   describe "GET /events/:id/registrants with state and county filters" do
     let(:ca_person) { create(:person, first_name: "Cali", last_name: "Person") }
     let(:ny_person) { create(:person, first_name: "York", last_name: "Person") }
@@ -1024,7 +1082,7 @@ RSpec.describe "Events", type: :request do
       get onboarding_event_path(event, highlight: registration.id)
 
       expect(response.body).to include("id=\"onboarding-row-#{registration.id}\"")
-      expect(response.body).to include("ring-amber-300")
+      expect(response.body).to include("ring-yellow-300")
     end
 
     it "shows an Onboarding back-link to the row on registration edit" do

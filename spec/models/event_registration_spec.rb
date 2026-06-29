@@ -213,6 +213,34 @@ RSpec.describe EventRegistration, type: :model do
         expect(EventRegistration.ce_status("bogus")).to include(complete_ce, missing_ce, no_ce)
       end
     end
+
+    describe ".comment_status" do
+      let!(:no_comment) { create(:event_registration, event: event) }
+      let!(:commented) { create(:event_registration, event: event).tap { |r| create(:comment, commentable: r, body: "Hi") } }
+      let!(:flagged) { create(:event_registration, event: event).tap { |r| create(:comment, commentable: r, body: "Flag", flagged: true) } }
+
+      it "maps 'none' to registrations without comments" do
+        results = EventRegistration.comment_status("none")
+        expect(results).to include(no_comment)
+        expect(results).not_to include(commented, flagged)
+      end
+
+      it "maps 'present' to registrations with any comment" do
+        results = EventRegistration.comment_status("present")
+        expect(results).to include(commented, flagged)
+        expect(results).not_to include(no_comment)
+      end
+
+      it "maps 'flagged' to registrations with a flagged comment" do
+        results = EventRegistration.comment_status("flagged")
+        expect(results).to include(flagged)
+        expect(results).not_to include(no_comment, commented)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.comment_status("bogus")).to include(no_comment, commented, flagged)
+      end
+    end
   end
 
   describe "#scholarship?" do

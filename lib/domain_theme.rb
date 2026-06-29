@@ -30,6 +30,7 @@ module DomainTheme
 
     banners:                  :yellow,
     users:                    :rose,
+    comments:                 :purple,
 
     # Event dashboard cards
     payments:                 :green,

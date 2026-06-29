@@ -82,12 +82,14 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob }, { affiliations: :organization } ])
+      .includes(:comments, :organizations, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, :contact_methods, { avatar_attachment: :blob }, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
     scope = scope.scholarship_status(params[:scholarship]) if params[:scholarship].present?
     scope = scope.ce_status(params[:ce_status]) if params[:ce_status].present?
+    scope = scope.comment_status(params[:comment_status]) if params[:comment_status].present?
+    scope = scope.organization_status(params[:org_status], @event) if params[:org_status].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
     scope = scope.registrant_state(params[:state]) if params[:state].present?
     scope = scope.registrant_county(params[:county]) if params[:county].present?

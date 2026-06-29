@@ -137,8 +137,8 @@
       <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-4">
-        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:col-span-2">
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>">
               <i class="fa-solid fa-building"></i>
@@ -298,10 +298,10 @@
       <% end %>
 
       <%# ---- Comments ---- %>
-      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="comment-edit-toggle">
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm scroll-mt-24" id="comments-section" data-controller="comment-edit-toggle">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:quotes, intensity: 100) %> <%= DomainTheme.text_class_for(:quotes, intensity: 600) %>">
-            <i class="fa-solid fa-comments"></i>
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:comments, intensity: 100) %> <%= DomainTheme.text_class_for(:comments, intensity: 600) %>">
+            <i class="fa-solid fa-message"></i>
           </span>
           <h2 class="text-sm font-semibold text-gray-700">Registration comments</h2>
           <%= link_to event_registration_comments_path(f.object),
@@ -372,11 +372,12 @@
               <%= rf.input :shoutout_text,
                     label: "Shout-out text",
                     label_html: { class: "sr-only" },
-                    as: :string,
+                    as: :text,
                     placeholder: "Shown beneath their name on the recipients page",
                     wrapper_html: { class: "mb-0" },
                     input_html: {
                       maxlength: 1650,
+                      rows: 3,
                       class: "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:outline-none"
                     } %>
             <% end %>
@@ -442,7 +443,7 @@
       <% end %>
 
       <% cancel_path = case params[:return_to]
-                       when "registrants" then registrants_event_path(event_registration.event)
+                       when "registrants" then registrants_event_row_path(event_registration.event, event_registration.id)
                        when "index" then event_registrations_path
                        when "preview_reminder" then preview_reminder_event_path(event_registration.event)
                        else allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path

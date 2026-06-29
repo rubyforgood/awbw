@@ -160,6 +160,34 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  scope :comment_status, ->(value) {
+    commented = Comment.where(commentable_type: "EventRegistration").select(:commentable_id)
+    case value
+    when "none" then where.not(id: commented)
+    when "present" then where(id: commented)
+    when "flagged" then where(id: Comment.where(commentable_type: "EventRegistration", flagged: true).select(:commentable_id))
+    else all
+    end
+  }
+  # "linked" = at least one organization linked; "pending" = the registrant
+  # submitted an agency name on the event's registration form but nothing is
+  # linked yet (mirrors the Pending chip on the roster). Needs the event to
+  # resolve its registration form's agency_name field.
+  scope :organization_status, ->(value, event) {
+    linked = EventRegistrationOrganization.select(:event_registration_id)
+    case value
+    when "linked" then where(id: linked)
+    when "pending"
+      field = event.registration_form&.form_fields&.find_by(field_identifier: "agency_name")
+      next none unless field
+      submitted = FormAnswer.joins(:form_submission)
+        .where(form_field_id: field.id, form_submissions: { form_id: event.registration_form.id })
+        .where.not(submitted_answer: [ nil, "" ])
+        .select(Arel.sql("form_submissions.person_id"))
+      where(registrant_id: submitted).where.not(id: linked)
+    else all
+    end
+  }
   scope :keyword, ->(term) {
     return none if term.blank?
 
