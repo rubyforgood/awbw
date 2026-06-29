@@ -169,6 +169,22 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  # Mirrors EventRegistration#account_status (none / has_access / invited /
+  # no_access) as a DB filter, joining the registrant's login account.
+  scope :account_status, ->(value) {
+    # Guard every subquery against NULL person_id (system/audit users) — a NULL in
+    # a NOT IN list makes the whole comparison return no rows.
+    with_user = User.where.not(person_id: nil).select(:person_id)
+    has_access = User.has_access.where.not(person_id: nil).select(:person_id)
+    invited = User.where.not(person_id: nil).where.not(welcome_instructions_sent_at: nil).select(:person_id)
+    case value
+    when "none" then where.not(registrant_id: with_user)
+    when "has_access" then where(registrant_id: has_access)
+    when "invited" then where(registrant_id: invited).where.not(registrant_id: has_access)
+    when "no_access" then where(registrant_id: with_user).where.not(registrant_id: has_access).where.not(registrant_id: invited)
+    else all
+    end
+  }
   # "linked" = at least one organization linked; "pending" = the registrant
   # submitted an agency name on the event's registration form but nothing is
   # linked yet (mirrors the Pending chip on the roster). Needs the event to

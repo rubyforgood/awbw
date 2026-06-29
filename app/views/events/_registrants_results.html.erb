@@ -177,7 +177,7 @@
               <% person = registration.registrant %>
 
               <% highlighted = params[:highlight].to_s == registration.id.to_s %>
-              <tr id="<%= registrant_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-300" : "hover:bg-gray-50" %>">
+              <tr id="<%= registrant_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-400" : "hover:bg-gray-50" %>">
                 <td class="px-4 py-2" data-sort-first="<%= person.first_name.to_s.downcase %>" data-sort-last="<%= person.last_name.to_s.downcase %>">
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 

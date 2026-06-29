@@ -55,9 +55,13 @@
           options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
           selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
 
+    <%= render "events/filter_select", param: :account_status, label: "User account",
+          options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
+          selected: params[:account_status], blank: "Any account status", field_class: field_class %>
+
     <% if @dashboard.states.any? %>
       <%= render "events/filter_select", param: :state, label: "State",
-            options: @dashboard.states, selected: params[:state], blank: "All states", field_class: field_class %>
+            options: @dashboard.states, selected: params[:state], blank: "All states", field_class: field_class, wrapper_class: "w-full md:w-32" %>
     <% end %>
 
     <% if @dashboard.counties.any? %>

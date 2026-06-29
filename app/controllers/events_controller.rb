@@ -90,6 +90,7 @@ class EventsController < ApplicationController
     scope = scope.ce_status(params[:ce_status]) if params[:ce_status].present?
     scope = scope.comment_status(params[:comment_status]) if params[:comment_status].present?
     scope = scope.organization_status(params[:org_status], @event) if params[:org_status].present?
+    scope = scope.account_status(params[:account_status]) if params[:account_status].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
     scope = scope.registrant_state(params[:state]) if params[:state].present?
     scope = scope.registrant_county(params[:county]) if params[:county].present?

@@ -3,57 +3,55 @@
     auto-submits into the reminder_recipients turbo frame via the collection
     controller, mirroring the workshops and registrants filters. %>
 <% field_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
-<%# Grey the dropdown text only while the include_blank placeholder (the first
-    option) is the one selected, so a chosen value still reads in dark text. %>
-<% select_class = "#{field_class} has-[option:first-child:checked]:text-gray-400" %>
 <% label_class = "block text-sm font-medium text-gray-700 mb-1" %>
 <%= form_with url: preview_reminder_event_path(@event), method: :get,
   data: { controller: "collection", turbo_frame: "reminder_recipients" },
   autocomplete: "off",
   class: "bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-6" do %>
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4 items-end">
-    <div>
+  <%# Inputs wrap in a flex row sized to match the shared filter dropdowns (w-48). %>
+  <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mb-4">
+    <div class="w-full md:w-48">
       <%= label_tag :name, "Name", class: label_class %>
       <%= text_field_tag :name, params[:name], class: field_class, placeholder: "Registrant name" %>
     </div>
-    <div>
+    <div class="w-full md:w-48">
       <%= label_tag :reg_org, "Organization", class: label_class %>
       <%= text_field_tag :reg_org, params[:reg_org], class: field_class, placeholder: "Organization name" %>
     </div>
-    <div>
+    <div class="w-full md:w-48">
       <%= label_tag :grantor, "Grantor", class: label_class %>
       <%= text_field_tag :grantor, params[:grantor], class: field_class, placeholder: "Grantor name" %>
     </div>
-    <div>
+    <div class="w-full md:w-48">
       <%= label_tag :comment, "Comment", class: label_class %>
       <%= text_field_tag :comment, params[:comment], class: field_class, placeholder: "Comment text" %>
     </div>
-    <div>
+    <div class="w-full md:w-48">
       <%= label_tag :email, "Email", class: label_class %>
       <%= text_field_tag :email, params[:email], class: field_class, placeholder: "Email address" %>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
+  <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4">
     <% if @event.cost_cents.to_i > 0 %>
       <%= render "events/filter_select", param: :payment_status, label: "Payment",
             options: [ [ "Paid", "paid" ], [ "Due", "unpaid" ], [ "Intends to pay", "intends_to_pay" ], [ "Paid + intends", "paid_or_intends" ] ],
-            selected: params[:payment_status], blank: "Any payment status", field_class: select_class, wrapper_class: "" %>
+            selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
     <% end %>
     <%= render "events/filter_select", param: :scholarship_status, label: "Scholarship",
           options: [ [ "Requested", "requested" ], [ "Allocated", "allocated" ], [ "Tasks completed", "tasks_completed" ] ],
-          selected: params[:scholarship_status], blank: "Any scholarship status", field_class: select_class, wrapper_class: "" %>
+          selected: params[:scholarship_status], blank: "Any scholarship status", field_class: field_class %>
     <% if @ce_eligible %>
       <%= render "events/filter_select", param: :ce_status, label: "CE",
             options: [ [ "Requested", "requested" ], [ "License not provided", "license_not_provided" ], [ "Hours not provided", "hours_not_provided" ], [ "Paid", "paid" ] ],
-            selected: params[:ce_status], blank: "Any CE status", field_class: select_class, wrapper_class: "" %>
+            selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
     <% end %>
     <%= render "events/filter_select", param: :account_status, label: "User account",
           options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
-          selected: params[:account_status], blank: "Any account status", field_class: select_class, wrapper_class: "" %>
-    <div class="flex items-end">
+          selected: params[:account_status], blank: "Any account status", field_class: field_class %>
+    <div class="w-full md:w-auto md:ml-auto flex justify-end">
       <%= link_to "Clear filters", preview_reminder_event_path(@event),
-            class: "btn btn-utility-outline",
+            class: "btn btn-utility",
             data: { action: "collection#clearAndSubmit" } %>
     </div>
   </div>

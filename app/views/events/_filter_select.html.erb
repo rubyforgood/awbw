@@ -11,8 +11,10 @@
       wrapper_class – optional wrapper width (defaults to the roster's w-48) %>
 <div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-48") %>">
   <%= label_tag param, label, class: "block text-sm font-medium text-gray-700 mb-1" %>
+  <%# Grey the text only while the include_blank placeholder (the first option) is
+      selected, so a chosen value still reads in dark text. %>
   <%= select_tag param,
                  options_for_select(options, selected),
                  include_blank: blank,
-                 class: field_class %>
+                 class: "#{field_class} has-[option:first-child:checked]:text-gray-400" %>
 </div>

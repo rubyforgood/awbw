@@ -241,6 +241,43 @@ RSpec.describe EventRegistration, type: :model do
         expect(EventRegistration.comment_status("bogus")).to include(no_comment, commented, flagged)
       end
     end
+
+    describe ".account_status" do
+      # The person factory auto-builds a confirmed user, so each case sets the
+      # registrant's account state explicitly (user: nil for no account).
+      let!(:none_reg) { create(:event_registration, event: event, registrant: create(:person, user: nil)) }
+      let!(:access_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: Time.current))) }
+      let!(:invited_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: nil, welcome_instructions_sent_at: Time.current))) }
+      let!(:no_access_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: nil, welcome_instructions_sent_at: nil))) }
+
+      it "maps 'none' to registrants without an account" do
+        results = EventRegistration.account_status("none")
+        expect(results).to include(none_reg)
+        expect(results).not_to include(access_reg, invited_reg, no_access_reg)
+      end
+
+      it "maps 'has_access' to confirmed, unlocked, active accounts" do
+        results = EventRegistration.account_status("has_access")
+        expect(results).to include(access_reg)
+        expect(results).not_to include(none_reg, invited_reg, no_access_reg)
+      end
+
+      it "maps 'invited' to invited accounts that don't yet have access" do
+        results = EventRegistration.account_status("invited")
+        expect(results).to include(invited_reg)
+        expect(results).not_to include(none_reg, access_reg, no_access_reg)
+      end
+
+      it "maps 'no_access' to accounts that are neither invited nor active" do
+        results = EventRegistration.account_status("no_access")
+        expect(results).to include(no_access_reg)
+        expect(results).not_to include(none_reg, access_reg, invited_reg)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.account_status("bogus")).to include(none_reg, access_reg, invited_reg, no_access_reg)
+      end
+    end
   end
 
   describe "#scholarship?" do
