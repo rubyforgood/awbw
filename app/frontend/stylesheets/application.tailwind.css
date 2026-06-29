@@ -33,6 +33,7 @@
 
 @source inline("{hover:,}bg-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{50,{100..900..100},950}");
 @source inline("{hover:,}border-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{200,300}");
+@source inline("ring-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{200,300,400,500}");
 @source inline("{hover:,}text-{indigo,purple,teal,violet,orange,rose,blue,sky,emerald,slate,lime,stone,amber,green,yellow,gray,cyan,fuchsia,pink}-{50,{100..900..100},950}");
 
 /* Per-field form layout widths (generated from FormField::WIDTH_GRID_SPANS, which

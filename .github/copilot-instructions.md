@@ -54,6 +54,7 @@ When changing a model or controller, check whether these related files need upda
 - Avoid `update_all` unless explicitly intended
 - Prefer service objects under app/services/
 - Prefer POROs over concerns when possible
+- **Prefer decorators (Draper, app/decorators/) over view helpers for model-specific presentation** — when display logic is "about a record" (labels, badges, formatted attributes, status pills), put it on that model's decorator and call `record.decorate.thing`. Reserve `app/helpers/` for generic, cross-model view utilities that aren't tied to one model. Decorators keep presentation testable and out of ERB.
 - Use `after_commit` instead of `after_save` for side effects
 
 ## RuboCop (rubocop-rails-omakase)

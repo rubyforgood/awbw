@@ -171,10 +171,10 @@ RSpec.describe "Scholarships", type: :request do
   end
 
   describe "back link follows the page the user came from" do
-    it "links the new page back to the registrants roster when return_to=registrants" do
+    it "links the new page back to the registrants roster (anchored to the row) when return_to=registrants" do
       get new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants")
 
-      expect(response.body).to include("href=\"#{registrants_event_path(event)}\"")
+      expect(response.body).to include("href=\"#{registrants_event_path(event, highlight: registration.id, anchor: "registrant-row-#{registration.id}")}\"")
       expect(response.body).not_to include("href=\"#{edit_event_registration_path(registration)}\"")
     end
 
@@ -184,10 +184,10 @@ RSpec.describe "Scholarships", type: :request do
       expect(response.body).to include("href=\"#{edit_event_registration_path(registration)}\"")
     end
 
-    it "links the edit page back to the registrants roster when return_to=registrants" do
+    it "links the edit page back to the registrants roster (anchored to the row) when return_to=registrants" do
       get edit_scholarship_path(scholarship, return_to: "registrants")
 
-      expect(response.body).to include("href=\"#{registrants_event_path(event)}\"")
+      expect(response.body).to include("href=\"#{registrants_event_path(event, highlight: registration.id, anchor: "registrant-row-#{registration.id}")}\"")
     end
 
     it "links the edit page back to the registration when return_to=registration" do

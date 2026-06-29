@@ -84,7 +84,7 @@
       </label>
 
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-        <% skip_path = @return_to == "registrants" ? registrants_event_path(@event_registration.event) : registration_ticket_path(@event_registration.slug) %>
+        <% skip_path = @return_to == "registrants" ? registrants_event_row_path(@event_registration.event, @event_registration.id) : registration_ticket_path(@event_registration.slug) %>
         <%= link_to "Skip", skip_path, class: "btn btn-secondary-outline" %>
         <button type="submit" class="btn btn-primary">Send selected</button>
       </div>

@@ -147,6 +147,63 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  # Mirrors ReminderRecipientFilter#matches_ce_status?. The "license"/"hours"
+  # sub-statuses only make sense for someone who requested CE credit, so they're
+  # gated on it. "paid" has no CE-specific payment record yet, so it falls back
+  # to the registrant being paid in full.
+  scope :ce_status, ->(value) {
+    case value
+    when "requested" then where(ce_credit_requested: true)
+    when "license_not_provided" then where(ce_credit_requested: true).where(ce_license_number: [ nil, "" ])
+    when "hours_not_provided" then where(ce_credit_requested: true).where("COALESCE(ce_hours_requested, 0) <= 0")
+    when "paid" then where(ce_credit_requested: true).merge(paid_in_full)
+    else all
+    end
+  }
+  scope :comment_status, ->(value) {
+    commented = Comment.where(commentable_type: "EventRegistration").select(:commentable_id)
+    case value
+    when "none" then where.not(id: commented)
+    when "present" then where(id: commented)
+    when "flagged" then where(id: Comment.where(commentable_type: "EventRegistration", flagged: true).select(:commentable_id))
+    else all
+    end
+  }
+  # Mirrors EventRegistration#account_status (none / has_access / invited /
+  # no_access) as a DB filter, joining the registrant's login account.
+  scope :account_status, ->(value) {
+    # Guard every subquery against NULL person_id (system/audit users) — a NULL in
+    # a NOT IN list makes the whole comparison return no rows.
+    with_user = User.where.not(person_id: nil).select(:person_id)
+    has_access = User.has_access.where.not(person_id: nil).select(:person_id)
+    invited = User.where.not(person_id: nil).where.not(welcome_instructions_sent_at: nil).select(:person_id)
+    case value
+    when "none" then where.not(registrant_id: with_user)
+    when "has_access" then where(registrant_id: has_access)
+    when "invited" then where(registrant_id: invited).where.not(registrant_id: has_access)
+    when "no_access" then where(registrant_id: with_user).where.not(registrant_id: has_access).where.not(registrant_id: invited)
+    else all
+    end
+  }
+  # "linked" = at least one organization linked; "pending" = the registrant
+  # submitted an agency name on the event's registration form but nothing is
+  # linked yet (mirrors the Pending chip on the roster). Needs the event to
+  # resolve its registration form's agency_name field.
+  scope :organization_status, ->(value, event) {
+    linked = EventRegistrationOrganization.select(:event_registration_id)
+    case value
+    when "linked" then where(id: linked)
+    when "pending"
+      field = event.registration_form&.form_fields&.find_by(field_identifier: "agency_name")
+      next none unless field
+      submitted = FormAnswer.joins(:form_submission)
+        .where(form_field_id: field.id, form_submissions: { form_id: event.registration_form.id })
+        .where.not(submitted_answer: [ nil, "" ])
+        .select(Arel.sql("form_submissions.person_id"))
+      where(registrant_id: submitted).where.not(id: linked)
+    else all
+    end
+  }
   scope :keyword, ->(term) {
     return none if term.blank?
 
@@ -260,6 +317,17 @@ class EventRegistration < ApplicationRecord
   # True when the registrant has supplied a CE license number.
   def ce_license_provided?
     ce_license_number.present?
+  end
+
+  # A short label summarizing the registrant's CE credit standing, matching the
+  # ce_status filter buckets. Nil when CE credit was not requested, so callers
+  # can render a placeholder. "Incomplete" takes precedence over "Paid" because
+  # a missing license/hours is the actionable state regardless of payment.
+  def ce_status_label
+    return unless ce_credit_requested?
+    return "Incomplete" if !ce_license_provided? || ce_hours_requested.to_i <= 0
+    return "Paid" if paid_in_full?
+    "Requested"
   end
 
   # What the registrant owes for their requested CE hours, in cents, at the

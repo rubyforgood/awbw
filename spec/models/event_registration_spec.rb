@@ -174,6 +174,110 @@ RSpec.describe EventRegistration, type: :model do
         expect(EventRegistration.payment_status("bogus")).to include(paid_reg, unpaid_reg)
       end
     end
+
+    describe ".ce_status" do
+      let!(:complete_ce) do
+        create(:event_registration, event: event, ce_credit_requested: true, ce_license_number: "ABC123", ce_hours_requested: 3).tap do |r|
+          create(:allocation, source: create(:payment, amount_cents: event.cost_cents, amount_cents_remaining: event.cost_cents),
+                              allocatable: r, amount: event.cost_cents)
+        end
+      end
+      let!(:missing_ce) { create(:event_registration, event: event, ce_credit_requested: true) }
+      let!(:no_ce) { create(:event_registration, event: event, ce_credit_requested: false) }
+
+      it "maps 'requested' to anyone who asked for CE credit" do
+        results = EventRegistration.ce_status("requested")
+        expect(results).to include(complete_ce, missing_ce)
+        expect(results).not_to include(no_ce)
+      end
+
+      it "maps 'license_not_provided' to CE requests missing a license number" do
+        results = EventRegistration.ce_status("license_not_provided")
+        expect(results).to include(missing_ce)
+        expect(results).not_to include(complete_ce, no_ce)
+      end
+
+      it "maps 'hours_not_provided' to CE requests missing hours" do
+        results = EventRegistration.ce_status("hours_not_provided")
+        expect(results).to include(missing_ce)
+        expect(results).not_to include(complete_ce, no_ce)
+      end
+
+      it "maps 'paid' to CE requests that are paid in full" do
+        results = EventRegistration.ce_status("paid")
+        expect(results).to include(complete_ce)
+        expect(results).not_to include(missing_ce, no_ce)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.ce_status("bogus")).to include(complete_ce, missing_ce, no_ce)
+      end
+    end
+
+    describe ".comment_status" do
+      let!(:no_comment) { create(:event_registration, event: event) }
+      let!(:commented) { create(:event_registration, event: event).tap { |r| create(:comment, commentable: r, body: "Hi") } }
+      let!(:flagged) { create(:event_registration, event: event).tap { |r| create(:comment, commentable: r, body: "Flag", flagged: true) } }
+
+      it "maps 'none' to registrations without comments" do
+        results = EventRegistration.comment_status("none")
+        expect(results).to include(no_comment)
+        expect(results).not_to include(commented, flagged)
+      end
+
+      it "maps 'present' to registrations with any comment" do
+        results = EventRegistration.comment_status("present")
+        expect(results).to include(commented, flagged)
+        expect(results).not_to include(no_comment)
+      end
+
+      it "maps 'flagged' to registrations with a flagged comment" do
+        results = EventRegistration.comment_status("flagged")
+        expect(results).to include(flagged)
+        expect(results).not_to include(no_comment, commented)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.comment_status("bogus")).to include(no_comment, commented, flagged)
+      end
+    end
+
+    describe ".account_status" do
+      # The person factory auto-builds a confirmed user, so each case sets the
+      # registrant's account state explicitly (user: nil for no account).
+      let!(:none_reg) { create(:event_registration, event: event, registrant: create(:person, user: nil)) }
+      let!(:access_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: Time.current))) }
+      let!(:invited_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: nil, welcome_instructions_sent_at: Time.current))) }
+      let!(:no_access_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: nil, welcome_instructions_sent_at: nil))) }
+
+      it "maps 'none' to registrants without an account" do
+        results = EventRegistration.account_status("none")
+        expect(results).to include(none_reg)
+        expect(results).not_to include(access_reg, invited_reg, no_access_reg)
+      end
+
+      it "maps 'has_access' to confirmed, unlocked, active accounts" do
+        results = EventRegistration.account_status("has_access")
+        expect(results).to include(access_reg)
+        expect(results).not_to include(none_reg, invited_reg, no_access_reg)
+      end
+
+      it "maps 'invited' to invited accounts that don't yet have access" do
+        results = EventRegistration.account_status("invited")
+        expect(results).to include(invited_reg)
+        expect(results).not_to include(none_reg, access_reg, no_access_reg)
+      end
+
+      it "maps 'no_access' to accounts that are neither invited nor active" do
+        results = EventRegistration.account_status("no_access")
+        expect(results).to include(no_access_reg)
+        expect(results).not_to include(none_reg, access_reg, invited_reg)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.account_status("bogus")).to include(none_reg, access_reg, invited_reg, no_access_reg)
+      end
+    end
   end
 
   describe "#scholarship?" do
