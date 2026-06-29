@@ -37,6 +37,11 @@ class ContinuingEducationRegistration < ApplicationRecord
     [ cost_cents - allocations_sum, 0 ].max
   end
 
+  # A zero-cost CE registration counts as paid (allocations_sum >= 0). That's
+  # intentional and only ever reached for already-existing zero-cost records:
+  # Allocation#validate_ce_registration_cost forbids *allocating* to a zero-cost
+  # CE in the first place, so the two layers encode "no cost" with opposite
+  # intent on purpose — nothing to pay here vs. nothing may be paid there.
   def paid_in_full?
     allocations_sum >= cost_cents.to_i
   end

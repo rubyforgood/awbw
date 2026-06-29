@@ -120,6 +120,10 @@ class Allocation < ApplicationRecord
     ce_reg = allocatable
     return unless ce_reg.is_a?(ContinuingEducationRegistration)
 
+    # cost_cents is a non-null, default-0 column, so `<= 0` (not `.blank?`, as in
+    # the event variant whose cost is nullable) is the right "no cost" test. A
+    # zero-cost CE accepts no allocations even though CE#paid_in_full? reports it
+    # as paid — that asymmetry is deliberate, see CE#paid_in_full?.
     cost_cents = ce_reg.cost_cents.to_i
     if cost_cents <= 0
       errors.add(:base, "Cannot allocate to a CE registration with no cost.")
