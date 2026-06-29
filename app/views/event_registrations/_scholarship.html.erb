@@ -41,9 +41,12 @@
           <% end %>
         </div>
 
+        <%# Keep this row present whether funded or not so the card matches the
+            continuing-education card's height and their status chips line up.
+            Unfunded → an empty spacer of the same height (padding), no text. %>
         <% if scholarship.grant&.funder_name.present? %>
           <p class="text-xs text-gray-500">
-            Funded by
+            Grantor:
             <% if scholarship.grant.donor %>
               <%= link_to scholarship.grant.funder_name, polymorphic_path(scholarship.grant.donor),
                           class: "font-medium text-gray-700 hover:underline" %>
@@ -51,6 +54,8 @@
               <span class="font-medium text-gray-700"><%= scholarship.grant.funder_name %></span>
             <% end %>
           </p>
+        <% else %>
+          <p class="text-xs text-gray-500" aria-hidden="true">&nbsp;</p>
         <% end %>
 
         <div class="flex flex-wrap items-center gap-1.5">

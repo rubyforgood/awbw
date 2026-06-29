@@ -117,7 +117,7 @@ RSpec.describe "Event registration edit page", type: :system do
       visit edit_event_registration_path(registration)
 
       within("section", text: "Scholarship") do
-        expect(page).to have_text("Funded by")
+        expect(page).to have_text("Grantor:")
         expect(page).to have_link("Acme Foundation", href: organization_path(organization))
       end
     end
@@ -136,7 +136,7 @@ RSpec.describe "Event registration edit page", type: :system do
       end
     end
 
-    it "omits the funder line when the scholarship has no grant" do
+    it "shows no grantor text (just a spacer) when the scholarship has no grant" do
       scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
 
@@ -144,7 +144,7 @@ RSpec.describe "Event registration edit page", type: :system do
       visit edit_event_registration_path(registration)
 
       within("section", text: "Scholarship") do
-        expect(page).to have_no_text("Funded by")
+        expect(page).to have_no_text("Grantor:")
       end
     end
   end
