@@ -333,4 +333,18 @@ RSpec.describe Event, type: :model do
       expect(build(:event, ce_hours_cost: "").ce_hours_cost_cents).to be_nil
     end
   end
+
+  describe "#ce_eligible?" do
+    it "is true when the event offers a positive number of CE hours" do
+      expect(build(:event, ce_hours_offered: 6)).to be_ce_eligible
+    end
+
+    it "is false when no CE hours are offered" do
+      expect(build(:event, ce_hours_offered: nil)).not_to be_ce_eligible
+    end
+
+    it "is false when CE hours are zero" do
+      expect(build(:event, ce_hours_offered: 0)).not_to be_ce_eligible
+    end
+  end
 end

@@ -21,8 +21,8 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
   end
 
   describe "hours and cost defaults from the event" do
-    it "defaults hours from the event's available CE hours on create" do
-      event = create(:event, ce_hours_available: 8)
+    it "defaults hours from the event's offered CE hours on create" do
+      event = create(:event, ce_hours_offered: 8)
       registration = create(:event_registration, event: event)
 
       ce_reg = create(:continuing_education_registration,

@@ -71,7 +71,7 @@ class ContinuingEducationRegistration < ApplicationRecord
   # explicitly. Both are plain stored values — no per-hour rate is multiplied out.
   def default_from_event
     event = event_registration&.event
-    self.hours = event.ce_hours_available if event&.ce_hours_available && (hours.blank? || hours.zero?)
+    self.hours = event.ce_hours_offered if event&.ce_hours_offered && (hours.blank? || hours.zero?)
     self.cost_cents = event.ce_hours_cost_cents if event&.ce_hours_cost_cents && (cost_cents.blank? || cost_cents.zero?)
   end
 

@@ -536,11 +536,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_010238) do
     t.boolean "autoshow_title", default: true, null: false
     t.boolean "autoshow_videoconference_label", default: true, null: false
     t.boolean "autoshow_videoconference_link", default: true, null: false
-    t.decimal "ce_hours_available", precision: 5, scale: 2
     t.integer "ce_hours_cost_cents"
     t.text "ce_hours_details"
     t.string "ce_hours_details_label", default: "CE hours", null: false
-    t.boolean "ce_hours_eligible", default: false, null: false
+    t.decimal "ce_hours_offered", precision: 5, scale: 2
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
