@@ -142,7 +142,7 @@
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 
                   <div class="flex items-center gap-1">
-                    <div class="w-44 min-w-0">
+                    <div class="w-40 min-w-0">
                       <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }, path_params: { return_to: "registrants", event_id: @event.id }, compact: true) %>
                     </div>
 
