@@ -3,7 +3,10 @@
     registration stub, which is then filled in on its own edit page. Once a record
     exists the toggle is gone and we show the record + an Edit link. Only rendered
     for CE-eligible events. ---- %>
-<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ring-teal-400"
+         data-controller="ce-credit-requested"
+         data-ce-credit-requested-initial-value="<%= event_registration.ce_requested? %>"
+         data-ce-credit-requested-target="box">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-teal-600">
       <i class="fa-solid fa-certificate"></i>
@@ -19,8 +22,10 @@
                name="event_registration[ce_requested]"
                value="1"
                <%= "checked" if event_registration.ce_requested? %>
+               data-ce-credit-requested-target="checkbox"
+               data-action="ce-credit-requested#refresh"
                class="sr-only peer">
-        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
+        <span data-ce-credit-requested-target="track" class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
         <span class="text-sm font-medium text-gray-700">Requested</span>
       </label>
 
