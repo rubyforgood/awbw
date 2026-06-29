@@ -10,8 +10,8 @@ class ContinuingEducationRegistration < ApplicationRecord
   has_many :payments, through: :allocations, source: :source, source_type: "Payment"
 
   # Fulfillment lifecycle. Plain strings (no enum, per project convention):
-  #   requested → paid (auto, on full payment) → issued (admin), or unawarded.
-  STATUSES = %w[ requested paid issued unawarded ].freeze
+  #   requested → paid (auto, on full payment) → issued (admin), or not_issued.
+  STATUSES = %w[ requested paid issued not_issued ].freeze
 
   before_validation :default_from_event, on: :create
 
@@ -46,7 +46,7 @@ class ContinuingEducationRegistration < ApplicationRecord
   end
 
   # Advance requested↔paid to track real payments without clobbering a later
-  # admin state (issued/unawarded). Called when allocations change.
+  # admin state (issued/not_issued). Called when allocations change.
   def sync_payment_status!
     return unless status == "requested" || status == "paid"
 
