@@ -133,8 +133,10 @@ class MagicTicketCallouts
   end
 
   def ce_hours_subtitle
-    hours = ContinuingEducationRegistration.format_hours(event.ce_hours_offered)
-    hours.present? ? "#{hours} hours" : "Continuing education credit"
+    total = registration.ce_hours_total
+    return "Continuing education credit" unless total.positive?
+
+    "#{ContinuingEducationRegistration.format_hours(total)} hours"
   end
 
   # Teal "$X due" once hours + license are on file and money is owed; otherwise an
