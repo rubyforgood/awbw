@@ -152,7 +152,10 @@
           </div>
 
           <div class="flex flex-1 flex-col p-4">
-            <div data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
+            <%# Nudge the chips up by the org card's extra header line (its title wraps
+                to two lines) so the first chip's top lines up with the scholarship
+                card's "$100". %>
+            <div class="-mt-2" data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
               <div class="flex flex-wrap gap-1.5" data-org-toggle-target="chips">
                 <% f.object.organizations.sort_by(&:name).each do |org| %>
                   <label class="inline-flex items-center gap-1 px-4 py-1 rounded-full text-xs border cursor-pointer transition-colors bg-red-50 border-red-200 text-red-400 line-through has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-200 has-[:checked]:text-emerald-800 has-[:checked]:no-underline">

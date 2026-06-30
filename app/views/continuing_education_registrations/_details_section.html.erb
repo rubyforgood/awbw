@@ -47,8 +47,11 @@
         </div>
         <div>
           <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_license_issuing_state">Issuing state <span class="font-normal text-xs text-gray-400">(optional)</span></label>
-          <%= f.text_field :license_issuing_state, value: license&.issuing_state, id: "continuing_education_registration_license_issuing_state",
-                placeholder: "e.g. CA", data: { "ce-license-picker-target": "state" },
+          <%= f.select :license_issuing_state,
+                us_states,
+                { selected: license&.issuing_state, include_blank: "Select a state" },
+                id: "continuing_education_registration_license_issuing_state",
+                data: { "ce-license-picker-target": "state" },
                 class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
         </div>
         <div>
