@@ -52,4 +52,26 @@ RSpec.describe ProfessionalLicense, type: :model do
       expect(dup).not_to be_valid
     end
   end
+
+  describe "removal guard" do
+    let(:license) { create(:professional_license, person: person, number: "GUARD-1") }
+
+    def attach_paid_ce
+      registration = create(:event_registration, registrant: person)
+      ce = create(:continuing_education_registration, event_registration: registration, professional_license: license, cost_cents: 10_000)
+      create(:allocation, source: create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000),
+                          allocatable: ce, amount: 10_000)
+    end
+
+    it "is removable with no paid CE registrations" do
+      expect(license).to be_removable
+      expect { license.destroy }.to change(described_class, :count).by(-1)
+    end
+
+    it "refuses to destroy when a CE registration carries payments" do
+      attach_paid_ce
+      expect(license.reload).not_to be_removable
+      expect { license.destroy }.not_to change(described_class, :count)
+    end
+  end
 end

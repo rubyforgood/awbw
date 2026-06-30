@@ -7,6 +7,11 @@ class ProfessionalLicense < ApplicationRecord
 
   has_many :continuing_education_registrations, dependent: :destroy
 
+  # Deleting a license cascades to its CE registrations (and their allocations),
+  # so refuse to remove one whose CE registrations carry payments. prepend so this
+  # runs before the dependent: :destroy cascade below clears those registrations.
+  before_destroy :prevent_destroy_with_paid_ce, prepend: true
+
   validates :number, uniqueness: { scope: :person_id }, allow_nil: true
 
   # Find the person's license for this number, or create it. A blank number
@@ -29,5 +34,20 @@ class ProfessionalLicense < ApplicationRecord
 
   def name
     [ kind, number ].compact_blank.join(" ").presence || "License (number pending)"
+  end
+
+  # True when removing this license would cascade away CE registrations that
+  # carry payments — used to gate the remove control on the person edit form.
+  def removable?
+    continuing_education_registrations.none? { |ce| ce.allocations.exists? }
+  end
+
+  private
+
+  def prevent_destroy_with_paid_ce
+    return if removable?
+
+    errors.add(:base, "Can't remove a license with paid CE registrations.")
+    throw :abort
   end
 end

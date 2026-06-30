@@ -20,7 +20,7 @@
 
   <div class="space-y-6">
     <%= form_with model: @ce_registration, url: continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
-          method: :patch, data: { turbo: false } do |f| %>
+          method: :patch, id: "ce_registration_form", data: { turbo: false } do |f| %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
           <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
@@ -35,7 +35,11 @@
             <%= f.text_field :license_number, value: license&.number, id: "continuing_education_registration_license_number",
                   placeholder: "e.g. LMFT 12345",
                   class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
-            <p class="mt-1 text-xs text-gray-400">Leave blank to keep the current license (number pending).</p>
+            <% if license&.number_known? %>
+              <p class="mt-1 text-xs text-gray-400">The registrant's license number on file. Edit it here to correct it.</p>
+            <% else %>
+              <p class="mt-1 text-xs text-amber-600">No license number on file yet — add it here.</p>
+            <% end %>
           </div>
 
           <div class="flex flex-wrap gap-4">
@@ -51,10 +55,6 @@
                     id: "continuing_education_registration_cost_dollars",
                     class: "w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm tabular-nums text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
             </div>
-          </div>
-
-          <div class="flex justify-end">
-            <%= f.submit "Save", class: "rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 cursor-pointer" %>
           </div>
         </div>
       </section>
@@ -83,12 +83,22 @@
       </div>
     </section>
 
-    <div class="flex justify-end">
+    <%# ---- Footer actions ---- %>
+    <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
       <%= button_to continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
             method: :delete, form: { data: { turbo_confirm: "Remove this CE registration?" } },
-            class: "inline-flex items-center gap-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:underline cursor-pointer" do %>
-        <i class="fa-solid fa-trash text-xs"></i> Remove CE registration
+            class: "btn btn-danger-outline" do %>
+        <i class="fa-solid fa-trash-can"></i>
+        Delete
       <% end %>
+
+      <div class="ml-auto flex items-center gap-3">
+        <%= link_to "Cancel", edit_event_registration_path(registration), class: "btn btn-secondary-outline" %>
+        <%# Submits the CE details form above (which the certificate section sits outside of). %>
+        <button type="submit" form="ce_registration_form" class="btn btn-primary">Save changes</button>
+      </div>
     </div>
   </div>
+
+  <%= render "shared/audit_info", resource: @ce_registration %>
 </div>

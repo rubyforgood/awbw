@@ -1,0 +1,39 @@
+<div class="nested-fields rounded-lg bg-white border border-gray-200 p-6 mb-4">
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+    <div>
+      <%= f.input :number,
+                  wrapper: false,
+                  label: "License number",
+                  input_html: { placeholder: "e.g. 90210", class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+    </div>
+
+    <div>
+      <%= f.input :kind,
+                  wrapper: false,
+                  label: "Type",
+                  input_html: { placeholder: "e.g. LMFT", class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+    </div>
+
+    <div>
+      <%= f.input :issuing_state,
+                  wrapper: false,
+                  label: "Issuing state",
+                  input_html: { placeholder: "e.g. CA", class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+    </div>
+
+    <div>
+      <%= f.label :expires_on, "Expires", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.date_field :expires_on, class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+    </div>
+
+    <div class="text-right text-end">
+      <% if f.object.new_record? || f.object.removable? %>
+        <%= link_to_remove_association "Remove",
+                                       f,
+                                       class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
+      <% else %>
+        <span class="text-xs text-amber-600">Has paid CE — can't remove</span>
+      <% end %>
+    </div>
+  </div>
+</div>
