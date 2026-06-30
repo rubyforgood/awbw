@@ -273,6 +273,10 @@ class EventRegistrationsController < ApplicationController
     event = @event_registration.event
     if !@event_registration.deletable?
       flash[:alert] = "This registration can't be deleted because it has financial records (payments, scholarships, or the like) or attendance on record."
+    elsif @event_registration.continuing_education_registrations.any? { |ce| ce.allocations.exists? }
+      # Deleting the registration would cascade away a paid CE registration (and its
+      # allocations); make the admin revert the payment first.
+      flash[:alert] = "Can't delete this registration while its CE registration has payments — revert the payment first."
     elsif @event_registration.destroy
       flash[:notice] = "Registration deleted."
     else

@@ -469,6 +469,18 @@ RSpec.describe "EventRegistrations", type: :request do
 
         expect(flash[:alert]).to include("can't be deleted")
       end
+
+      it "refuses to delete a registration whose CE registration has payments" do
+        ce = create(:continuing_education_registration, event_registration: existing_registration, cost_cents: 12_000)
+        create(:allocation, source: create(:payment, amount_cents: 12_000, amount_cents_remaining: 12_000),
+                            allocatable: ce, amount: 12_000)
+
+        expect {
+          delete event_registration_path(existing_registration)
+        }.not_to change(EventRegistration, :count)
+
+        expect(flash[:alert]).to match(/has payments/)
+      end
     end
 
     describe "organization linking" do
