@@ -424,6 +424,17 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(saved.issuing_state).to eq("CA")
       expect(saved.expires_on).to eq(Date.new(2027, 1, 31))
     end
+
+    it "refuses to change the license once the certificate is issued" do
+      license = create(:professional_license, person: registration.registrant, kind: "LMFT", number: "111")
+      create(:continuing_education_registration, event_registration: registration, professional_license: license,
+        hours: 6, certificate_sent_at: Time.current)
+
+      post registration_ce_license_path(registration.slug), params: { license_kind: "LCSW", license_number: "999" }
+
+      expect(license.reload).to have_attributes(kind: "LMFT", number: "111")
+      expect(flash[:alert]).to match(/certificate has been issued/)
+    end
   end
 
   describe "POST /registration/:slug/ce/request" do
