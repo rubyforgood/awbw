@@ -16,9 +16,12 @@
 
     <div>
       <%= f.input :issuing_state,
+                  as: :select,
+                  collection: us_states,
+                  include_blank: true,
                   wrapper: false,
                   label: "Issuing state",
-                  input_html: { placeholder: "e.g. CA", class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+                  input_html: { class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
     </div>
 
     <div>

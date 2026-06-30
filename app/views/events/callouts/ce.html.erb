@@ -107,13 +107,20 @@
                     class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
             </div>
             <div>
-              <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_issuing_state">Issuing state</label>
-              <%= form.text_field :license_issuing_state, value: license_issuing_state, id: "license_issuing_state",
-                    placeholder: "e.g. CA",
-                    class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+              <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_issuing_state">Issuing state <span class="font-normal normal-case text-gray-400">(optional)</span></label>
+              <%# US states dropdown, matching the public registration form's state field.
+                  Greyed while blank (placeholder) and darkened once a state is picked — by
+                  form logic on the stored value, no JS. %>
+              <select name="license_issuing_state" id="license_issuing_state"
+                      class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm <%= license_issuing_state.present? ? "text-gray-900" : "text-gray-400" %> shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none">
+                <option value="">Select a state</option>
+                <% us_states.each do |name, abbr| %>
+                  <option value="<%= abbr %>" <%= "selected" if license_issuing_state == abbr %>><%= name %> (<%= abbr %>)</option>
+                <% end %>
+              </select>
             </div>
             <div>
-              <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_expires_on">Expires</label>
+              <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_expires_on">Expires <span class="font-normal normal-case text-gray-400">(optional)</span></label>
               <%# Date inputs render their mm/dd/yyyy hint in the input's own text colour
                   (no ::placeholder), so grey it while empty and darken once a date is set. %>
               <%= form.date_field :license_expires_on, value: license_expires_on, id: "license_expires_on",
