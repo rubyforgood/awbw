@@ -2,10 +2,7 @@
     not create or destroy an award on its own. Awarding is a deliberate action
     via "Add scholarship". On save, the controller cleans up an unrequested
     scholarship only when it is an empty stub (no amount, tasks incomplete). ---- %>
-<% scholarship_active = scholarship.present? || event_registration.scholarship_requested %>
-<section class="overflow-hidden rounded-xl border shadow-sm transition-colors <%= scholarship_active ? "border-fuchsia-200 bg-fuchsia-50" : "border-gray-200 bg-white" %>"
-         data-controller="scholarship-requested"
-         data-scholarship-requested-initial-value="<%= event_registration.scholarship_requested %>">
+<section class="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
       <i class="fa-solid fa-graduation-cap"></i>
@@ -13,7 +10,7 @@
     <h2 class="text-sm font-semibold text-gray-700">Scholarship</h2>
   </div>
 
-  <div class="space-y-3 p-4">
+  <div class="flex flex-1 flex-col gap-3 p-4">
     <% unless scholarship %>
       <label class="flex items-center gap-2.5 cursor-pointer">
         <input type="hidden" name="event_registration[scholarship_requested]" value="0" autocomplete="off">
@@ -30,7 +27,7 @@
     <% end %>
 
     <% if scholarship %>
-      <div class="space-y-2">
+      <div class="flex flex-1 flex-col gap-2">
         <div class="flex items-center gap-2">
           <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(scholarship.amount_cents) %></span>
           <%= link_to edit_scholarship_path(scholarship, return_to: "registration"),
@@ -41,9 +38,6 @@
           <% end %>
         </div>
 
-        <%# Keep this row present whether funded or not so the card matches the
-            continuing-education card's height and their status chips line up.
-            Unfunded → an empty spacer of the same height (padding), no text. %>
         <% if scholarship.grant&.funder_name.present? %>
           <p class="text-xs text-gray-500">
             Grantor:
@@ -54,11 +48,11 @@
               <span class="font-medium text-gray-700"><%= scholarship.grant.funder_name %></span>
             <% end %>
           </p>
-        <% else %>
-          <p class="text-xs text-gray-500" aria-hidden="true">&nbsp;</p>
         <% end %>
 
-        <div class="flex flex-wrap items-center gap-1.5">
+        <%# Pinned to the card's bottom so it lines up with the CE card's chip and
+            the organizations card's "Connect organization" link. %>
+        <div class="mt-auto flex flex-wrap items-center gap-1.5">
           <% if scholarship.tasks_completed? %>
             <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-2.5 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
               <i class="fa-solid fa-circle-check"></i>
@@ -73,7 +67,7 @@
         </div>
       </div>
     <% else %>
-      <div class="border-t border-gray-100 pt-3">
+      <div class="mt-auto border-t border-gray-100 pt-3">
         <%= link_to new_scholarship_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
                     class: "inline-flex items-center gap-1.5 text-sm font-medium #{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:underline",
                     target: "_blank", rel: "noopener" do %>

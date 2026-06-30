@@ -3,7 +3,7 @@
     registration stub, which is then filled in on its own edit page. Once a record
     exists the toggle is gone and we show the record + an Edit link. Only rendered
     for CE-eligible events. ---- %>
-<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ring-teal-400"
+<section class="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ring-teal-400"
          data-controller="ce-credit-requested"
          data-ce-credit-requested-initial-value="<%= event_registration.ce_requested? %>"
          data-ce-credit-requested-target="box">
@@ -14,7 +14,7 @@
     <h2 class="text-sm font-semibold text-gray-700">Continuing education</h2>
   </div>
 
-  <div class="space-y-3 p-4">
+  <div class="flex flex-1 flex-col gap-3 p-4">
     <% unless ce_registration %>
       <label class="flex items-center gap-2.5 cursor-pointer">
         <input type="hidden" name="event_registration[ce_requested]" value="0" autocomplete="off">
@@ -34,7 +34,7 @@
           editable on the CE registration's own page. %>
     <% else %>
       <% license_number = ce_registration.professional_license&.number %>
-      <div class="space-y-2">
+      <div class="flex flex-1 flex-col gap-2">
         <div class="flex items-center gap-2">
           <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(ce_registration.cost_cents) %></span>
           <span class="text-xs text-gray-400">·</span>
@@ -56,7 +56,9 @@
           <% end %>
         </p>
 
-        <div class="flex flex-wrap items-center gap-1.5">
+        <%# Pinned to the card's bottom so it lines up with the scholarship card's
+            chip and the organizations card's "Connect organization" link. %>
+        <div class="mt-auto flex flex-wrap items-center gap-1.5">
           <% if ce_registration.certificate_sent_at.present? %>
             <span class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
               <i class="fa-solid fa-circle-check"></i>

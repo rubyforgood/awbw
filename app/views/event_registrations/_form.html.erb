@@ -141,7 +141,7 @@
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <section class="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>">
               <i class="fa-solid fa-building"></i>
@@ -149,7 +149,7 @@
             <h2 class="min-w-0 text-sm font-semibold text-gray-700">Registration organizations</h2>
           </div>
 
-          <div class="p-4">
+          <div class="flex flex-1 flex-col p-4">
             <div data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
               <div class="flex flex-wrap gap-1.5" data-org-toggle-target="chips">
                 <% f.object.organizations.sort_by(&:name).each do |org| %>
@@ -177,7 +177,7 @@
               type="button"
               data-org-toggle-target="addButton"
               data-action="org-toggle#showAddForm"
-              class="mt-3 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
+              class="mt-auto inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
               <i class="fa-solid fa-plus text-[0.6rem]"></i>
               Connect organization
             </button>
