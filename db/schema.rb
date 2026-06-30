@@ -966,7 +966,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_184214) do
     t.boolean "blog_contributor", default: false, null: false
     t.datetime "created_at", null: false
     t.integer "created_by_id"
-    t.string "credentials"
     t.date "date_of_birth"
     t.string "display_name_preference"
     t.string "email"

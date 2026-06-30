@@ -459,7 +459,6 @@ class PeopleController < ApplicationController
       :street_address, :city, :state, :zip, :country, :mailing_address_type,
       :best_time_to_call,
       :date_of_birth,
-      :credentials,
       :racial_ethnic_identity,
       :filemaker_code,
       :mailing_list_consented,

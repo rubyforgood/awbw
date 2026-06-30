@@ -146,7 +146,9 @@
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:organizations, f.object.organizations.any?) %>">
               <i class="fa-solid fa-building"></i>
             </span>
-            <h2 class="min-w-0 text-sm font-semibold text-gray-700">Registration-linked</h2>
+            <%# Keep "Registration-linked" intact on line one (no break at the hyphen) and
+                let "organizations" wrap to line two in the narrow card header. %>
+            <h2 class="min-w-0 text-sm font-semibold text-gray-700"><span class="whitespace-nowrap">Registration-linked</span> organizations</h2>
           </div>
 
           <div class="flex flex-1 flex-col p-4">
