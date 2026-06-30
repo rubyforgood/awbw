@@ -22,8 +22,12 @@
     </div>
 
     <div>
-      <%= f.label :expires_on, "Expires", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.date_field :expires_on, class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+      <%= f.input :expires_on,
+                  as: :date,
+                  html5: true,
+                  wrapper: false,
+                  label: "Expires",
+                  input_html: { class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
     </div>
 
     <div class="text-right text-end">
