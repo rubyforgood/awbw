@@ -30,7 +30,8 @@
                   html5: true,
                   wrapper: false,
                   label: "Expires",
-                  input_html: { class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+                  input_html: { class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500",
+                                data: { controller: "date-placeholder", action: "input->date-placeholder#refresh change->date-placeholder#refresh" } } %>
     </div>
 
     <div class="text-right text-end">
