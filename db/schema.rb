@@ -1031,8 +1031,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_184214) do
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
     t.index ["created_by_id"], name: "index_professional_licenses_on_created_by_id"
-    t.index ["person_id"], name: "index_professional_licenses_on_person_id"
     t.index ["person_id", "kind", "number"], name: "index_professional_licenses_on_person_kind_number", unique: true
+    t.index ["person_id"], name: "index_professional_licenses_on_person_id"
     t.index ["updated_by_id"], name: "index_professional_licenses_on_updated_by_id"
   end
 
