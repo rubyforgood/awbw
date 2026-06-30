@@ -375,7 +375,7 @@
       Professional licenses
     </div>
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <p class="text-sm text-gray-500 mb-3">Used for continuing-education credit. A license with paid CE registrations can't be removed.</p>
+      <p class="text-sm text-gray-500 mb-3">Used for continuing-education credit. Once a license has CE registrations it can't be removed, and only an admin can edit it.</p>
       <%= f.simple_fields_for :professional_licenses do |license_form| %>
         <%= render "professional_licenses/professional_license_fields", f: license_form %>
       <% end %>

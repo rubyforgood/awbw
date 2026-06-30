@@ -56,22 +56,41 @@ RSpec.describe ProfessionalLicense, type: :model do
   describe "removal guard" do
     let(:license) { create(:professional_license, person: person, number: "GUARD-1") }
 
-    def attach_paid_ce
+    def attach_ce(paid: false)
       registration = create(:event_registration, registrant: person)
       ce = create(:continuing_education_registration, event_registration: registration, professional_license: license, cost_cents: 10_000)
+      return ce unless paid
       create(:allocation, source: create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000),
                           allocatable: ce, amount: 10_000)
+      ce
     end
 
-    it "is removable with no paid CE registrations" do
+    it "is removable with no CE registrations" do
       expect(license).to be_removable
       expect { license.destroy }.to change(described_class, :count).by(-1)
     end
 
-    it "refuses to destroy when a CE registration carries payments" do
-      attach_paid_ce
+    it "refuses to destroy when an unpaid CE registration exists" do
+      attach_ce(paid: false)
       expect(license.reload).not_to be_removable
       expect { license.destroy }.not_to change(described_class, :count)
+    end
+
+    it "refuses to destroy when a CE registration carries payments" do
+      attach_ce(paid: true)
+      expect(license.reload).not_to be_removable
+      expect { license.destroy }.not_to change(described_class, :count)
+    end
+  end
+
+  describe "#used_for_ce?" do
+    let(:license) { create(:professional_license, person: person, number: "USED-1") }
+
+    it "is false without CE registrations and true once one exists" do
+      expect(license).not_to be_used_for_ce
+      registration = create(:event_registration, registrant: person)
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      expect(license.reload).to be_used_for_ce
     end
   end
 end

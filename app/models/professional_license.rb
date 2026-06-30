@@ -8,9 +8,10 @@ class ProfessionalLicense < ApplicationRecord
   has_many :continuing_education_registrations, dependent: :destroy
 
   # Deleting a license cascades to its CE registrations (and their allocations),
-  # so refuse to remove one whose CE registrations carry payments. prepend so this
-  # runs before the dependent: :destroy cascade below clears those registrations.
-  before_destroy :prevent_destroy_with_paid_ce, prepend: true
+  # so refuse to remove one that has any CE registration at all — regardless of
+  # whether those registrations carry payments. prepend so this runs before the
+  # dependent: :destroy cascade below clears those registrations.
+  before_destroy :prevent_destroy_with_ce, prepend: true
 
   validates :number, uniqueness: { scope: :person_id }, allow_nil: true
 
@@ -36,18 +37,25 @@ class ProfessionalLicense < ApplicationRecord
     [ kind, number ].compact_blank.join(" ").presence || "License (number pending)"
   end
 
-  # True when removing this license would cascade away CE registrations that
-  # carry payments — used to gate the remove control on the person edit form.
+  # True when this license has no CE registrations and so can be deleted without
+  # cascading away CE history — used to gate the remove control on the person edit
+  # form. Once any CE registration exists (paid or not), the license is permanent.
   def removable?
-    continuing_education_registrations.none? { |ce| ce.allocations.exists? }
+    continuing_education_registrations.none?
+  end
+
+  # Has this license been used for CE credit? Drives edit gating: a license tied to
+  # any CE registration is locked to admins (see ProfessionalLicensePolicy).
+  def used_for_ce?
+    continuing_education_registrations.exists?
   end
 
   private
 
-  def prevent_destroy_with_paid_ce
+  def prevent_destroy_with_ce
     return if removable?
 
-    errors.add(:base, "Can't remove a license with paid CE registrations.")
+    errors.add(:base, "Can't remove a license with CE registrations.")
     throw :abort
   end
 end

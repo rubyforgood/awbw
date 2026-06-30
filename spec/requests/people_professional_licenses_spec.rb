@@ -38,7 +38,7 @@ RSpec.describe "People professional licenses", type: :request do
     }.not_to change { person.professional_licenses.count }
   end
 
-  it "removes a license with no paid CE registrations" do
+  it "removes a license with no CE registrations" do
     person = create(:person)
     license = create(:professional_license, person: person, number: "GONE-1")
 
@@ -47,6 +47,19 @@ RSpec.describe "People professional licenses", type: :request do
         professional_licenses_attributes: { "0" => { id: license.id, _destroy: "1" } }
       } }
     }.to change { person.professional_licenses.count }.by(-1)
+  end
+
+  it "keeps a license whose CE registration has no payments" do
+    person = create(:person)
+    license = create(:professional_license, person: person, number: "UNPAID-1")
+    registration = create(:event_registration, registrant: person)
+    create(:continuing_education_registration, event_registration: registration, professional_license: license, cost_cents: 10_000)
+
+    patch person_path(person), params: { person: {
+      professional_licenses_attributes: { "0" => { id: license.id, _destroy: "1" } }
+    } }
+
+    expect(ProfessionalLicense.exists?(license.id)).to be(true)
   end
 
   it "keeps a license whose CE registration has payments" do
