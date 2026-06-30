@@ -138,9 +138,6 @@ application.register("rhino-source", RhinoSourceController)
 import ScholarshipPreviewController from "./scholarship_preview_controller"
 application.register("scholarship-preview", ScholarshipPreviewController)
 
-import ScholarshipRequestedController from "./scholarship_requested_controller"
-application.register("scholarship-requested", ScholarshipRequestedController)
-
 import ScholarshipStatusToggleController from "./scholarship_status_toggle_controller"
 application.register("scholarship-status-toggle", ScholarshipStatusToggleController)
 

@@ -113,7 +113,7 @@
 
           <% if f.object.slug.present? %>
             <%= link_to registration_ticket_path(f.object.slug),
-                        class: "group inline-flex items-center gap-1.5 font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
+                        class: "group inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1 font-medium shadow-sm #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:bg-gray-50 transition-colors",
                         target: "_blank",
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-ticket"></i>
@@ -129,7 +129,7 @@
                         title: "#{form_name} — submitted #{ts.strftime('%b %-d, %Y')}",
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-file-lines"></i>
-              View submission<%= " ##{i + 1}" if submissions.size > 1 %>
+              View form submission<%= " ##{i + 1}" if submissions.size > 1 %>
               <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem] text-gray-400"></i>
             <% end %>
           <% end %>
@@ -141,12 +141,12 @@
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <section class="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:organizations, f.object.organizations.any?) %>">
               <i class="fa-solid fa-building"></i>
             </span>
-            <h2 class="min-w-0 text-sm font-semibold text-gray-700">Registration organizations</h2>
+            <h2 class="min-w-0 text-sm font-semibold text-gray-700">Registration-linked</h2>
           </div>
 
           <div class="flex flex-1 flex-col p-4">
@@ -173,14 +173,16 @@
               <p data-org-toggle-target="empty" class="text-sm text-gray-400">No organizations linked to this registration.</p>
             <% end %>
 
-            <button
-              type="button"
-              data-org-toggle-target="addButton"
-              data-action="org-toggle#showAddForm"
-              class="mt-auto inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
-              <i class="fa-solid fa-plus text-[0.6rem]"></i>
-              Connect organization
-            </button>
+            <div class="mt-auto pt-3">
+              <button
+                type="button"
+                data-org-toggle-target="addButton"
+                data-action="org-toggle#showAddForm"
+                class="inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
+                <i class="fa-solid fa-plus text-[0.6rem]"></i>
+                Connect organization
+              </button>
+            </div>
 
             <%# Pending-chip template cloned by org_toggle_controller when adding. Kept in
                 the markup (not a JS string) so Tailwind always compiles the amber variants. %>
@@ -243,7 +245,7 @@
       <%# ---- Comments ---- %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm scroll-mt-24" id="comments-section" data-controller="edit-toggle">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:comments, intensity: 100) %> <%= DomainTheme.text_class_for(:comments, intensity: 600) %>">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:comments, f.object.comments.any?) %>">
             <i class="fa-solid fa-message"></i>
           </span>
           <h2 class="text-sm font-semibold text-gray-700">Registration comments</h2>
@@ -292,7 +294,7 @@
           their profile via nested attributes. ---- %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:scholarships, f.object.shoutout? || f.object.registrant.shoutout_text.present?) %>">
             <i class="fa-solid fa-bullhorn"></i>
           </span>
           <h2 class="text-sm font-semibold text-gray-700">Shout out</h2>
@@ -306,7 +308,7 @@
                    value="1"
                    <%= "checked" if f.object.shoutout? %>
                    class="sr-only peer">
-            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-300"></span>
+            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
             <span class="text-sm font-medium text-gray-700">Feature on the recipients page</span>
           </label>
 
