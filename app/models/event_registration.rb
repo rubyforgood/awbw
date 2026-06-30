@@ -419,11 +419,27 @@ class EventRegistration < ApplicationRecord
     continuing_education_registrations.sum(:cost_cents)
   end
 
+  # Outstanding CE balance across this registration's CE registrations — cost net
+  # of payments/discounts, floored at zero. The "$X due" the registrant still owes;
+  # drops to zero once paid. remaining_cost is computed (not a column), so this sums
+  # in Ruby.
+  def ce_amount_due_cents
+    continuing_education_registrations.sum { |c| c.remaining_cost }
+  end
+
   # True only when every CE registration has a known license number on file.
   def ce_license_provided?
     return false unless ce_registered?
 
     continuing_education_registrations.all? { |c| c.professional_license&.number_known? }
+  end
+
+  # True when CE is registered and every CE registration's certificate has been
+  # issued (sent) — the terminal state of the CE lifecycle.
+  def ce_certificate_issued?
+    return false unless ce_registered?
+
+    continuing_education_registrations.all? { |c| c.certificate_sent_at.present? }
   end
 
   # True when a CE registration exists and every one is fully paid.

@@ -1114,30 +1114,41 @@ RSpec.describe "Events", type: :request do
       expect(ce_chip_text).to eq("Create")
     end
 
-    it "shows No license # once a CE record exists without a license number" do
+    it "shows License # needed once a CE record exists without a license number" do
       reg = create(:event_registration, event: event, registrant: person)
       create(:continuing_education_registration, event_registration: reg,
         professional_license: create(:professional_license, :placeholder, person: person))
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("No license #")
+      expect(ce_chip_text).to eq("License # needed")
     end
 
-    it "shows Filed once a license is on file but the CE balance is unpaid" do
+    it "shows the balance due once a license is on file but the CE balance is unpaid" do
       reg = create(:event_registration, event: event, registrant: person)
       create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
         professional_license: create(:professional_license, person: person))
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("Filed")
+      expect(ce_chip_text).to eq("$150 due")
     end
 
-    it "shows Recipient when the CE balance is paid" do
+    it "shows Pending when the CE balance is paid but the certificate isn't issued" do
       reg = create(:event_registration, event: event, registrant: person)
       cer = create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
         professional_license: create(:professional_license, person: person))
       create(:allocation, source: create(:payment, amount_cents: 15_000, amount_cents_remaining: 15_000),
         allocatable: cer, amount: 15_000)
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("Recipient")
+      expect(ce_chip_text).to eq("Pending")
+    end
+
+    it "shows Issued once the CE certificate has been delivered" do
+      reg = create(:event_registration, event: event, registrant: person)
+      cer = create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
+        professional_license: create(:professional_license, person: person))
+      create(:allocation, source: create(:payment, amount_cents: 15_000, amount_cents_remaining: 15_000),
+        allocatable: cer, amount: 15_000)
+      cer.mark_certificate_sent!
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("Issued")
     end
   end
 

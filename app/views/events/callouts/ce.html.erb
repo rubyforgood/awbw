@@ -17,6 +17,10 @@
     <% license_issuing_state = license&.issuing_state %>
     <% license_expires_on = license&.expires_on %>
     <% license_on_file = license&.number_known? %>
+    <%# ?admin=true lets an admin preview the post-payment ("Pending") state of the
+        badge without recording a real payment. Gated on edit access so a registrant
+        can't fake it by editing the URL. %>
+    <% simulate_ce_paid = params[:admin] == "true" && ce_registration && allowed_to?(:edit?, ce_registration) %>
     <%# Admin-only jump to the management surface for this CE registration. Hidden
         from registrants; opens in a new tab so the registrant view is kept. %>
     <% if ce_registration && allowed_to?(:edit?, ce_registration) %>
@@ -43,19 +47,7 @@
         <div class="flex items-center gap-3 sm:ml-auto">
           <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</dt>
           <dd>
-            <% if @event_registration.ce_paid_in_full? %>
-              <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
-                <i class="fa-solid fa-circle-check"></i> Paid
-              </span>
-            <% elsif !license_on_file %>
-              <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
-                <i class="fa-solid fa-circle-exclamation"></i> Needs license #
-              </span>
-            <% else %>
-              <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
-                <i class="fa-solid fa-clock"></i> Requested
-              </span>
-            <% end %>
+            <%= render "event_registrations/ce_status_badge", registration: @event_registration, simulate_paid: simulate_ce_paid %>
           </dd>
         </div>
       </dl>
@@ -68,57 +60,64 @@
         file the form shows straight away. %>
     <% editing_license = params[:editing] == "license" %>
     <section id="license" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
-      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Your professional license</h2>
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Your professional license</h2>
+        <% if license_on_file && !editing_license %>
+          <%= link_to registration_ce_path(@event_registration.slug, editing: "license", return_to: params[:return_to].presence, anchor: "license"),
+                class: "shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50" do %>
+            <i class="fa-solid fa-pen-to-square text-xs"></i> Edit
+          <% end %>
+        <% end %>
+      </div>
 
       <% if license_on_file && !editing_license %>
-        <div class="mt-3 flex flex-wrap items-center gap-x-8 gap-y-3">
+        <%# Each license field on its own row, labels in a fixed column so the values line up. %>
+        <dl class="mt-3 flex flex-col gap-2">
           <div class="flex items-baseline gap-2">
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License type</dt>
+            <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">License type</dt>
             <dd class="text-sm font-medium text-gray-900"><%= license_kind.presence || "—" %></dd>
           </div>
           <div class="flex items-baseline gap-2">
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License number</dt>
+            <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">License number</dt>
             <dd class="text-sm font-medium text-gray-900 tabular-nums"><%= license_number %></dd>
           </div>
           <div class="flex items-baseline gap-2">
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Issuing state</dt>
+            <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">Issuing state</dt>
             <dd class="text-sm font-medium text-gray-900"><%= license_issuing_state.presence || "—" %></dd>
           </div>
           <div class="flex items-baseline gap-2">
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Expires</dt>
+            <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">Expires</dt>
             <dd class="text-sm font-medium text-gray-900 tabular-nums"><%= license_expires_on&.to_fs(:long) || "—" %></dd>
           </div>
-          <%= link_to registration_ce_path(@event_registration.slug, editing: "license", return_to: params[:return_to].presence, anchor: "license"),
-                class: "shrink-0 sm:ml-auto inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50" do %>
-            <i class="fa-solid fa-pen-to-square text-xs"></i> Edit
-          <% end %>
-        </div>
+        </dl>
       <% else %>
         <%= form_with url: registration_ce_license_path(@event_registration.slug), method: :post,
               data: { turbo: false }, class: "mt-3" do |form| %>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_kind">License type</label>
+              <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_kind">License type <span class="text-red-500">*</span></label>
               <%= form.text_field :license_kind, value: license_kind, id: "license_kind",
-                    placeholder: "e.g. LCSW",
-                    class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+                    placeholder: "e.g. LCSW", required: true,
+                    class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
             </div>
             <div>
-              <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_number">Your license number</label>
+              <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_number">Your license number <span class="text-red-500">*</span></label>
               <%= form.text_field :license_number, value: license_number, id: "license_number",
-                    placeholder: "e.g. 12345",
-                    class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+                    placeholder: "e.g. 12345", required: true,
+                    class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
             </div>
             <div>
               <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_issuing_state">Issuing state</label>
               <%= form.text_field :license_issuing_state, value: license_issuing_state, id: "license_issuing_state",
                     placeholder: "e.g. CA",
-                    class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+                    class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
             </div>
             <div>
               <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_expires_on">Expires</label>
+              <%# Date inputs render their mm/dd/yyyy hint in the input's own text colour
+                  (no ::placeholder), so grey it while empty and darken once a date is set. %>
               <%= form.date_field :license_expires_on, value: license_expires_on, id: "license_expires_on",
-                    class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+                    class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm #{license_expires_on.present? ? "text-gray-900" : "text-gray-400"} shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
             </div>
           </div>
           <div class="mt-3 flex items-center gap-3">

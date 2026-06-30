@@ -780,6 +780,33 @@ RSpec.describe EventRegistration, type: :model do
         expect(reg.reload).not_to be_ce_license_provided
       end
     end
+
+    describe "#ce_amount_due_cents" do
+      it "is the cost not yet covered by payments, floored at zero" do
+        cer = add_ce(cost_cents: 15_000)
+        expect(reg.ce_amount_due_cents).to eq(15_000)
+
+        payment = create(:payment, person: reg.registrant, amount_cents: 6_000, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: cer, amount: 6_000)
+        expect(reg.reload.ce_amount_due_cents).to eq(9_000)
+      end
+
+      it "is zero once fully paid" do
+        cer = add_ce(cost_cents: 15_000)
+        payment = create(:payment, person: reg.registrant, amount_cents: 15_000, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: cer, amount: 15_000)
+        expect(reg.reload.ce_amount_due_cents).to eq(0)
+      end
+    end
+
+    describe "#ce_certificate_issued?" do
+      it "is true only once every CE registration's certificate is sent" do
+        cer = add_ce
+        expect(reg.reload).not_to be_ce_certificate_issued
+        cer.mark_certificate_sent!
+        expect(reg.reload).to be_ce_certificate_issued
+      end
+    end
   end
 
   describe '.search_by_params' do

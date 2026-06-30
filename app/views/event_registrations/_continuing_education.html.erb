@@ -3,7 +3,7 @@
     registration stub, which is then filled in on its own edit page. Once a record
     exists the toggle is gone and we show the record + an Edit link. Only rendered
     for CE-eligible events. ---- %>
-<section class="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:continuing_education, ce_registration.present? || event_registration.ce_requested?) %>">
       <i class="fa-solid fa-certificate"></i>
@@ -63,18 +63,8 @@
 
         <%# Pinned to the card's bottom so it lines up with the scholarship card's
             chip and the organizations card's "Connect organization" link. %>
-        <div class="mt-auto flex flex-wrap items-center gap-1.5">
-          <% if ce_registration.certificate_sent_at.present? %>
-            <span class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
-              <i class="fa-solid fa-circle-check"></i>
-              Certificate issued
-            </span>
-          <% else %>
-            <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-              <i class="fa-solid fa-clock"></i>
-              Not issued
-            </span>
-          <% end %>
+        <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
+          <%= render "event_registrations/ce_status_badge", registration: event_registration %>
         </div>
       </div>
     <% end %>
