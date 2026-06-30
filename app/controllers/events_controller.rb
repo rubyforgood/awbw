@@ -671,7 +671,7 @@ class EventsController < ApplicationController
     if include_ce
       ce_hours = registration.ce_hours_total
       row << (registration.ce_requested? ? "Yes" : "No")
-      row << (ce_hours.positive? ? ContinuingEducationRegistration.format_hours(ce_hours) : "")
+      row << (ce_hours.positive? ? helpers.plain_number(ce_hours) : "")
       row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
       row << registration.ce_license_numbers.join("; ")
     end

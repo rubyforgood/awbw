@@ -20,14 +20,6 @@ class ContinuingEducationRegistration < ApplicationRecord
   # Payment interface (allocations_sum / paid_in_full? / remaining_cost / …) comes from
   # Registerable, driven by this record's own cost_cents column.
 
-  # Display a CE hours figure without trailing zeros: "6", "1.5".
-  def self.format_hours(hours)
-    return if hours.blank?
-
-    number = hours.to_f
-    number == number.to_i ? number.to_i.to_s : number.to_s
-  end
-
   # CE certificate eligibility — its own rule (not shared): the event grants CE,
   # the registrant attended, the training has ended, and the CE balance is paid.
   def certificate_available?

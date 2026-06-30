@@ -1,9 +1,4 @@
 module EventsHelper
-  # Display a CE hours figure without trailing zeros (e.g. "6", "1.5").
-  def ce_hours_display(hours)
-    ContinuingEducationRegistration.format_hours(hours)
-  end
-
   # Stable anchor id for a registrant's row on the Onboarding matrix, so back-links
   # from detail pages can scroll to (and highlight) the row they came from.
   def onboarding_row_id(record_or_id)

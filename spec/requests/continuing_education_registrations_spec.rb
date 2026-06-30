@@ -66,6 +66,31 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(ce_registration.reload.certificate_sent_at).to be_nil
     end
 
+    it "renders the new page for a registration" do
+      get new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Add CE registration")
+    end
+
+    it "creates a CE registration with license, hours, and cost, and sets the flag" do
+      registration
+
+      expect {
+        post continuing_education_registrations_path,
+             params: { allocatable_sgid: registration.to_sgid.to_s,
+               continuing_education_registration: { hours: "4.5", cost_dollars: "90", license_kind: "LMFT",
+                 license_number: "555", license_issuing_state: "CA", license_expires_on: "2027-01-31" } }
+      }.to change { registration.continuing_education_registrations.count }.by(1)
+
+      ce = registration.continuing_education_registrations.last
+      expect(response).to redirect_to(edit_event_registration_path(registration))
+      expect(ce.hours).to eq(4.5)
+      expect(ce.cost_cents).to eq(9_000)
+      expect(ce.professional_license).to have_attributes(kind: "LMFT", number: "555",
+        issuing_state: "CA", expires_on: Date.new(2027, 1, 31))
+      expect(registration.reload.ce_requested).to be(true)
+    end
+
     it "removes a CE registration with no payments and clears the flag" do
       ce_registration
       delete continuing_education_registration_path(ce_registration)

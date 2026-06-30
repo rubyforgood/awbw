@@ -219,7 +219,7 @@
     <% when :ce_hours %>
       <% ce_hours = registration.ce_hours_total.to_f %>
       <td class="<%= td_classes.join(" ") %> <%= ce_hours.positive? ? "text-gray-800" : "text-gray-400" %>" data-sort-value="<%= ce_hours %>">
-        <%= link_to (ce_hours.positive? ? ce_hours_display(ce_hours) : "—"), edit_event_registration_path(registration, return_to: "onboarding"), class: "hover:underline #{ce_hours.positive? ? "text-gray-800" : "text-gray-400"}", data: { turbo_frame: "_top" } %>
+        <%= link_to (ce_hours.positive? ? plain_number(ce_hours) : "—"), edit_event_registration_path(registration, return_to: "onboarding"), class: "hover:underline #{ce_hours.positive? ? "text-gray-800" : "text-gray-400"}", data: { turbo_frame: "_top" } %>
       </td>
 
     <% when :ce_amount %>

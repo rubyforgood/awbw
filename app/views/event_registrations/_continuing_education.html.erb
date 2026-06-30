@@ -5,7 +5,7 @@
     for CE-eligible events. ---- %>
 <section class="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-teal-600">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:continuing_education, ce_registration.present? || event_registration.ce_requested?) %>">
       <i class="fa-solid fa-certificate"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700">Continuing education</h2>
@@ -20,24 +20,30 @@
                value="1"
                <%= "checked" if event_registration.ce_requested? %>
                class="sr-only peer">
-        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-orange-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-orange-300"></span>
+        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
         <span class="text-sm font-medium text-gray-700">Requested</span>
       </label>
 
-      <%# No license picker here — saving creates the record against the registrant's
-          license (or an empty placeholder), then it's editable on its own page. The
-          grey prompt below mirrors the scholarship/organizations cards' bottom links;
-          CE has no separate award page, so it's a hint rather than a link. %>
-      <p class="mt-auto border-t border-gray-100 pt-3 text-xs text-gray-500">
-        Save with this on to start a CE registration, then add the license and hours.
-      </p>
+      <%# Two ways to create the record, mirroring the scholarship card: the
+          Requested toggle above auto-creates a stub on save, while "Add CE
+          registration" opens the full new form (license/hours/cost) in a new tab
+          and returns here. %>
+      <div class="mt-auto border-t border-gray-100 pt-3">
+        <%= link_to new_continuing_education_registration_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
+                    class: "inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700",
+                    target: "_blank", rel: "noopener" do %>
+          <i class="fa-solid fa-plus text-[0.6rem]"></i>
+          Add CE registration
+          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+        <% end %>
+      </div>
     <% else %>
       <% license = ce_registration.professional_license %>
       <div class="flex flex-1 flex-col gap-2">
         <div class="flex items-center gap-2">
           <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(ce_registration.cost_cents) %></span>
           <span class="text-xs text-gray-400">·</span>
-          <span class="text-sm text-gray-600"><%= ContinuingEducationRegistration.format_hours(ce_registration.hours) || "0" %> hrs</span>
+          <span class="text-sm text-gray-600"><%= plain_number(ce_registration.hours) || "0" %> hrs</span>
           <%= link_to edit_continuing_education_registration_path(ce_registration, return_to: "registration"),
                       class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
                       target: "_blank", rel: "noopener" do %>

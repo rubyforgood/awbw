@@ -136,7 +136,7 @@ class MagicTicketCallouts
     total = registration.ce_hours_total
     return "Continuing education credit" unless total.positive?
 
-    "#{ContinuingEducationRegistration.format_hours(total)} hours"
+    "#{NumberFormatter.plain(total)} hours"
   end
 
   # Teal "$X due" once hours + license are on file and money is owed; otherwise an

@@ -1,5 +1,32 @@
 class ContinuingEducationRegistrationsController < ApplicationController
-  before_action :set_ce_registration
+  before_action :set_ce_registration, except: [ :new, :create ]
+  before_action :set_event_registration, only: [ :new, :create ]
+
+  # Deliberate "Add CE registration" path, mirroring scholarship's new/create.
+  # The "Requested" toggle on the registration form still auto-creates a stub on
+  # save; this is the alternative where the admin fills in license/hours/cost up
+  # front. Hours/cost prefill from the event's offering.
+  def new
+    @ce_registration = @event_registration.continuing_education_registrations.build(
+      hours: @event_registration.event.ce_hours_offered,
+      cost_cents: @event_registration.event.ce_hours_cost_cents
+    )
+    authorize! @ce_registration
+  end
+
+  def create
+    @ce_registration = @event_registration.continuing_education_registrations.build(professional_license: license_for_create)
+    authorize! @ce_registration
+    apply_ce_params(@ce_registration)
+
+    if @ce_registration.save
+      @event_registration.update_column(:ce_requested, true)
+      redirect_to registration_path, notice: "CE registration created.", status: :see_other
+    else
+      flash.now[:alert] = @ce_registration.errors.full_messages.to_sentence
+      render :new, status: :unprocessable_content
+    end
+  end
 
   def edit
     authorize! @ce_registration
@@ -7,13 +34,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def update
     authorize! @ce_registration
-    @ce_registration.assign_license(number: params.dig(:continuing_education_registration, :license_number),
-                                    kind: params.dig(:continuing_education_registration, :license_kind),
-                                    issuing_state: params.dig(:continuing_education_registration, :license_issuing_state),
-                                    expires_on: params.dig(:continuing_education_registration, :license_expires_on))
-    @ce_registration.hours = params.dig(:continuing_education_registration, :hours)
-    cost = params.dig(:continuing_education_registration, :cost_dollars)
-    @ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
+    apply_ce_params(@ce_registration)
 
     if @ce_registration.save
       redirect_to registration_path, notice: "CE registration updated.", status: :see_other
@@ -53,6 +74,34 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def set_ce_registration
     @ce_registration = ContinuingEducationRegistration.find(params[:id])
+  end
+
+  # The registration a new CE record attaches to, located from the signed global
+  # id the "Add CE registration" link carries (mirrors scholarship's allocatable).
+  def set_event_registration
+    sgid = params[:allocatable_sgid] || params.dig(:continuing_education_registration, :allocatable_sgid)
+    @event_registration = GlobalID::Locator.locate_signed(sgid) if sgid
+    redirect_to root_path, alert: "Registration not found.", status: :see_other unless @event_registration
+  end
+
+  # License a brand-new CE registration attaches to: the registrant's existing
+  # license, else an empty placeholder. assign_license then fills it from the
+  # submitted type/number/state/expiry. Mirrors EventRegistrationsController.
+  def license_for_create
+    @event_registration.registrant.professional_licenses.first ||
+      ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
+  end
+
+  # Apply the submitted license fields, hours, and cost to a CE registration.
+  # Shared by create and update so both read params the same way.
+  def apply_ce_params(ce_registration)
+    ce_registration.assign_license(number: params.dig(:continuing_education_registration, :license_number),
+                                   kind: params.dig(:continuing_education_registration, :license_kind),
+                                   issuing_state: params.dig(:continuing_education_registration, :license_issuing_state),
+                                   expires_on: params.dig(:continuing_education_registration, :license_expires_on))
+    ce_registration.hours = params.dig(:continuing_education_registration, :hours)
+    cost = params.dig(:continuing_education_registration, :cost_dollars)
+    ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
   end
 
   def registration_path
