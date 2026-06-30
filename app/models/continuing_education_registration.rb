@@ -44,9 +44,11 @@ class ContinuingEducationRegistration < ApplicationRecord
   # person holds, link to that one rather than duplicating or colliding on the
   # unique (person, number) index. Does not save the registration itself — callers
   # persist it alongside their other changes.
-  def assign_license(number:, kind:)
+  def assign_license(number:, kind:, issuing_state: nil, expires_on: nil)
     number = number.to_s.strip.presence
     kind = kind.to_s.strip.presence
+    issuing_state = issuing_state.to_s.strip.presence
+    expires_on = expires_on.presence
     current = professional_license
     person = event_registration.registrant
 
@@ -54,7 +56,7 @@ class ContinuingEducationRegistration < ApplicationRecord
     if match
       self.professional_license = match
     else
-      current.update!(number: number, kind: kind)
+      current.update!(number: number, kind: kind, issuing_state: issuing_state, expires_on: expires_on)
     end
   end
 

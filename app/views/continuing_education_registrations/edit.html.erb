@@ -55,6 +55,17 @@
                       placeholder: "e.g. 12345",
                       class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
               </div>
+              <div class="w-32">
+                <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_license_issuing_state">Issuing state</label>
+                <%= f.text_field :license_issuing_state, value: license&.issuing_state, id: "continuing_education_registration_license_issuing_state",
+                      placeholder: "e.g. CA",
+                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+              </div>
+              <div class="w-40">
+                <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_license_expires_on">Expires</label>
+                <%= f.date_field :license_expires_on, value: license&.expires_on, id: "continuing_education_registration_license_expires_on",
+                      class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+              </div>
             </div>
             <% if license&.number_known? %>
               <p class="mt-1 text-xs text-gray-400">Editing the type or number corrects the license already on file.</p>

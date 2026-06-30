@@ -8,7 +8,9 @@ class ContinuingEducationRegistrationsController < ApplicationController
   def update
     authorize! @ce_registration
     @ce_registration.assign_license(number: params.dig(:continuing_education_registration, :license_number),
-                                    kind: params.dig(:continuing_education_registration, :license_kind))
+                                    kind: params.dig(:continuing_education_registration, :license_kind),
+                                    issuing_state: params.dig(:continuing_education_registration, :license_issuing_state),
+                                    expires_on: params.dig(:continuing_education_registration, :license_expires_on))
     @ce_registration.hours = params.dig(:continuing_education_registration, :hours)
     cost = params.dig(:continuing_education_registration, :cost_dollars)
     @ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?

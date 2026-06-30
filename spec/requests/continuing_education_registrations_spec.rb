@@ -18,17 +18,19 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(response.body).to include("Edit CE registration")
     end
 
-    it "updates hours, cost, and fills the placeholder license type + number in place" do
+    it "updates hours, cost, and fills the placeholder license type, number, state + expiry in place" do
       license = ce_registration.professional_license
       patch continuing_education_registration_path(ce_registration),
-            params: { continuing_education_registration: { hours: "4.5", cost_dollars: "90", license_kind: "LMFT", license_number: "555" } }
+            params: { continuing_education_registration: { hours: "4.5", cost_dollars: "90", license_kind: "LMFT",
+              license_number: "555", license_issuing_state: "CA", license_expires_on: "2027-01-31" } }
 
       ce_registration.reload
       expect(ce_registration.hours).to eq(4.5)
       expect(ce_registration.cost_cents).to eq(9_000)
       # Placeholder is filled in place rather than orphaned.
       expect(ce_registration.professional_license).to eq(license)
-      expect(license.reload).to have_attributes(kind: "LMFT", number: "555")
+      expect(license.reload).to have_attributes(kind: "LMFT", number: "555",
+        issuing_state: "CA", expires_on: Date.new(2027, 1, 31))
     end
 
     it "edits the same license in place when correcting a typo (no new record)" do

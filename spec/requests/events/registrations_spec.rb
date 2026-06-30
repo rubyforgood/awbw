@@ -364,16 +364,20 @@ RSpec.describe "Events::Registrations", type: :request do
   describe "POST /registration/:slug/ce/license" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "saves a license type and number entered on the callout" do
+    it "saves the license type, number, issuing state, and expiry entered on the callout" do
       license = create(:professional_license, :placeholder, person: registration.registrant)
       create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
 
-      post registration_ce_license_path(registration.slug), params: { license_kind: "LMFT", license_number: "7788" }
+      post registration_ce_license_path(registration.slug),
+        params: { license_kind: "LMFT", license_number: "7788",
+          license_issuing_state: "CA", license_expires_on: "2027-01-31" }
 
       expect(response).to redirect_to(registration_ce_path(registration.slug))
       saved = registration.continuing_education_registrations.first.professional_license
       expect(saved.kind).to eq("LMFT")
       expect(saved.number).to eq("7788")
+      expect(saved.issuing_state).to eq("CA")
+      expect(saved.expires_on).to eq(Date.new(2027, 1, 31))
     end
   end
 

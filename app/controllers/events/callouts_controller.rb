@@ -62,16 +62,17 @@ module Events
     def ce
     end
 
-    # Public license type + number entry from the CE callout. Edits the license on
-    # the registrant's (first) CE registration in place, mirrors the number onto the
-    # registration's form answer, then returns to the callout. Plain full-page POST —
-    # no Turbo. Shares ContinuingEducationRegistration#assign_license with the admin
-    # edit page.
+    # Public license entry from the CE callout (type, number, issuing state, and
+    # expiry). Edits the license on the registrant's (first) CE registration in
+    # place, mirrors the number onto the registration's form answer, then returns to
+    # the callout. Plain full-page POST — no Turbo. Shares
+    # ContinuingEducationRegistration#assign_license with the admin edit page.
     def update_ce_license
       ce_registration = @event_registration.continuing_education_registrations.first
       return redirect_to(registration_ce_path(@event_registration.slug)) unless ce_registration
 
-      ce_registration.assign_license(number: params[:license_number], kind: params[:license_kind])
+      ce_registration.assign_license(number: params[:license_number], kind: params[:license_kind],
+                                     issuing_state: params[:license_issuing_state], expires_on: params[:license_expires_on])
       ce_registration.save!
       record_ce_license_answer(params[:license_number].to_s.strip.presence)
 
