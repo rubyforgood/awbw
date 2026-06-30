@@ -74,7 +74,9 @@ module Events
       ce_registration.assign_license(number: params[:license_number], kind: params[:license_kind],
                                      issuing_state: params[:license_issuing_state], expires_on: params[:license_expires_on])
       ce_registration.save!
-      record_ce_license_answer(params[:license_number].to_s.strip.presence)
+      # assign_license already normalized the number; mirror the saved value rather
+      # than re-stripping the raw param.
+      record_ce_license_answer(ce_registration.professional_license.number)
 
       redirect_to registration_ce_path(@event_registration.slug), notice: "License saved."
     rescue ActiveRecord::RecordInvalid
