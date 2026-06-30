@@ -323,6 +323,25 @@ RSpec.describe "Events::Registrations", type: :request do
       get registration_ce_path(registration.slug)
       expect(response.body).to include(edit_continuing_education_registration_path(ce))
     end
+
+    it "points the eyebrow back to the CE registration when reached from there" do
+      ce = create(:continuing_education_registration, event_registration: registration,
+        professional_license: create(:professional_license, :placeholder, person: registration.registrant), hours: 6)
+
+      sign_in create(:user, :with_person, super_user: true)
+      get registration_ce_path(registration.slug, return_to: "ce_registration")
+      expect(response.body).to include("Back to CE registration")
+      expect(response.body).to include(edit_continuing_education_registration_path(ce))
+    end
+
+    it "keeps the default ticket eyebrow for a registrant even with the ce_registration origin" do
+      create(:continuing_education_registration, event_registration: registration,
+        professional_license: create(:professional_license, :placeholder, person: registration.registrant), hours: 6)
+
+      get registration_ce_path(registration.slug, return_to: "ce_registration")
+      expect(response.body).to include("Back to ticket")
+      expect(response.body).not_to include("Back to CE registration")
+    end
   end
 
   describe "POST /registration/:slug/ce/license" do
