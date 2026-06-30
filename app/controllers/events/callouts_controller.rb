@@ -82,6 +82,21 @@ module Events
       redirect_to registration_ce_path(@event_registration.slug), alert: "We couldn't save that license number."
     end
 
+    # Public CE opt-in from the callout: a registrant who didn't ask for credit at
+    # registration can request it here. Sets the flag and creates the CE
+    # registration (against a placeholder license; the number is entered next).
+    def request_ce
+      return redirect_to(registration_ce_path(@event_registration.slug)) unless @event.ce_eligible?
+
+      @event_registration.update!(ce_requested: true)
+      unless @event_registration.continuing_education_registrations.exists?
+        license = ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
+        @event_registration.continuing_education_registrations.create!(professional_license: license)
+      end
+
+      redirect_to registration_ce_path(@event_registration.slug), notice: "Continuing education credit requested."
+    end
+
     # Forms page: callout-card links to the W-9 (when seeded) and, for paid
     # events, the invoice and the paid-in-full receipt (once settled), each
     # returning to forms. Only reachable when the event shows the Forms callout.

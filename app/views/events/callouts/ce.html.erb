@@ -50,7 +50,10 @@
       <p class="mt-2 text-xs text-gray-400">Acceptance of CE hours is determined by each state board; we can't guarantee yours will accept them.</p>
     <% end %>
   <% else %>
-    <p class="text-sm text-gray-600">You haven't requested continuing education credit for this training. CE hours are available for an additional fee — reach out to request credit.</p>
+    <p class="text-sm text-gray-600">You haven't requested continuing education credit for this training. CE hours are available for an additional fee.</p>
+    <%= form_with url: registration_ce_request_path(@event_registration.slug), method: :post, data: { turbo: false }, class: "mt-4" do |form| %>
+      <%= form.submit "Request CE credit", class: "rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
+    <% end %>
   <% end %>
 
   <% if @event.ce_hours_details.present? %>
