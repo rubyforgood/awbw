@@ -91,6 +91,25 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(registration.reload.ce_requested).to be(true)
     end
 
+    it "creates no license just from opening the new form" do
+      registration
+      expect {
+        get new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s)
+      }.not_to change(ProfessionalLicense, :count)
+    end
+
+    it "leaves no orphan license when the create fails validation" do
+      registration
+      params = { allocatable_sgid: registration.to_sgid.to_s,
+        continuing_education_registration: { hours: "-5", license_kind: "LMFT", license_number: "555" } }
+
+      expect {
+        post continuing_education_registrations_path, params: params
+      }.to change(ProfessionalLicense, :count).by(0)
+      expect(ContinuingEducationRegistration.count).to eq(0)
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
     it "renders the license picker on new once the registrant holds a license" do
       create(:professional_license, person: registration.registrant, kind: "LMFT", number: "111")
       get new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s)

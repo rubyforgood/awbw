@@ -18,15 +18,18 @@ class ContinuingEducationRegistrationsController < ApplicationController
   def create
     @ce_registration = @event_registration.continuing_education_registrations.build(professional_license: license_for_create)
     authorize! @ce_registration
-    apply_ce_params(@ce_registration)
 
-    if @ce_registration.save
+    # One transaction so the new license (a build until now) and the CE registration
+    # persist together — a failed save leaves neither behind.
+    ActiveRecord::Base.transaction do
+      apply_ce_params(@ce_registration)
+      @ce_registration.save!
       @event_registration.update_column(:ce_requested, true)
-      redirect_to registration_path, notice: "CE registration created.", status: :see_other
-    else
-      flash.now[:alert] = @ce_registration.errors.full_messages.to_sentence
-      render :new, status: :unprocessable_content
     end
+    redirect_to registration_path, notice: "CE registration created.", status: :see_other
+  rescue ActiveRecord::RecordInvalid
+    flash.now[:alert] = @ce_registration.errors.full_messages.to_sentence
+    render :new, status: :unprocessable_content
   end
 
   def edit
@@ -35,14 +38,15 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def update
     authorize! @ce_registration
-    apply_ce_params(@ce_registration)
 
-    if @ce_registration.save
-      redirect_to registration_path, notice: "CE registration updated.", status: :see_other
-    else
-      flash.now[:alert] = @ce_registration.errors.full_messages.to_sentence
-      render :edit, status: :unprocessable_content
+    ActiveRecord::Base.transaction do
+      apply_ce_params(@ce_registration)
+      @ce_registration.save!
     end
+    redirect_to registration_path, notice: "CE registration updated.", status: :see_other
+  rescue ActiveRecord::RecordInvalid
+    flash.now[:alert] = @ce_registration.errors.full_messages.to_sentence
+    render :edit, status: :unprocessable_content
   end
 
   # Removal mirrors scholarship's destroy but never cascades away a CE registration
@@ -86,11 +90,12 @@ class ContinuingEducationRegistrationsController < ApplicationController
   end
 
   # License a brand-new CE registration attaches to: the registrant's existing
-  # license, else an empty placeholder. assign_license then fills it from the
-  # submitted type/number/state/expiry. Mirrors EventRegistrationsController.
+  # license, else an unsaved build. assign_license fills it from the submitted
+  # type/number/state/expiry, and it persists with the CE registration in create's
+  # transaction — so abandoning the new form never leaves a stray license behind.
   def license_for_create
     @event_registration.registrant.professional_licenses.first ||
-      ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
+      @event_registration.registrant.professional_licenses.build
   end
 
   # Apply the submitted license fields, hours, and cost to a CE registration.
