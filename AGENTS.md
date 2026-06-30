@@ -282,6 +282,7 @@ end
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state
 - `carousel` — Swiper-based carousels
+- `ce_license_picker` — Fill the CE license type/number/state/expiry fields from the picked license (or clear them for a new one)
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
