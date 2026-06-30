@@ -13,7 +13,9 @@ class ProfessionalLicense < ApplicationRecord
   # dependent: :destroy cascade below clears those registrations.
   before_destroy :prevent_destroy_with_ce, prepend: true
 
-  validates :number, uniqueness: { scope: :person_id }, allow_nil: true
+  # A license is identified by its kind + number, so the same number under two
+  # different kinds is allowed; only a duplicate (kind, number) pair is rejected.
+  validates :number, uniqueness: { scope: [ :person_id, :kind ] }, allow_nil: true
 
   # Find the person's license for this number, or create it. A blank number
   # resolves to the person's single placeholder license (number nil) so a CE

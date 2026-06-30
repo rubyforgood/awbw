@@ -414,7 +414,7 @@
                         collection: us_time_zone_fundamentals,
                         selected: user_form.object.time_zone.presence || "Pacific Time (US & Canada)",
                         include_blank: false,
-                        hint: "User will see times and dates in this timezone.",
+                        hint: timezone_visibility_hint(user_form.object),
                         input_html: { class: "w-full" },
                         wrapper_html: { class: "w-full sm:flex-1" } %>
           <% end %>

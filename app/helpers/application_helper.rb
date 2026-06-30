@@ -492,6 +492,13 @@ module ApplicationHelper
     NumberFormatter.plain(number)
   end
 
+  # Timezone hint phrased for whoever the form is about: second person when you're
+  # editing your own settings, third person ("User") when an admin edits someone else.
+  def timezone_visibility_hint(user)
+    subject = user == current_user ? "You" : "User"
+    "#{subject} will see times and dates in this timezone."
+  end
+
   def navbar_bg_class
     if staging_environment? && !params[:nav_bg_primary].present?
       "bg-red-600"

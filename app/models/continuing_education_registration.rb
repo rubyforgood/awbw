@@ -58,7 +58,9 @@ class ContinuingEducationRegistration < ApplicationRecord
       end
     end
 
-    match = person.professional_licenses.where.not(id: current&.id).find_by(number: number) if number
+    # Licenses are identified by (kind, number), so only an exact kind + number
+    # match is a duplicate to link to rather than create.
+    match = person.professional_licenses.where.not(id: current&.id).find_by(number: number, kind: kind) if number
     if match
       self.professional_license = match
     else

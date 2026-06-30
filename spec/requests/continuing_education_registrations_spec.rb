@@ -110,11 +110,18 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
-    it "renders the license picker on new once the registrant holds a license" do
+    it "renders the license picker on new when the registrant holds more than one license" do
       create(:professional_license, person: registration.registrant, kind: "LMFT", number: "111")
+      create(:professional_license, person: registration.registrant, kind: "LCSW", number: "222")
       get new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s)
       expect(response.body).to include("professional_license_id")
       expect(response.body).to include("Create new license")
+    end
+
+    it "omits the license picker when the registrant has a single license" do
+      create(:professional_license, person: registration.registrant, kind: "LMFT", number: "111")
+      get new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s)
+      expect(response.body).not_to include("professional_license_id")
     end
 
     it "points the registration at a picked license and edits it in place from the fields" do

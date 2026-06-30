@@ -45,11 +45,19 @@ RSpec.describe ProfessionalLicense, type: :model do
   end
 
   describe "validations" do
-    it "rejects a duplicate number for the same person" do
-      create(:professional_license, person: person, number: "DUP")
-      dup = build(:professional_license, person: person, number: "DUP")
+    it "rejects a duplicate kind + number for the same person" do
+      create(:professional_license, person: person, kind: "LMFT", number: "DUP")
+      dup = build(:professional_license, person: person, kind: "LMFT", number: "DUP")
 
       expect(dup).not_to be_valid
+    end
+
+    it "allows (and persists) the same number under a different kind" do
+      create(:professional_license, person: person, kind: "LMFT", number: "DUP")
+
+      expect {
+        create(:professional_license, person: person, kind: "LCSW", number: "DUP")
+      }.to change(described_class, :count).by(1)
     end
   end
 

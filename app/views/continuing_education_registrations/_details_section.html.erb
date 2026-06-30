@@ -2,7 +2,7 @@
     shared by the new and edit pages. Renders inside a form_with block — `f` is the
     builder. Locals: f, license (may be nil on new), ce_registration, event. %>
 <% licenses = ce_registration.event_registration.registrant.professional_licenses.order(:kind, :number) %>
-<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="<%= "ce-license-picker" if licenses.any? %>">
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="<%= "ce-license-picker" if licenses.many? %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
       <i class="fa-solid fa-certificate"></i>
@@ -11,10 +11,10 @@
   </div>
 
   <div class="space-y-5 p-4">
-    <%# License picker — shown once the registrant holds a license. Pick one to use
-        it as-is, or "Create new license" to add one from the fields below. With no
-        license on file there's no picker and the fields create the first one. %>
-    <% if licenses.any? %>
+    <%# License picker — shown only when the registrant holds more than one license,
+        to choose which to load into the fields (or "Create new license"). With zero
+        or one license there's no picker and the fields edit/create it directly. %>
+    <% if licenses.many? %>
       <div class="w-full sm:w-80">
         <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_professional_license_id">License</label>
         <%= f.select :professional_license_id,
