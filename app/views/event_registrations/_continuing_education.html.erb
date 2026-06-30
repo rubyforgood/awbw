@@ -33,7 +33,7 @@
           license (or an empty placeholder). The license is then shown below and
           editable on the CE registration's own page. %>
     <% else %>
-      <% license_number = ce_registration.professional_license&.number %>
+      <% license = ce_registration.professional_license %>
       <div class="flex flex-1 flex-col gap-2">
         <div class="flex items-center gap-2">
           <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(ce_registration.cost_cents) %></span>
@@ -49,8 +49,8 @@
 
         <p class="text-xs text-gray-500">
           License:
-          <% if license_number.present? %>
-            <span class="font-medium text-gray-700"><%= license_number %></span>
+          <% if license&.number_known? %>
+            <span class="font-medium text-gray-700"><%= license.name %></span>
           <% else %>
             <span class="font-medium text-amber-700">Needs license</span>
           <% end %>

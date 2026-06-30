@@ -18,17 +18,42 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(response.body).to include("Edit CE registration")
     end
 
-    it "updates hours, cost, and promotes the placeholder license in place" do
+    it "updates hours, cost, and fills the placeholder license type + number in place" do
       license = ce_registration.professional_license
       patch continuing_education_registration_path(ce_registration),
-            params: { continuing_education_registration: { hours: "4.5", cost_dollars: "90", license_number: "LMFT 555" } }
+            params: { continuing_education_registration: { hours: "4.5", cost_dollars: "90", license_kind: "LMFT", license_number: "555" } }
 
       ce_registration.reload
       expect(ce_registration.hours).to eq(4.5)
       expect(ce_registration.cost_cents).to eq(9_000)
-      # Placeholder is promoted in place rather than orphaned.
+      # Placeholder is filled in place rather than orphaned.
       expect(ce_registration.professional_license).to eq(license)
-      expect(license.reload.number).to eq("LMFT 555")
+      expect(license.reload).to have_attributes(kind: "LMFT", number: "555")
+    end
+
+    it "edits the same license in place when correcting a typo (no new record)" do
+      license = create(:professional_license, person: registration.registrant, kind: "LCSW", number: "11223")
+      ce_registration.update!(professional_license: license)
+
+      expect {
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120", license_kind: "LCSW", license_number: "11224" } }
+      }.not_to change(ProfessionalLicense, :count)
+
+      expect(ce_registration.reload.professional_license).to eq(license)
+      expect(license.reload.number).to eq("11224")
+    end
+
+    it "links to the registrant's existing license when the typed number already matches one" do
+      ce_registration
+      other = create(:professional_license, person: registration.registrant, kind: "LMFT", number: "99887")
+
+      expect {
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { hours: "6", cost_dollars: "120", license_kind: "LMFT", license_number: "99887" } }
+      }.not_to change(ProfessionalLicense, :count)
+
+      expect(ce_registration.reload.professional_license).to eq(other)
     end
 
     it "marks the certificate issued and back to not issued" do
