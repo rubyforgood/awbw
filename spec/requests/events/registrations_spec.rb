@@ -232,6 +232,29 @@ RSpec.describe "Events::Registrations", type: :request do
 
       expect(response.body).not_to include("Review your form responses")
     end
+
+    it "shows an admin edit-scholarship link and a back-to-scholarship eyebrow when reached from there" do
+      scholarship = create(:scholarship, amount_cents: 75_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 75_000)
+
+      sign_in create(:user, :with_person, super_user: true)
+      get registration_scholarship_path(registration.slug, return_to: "scholarship")
+
+      expect(response.body).to include("Edit scholarship")
+      expect(response.body).to include("Back to scholarship")
+      expect(response.body).to include(edit_scholarship_path(scholarship))
+    end
+
+    it "keeps the default ticket eyebrow for a registrant even with the scholarship origin" do
+      scholarship = create(:scholarship, amount_cents: 75_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 75_000)
+
+      get registration_scholarship_path(registration.slug, return_to: "scholarship")
+
+      expect(response.body).to include("Back to ticket")
+      expect(response.body).not_to include("Back to scholarship")
+      expect(response.body).not_to include("Edit scholarship")
+    end
   end
 
   describe "GET /registration/:slug/faq" do
