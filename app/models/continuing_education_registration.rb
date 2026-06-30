@@ -31,16 +31,16 @@ class ContinuingEducationRegistration < ApplicationRecord
 
   # Point this registration at a license for the typed type + number. `license_id`
   # comes from the form's license picker (shown when the registrant holds licenses):
-  #   * an existing license other than the current one → just use it as-is (the
-  #     typed fields are ignored — you switch licenses, you don't edit the one you
-  #     switched to here);
+  #   * an existing license → correct it in place from the typed fields (the picker
+  #     populates those fields from whichever license is selected, so editing one
+  #     and saving updates that license);
   #   * "new" → create a brand-new license for the person from the typed fields;
-  #   * blank, or the current license → correct the current license in place
-  #     (filling a blank placeholder or fixing a typo).
-  # In every "write the typed fields" case, an existing license already holding the
-  # typed number wins, to avoid duplicating or colliding on the unique
-  # (person, number) index. Does not save the registration itself — callers persist
-  # it alongside their other changes.
+  #   * blank (no picker) → correct the current license in place (filling a blank
+  #     placeholder or fixing a typo).
+  # In the "new"/"blank" cases an existing license already holding the typed number
+  # wins, to avoid duplicating or colliding on the unique (person, number) index.
+  # Does not save the registration itself — callers persist it alongside their other
+  # changes.
   def assign_license(number:, kind:, issuing_state: nil, expires_on: nil, license_id: nil)
     number = number.to_s.strip.presence
     kind = kind.to_s.strip.presence
@@ -49,9 +49,10 @@ class ContinuingEducationRegistration < ApplicationRecord
     current = professional_license
     person = event_registration.registrant
 
-    if license_id.present? && license_id != "new" && license_id.to_s != current&.id.to_s
+    if license_id.present? && license_id != "new"
       picked = person.professional_licenses.find_by(id: license_id)
       if picked
+        picked.update!(number: number, kind: kind, issuing_state: issuing_state, expires_on: expires_on)
         self.professional_license = picked
         return
       end

@@ -33,6 +33,9 @@ application.register("callout-preview", CalloutPreviewController)
 import CarouselController from "./carousel_controller"
 application.register("carousel", CarouselController)
 
+import CeLicensePickerController from "./ce_license_picker_controller"
+application.register("ce-license-picker", CeLicensePickerController)
+
 import ChipSelectController from "./chip_select_controller"
 application.register("chip-select", ChipSelectController)
 

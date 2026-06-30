@@ -117,17 +117,18 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(response.body).to include("Create new license")
     end
 
-    it "points the registration at a picked existing license without editing it" do
+    it "points the registration at a picked license and edits it in place from the fields" do
       a = create(:professional_license, person: registration.registrant, kind: "LMFT", number: "111")
       b = create(:professional_license, person: registration.registrant, kind: "LCSW", number: "222")
       ce_registration.update!(professional_license: a)
 
       patch continuing_education_registration_path(ce_registration),
             params: { continuing_education_registration: { professional_license_id: b.id,
-              license_kind: "IGNORED", license_number: "999", hours: "6", cost_dollars: "120" } }
+              license_kind: "LCSW", license_number: "222-B", license_issuing_state: "NY", hours: "6", cost_dollars: "120" } }
 
       expect(ce_registration.reload.professional_license).to eq(b)
-      expect(b.reload).to have_attributes(kind: "LCSW", number: "222")
+      expect(b.reload).to have_attributes(kind: "LCSW", number: "222-B", issuing_state: "NY")
+      expect(a.reload).to have_attributes(kind: "LMFT", number: "111")
     end
 
     it "creates a new license when 'Create new license' is picked" do
