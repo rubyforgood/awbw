@@ -66,13 +66,6 @@ class FormField < ApplicationRecord
     "Foundation/Funder" => "Please list the name of the foundation/funder"
   }.freeze
 
-  # Specify options scoped to a single field by its field_identifier, rather than
-  # to an option label everywhere it appears (SPECIFY_OPTION_PLACEHOLDERS). The
-  # CE-interest question once revealed a "How many CE hours?" box here, but CE
-  # hours now come from the event, so the question is a plain Yes/No. Kept as the
-  # general mechanism for any future field-scoped specify box.
-  FIELD_SPECIFY_OPTION_PLACEHOLDERS = {}.freeze
-
   # Fallback character ceilings applied when a free-form field has no explicit
   # max_characters set. This is a safety net against pathological submissions
   # (megabyte answers that bloat the DB and break admin/email rendering), not a
@@ -339,20 +332,17 @@ class FormField < ApplicationRecord
 
   # The "please specify" placeholder for an option label, or nil when the option
   # does not reveal a free-text box. Matched case- and whitespace-insensitively
-  # against SPECIFY_OPTION_PLACEHOLDERS, then (when a field_identifier is given)
-  # against that field's FIELD_SPECIFY_OPTION_PLACEHOLDERS, which wins.
-  def self.specify_placeholder_for(label, field_identifier = nil)
+  # against SPECIFY_OPTION_PLACEHOLDERS.
+  def self.specify_placeholder_for(label)
     normalized = label.to_s.strip
     return if normalized.blank?
 
-    field_scoped = FIELD_SPECIFY_OPTION_PLACEHOLDERS[field_identifier]&.find { |key, _| key.casecmp?(normalized) }&.last
-    field_scoped || SPECIFY_OPTION_PLACEHOLDERS.find { |key, _| key.casecmp?(normalized) }&.last
+    SPECIFY_OPTION_PLACEHOLDERS.find { |key, _| key.casecmp?(normalized) }&.last
   end
 
-  # True when an option label reveals a free-text "please specify" box, optionally
-  # scoped to a field via its field_identifier.
-  def self.specify_option?(label, field_identifier = nil)
-    specify_placeholder_for(label, field_identifier).present?
+  # True when an option label reveals a free-text "please specify" box.
+  def self.specify_option?(label)
+    specify_placeholder_for(label).present?
   end
 
   # True when an option label is the generic free-text "Other" choice. Unlike
@@ -371,7 +361,7 @@ class FormField < ApplicationRecord
   # their options, so they expose no specify option.
   def specify_option_labels
     option_names = dynamic_options? ? dynamic_option_names : answer_options.map(&:name)
-    option_names.select { |name| FormField.specify_option?(name, field_identifier) }
+    option_names.select { |name| FormField.specify_option?(name) }
   end
 
   # The names of this field's dynamically-sourced options (Sector or Category),

@@ -19,11 +19,6 @@ RSpec.describe EventHelper, type: :helper do
       expect(helper.specify_placeholder("Other reasons")).to be_nil
       expect(helper.specify_placeholder(nil)).to be_nil
     end
-
-    it "does not reveal a box for the CE question's 'Yes' (hours come from the event)" do
-      ce_field = FormField.new(field_identifier: "ce_credit_interest")
-      expect(helper.specify_placeholder("Yes", ce_field)).to be_nil
-    end
   end
 
   describe "#specify_option_selected?" do

@@ -3,8 +3,22 @@
 <%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_details_label } do %>
   <% if @event_registration.ce_registered? %>
     <% ce_registration = @event_registration.continuing_education_registrations.first %>
-    <% license_number = ce_registration&.professional_license&.number %>
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <% license = ce_registration&.professional_license %>
+    <% license_kind = license&.kind %>
+    <% license_number = license&.number %>
+    <%# Admin-only jump to the management surface for this CE registration. Hidden
+        from registrants; opens in a new tab so the registrant view is kept. %>
+    <% if ce_registration && allowed_to?(:edit?, ce_registration) %>
+      <div class="mb-4 flex justify-end">
+        <%= link_to edit_continuing_education_registration_path(ce_registration), target: "_blank", rel: "noopener",
+              class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
+          <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
+          Edit CE registration
+          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+        <% end %>
+      </div>
+    <% end %>
+    <div class="flex flex-wrap items-center gap-3">
       <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</p>
       <% if @event_registration.ce_paid_in_full? %>
         <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
@@ -17,34 +31,35 @@
       <% end %>
     </div>
 
-    <dl class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <div>
+    <dl class="mt-5 flex flex-wrap gap-x-8 gap-y-2">
+      <div class="flex items-baseline gap-2">
         <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Hours</dt>
-        <dd class="mt-1 text-lg font-semibold text-gray-900 tabular-nums"><%= ce_hours_display(@event_registration.ce_hours_total) || "—" %></dd>
+        <dd class="text-lg font-semibold text-gray-900 tabular-nums"><%= ce_hours_display(@event_registration.ce_hours_total) || "—" %></dd>
       </div>
-      <div>
+      <div class="flex items-baseline gap-2">
         <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Cost</dt>
-        <dd class="mt-1 text-lg font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@event_registration.ce_amount_owed_cents) %></dd>
-      </div>
-      <div>
-        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License number</dt>
-        <% if license_number.present? %>
-          <dd class="mt-1 text-lg font-semibold text-gray-900"><%= license_number %></dd>
-        <% else %>
-          <dd class="mt-1 text-sm text-amber-700">Not on file yet.</dd>
-        <% end %>
+        <dd class="text-lg font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@event_registration.ce_amount_owed_cents) %></dd>
       </div>
     </dl>
 
-    <%# Registrants supply (or correct) their license number here — a plain
-        full-page POST, no Turbo, so the page simply reloads with the saved value. %>
+    <%# Registrants supply (or correct) their license type + number here — a plain
+        full-page POST, no Turbo, so the page simply reloads with the saved value.
+        This is the only license display: the editable fields double as the readout. %>
     <%= form_with url: registration_ce_license_path(@event_registration.slug), method: :post,
           data: { turbo: false }, class: "mt-5 border-t border-gray-100 pt-5" do |form| %>
-      <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_number">Your license number</label>
-      <div class="mt-2 flex flex-col gap-2 sm:flex-row">
-        <%= form.text_field :license_number, value: license_number, id: "license_number",
-              placeholder: "e.g. LMFT 12345",
-              class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div class="sm:w-32">
+          <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_kind">License type</label>
+          <%= form.text_field :license_kind, value: license_kind, id: "license_kind",
+                placeholder: "e.g. LCSW",
+                class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+        </div>
+        <div class="flex-1">
+          <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_number">Your license number</label>
+          <%= form.text_field :license_number, value: license_number, id: "license_number",
+                placeholder: "e.g. 12345",
+                class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+        </div>
         <%= form.submit "Save", class: "shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
       </div>
       <p class="mt-2 text-xs text-gray-400">Acceptance of CE hours is determined by each state board; we can't guarantee yours will accept them.</p>

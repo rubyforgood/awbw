@@ -7,8 +7,8 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def update
     authorize! @ce_registration
-    assign_license(params.dig(:continuing_education_registration, :license_number),
-                   params.dig(:continuing_education_registration, :license_kind))
+    @ce_registration.assign_license(number: params.dig(:continuing_education_registration, :license_number),
+                                    kind: params.dig(:continuing_education_registration, :license_kind))
     @ce_registration.hours = params.dig(:continuing_education_registration, :hours)
     cost = params.dig(:continuing_education_registration, :cost_dollars)
     @ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
@@ -51,25 +51,6 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def set_ce_registration
     @ce_registration = ContinuingEducationRegistration.find(params[:id])
-  end
-
-  # Edit the attached license in place from the typed type + number — filling a
-  # blank placeholder and fixing a typo both just correct this one record (and its
-  # PaperTrail history). The only exception: if the typed number already belongs to
-  # another license this person holds, link to that one rather than duplicating or
-  # colliding on the unique (person, number) index.
-  def assign_license(number, kind)
-    number = number.to_s.strip.presence
-    kind = kind.to_s.strip.presence
-    current = @ce_registration.professional_license
-    person = @ce_registration.event_registration.registrant
-
-    match = person.professional_licenses.where.not(id: current.id).find_by(number: number) if number
-    if match
-      @ce_registration.professional_license = match
-    else
-      current.update!(number: number, kind: kind)
-    end
   end
 
   def registration_path

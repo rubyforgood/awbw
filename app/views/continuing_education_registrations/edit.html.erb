@@ -8,7 +8,18 @@
     <%= link_to edit_event_registration_path(registration), class: "text-sm text-gray-500 hover:text-gray-700" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Registration
     <% end %>
-    <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <div class="flex items-center gap-3">
+      <%# Admin jump to the registrant-facing CE callout (what the registrant sees /
+          where they enter their own license). Opens in a new tab so the edit context
+          is kept; matches the sky admin-link convention. %>
+      <%= link_to registration_ce_path(registration.slug), target: "_blank", rel: "noopener",
+            class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
+        <i class="fa-solid fa-id-card text-[0.6rem]"></i>
+        Registrant's CE page
+        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+      <% end %>
+      <%= link_to "Home", root_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    </div>
   </div>
 
   <%= render "shared/event_page_header",

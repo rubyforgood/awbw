@@ -37,6 +37,27 @@ class ContinuingEducationRegistration < ApplicationRecord
     event.end_date&.past? && event_registration.attended? && paid_in_full?
   end
 
+  # Point this registration at the registrant's license for the typed type +
+  # number, editing the current license in place — filling a blank placeholder and
+  # fixing a typo both just correct this one record (and its PaperTrail history).
+  # The exception: if the typed number already belongs to another license this
+  # person holds, link to that one rather than duplicating or colliding on the
+  # unique (person, number) index. Does not save the registration itself — callers
+  # persist it alongside their other changes.
+  def assign_license(number:, kind:)
+    number = number.to_s.strip.presence
+    kind = kind.to_s.strip.presence
+    current = professional_license
+    person = event_registration.registrant
+
+    match = person.professional_licenses.where.not(id: current.id).find_by(number: number) if number
+    if match
+      self.professional_license = match
+    else
+      current.update!(number: number, kind: kind)
+    end
+  end
+
   # Human-readable payment status, mirroring EventRegistration#payment_status_label.
   # CE has no "intends to pay" concept (that's an event-access affordance), so the
   # middle state is a genuine partial payment instead.

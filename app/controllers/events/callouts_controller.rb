@@ -62,24 +62,22 @@ module Events
     def ce
     end
 
-    # Public license-number entry from the CE callout. Sets the number on the
-    # registrant's (first) CE registration via a found-or-created license, mirrors
-    # it onto the registration's form answer, then returns to the callout. Plain
-    # full-page POST — no Turbo.
+    # Public license type + number entry from the CE callout. Edits the license on
+    # the registrant's (first) CE registration in place, mirrors the number onto the
+    # registration's form answer, then returns to the callout. Plain full-page POST —
+    # no Turbo. Shares ContinuingEducationRegistration#assign_license with the admin
+    # edit page.
     def update_ce_license
       ce_registration = @event_registration.continuing_education_registrations.first
       return redirect_to(registration_ce_path(@event_registration.slug)) unless ce_registration
 
-      number = params[:license_number].to_s.strip.presence
-      ce_registration.professional_license = ProfessionalLicense.find_or_create_for(
-        person: @event_registration.registrant, number: number
-      )
+      ce_registration.assign_license(number: params[:license_number], kind: params[:license_kind])
       ce_registration.save!
-      record_ce_license_answer(number)
+      record_ce_license_answer(params[:license_number].to_s.strip.presence)
 
-      redirect_to registration_ce_path(@event_registration.slug), notice: "License number saved."
+      redirect_to registration_ce_path(@event_registration.slug), notice: "License saved."
     rescue ActiveRecord::RecordInvalid
-      redirect_to registration_ce_path(@event_registration.slug), alert: "We couldn't save that license number."
+      redirect_to registration_ce_path(@event_registration.slug), alert: "We couldn't save that license."
     end
 
     # Public CE opt-in from the callout: a registrant who didn't ask for credit at

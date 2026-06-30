@@ -217,6 +217,13 @@ class Person < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
+  # Distinct professional-license types (e.g. "LMFT, LCSW"), shown as a credential
+  # suffix after the person's name on their profile (replaces the old free-text
+  # credentials field). Nil when no licensed types are on file.
+  def license_credentials
+    professional_licenses.filter_map { |license| license.kind.presence&.strip }.uniq.join(", ").presence
+  end
+
   def full_name_with_email
     email = preferred_email
     name = full_name
