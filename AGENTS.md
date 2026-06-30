@@ -48,19 +48,19 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~78 files |
+| `app/models/` | ActiveRecord models | ~80 files |
 | `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~30 files |
-| `app/jobs/` | SolidQueue background jobs | 3 files |
+| `app/jobs/` | SolidQueue background jobs | 4 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
 ### Presentation
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~71 files |
-| `app/views/` | ERB templates | ~507 files |
-| `app/decorators/` | Draper decorators for view logic | ~38 files |
-| `app/policies/` | ActionPolicy authorization rules | ~50 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~77 files |
+| `app/views/` | ERB templates | ~632 files |
+| `app/decorators/` | Draper decorators for view logic | ~40 files |
+| `app/policies/` | ActionPolicy authorization rules | ~55 files |
 | `app/presenters/` | Presentation objects | 3 files |
 | `app/helpers/` | View helpers | ~25 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (74) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -81,7 +81,7 @@ This codebase (Rails 8.1)
 |---|---|
 | `config/routes.rb` | All routes (single file) |
 | `config/database.yml` | MySQL via Trilogy adapter |
-| `config/initializers/` | ~28 initializer files |
+| `config/initializers/` | ~30 initializer files |
 | `.github/workflows/` | GitHub Actions CI |
 | `Procfile.dev` | Dev services: `vite` + `web` |
 | `ai/` | Shell script shortcuts for common dev tasks (see `ai/README.md`) |
@@ -147,7 +147,7 @@ This codebase (Rails 8.1)
 
 ### Namespaces
 
-- **Root level** (~52 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
+- **Root level** (~58 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
@@ -348,17 +348,17 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 
 | Directory | Count | Purpose |
 |---|---|---|
-| `spec/models/` | ~58 | Model unit tests |
-| `spec/views/` | ~73 | View template tests |
-| `spec/requests/` | ~47 | HTTP request/integration tests |
-| `spec/system/` | ~25 | End-to-end browser tests (Capybara) |
-| `spec/routing/` | ~13 | Route definition tests |
-| `spec/policies/` | ~9 | Authorization policy tests |
-| `spec/decorators/` | ~10 | Decorator tests |
-| `spec/services/` | ~13 | Service object tests |
+| `spec/models/` | ~71 | Model unit tests |
+| `spec/views/` | ~76 | View template tests |
+| `spec/requests/` | ~79 | HTTP request/integration tests |
+| `spec/system/` | ~20 | End-to-end browser tests (Capybara) |
+| `spec/routing/` | ~15 | Route definition tests |
+| `spec/policies/` | ~14 | Authorization policy tests |
+| `spec/decorators/` | ~14 | Decorator tests |
+| `spec/services/` | ~22 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
-| `spec/helpers/` | ~1 | Helper tests |
-| `spec/factories/` | ~53 | FactoryBot factory definitions |
+| `spec/helpers/` | ~5 | Helper tests |
+| `spec/factories/` | ~67 | FactoryBot factory definitions |
 
 ### Configuration
 
@@ -431,8 +431,12 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (4 files):
+Located in `lib/tasks/` (8 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
 - `migrate_internal_id_to_filemaker_code.rake` — FileMaker code migration
+- `convert_age_ranges.rake` — Age range data conversion
+- `legacy_user_permissions_to_comments.rake` — Migrate legacy user permissions into comments
+- `migrate_sectors.rake` — Sector data migration
+- `migrate_workshop_logs.rake` — Workshop log migration
