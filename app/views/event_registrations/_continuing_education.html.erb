@@ -3,10 +3,7 @@
     registration stub, which is then filled in on its own edit page. Once a record
     exists the toggle is gone and we show the record + an Edit link. Only rendered
     for CE-eligible events. ---- %>
-<section class="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ring-teal-400"
-         data-controller="ce-credit-requested"
-         data-ce-credit-requested-initial-value="<%= event_registration.ce_requested? %>"
-         data-ce-credit-requested-target="box">
+<section class="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-teal-600">
       <i class="fa-solid fa-certificate"></i>
@@ -22,16 +19,18 @@
                name="event_registration[ce_requested]"
                value="1"
                <%= "checked" if event_registration.ce_requested? %>
-               data-ce-credit-requested-target="checkbox"
-               data-action="ce-credit-requested#refresh"
                class="sr-only peer">
-        <span data-ce-credit-requested-target="track" class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
+        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-orange-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-orange-300"></span>
         <span class="text-sm font-medium text-gray-700">Requested</span>
       </label>
 
       <%# No license picker here — saving creates the record against the registrant's
-          license (or an empty placeholder). The license is then shown below and
-          editable on the CE registration's own page. %>
+          license (or an empty placeholder), then it's editable on its own page. The
+          grey prompt below mirrors the scholarship/organizations cards' bottom links;
+          CE has no separate award page, so it's a hint rather than a link. %>
+      <p class="mt-auto border-t border-gray-100 pt-3 text-xs text-gray-500">
+        Save with this on to start a CE registration, then add the license and hours.
+      </p>
     <% else %>
       <% license = ce_registration.professional_license %>
       <div class="flex flex-1 flex-col gap-2">
