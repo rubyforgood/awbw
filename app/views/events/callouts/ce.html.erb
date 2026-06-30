@@ -59,10 +59,14 @@
         JS). Saving POSTs and redirects back to the read-only view. With nothing on
         file the form shows straight away. %>
     <% editing_license = params[:editing] == "license" %>
+    <%# Once the certificate is issued the license is locked — it's the credential
+        the certificate was issued under. Read-only, no Edit link; admins correct it
+        on the admin CE edit page. %>
+    <% license_locked = ce_registration.certificate_sent_at.present? %>
     <section id="license" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
       <div class="flex items-center justify-between gap-3">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Your professional license</h2>
-        <% if license_on_file && !editing_license %>
+        <% if license_on_file && !editing_license && !license_locked %>
           <%= link_to registration_ce_path(@event_registration.slug, editing: "license", return_to: params[:return_to].presence, anchor: "license"),
                 class: "shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50" do %>
             <i class="fa-solid fa-pen-to-square text-xs"></i> Edit
@@ -70,7 +74,7 @@
         <% end %>
       </div>
 
-      <% if license_on_file && !editing_license %>
+      <% if license_locked || (license_on_file && !editing_license) %>
         <%# Each license field on its own row, labels in a fixed column so the values line up. %>
         <dl class="mt-3 flex flex-col gap-2">
           <div class="flex items-baseline gap-2">
@@ -90,6 +94,12 @@
             <dd class="text-sm font-medium text-gray-900 tabular-nums"><%= license_expires_on&.to_fs(:long) || "—" %></dd>
           </div>
         </dl>
+        <% if license_locked %>
+          <p class="mt-3 inline-flex items-center gap-1.5 text-xs text-gray-500">
+            <i class="fa-solid fa-lock text-[0.65rem]"></i>
+            Your CE certificate has been issued, so your license is locked. Contact us if it needs correcting.
+          </p>
+        <% end %>
       <% else %>
         <%= form_with url: registration_ce_license_path(@event_registration.slug), method: :post,
               data: { turbo: false }, class: "mt-3" do |form| %>

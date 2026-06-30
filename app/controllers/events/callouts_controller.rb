@@ -71,6 +71,13 @@ module Events
       ce_registration = @event_registration.continuing_education_registrations.first
       return redirect_to(registration_ce_path(@event_registration.slug)) unless ce_registration
 
+      # Once the certificate is issued the license is the credential it was issued
+      # under — frozen here. Admins can still correct it on the admin CE edit page.
+      if ce_registration.certificate_sent_at.present?
+        return redirect_to registration_ce_path(@event_registration.slug),
+          alert: "Your CE certificate has been issued, so the license can no longer be changed here. Contact us if it needs correcting."
+      end
+
       ce_registration.assign_license(number: params[:license_number], kind: params[:license_kind],
                                      issuing_state: params[:license_issuing_state], expires_on: params[:license_expires_on])
       ce_registration.save!
