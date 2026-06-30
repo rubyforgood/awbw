@@ -292,7 +292,7 @@ RSpec.describe "Events::Registrations", type: :request do
   describe "GET /registration/:slug/ce" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "shows status, cost, and the license number on file" do
+    it "shows status, cost, and the license number on file, read-only with an edit link" do
       event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
       create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
@@ -302,14 +302,31 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Hours")
       expect(response.body).to include("$150")
       expect(response.body).to include("LIC123")
+      # Read-only by default: the form is not rendered, just an Edit link that flips to it.
+      expect(response.body).to include("editing=license")
+      expect(response.body).not_to include("Save changes")
     end
 
-    it "shows blank license fields when nothing is on file yet" do
+    it "flips to the editable form when reached with ?editing=license" do
+      license = create(:professional_license, person: registration.registrant, number: "LIC123")
+      create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
+      get registration_ce_path(registration.slug, editing: "license")
+      expect(response.body).to include("Save changes")
+      expect(response.body).to include("Cancel")
+    end
+
+    it "shows blank license fields and a needs-license prompt when nothing is on file yet" do
       license = create(:professional_license, :placeholder, person: registration.registrant)
       create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
       get registration_ce_path(registration.slug)
       expect(response.body).to include("License type")
       expect(response.body).to include("Your license number")
+      expect(response.body).to include("Needs license #")
+      expect(response.body).to include("We need your license type and number")
+      expect(response.body).to include("Save changes")
+      # Nothing on file yet, so there's no read-only value to edit or cancel back to.
+      expect(response.body).not_to include("editing=license")
+      expect(response.body).not_to include(">Cancel<")
     end
 
     it "shows an admin jump link to the CE registration only to admins" do
