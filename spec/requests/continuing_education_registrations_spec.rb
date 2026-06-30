@@ -15,7 +15,7 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
     it "renders the edit page" do
       get edit_continuing_education_registration_path(ce_registration)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Continuing education")
+      expect(response.body).to include("Edit CE registration")
     end
 
     it "updates hours, cost, and promotes the placeholder license in place" do
