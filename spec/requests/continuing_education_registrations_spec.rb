@@ -91,6 +91,40 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(registration.reload.ce_requested).to be(true)
     end
 
+    it "renders the license picker on new once the registrant holds a license" do
+      create(:professional_license, person: registration.registrant, kind: "LMFT", number: "111")
+      get new_continuing_education_registration_path(allocatable_sgid: registration.to_sgid.to_s)
+      expect(response.body).to include("professional_license_id")
+      expect(response.body).to include("Create new license")
+    end
+
+    it "points the registration at a picked existing license without editing it" do
+      a = create(:professional_license, person: registration.registrant, kind: "LMFT", number: "111")
+      b = create(:professional_license, person: registration.registrant, kind: "LCSW", number: "222")
+      ce_registration.update!(professional_license: a)
+
+      patch continuing_education_registration_path(ce_registration),
+            params: { continuing_education_registration: { professional_license_id: b.id,
+              license_kind: "IGNORED", license_number: "999", hours: "6", cost_dollars: "120" } }
+
+      expect(ce_registration.reload.professional_license).to eq(b)
+      expect(b.reload).to have_attributes(kind: "LCSW", number: "222")
+    end
+
+    it "creates a new license when 'Create new license' is picked" do
+      a = create(:professional_license, person: registration.registrant, kind: "LMFT", number: "111")
+      ce_registration.update!(professional_license: a)
+
+      expect {
+        patch continuing_education_registration_path(ce_registration),
+              params: { continuing_education_registration: { professional_license_id: "new",
+                license_kind: "LPCC", license_number: "333", hours: "6", cost_dollars: "120" } }
+      }.to change(ProfessionalLicense, :count).by(1)
+
+      expect(ce_registration.reload.professional_license).to have_attributes(kind: "LPCC", number: "333")
+      expect(a.reload).to have_attributes(kind: "LMFT", number: "111")
+    end
+
     it "removes a CE registration with no payments and clears the flag" do
       ce_registration
       delete continuing_education_registration_path(ce_registration)

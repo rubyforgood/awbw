@@ -29,14 +29,19 @@ class ContinuingEducationRegistration < ApplicationRecord
     event.end_date&.past? && event_registration.attended? && paid_in_full?
   end
 
-  # Point this registration at the registrant's license for the typed type +
-  # number, editing the current license in place — filling a blank placeholder and
-  # fixing a typo both just correct this one record (and its PaperTrail history).
-  # The exception: if the typed number already belongs to another license this
-  # person holds, link to that one rather than duplicating or colliding on the
-  # unique (person, number) index. Does not save the registration itself — callers
-  # persist it alongside their other changes.
-  def assign_license(number:, kind:, issuing_state: nil, expires_on: nil)
+  # Point this registration at a license for the typed type + number. `license_id`
+  # comes from the form's license picker (shown when the registrant holds licenses):
+  #   * an existing license other than the current one → just use it as-is (the
+  #     typed fields are ignored — you switch licenses, you don't edit the one you
+  #     switched to here);
+  #   * "new" → create a brand-new license for the person from the typed fields;
+  #   * blank, or the current license → correct the current license in place
+  #     (filling a blank placeholder or fixing a typo).
+  # In every "write the typed fields" case, an existing license already holding the
+  # typed number wins, to avoid duplicating or colliding on the unique
+  # (person, number) index. Does not save the registration itself — callers persist
+  # it alongside their other changes.
+  def assign_license(number:, kind:, issuing_state: nil, expires_on: nil, license_id: nil)
     number = number.to_s.strip.presence
     kind = kind.to_s.strip.presence
     issuing_state = issuing_state.to_s.strip.presence
@@ -44,11 +49,21 @@ class ContinuingEducationRegistration < ApplicationRecord
     current = professional_license
     person = event_registration.registrant
 
-    match = person.professional_licenses.where.not(id: current.id).find_by(number: number) if number
+    if license_id.present? && license_id != "new" && license_id.to_s != current&.id.to_s
+      picked = person.professional_licenses.find_by(id: license_id)
+      if picked
+        self.professional_license = picked
+        return
+      end
+    end
+
+    match = person.professional_licenses.where.not(id: current&.id).find_by(number: number) if number
     if match
       self.professional_license = match
     else
-      current.update!(number: number, kind: kind, issuing_state: issuing_state, expires_on: expires_on)
+      target = license_id == "new" ? person.professional_licenses.new : current
+      target.update!(number: number, kind: kind, issuing_state: issuing_state, expires_on: expires_on)
+      self.professional_license = target
     end
   end
 

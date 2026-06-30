@@ -1,6 +1,7 @@
 <%# CE details form fields (license type/number/state/expiry + hours + cost),
     shared by the new and edit pages. Renders inside a form_with block — `f` is the
     builder. Locals: f, license (may be nil on new), ce_registration, event. %>
+<% licenses = ce_registration.event_registration.registrant.professional_licenses.order(:kind, :number) %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
@@ -10,6 +11,21 @@
   </div>
 
   <div class="space-y-5 p-4">
+    <%# License picker — shown once the registrant holds a license. Pick one to use
+        it as-is, or "Create new license" to add one from the fields below. With no
+        license on file there's no picker and the fields create the first one. %>
+    <% if licenses.any? %>
+      <div class="w-full sm:w-80">
+        <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_professional_license_id">License</label>
+        <%= f.select :professional_license_id,
+              options_for_select(licenses.map { |l| [ l.name, l.id ] } + [ [ "Create new license", "new" ] ], license&.id),
+              {},
+              id: "continuing_education_registration_professional_license_id",
+              class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+        <p class="mt-1 text-xs text-gray-400">Pick an existing license to use it, or "Create new license" to add one from the fields below.</p>
+      </div>
+    <% end %>
+
     <div>
       <div class="flex flex-wrap gap-4">
         <div class="w-32">

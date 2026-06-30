@@ -8,6 +8,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
   # front. Hours/cost prefill from the event's offering.
   def new
     @ce_registration = @event_registration.continuing_education_registrations.build(
+      professional_license: @event_registration.registrant.professional_licenses.first,
       hours: @event_registration.event.ce_hours_offered,
       cost_cents: @event_registration.event.ce_hours_cost_cents
     )
@@ -98,7 +99,8 @@ class ContinuingEducationRegistrationsController < ApplicationController
     ce_registration.assign_license(number: params.dig(:continuing_education_registration, :license_number),
                                    kind: params.dig(:continuing_education_registration, :license_kind),
                                    issuing_state: params.dig(:continuing_education_registration, :license_issuing_state),
-                                   expires_on: params.dig(:continuing_education_registration, :license_expires_on))
+                                   expires_on: params.dig(:continuing_education_registration, :license_expires_on),
+                                   license_id: params.dig(:continuing_education_registration, :professional_license_id))
     ce_registration.hours = params.dig(:continuing_education_registration, :hours)
     cost = params.dig(:continuing_education_registration, :cost_dollars)
     ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
