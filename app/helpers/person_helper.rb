@@ -22,6 +22,9 @@ module PersonHelper
     full_name = display_name || person.try(:name) || person.to_s
     hover_title = [ full_name, subtitle ].compact_blank.join(" — ")
 
+    unconfirmed_email = person.user&.unconfirmed_email
+    show_email_change = unconfirmed_email.present? && allowed_to?(:show_email_change?, person)
+
     link_to person_path(person, **path_params),
             data: { turbo_prefetch: false }.merge(data),
             title: hover_title,
@@ -67,7 +70,16 @@ module PersonHelper
         class: "flex flex-col leading-tight text-left min-w-0"
       )
 
-      avatar + text_block
+      warning_tag = if show_email_change
+        content_tag(:span,
+                    tag.i(class: "fa-solid fa-triangle-exclamation"),
+                    class: "flex-shrink-0 ml-auto text-yellow-500",
+                    title: "Email change to #{unconfirmed_email} awaiting confirmation")
+      else
+        "".html_safe
+      end
+
+      avatar + text_block + warning_tag
     end
   end
 end
