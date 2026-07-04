@@ -197,11 +197,12 @@ module EventRegistrationServices
     # no stale free text lingers. Follows the same latest-wins / never-clobber-on-
     # blank contract as apply_value.
     def sync_agency_type(organization)
-      raw = field_value("agency_type")
+      raw = field_value("agency_type")&.strip
       return if raw.blank?
 
-      label, _separator, specified = raw.strip.partition(":")
+      label, _separator, specified = raw.partition(":")
       label = label.strip
+      return if label.blank?
       other_text = FormField.other_option?(label) ? specified.strip.presence : nil
       organization.update!(agency_type: label, agency_type_other: other_text)
     end
