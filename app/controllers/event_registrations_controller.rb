@@ -215,12 +215,7 @@ class EventRegistrationsController < ApplicationController
     @person = @event_registration.registrant
     organization = Organization.find(params[:organization_id])
 
-    AffiliationServices::CreateFromRegistration.call(
-      person: @person,
-      organization: organization,
-      job_title: submitted_position(@event_registration),
-      training_date: @event_registration.event.start_date
-    )
+    link_affiliations_for(@event_registration, organization)
 
     @event_registration.event_registration_organizations
       .find_or_create_by!(organization: organization)
@@ -248,12 +243,7 @@ class EventRegistrationsController < ApplicationController
     existing = Organization.where("LOWER(name) = ?", name.strip.downcase).first
     organization = existing || Organization.create!(name: name.strip, organization_status: OrganizationStatus.find_by(name: "Active"))
 
-    AffiliationServices::CreateFromRegistration.call(
-      person: @person,
-      organization: organization,
-      job_title: submitted_position(@event_registration),
-      training_date: @event_registration.event.start_date
-    )
+    link_affiliations_for(@event_registration, organization)
     @event_registration.event_registration_organizations.find_or_create_by!(organization: organization)
 
     notice = existing ? "#{organization.name} linked." : "#{organization.name} created and linked."
@@ -386,10 +376,8 @@ class EventRegistrationsController < ApplicationController
     return [] unless form
 
     field_ids = form.form_fields
-      .where(field_identifier: %w[agency_name agency_position])
+      .where(field_identifier: %w[agency_name agency_position agency_street agency_city agency_state agency_zip agency_country])
       .pluck(:field_identifier, :id).to_h
-    name_field_id = field_ids["agency_name"]
-    position_field_id = field_ids["agency_position"]
 
     entries = registration.registrant.form_submissions
       .where(form: form)
@@ -397,10 +385,18 @@ class EventRegistrationsController < ApplicationController
       .includes(:form_answers)
       .map do |submission|
         answers = submission.form_answers.index_by(&:form_field_id)
+        answer = ->(identifier) { (id = field_ids[identifier]) && answers[id]&.submitted_answer }
         {
           submission: submission,
-          org_name: name_field_id && answers[name_field_id]&.submitted_answer,
-          position: position_field_id && answers[position_field_id]&.submitted_answer
+          org_name: answer.call("agency_name"),
+          position: answer.call("agency_position"),
+          address: {
+            street_address: answer.call("agency_street"),
+            city: answer.call("agency_city"),
+            state: answer.call("agency_state"),
+            zip_code: answer.call("agency_zip"),
+            country: answer.call("agency_country")
+          }
         }
       end
 
@@ -430,5 +426,31 @@ class EventRegistrationsController < ApplicationController
     entries = registration_submission_entries(registration)
     primary = entries.find { |entry| entry[:org_name].present? } || entries.first
     primary && primary[:position]
+  end
+
+  # The org address fields the registrant typed on the same "primary" submission
+  # used for the org name/position, as attrs for OrganizationServices::UpsertAddress.
+  def submitted_agency_address(registration)
+    entries = registration_submission_entries(registration)
+    primary = entries.find { |entry| entry[:org_name].present? } || entries.first
+    primary && primary[:address] || {}
+  end
+
+  # Upsert the linked org's work address from the registrant's submission and
+  # create the job + facilitator affiliations linked to it. Shared by the
+  # select-existing and create-new org-linking actions.
+  def link_affiliations_for(registration, organization)
+    organization_address = OrganizationServices::UpsertAddress.call(
+      organization: organization,
+      **submitted_agency_address(registration)
+    )
+
+    AffiliationServices::CreateFromRegistration.call(
+      person: registration.registrant,
+      organization: organization,
+      job_title: submitted_position(registration),
+      training_date: registration.event.start_date,
+      organization_address: organization_address
+    )
   end
 end

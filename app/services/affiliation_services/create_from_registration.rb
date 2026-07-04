@@ -22,15 +22,16 @@ module AffiliationServices
   # (they may have been with the org for years before this training), and dating it
   # to registration would misrepresent that.
   class CreateFromRegistration
-    def self.call(person:, organization:, job_title: nil, training_date: nil)
-      new(person:, organization:, job_title:, training_date:).call
+    def self.call(person:, organization:, job_title: nil, training_date: nil, organization_address: nil)
+      new(person:, organization:, job_title:, training_date:, organization_address:).call
     end
 
-    def initialize(person:, organization:, job_title: nil, training_date: nil)
+    def initialize(person:, organization:, job_title: nil, training_date: nil, organization_address: nil)
       @person = person
       @organization = organization
       @job_title = job_title.presence&.strip
       @training_date = training_date
+      @organization_address = organization_address
     end
 
     def call
@@ -44,27 +45,48 @@ module AffiliationServices
 
     def create_job_affiliation
       return unless @job_title
-      return if active_or_pending_affiliation_with_title?(@job_title)
+
+      existing = active_or_pending_affiliations_with_title(@job_title)
+      return backfill_address(existing) if existing.exists?
 
       create_affiliation(@job_title, start_date: nil)
     end
 
     def create_facilitator_affiliation
-      return if active_or_pending_facilitator_affiliation?
+      existing = active_or_pending_facilitator_affiliations
+      return backfill_address(existing) if existing.exists?
 
       create_affiliation(Affiliation::FACILITATOR_TITLE, start_date: facilitator_start_date)
     end
 
+    # When we'd otherwise skip creating an affiliation because an active-or-pending
+    # one already exists, still link this registration's organization address onto
+    # any of those affiliations that don't have one yet. We only fill the blank —
+    # an address an admin set deliberately (via the affiliation address picker) is
+    # left untouched. No-op when this registration carried no organization address.
+    def backfill_address(affiliations)
+      return unless @organization_address
+
+      affiliations.where(organization_address_id: nil).find_each do |affiliation|
+        affiliation.update!(organization_address: @organization_address)
+      end
+    end
+
     def create_affiliation(title, start_date:)
-      @person.affiliations.create!(organization: @organization, title: title, start_date: start_date)
+      @person.affiliations.create!(
+        organization: @organization,
+        title: title,
+        start_date: start_date,
+        organization_address: @organization_address
+      )
     end
 
     def facilitator_start_date
       (@training_date || Date.current).to_date.beginning_of_month
     end
 
-    def active_or_pending_affiliation_with_title?(title)
-      @person.affiliations.active_or_pending.where(organization: @organization, title: title).exists?
+    def active_or_pending_affiliations_with_title(title)
+      @person.affiliations.active_or_pending.where(organization: @organization, title: title)
     end
 
     # Uses the model's canonical `facilitators` scope (exactly "Facilitator",
@@ -72,8 +94,8 @@ module AffiliationServices
     # the app on what counts as a facilitator affiliation. Counts pending
     # (future-dated) facilitator affiliations too, so registering for a second
     # upcoming training doesn't mint a duplicate.
-    def active_or_pending_facilitator_affiliation?
-      @person.affiliations.active_or_pending.facilitators.where(organization: @organization).exists?
+    def active_or_pending_facilitator_affiliations
+      @person.affiliations.active_or_pending.facilitators.where(organization: @organization)
     end
   end
 end

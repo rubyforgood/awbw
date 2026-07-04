@@ -729,6 +729,25 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
             .to contain_exactly("Facilitator")
         end
+
+        it "builds the org address from the submission and links the affiliations to it" do
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701", "agency_country" => "USA" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          address = organization.addresses.find_by(city: "Austin")
+          expect(address).to be_present
+          expect(address.country).to eq("USA")
+          expect(regular_user.person.affiliations.where(organization: organization).map(&:organization_address))
+            .to all(eq(address))
+        end
       end
 
       describe "POST /event_registrations/:id/create_organization" do
@@ -763,6 +782,27 @@ RSpec.describe "EventRegistrations", type: :request do
           organization = Organization.find_by(name: "Brand New Org")
           expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
             .to contain_exactly("Counselor", "Facilitator")
+        end
+
+        it "builds the new org's address from the submission and links the affiliations to it" do
+          create(:organization_status, name: "Active")
+          reg_form = create(:form, name: "Reg form")
+          name_field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_NAME_IDENTIFIER)
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
+          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post create_organization_event_registration_path(existing_registration)
+
+          organization = Organization.find_by(name: "Brand New Org")
+          address = organization.addresses.find_by(city: "Austin")
+          expect(address).to be_present
+          expect(regular_user.person.affiliations.where(organization: organization).map(&:organization_address))
+            .to all(eq(address))
         end
 
         it "links an existing org instead of creating a duplicate" do

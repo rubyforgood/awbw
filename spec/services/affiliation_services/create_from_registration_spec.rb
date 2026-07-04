@@ -82,6 +82,61 @@ RSpec.describe AffiliationServices::CreateFromRegistration do
     expect(titles).to contain_exactly("Counselor", "Facilitator")
   end
 
+  it "links every created affiliation to the given organization address" do
+    address = create(:address, addressable: organization)
+
+    described_class.call(person: person, organization: organization,
+                         job_title: "Counselor", organization_address: address)
+
+    linked = person.affiliations.where(organization: organization)
+    expect(linked.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+    expect(linked.map(&:organization_address)).to all(eq(address))
+  end
+
+  it "leaves the organization address nil when none is given" do
+    described_class.call(person: person, organization: organization, job_title: "Counselor")
+
+    expect(person.affiliations.where(organization: organization).map(&:organization_address)).to all(be_nil)
+  end
+
+  describe "backfilling the organization address onto an affiliation that already exists" do
+    let(:address) { create(:address, addressable: organization) }
+
+    it "links the address to an existing job affiliation that has none, instead of skipping it" do
+      job = create(:affiliation, person: person, organization: organization, title: "Counselor", organization_address: nil)
+
+      described_class.call(person: person, organization: organization,
+                           job_title: "Counselor", organization_address: address)
+
+      expect(job.reload.organization_address).to eq(address)
+    end
+
+    it "links the address to an existing facilitator affiliation that has none" do
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: nil)
+
+      described_class.call(person: person, organization: organization, organization_address: address)
+
+      expect(facilitator.reload.organization_address).to eq(address)
+    end
+
+    it "does not overwrite an address the affiliation already has" do
+      other = create(:address, addressable: organization)
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: other)
+
+      described_class.call(person: person, organization: organization, organization_address: address)
+
+      expect(facilitator.reload.organization_address).to eq(other)
+    end
+
+    it "leaves the existing affiliation's address nil when no address is given" do
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", organization_address: nil)
+
+      described_class.call(person: person, organization: organization)
+
+      expect(facilitator.reload.organization_address).to be_nil
+    end
+  end
+
   it "leaves the job affiliation without a start date" do
     described_class.call(person: person, organization: organization, job_title: "Counselor")
 
