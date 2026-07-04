@@ -47,8 +47,13 @@
     <% end %>
   </div>
 
-  <%# Row 2: organization + comments + location filters, and the clear action. %>
+  <%# Row 2: readiness + organization + comments + location filters, and the clear action. %>
   <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mt-4">
+    <%# Mirrors the far-right Status column: Not ready → Ready → Certificate pending → Completed. %>
+    <%= render "events/filter_select", param: :readiness, label: "Status",
+          options: [ [ "Not ready", "not_ready" ], [ "Ready", "ready" ], [ "Certificate pending", "certificate_due" ], [ "Completed", "completed" ] ],
+          selected: params[:readiness], blank: "All statuses", field_class: field_class %>
+
     <%= render "events/filter_select", param: :org_status, label: "Organization",
           options: [ [ "Pending", "pending" ], [ "Linked", "linked" ] ],
           selected: params[:org_status], blank: "All organizations", field_class: field_class %>
