@@ -277,7 +277,7 @@ class User < ApplicationRecord
 
   def after_confirmation
     super
-    track_auth_event("auth.email_confirmed")
+    track_auth_event("auth.email_confirmed", { changes: { email: { after: email } } })
   end
 
   def after_lock
