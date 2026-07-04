@@ -14,7 +14,7 @@ class MonthlyReportsController < ApplicationController
       @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
       compute_participant_totals(filtered, @monthly_reports)
 
-      render :index_lazy
+      render :monthly_reports_results
     else
       base_scope = authorized_scope(MonthlyReport.all)
       @monthly_reports_unpaginated = base_scope.search(params)

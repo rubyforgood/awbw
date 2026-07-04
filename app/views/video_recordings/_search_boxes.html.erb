@@ -1,8 +1,8 @@
 <!-- Filters -->
-<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg" data-controller="collection">
+<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
   <%= form_with url: video_recordings_path,
                 method: :get,
-                data: { turbo_frame: "video_recordings_results", controller: "searchable-checkbox" },
+                data: { turbo_frame: "video_recordings_results", controller: "collection searchable-checkbox" },
                 autocomplete: "off",
                 local: false,
                 class: "space-y-4" do |f| %>
@@ -15,8 +15,7 @@
                          value: params[:search],
                          placeholder: "e.g. Profile, Workshop search…",
                          class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
-                                   focus:ring-blue-500 focus:border-blue-500",
-                         oninput: "this.form.requestSubmit()" %>
+                                   focus:ring-blue-500 focus:border-blue-500" %>
       </div>
 
       <% if @video_type != "instructional" %>
@@ -27,7 +26,6 @@
 
           <select id="video_type"
                   name="video_type"
-                  onchange="this.form.requestSubmit()"
                   class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2
                          focus:ring-blue-500 focus:border-blue-500">
             <option value="all" <%= "selected" if @video_type == "all" %>>All videos</option>

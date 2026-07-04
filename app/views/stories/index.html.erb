@@ -20,11 +20,11 @@
 
     <%= render "search_boxes" %>
 
-    <%= render "story_count" %>
+    <%= render "stories_count" %>
 
     <% result_src = stories_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag "story_results", src: result_src do %>
+    <%= turbo_frame_tag "stories_results", src: result_src do %>
       <%= render "results_skeleton" %>
     <% end %>
   </div>

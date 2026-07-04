@@ -1,4 +1,4 @@
-<%= turbo_frame_tag :workshop_results do %>
+<%= turbo_frame_tag :workshops_results do %>
   <%= turbo_stream.replace("filters_applied", partial: "filters_applied") %>
 
   <%= turbo_stream.replace("workshops_count", partial: "workshops_count") %>

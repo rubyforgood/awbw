@@ -1,4 +1,4 @@
-<%= turbo_stream.replace("story_count", partial: "story_count") %>
+<%= turbo_stream.replace("stories_count", partial: "stories_count") %>
 <%
   sort_base = params.permit(:title, :query, :published, :year, :number_of_items_per_page).to_h.symbolize_keys
   sort_icon = ->(column) {
@@ -10,7 +10,7 @@
   }
   sort_link = ->(column, label) {
     link_to stories_path(sort_base.merge(sort: column, direction: (@sort == column && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-            data: { turbo_frame: "story_results" },
+            data: { turbo_frame: "stories_results" },
             class: "inline-flex items-center gap-1 text-gray-700 hover:text-gray-900" do
       concat label
       concat content_tag(:i, "", class: "fa-solid #{sort_icon.call(column)} text-xs opacity-70")

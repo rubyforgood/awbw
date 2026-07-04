@@ -35,7 +35,7 @@ RSpec.describe "video_recordings/index", type: :view do
   end
 end
 
-RSpec.describe "video_recordings/index_lazy", type: :view do
+RSpec.describe "video_recordings/video_recordings_results", type: :view do
   let(:admin) { create(:user, :admin) }
 
   before(:each) do
