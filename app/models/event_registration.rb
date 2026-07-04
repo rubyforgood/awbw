@@ -269,14 +269,22 @@ class EventRegistration < ApplicationRecord
     status.in?(%w[ attended incomplete_attendance no_show ])
   end
 
-  # Safe to delete only when removing the record would not orphan financial
-  # data or erase attendance history. Allocations tie the registration to a
-  # financial source of any kind (payments, scholarships, and others) and have
-  # no dependent: :destroy, so a registration with any allocation must be kept —
-  # even a reverted payment leaves its (now net-zero) allocation rows — as must
-  # one with an attendance outcome (attended, incomplete, or no-show).
+  # Transferred out to another event. The trail to where the registrant went is
+  # history worth keeping, so it blocks deletion. Transferred_in is deliberately
+  # excluded: it's an ordinary active registration here, and the source event's
+  # transferred_out record already preserves the transfer trail.
+  def transferred_out?
+    status == "transferred_out"
+  end
+
+  # Safe to delete only when removing the record would not orphan financial data
+  # or erase history. Allocations tie the registration to a financial source of
+  # any kind (payments, scholarships, and others) and have no dependent: :destroy,
+  # so a registration with any allocation must be kept — even a reverted payment
+  # leaves its (now net-zero) allocation rows. An attendance outcome (attended,
+  # incomplete, or no-show) or a transfer out is likewise history worth keeping.
   def deletable?
-    !allocations.exists? && !attendance_recorded?
+    !allocations.exists? && !attendance_recorded? && !transferred_out?
   end
 
   def checked_in?

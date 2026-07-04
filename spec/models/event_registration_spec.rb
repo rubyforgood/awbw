@@ -137,6 +137,17 @@ RSpec.describe EventRegistration, type: :model do
       # Cancelling is a pre-event withdrawal, not an attendance outcome, so it stays deletable.
       expect(create(:event_registration, status: "cancelled")).to be_deletable
     end
+
+    it "returns false for a transferred-out registration" do
+      # The trail to the destination event is history worth keeping.
+      expect(create(:event_registration, status: "transferred_out")).not_to be_deletable
+    end
+
+    it "returns true for a transferred-in registration with no allocations" do
+      # Transferred-in is an ordinary active registration here; the source event's
+      # transferred_out record preserves the transfer history.
+      expect(create(:event_registration, status: "transferred_in")).to be_deletable
+    end
   end
 
   describe "#cancel!" do
