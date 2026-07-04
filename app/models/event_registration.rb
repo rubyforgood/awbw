@@ -270,10 +270,11 @@ class EventRegistration < ApplicationRecord
   end
 
   # Safe to delete only when removing the record would not orphan financial
-  # data or erase attendance history. Allocations (payments and scholarships)
-  # have no dependent: :destroy, so a registration with any allocation must be
-  # kept — even a reverted payment leaves its (now net-zero) allocation rows —
-  # as must one with an attendance outcome (attended, incomplete, or no-show).
+  # data or erase attendance history. Allocations tie the registration to a
+  # financial source of any kind (payments, scholarships, and others) and have
+  # no dependent: :destroy, so a registration with any allocation must be kept —
+  # even a reverted payment leaves its (now net-zero) allocation rows — as must
+  # one with an attendance outcome (attended, incomplete, or no-show).
   def deletable?
     !allocations.exists? && !attendance_recorded?
   end

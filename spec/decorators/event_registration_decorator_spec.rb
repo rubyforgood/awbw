@@ -13,7 +13,7 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       create(:allocation, source: payment, allocatable: reg, amount: 1000)
 
       reason = reg.decorate.deletion_blocked_reason
-      expect(reason).to include("payment or scholarship records")
+      expect(reason).to include("financial records")
       expect(reason).to include("reverted payments still count")
     end
 
@@ -25,7 +25,7 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       allocation.update!(reverted_id: revert.id)
 
       expect(reg.decorate.deletable?).to be(false)
-      expect(reg.decorate.deletion_blocked_reason).to include("payment or scholarship records")
+      expect(reg.decorate.deletion_blocked_reason).to include("financial records")
     end
 
     it "explains recorded attendance" do
@@ -48,7 +48,7 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       create(:allocation, source: payment, allocatable: reg, amount: 1000)
 
       reason = reg.decorate.deletion_blocked_reason
-      expect(reason).to include("payment or scholarship records")
+      expect(reason).to include("financial records")
       expect(reason).to include("attendance on record")
     end
   end

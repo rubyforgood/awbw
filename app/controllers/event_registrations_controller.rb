@@ -277,7 +277,7 @@ class EventRegistrationsController < ApplicationController
     authorize! @event_registration
     event = @event_registration.event
     if !@event_registration.deletable?
-      flash[:alert] = "This registration can't be deleted because it has payments, scholarships, or attendance on record."
+      flash[:alert] = "This registration can't be deleted because it has financial records (payments, scholarships, or the like) or attendance on record."
     elsif @event_registration.destroy
       flash[:notice] = "Registration deleted."
     else

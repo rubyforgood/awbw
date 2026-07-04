@@ -289,7 +289,7 @@ RSpec.describe "EventRegistrations", type: :request do
         get edit_event_registration_path(existing_registration)
 
         expect(response.body).not_to include("fa-trash-can")
-        expect(response.body).to include("payment or scholarship records")
+        expect(response.body).to include("financial records")
         expect(response.body).to include("reverted payments still count")
       end
     end
