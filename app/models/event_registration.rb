@@ -21,6 +21,7 @@ class EventRegistration < ApplicationRecord
   accepts_nested_attributes_for :registrant
 
   before_create :generate_slug
+  after_update :release_scholarships, if: :status_changed_to_cancelled?
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance transferred_in ].freeze
@@ -253,16 +254,11 @@ class EventRegistration < ApplicationRecord
     status.in?(ACTIVE_STATUSES)
   end
 
-  # Public self-service cancellation: mark the registration cancelled and release
-  # any scholarship award back to its grant by zeroing the scholarship amount
-  # (which syncs its allocation to 0 via Scholarship#sync_allocation_amount). The
-  # allocation rows remain, so financial history is preserved and the record stays
-  # non-deletable. Setting status fires the cancellation emails via after_commit.
+  # Cancel this registration. Releasing scholarships and sending cancellation
+  # emails hang off the status-change callbacks, so this and every other path to
+  # "cancelled" (e.g. the admin edit form's status dropdown) behave identically.
   def cancel!
-    transaction do
-      scholarships.each { |scholarship| scholarship.update!(amount_cents: 0) }
-      update!(status: "cancelled")
-    end
+    update!(status: "cancelled")
   end
 
   def attendance_recorded?
@@ -509,6 +505,14 @@ class EventRegistration < ApplicationRecord
 
   def status_changed_to_cancelled?
     saved_change_to_status? && status == "cancelled"
+  end
+
+  # On cancellation, release any awarded scholarship back to its grant by zeroing
+  # the amount (Scholarship#sync_allocation_amount zeroes the allocation to match).
+  # scholarship_requested is left set on purpose: reactivating won't re-award, but
+  # the registration should still reflect that a scholarship was requested.
+  def release_scholarships
+    scholarships.each { |scholarship| scholarship.update!(amount_cents: 0) }
   end
 
   def send_cancellation_emails

@@ -143,16 +143,44 @@ RSpec.describe EventRegistration, type: :model do
       reg.cancel!
       expect(reg.reload.status).to eq("cancelled")
     end
+  end
 
-    it "zeroes any scholarship award and its allocation" do
-      reg = create(:event_registration, event: create(:event, cost_cents: 50_000), status: "registered")
+  describe "releasing scholarships when a registration is cancelled" do
+    # Returns a registered registration on a costed event with a $500 scholarship
+    # awarded against it (scholarship_requested flagged, as the real award flow does).
+    def registration_with_scholarship
+      reg = create(:event_registration, event: create(:event, cost_cents: 50_000),
+                                         status: "registered", scholarship_requested: true)
       scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 50_000)
       allocation = create(:allocation, source: scholarship, allocatable: reg, amount: 50_000)
+      [ reg, scholarship, allocation ]
+    end
+
+    it "zeroes the scholarship award and its allocation via #cancel!" do
+      reg, scholarship, allocation = registration_with_scholarship
 
       reg.cancel!
 
       expect(scholarship.reload.amount_cents).to eq(0)
       expect(allocation.reload.amount).to eq(0)
+    end
+
+    it "zeroes the scholarship on any transition to cancelled (e.g. admin edit form)" do
+      reg, scholarship, _allocation = registration_with_scholarship
+
+      reg.update!(status: "cancelled")
+
+      expect(scholarship.reload.amount_cents).to eq(0)
+    end
+
+    it "keeps scholarship_requested set and does not re-award when reactivated" do
+      reg, scholarship, _allocation = registration_with_scholarship
+
+      reg.cancel!
+      reg.update!(status: "registered")
+
+      expect(reg.reload.scholarship_requested).to be(true)
+      expect(scholarship.reload.amount_cents).to eq(0)
     end
   end
 

@@ -378,6 +378,16 @@ RSpec.describe "EventRegistrations", type: :request do
         expect { unrequest(existing_registration) }
           .not_to change { existing_registration.scholarships.count }
       end
+
+      it "zeroes a funded scholarship when the status is set to cancelled" do
+        scholarship = link_scholarship(existing_registration, amount_cents: 1000)
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { status: "cancelled" } }
+
+        expect(existing_registration.reload.status).to eq("cancelled")
+        expect(scholarship.reload.amount_cents).to eq(0)
+      end
     end
 
     describe "PATCH /event_registrations/:id logging a notification" do
