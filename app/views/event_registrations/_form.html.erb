@@ -143,9 +143,9 @@
               matrix. Toggling a day rolls the status select above forward/back
               (see the attendance-status controller), and the boxes save with the
               form. ---- %>
-          <div class="inline-flex items-center gap-2">
+          <div class="ml-auto flex flex-col items-end gap-1">
             <span class="text-gray-400">Days attended</span>
-            <div class="flex flex-wrap items-center gap-1.5">
+            <div class="flex flex-wrap items-center justify-end gap-1.5">
               <% (1..f.object.event.day_count).each do |day| %>
                 <label class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-medium cursor-pointer transition-colors border-gray-200 text-gray-500 has-[:checked]:border-green-300 has-[:checked]:bg-green-50 has-[:checked]:text-green-700">
                   <%= f.check_box "completed_day_#{day}",
