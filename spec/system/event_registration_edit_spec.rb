@@ -220,6 +220,8 @@ RSpec.describe "Event registration edit page", type: :system do
 
       click_on "Save changes"
 
+      # Wait for the save round-trip to land before reading the database.
+      expect(page).to have_current_path(registrants_event_path(event))
       expect(registration.reload.status).to eq("attended")
       expect(registration.completed_day_count).to eq(3)
     end
