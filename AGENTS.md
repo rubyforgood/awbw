@@ -206,7 +206,11 @@ end
 
 ### Affiliations
 
-- `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation
+- `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation. Accepts an optional `organization_address:` and sets it on every affiliation it creates (the registrant's typed agency address, upserted onto the org); when an affiliation already exists and is skipped, it backfills that address onto the existing one only if it has none (an admin-set address is never overwritten)
+
+### Organizations
+
+- `OrganizationServices::UpsertAddress` — Find-or-create an organization's "work" address from a registrant's submitted agency fields (street/city/state/zip/country). Updates the matching city/state address in place, else adds a new one; never demotes the org's existing primary (a registrant's address becomes primary only when the org has none yet). Returns nil when no city is given. Shared by `PublicRegistration` and the admin org-linking actions so both build the org address identically before linking the affiliation to it
 
 ### Notifications
 
