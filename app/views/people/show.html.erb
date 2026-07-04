@@ -96,7 +96,7 @@
               </span>
             <% end %>
             <% if @person.user&.unconfirmed_email.present? && allowed_to?(:show_email_change?, @person) %>
-              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-yellow-50 border border-yellow-300 rounded-full text-xs font-medium text-yellow-800" title="Change to <%= @person.user.unconfirmed_email %> awaiting confirmation. Only you and admins can see this — it is not shown on your public profile.">
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-yellow-50 border border-yellow-300 rounded-full text-xs font-medium text-yellow-800" title="Change to <%= @person.user.unconfirmed_email %> awaiting confirmation. Only the person and admins can see this; it is not shown on the public profile.">
                 <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
                 Email change pending
                 <span class="inline-flex items-center gap-1 pl-1.5 ml-0.5 border-l border-yellow-300 text-yellow-700 italic">
