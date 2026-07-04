@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~78 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~29 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~30 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
@@ -201,6 +201,7 @@ end
 
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
+- `EventRegistrationReadiness` — Computes a registration's lifecycle `status` (`:not_ready` → `:ready` → `:certificate_due` → `:completed`) from a pre-event "event ready" checklist, a post-event "completion work" checklist (attendance, scholarship tasks), and certificate delivery, returning the specific outstanding reasons. Reads payment/certificate state via `Registerable` (`paid_in_full?`, `certificate_sent?`) on both the registration and its `continuing_education_registrations`. Drives the registrants roster's single far-right Status badge column (with a short reason under "Not ready" and a cert-type note under "Certificate pending") and its matching filter
 - `ReminderRecipientFilter` — Decides which event registrations stay checked on the bulk reminder page given the admin's filters (matches in memory, returns matching ids)
 - `MagicTicketCallouts` — Code-defined ("magic") ticket callout cards (payment, certificate, scholarship, CE hours, art supplies, forms, handouts, portal, videoconference, FAQ), each with its own visibility rule; rendered through the same `_callout_card` partial as admin-configured `RegistrationTicketCallout`s. Their public show pages live under `app/views/events/callouts/` and are served by `Events::CalloutsController` (slug-authorized, no login)
 
@@ -351,7 +352,7 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 | `spec/routing/` | ~13 | Route definition tests |
 | `spec/policies/` | ~9 | Authorization policy tests |
 | `spec/decorators/` | ~10 | Decorator tests |
-| `spec/services/` | ~12 | Service object tests |
+| `spec/services/` | ~13 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
 | `spec/helpers/` | ~1 | Helper tests |
 | `spec/factories/` | ~53 | FactoryBot factory definitions |

@@ -82,7 +82,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:comments, :organizations, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, :contact_methods, { avatar_attachment: :blob }, { affiliations: :organization } ])
+      .includes(:comments, :organizations, :allocations, :scholarships, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, :contact_methods, { avatar_attachment: :blob }, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
@@ -107,9 +107,17 @@ class EventsController < ApplicationController
       scope = scope.active if @status_filter == "active"
     end
 
-    @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
+    @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name")).to_a
     @dashboard = EventDashboard.new(@event)
     @ce_eligible = @event.ce_eligible?
+
+    @submitted_org_names = submitted_org_names_for(@event_registrations)
+    @readiness = @event_registrations.to_h do |registration|
+      [ registration.id, EventRegistrationReadiness.new(registration) ]
+    end
+    if params[:readiness].in?(%w[ not_ready ready certificate_due completed ])
+      @event_registrations.select! { |r| @readiness[r.id].status.to_s == params[:readiness] }
+    end
 
     emails = @event_registrations.map { |r| r.registrant.preferred_email&.downcase }.compact
     @duplicate_emails = emails.tally.select { |_, count| count > 1 }.keys.to_set
@@ -539,6 +547,21 @@ class EventsController < ApplicationController
       .where(allocatable_type: "EventRegistration", allocatable_id: registrations.ids)
       .group(:allocatable_id)
       .sum(:amount)
+  end
+
+  # Maps registrant person_id => the organization name they typed on the
+  # registration form (the `agency_name` answer), in one batch query. Drives both
+  # the roster's Pending/None org chip and the readiness "Organization not linked"
+  # check, so both read the same resolved answer.
+  def submitted_org_names_for(registrations)
+    registration_form = @event.registration_form
+    field = registration_form&.form_fields&.find_by(field_identifier: "agency_name")
+    return {} unless field
+
+    FormAnswer.joins(:form_submission)
+      .where(form_submissions: { person_id: registrations.map(&:registrant_id), form_id: registration_form.id }, form_field_id: field.id)
+      .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
+      .to_h
   end
 
   def event_registrations_csv_string
