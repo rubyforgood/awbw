@@ -5,6 +5,15 @@ class GrantsController < ApplicationController
   def index
     authorize!
 
+    # Scoped to a single donor when linked from a person/org edit page. Resolve
+    # the donor from a matching grant (avoids reflection on the type param) so the
+    # header banner can name it; filter_grants scopes the rows to the same donor.
+    if params[:donor_id].present? && Grant::DONOR_TYPES.include?(params[:donor_type])
+      @donor = authorized_scope(Grant.all)
+                 .where(donor_id: params[:donor_id], donor_type: params[:donor_type])
+                 .first&.donor
+    end
+
     # The full page renders only the header, filters, and an empty results frame;
     # the frame's src request (turbo_frame_request?) loads the filtered rows.
     if turbo_frame_request?
@@ -96,6 +105,7 @@ class GrantsController < ApplicationController
     end
 
     scope = scope.where(donor_type: params[:donor_type]) if Grant::DONOR_TYPES.include?(params[:donor_type])
+    scope = scope.where(donor_id: params[:donor_id]) if params[:donor_id].present?
 
     case params[:tasks]
     when "completed" then scope.all_tasks_completed

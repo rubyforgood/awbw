@@ -258,7 +258,9 @@ module ApplicationHelper
     workshops:           "fa-chalkboard-user",
     resources:           "fa-book",
     scholarships:        "fa-graduation-cap",
-    notifications:       "fa-bell"
+    notifications:       "fa-bell",
+    grants:              "fa-hand-holding-dollar",
+    form_submissions:    "fa-file-signature"
   }.freeze
 
   # Themed card-style link to a filtered index. The collection drives the

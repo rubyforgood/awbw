@@ -118,6 +118,22 @@ RSpec.describe "/grants", type: :request do
         expect(response.body).to include("Has outstanding")
         expect(response.body).not_to include("All done")
       end
+
+      it "scopes to a single donor via donor_id and names it in the banner" do
+        donor = create(:person, first_name: "Dana", last_name: "Donor")
+        create(:grant, name: "Dana Fund", donor: donor)
+        create(:grant, name: "Other Fund", donor: create(:organization, name: "Big Org"))
+
+        # Banner renders on the full page (donor resolved in the non-frame branch).
+        get grants_url(donor_id: donor.id, donor_type: "Person")
+        expect(response.body).to include("Filtered to")
+        expect(response.body).to include("Dana Donor")
+
+        # Rows are scoped to that donor inside the results frame.
+        get grants_url(donor_id: donor.id, donor_type: "Person"), headers: frame_headers
+        expect(response.body).to include("Dana Fund")
+        expect(response.body).not_to include("Other Fund")
+      end
     end
 
     describe "GET /show" do

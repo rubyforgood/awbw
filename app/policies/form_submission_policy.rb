@@ -1,5 +1,9 @@
 class FormSubmissionPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
+  def index?
+    admin?
+  end
+
   def show?
     admin?
   end

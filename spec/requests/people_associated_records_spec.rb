@@ -6,11 +6,13 @@ RSpec.describe "Person edit associated records", type: :request do
   before { sign_in admin }
 
   describe "GET /people/:id/edit" do
-    it "links to the person's filtered registrations, workshop logs, scholarships, and notifications" do
+    it "links to the person's filtered registrations, workshop logs, scholarships, grants, form submissions, and notifications" do
       person = create(:person)
       create(:event_registration, registrant: person)
       create(:workshop_log, created_by: person.user)
       create(:scholarship, recipient: person)
+      create(:grant, donor: person)
+      create(:form_submission, person: person)
       create(:notification, recipient_email: person.preferred_email)
 
       get edit_person_path(person)
@@ -20,6 +22,8 @@ RSpec.describe "Person edit associated records", type: :request do
       expect(response.body).to include(event_registrations_path(registrant_id: person.id))
       expect(response.body).to include(workshop_logs_person_path(person))
       expect(response.body).to include(scholarships_path(recipient_id: person.id))
+      expect(response.body).to include(CGI.escapeHTML(grants_path(donor_id: person.id, donor_type: "Person")))
+      expect(response.body).to include(form_submissions_path(person_id: person.id))
       expect(response.body).to include(notifications_path(email: person.preferred_email))
     end
   end

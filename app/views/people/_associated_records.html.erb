@@ -5,5 +5,7 @@
   <li><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
   <li><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
   <li><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
+  <li><%= index_button person.grants, params: { donor_id: person.id, donor_type: "Person" } %></li>
+  <li><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
   <li><%= index_button notifications, params: { email: email } %></li>
 </ul>
