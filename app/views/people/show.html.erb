@@ -95,6 +95,16 @@
                 📧 <!--email_off--><%= mail_to email, email, class: "text-blue-600 hover:underline" %><!--email_on-->
               </span>
             <% end %>
+            <% if @person.user&.unconfirmed_email.present? && allowed_to?(:show_email_change?, @person) %>
+              <span class="inline-flex items-center gap-2 px-2 py-0.5 bg-yellow-50 border border-yellow-300 rounded-full text-xs font-medium text-yellow-800" title="Change to <%= @person.user.unconfirmed_email %> awaiting confirmation. Only the person and admins can see this; it is hidden from other profile visitors.">
+                <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+                Email change to <strong class="font-semibold"><%= @person.user.unconfirmed_email %></strong> pending
+                <span class="inline-flex items-center gap-1 text-yellow-700 italic">
+                  <i class="fa-solid fa-eye-slash"></i>
+                  Private
+                </span>
+              </span>
+            <% end %>
           <% end %>
           <% phone = @person.phone_number || @person.user&.phone %>
           <% if @person.profile_show_phone? && phone.present? %>
