@@ -48,6 +48,8 @@
 
               <% if dup[:blocked] %>
                 <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">exact match</span>
+              <% elsif dup[:match_type] == "approximate" %>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">approximate match</span>
               <% else %>
                 <% if dup[:name_match] %>
                   <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700">name match</span>
@@ -55,7 +57,7 @@
                 <% if dup[:match_type] == "nickname" %>
                   <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-700">similar name</span>
                 <% end %>
-                <% if %w[email approximate].include?(dup[:match_type]) %>
+                <% if dup[:match_type] == "email" %>
                   <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">email match</span>
                 <% end %>
               <% end %>
@@ -83,7 +85,7 @@
         </p>
       <% elsif @duplicates.any? { |d| d[:match_type] == "approximate" } %>
         <p class="text-sm text-orange-600 font-medium mb-6">
-          A person with this name has a matching secondary or user email.
+          A person with this name has a matching secondary or user email. You can still create them if this is a different person.
         </p>
       <% end %>
 
@@ -94,7 +96,7 @@
       <% end %>
 
       <div class="flex flex-col items-center gap-3">
-        <% shareable_url = check_duplicates_people_url(first_name: @first_name, last_name: @last_name, email: @email) %>
+        <% shareable_url = check_duplicates_people_url(first_name: @first_name, last_name: @last_name, email: @email, legal_first_name: @legal_first_name, email_2: @email_2) %>
 
         <%= mail_to "",
               "Ask a colleague",
