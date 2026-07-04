@@ -1360,6 +1360,27 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Attending")
     end
 
+    it "shows the staffer's real-job organization on their card" do
+      job_org = create(:organization, name: "County Health")
+      create(:affiliation, person: staff_member, organization: job_org, title: "Social Worker")
+      create(:affiliation, person: staff_member, organization: job_org, title: "Facilitator")
+      create(:event_staff, event: public_event, person: staff_member)
+
+      get staff_event_path(public_event)
+
+      expect(response.body).to include("County Health")
+    end
+
+    it "falls back to the facilitator org when the staffer has no separate job affiliation" do
+      facilitator_org = create(:organization, name: "Prevail")
+      create(:affiliation, person: staff_member, organization: facilitator_org, title: "Facilitator")
+      create(:event_staff, event: public_event, person: staff_member)
+
+      get staff_event_path(public_event)
+
+      expect(response.body).to include("Prevail")
+    end
+
     context "when the event has ended" do
       let(:ended_event) { create(:event, :published, :ended) }
 
@@ -1505,19 +1526,24 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Mark tasks complete")
       end
 
-      it "shows the non-facilitator affiliation's title and linked organization, excluding facilitator roles" do
-        org = create(:organization, name: "Safe Harbor of Sheboygan")
-        create(:affiliation, person: applicant, organization: org,
-                             title: "Prevention, Education, and Outreach Specialist", start_date: 1.year.ago)
-        create(:affiliation, person: applicant, organization: create(:organization, name: "Facilitator Org"),
+      it "shows the program org (from the facilitator affiliation) with its city/state and the real-job title" do
+        # A recipient holds two affiliations to the same org: their real job and
+        # their AWBW Facilitator role. The header shows the program org + its
+        # city/state (facilitator side) and the job title (real-job side).
+        program_org = create(:organization, name: "Safe Harbor of Sheboygan")
+        create(:address, addressable: program_org, city: "Sheboygan", state: "WI")
+        create(:affiliation, person: applicant, organization: program_org,
                              title: "Facilitator", start_date: 1.year.ago)
+        create(:affiliation, person: applicant, organization: program_org,
+                             title: "Prevention, Education, and Outreach Specialist", start_date: 1.year.ago)
 
         get recipients_event_path(event)
 
-        expect(response.body).to include("Prevention, Education, and Outreach Specialist")
         expect(response.body).to include("Safe Harbor of Sheboygan")
-        expect(response.body).to include(organization_path(org))
-        expect(response.body).not_to include("Facilitator Org")
+        expect(response.body).to include(organization_path(program_org))
+        expect(response.body).to include("Sheboygan, WI")
+        expect(response.body).to include("Prevention, Education, and Outreach Specialist")
+        expect(response.body).not_to include("Facilitator")
       end
 
       it "excludes registrants who did not request a scholarship" do

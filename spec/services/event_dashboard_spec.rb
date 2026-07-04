@@ -486,6 +486,25 @@ RSpec.describe EventDashboard do
         expect(shoutout.organization).to eq(org)
       end
 
+      it "prefers the real-job affiliation's org over the AWBW Facilitator role" do
+        job_org = create(:organization, name: "County Health")
+        opt_in(embedded_applicant, text: "Honored to serve.")
+        create(:affiliation, person: embedded_applicant, organization: org, title: "Facilitator")
+        create(:affiliation, person: embedded_applicant, organization: job_org, title: "Social Worker")
+
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == embedded_applicant }
+        expect(shoutout.organization).to eq(job_org)
+      end
+
+      it "falls back to the registration's snapshotted org when the recipient has no affiliations" do
+        opt_in(separate_applicant, text: "Art has been my way through.")
+        registration = EventRegistration.find_by(event: event, registrant: separate_applicant)
+        create(:event_registration_organization, event_registration: registration, organization: org)
+
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == separate_applicant }
+        expect(shoutout.organization).to eq(org)
+      end
+
       it "exposes the registrant's primary sector and age group" do
         age_range = create(:category_type, name: "AgeRange")
         embedded_applicant.sectorable_items.create!(sector: create(:sector, name: "Sexual Assault"), is_primary: true)
