@@ -131,6 +131,9 @@ class EventRegistrationsController < ApplicationController
       @event_registration.update(fee_note: params[:value])
     elsif EventRegistration::DAY_FIELDS.include?(@field)
       @event_registration.update(@field => completed)
+      # Toggling a day rolls the attendance status forward/back (registered →
+      # incomplete_attendance → attended). Flag it so the badge re-renders too.
+      @status_synced = @event_registration.sync_attendance_status_to_days!
     elsif EventRegistration::CHECKLIST_STEPS.key?(@field)
       toggle_checklist_step(@field, completed)
       @event_registration.checklist_completions.reload
