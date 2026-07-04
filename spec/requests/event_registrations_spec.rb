@@ -274,6 +274,24 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("name=\"event_registration[expected_payment_method]\"")
         expect(response.body).to include("<option selected=\"selected\" value=\"Check\">Check</option>")
       end
+
+      it "shows a Delete button for a deletable registration" do
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("fa-trash-can")
+        expect(response.body).not_to include("reverted payments still count")
+      end
+
+      it "hides Delete and explains why for a registration with payment records" do
+        payment = create(:payment, person: regular_user.person, amount_cents: 1000, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: existing_registration, amount: 1000)
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).not_to include("fa-trash-can")
+        expect(response.body).to include("payment or scholarship records")
+        expect(response.body).to include("reverted payments still count")
+      end
     end
 
     describe "PATCH /event_registrations/:id" do

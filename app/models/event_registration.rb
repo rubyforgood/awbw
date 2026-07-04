@@ -253,12 +253,17 @@ class EventRegistration < ApplicationRecord
     status.in?(ACTIVE_STATUSES)
   end
 
+  def attendance_recorded?
+    status.in?(%w[ attended incomplete_attendance ])
+  end
+
   # Safe to delete only when removing the record would not orphan financial
   # data or erase attendance history. Allocations (payments and scholarships)
   # have no dependent: :destroy, so a registration with any allocation must be
-  # kept, as must one with attendance (attended or incomplete) on record.
+  # kept — even a reverted payment leaves its (now net-zero) allocation rows —
+  # as must one with attendance (attended or incomplete) on record.
   def deletable?
-    !allocations.exists? && !status.in?(%w[ attended incomplete_attendance ])
+    !allocations.exists? && !attendance_recorded?
   end
 
   def checked_in?

@@ -444,6 +444,11 @@
           <i class="fa-solid fa-trash-can"></i>
           Delete
         <% end %>
+      <% elsif allowed_to?(:destroy?, f.object) %>
+        <span class="inline-flex max-w-md items-start gap-2 text-sm text-gray-500">
+          <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-gray-400"></i>
+          <%= f.object.decorate.deletion_blocked_reason %>
+        </span>
       <% end %>
 
       <% cancel_path = case params[:return_to]
