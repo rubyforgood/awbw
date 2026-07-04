@@ -127,12 +127,14 @@ RSpec.describe EventRegistration, type: :model do
       expect(reg).not_to be_deletable
     end
 
-    it "returns false when the registration has attendance on record" do
+    it "returns false when the registration has an attendance outcome on record" do
       expect(create(:event_registration, status: "attended")).not_to be_deletable
       expect(create(:event_registration, status: "incomplete_attendance")).not_to be_deletable
+      expect(create(:event_registration, status: "no_show")).not_to be_deletable
     end
 
     it "returns true for a cancelled registration with no allocations" do
+      # Cancelling is a pre-event withdrawal, not an attendance outcome, so it stays deletable.
       expect(create(:event_registration, status: "cancelled")).to be_deletable
     end
   end

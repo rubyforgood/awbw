@@ -261,15 +261,19 @@ class EventRegistration < ApplicationRecord
     update!(status: "cancelled")
   end
 
+  # True once the event has happened and an attendance outcome is on record —
+  # attended, partially attended, or a no-show. Cancelled/transferred are not
+  # attendance outcomes. (Distinct from #active?, which is about registration
+  # standing, and #attended?, which is specifically "fully attended".)
   def attendance_recorded?
-    status.in?(%w[ attended incomplete_attendance ])
+    status.in?(%w[ attended incomplete_attendance no_show ])
   end
 
   # Safe to delete only when removing the record would not orphan financial
   # data or erase attendance history. Allocations (payments and scholarships)
   # have no dependent: :destroy, so a registration with any allocation must be
   # kept — even a reverted payment leaves its (now net-zero) allocation rows —
-  # as must one with attendance (attended or incomplete) on record.
+  # as must one with an attendance outcome (attended, incomplete, or no-show).
   def deletable?
     !allocations.exists? && !attendance_recorded?
   end

@@ -35,6 +35,13 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       )
     end
 
+    it "treats a no-show as a recorded attendance outcome" do
+      reg = create(:event_registration, status: "no_show")
+      expect(reg.decorate.deletion_blocked_reason).to eq(
+        "Can't be deleted — this registration has attendance on record."
+      )
+    end
+
     it "combines both reasons when payment and attendance are present" do
       reg = create(:event_registration, status: "attended")
       payment = create(:payment, person: reg.registrant, amount_cents: 1000, amount_cents_remaining: nil)
