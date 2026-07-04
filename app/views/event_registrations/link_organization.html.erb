@@ -43,20 +43,21 @@
           <% multiple = present_entries.size > 1 %>
           <ul class="space-y-3">
             <% present_entries.each_with_index do |entry, i| %>
-              <li class="flex items-start gap-2">
-                <%# Same green form-submission icon used on the registrants list, linking
-                    to this specific submission's public view. %>
+              <li>
+                <%# The whole card links to this specific submission's public view;
+                    the green form-submission icon (also used on the registrants list)
+                    sits inline as the affordance. %>
                 <%= link_to event_public_registration_path(@event_registration.event, **form_show_params, form_submission_id: entry[:submission].id, return_to: "link_organization", link_org_return_to: params[:return_to]),
                             target: "_blank", rel: "noopener",
-                            class: "text-green-600 hover:text-green-800 mt-1 shrink-0",
+                            class: "flex items-start gap-2 group hover:text-green-800",
                             title: multiple ? "View submission ##{i + 1}" : "View form submission",
                             data: { turbo_frame: "_top" } do %>
-                  <i class="fa-solid fa-file-lines"></i>
+                  <i class="fa-solid fa-file-lines text-green-600 group-hover:text-green-800 mt-1 shrink-0"></i>
+                  <div class="min-w-0">
+                    <p class="text-base text-gray-800">Organization: <strong><%= entry[:org_name].presence || "—" %></strong><% if entry[:organization]&.city_state.present? %> <span class="text-sm text-gray-500">· <%= entry[:organization].city_state %></span><% end %><%# Mirror the roster's amber "Pending" chip so it's clear why this registrant was flagged — shown only while nothing is linked. %><% if entry[:org_name].present? && @linked_organizations.none? %> <span class="ml-1 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700" title="The registrant submitted this organization, but none is linked to the registration yet."><i class="fa-solid fa-circle-exclamation text-[0.65rem]"></i>Pending</span><% end %></p>
+                    <p class="text-base text-gray-800">Position / title: <strong><%= entry[:position].presence || "—" %></strong></p>
+                  </div>
                 <% end %>
-                <div class="min-w-0">
-                  <p class="text-base text-gray-800">Organization: <strong><%= entry[:org_name].presence || "—" %></strong><% if entry[:organization]&.city_state.present? %> <span class="text-sm text-gray-500">· <%= entry[:organization].city_state %></span><% end %><%# Mirror the roster's amber "Pending" chip so it's clear why this registrant was flagged — shown only while nothing is linked. %><% if entry[:org_name].present? && @linked_organizations.none? %> <span class="ml-1 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700" title="The registrant submitted this organization, but none is linked to the registration yet."><i class="fa-solid fa-circle-exclamation text-[0.65rem]"></i>Pending</span><% end %></p>
-                  <p class="text-base text-gray-800">Position / title: <strong><%= entry[:position].presence || "—" %></strong></p>
-                </div>
               </li>
             <% end %>
           </ul>
