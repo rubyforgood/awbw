@@ -23,6 +23,16 @@ class Affiliation < ApplicationRecord
 
   scope :active, -> { active_or_pending }
 
+  # Affiliations that overlapped a given date, judged purely by their start/end
+  # dates rather than the cached `inactive` flag (which reflects "now"). Use this
+  # when a view must reflect a fixed point in time — e.g. the event dashboard
+  # reporting organizations as they stood at the time of the event, so the
+  # numbers don't drift as affiliations end after the fact.
+  scope :active_on, ->(date) {
+    where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", date)
+      .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", date)
+  }
+
   # Only the exact, case-sensitive title "Facilitator" counts — variants like
   # "Lead Facilitator" or "facilitator" are deliberately excluded. BINARY forces
   # a case-sensitive comparison under MySQL's default case-insensitive collation;
