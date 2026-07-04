@@ -113,7 +113,7 @@ class EventsController < ApplicationController
 
     @submitted_org_names = submitted_org_names_for(@event_registrations)
     @readiness = @event_registrations.to_h do |registration|
-      [ registration.id, EventRegistrationReadiness.new(registration, submitted_org_name: @submitted_org_names[registration.registrant_id]) ]
+      [ registration.id, EventRegistrationReadiness.new(registration) ]
     end
     if params[:readiness].in?(%w[ not_ready ready certificate_due completed ])
       @event_registrations.select! { |r| @readiness[r.id].status.to_s == params[:readiness] }

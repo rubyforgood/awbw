@@ -77,6 +77,25 @@
           </span>
         </label>
 
+        <%# On by default — Date registered shows unless the admin hides it. %>
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+               data-controller="column-toggle" data-column-toggle-group-value="date">
+          <span class="text-sm text-gray-500">Date registered</span>
+
+          <input
+            type="checkbox"
+            checked
+            data-column-toggle-target="toggle"
+            data-action="column-toggle#toggle"
+            class="sr-only"
+          >
+
+          <span class="relative inline-block w-9 h-5">
+            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style="transform: translateX(16px)"></span>
+          </span>
+        </label>
+
         <%# Off by default — Attendance is hidden until the admin reveals it. %>
         <label class="inline-flex items-center gap-2 cursor-pointer select-none"
                data-controller="column-toggle" data-column-toggle-group-value="attendance">
@@ -124,13 +143,13 @@
         <% ce_col = @ce_eligible %>
         <% extra_cols = (payment_col ? 1 : 0) + (ce_col ? 1 : 0) %>
         <%# Column order: Name, Organization, [CE status], Scholarship, [Payment],
-            Confirmed (hidden), Attendance, Edit, Date registered, Status (far right). %>
+            Confirmed (hidden), Attendance, Date registered, Status, Edit (far right). %>
         <% ce_index = 2 %>
         <% scholarship_index = ce_col ? 3 : 2 %>
         <% payment_index = scholarship_index + 1 %>
         <% attendance_index = 4 + extra_cols %>
-        <% date_index = 6 + extra_cols %>
-        <% status_index = 7 + extra_cols %>
+        <% date_index = 5 + extra_cols %>
+        <% status_index = 6 + extra_cols %>
         <table class="w-full border-collapse border border-gray-200" data-controller="table-sort">
           <thead class="bg-gray-100">
             <tr>
@@ -165,13 +184,13 @@
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" aria-sort="none" data-column-toggle-col="attendance">
                 <%= render "shared/sortable_header", label: "Attendance", index: attendance_index %>
               </th>
-              <th class="px-4 py-2"></th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="date">
                 <%= render "shared/sortable_header", label: "Date registered", index: date_index %>
               </th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
                 <%= render "shared/sortable_header", label: "Status", index: status_index %>
               </th>
+              <th class="px-4 py-2"></th>
             </tr>
           </thead>
 
@@ -404,16 +423,16 @@
                 </td>
 
                 <td class="px-4 py-2 text-sm text-nowrap text-center hidden" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
-                <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
-                <td class="px-4 py-2 text-sm text-nowrap text-center text-gray-600" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
+                <td class="px-4 py-2 text-sm text-nowrap text-center text-gray-600" data-column-toggle-col="date" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
                 <% readiness = @readiness[registration.id] %>
-                <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= readiness.status %>">
+                <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= readiness.status_sort_key %>">
                   <%= render "event_registrations/readiness_badge",
                         status: readiness.status,
                         label: readiness.status_label,
                         issues: readiness.status_issues,
                         subtext: readiness.status_reason %>
                 </td>
+                <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
               </tr>
             <% end %>
           </tbody>

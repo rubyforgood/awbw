@@ -3,13 +3,17 @@ require "rails_helper"
 RSpec.describe EventRegistrationReadiness do
   let(:event) { create(:event, cost_cents: 1000) }
   let(:registration) { create(:event_registration, event: event, status: "registered") }
-  let(:submitted_org_name) { nil }
-  subject(:readiness) { described_class.new(registration, submitted_org_name: submitted_org_name) }
+  subject(:readiness) { described_class.new(registration) }
 
   def pay(reg, cents)
     create(:allocation,
       source: create(:payment, amount_cents: cents, amount_cents_remaining: cents),
       allocatable: reg, amount: cents)
+  end
+
+  # Links an organization so the "No organization linked" pre-event check clears.
+  def link_org(reg)
+    create(:event_registration_organization, event_registration: reg, organization: create(:organization))
   end
 
   def award_scholarship(reg, tasks_completed:, amount: 1000)
@@ -19,8 +23,9 @@ RSpec.describe EventRegistrationReadiness do
   end
 
   describe "#event_ready?" do
-    it "is ready when paid in full with no organization, scholarship, or CE concerns" do
+    it "is ready when paid in full with an org linked and no scholarship or CE concerns" do
       pay(registration, 1000)
+      link_org(registration)
 
       expect(readiness.event_ready?).to be(true)
       expect(readiness.event_ready_issues).to be_empty
@@ -46,45 +51,17 @@ RSpec.describe EventRegistrationReadiness do
     context "organization" do
       let(:organization) { create(:organization, name: "Helping Hands") }
 
-      it "flags an org answer that is not linked to a registration" do
+      it "flags a registration with no organization linked" do
         pay(registration, 1000)
-        readiness = described_class.new(registration, submitted_org_name: "Some Unlisted Org")
 
-        expect(readiness.event_ready_issues).to include("Organization not linked")
+        expect(readiness.event_ready_issues).to include("No organization linked")
       end
 
-      it "does not flag when the submitted org matches a linked org (and a facilitator affiliation exists)" do
-        pay(registration, 1000)
-        create(:event_registration_organization, event_registration: registration, organization: organization)
-        create(:affiliation, person: registration.registrant, organization: organization, title: "Facilitator")
-        readiness = described_class.new(registration, submitted_org_name: "Helping Hands")
-
-        expect(readiness.event_ready_issues).not_to include("Organization not linked")
-        expect(readiness.event_ready_issues).not_to include("Not a facilitator at a linked organization")
-      end
-
-      it "does not flag an unlinked org answer once any organization is linked" do
-        pay(registration, 1000)
-        create(:event_registration_organization, event_registration: registration, organization: organization)
-        create(:affiliation, person: registration.registrant, organization: organization, title: "Facilitator")
-        readiness = described_class.new(registration, submitted_org_name: "A Different Unlisted Agency")
-
-        expect(readiness.event_ready_issues).not_to include("Organization not linked")
-      end
-
-      it "flags a linked org the registrant has no facilitator affiliation for" do
+      it "does not flag once any organization is linked (no facilitator affiliation required)" do
         pay(registration, 1000)
         create(:event_registration_organization, event_registration: registration, organization: organization)
 
-        expect(readiness.event_ready_issues).to include("Not a facilitator at a linked organization")
-      end
-
-      it "does not count a non-facilitator affiliation as satisfying the requirement" do
-        pay(registration, 1000)
-        create(:event_registration_organization, event_registration: registration, organization: organization)
-        create(:affiliation, person: registration.registrant, organization: organization, title: "Volunteer")
-
-        expect(readiness.event_ready_issues).to include("Not a facilitator at a linked organization")
+        expect(readiness.event_ready_issues).not_to include("No organization linked")
       end
     end
 
@@ -196,6 +173,7 @@ RSpec.describe EventRegistrationReadiness do
 
     it "is :ready once the pre-event checklist is clear but no post-event work is done" do
       pay(registration, 1000)
+      link_org(registration)
       registration.update!(status: "registered")
 
       expect(readiness.status).to eq(:ready)
@@ -204,6 +182,7 @@ RSpec.describe EventRegistrationReadiness do
 
     it "is :certificate_due once the post-event work is done but the certificate is unsent" do
       pay(registration, 1000)
+      link_org(registration)
       registration.update!(status: "attended")
 
       expect(readiness.status).to eq(:certificate_due)
@@ -229,22 +208,21 @@ RSpec.describe EventRegistrationReadiness do
   describe "#event_ready_reason" do
     it "is nil when the pre-event checklist is clear" do
       pay(registration, 1000)
+      link_org(registration)
 
       expect(readiness.event_ready_reason).to be_nil
     end
 
     it "gives a two-word reason for the highest-priority outstanding item" do
       # unpaid (highest priority) trumps a later org issue
-      organization = create(:organization, name: "Helping Hands")
-      create(:event_registration_organization, event_registration: registration, organization: organization)
+      link_org(registration)
+      registration.update!(scholarship_requested: true)
 
       expect(readiness.event_ready_reason).to eq("Payment due")
     end
 
-    it "summarizes an organization problem as 'Org validation'" do
+    it "summarizes a missing organization as 'Org validation'" do
       pay(registration, 1000)
-      organization = create(:organization, name: "Helping Hands")
-      create(:event_registration_organization, event_registration: registration, organization: organization)
 
       expect(readiness.event_ready_reason).to eq("Org validation")
     end
@@ -257,6 +235,7 @@ RSpec.describe EventRegistrationReadiness do
 
     it "names the outstanding certificate when certificate-pending" do
       pay(registration, 1000)
+      link_org(registration)
       registration.update!(status: "attended")
 
       expect(readiness.status_reason).to eq("Registration")
@@ -264,9 +243,25 @@ RSpec.describe EventRegistrationReadiness do
 
     it "is nil when ready" do
       pay(registration, 1000)
+      link_org(registration)
       registration.update!(status: "registered")
 
       expect(readiness.status_reason).to be_nil
+    end
+  end
+
+  describe "#status_sort_key" do
+    it "prefixes the lifecycle rank and appends the reason (not-ready)" do
+      # default: unpaid + no org → not-ready, highest-priority reason "Payment due"
+      expect(readiness.status_sort_key).to eq("0|Payment due")
+    end
+
+    it "sorts a ready registration (rank 1) after a not-ready one (rank 0)" do
+      pay(registration, 1000)
+      link_org(registration)
+      registration.update!(status: "registered")
+
+      expect(readiness.status_sort_key).to eq("1|")
     end
   end
 

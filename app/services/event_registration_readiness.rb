@@ -4,16 +4,12 @@
 # roster can render a badge with an explanatory tooltip and the index can filter
 # on either state.
 #
-# Reads only already-loaded associations (organizations, registrant.affiliations,
-# allocations, scholarships) so it adds no per-row queries when the roster
-# preloads them.
+# Reads only already-loaded associations (organizations, allocations,
+# scholarships, continuing_education_registrations) so it adds no per-row queries
+# when the roster preloads them.
 class EventRegistrationReadiness
-  # `submitted_org_name` is the organization the registrant typed on the
-  # registration form (the `agency_name` answer). It's passed in because resolving
-  # it is a batch query the roster already runs once for every row.
-  def initialize(registration, submitted_org_name: nil)
+  def initialize(registration)
     @registration = registration
-    @submitted_org_name = submitted_org_name.to_s.strip
   end
 
   STATUS_LABELS = {
@@ -22,6 +18,9 @@ class EventRegistrationReadiness
     certificate_due: "Certificate pending",
     completed: "Completed"
   }.freeze
+
+  # Lifecycle order for sorting the roster's Status column.
+  STATUS_ORDER = %i[ not_ready ready certificate_due completed ].freeze
 
   def event_ready?
     event_ready_issues.empty?
@@ -53,6 +52,12 @@ class EventRegistrationReadiness
 
   def status_label
     STATUS_LABELS.fetch(status)
+  end
+
+  # Sort key for the roster's Status column: lifecycle order first, then the
+  # reason, so same-status rows group by reason (e.g. all "Payment due" together).
+  def status_sort_key
+    "#{STATUS_ORDER.index(status)}|#{status_reason}"
   end
 
   # The outstanding items relevant to the current status, for the badge tooltip.
@@ -88,8 +93,7 @@ class EventRegistrationReadiness
   # short and long forms in sync.
   EVENT_READY_CHECKS = [
     [ :payment_due?, "Payment due", "Payment due" ],
-    [ :organization_unlinked?, "Org validation", "Organization not linked" ],
-    [ :missing_facilitator_affiliation?, "Org validation", "Not a facilitator at a linked organization" ],
+    [ :organization_missing?, "Org validation", "No organization linked" ],
     [ :scholarship_uncreated?, "No scholarship", "Scholarship not created" ],
     [ :scholarship_tasks_incomplete?, "Tasks incomplete", "Scholarship tasks incomplete" ],
     [ :ce_unpaid?, "CE unpaid", "CE not paid" ],
@@ -128,7 +132,7 @@ class EventRegistrationReadiness
 
   private
 
-  attr_reader :registration, :submitted_org_name
+  attr_reader :registration
 
   def failed_event_ready_checks
     @failed_event_ready_checks ||= EVENT_READY_CHECKS.select { |predicate, _, _| send(predicate) }
@@ -138,21 +142,11 @@ class EventRegistrationReadiness
     registration.event.cost_cents.to_i > 0 && !registration.paid_in_full?
   end
 
-  # Flags a registrant who typed an organization on the form but has none linked.
-  # Once an admin links any organization they've made the call, so a non-matching
-  # submitted name is not treated as outstanding.
-  def organization_unlinked?
-    submitted_org_name.present? && registration.organizations.empty?
-  end
-
-  # A registrant linked to an organization is expected to hold an active
-  # Facilitator affiliation with it. Flags when any linked org lacks one.
-  def missing_facilitator_affiliation?
-    registration.organizations.any? do |org|
-      registration.registrant.affiliations.none? do |affiliation|
-        affiliation.organization_id == org.id && affiliation.facilitator? && affiliation.active?
-      end
-    end
+  # The organization needs an admin's attention until one is linked to the
+  # registration — whether that's a pending submitted name or nothing at all.
+  # Once any org is linked, they've made the call, so it's resolved.
+  def organization_missing?
+    registration.organizations.empty?
   end
 
   def scholarship_uncreated?

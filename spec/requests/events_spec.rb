@@ -633,11 +633,12 @@ RSpec.describe "Events", type: :request do
       let!(:not_ready_registration) { create(:event_registration, event: event, registrant: not_ready_person, status: "registered") }
 
       before do
-        # Pay `ready_registration` in full so it clears the only pre-event
-        # condition; `not_ready_registration` stays unpaid, so it is not ready.
+        # Pay `ready_registration` in full and link an org so it clears the
+        # pre-event checklist; `not_ready_registration` stays unpaid → not ready.
         create(:allocation,
           source: create(:payment, amount_cents: event.cost_cents, amount_cents_remaining: event.cost_cents),
           allocatable: ready_registration, amount: event.cost_cents)
+        create(:event_registration_organization, event_registration: ready_registration, organization: create(:organization))
       end
 
       it "renders the combined Status column with the right badge labels" do
