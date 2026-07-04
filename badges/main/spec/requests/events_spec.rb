@@ -1436,13 +1436,11 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Veterans")
       end
 
-      it "shows no-data boxes for life experiences and settings when registrants have no tags" do
+      it "hides the life experiences and settings cards when registrants have no tags" do
         get background_event_path(event)
 
-        expect(response.body).to include("Life experiences")
-        expect(response.body).to include("No life experiences from registration answers yet.")
-        expect(response.body).to include("Settings")
-        expect(response.body).to include("No settings from registration answers yet.")
+        expect(response.body).not_to include("Life experiences")
+        expect(response.body).not_to include("Settings")
       end
 
       it "links scholarship recipients to their entry on the recipients page" do
