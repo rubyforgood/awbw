@@ -50,7 +50,9 @@ class PeopleController < ApplicationController
         @workshop_variations = @person.user&.workshop_variations_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
         render partial: "people/sections/workshop_variations", locals: { person: @person, workshop_variations: @workshop_variations }
       when "stories"
-        story_ids = @person.user&.stories_as_creator&.pluck(:id).to_a + @person.stories_as_spotlighted_facilitator.pluck(:id)
+        story_ids = @person.user&.stories_as_creator&.pluck(:id).to_a +
+          @person.stories_as_author.pluck(:id) +
+          @person.stories_as_spotlighted_facilitator.pluck(:id)
         @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
       when "events"

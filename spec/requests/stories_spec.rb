@@ -228,6 +228,20 @@ RSpec.describe "/stories", type: :request do
 
         expect(response).to redirect_to(story_url(Story.last))
       end
+
+      it "records the current user as created_by regardless of submitted value" do
+        someone_else = create(:user)
+        post stories_url, params: { story: base_attributes.merge(created_by_id: someone_else.id) }
+
+        expect(Story.last.created_by).to eq(admin)
+      end
+
+      it "assigns the chosen person as author" do
+        facilitator = create(:person)
+        post stories_url, params: { story: base_attributes.merge(author_id: facilitator.id) }
+
+        expect(Story.last.author).to eq(facilitator)
+      end
     end
   end
 

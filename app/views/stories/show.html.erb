@@ -28,8 +28,9 @@
         <!-- Meta Data (exact screenshot style) -->
         <div class="text-sm text-gray-600 space-y-0.5">
           <p><strong>Story by:</strong>
-            <% if @story.created_by.person&.profile_is_searchable %>
-              <%= link_to @story.author_credit, person_path(@story.created_by) %>
+            <% credited_person = @story.author_person %>
+            <% if credited_person&.profile_is_searchable %>
+              <%= link_to @story.author_credit, person_path(credited_person) %>
             <% else %>
               <%= @story.author_credit %>
             <% end %>

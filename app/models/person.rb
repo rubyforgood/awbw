@@ -21,6 +21,8 @@ class Person < ApplicationRecord
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
            dependent: :restrict_with_error
+  has_many :stories_as_author, inverse_of: :author, class_name: "Story", foreign_key: :author_id,
+           dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
   has_many :event_staffs, dependent: :destroy
