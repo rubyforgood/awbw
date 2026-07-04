@@ -27,8 +27,16 @@ export default class extends Controller {
       },
     });
     this.addSearchIcon();
-    // Inject CSS to remove some default tom-select styles -might be a better way to do this.
+    this.injectStyles();
+  }
+
+  // Inject CSS to remove some default tom-select styles -might be a better way to do this.
+  // Gated on an id so repeated connects (Turbo nav, cocoon add, reconnect) don't append duplicates.
+  injectStyles() {
+    const styleId = "remote-select-styles";
+    if (document.getElementById(styleId)) return;
     const style = document.createElement("style");
+    style.id = styleId;
     style.textContent = `
       /* Remove border and shadow */
       .ts-control .ts-input,
