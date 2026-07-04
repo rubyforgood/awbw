@@ -7,10 +7,10 @@
 <% sender_users |= [ current_user ] if current_user %>
 <% sender_options = sender_users.sort_by { |u| u.full_name.to_s.downcase }.map { |u| [ u.full_name, u.id ] } %>
 <% channel_default = Notification::MANUAL_CHANNELS.include?(f.object.channel) ? f.object.channel : "email" %>
-<% record = local_assigns[:event_registration] %>
+<% record = local_assigns[:record] %>
 <div class="nested-fields rounded-md border border-amber-200 bg-amber-50 p-3">
-  <%# Record this communication against the event registration (the "Record"
-      column in the notifications index). %>
+  <%# Record this communication against its parent (the "Record" column in the
+      notifications index) — e.g. an event registration or a person. %>
   <% if record %>
     <%= f.hidden_field :noticeable_type, value: record.class.name %>
     <%= f.hidden_field :noticeable_id, value: record.id %>

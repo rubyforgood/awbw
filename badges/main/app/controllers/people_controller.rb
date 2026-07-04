@@ -213,6 +213,10 @@ class PeopleController < ApplicationController
     @person.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @person.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
+    # Inline-logged notifications are addressed to the person.
+    recipient_email = @person.preferred_email.presence || "n/a"
+    @person.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
+
     if @person.save
       assign_associations(@person) if params.dig(:person, :category_ids)
       redirect_to person_update_return_path, notice: "Person was successfully updated."
@@ -526,6 +530,7 @@ class PeopleController < ApplicationController
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id ]
     )
   end
 end
