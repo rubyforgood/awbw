@@ -118,21 +118,19 @@
     <% form_submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
     <% scholarship_form = @event.scholarship_form %>
     <% scholarship_submitter_ids = scholarship_form ? FormSubmission.joins(:form_answers).where(form_id: scholarship_form.id, role: "scholarship", person_id: @event_registrations.map(&:registrant_id)).distinct.pluck(:person_id).to_set : Set.new %>
-    <% registration_form = @event.registration_form %>
-    <% agency_name_field = registration_form&.form_fields&.find_by(field_identifier: "agency_name") %>
-    <% submitted_org_names = agency_name_field ? FormAnswer.joins(:form_submission).where(form_submissions: { person_id: @event_registrations.map(&:registrant_id), form_id: registration_form.id }, form_field_id: agency_name_field.id).pluck(Arel.sql("form_submissions.person_id"), :submitted_answer).to_h : {} %>
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <% payment_col = @event.cost_cents.to_i > 0 %>
         <% ce_col = @ce_eligible %>
         <% extra_cols = (payment_col ? 1 : 0) + (ce_col ? 1 : 0) %>
         <%# Column order: Name, Organization, [CE status], Scholarship, [Payment],
-            Confirmed (hidden), Attendance, Edit, Date registered (far right). %>
+            Confirmed (hidden), Attendance, Edit, Date registered, Status (far right). %>
         <% ce_index = 2 %>
         <% scholarship_index = ce_col ? 3 : 2 %>
         <% payment_index = scholarship_index + 1 %>
         <% attendance_index = 4 + extra_cols %>
         <% date_index = 6 + extra_cols %>
+        <% status_index = 7 + extra_cols %>
         <table class="w-full border-collapse border border-gray-200" data-controller="table-sort">
           <thead class="bg-gray-100">
             <tr>
@@ -170,6 +168,9 @@
               <th class="px-4 py-2"></th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
                 <%= render "shared/sortable_header", label: "Date registered", index: date_index %>
+              </th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
+                <%= render "shared/sortable_header", label: "Status", index: status_index %>
               </th>
             </tr>
           </thead>
@@ -236,7 +237,7 @@
 
                 <td class="px-4 py-2 text-sm text-gray-800" data-column-toggle-col="organization">
                   <% linked_orgs = registration.organizations %>
-                  <% submitted_org_name = submitted_org_names[registration.registrant_id].to_s.strip %>
+                  <% submitted_org_name = @submitted_org_names[registration.registrant_id].to_s.strip %>
                   <%# A submitted org name needs admin attention only while nothing is linked
                       yet; once an admin links any org they've made the call, so a non-matching
                       submitted name is no longer treated as pending. %>
@@ -405,6 +406,14 @@
                 <td class="px-4 py-2 text-sm text-nowrap text-center hidden" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
                 <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
                 <td class="px-4 py-2 text-sm text-nowrap text-center text-gray-600" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
+                <% readiness = @readiness[registration.id] %>
+                <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= readiness.status %>">
+                  <%= render "event_registrations/readiness_badge",
+                        status: readiness.status,
+                        label: readiness.status_label,
+                        issues: readiness.status_issues,
+                        subtext: readiness.status_reason %>
+                </td>
               </tr>
             <% end %>
           </tbody>

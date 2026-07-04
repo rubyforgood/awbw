@@ -626,6 +626,82 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "readiness filtering" do
+      let(:ready_person) { create(:person, first_name: "Reada", last_name: "Paidinfull") }
+      let(:not_ready_person) { create(:person, first_name: "Nottaready", last_name: "Owes") }
+      let!(:ready_registration) { create(:event_registration, event: event, registrant: ready_person, status: "registered") }
+      let!(:not_ready_registration) { create(:event_registration, event: event, registrant: not_ready_person, status: "registered") }
+
+      before do
+        # Pay `ready_registration` in full so it clears the only pre-event
+        # condition; `not_ready_registration` stays unpaid, so it is not ready.
+        create(:allocation,
+          source: create(:payment, amount_cents: event.cost_cents, amount_cents_remaining: event.cost_cents),
+          allocatable: ready_registration, amount: event.cost_cents)
+      end
+
+      it "renders the combined Status column with the right badge labels" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Ready")
+        expect(response.body).to include("Not ready")
+      end
+
+      it "shows a two-word reason under the Not ready badge" do
+        get registrants_event_path(event)
+
+        # Nottaready is unpaid on a paid event
+        expect(response.body).to include("Payment due")
+      end
+
+      it "shows the Certificate pending badge with a cert-type subtext once an event-ready registrant has attended" do
+        ready_registration.update!(status: "attended")
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Certificate pending")
+        expect(response.body).to include(">Registration<")
+      end
+
+      it "shows only not-ready registrants when filtered to not_ready" do
+        get registrants_event_path(event, params: { readiness: "not_ready" })
+
+        expect(response.body).to include("Nottaready")
+        expect(response.body).not_to include("Reada")
+      end
+
+      it "shows only ready registrants when filtered to ready" do
+        get registrants_event_path(event, params: { readiness: "ready" })
+
+        expect(response.body).to include("Reada")
+        expect(response.body).not_to include("Nottaready")
+      end
+
+      it "excludes an attended registrant from 'completed' until the certificate is sent" do
+        ready_registration.update!(status: "attended")
+
+        get registrants_event_path(event, params: { readiness: "completed" })
+
+        expect(response.body).not_to include("Reada")
+        expect(response.body).not_to include("Nottaready")
+      end
+
+      it "shows a registrant under 'completed' once attended and the certificate is sent" do
+        ready_registration.update!(status: "attended", certificate_sent_at: Time.current)
+
+        get registrants_event_path(event, params: { readiness: "completed" })
+
+        expect(response.body).to include("Reada")
+        expect(response.body).not_to include("Nottaready")
+      end
+
+      it "does not crash on an invalid readiness filter" do
+        get registrants_event_path(event, params: { readiness: "bogus" })
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     context "event heading" do
       it "shows the event title and date range after the heading" do
         event.update!(start_date: Time.zone.local(2026, 6, 2, 9), end_date: Time.zone.local(2026, 6, 2, 17))

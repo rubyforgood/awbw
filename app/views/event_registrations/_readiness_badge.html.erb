@@ -1,0 +1,29 @@
+<%# Single status pill for a registration's lifecycle: Not ready (pre-event work
+    outstanding) → Ready (cleared for the event) → Certificate due (post-event
+    work done, certificate still to send) → Completed. When there are outstanding
+    items, the tooltip lists them; `subtext` shows a short reason under the badge.
+    Locals:
+      status  - Symbol (:not_ready, :ready, :certificate_due, :completed)
+      label   - display text for the status
+      issues  - array of outstanding-condition strings (tooltip, when any)
+      subtext - optional short reason rendered under the badge %>
+<%
+  subtext = local_assigns[:subtext]
+  style, icon, subtext_color = case status
+    when :completed then [ "bg-green-50 text-green-700 border-green-200", "fa-flag-checkered", "text-green-600" ]
+    when :certificate_due then [ "bg-purple-50 text-purple-700 border-purple-200", "fa-certificate", "text-purple-600" ]
+    when :ready then [ "bg-blue-50 text-blue-700 border-blue-200", "fa-circle-check", "text-blue-600" ]
+    else [ "bg-amber-50 text-amber-700 border-amber-200", "fa-circle-exclamation", "text-amber-600" ]
+  end
+  tooltip = issues.any? ? issues.join(" · ") : label
+%>
+<div class="inline-flex flex-col items-center gap-0.5">
+  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 <%= style %>"
+        title="<%= tooltip %>">
+    <i class="fas <%= icon %>"></i>
+    <span><%= label %></span>
+  </span>
+  <% if subtext.present? %>
+    <span class="text-[0.65rem] font-medium <%= subtext_color %>"><%= subtext %></span>
+  <% end %>
+</div>
