@@ -91,8 +91,10 @@
 
     <%= f.input :state,
                 as: :select,
-                collection: us_states,
+                collection: state_select_options(f.object.state),
+                selected: f.object.state,
                 input_html: {
+                  value: f.object.state,
                   class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 } %>
     <%= f.input :zip_code,

@@ -54,4 +54,15 @@ module GeographyHelper
       [ "Wyoming", "WY" ]
     ]
   end
+
+  # State dropdown options that always include the address's current value, even
+  # when it isn't a US state (e.g. an international province like "ON" or
+  # "England"). Without this the US-only list can't match such a value, so the
+  # select renders blank and saving wipes the state — tripping the presence
+  # validation on an otherwise-untouched address.
+  def state_select_options(current = nil)
+    return us_states if current.blank? || us_states.any? { |_name, abbr| abbr == current }
+
+    us_states + [ [ current, current ] ]
+  end
 end

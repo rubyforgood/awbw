@@ -784,6 +784,19 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).not_to include('fa-file-lines')
       end
+
+      it "shows no form icon when the only submission is for a bulk payment form" do
+        bulk_payment_form = create(:form, :standalone, name: "Bulk Payment Form")
+        create(:event_form, event: event, form: reg_form, role: "registration")
+        create(:event_form, event: event, form: bulk_payment_form, role: "bulk_payment")
+        create(:form_submission, person: person, form: bulk_payment_form)
+
+        get registrants_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include('fa-file-lines')
+        expect(response.body).to include('inline-flex w-4 justify-center')
+      end
     end
   end
 
