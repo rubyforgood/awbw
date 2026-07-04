@@ -218,7 +218,10 @@
             details (license number + requested hours) and what they owe at the
             default hourly rate, recomputed live by the ce-credit-requested
             controller. The details collapse when CE isn't requested. ---- %>
-        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <section class="overflow-hidden rounded-xl border shadow-sm transition-colors <%= f.object.ce_credit_requested ? "border-teal-200 bg-teal-50" : "border-gray-200 bg-white" %>"
+                 data-controller="ce-credit-requested"
+                 data-ce-credit-requested-initial-value="<%= f.object.ce_credit_requested %>"
+                 data-ce-credit-requested-rate-value="<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
               <i class="fa-solid fa-certificate"></i>
@@ -226,10 +229,7 @@
             <h2 class="text-sm font-semibold text-gray-700">CE credits</h2>
           </div>
 
-          <div class="space-y-3 p-4"
-               data-controller="ce-credit-requested"
-               data-ce-credit-requested-initial-value="<%= f.object.ce_credit_requested %>"
-               data-ce-credit-requested-rate-value="<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>">
+          <div class="space-y-3 p-4">
             <label class="flex items-center gap-2.5 cursor-pointer">
               <input type="hidden" name="event_registration[ce_credit_requested]" value="0" autocomplete="off">
               <input type="checkbox"

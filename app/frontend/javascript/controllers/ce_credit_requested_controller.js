@@ -1,9 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Drives the CE-credit box on the registration form. Colors the "Requested"
-// toggle to signal save state: amber while the choice is pending (changed but
-// not yet saved), the continuing-education theme color once it matches the
-// stored "on" value, neutral gray when stored as off. While "Requested" is on it
+// Drives the CE-credit box on the registration form. Mounted on the <section>
+// so it can tint the whole card to signal save state: amber while the choice is
+// pending (changed but not yet saved), the continuing-education theme color once
+// it matches the stored "on" value, neutral gray when stored as off — the
+// "Requested" toggle and the card share that color. While "Requested" is on it
 // reveals the CE details (license number + hours) and keeps the "Provided" badge
 // and amount-owed total ($rate × hours) in sync as the admin edits them.
 export default class extends Controller {
@@ -21,6 +22,13 @@ export default class extends Controller {
     this.trackTarget.classList.toggle("bg-amber-500", pending)
     this.trackTarget.classList.toggle("bg-teal-600", checked && !pending)
     this.trackTarget.classList.toggle("bg-gray-200", !checked && !pending)
+
+    this.element.classList.toggle("bg-amber-50", pending)
+    this.element.classList.toggle("border-amber-200", pending)
+    this.element.classList.toggle("bg-teal-50", checked && !pending)
+    this.element.classList.toggle("border-teal-200", checked && !pending)
+    this.element.classList.toggle("bg-white", !checked && !pending)
+    this.element.classList.toggle("border-gray-200", !checked && !pending)
 
     if (this.hasDetailsTarget) this.detailsTarget.classList.toggle("hidden", !checked)
 
