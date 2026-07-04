@@ -212,7 +212,7 @@ class OrganizationsController < ApplicationController
       :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
-      affiliations: :person
+      affiliations: { person: :user }
     ).find(params[:id])
   end
 
