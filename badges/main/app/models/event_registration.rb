@@ -23,8 +23,8 @@ class EventRegistration < ApplicationRecord
   before_create :generate_slug
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
-  ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
-  INACTIVE_STATUSES = %w[ cancelled no_show ].freeze
+  ACTIVE_STATUSES = %w[ registered attended incomplete_attendance transferred_in ].freeze
+  INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
 
   # Manual onboarding checklist steps shown on the event's Onboarding tab. Each is
@@ -371,6 +371,8 @@ class EventRegistration < ApplicationRecord
     when "incomplete_attendance" then "Incomplete attendance"
     when "cancelled" then "Cancelled"
     when "no_show" then "No show"
+    when "transferred_in" then "Transferred in"
+    when "transferred_out" then "Transferred out"
     else status.humanize
     end
   end
