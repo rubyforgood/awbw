@@ -62,8 +62,9 @@ module Events
     def ce
     end
 
-    # Forms page: callout-card links to the W-9 and letter-to-supervisors
-    # resource pages (when seeded) and the invoice, each returning to forms.
+    # Forms page: callout-card links to the W-9 (when seeded) and, for paid
+    # events, the invoice and the paid-in-full receipt (once settled), each
+    # returning to forms.
     def forms
       @form_cards = build_form_cards
     end
@@ -113,9 +114,9 @@ module Events
       @event = @event_registration.event
     end
 
-    # Builds the callout-card links shown on the forms page. The W-9 opens in
-    # its own resource page (preview + download) when seeded; the invoice is
-    # always available.
+    # Builds the callout-card links shown on the forms page. The W-9 opens in its
+    # own resource page (preview + download) when seeded; the invoice and the
+    # paid-in-full receipt (once settled) show for paid events. Each returns to forms.
     def build_form_cards
       cards = []
       w9 = Resource.find_by(title: "W-9")
@@ -124,9 +125,16 @@ module Events
                                subtitle: "AWBW's W-9 tax form for your records",
                                href: registration_resource_path(@event_registration.slug, w9, return_to: "forms"), target: nil)
       end
-      cards << resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
-                             subtitle: "Itemized invoice for this registration",
-                             href: registration_invoice_path(@event_registration.slug, return_to: "forms"))
+      if @event_registration.invoice_available?
+        cards << resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
+                               subtitle: "Itemized invoice for this registration",
+                               href: registration_invoice_path(@event_registration.slug, return_to: "forms"))
+      end
+      if @event_registration.receipt_available?
+        cards << resource_card(icon: "fa-solid fa-receipt", title: "View receipt",
+                               subtitle: "Paid-in-full receipt for this registration",
+                               href: registration_receipt_path(@event_registration.slug, return_to: "forms"))
+      end
       cards
     end
 

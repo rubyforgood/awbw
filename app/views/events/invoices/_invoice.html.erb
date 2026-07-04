@@ -18,7 +18,7 @@
   <%# Bill-to %>
   <div class="space-y-1">
     <p class="text-sm font-bold">Invoice To:</p>
-    <div class="rounded-2xl border border-gray-300 px-4 py-3 text-sm leading-relaxed">
+    <div class="rounded-lg border border-gray-300 px-4 py-3 text-sm leading-relaxed">
       <p class="font-medium"><%= invoice.bill_to_name %></p>
       <% invoice.bill_to_address_lines.each do |line| %>
         <p><%= line %></p>
@@ -32,13 +32,13 @@
   <%# Attention %>
   <div class="space-y-1 mt-5">
     <p class="text-sm font-bold">Attention:</p>
-    <div class="rounded-2xl border border-gray-300 px-4 py-3 text-sm">
+    <div class="rounded-lg border border-gray-300 px-4 py-3 text-sm">
       <%= invoice.attention.presence || "—" %>
     </div>
   </div>
 
   <%# Meta row: number / date / reference / client id %>
-  <div class="mt-6 rounded-2xl border border-gray-300 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 text-center">
+  <div class="mt-6 rounded-lg border border-gray-300 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 text-center">
     <% [
          [ "Invoice Number", invoice.number ],
          [ "Invoice Date", invoice.date&.strftime("%-d %b, %Y") ],

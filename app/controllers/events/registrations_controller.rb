@@ -3,7 +3,7 @@ module Events
     before_action :authenticate_user!, only: [ :create, :destroy ]
     before_action :set_event, only: [ :create, :destroy ]
     before_action :set_registrant, only: [ :create, :destroy ]
-    before_action :set_event_registration, only: [ :show, :invoice, :resend_confirmation, :cancel, :reactivate, :pay ]
+    before_action :set_event_registration, only: [ :show, :invoice, :receipt, :resend_confirmation, :cancel, :reactivate, :pay ]
 
     def show
       authorize! @event_registration, to: :show_public?
@@ -24,8 +24,28 @@ module Events
 
     def invoice
       authorize! @event_registration, to: :show_public?
+
+      unless @event_registration.invoice_available?
+        redirect_to registration_ticket_path(@event_registration.slug),
+                    alert: "There's no invoice for a free event."
+        return
+      end
+
       @event = @event_registration.event
       @invoice = EventInvoice.from_registration(@event_registration)
+    end
+
+    def receipt
+      authorize! @event_registration, to: :show_public?
+
+      unless @event_registration.receipt_available?
+        redirect_to registration_ticket_path(@event_registration.slug),
+                    alert: "A receipt is available once your balance is paid in full."
+        return
+      end
+
+      @event = @event_registration.event
+      @receipt = EventReceipt.from_registration(@event_registration)
     end
 
     def resend_confirmation

@@ -309,6 +309,17 @@ class EventRegistration < ApplicationRecord
     event.end_date.present? && event.end_date.past? && attended? && scholarship_tasks_met?
   end
 
+  # An invoice (and receipt) only make sense for a paid event — free events have
+  # nothing to bill or receipt.
+  def invoice_available?
+    event.cost_cents.to_i.positive?
+  end
+
+  # A paid-in-full receipt is available once a paid event carries no balance.
+  def receipt_available?
+    invoice_available? && remaining_cost.zero?
+  end
+
   # Cost source for the Registerable payment interface: the event's price.
   def cost_cents
     event.cost_cents
