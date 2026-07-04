@@ -497,6 +497,19 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(flash[:alert]).to eq("Registration is already cancelled.")
     end
 
+    it "zeroes any scholarship award when cancelling" do
+      costed_registration = create(:event_registration, event: create(:event, cost_cents: 50_000),
+                                                         registrant: user.person, status: "registered")
+      scholarship = create(:scholarship, recipient: user.person, amount_cents: 50_000)
+      allocation = create(:allocation, source: scholarship, allocatable: costed_registration, amount: 50_000)
+
+      post registration_cancel_path(costed_registration.slug)
+
+      expect(costed_registration.reload.status).to eq("cancelled")
+      expect(scholarship.reload.amount_cents).to eq(0)
+      expect(allocation.reload.amount).to eq(0)
+    end
+
     context "as a guest" do
       before { sign_out user }
 
@@ -708,56 +721,6 @@ RSpec.describe "Events::Registrations", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.media_type).to eq("text/vnd.turbo-stream.html")
         expect(flash.now[:alert]).to eq("Cannot register")
-      end
-    end
-  end
-
-  describe "DELETE /events/:event_id/registrations" do
-    context "when registration exists" do
-      let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
-
-      it "destroys registration and returns turbo stream" do
-        expect {
-          delete event_registrant_registration_path(event_id: event.id),
-            headers: turbo_headers
-        }.to change(EventRegistration, :count).by(-1)
-
-        expect(response).to have_http_status(:ok)
-        expect(response.media_type).to eq("text/vnd.turbo-stream.html")
-        expect(flash.now[:notice]).to eq("You are no longer registered.")
-      end
-    end
-
-    context "when registration does not exist" do
-      it "returns turbo stream with alert" do
-        delete event_registrant_registration_path(event_id: event.id),
-          headers: turbo_headers
-
-        expect(response).to have_http_status(:ok)
-        expect(response.media_type).to eq("text/vnd.turbo-stream.html")
-        expect(flash.now[:alert]).to eq("Registration not found")
-      end
-    end
-
-    context "when destroy fails" do
-      let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
-
-      before do
-        allow_any_instance_of(EventRegistration)
-          .to receive(:destroy)
-          .and_return(false)
-        allow_any_instance_of(EventRegistration)
-          .to receive_message_chain(:errors, :full_messages)
-          .and_return([ "Cannot delete" ])
-      end
-
-      it "returns turbo stream with alert" do
-        delete event_registrant_registration_path(event_id: event.id),
-          headers: turbo_headers
-
-        expect(response).to have_http_status(:ok)
-        expect(response.media_type).to eq("text/vnd.turbo-stream.html")
-        expect(flash.now[:alert]).to eq("Cannot delete")
       end
     end
   end

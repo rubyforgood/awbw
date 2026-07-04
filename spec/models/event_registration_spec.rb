@@ -107,6 +107,96 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#deletable?" do
+    it "returns true for a plain registration with no allocations or attendance" do
+      reg = create(:event_registration, status: "registered")
+      expect(reg).to be_deletable
+    end
+
+    it "returns false when the registration has a payment allocation" do
+      reg = create(:event_registration, status: "registered")
+      payment = create(:payment, person: reg.registrant, amount_cents: 1000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1000)
+      expect(reg).not_to be_deletable
+    end
+
+    it "returns false when the registration has a scholarship allocation" do
+      reg = create(:event_registration, status: "registered")
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 1000)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1000)
+      expect(reg).not_to be_deletable
+    end
+
+    it "returns false when the registration has an attendance outcome on record" do
+      expect(create(:event_registration, status: "attended")).not_to be_deletable
+      expect(create(:event_registration, status: "incomplete_attendance")).not_to be_deletable
+      expect(create(:event_registration, status: "no_show")).not_to be_deletable
+    end
+
+    it "returns true for a cancelled registration with no allocations" do
+      # Cancelling is a pre-event withdrawal, not an attendance outcome, so it stays deletable.
+      expect(create(:event_registration, status: "cancelled")).to be_deletable
+    end
+
+    it "returns false for a transferred-out registration" do
+      # The trail to the destination event is history worth keeping.
+      expect(create(:event_registration, status: "transferred_out")).not_to be_deletable
+    end
+
+    it "returns true for a transferred-in registration with no allocations" do
+      # Transferred-in is an ordinary active registration here; the source event's
+      # transferred_out record preserves the transfer history.
+      expect(create(:event_registration, status: "transferred_in")).to be_deletable
+    end
+  end
+
+  describe "#cancel!" do
+    it "marks the registration cancelled" do
+      reg = create(:event_registration, status: "registered")
+      reg.cancel!
+      expect(reg.reload.status).to eq("cancelled")
+    end
+  end
+
+  describe "releasing scholarships when a registration is cancelled" do
+    # Returns a registered registration on a costed event with a $500 scholarship
+    # awarded against it (scholarship_requested flagged, as the real award flow does).
+    def registration_with_scholarship
+      reg = create(:event_registration, event: create(:event, cost_cents: 50_000),
+                                         status: "registered", scholarship_requested: true)
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 50_000)
+      allocation = create(:allocation, source: scholarship, allocatable: reg, amount: 50_000)
+      [ reg, scholarship, allocation ]
+    end
+
+    it "zeroes the scholarship award and its allocation via #cancel!" do
+      reg, scholarship, allocation = registration_with_scholarship
+
+      reg.cancel!
+
+      expect(scholarship.reload.amount_cents).to eq(0)
+      expect(allocation.reload.amount).to eq(0)
+    end
+
+    it "zeroes the scholarship on any transition to cancelled (e.g. admin edit form)" do
+      reg, scholarship, _allocation = registration_with_scholarship
+
+      reg.update!(status: "cancelled")
+
+      expect(scholarship.reload.amount_cents).to eq(0)
+    end
+
+    it "keeps scholarship_requested set and does not re-award when reactivated" do
+      reg, scholarship, _allocation = registration_with_scholarship
+
+      reg.cancel!
+      reg.update!(status: "registered")
+
+      expect(reg.reload.scholarship_requested).to be(true)
+      expect(scholarship.reload.amount_cents).to eq(0)
+    end
+  end
+
   describe ".registrant_ids" do
     it "returns registrations for the registrants in a hyphenated id list" do
       person_a = create(:person)
