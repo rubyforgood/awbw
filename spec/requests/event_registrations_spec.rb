@@ -535,6 +535,15 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("Title differs from form")
         end
 
+        it "does not show a title-comparison badge when a facilitator affiliation matches the submitted 'Facilitator' position" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Facilitator")
+          submit_form(org_name: organization.name, position: "Facilitator")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).not_to include("Title differs from form")
+        end
+
         it "shows 'Title differs from form' when the affiliation title differs from the submitted position" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
           submit_form(org_name: organization.name, position: "Director")
