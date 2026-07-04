@@ -17,7 +17,7 @@ RSpec.describe DomainTheme do
 
     it "supports intensity overrides" do
       expect(DomainTheme.bg_class_for(:events, intensity: 100))
-        .to eq("bg-blue-100")
+        .to eq("bg-teal-100")
     end
 
     it "supports hover classes for 100's" do
