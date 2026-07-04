@@ -798,6 +798,38 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('inline-flex w-4 justify-center')
       end
     end
+
+    context "scholarship application icon" do
+      let(:scholarship_form) { create(:form, :standalone, name: "Scholarship Form") }
+
+      before { create(:event_form, event: event, form: scholarship_form, role: "scholarship") }
+
+      it "shows the scholarship icon when the person submitted the scholarship form" do
+        submission = create(:form_submission, person: person, form: scholarship_form, role: "scholarship")
+        create(:form_answer, form_submission: submission)
+
+        get registrants_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("fa-solid fa-hand-holding-heart")
+      end
+
+      it "does not show the scholarship icon for a submission with no answers" do
+        create(:form_submission, person: person, form: scholarship_form, role: "scholarship")
+
+        get registrants_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("fa-hand-holding-heart")
+      end
+
+      it "does not show the scholarship icon when the person has no scholarship submission" do
+        get registrants_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("fa-hand-holding-heart")
+      end
+    end
   end
 
   describe "GET /events/:id/registrants with payment and scholarship filters" do
