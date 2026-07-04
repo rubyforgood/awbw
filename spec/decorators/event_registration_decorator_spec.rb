@@ -38,24 +38,24 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       expect(reg.decorate.deletion_blocked_reason).to include("financial records")
     end
 
-    it "explains recorded attendance" do
+    it "explains recorded attendance, enumerating the outcomes that count" do
       reg = create(:event_registration, status: "attended")
       expect(reg.decorate.deletion_blocked_reason).to eq(
-        "Can't be deleted — this registration has attendance on record."
+        "Can't be deleted — this registration has an attendance outcome on record (attended, incomplete, or no-show)."
       )
     end
 
     it "treats a no-show as a recorded attendance outcome" do
       reg = create(:event_registration, status: "no_show")
       expect(reg.decorate.deletion_blocked_reason).to eq(
-        "Can't be deleted — this registration has attendance on record."
+        "Can't be deleted — this registration has an attendance outcome on record (attended, incomplete, or no-show)."
       )
     end
 
     it "explains a transfer out to another event" do
       reg = create(:event_registration, status: "transferred_out")
       expect(reg.decorate.deletion_blocked_reason).to eq(
-        "Can't be deleted — this registration has a transfer to another event on record."
+        "Can't be deleted — this registration has a transfer to another event."
       )
     end
 
@@ -71,7 +71,7 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
 
       reason = reg.decorate.deletion_blocked_reason
       expect(reason).to include("financial records")
-      expect(reason).to include("attendance on record")
+      expect(reason).to include("an attendance outcome on record")
     end
   end
 end
