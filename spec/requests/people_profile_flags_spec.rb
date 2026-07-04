@@ -156,6 +156,31 @@ RSpec.describe "Person profile flag visibility", type: :request do
         expect(response.body).to include(email)
       end
     end
+
+    context "with a pending email change" do
+      before do
+        person.update!(profile_show_email: true)
+        person.user.update_columns(unconfirmed_email: "aisha.new@example.com")
+      end
+
+      it "shows the pending address inline on own profile, not just in the hover title" do
+        sign_in owner_user
+        get person_path(person)
+        expect(response.body).to include("Email change to <strong class=\"font-semibold\">aisha.new@example.com</strong> pending")
+      end
+
+      it "shows the pending address inline when admin views profile" do
+        sign_in admin
+        get person_path(person)
+        expect(response.body).to include("Email change to <strong class=\"font-semibold\">aisha.new@example.com</strong> pending")
+      end
+
+      it "hides the pending change from other viewers" do
+        sign_in create(:user)
+        get person_path(person)
+        expect(response.body).not_to include("aisha.new@example.com")
+      end
+    end
   end
 
   # Flags inside the "Submitted content" section (gated by show? policy)
