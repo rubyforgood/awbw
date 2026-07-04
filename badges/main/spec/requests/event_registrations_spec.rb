@@ -274,6 +274,24 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("name=\"event_registration[expected_payment_method]\"")
         expect(response.body).to include("<option selected=\"selected\" value=\"Check\">Check</option>")
       end
+
+      it "shows a Delete button for a deletable registration" do
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("fa-trash-can")
+        expect(response.body).not_to include("reverted payments still count")
+      end
+
+      it "hides Delete and explains why for a registration with payment records" do
+        payment = create(:payment, person: regular_user.person, amount_cents: 1000, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: existing_registration, amount: 1000)
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).not_to include("fa-trash-can")
+        expect(response.body).to include("financial records")
+        expect(response.body).to include("reverted payments still count")
+      end
     end
 
     describe "PATCH /event_registrations/:id" do
@@ -360,6 +378,16 @@ RSpec.describe "EventRegistrations", type: :request do
         expect { unrequest(existing_registration) }
           .not_to change { existing_registration.scholarships.count }
       end
+
+      it "zeroes a funded scholarship when the status is set to cancelled" do
+        scholarship = link_scholarship(existing_registration, amount_cents: 1000)
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { status: "cancelled" } }
+
+        expect(existing_registration.reload.status).to eq("cancelled")
+        expect(scholarship.reload.amount_cents).to eq(0)
+      end
     end
 
     describe "PATCH /event_registrations/:id logging a notification" do
@@ -395,6 +423,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect {
           delete event_registration_path(existing_registration)
         }.to change(EventRegistration, :count).by(-1)
+      end
+
+      it "refuses to delete a registration with payments on record" do
+        payment = create(:payment, person: regular_user.person, amount_cents: 1000, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: existing_registration, amount: 1000)
+
+        expect {
+          delete event_registration_path(existing_registration)
+        }.not_to change(EventRegistration, :count)
+
+        expect(flash[:alert]).to include("can't be deleted")
       end
     end
 

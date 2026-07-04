@@ -10,6 +10,19 @@ class EventRegistrationDecorator < ApplicationDecorator
     h.registration_ticket_path(slug)
   end
 
+  # Human-readable explanation of why the Delete button is unavailable, or nil
+  # when the registration is deletable. Reverted payments still leave allocation
+  # rows, so they count here even though they net to zero — hence the aside.
+  def deletion_blocked_reason
+    return if deletable?
+
+    reasons = []
+    reasons << "financial records — payments, scholarships, discounts, or refunds (reverted payments still count)" if allocations.exists?
+    reasons << "an attendance outcome on record (attended, incomplete, or no-show)" if attendance_recorded?
+    reasons << "a transfer to another event" if transferred_out?
+    "Can't be deleted — this registration has #{reasons.to_sentence}."
+  end
+
   def default_display_image
     return event.primary_asset.file if event.respond_to?(:primary_asset) && event.primary_asset&.file&.attached?
     "theme_default.png"

@@ -21,6 +21,7 @@ class EventRegistration < ApplicationRecord
   accepts_nested_attributes_for :registrant
 
   before_create :generate_slug
+  after_update :release_scholarships, if: :status_changed_to_cancelled?
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance transferred_in ].freeze
@@ -251,6 +252,39 @@ class EventRegistration < ApplicationRecord
 
   def active?
     status.in?(ACTIVE_STATUSES)
+  end
+
+  # Cancel this registration. Releasing scholarships and sending cancellation
+  # emails hang off the status-change callbacks, so this and every other path to
+  # "cancelled" (e.g. the admin edit form's status dropdown) behave identically.
+  def cancel!
+    update!(status: "cancelled")
+  end
+
+  # True once the event has happened and an attendance outcome is on record —
+  # attended, partially attended, or a no-show. Cancelled/transferred are not
+  # attendance outcomes. (Distinct from #active?, which is about registration
+  # standing, and #attended?, which is specifically "fully attended".)
+  def attendance_recorded?
+    status.in?(%w[ attended incomplete_attendance no_show ])
+  end
+
+  # Transferred out to another event. The trail to where the registrant went is
+  # history worth keeping, so it blocks deletion. Transferred_in is deliberately
+  # excluded: it's an ordinary active registration here, and the source event's
+  # transferred_out record already preserves the transfer trail.
+  def transferred_out?
+    status == "transferred_out"
+  end
+
+  # Safe to delete only when removing the record would not orphan financial data
+  # or erase history. Allocations tie the registration to a financial source of
+  # any kind (payments, scholarships, and others) and have no dependent: :destroy,
+  # so a registration with any allocation must be kept — even a reverted payment
+  # leaves its (now net-zero) allocation rows. An attendance outcome (attended,
+  # incomplete, or no-show) or a transfer out is likewise history worth keeping.
+  def deletable?
+    !allocations.exists? && !attendance_recorded? && !transferred_out?
   end
 
   def checked_in?
@@ -484,6 +518,14 @@ class EventRegistration < ApplicationRecord
 
   def status_changed_to_cancelled?
     saved_change_to_status? && status == "cancelled"
+  end
+
+  # On cancellation, release any awarded scholarship back to its grant by zeroing
+  # the amount (Scholarship#sync_allocation_amount zeroes the allocation to match).
+  # scholarship_requested is left set on purpose: reactivating won't re-award, but
+  # the registration should still reflect that a scholarship was requested.
+  def release_scholarships
+    scholarships.each { |scholarship| scholarship.update!(amount_cents: 0) }
   end
 
   def send_cancellation_emails
