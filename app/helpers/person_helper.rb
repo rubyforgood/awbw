@@ -75,7 +75,7 @@ module PersonHelper
                     tag.i(class: "fa-solid fa-triangle-exclamation"),
                     class: "flex-shrink-0 ml-auto text-yellow-500",
                     title: "Email change to #{unconfirmed_email} awaiting confirmation. " \
-                           "Only the person and admins can see this; it is not shown on the public profile.")
+                           "Only the person and admins can see this; it is hidden from other profile visitors.")
       else
         "".html_safe
       end
