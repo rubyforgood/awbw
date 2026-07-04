@@ -78,6 +78,7 @@ Rails.application.routes.draw do
   post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payments#resend_confirmation", as: :bulk_payment_resend_confirmation
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
+  get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
   get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
   get "registration/:slug/faq", to: "events/callouts#faq", as: :registration_faq
   get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment

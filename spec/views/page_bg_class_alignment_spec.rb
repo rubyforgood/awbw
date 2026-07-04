@@ -196,6 +196,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/public_registrations/show.html.erb" => "public",
     "app/views/events/registrations/show.html.erb"        => "public",
     "app/views/events/registrations/invoice.html.erb"     => "public",
+    "app/views/events/registrations/receipt.html.erb"     => "public",
     "app/views/events/callouts/scholarship.html.erb"      => "public",
     "app/views/events/callouts/faq.html.erb"              => "public",
     "app/views/events/callouts/payment.html.erb"          => "public",

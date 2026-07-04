@@ -51,7 +51,7 @@ RSpec.describe "Events::Registrations", type: :request do
       it "renders the consolidated magic callout cards" do
         get registration_ticket_path(registration.slug)
         expect(response.body).to include("view your balance")
-        expect(response.body).to include("W-9 and invoice")
+        expect(response.body).to include("W-9, invoice, and receipt")
         expect(response.body).to include("Worksheets and resources for the training")
         expect(response.body).to include("Frequently asked questions")
       end
@@ -105,9 +105,67 @@ RSpec.describe "Events::Registrations", type: :request do
       end
     end
 
+    context "for a free event" do
+      let(:event) { create(:event, cost_cents: 0) }
+
+      it "redirects to the ticket (nothing to invoice)" do
+        get registration_invoice_path(registration.slug)
+        expect(response).to redirect_to(registration_ticket_path(registration.slug))
+      end
+    end
+
     context "with an invalid slug" do
       it "returns 404" do
         get registration_invoice_path("nonexistent-slug")
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+  end
+
+  describe "GET /registration/:slug/receipt" do
+    let(:event) { create(:event, title: "AWBW 2-Day Art Facilitator Training", cost_cents: 150_000) }
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    context "when paid in full" do
+      before { create(:allocation, allocatable: registration, amount: 150_000) }
+
+      it "renders the receipt with a zero balance" do
+        get registration_receipt_path(registration.slug)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("RECEIPT")
+        expect(response.body).to include("Paid in full")
+        expect(response.body).to include("AWBW 2-Day Art Facilitator Training")
+        expect(response.body).to include("Balance due")
+      end
+
+      context "as a guest" do
+        before { sign_out user }
+
+        it "renders the receipt (slug is authorization)" do
+          get registration_receipt_path(registration.slug)
+          expect(response).to have_http_status(:success)
+        end
+      end
+    end
+
+    it "redirects to the ticket when a balance is still due" do
+      get registration_receipt_path(registration.slug)
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+
+    context "for a free event" do
+      let(:event) { create(:event, cost_cents: 0) }
+
+      it "redirects to the ticket (nothing to receipt)" do
+        get registration_receipt_path(registration.slug)
+        expect(response).to redirect_to(registration_ticket_path(registration.slug))
+      end
+    end
+
+    context "with an invalid slug" do
+      it "returns 404" do
+        get registration_receipt_path("nonexistent-slug")
         expect(response).to have_http_status(:not_found)
       end
     end
@@ -252,6 +310,20 @@ RSpec.describe "Events::Registrations", type: :request do
       get registration_forms_path(registration.slug)
       expect(response.body).to include(registration_resource_path(registration.slug, w9, return_to: "forms"))
       expect(response.body).not_to include("/documents/awbw-w9.pdf")
+    end
+
+    it "omits the receipt link until the balance is paid in full" do
+      get registration_forms_path(registration.slug)
+      expect(response.body).not_to include(registration_receipt_path(registration.slug))
+    end
+
+    it "links to the receipt once paid in full, returning to forms" do
+      paid_event = create(:event, cost_cents: 150_000)
+      paid_registration = create(:event_registration, event: paid_event, registrant: user.person)
+      create(:allocation, allocatable: paid_registration, amount: 150_000)
+
+      get registration_forms_path(paid_registration.slug)
+      expect(response.body).to include(registration_receipt_path(paid_registration.slug, return_to: "forms"))
     end
   end
 
