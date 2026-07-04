@@ -5,6 +5,13 @@ RSpec.describe "Events", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:event) { create(:event) }
 
+  # Makes the event CE-eligible (offers a positive number of CE hours), which
+  # gates every CE column/filter/export.
+  def offer_ce!(target_event)
+    target_event.update!(ce_hours_offered: 6)
+    target_event
+  end
+
   let(:valid_params) do
     {
       event: {
@@ -248,18 +255,25 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("Preview bulk payment page")
     end
 
-    it "renders the 'Before you attend' toggle with the details fields" do
+    it "renders the built-in 'Before you attend' card fields within the callouts section" do
       get edit_event_path(event)
+      expect(response.body).to include("Registration ticket callouts")
       expect(response.body).to include("Before you attend")
       expect(response.body).to include("event[event_details_label]")
       expect(response.body).to include("event[event_details]")
     end
 
-    it "renders the 'CE hours' toggle with the details fields" do
+    it "renders the built-in 'CE hours' card fields within the callouts section" do
       get edit_event_path(event)
+      expect(response.body).to include("Registration ticket callouts")
       expect(response.body).to include("CE hours")
       expect(response.body).to include("event[ce_hours_details_label]")
       expect(response.body).to include("event[ce_hours_details]")
+    end
+
+    it "previews the app-controlled built-in callouts (greyed, non-editable)" do
+      get edit_event_path(event)
+      expect(response.body).to include("Frequently asked questions")
     end
   end
 
@@ -585,6 +599,13 @@ RSpec.describe "Events", type: :request do
     context "organization column" do
       let(:organization) { create(:organization, name: "Helping Hands") }
 
+      # Scopes assertions to the registrant's org cell so generic words like
+      # "None" in unrelated filter dropdowns don't cause false matches.
+      def org_cell_text
+        Nokogiri::HTML(response.body)
+          .at_css("tr#registrant-row-#{registration.id} td[data-column-toggle-col='organization']")&.text&.squish
+      end
+
       # Stores a submitted "agency_name" answer for the registrant, mirroring what
       # public registration captures, so the Pending/None chip logic has data.
       def submit_agency_name(name)
@@ -610,25 +631,25 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include(">Pending<")
-        expect(response.body).not_to include(">None<")
+        expect(org_cell_text).to include("Pending")
+        expect(org_cell_text).not_to include("None")
       end
 
       it "shows a 'None' chip when a registrant has no linked org and submitted nothing" do
         get registrants_event_path(event)
 
-        expect(response.body).to include(">None<")
-        expect(response.body).not_to include(">Pending<")
+        expect(org_cell_text).to include("None")
+        expect(org_cell_text).not_to include("Pending")
       end
 
-      it "shows the linked org AND a 'Pending' chip when the submitted name is not among the linked orgs" do
+      it "does not show a 'Pending' chip when an org is linked, even if the submitted name differs" do
         create(:event_registration_organization, event_registration: registration, organization: organization)
         submit_agency_name("A Different Unlisted Agency")
 
         get registrants_event_path(event)
 
-        expect(response.body).to include(organization.name)
-        expect(response.body).to include(">Pending<")
+        expect(org_cell_text).to include(organization.name)
+        expect(org_cell_text).not_to include("Pending")
       end
 
       it "does not show 'Pending' when the submitted name matches a linked org" do
@@ -637,8 +658,85 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include(organization.name)
-        expect(response.body).not_to include(">Pending<")
+        expect(org_cell_text).to include(organization.name)
+        expect(org_cell_text).not_to include("Pending")
+      end
+    end
+
+    context "readiness filtering" do
+      let(:ready_person) { create(:person, first_name: "Reada", last_name: "Paidinfull") }
+      let(:not_ready_person) { create(:person, first_name: "Nottaready", last_name: "Owes") }
+      let!(:ready_registration) { create(:event_registration, event: event, registrant: ready_person, status: "registered") }
+      let!(:not_ready_registration) { create(:event_registration, event: event, registrant: not_ready_person, status: "registered") }
+
+      before do
+        # Pay `ready_registration` in full and link an org so it clears the
+        # pre-event checklist; `not_ready_registration` stays unpaid → not ready.
+        create(:allocation,
+          source: create(:payment, amount_cents: event.cost_cents, amount_cents_remaining: event.cost_cents),
+          allocatable: ready_registration, amount: event.cost_cents)
+        create(:event_registration_organization, event_registration: ready_registration, organization: create(:organization))
+      end
+
+      it "renders the combined Status column with the right badge labels" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Ready")
+        expect(response.body).to include("Not ready")
+      end
+
+      it "shows a two-word reason under the Not ready badge" do
+        get registrants_event_path(event)
+
+        # Nottaready is unpaid on a paid event
+        expect(response.body).to include("Payment due")
+      end
+
+      it "shows the Certificate pending badge with a cert-type subtext once an event-ready registrant has attended" do
+        ready_registration.update!(status: "attended")
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Certificate pending")
+        expect(response.body).to include(">Registration<")
+      end
+
+      it "shows only not-ready registrants when filtered to not_ready" do
+        get registrants_event_path(event, params: { readiness: "not_ready" })
+
+        expect(response.body).to include("Nottaready")
+        expect(response.body).not_to include("Reada")
+      end
+
+      it "shows only ready registrants when filtered to ready" do
+        get registrants_event_path(event, params: { readiness: "ready" })
+
+        expect(response.body).to include("Reada")
+        expect(response.body).not_to include("Nottaready")
+      end
+
+      it "excludes an attended registrant from 'completed' until the certificate is sent" do
+        ready_registration.update!(status: "attended")
+
+        get registrants_event_path(event, params: { readiness: "completed" })
+
+        expect(response.body).not_to include("Reada")
+        expect(response.body).not_to include("Nottaready")
+      end
+
+      it "shows a registrant under 'completed' once attended and the certificate is sent" do
+        ready_registration.update!(status: "attended", certificate_sent_at: Time.current)
+
+        get registrants_event_path(event, params: { readiness: "completed" })
+
+        expect(response.body).to include("Reada")
+        expect(response.body).not_to include("Nottaready")
+      end
+
+      it "does not crash on an invalid readiness filter" do
+        get registrants_event_path(event, params: { readiness: "bogus" })
+
+        expect(response).to have_http_status(:ok)
       end
     end
 
@@ -713,7 +811,6 @@ RSpec.describe "Events", type: :request do
       it "shows the due amount and no paid amount when nothing has been paid" do
         get registrants_event_path(event)
 
-        expect(response.body).to include("fa-circle-exclamation")
         expect(response.body).to include("$10 due")
         expect(response.body).not_to include("Partial")
       end
@@ -724,7 +821,6 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include("fa-circle-half-stroke")
         expect(response.body).to include("Partial payment · $6 due")
         expect(response.body).not_to include(">Partial payment<")
         expect(response.body).to include("$6 due")
@@ -736,7 +832,6 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include("fa-circle-exclamation")
         expect(response.body).to include("$6 due")
         expect(response.body).not_to include("Partial")
       end
@@ -747,7 +842,6 @@ RSpec.describe "Events", type: :request do
 
         get registrants_event_path(event)
 
-        expect(response.body).to include("fa-circle-check")
         expect(response.body).to include(">Paid</span>")
       end
 
@@ -777,23 +871,25 @@ RSpec.describe "Events", type: :request do
     context "registration form icon" do
       let(:reg_form) { create(:form, :standalone, name: "Registration Form") }
 
-      it "shows green icon when person submitted the current registration form" do
+      it "shows a blue outline form icon when person submitted the current registration form" do
         create(:event_form, event: event, form: reg_form, role: "registration")
         create(:form_submission, person: person, form: reg_form)
 
         get registrants_event_path(event)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include('fa-solid fa-file-lines')
+        expect(response.body).to include('fa-regular fa-file-lines')
+        expect(response.body).to include('text-blue-600')
       end
 
-      it "shows gray icon when person has not submitted any form" do
+      it "reserves an empty slot (no icon) when person has not submitted, keeping later icons aligned" do
         create(:event_form, event: event, form: reg_form, role: "registration")
 
         get registrants_event_path(event)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include('fa-regular fa-file-lines')
+        expect(response.body).not_to include('fa-file-lines')
+        expect(response.body).to include('inline-flex w-4 justify-center')
       end
 
       it "does not show any form icon when event has no forms" do
@@ -801,6 +897,51 @@ RSpec.describe "Events", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).not_to include('fa-file-lines')
+      end
+
+      it "shows no form icon when the only submission is for a bulk payment form" do
+        bulk_payment_form = create(:form, :standalone, name: "Bulk Payment Form")
+        create(:event_form, event: event, form: reg_form, role: "registration")
+        create(:event_form, event: event, form: bulk_payment_form, role: "bulk_payment")
+        create(:form_submission, person: person, form: bulk_payment_form)
+
+        get registrants_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include('fa-file-lines')
+        expect(response.body).to include('inline-flex w-4 justify-center')
+      end
+    end
+
+    context "scholarship application icon" do
+      let(:scholarship_form) { create(:form, :standalone, name: "Scholarship Form") }
+
+      before { create(:event_form, event: event, form: scholarship_form, role: "scholarship") }
+
+      it "shows the scholarship icon when the person submitted the scholarship form" do
+        submission = create(:form_submission, person: person, form: scholarship_form, role: "scholarship")
+        create(:form_answer, form_submission: submission)
+
+        get registrants_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("fa-solid fa-hand-holding-heart")
+      end
+
+      it "does not show the scholarship icon for a submission with no answers" do
+        create(:form_submission, person: person, form: scholarship_form, role: "scholarship")
+
+        get registrants_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("fa-hand-holding-heart")
+      end
+
+      it "does not show the scholarship icon when the person has no scholarship submission" do
+        get registrants_event_path(event)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("fa-hand-holding-heart")
       end
     end
   end
@@ -868,6 +1009,137 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /events/:id/registrants with the CE status filter" do
+    let(:event) { create(:event, cost_cents: 1_000) }
+    let(:complete_person) { create(:person, first_name: "Complete", last_name: "Person") }
+    let(:missing_person) { create(:person, first_name: "Missing", last_name: "Person") }
+    let(:none_person) { create(:person, first_name: "Noce", last_name: "Person") }
+
+    let!(:complete_reg) do
+      reg = create(:event_registration, event: event, registrant: complete_person,
+                                         ce_credit_requested: true, ce_license_number: "ABC123", ce_hours_requested: 3)
+      create(:allocation, source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000),
+                          allocatable: reg, amount: 1_000)
+      reg
+    end
+    let!(:missing_reg) { create(:event_registration, event: event, registrant: missing_person, ce_credit_requested: true) }
+    let!(:none_reg) { create(:event_registration, event: event, registrant: none_person, ce_credit_requested: false) }
+
+    before do
+      offer_ce!(event)
+      sign_in admin
+    end
+
+    it "shows the CE status column and filter when the event offers CE" do
+      get registrants_event_path(event)
+      expect(response.body).to include("CE status")
+      expect(response.body).to include('data-column-toggle-group-value="ce"')
+    end
+
+    it "renders the CE status column on by default, with a toggle to hide it" do
+      get registrants_event_path(event)
+      # CE column markers render visible (no `hidden` class) since the toggle defaults on…
+      expect(response.body).to include('data-column-toggle-col="ce"')
+      expect(response.body).not_to match(/class="[^"]*\bhidden\b[^"]*"[^>]*data-column-toggle-col="ce"/)
+      # …and the toggle switch shows its on-state.
+      expect(response.body).to include('data-column-toggle-group-value="ce"')
+    end
+
+    it "filters to all CE requests" do
+      get registrants_event_path(event, ce_status: "requested")
+      expect(response.body).to include("Complete Person")
+      expect(response.body).to include("Missing Person")
+      expect(response.body).not_to include("Noce Person")
+    end
+
+    it "filters to CE requests missing a license number" do
+      get registrants_event_path(event, ce_status: "license_not_provided")
+      expect(response.body).to include("Missing Person")
+      expect(response.body).not_to include("Complete Person")
+    end
+
+    it "filters to CE requests missing hours" do
+      get registrants_event_path(event, ce_status: "hours_not_provided")
+      expect(response.body).to include("Missing Person")
+      expect(response.body).not_to include("Complete Person")
+    end
+
+    it "filters to paid CE requests" do
+      get registrants_event_path(event, ce_status: "paid")
+      expect(response.body).to include("Complete Person")
+      expect(response.body).not_to include("Missing Person")
+    end
+
+    it "does not crash on an invalid ce_status" do
+      get registrants_event_path(event, ce_status: "bogus")
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "hides CE entirely when the event's registration form doesn't offer CE" do
+      plain_event = create(:event)
+      create(:event_registration, event: plain_event, ce_credit_requested: true)
+      get registrants_event_path(plain_event)
+      expect(response.body).not_to include("CE status")
+    end
+
+    it "includes a CE status column in the CSV export" do
+      get registrants_event_path(event, format: :csv)
+      expect(response.body).to include("CE status")
+      expect(response.body).to include("Incomplete")
+    end
+  end
+
+  describe "GET /events/:id/registrants CE status column states" do
+    let(:event) { offer_ce!(create(:event, cost_cents: 1_000)) }
+    let(:person) { create(:person, first_name: "Cee", last_name: "Ee") }
+
+    before { sign_in admin }
+
+    # The CE chip is the only content of the CE column cell, so its squished text
+    # is the chip label (the trailing link arrow icon contributes no text).
+    def ce_chip_text
+      Nokogiri::HTML(response.body).at_css('td[data-column-toggle-col="ce"]')&.text&.squish
+    end
+
+    it "shows Create when CE was not requested" do
+      create(:event_registration, event: event, registrant: person, ce_credit_requested: false)
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("Create")
+    end
+
+    it "shows Requested when requested but no CE registration record exists yet" do
+      create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("Requested")
+    end
+
+    it "shows No license # once a CE record exists without a license number" do
+      reg = create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+      create(:continuing_education_registration, event_registration: reg,
+        professional_license: create(:professional_license, :placeholder, person: person))
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("No license #")
+    end
+
+    it "shows Filed once a license is on file but the CE balance is unpaid" do
+      reg = create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+      create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
+        professional_license: create(:professional_license, person: person))
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("Filed")
+    end
+
+    it "shows Recipient when the CE balance is paid" do
+      reg = create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+      cer = create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
+        professional_license: create(:professional_license, person: person))
+      create(:allocation, source: create(:payment, amount_cents: 15_000, amount_cents_remaining: 15_000),
+        allocatable: cer, amount: 15_000)
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("Recipient")
+    end
+  end
+
   describe "GET /events/:id/registrants with state and county filters" do
     let(:ca_person) { create(:person, first_name: "Cali", last_name: "Person") }
     let(:ny_person) { create(:person, first_name: "York", last_name: "Person") }
@@ -918,7 +1190,10 @@ RSpec.describe "Events", type: :request do
     let(:person) { create(:person, first_name: "Onboard", last_name: "Ready") }
     let!(:registration) { create(:event_registration, event: event, registrant: person) }
 
-    before { sign_in admin }
+    before do
+      offer_ce!(event)
+      sign_in admin
+    end
 
     it "renders the onboarding matrix with the checklist columns" do
       get onboarding_event_path(event)
@@ -966,7 +1241,7 @@ RSpec.describe "Events", type: :request do
       get onboarding_event_path(event, highlight: registration.id)
 
       expect(response.body).to include("id=\"onboarding-row-#{registration.id}\"")
-      expect(response.body).to include("ring-amber-300")
+      expect(response.body).to include("ring-yellow-500")
     end
 
     it "shows an Onboarding back-link to the row on registration edit" do
@@ -1164,10 +1439,12 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(bulk_payments_event_path(event))
       end
 
-      it "omits the bulk payments term when nothing is unallocated" do
+      it "shows the bulk payments term at zero when nothing is unallocated" do
         get dashboard_event_path(event)
 
         expect(response.body).not_to include("Unallocated bulk payments")
+        expect(response.body).to include("Bulk payments")
+        expect(response.body).to include(bulk_payments_event_path(event))
       end
     end
 
@@ -1318,13 +1595,11 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Veterans")
       end
 
-      it "shows no-data boxes for life experiences and settings when registrants have no tags" do
+      it "hides the life experiences and settings cards when registrants have no tags" do
         get background_event_path(event)
 
-        expect(response.body).to include("Life experiences")
-        expect(response.body).to include("No life experiences from registration answers yet.")
-        expect(response.body).to include("Settings")
-        expect(response.body).to include("No settings from registration answers yet.")
+        expect(response.body).not_to include("Life experiences")
+        expect(response.body).not_to include("Settings")
       end
 
       it "links scholarship recipients to their entry on the recipients page" do
@@ -1414,8 +1689,8 @@ RSpec.describe "Events", type: :request do
       create(:form_field, form: scholarship_form, name: "How will this help the people you serve?",
                           field_identifier: "impact_description")
     end
-    let(:service_area_field) do
-      create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
+    let(:sector_field) do
+      create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "additional_sectors")
     end
 
     before do
@@ -1423,10 +1698,10 @@ RSpec.describe "Events", type: :request do
       create(:event_form, :scholarship, event: event, form: scholarship_form)
       create(:event_registration, event: event, registrant: applicant, status: "registered", scholarship_requested: true)
 
-      # Service area captured as a registration answer (resolved from the sector id).
+      # Sector captured as a registration answer (resolved from the sector id).
       sector = create(:sector, name: "Sexual Assault")
       reg_submission = create(:form_submission, person: applicant, form: registration_form)
-      create(:form_answer, form_submission: reg_submission, form_field: service_area_field, submitted_answer: sector.id.to_s)
+      create(:form_answer, form_submission: reg_submission, form_field: sector_field, submitted_answer: sector.id.to_s)
 
       # Scholarship answer rides on a separate scholarship submission.
       sch_submission = create(:form_submission, person: applicant, form: scholarship_form, role: "scholarship")
@@ -1436,7 +1711,7 @@ RSpec.describe "Events", type: :request do
     context "as admin" do
       before { sign_in admin }
 
-      it "renders each applicant with their service area resolved from the form answer and scholarship answers" do
+      it "renders each applicant with their sector resolved from the form answer and scholarship answers" do
         get recipients_event_path(event)
 
         expect(response).to have_http_status(:ok)

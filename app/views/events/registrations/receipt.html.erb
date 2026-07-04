@@ -1,0 +1,14 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Receipt — #{@event.title}") %>
+<%# Eyebrow returns to the callout the registrant came from (forms/payment),
+    falling back to the forms page when reached directly. %>
+<% back_path, back_label = case params[:return_to]
+   when "payment"
+     [ registration_payment_path(@event_registration.slug), "Back to payment" ]
+   else
+     [ registration_forms_path(@event_registration.slug), "Back to forms" ]
+   end %>
+<%= render "events/invoices/actions", back_path: back_path, back_label: back_label %>
+<div class="px-4 sm:px-8 py-6 print:p-0">
+  <%= render "events/receipts/receipt", receipt: @receipt %>
+</div>

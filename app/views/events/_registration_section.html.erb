@@ -25,19 +25,19 @@
             <%= button_to button_text,
                           event_registrant_registration_path(event_id: event),
                           data: { turbo: !event.object.cost_cents.to_i.positive? },
-                          class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
-                          style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
+                          class: "btn btn-accent px-10 py-2 text-2xl uppercase",
+                          style: "font-family: 'Telefon Bold', sans-serif;" %>
           <% else %>
             <%= link_to button_text,
                         new_event_public_registration_path(event),
-                        class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
-                        style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
+                        class: "btn btn-accent px-10 py-2 text-2xl uppercase",
+                        style: "font-family: 'Telefon Bold', sans-serif;" %>
           <% end %>
         <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
           <%= link_to button_text,
                       new_event_public_registration_path(event),
-                      class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white event-register-btn",
-                      style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(170, 46, 0); border: 3px solid rgb(170, 46, 0);" %>
+                      class: "btn btn-accent px-10 py-2 text-2xl uppercase",
+                      style: "font-family: 'Telefon Bold', sans-serif;" %>
         <% end %>
       <% else %>
         <span class="text-2xl font-bold text-blue-400 italic">Registration closed</span>
@@ -58,11 +58,12 @@
 
   <% if (registered || slug_registered) && !event.ended? %>
     <!-- CALENDAR LINKS -->
+    <% calendar_registration = registered ? event.active_registration_for(current_user&.person) : slug_registration %>
     <div class="flex flex-col items-center mt-4">
       <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
         Add to Your Calendar
       </p>
-      <div class="flex gap-2 items-center text-sm text-gray-700"><%= event.calendar_links %></div>
+      <div class="flex gap-2 items-center text-sm text-gray-700"><%= event.calendar_links(show_videoconference_details: calendar_registration&.videoconference_details_visible?) %></div>
     </div>
   <% end %>
 <% end %>

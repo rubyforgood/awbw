@@ -456,14 +456,16 @@ RSpec.describe EventDashboard do
       expect(dashboard.scholarship_answers_by_applicant[embedded_applicant.id].size).to eq(1)
     end
 
-    it "gathers header (service area / age group) answers keyed by applicant and identifier" do
+    it "gathers header (sector / age group) answers keyed by applicant, sector answers under the normalized sector key" do
+      # Use a legacy "service area" identifier to confirm it still resolves under
+      # the normalized sector key alongside the current "sector" identifiers.
       service_field = create(:form_field, form: registration_form, name: "Primary sector", field_identifier: "primary_service_area")
       reg_submission = FormSubmission.find_by(person: embedded_applicant, form: registration_form)
       create(:form_answer, form_submission: reg_submission, form_field: service_field, submitted_answer: "5")
 
       header = dashboard.header_answers_by_applicant
 
-      expect(header[embedded_applicant.id]["primary_service_area"].submitted_answer).to eq("5")
+      expect(header[embedded_applicant.id][EventDashboard::HEADER_SECTOR_KEY].submitted_answer).to eq("5")
       expect(header).not_to have_key(non_applicant.id)
     end
 
@@ -758,7 +760,7 @@ RSpec.describe EventDashboard do
 
   # Admins create facilitator affiliations manually after registration, so a
   # registrant frequently has none yet. The org must still be classified by its
-  # own history as of today rather than defaulting to :new.
+  # own history as of the event rather than defaulting to :new.
   context "program-status when the registrant has no facilitator affiliation yet" do
     let(:event) { create(:event) }
     let(:person) { create(:person) }
@@ -791,6 +793,32 @@ RSpec.describe EventDashboard do
       it "classifies the org as reinstated" do
         expect(dashboard.program_statuses_by_registrant[person.id]).to eq([ :reinstated ])
       end
+    end
+  end
+
+  context "program-status breakdown for a past event whose affiliations have since ended" do
+    # The breakdown must reflect the organizations and statuses as they stood at
+    # the time of the event, not as they stand today. This registrant's
+    # facilitator affiliation was active during the event but has since ended;
+    # revisiting the dashboard must still count and classify the program the way
+    # it was at the event, rather than dropping it because the affiliation is no
+    # longer active right now.
+    let(:event) { create(:event, :ended) }
+    let(:org) { create(:organization, name: "Lapsed Program") }
+    let(:person) { create(:person) }
+
+    before do
+      create(:affiliation, organization: org, person: person, title: "Facilitator",
+             start_date: 1.year.ago, end_date: 2.days.ago)
+      create(:event_registration, event: event, registrant: person, status: "registered")
+    end
+
+    it "still counts the program as it was at the time of the event" do
+      expect(dashboard.program_status_counts).to eq(new: 1, ongoing: 0, reinstated: 0)
+    end
+
+    it "keeps the program in the organization count" do
+      expect(dashboard.organization_count).to eq(1)
     end
   end
 

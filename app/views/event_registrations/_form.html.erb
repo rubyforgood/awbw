@@ -17,14 +17,18 @@
            "attended"              => "text-green-600",
            "incomplete_attendance" => "text-amber-600",
            "cancelled"             => "text-gray-500",
-           "no_show"               => "text-red-600"
+           "no_show"               => "text-red-600",
+           "transferred_in"        => "text-teal-600",
+           "transferred_out"       => "text-purple-600"
          } %>
       <% status_icons = {
            "registered"            => "fa-clipboard-list",
            "attended"              => "fa-circle-check",
            "incomplete_attendance" => "fa-clock",
            "cancelled"             => "fa-ban",
-           "no_show"               => "fa-circle-xmark"
+           "no_show"               => "fa-circle-xmark",
+           "transferred_in"        => "fa-right-to-bracket",
+           "transferred_out"       => "fa-right-from-bracket"
          } %>
       <% current_icon_color = status_icon_colors[f.object.status] || "text-gray-500" %>
       <% current_icon = status_icons[f.object.status] || "fa-question" %>
@@ -137,8 +141,8 @@
       <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-4">
-        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:col-span-2">
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>">
               <i class="fa-solid fa-building"></i>
@@ -214,7 +218,10 @@
             details (license number + requested hours) and what they owe at the
             default hourly rate, recomputed live by the ce-credit-requested
             controller. The details collapse when CE isn't requested. ---- %>
-        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <section class="overflow-hidden rounded-xl border shadow-sm transition-colors <%= f.object.ce_credit_requested ? "border-teal-200 bg-teal-50" : "border-gray-200 bg-white" %>"
+                 data-controller="ce-credit-requested"
+                 data-ce-credit-requested-initial-value="<%= f.object.ce_credit_requested %>"
+                 data-ce-credit-requested-rate-value="<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
               <i class="fa-solid fa-certificate"></i>
@@ -222,10 +229,7 @@
             <h2 class="text-sm font-semibold text-gray-700">CE credits</h2>
           </div>
 
-          <div class="space-y-3 p-4"
-               data-controller="ce-credit-requested"
-               data-ce-credit-requested-initial-value="<%= f.object.ce_credit_requested %>"
-               data-ce-credit-requested-rate-value="<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>">
+          <div class="space-y-3 p-4">
             <label class="flex items-center gap-2.5 cursor-pointer">
               <input type="hidden" name="event_registration[ce_credit_requested]" value="0" autocomplete="off">
               <input type="checkbox"
@@ -298,10 +302,10 @@
       <% end %>
 
       <%# ---- Comments ---- %>
-      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="comment-edit-toggle">
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm scroll-mt-24" id="comments-section" data-controller="comment-edit-toggle">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:quotes, intensity: 100) %> <%= DomainTheme.text_class_for(:quotes, intensity: 600) %>">
-            <i class="fa-solid fa-comments"></i>
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:comments, intensity: 100) %> <%= DomainTheme.text_class_for(:comments, intensity: 600) %>">
+            <i class="fa-solid fa-message"></i>
           </span>
           <h2 class="text-sm font-semibold text-gray-700">Registration comments</h2>
           <%= link_to event_registration_comments_path(f.object),
@@ -372,11 +376,12 @@
               <%= rf.input :shoutout_text,
                     label: "Shout-out text",
                     label_html: { class: "sr-only" },
-                    as: :string,
+                    as: :text,
                     placeholder: "Shown beneath their name on the recipients page",
                     wrapper_html: { class: "mb-0" },
                     input_html: {
                       maxlength: 1650,
+                      rows: 1,
                       class: "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-200 focus:outline-none"
                     } %>
             <% end %>
@@ -432,17 +437,22 @@
 
     <%# ---- Footer actions ---- %>
     <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
-      <% if allowed_to?(:destroy?, f.object) %>
+      <% if allowed_to?(:destroy?, f.object) && f.object.deletable? %>
         <%= link_to event_registration_path(@event_registration, return_to: params[:return_to].presence),
                     class: "btn btn-danger-outline",
                     data: { turbo: true, turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } do %>
           <i class="fa-solid fa-trash-can"></i>
           Delete
         <% end %>
+      <% elsif allowed_to?(:destroy?, f.object) %>
+        <span class="inline-flex max-w-md items-start gap-2 text-sm text-gray-500">
+          <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-gray-400"></i>
+          <%= f.object.decorate.deletion_blocked_reason %>
+        </span>
       <% end %>
 
       <% cancel_path = case params[:return_to]
-                       when "registrants" then registrants_event_path(event_registration.event)
+                       when "registrants" then registrants_event_row_path(event_registration.event, event_registration.id)
                        when "index" then event_registrations_path
                        when "preview_reminder" then preview_reminder_event_path(event_registration.event)
                        else allowed_to?(:index?, EventRegistration) ? event_registrations_path : root_path
@@ -450,7 +460,7 @@
 
       <div class="ml-auto flex items-center gap-3">
         <%= link_to "Cancel", cancel_path, class: "btn btn-secondary-outline" %>
-        <%= f.button :submit, f.object.persisted? ? "Save changes" : "Create registration", class: "btn btn-primary" %>
+        <%= f.button :submit, f.object.persisted? ? "Save changes" : "Submit", class: "btn btn-primary" %>
       </div>
     </div>
   </div>

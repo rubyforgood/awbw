@@ -36,17 +36,13 @@
       </p>
     <% end %>
 
-    <% if @event.videoconference_url.present? %>
+    <%# Virtual events show only the platform label (e.g. "Zoom") — the join link,
+        meeting ID, and passcode are withheld until a week before and live on the
+        ticket/videoconference pages, not in the confirmation. %>
+    <% if event_platform_label(@event).present? %>
       <p style="font-size: 16px; color: #374151; margin: 0 0 8px;">
-        <a href="<%= @event.videoconference_url %>" style="color: #374151; text-decoration: underline;">Join us on <%= @event.decorate.videoconference_domain %></a>
+        <%= event_platform_label(@event) %>
       </p>
-      <% vc_room = @event.decorate.videoconference_room %>
-      <% if vc_room %>
-        <p style="font-size: 14px; color: #6b7280; margin: 0 0 4px;"><%= vc_room[:label] %>: <%= vc_room[:value] %></p>
-      <% end %>
-      <% if @event.videoconference_passcode.present? %>
-        <p style="font-size: 14px; color: #6b7280; margin: 0 0 8px;">Passcode: <%= @event.videoconference_passcode %></p>
-      <% end %>
     <% end %>
 
     <% if @event.registration_close_date %>

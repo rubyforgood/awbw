@@ -64,6 +64,20 @@
           </div>
         </div>
       <% end %>
+
+      <%# Jump to the registrant's full submission, where their scholarship
+          application answers are surfaced (inline for embedded-section forms, or
+          in a dedicated "Scholarship application" card for separate forms). %>
+      <% if @form_responses_available %>
+        <div class="border-t border-gray-100 pt-5">
+          <%= link_to event_public_registration_path(@event, reg: @event_registration.slug),
+                      class: "inline-flex items-center gap-1.5 text-sm font-medium #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:underline" do %>
+            <i class="fa-solid fa-file-lines"></i>
+            Review your form responses
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>

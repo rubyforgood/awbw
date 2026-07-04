@@ -1,13 +1,14 @@
 class Sector < ApplicationRecord
   include NameFilterable, Publishable
-  # Canonical service-area sector tags, in display order. "Other" is kept at the end
-  # as the catch-all free-text fallback for additional service areas (see
+  # Canonical sector tags, in display order. "Other" is kept at the end
+  # as the catch-all free-text fallback for additional sectors (see
   # OTHER_SECTOR_NAME below) — it isn't a selectable tag itself. Descriptions for
   # these (the parenthetical clarifications) live in db/seeds.rb.
   SECTOR_TYPES = [
     "Batterers Intervention",
     "Child Abuse/Neglect",
     "Climate/Environmental",
+    "Community Building",
     "Community Violence",
     "Court/Legal System",
     "Disability Services",
@@ -27,7 +28,7 @@ class Sector < ApplicationRecord
     "Military/Veterans",
     "Private Practice/Sole Proprietor",
     "Racial/Social Justice",
-    "Religious/Faith Based",
+    "Religious/Faith-Based",
     "Reproductive Services",
     "Restorative/Transformative Justice",
     "Self-Care/Personal Growth",
@@ -38,8 +39,8 @@ class Sector < ApplicationRecord
     "Other"
   ]
 
-  # The catch-all sector. Offered for "additional" service areas but not as a
-  # respondent's single "primary" service area.
+  # The catch-all sector. Offered for "additional" sectors but not as a
+  # respondent's single "primary" sector.
   OTHER_SECTOR_NAME = "Other"
 
   STORY_DISPLAY_TEXT = "Which sectors does this story fit into?"

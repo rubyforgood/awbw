@@ -150,21 +150,22 @@ end
 
 puts "Creating Sectors…"
 # Optional descriptions clarify a sector on the public registration form: shown as
-# subtext under the checkbox in the additional service-areas list, and folded into
-# the "Name (description)" label in the single primary service-area dropdown (which
+# subtext under the checkbox in the additional sectors list, and folded into
+# the "Name (description)" label in the single primary sector dropdown (which
 # can't show subtext). They come from the parenthetical clarifications on the
 # canonical sector list. Names without an entry below have no description. Admins
 # can edit each from the Sectors admin once seeded.
 sector_descriptions = {
   "Climate/Environmental" => "fire recovery, disaster response, environmental trauma",
-  "Community Violence" => "gang violence, police violence, mass shootings, etc.",
-  "Health/Medical" => "hospitals, first responders, illness and chronic disease",
-  "Immigration" => "family separation, deportation, refugees/asylees, etc.",
-  "Incarceration" => "including re-entry services",
+  "Community Building" => "grassroots, outreach and engagement",
+  "Community Violence" => "gang violence, police violence, mass shootings",
+  "Health/Medical" => "hospitals, illness/chronic disease",
+  "Immigration" => "family separation, deportation, refugees/asylees",
+  "Incarceration" => "including re-entry",
   "Reproductive Services" => "birth trauma, perinatal care, challenges conceiving, etc.",
   "Restorative/Transformative Justice" => "individual and community reconciliation",
-  "Staff/Organizational Development" => "Secondary/Vicarious Trauma",
-  "Systems/Policy Change" => "Advocating at state/government levels for policy change"
+  "Staff/Organizational Development" => "including secondary/vicarious trauma",
+  "Systems/Policy Change" => "advocating at state/government levels for policy change"
 }
 Sector::SECTOR_TYPES.each do |sector_type|
   sector = find_or_create_by_name!(Sector, sector_type)
@@ -180,12 +181,10 @@ Sector.all.reject { |sector| canonical_names.include?(sector.name.downcase) }
 
 puts "Creating CategoryTypes/Categories…"
 category_type_categories = [
-  [ "AgeRange", "3-5" ],
-  [ "AgeRange", "6-12" ],
-  [ "AgeRange", "13-17" ],
-  [ "AgeRange", "18+" ],
-  [ "AgeRange", "Mixed-age groups" ],
-  [ "AgeRange", "Family windows" ],
+  [ "AgeRange", "Children (0-12)" ],
+  [ "AgeRange", "Teens (13-17)" ],
+  [ "AgeRange", "Adults (18+)" ],
+  [ "AgeRange", "Elders (65+)" ],
   # ["ArtType", "Boxes", 1],
   [ "ArtType", "Clay", 11 ],
   [ "ArtType", "Collage", 2 ],
@@ -297,6 +296,17 @@ category_type_categories.each do |category_type_name, category_name, _legacy_id|
   end
   cat.update!(published: true) unless cat.published?
 end
+
+# Unpublish any AgeRange category no longer on the canonical list (e.g. the
+# retired "3-5" / "6-12" / "Family windows" buckets), preserving historical
+# taggings rather than destroying them, so the public form's age dropdowns only
+# offer the current ranges. Scoped to AgeRange so other category types are untouched.
+canonical_age_ranges = category_type_categories
+  .select { |type_name, _name| type_name == "AgeRange" }
+  .map { |_type_name, name| name.downcase }
+age_range_type = CategoryType.find_by(name: "AgeRange")
+age_range_type&.categories&.reject { |category| canonical_age_ranges.include?(category.name.downcase) }
+  &.each { |category| category.update!(published: false) }
 
 puts "Setting AgeRange category positions…"
 Category.heal_position_column!

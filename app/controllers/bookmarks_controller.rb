@@ -17,7 +17,7 @@ class BookmarksController < ApplicationController
       @bookmarks = @bookmarks.decorate
       @count_display = filtered.length == base_scope.length ? base_scope.length : "#{filtered.length}/#{base_scope.length}"
       set_index_variables
-      render :index_lazy
+      render :bookmarks_results
     else
       set_index_variables
     end

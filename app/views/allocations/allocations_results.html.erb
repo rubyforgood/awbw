@@ -1,4 +1,4 @@
-<%= turbo_frame_tag :allocation_results do %>
+<%= turbo_frame_tag :allocations_results do %>
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit">
     <% if @allocations.any? %>
       <% total = @allocations.respond_to?(:total_entries) ? @allocations.total_entries : @allocations.size %>

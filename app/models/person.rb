@@ -9,6 +9,7 @@ class Person < ApplicationRecord
   has_one :user, inverse_of: :person, dependent: :nullify
   has_many :affiliations, dependent: :destroy
   has_many :organizations, through: :affiliations
+  has_many :professional_licenses, dependent: :destroy
   has_many :communal_reports, through: :organizations, source: :reports
   has_many :windows_types, through: :organizations
 
@@ -17,6 +18,7 @@ class Person < ApplicationRecord
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
            dependent: :restrict_with_error
@@ -69,6 +71,7 @@ class Person < ApplicationRecord
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
     reject_if: proc { |attrs| attrs["organization_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :notifications, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   # Search Cop
   include SearchCop
@@ -136,6 +139,28 @@ class Person < ApplicationRecord
 
   def sector_list
     sectors.pluck(:name)
+  end
+
+  # Virtual checkbox for the admin person form. Presence of a consent timestamp is
+  # the source of truth; this lets an admin grant or withdraw consent. Withdrawing
+  # clears both the timestamp and its source; granting (when none is on file)
+  # stamps the time and records that an admin did it. Re-checking an existing
+  # consent leaves the original timestamp/source intact.
+  def mailing_list_consented
+    mailing_list_consent_at.present?
+  end
+
+  def mailing_list_consented=(value)
+    consented = ActiveModel::Type::Boolean.new.cast(value)
+
+    if consented
+      return if mailing_list_consent_at.present?
+      self.mailing_list_consent_at = Time.current
+      self.mailing_list_consent_source = "Admin update"
+    else
+      self.mailing_list_consent_at = nil
+      self.mailing_list_consent_source = nil
+    end
   end
 
   def name
@@ -228,16 +253,14 @@ class Person < ApplicationRecord
     }
   end
 
-  # Field identifiers whose "Other" free text maps onto the profile's sectors.
-  OTHER_SERVICE_AREA_IDENTIFIERS = %w[primary_service_area primary_service_area_single].freeze
   # Field identifiers whose "Other" free text maps onto the category-backed
   # profile fields shown on the edit page.
   OTHER_WORKSHOP_SETTING_IDENTIFIERS = %w[primary_age_group additional_age_group].freeze
 
-  # Free-text "Other" service areas the person typed on registration forms.
+  # Free-text "Other" sectors the person typed on registration forms.
   # They can't be Sector records, so they're surfaced beside the sector tags.
-  def other_service_area_responses
-    other_form_responses(OTHER_SERVICE_AREA_IDENTIFIERS)
+  def other_sector_responses
+    other_form_responses(FormField::SECTOR_FIELD_IDENTIFIERS)
   end
 
   # Free-text "Other" workshop settings (category-backed fields) from forms.

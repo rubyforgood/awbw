@@ -1,7 +1,7 @@
 class ResourcesController < ApplicationController
   include ExternallyRedirectable, AhoyTracking, TagAssignable, MentionableScopable
 
-  skip_before_action :authenticate_user!, only: [ :index, :show ]
+  skip_before_action :authenticate_user!, only: [ :index, :show, :download ]
 
   def index
     authorize!
@@ -21,7 +21,7 @@ class ResourcesController < ApplicationController
 
       track_index_intent(Resource, @resources, params)
 
-      render :resource_results
+      render :resources_results
     else
       render :index
     end

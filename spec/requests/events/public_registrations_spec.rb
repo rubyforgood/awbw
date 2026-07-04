@@ -69,6 +69,34 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     end
   end
 
+  describe "POST create error presentation" do
+    it "wires the error flash band to auto-scroll into view on failure" do
+      post_registration("too few")
+
+      expect(response).to have_http_status(:unprocessable_content)
+      # The form-errors Stimulus controller rides on the error flash band so it
+      # scrolls itself into view on connect.
+      expect(response.body).to match(/role="alert"[^>]*data-controller="form-errors"/)
+    end
+
+    it "shows no error band on a successful submission" do
+      first = create(:form_field, form: form, field_identifier: "first_name", name: "First name", required: false)
+      last = create(:form_field, form: form, field_identifier: "last_name", name: "Last name", required: false)
+      email = create(:form_field, form: form, field_identifier: "primary_email", name: "Email", required: false)
+
+      post event_public_registration_path(event),
+           params: { public_registration: { form_fields: {
+             essay_field.id.to_s => "this answer has plenty of words",
+             first.id.to_s => "Pat",
+             last.id.to_s => "Lee",
+             email.id.to_s => "pat@example.com"
+           } } }
+
+      expect(response).to have_http_status(:redirect)
+      expect(response.body).not_to include('data-controller="form-errors"')
+    end
+  end
+
   describe "POST create with a maximum character count" do
     let!(:bio_field) do
       create(:form_field, form: form, answer_type: :free_form_input_one_line,
@@ -356,6 +384,21 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Healthcare")
     end
 
+    it "renders the agency website as a text input so bare domains pass validation" do
+      website_field = create(:form_field, form: form, answer_type: :free_form_input_one_line,
+             field_identifier: "agency_website", name: "Organization website", required: false)
+
+      get new_event_public_registration_path(event)
+
+      input_id = "public_registration_form_fields_#{website_field.id}"
+      website_input = response.body[/<input[^>]*id="#{input_id}"[^>]*>/]
+      # type="url" makes browsers reject bare domains like "awbw.org"; a text
+      # input with inputmode="url" keeps the URL keyboard without that rejection.
+      expect(website_input).to include('type="text"')
+      expect(website_input).to include('inputmode="url"')
+      expect(website_input).not_to include('type="url"')
+    end
+
     it "shows the maximum character hint below the field" do
       create(:form_field, form: form, answer_type: :free_form_input_paragraph,
              name: "Bio", required: false, max_characters: 250)
@@ -578,6 +621,32 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       end
     end
 
+    context "when the scholarship answers were captured on the registration submission" do
+      let(:scholarship_form) { create(:form, role: "scholarship") }
+      let!(:scholarship_field) do
+        create(:form_field, form: scholarship_form, section: "scholarship",
+               answer_type: :free_form_input_paragraph, name: "Why do you need a scholarship?", required: false)
+      end
+
+      before do
+        EventForm.create!(event: event, form: scholarship_form, role: "scholarship")
+        # No separate scholarship submission — the answer hangs off the
+        # registration submission, on a scholarship-form field.
+        reg_submission = FormSubmission.find_by(person: person, form: form)
+        reg_submission.form_answers.create!(form_field: scholarship_field,
+                                            submitted_answer: "Our agency training budget was cut.")
+      end
+
+      it "still surfaces them in the scholarship application card" do
+        get event_public_registration_path(event, person_id: person.id)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Scholarship application")
+        expect(response.body).to include("Why do you need a scholarship?")
+        expect(response.body).to include("Our agency training budget was cut.")
+      end
+    end
+
     it "does not render a scholarship section when there is no scholarship submission" do
       get event_public_registration_path(event, person_id: person.id)
 
@@ -602,6 +671,23 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
         get event_public_registration_path(event, person_id: person.id)
 
         expect(response.body).not_to include("Back to linked organizations")
+      end
+    end
+
+    context "when viewed from the admin registrants roster" do
+      let(:admin) { create(:user, :admin) }
+      let!(:registration) { create(:event_registration, event: event, registrant: person) }
+
+      before { sign_in admin }
+
+      it "returns the eyebrow to the registrant's row instead of the ticket" do
+        get event_public_registration_path(event, person_id: person.id,
+          return_to: "registrants", return_registration_id: registration.id)
+
+        expect(response.body).to include("Back to registrants")
+        expect(response.body).to include("registrant-row-#{registration.id}")
+        expect(response.body).to include("highlight=#{registration.id}")
+        expect(response.body).not_to include("Back to ticket")
       end
     end
   end

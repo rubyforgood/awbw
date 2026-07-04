@@ -62,19 +62,28 @@ class EventDecorator < ApplicationDecorator
     length ? description&.truncate(length) : description
   end
 
-  def calendar_links
+  # `show_videoconference_details` controls whether the join link/ID/passcode are
+  # carried into the calendar entry. Callers with a registration pass that
+  # registrant's gate (date + paid/intends); the default falls back to the
+  # event-level date gate for registration-less contexts.
+  def calendar_links(show_videoconference_details: object.videoconference_details_visible?)
     start_time   = object.start_date.utc.strftime("%Y%m%dT%H%M%SZ")
     end_time     = object.end_date.utc.strftime("%Y%m%dT%H%M%SZ")
     title_encoded = ERB::Util.url_encode(object.title)
 
-    has_url      = object.videoconference_url.present?
+    # The join URL doubles as the calendar location, so withhold it from there
+    # too until the details may be shared — a physical location (if any) takes
+    # its place, otherwise the entry is left without a location.
+    has_url      = object.videoconference_url.present? && show_videoconference_details
     has_location = object.location.present?
     location_name = has_location ? object.location.name : nil
 
     # If both: URL in location field, physical location in description
     # If only URL: URL in location field
     # If only location: location in location field
-    event_description = object.rhino_description.to_plain_text
+    # Prefer the admin-authored short description; fall back to a flattened
+    # version of the rich show-page description when it's blank.
+    event_description = object.short_description.presence || object.rhino_description.to_plain_text
 
     if has_url && has_location
       cal_location = object.videoconference_url
@@ -91,8 +100,10 @@ class EventDecorator < ApplicationDecorator
     end
 
     # Carry the join link, meeting ID/code, and passcode into the calendar entry
-    # so registrants have everything they need to connect straight from the event.
-    description = [ videoconference_calendar_details, base_description ].compact_blank.join("\n\n")
+    # so registrants have everything they need to connect straight from the event
+    # — but only once the details may be shared (date + paid/intends).
+    vc_details = videoconference_calendar_details if show_videoconference_details
+    description = [ vc_details, base_description ].compact_blank.join("\n\n")
 
     desc_encoded     = ERB::Util.url_encode(description)
     location_encoded = ERB::Util.url_encode(cal_location.to_s)
@@ -287,10 +298,7 @@ class EventDecorator < ApplicationDecorator
     return if cost_cents.blank?
     return "Free event" if cost_cents.zero?
 
-    dollars = cost_cents / 100
-    cents   = cost_cents % 100
-    formatted = cents.zero? ? "$#{dollars}" : "$#{dollars}.#{cents.to_s.rjust(2, '0')}"
-    "Cost: #{formatted}"
+    "Cost: #{MoneyFormatter.dollars_from_cents(cost_cents)}"
   end
 
   def content
@@ -320,6 +328,7 @@ class EventDecorator < ApplicationDecorator
 
   # The videoconference connection block (join link, meeting ID/code, passcode)
   # as plain text for embedding in calendar entries. Nil when there's no link.
+  # Whether it's actually embedded is the caller's call (see #calendar_links).
   def videoconference_calendar_details
     return if videoconference_url.blank?
 

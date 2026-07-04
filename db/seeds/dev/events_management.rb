@@ -3,11 +3,20 @@
 # dev events that share them, event registrations for named scenarios, and form submissions.
 # Named people are looked up when present (e.g. after `rake db:seed:people_profiles`).
 
+# Faker is installed but not auto-required on staging, where the app runs as
+# RAILS_ENV=production and Bundler.require only loads the production group.
+require "faker"
+
 puts "Creating standalone registration forms…"
 unless Form.standalone.exists?(name: "Training Registration Form")
+  # Sections are built in this order (not the canonical SECTIONS order) so the
+  # seeded form reads top-to-bottom like the real AWBW Facilitator Training form:
+  # Your Information → Mailing Address → Your Organization → Participant
+  # Information → About You → Payment → Consent. The CE and "Additional forms"
+  # magic questions are appended below and slotted into place by reorder.
   FormBuilderService.new(
     name: "Training Registration Form",
-    sections: %i[person_identifier professional_info payment],
+    sections: %i[person_identifier person_contact_info professional_info person_background marketing payment consent],
     role: "registration"
   ).call
 end
@@ -87,25 +96,71 @@ if scholarship_form.header.blank?
   HTML
 end
 
-# Ensure the professional section (Primary Age Group(s) Served, Primary Service
-# Area, etc.) exists even on a registration form seeded before it was added — the
-# event Background charts aggregate answers to those questions.
-if registration_form.form_fields.where(field_identifier: "primary_age_group").none?
-  FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :professional_info ])
+# The two "Your goals" essays carry a 250-word minimum on the real form. Set it
+# on the seeded scholarship form so the public form shows the "Minimum of 250
+# words" hint and enforces it on submit. Idempotent: only sets when not already set.
+scholarship_form.form_fields
+  .where(field_identifier: %w[impact_description implementation_plan], min_words: [ nil, 0 ])
+  .update_all(min_words: 250)
+
+# The real scholarship form heads its first section "Partial Scholarship
+# Application" (see the scholarship screenshots). Idempotent — only renames the
+# default header.
+scholarship_form.form_fields
+  .where(answer_type: :group_header, name: "Scholarship Application")
+  .update_all(name: "Partial Scholarship Application")
+
+# Rename the generic section headers FormBuilderService creates to the AWBW
+# Facilitator Training wording, and add the subtitles shown on the real form.
+# Idempotent: each rename only matches the default name, so a re-seed (or an admin
+# edit) is left alone.
+rename_registration_header = ->(from, to, subtitle: nil) do
+  header = registration_form.form_fields.find_by(answer_type: :group_header, name: from)
+  header&.update!(name: to, subtitle: subtitle)
+end
+rename_registration_header.call("Contact Information", "Your Information")
+rename_registration_header.call("Mailing Address", "Primary Mailing Address",
+                                subtitle: "For mailing raffle prizes, incentives, and important announcements")
+rename_registration_header.call("Organization Information", "Your Organization",
+                                subtitle: "If your organization has a website, please put your organization name as it appears on the website. " \
+                                          "If you're not associated with an organization, please provide a name for your art program.")
+rename_registration_header.call("Professional Information", "Participant Information")
+rename_registration_header.call("Background Information", "About You")
+
+# The real form folds the "How did you hear" / "What motivated you" questions in
+# under the "About You" heading, with no separate Marketing header and no
+# "interested in learning more?" question. Drop both so the seeded form matches.
+registration_form.form_fields.where(answer_type: :group_header, name: "Marketing").destroy_all
+registration_form.form_fields.where(field_identifier: "interested_in_more").destroy_all
+
+# Match the public AWBW form's field set, labels, and order (see the registration
+# screenshots): it labels the primary email "Primary Email", omits the optional
+# Preferred Nickname / Pronouns questions, and lists "What motivated you" before
+# "How did you hear". Idempotent — each clause only matches the default state.
+registration_form.form_fields
+  .where(field_identifier: "primary_email", name: "Email").update_all(name: "Primary Email")
+registration_form.form_fields.where(field_identifier: %w[nickname pronouns]).destroy_all
+
+motivation_field = registration_form.form_fields.find_by(field_identifier: "training_motivation")
+referral_field = registration_form.form_fields.find_by(field_identifier: "referral_source")
+if motivation_field && referral_field && motivation_field.position > referral_field.position
+  motivation_position = motivation_field.position
+  motivation_field.update_column(:position, referral_field.position)
+  referral_field.update_column(:position, motivation_position)
 end
 
-# Ensure the person/organization section (Organization Name, Position / Title) exists
-# so registrants can record the org + title they typed on the form — the registrants
-# page compares that typed org name against the registration's linked orgs.
-if registration_form.form_fields.where(field_identifier: "agency_name").none?
-  FormBuilderService.update_sections!(registration_form, (registration_form.sections || []).map(&:to_sym) | [ :person_contact_info ])
-end
+# The real form notes the payment timing under the "Payment Information" heading.
+registration_form.form_fields
+  .where(answer_type: :group_header, name: "Payment Information", subtitle: [ nil, "" ])
+  .update_all(subtitle: "Payments are due no more than three weeks after your registration date. " \
+                        "Training details will be sent after payments are received.")
 
 # The CE-interest "magic question": a single Yes/No whose answer drives the
 # resulting registration's ce_credit_requested flag (see
 # EventRegistrationServices::PublicRegistration). Seeded straight onto the form
 # with its own section so the form builder's add/remove-section logic leaves it
-# alone, and carrying the well-known field_identifier the service keys off.
+# alone, and carrying the well-known field_identifier the service keys off. A
+# follow-on license-number question mirrors the real form's CE block.
 ce_identifier = EventRegistrationServices::PublicRegistration::CE_CREDIT_INTEREST_IDENTIFIER
 if registration_form.form_fields.where(field_identifier: ce_identifier).none?
   next_position = (registration_form.form_fields.maximum(:position) || 0) + 1
@@ -119,7 +174,7 @@ if registration_form.form_fields.where(field_identifier: ce_identifier).none?
     visibility: :always_ask
   )
   ce_field = registration_form.form_fields.create!(
-    name: "Might you be seeking continuing education (CE) hours for attending this training?",
+    name: "Do you seek Continuing Education (CE) hours for this training?",
     answer_type: :single_select_radio,
     status: :active,
     position: next_position + 1,
@@ -127,14 +182,43 @@ if registration_form.form_fields.where(field_identifier: ce_identifier).none?
     field_identifier: ce_identifier,
     section: "continuing_education",
     visibility: :always_ask,
-    width: :full,
-    subtitle: "CE hours are available for select trainings. Let us know and our team will follow up with details."
+    width: :full
   )
   %w[Yes No].each_with_index do |opt, idx|
     ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
     ce_field.form_field_answer_options.create!(answer_option: ao)
   end
+  registration_form.form_fields.create!(
+    name: "If seeking CE hours, what is your LMFT, LCSW, LPCC or LEP license number?",
+    answer_type: :free_form_input_one_line,
+    status: :active,
+    position: next_position + 2,
+    required: false,
+    field_identifier: "ce_license_number",
+    section: "continuing_education",
+    visibility: :always_ask,
+    width: :full,
+    subtitle: "Acceptance of continuing education hours is determined by each individual state board separately, " \
+              "and AWBW cannot guarantee your specific state board will accept them. Participants are responsible " \
+              "for confirming whether the hours meet the requirements for their specific license and state."
+  )
 end
+
+# Bring an already-seeded CE block up to the current wording (these only run when
+# the field exists from an earlier seed, since the create above skips them then).
+# Idempotent — each clause only matches the prior default copy.
+registration_form.form_fields
+  .where(field_identifier: ce_identifier, name: "Do you plan to use Continuing Education (CE) hours for this course?")
+  .update_all(name: "Do you seek Continuing Education (CE) hours for this training?")
+registration_form.form_fields
+  .where(field_identifier: ce_identifier,
+         subtitle: "CE hours are available for select trainings. Let us know and our team will follow up with details.")
+  .update_all(subtitle: nil)
+registration_form.form_fields
+  .where(field_identifier: "ce_license_number", subtitle: [ nil, "" ])
+  .update_all(subtitle: "Acceptance of continuing education hours is determined by each individual state board separately, " \
+                        "and AWBW cannot guarantee your specific state board will accept them. Participants are responsible " \
+                        "for confirming whether the hours meet the requirements for their specific license and state.")
 
 # The "Additional forms" question: a multi-select whose checked options drive the
 # resulting registration's invoice_requested / w9_requested flags (see
@@ -142,7 +226,8 @@ end
 # flags to surface the matching downloads. Seeded onto its own section, like the
 # CE question above, so the form builder's add/remove-section logic leaves it
 # alone, and carrying the well-known field_identifier the service keys off. The
-# answer-option names must match the service's ADDITIONAL_FORMS_* constants.
+# W-9/Invoice option names must match the service's ADDITIONAL_FORMS_* constants;
+# "No forms needed" is an inert opt-out the service ignores.
 additional_forms_identifier = EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_IDENTIFIER
 if registration_form.form_fields.where(field_identifier: additional_forms_identifier).none?
   next_position = (registration_form.form_fields.maximum(:position) || 0) + 1
@@ -168,13 +253,26 @@ if registration_form.form_fields.where(field_identifier: additional_forms_identi
     subtitle: "If selected, these will be available on your digital registration ticket."
   )
   [
+    EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_W9,
     EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_INVOICE,
-    EventRegistrationServices::PublicRegistration::ADDITIONAL_FORMS_W9
+    "No forms needed"
   ].each_with_index do |opt, idx|
     ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
     additional_forms_field.form_field_answer_options.create!(answer_option: ao)
   end
 end
+
+# Renumber the form's fields so the appended CE block sits between "About You" and
+# "Payment Information", and "Additional forms" sits between payment and consent —
+# the order the real form uses. Idempotent: re-running lands on the same order.
+registration_section_order = %w[
+  person_identifier person_contact_info professional background marketing
+  continuing_education payment additional_forms consent
+]
+registration_section_rank = registration_section_order.each_with_index.to_h
+registration_form.form_fields.reorder(:position).to_a.each_with_index
+  .sort_by { |field, index| [ registration_section_rank.fetch(field.section, registration_section_rank.size), index ] }
+  .each_with_index { |(field, _index), position| field.update_column(:position, position + 1) }
 
 # Each entry: [title, form_type, cost_cents, scholarship?, visibility, span_days]
 # form_type: :long, :short, or :none. span_days (optional) makes a multi-day event.
@@ -510,16 +608,6 @@ component_callouts = {
       </ul>
     HTML
   },
-  facilitator_portal: {
-    title: "Facilitator Portal access",
-    subtitle: "Available once attendance & payment are complete",
-    callout_type: "reference", color_class: "rose", icon_class: "fa-solid fa-right-to-bracket",
-    payment_access_gated: true,
-    description: <<~HTML.strip
-      <p>Access to the Facilitator Portal is provided once your attendance requirements are met and your training fee is paid.</p>
-      <p>You're all set — watch for your portal invitation.</p>
-    HTML
-  },
   add_to_calendar: {
     title: "Add to your calendar",
     subtitle: "Save both training days",
@@ -737,15 +825,17 @@ if lisa_w && roundtable
   registrations_data << { person: lisa_w, event: roundtable, status: "incomplete_attendance" }
 end
 
-# --- People with multiple active affiliations — ensures org snapshots get exercised ---
+# --- People with multiple active affiliations — exercise a registration linked to
+# one of the registrant's orgs (the org they registered with), not all of them ---
 mariana_j = Person.find_by(first_name: "Mariana", last_name: "Johnson")
 samuel_s = Person.find_by(first_name: "Samuel", last_name: "Smith")
 lisa_wn = Person.find_by(first_name: "Lisa", last_name: "Williamson")
 kim_dv = Person.find_by(first_name: "Kim", last_name: "Davidson")
 sarah_d = Person.find_by(first_name: "Sarah", last_name: "Davis")
 
-{ mariana_j => youth_day, samuel_s => mindful_art, lisa_wn => virtual_session,
-  kim_dv => family_day, sarah_d => roundtable }.each do |person, evt|
+multi_affiliation_registrations = { mariana_j => youth_day, samuel_s => mindful_art,
+  lisa_wn => virtual_session, kim_dv => family_day, sarah_d => roundtable }
+multi_affiliation_registrations.each do |person, evt|
   next unless person && evt
   registrations_data << { person: person, event: evt, status: "registered" }
 end
@@ -771,6 +861,17 @@ registrations_data.each do |data|
   registration.ce_credit_requested = data[:ce_credit_requested] || false
   registration.intends_to_pay = data[:intends_to_pay] || false
   registration.save!
+end
+
+# Connect each multi-affiliation registrant's registration to a single one of
+# their orgs — mirroring a real registration, which links only the org submitted
+# on the form, not every active affiliation.
+multi_affiliation_registrations.each do |person, evt|
+  next unless person && evt
+  org = person.affiliations.active.first&.organization
+  next unless org
+  registration = EventRegistration.find_by(event: evt, registrant: person)
+  registration&.event_registration_organizations&.find_or_create_by!(organization: org)
 end
 
 # Give the flagship training its demo cohort: top up to 10 active registrants with
@@ -951,7 +1052,6 @@ form_submissions.each do |data|
     when "agency_organization_name" then Faker::Company.name
     when "position_title" then "Facilitator"
     when "agency_website" then "https://example.org"
-    when "racial_ethnic_identity" then "Prefer not to say"
     when "secondary_email" then data[:person].email_2
     when "preferred_nickname" then data[:person].first_name
     when "pronouns" then [ "she/her", "he/him", "they/them" ].sample
@@ -976,14 +1076,14 @@ puts "Giving Amy a free-text \"Other\" answer on her Facilitator Training submis
 # Demo data for the "Other" chip on the person profile + edit pages: a registrant
 # who picked the "Other" option (folded into "Other: <text>") on a sector-backed
 # field (Additional sectors). The free-text value can't be a Sector record, so it
-# only surfaces via Person#other_service_area_responses.
-# Seeded before the professional-answer enrichment below so the primary_service_area
+# only surfaces via Person#other_sector_responses.
+# Seeded before the professional-answer enrichment below so the additional_sectors
 # value survives its "skip if already answered" guard. Idempotent.
 if facilitator_training && amy_person
   amy_submission = FormSubmission.find_by(person: amy_person, form: facilitator_training.registration_form)
   if amy_submission
     {
-      "primary_service_area" => "Other: Equine-assisted therapy"
+      "additional_sectors" => "Other: Equine-assisted therapy"
     }.each do |identifier, value|
       field = amy_submission.form.form_fields.find_by(field_identifier: identifier)
       next unless field
@@ -993,51 +1093,68 @@ if facilitator_training && amy_person
   end
 end
 
-puts "Recording professional answers (age group / service area) on registration submissions…"
-# The Background page charts the registrants' "Primary Age Group(s) Served" and
-# "Primary Service Area(s)" registration answers. Public registration stores
-# these checkbox answers as ", "-joined category / sector ids (see
-# PublicRegistration#save_form_answers + assign_tags); seed them the same way so
-# the charts have data. Age group is read from the form answers; service area is
-# read from SectorableItem tags, so write both. Idempotent: skips a field already
-# answered on a submission, and only enriches people who have a submission (so the
-# "registered but didn't fill the form" scenarios stay answer-free).
+puts "Recording professional answers (age group / sector) on registration submissions…"
+# The Background page charts the registrants' age-group and sector registration
+# answers. Public registration stores these as ", "-joined category / sector ids
+# (see PublicRegistration#save_form_answers + assign_tags); seed them the same way
+# so the charts have data. The age-group and primary-sector charts read the form
+# answers; the All-sectors chart reads SectorableItem tags, so write both.
+# Idempotent: skips a field already answered on a submission, and only enriches
+# people who have a submission (so the "registered but didn't fill the form"
+# scenarios stay answer-free).
 age_range_categories = Category.age_ranges.published.order(:position, :name).to_a
 # Exclude the catch-all "Other" sector: it's the free-text fallback registrants
-# type into (surfaced via Person#other_service_area_responses), not a selectable
-# service area. Seeding it as a sector tag would list "Other" as a real service area.
-service_area_sectors = Sector.published.excluding_other.order(:name).to_a
+# type into (surfaced via Person#other_sector_responses), not a selectable
+# sector. Seeding it as a sector tag would list "Other" as a real sector.
+selectable_sectors = Sector.published.excluding_other.order(:name).to_a
 
 record_professional_answers = ->(submission, i) do
   person = submission.person
   form = submission.form
 
+  # Primary age group is a single-select dropdown, so store one AgeRange category id.
+  age = age_range_categories[i % age_range_categories.size] if age_range_categories.any?
   age_field = form.form_fields.find_by(field_identifier: "primary_age_group")
-  ages = pick_categories.call(age_range_categories, i, 2)
-  if age_field && ages.present? && submission.form_answers.where(form_field: age_field).none?
+  if age_field && age && submission.form_answers.where(form_field: age_field).none?
     submission.form_answers.create!(form_field: age_field,
-                                    submitted_answer: ages.map(&:id).join(", "),
+                                    submitted_answer: age.id.to_s,
                                     question_name_when_answered: age_field.name)
   end
 
-  service_field = form.form_fields.find_by(field_identifier: "primary_service_area")
-  sectors = service_area_sectors.empty? ? [] : [ service_area_sectors[i % service_area_sectors.size], service_area_sectors[(i + 4) % service_area_sectors.size] ].uniq
-  if service_field && sectors.present? && submission.form_answers.where(form_field: service_field).none?
-    submission.form_answers.create!(form_field: service_field,
-                                    submitted_answer: sectors.map(&:id).join(", "),
-                                    question_name_when_answered: service_field.name)
+  # Additional age groups are multi-select checkboxes, so store a couple of
+  # ", "-joined AgeRange ids the way public registration does.
+  additional_ages = age_range_categories.rotate(i + 1).reject { |category| category == age }.first(2)
+  additional_age_field = form.form_fields.find_by(field_identifier: "additional_age_group")
+  if additional_age_field && additional_ages.present? && submission.form_answers.where(form_field: additional_age_field).none?
+    submission.form_answers.create!(form_field: additional_age_field,
+                                    submitted_answer: additional_ages.map(&:id).join(", "),
+                                    question_name_when_answered: additional_age_field.name)
   end
-  # Service area chart reads SectorableItem tags, mirroring assign_tags.
-  sectors.each { |sector| SectorableItem.find_or_create_by!(sector: sector, sectorable: person) }
-  # Make the first submitted service area the person's single primary sector, so the
-  # recipients page + profile crown a primary that matches what they selected on the
-  # registration form. Demote any other primary first to keep exactly one (a person
-  # registered for several events is enriched once per event). Idempotent.
+
+  sectors = selectable_sectors.empty? ? [] : [ selectable_sectors[i % selectable_sectors.size], selectable_sectors[(i + 4) % selectable_sectors.size] ].uniq
   primary_sector = sectors.first
-  if primary_sector
-    person.sectorable_items.where(is_primary: true).where.not(sector: primary_sector).update_all(is_primary: false)
-    person.sectorable_items.find_by(sector: primary_sector)&.update!(is_primary: true)
+  additional_sectors = sectors.drop(1)
+
+  # Mirror the registration form's two sector fields: the single-select primary
+  # sector dropdown and the multi-select additional sectors checkboxes.
+  primary_field = form.form_fields.find_by(field_identifier: "primary_sector_single")
+  if primary_field && primary_sector && submission.form_answers.where(form_field: primary_field).none?
+    submission.form_answers.create!(form_field: primary_field,
+                                    submitted_answer: primary_sector.id.to_s,
+                                    question_name_when_answered: primary_field.name)
   end
+  additional_field = form.form_fields.find_by(field_identifier: "additional_sectors")
+  if additional_field && additional_sectors.present? && submission.form_answers.where(form_field: additional_field).none?
+    submission.form_answers.create!(form_field: additional_field,
+                                    submitted_answer: additional_sectors.map(&:id).join(", "),
+                                    question_name_when_answered: additional_field.name)
+  end
+
+  # Tag the person with the same primary/additional split assign_tags applies, so
+  # the All-sectors chart has data and the recipients page + profile crown a single
+  # primary that matches the form. Idempotent (a person enriched once per event).
+  person.tag_sectors(primary_ids: [ primary_sector&.id ].compact, additional_ids: additional_sectors.map(&:id))
+  person.tag_age_groups(primary_ids: [ age&.id ].compact, additional_ids: additional_ages.map(&:id))
 end
 
 # Real orgs (minus the AWBW house org) to link registrations against and match on,
@@ -1063,8 +1180,11 @@ record_organization_answers = ->(registration, submission, i) do
   person = registration.registrant
   form = submission.form
 
+  # A title on most submissions, but leave roughly one in five blank so dev data
+  # exercises both registration/linking outcomes: a job + Facilitator affiliation
+  # when a title was given, and a Facilitator-only affiliation when it wasn't.
   position_field = form.form_fields.find_by(field_identifier: "agency_position")
-  if position_field && submission.form_answers.where(form_field: position_field).none?
+  if position_field && i % 5 != 4 && submission.form_answers.where(form_field: position_field).none?
     submission.form_answers.create!(form_field: position_field,
                                     submitted_answer: job_titles[i % job_titles.size],
                                     question_name_when_answered: position_field.name)
@@ -1452,5 +1572,33 @@ if facilitator_training && registration_form
     registration.event_registration_organizations.find_or_create_by!(organization: aff_org)
     add_affiliation.call(person, aff_org, title: "Facilitator")
     add_affiliation.call(person, other_org, title: "Board Member")
+  end
+
+  # The two ways a single registration ends up with more than one org. A
+  # registration no longer snapshots every affiliation, so multiple orgs are
+  # always deliberate — these two demos show each path side by side.
+
+  # A5: the registrant submitted one org on the form, then an admin linked a
+  # second org by hand → two linked orgs but a single submission.
+  if aff_org && other_org
+    person = Person.create!(email: "affdemo.5@seed.example.com", first_name: "Demo Affiliation", last_name: "A5 Admin-linked second org")
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    submit_field.call(registration, agency_field, aff_org.name)
+    link_org.call(registration, aff_org)
+    # Admin adds the second org later — no matching submission (mirrors the
+    # select/create_organization controller path: affiliation + connection).
+    link_org.call(registration, other_org)
+  end
+
+  # A6: the registrant applied twice, each submission naming a different org →
+  # two submissions, each adding its single org, so the registration links both.
+  if aff_org && other_org
+    person = Person.create!(email: "affdemo.6@seed.example.com", first_name: "Demo Affiliation", last_name: "A6 Applied twice, two orgs")
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    [ aff_org, other_org ].each do |org|
+      submission = FormSubmission.create!(person: person, form: registration_form, event: facilitator_training)
+      submission.form_answers.create!(form_field: agency_field, submitted_answer: org.name, question_name_when_answered: agency_field.name) if agency_field
+      link_org.call(registration, org)
+    end
   end
 end

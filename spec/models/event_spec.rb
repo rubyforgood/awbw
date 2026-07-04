@@ -88,6 +88,28 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#videoconference_details_visible?" do
+    it "returns false when there is no start_date" do
+      event = build(:event, start_date: nil)
+      expect(event.videoconference_details_visible?).to be false
+    end
+
+    it "returns false more than a week before the start" do
+      event = build(:event, start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours)
+      expect(event.videoconference_details_visible?).to be false
+    end
+
+    it "returns true within a week of the start" do
+      event = build(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      expect(event.videoconference_details_visible?).to be true
+    end
+
+    it "returns true once the event has started" do
+      event = build(:event, start_date: 1.hour.ago, end_date: 1.hour.from_now)
+      expect(event.videoconference_details_visible?).to be true
+    end
+  end
+
   describe "#registerable?" do
     it "returns true when registration_close_date is in the future" do
       event = build(:event, published: true, registration_close_date: 5.days.from_now)
@@ -239,6 +261,23 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#registration_form_ids" do
+    it "returns only the ids of forms linked with the registration role" do
+      event = create(:event)
+      registration_form = create(:form, name: "Registration")
+      bulk_payment_form = create(:form, name: "Bulk payment")
+      create(:event_form, event: event, form: registration_form, role: "registration")
+      create(:event_form, event: event, form: bulk_payment_form, role: "bulk_payment")
+
+      expect(event.registration_form_ids).to contain_exactly(registration_form.id)
+    end
+
+    it "returns an empty array when no registration form is linked" do
+      event = create(:event)
+      expect(event.registration_form_ids).to eq([])
+    end
+  end
+
   describe "#one_click_for_signed_in?" do
     it "is true when no registration form is linked" do
       event = create(:event)
@@ -291,6 +330,38 @@ RSpec.describe Event, type: :model do
     it 'returns empty for non-matching query' do
       results = Event.search_by_params(query: 'nonexistent')
       expect(results).not_to include(art_event, music_event)
+    end
+  end
+
+  describe "#ce_hours_cost (dollars)" do
+    it "is nil when no cost is set" do
+      expect(build(:event, ce_hours_cost_cents: nil).ce_hours_cost).to be_nil
+    end
+
+    it "reads the stored cost back in dollars" do
+      expect(build(:event, ce_hours_cost_cents: 15_000).ce_hours_cost).to eq(150)
+    end
+
+    it "converts a dollar amount to cents on assignment" do
+      expect(build(:event, ce_hours_cost: 150).ce_hours_cost_cents).to eq(15_000)
+    end
+
+    it "clears the cents when assigned blank" do
+      expect(build(:event, ce_hours_cost: "").ce_hours_cost_cents).to be_nil
+    end
+  end
+
+  describe "#ce_eligible?" do
+    it "is true when the event offers a positive number of CE hours" do
+      expect(build(:event, ce_hours_offered: 6)).to be_ce_eligible
+    end
+
+    it "is false when no CE hours are offered" do
+      expect(build(:event, ce_hours_offered: nil)).not_to be_ce_eligible
+    end
+
+    it "is false when CE hours are zero" do
+      expect(build(:event, ce_hours_offered: 0)).not_to be_ce_eligible
     end
   end
 end

@@ -40,6 +40,21 @@ RSpec.describe "/workshops", type: :request do
     end
   end
 
+  # --- SECTOR FILTER LABELS --------------------------------------------------
+  describe "sector filter dropdown labels" do
+    let(:admin) { create(:user, :admin) }
+    let!(:sector) { create(:sector, :published, name: "LGBTQIA+") }
+
+    before { sign_in admin }
+
+    it "renders sector names with their canonical casing, not sentence case" do
+      get workshops_url
+
+      expect(response.body).to include("LGBTQIA+")
+      expect(response.body).not_to include("Lgbtqia+")
+    end
+  end
+
   # --- DESTROY ---------------------------------------------------------------
   describe "DELETE /destroy" do
     let(:user) { create(:user) }

@@ -23,7 +23,7 @@ class CommunityNewsController < ApplicationController
       @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
       @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
 
-      render :index_lazy
+      render :community_news_results
     else
       @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
       render :index

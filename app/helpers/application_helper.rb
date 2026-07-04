@@ -212,8 +212,8 @@ module ApplicationHelper
   # values for these is mirrored by FormField#allowed_answer_values.
   def dynamic_form_field_options(field)
     case field.field_identifier
-    when *FormField::SERVICE_AREA_FIELD_IDENTIFIERS
-      field.service_area_sectors.map { |sector| [ sector.name, sector.id.to_s, sector.description ] }
+    when *FormField::SECTOR_FIELD_IDENTIFIERS
+      field.sector_options.map { |sector| [ sector.name, sector.id.to_s, sector.description ] }
     when *FormField::DYNAMIC_FIELD_CATEGORY_TYPES.keys
       field.dynamic_categories.map { |category| [ category.name, category.id.to_s, category.description ] }
     end
@@ -236,7 +236,7 @@ module ApplicationHelper
   # editor badge: a sentence-case label and a link to the filtered admin list
   # that manages those options. Returns nil for fields with stored options.
   def form_field_option_source(field)
-    if field.field_identifier.in?(FormField::SERVICE_AREA_FIELD_IDENTIFIERS)
+    if field.field_identifier.in?(FormField::SECTOR_FIELD_IDENTIFIERS)
       { label: "Sectors", path: sectors_path }
     elsif (type_name = FormField::DYNAMIC_FIELD_CATEGORY_TYPES[field.field_identifier])
       type = CategoryType.find_by(name: type_name)

@@ -60,6 +60,7 @@ class Notification < ApplicationRecord
   NOTICEABLE_TYPES = %w[
     EventRegistration
     FormSubmission
+    Person
     Report
     StoryIdea
     User

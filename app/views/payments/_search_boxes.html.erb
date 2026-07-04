@@ -6,7 +6,7 @@
   <%= form_tag payments_path, method: :get, class: "space-y-4",
     data: {
       controller: "collection",
-      turbo_frame: "payment_results",
+      turbo_frame: "payments_results",
       collection_unselected_class: default_btn,
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
@@ -15,7 +15,7 @@
         <label for="type" class="text-sm font-medium text-gray-500 mb-1 block">Type</label>
 
         <%= select_tag "type[]",
-          options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Credit Card" => "CreditCardPayment", "Stripe" => "ExternalProcessorPayment" }, Array(params[:type]).first),
+          options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Stripe" => "ExternalProcessorPayment" }, Array(params[:type]).first),
           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
       </div>
 

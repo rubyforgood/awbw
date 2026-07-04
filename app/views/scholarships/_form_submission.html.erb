@@ -1,6 +1,6 @@
-<%# ---- Form submission — the recipient's scholarship-section answers from their
-    registration form, with a jump link to the full public submission (where the
-    complete application, if any, lives). ---- %>
+<%# ---- Form submission — the recipient's scholarship application answers (from
+    the event's dedicated scholarship form, or a "scholarship" section embedded in
+    the registration form), with a jump link to the full public submission. ---- %>
 <% submission_params = @allocatable.try(:slug).present? ? { reg: @allocatable.slug } : { person_id: @scholarship.recipient_id } %>
 <% answered = @scholarship_answers.to_a.any? { |_field, response| response&.submitted_answer.present? } %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">

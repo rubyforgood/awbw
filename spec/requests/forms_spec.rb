@@ -443,6 +443,16 @@ RSpec.describe "Forms", type: :request do
       expect(response).to redirect_to(edit_form_path(form))
     end
 
+    it "saves the field_identifier for a field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form: form, name: "Pick a payment method")
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => { id: field.id, field_identifier: "payment_method" } } }
+      }
+      expect(field.reload.field_identifier).to eq("payment_method")
+      expect(response).to redirect_to(edit_form_path(form))
+    end
+
     it "updates hide_answered flags" do
       form = create(:form, :standalone)
       patch form_path(form), params: {

@@ -30,7 +30,7 @@
   <% link_base = "inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm font-medium shadow-sm transition-colors" %>
   <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
     <% if @event.event_forms.registration.exists? %>
-      <%= link_to new_event_public_registration_path(@event, as_visitor: true), target: "_blank", rel: "noopener noreferrer",
+      <%= link_to new_event_public_registration_path(@event), target: "_blank", rel: "noopener noreferrer",
             class: "#{link_base} #{DomainTheme.border_class_for(:events, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:events, intensity: 300)} hover:bg-gray-50" do %>
         <i class="fa-solid fa-clipboard-list <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
         Public registration form
@@ -39,7 +39,7 @@
     <% end %>
 
     <% if @event.event_forms.registration.exists? && @event.scholarship_form %>
-      <%= link_to new_event_public_registration_path(@event, scholarship_requested: true, as_visitor: true), target: "_blank", rel: "noopener noreferrer",
+      <%= link_to new_event_public_registration_path(@event, scholarship_requested: true), target: "_blank", rel: "noopener noreferrer",
             class: "#{link_base} #{DomainTheme.border_class_for(:scholarships, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:scholarships, intensity: 300)} hover:bg-gray-50" do %>
         <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"></i>
         Scholarship form
@@ -82,7 +82,6 @@
       <%# Grand total — full-width headline read as an inline equation:
           $grand = $registration + $scholarships + $cont_ed. Left-aligned; the headline
           figure dominates while the addends stay muted, and the row wraps on mobile. %>
-      <% show_bulk_payments = @dashboard.unallocated_bulk_payment_cents.positive? %>
       <%# Each equation term is colorless at rest and reveals its domain color on
           hover — a tinted fill + darker border, matching the amber bulk-payments
           term's look but per-domain. border-transparent reserves the border so
@@ -121,8 +120,8 @@
                 <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_total_cents) %></p>
                 <p class="hidden lg:block text-xs text-gray-500">CE fees</p>
               <% end %>
-              <% if show_bulk_payments %>
-                <span class="text-2xl font-light text-gray-300 select-none">+</span>
+              <span class="text-2xl font-light text-gray-300 select-none">+</span>
+              <% if @dashboard.unallocated_bulk_payment_cents.positive? %>
                 <%# Styled like the "Amount due" subcard on a registration: a little
                     amber-bordered card with a warning icon, since unallocated bulk
                     payment money still needs action. %>
@@ -133,9 +132,14 @@
                   </p>
                   <p class="hidden lg:block text-xs text-gray-500">Unallocated bulk payments</p>
                 <% end %>
+              <% else %>
+                <%= link_to bulk_payments_event_path(@event), class: addend_class.call(:bulk_payments), title: "View bulk payments" do %>
+                  <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:bulk_payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.unallocated_bulk_payment_cents) %></p>
+                  <p class="hidden lg:block text-xs text-gray-500">Bulk payments</p>
+                <% end %>
               <% end %>
             </div>
-            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees<%= " + unallocated bulk payments" if show_bulk_payments %></p>
+            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees + bulk payments</p>
           </div>
 
           <%# Cash view of the same money: what's collected (registration paid +

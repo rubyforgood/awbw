@@ -20,7 +20,10 @@
       <div class="py-2">
         <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide"><%= display_question_label(field, response) %></dt>
         <dd class="mt-1 text-sm text-gray-900">
-          <%= response&.submitted_answer.presence || tag.span("—", class: "text-gray-400") %>
+          <%# Resolves the sector / age-group ids stored behind the professional
+              fields to their names; free-text ("Other: …") and plain answers pass
+              through unchanged. %>
+          <%= display_response_text(field, response) %>
         </dd>
       </div>
     <% end %>

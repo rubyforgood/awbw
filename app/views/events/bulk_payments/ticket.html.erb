@@ -37,7 +37,7 @@
         <div class="shrink-0"><%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %></div>
 
         <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight">Bulk payment ticket</h1>
+          <h1 class="text-xl font-semibold tracking-wide leading-tight">Payment ticket</h1>
           <p class="text-sm text-blue-200"><%= @event.title %></p>
         </div>
       </div>
@@ -55,7 +55,7 @@
       <% elsif params[:checkout] == "cancelled" %>
         <div class="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3">
           <i class="fa-solid fa-circle-exclamation mt-0.5 text-amber-500"></i>
-          <span>Payment was cancelled. Your bulk payment information has been saved but payment is still pending.</span>
+          <span>Payment was cancelled. Your payment information has been saved but payment is still pending.</span>
         </div>
       <% end %>
 
@@ -119,7 +119,7 @@
 
         <div class="flex-1 min-w-0 text-left">
           <p class="font-semibold text-blue-900">View invoice</p>
-          <p class="text-sm text-blue-700">Itemized invoice for this bulk payment</p>
+          <p class="text-sm text-blue-700">Itemized invoice for this payment</p>
         </div>
 
         <i class="fa-solid fa-arrow-right text-blue-500 shrink-0"></i>
@@ -164,7 +164,7 @@
 
         <div class="flex-1 min-w-0 text-left">
           <p class="font-semibold text-gray-800">View submission</p>
-          <p class="text-sm text-gray-500">The bulk payment form you submitted</p>
+          <p class="text-sm text-gray-500">The <%= Form::BULK_PAYMENT_PUBLIC_NAME %> form you submitted</p>
         </div>
 
         <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>

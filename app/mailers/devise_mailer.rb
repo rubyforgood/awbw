@@ -125,9 +125,15 @@ class DeviseMailer < Devise::Mailer
 
     return unless event_name
 
+    properties = { record_id: @record.id, record_type: "User" }
+
+    if event_name == "auth.email_change_requested_email_sent"
+      properties[:changes] = { email: { after: @record.unconfirmed_email } }
+    end
+
     Analytics::AhoyTracker.track_auth_event(
       event_name,
-      { record_id: @record.id, record_type: "User" },
+      properties,
       user: Current.user
     )
   end

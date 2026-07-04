@@ -1,5 +1,5 @@
-<%= turbo_frame_tag :resource_results do %>
-  <%= turbo_stream.replace("resource_count", partial: "resource_count") %>
+<%= turbo_frame_tag :resources_results do %>
+  <%= turbo_stream.replace("resources_count", partial: "resources_count") %>
   <%= turbo_stream.replace("copy_url", partial: "shared/copy_url") %>
 
   <% if @resources.any? %>

@@ -12,6 +12,11 @@ class Resource < ApplicationRecord
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
   KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship" ]
 
+  # Titles whose downloadable PDF is a single page. Every other resource PDF is
+  # multi-page, so its first-page preview needs a "download for all pages" note.
+  # Hardcoded for now — replace with real PDF introspection later.
+  SINGLE_PAGE_PDF_TITLES = [ "Letter to Supervisors", "W-9" ].freeze
+
   has_rich_text :rhino_body
 
   belongs_to :created_by, class_name: "User"
@@ -117,6 +122,12 @@ class Resource < ApplicationRecord
 
   def story?
     [ "Story", "LeaderSpotlight" ].include? self.kind
+  end
+
+  # A multi-page PDF only previews its first page, so the viewer needs a prompt
+  # to download for the rest. See SINGLE_PAGE_PDF_TITLES.
+  def single_page_pdf?
+    SINGLE_PAGE_PDF_TITLES.include?(title)
   end
 
   def custom_label_list

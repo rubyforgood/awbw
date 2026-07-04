@@ -124,10 +124,15 @@ RSpec.describe EventDecorator do
       event = build(:event, cost_cents: 2505).decorate
       expect(event.labelled_cost).to eq("Cost: $25.05")
     end
+
+    it "adds a thousands separator for large amounts" do
+      event = build(:event, cost_cents: 150_000).decorate
+      expect(event.labelled_cost).to eq("Cost: $1,500")
+    end
   end
 
   describe "#calendar_links" do
-    it "includes rhino_description plain text in all calendar links" do
+    it "falls back to rhino_description plain text when short_description is blank" do
       event = create(:event)
       event.update!(rhino_description: "<div>Join us for healing through art</div>")
       decorated = event.decorate
@@ -154,8 +159,27 @@ RSpec.describe EventDecorator do
       expect(yahoo["href"]).to include("desc=#{desc_encoded}")
     end
 
-    it "embeds the join link, meeting ID, and passcode in the calendar description" do
+    it "uses short_description over rhino_description when present" do
+      event = create(:event, short_description: "Bring a friend!")
+      event.update!(rhino_description: "<div>Join us for healing through art</div>")
+      decorated = event.decorate
+
+      doc = Nokogiri::HTML.fragment(decorated.calendar_links)
+      links = doc.css("a")
+
+      desc_encoded = ERB::Util.url_encode("Bring a friend!")
+
+      google = links.find { |a| a.text == "Google" }
+      expect(google["href"]).to include("details=#{desc_encoded}")
+      expect(google["href"]).not_to include(ERB::Util.url_encode("healing through art"))
+
+      apple = links.find { |a| a.text == "Apple" }
+      expect(apple["href"]).to include("DESCRIPTION:Bring a friend!")
+    end
+
+    it "embeds the join link, meeting ID, and passcode within a week of the event" do
       event = create(:event,
+                      start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours,
                       videoconference_url: "https://awbw.zoom.us/j/88285411273",
                       videoconference_passcode: "secret123")
       decorated = event.decorate
@@ -166,6 +190,21 @@ RSpec.describe EventDecorator do
       expect(apple["href"]).to include("Join on Zoom: https://awbw.zoom.us/j/88285411273")
       expect(apple["href"]).to include("Meeting ID: 882 8541 1273")
       expect(apple["href"]).to include("Passcode: secret123")
+    end
+
+    it "omits the join link, meeting ID, and passcode more than a week out" do
+      event = create(:event,
+                      start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours,
+                      videoconference_url: "https://awbw.zoom.us/j/88285411273",
+                      videoconference_passcode: "secret123")
+      decorated = event.decorate
+
+      doc = Nokogiri::HTML.fragment(decorated.calendar_links)
+      apple = doc.css("a").find { |a| a.text == "Apple" }
+
+      expect(apple["href"]).not_to include("88285411273")
+      expect(apple["href"]).not_to include("Meeting ID")
+      expect(apple["href"]).not_to include("secret123")
     end
   end
 

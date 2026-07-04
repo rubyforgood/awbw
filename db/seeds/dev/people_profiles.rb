@@ -2,6 +2,10 @@
 # or as part of `rake db:seed:dev`. Creates Person records for the seed users, a set of
 # search-disambiguation test people, their affiliations, and addresses/sectors.
 
+# Faker is installed but not auto-required on staging, where the app runs as
+# RAILS_ENV=production and Bundler.require only loads the production group.
+require "faker"
+
 puts "Creating Persons and Affiliations for seed users…"
 [
   User.find_by(email: "umberto.user@example.com"),
@@ -219,9 +223,9 @@ puts "Tagging seed users with primary/additional age groups…"
 # to render. tag_age_groups marks exactly the named primary and treats the rest
 # as additional, and is idempotent on reseed.
 seed_user_age_groups = {
-  "umberto.user@example.com" => { primary: "13-17", additional: [ "18+" ] },
-  "amy.user@example.com" => { primary: "6-12", additional: [ "3-5", "13-17" ] },
-  "aisha.user@example.com" => { primary: "18+", additional: [] }
+  "umberto.user@example.com" => { primary: "Teens (13-17)", additional: [ "Adults (18+)" ] },
+  "amy.user@example.com" => { primary: "Children (0-12)", additional: [ "Teens (13-17)" ] },
+  "aisha.user@example.com" => { primary: "Adults (18+)", additional: [] }
 }
 seed_user_age_groups.each do |email, groups|
   person = User.find_by(email: email)&.person

@@ -1,6 +1,10 @@
 # Resource seeds (dev-only) - run on their own via `rake db:seed:resources`, or as
 # part of `rake db:seed:dev`.
 
+# Faker is installed but not auto-required on staging, where the app runs as
+# RAILS_ENV=production and Bundler.require only loads the production group.
+require "faker"
+
 puts "Creating Resources…"
 10.times do |i|
   kind = Resource::PUBLISHED_KINDS.sample
@@ -64,6 +68,12 @@ hidden_resources = [
     title: "Letter to Supervisors",
     body: "A letter trainees can share with supervisors to request release time for the training.",
     filename: "letter_to_supervisors.pdf",
+    kind: "Form"
+  },
+  {
+    title: "W-9",
+    body: "AWBW's W-9 tax form for trainees' records.",
+    filename: "w9.pdf",
     kind: "Form"
   }
 ]

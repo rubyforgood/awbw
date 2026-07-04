@@ -231,13 +231,14 @@
     <% if school_district_data.any? %>
       <%= render "breakdown_card", title: "School districts", data: school_district_data, chart: :bar, palette: palette, row_paths: school_district_paths %>
     <% end %>
-    <%# Life experiences and settings come from registration answers; always show
-        the card (with a no-data box when empty) so the section reads even before
-        anyone has answered those questions. %>
-    <%= render "breakdown_card", title: "Life experiences", data: life_experience_data, chart: :bar, palette: palette,
-                                 empty_message: "No life experiences from registration answers yet.", row_paths: life_experience_paths %>
-    <%= render "breakdown_card", title: "Settings", data: settings_data, chart: :bar, palette: palette,
-                                 empty_message: "No settings from registration answers yet.", row_paths: settings_paths %>
+    <%# Life experiences and settings come from registration answers; hide each
+        card entirely when no one has answered those questions. %>
+    <% if life_experience_data.any? %>
+      <%= render "breakdown_card", title: "Life experiences", data: life_experience_data, chart: :bar, palette: palette, row_paths: life_experience_paths %>
+    <% end %>
+    <% if settings_data.any? %>
+      <%= render "breakdown_card", title: "Settings", data: settings_data, chart: :bar, palette: palette, row_paths: settings_paths %>
+    <% end %>
     <% if org_data.any? %>
       <%= render "breakdown_card", title: "Organizations", data: org_data, chart: nil, palette: palette, row_paths: org_paths %>
     <% end %>

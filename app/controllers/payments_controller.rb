@@ -9,7 +9,7 @@ class PaymentsController < ApplicationController
 
     if turbo_frame_request?
       @payments = Payment.search_by_params(params).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
-      render :payment_results
+      render :payments_results
     else
       @payments = Payment.search_by_params(params).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
     end

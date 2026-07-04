@@ -15,6 +15,14 @@ module EventRegistrationServices
     ADDITIONAL_FORMS_INVOICE = "Invoice".freeze
     ADDITIONAL_FORMS_W9 = "W-9".freeze
 
+    # Well-known field_identifiers for the registrant's organization name and
+    # position on the registration form. We name them in organization terms here
+    # as we move the vocabulary away from "agency"; the stored identifiers are
+    # still "agency_*" pending a form-field rename. Kept here so the service,
+    # controller, and specs agree on a single source.
+    ORGANIZATION_NAME_IDENTIFIER = "agency_name".freeze
+    ORGANIZATION_POSITION_IDENTIFIER = "agency_position".freeze
+
     def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil,
                   scholarship_form: nil, scholarship_params: {})
       new(event:, form:, form_params:, scholarship_requested:, person:,
@@ -36,13 +44,18 @@ module EventRegistrationServices
     def call
       ActiveRecord::Base.transaction do
         person = find_or_create_person
+        sync_person_profile(person)
+        record_mailing_list_consent(person)
 
         create_mailing_address(person) if field_value("mailing_city").present?
         create_phone_contact(person) if field_value("phone").present?
 
-        organization = find_organization if field_value("agency_name").present?
-        create_affiliation(person, organization) if organization
-        create_agency_address(organization) if organization && field_value("agency_city").present?
+        organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
+        if organization
+          sync_organization_profile(organization)
+          agency_address = create_agency_address(organization)
+          create_affiliation(person, organization, agency_address)
+        end
 
         assign_tags(person, organization)
 
@@ -52,16 +65,20 @@ module EventRegistrationServices
           existing.update!(ce_credit_requested: true, ce_hours_requested: ce_hours_requested) if ce_credit_requested?
           existing.update!(w9_requested: true) if w9_requested?
           existing.update!(invoice_requested: true) if invoice_requested?
+          payment_method = field_value("payment_method")&.strip
+          existing.update!(expected_payment_method: payment_method) if payment_method.present?
           if existing.status == "cancelled"
             existing.update!(status: "registered")
             send_notifications(existing)
           end
+          connect_organization(existing, organization)
           submission = update_form_submission(person)
           save_scholarship_submission(person)
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
         event_registration = create_event_registration(person)
+        connect_organization(event_registration, organization)
         submission = create_form_submission(person)
         save_scholarship_submission(person)
 
@@ -121,10 +138,7 @@ module EventRegistrationServices
       email = field_value("primary_email")&.strip&.downcase
       email_type = field_value("primary_email_type")&.downcase
 
-      person = Person.find_by(
-        "LOWER(first_name) = ? AND LOWER(last_name) = ? AND LOWER(email) = ?",
-        first_name&.downcase, last_name&.downcase, email&.downcase
-      )
+      person = find_matching_person(last_name: last_name, email: email)
       return person if person
 
       Person.create!(
@@ -137,6 +151,76 @@ module EventRegistrationServices
         email_2: field_value("secondary_email")&.strip,
         email_2_type: field_value("secondary_email_type")&.downcase,
       )
+    end
+
+    # Find the existing registrant this submission belongs to, tolerating a
+    # first-name / nickname swap. We match on email + last name (both strong,
+    # stable identifiers) and accept either the typed first name or the nickname
+    # against either the stored first_name or legal_first_name. Without this, a
+    # returning registrant who types their legal name when we stored their
+    # nickname (or vice versa) slips past the match and registers as a duplicate
+    # Person. Anonymous (incognito) registrations rely on this; logged-in ones
+    # already arrive with @person set and never reach here.
+    def find_matching_person(last_name:, email:)
+      return if email.blank? || last_name.blank?
+
+      first_names = [ field_value("first_name"), field_value("nickname") ]
+        .filter_map { |value| value&.strip.presence&.downcase }
+        .uniq
+      return if first_names.empty?
+
+      Person
+        .where("LOWER(last_name) = ? AND LOWER(email) = ?", last_name.downcase, email.downcase)
+        .where("LOWER(first_name) IN (:names) OR LOWER(COALESCE(legal_first_name, '')) IN (:names)", names: first_names)
+        .first
+    end
+
+    # Populate the structured columns that the registration form collects but that
+    # we historically stored only as form answers. A non-blank submitted value
+    # overwrites whatever was on file: the latest registration is treated as the
+    # freshest source of truth, and the prior value is preserved in the audit trail
+    # — every model includes AhoyTrackable, whose after_update logs an Ahoy::Event
+    # capturing the change. A blank answer never clobbers existing data.
+    def sync_person_profile(person)
+      apply_value(person, :racial_ethnic_identity, field_value("racial_ethnic_identity"))
+    end
+
+    def sync_organization_profile(organization)
+      apply_value(organization, :website_url, field_value("agency_website"))
+      apply_value(organization, :agency_type, field_value("agency_type"))
+    end
+
+    # Write value onto attribute when a non-blank value was submitted, overwriting
+    # any existing value. A no-op when the value is unchanged (update! records no
+    # change, so no spurious audit event).
+    def apply_value(record, attribute, value)
+      return if value.blank?
+      record.update!(attribute => value.strip)
+    end
+
+    # Consent is opt-in only and recorded once. An affirmative answer grants
+    # consent (stamping the time and where it came from) when none is on file; we
+    # never clear it from here — withdrawal is a separate, deliberate action — and
+    # we don't keep re-stamping a registrant who already consented.
+    def record_mailing_list_consent(person)
+      return if person.mailing_list_consent_at.present?
+      return unless mailing_list_consent_given?
+
+      person.update!(
+        mailing_list_consent_at: Time.current,
+        mailing_list_consent_source: mailing_list_consent_source
+      )
+    end
+
+    def mailing_list_consent_given?
+      Array(field_value("communication_consent")).any? { |value| value.to_s.strip.present? }
+    end
+
+    # Identify the event by start date *and* title — many trainings share a title,
+    # so the leading date is what makes the consent source traceable to one event,
+    # e.g. "2026-06-23 Facilitator Training registration".
+    def mailing_list_consent_source
+      [ @event.start_date&.to_date&.iso8601, "#{@event.title} registration" ].compact.join(" ")
     end
 
     def create_mailing_address(person)
@@ -155,6 +239,7 @@ module EventRegistrationServices
           primary: true,
           inactive: false
         )
+        apply_value(existing, :country, field_value("mailing_country"))
         return existing
       end
 
@@ -165,6 +250,7 @@ module EventRegistrationServices
         city: new_city,
         state: new_state,
         zip_code: field_value("mailing_zip"),
+        country: field_value("mailing_country")&.strip,
         locality: "Unknown",
         address_type: field_value("mailing_address_type")&.downcase || "unknown",
         primary: true
@@ -198,64 +284,57 @@ module EventRegistrationServices
     end
 
     def find_organization
-      name = field_value("agency_name")&.strip
+      name = field_value(ORGANIZATION_NAME_IDENTIFIER)&.strip
       return nil if name.blank?
 
       Organization.find_by(name: name)
     end
 
-    def create_affiliation(person, organization)
-      Affiliation.find_or_create_by!(
+    # Connect only the one organization the registrant submitted on this form —
+    # not every organization they're affiliated with. A registration accrues
+    # multiple orgs only deliberately: an admin links extra ones from the edit
+    # page, or the registrant applies again with a different org (each submission
+    # adds its single org to the same registration via find_or_create_by!).
+    def connect_organization(event_registration, organization)
+      return unless organization
+
+      event_registration.event_registration_organizations
+        .find_or_create_by!(organization: organization)
+    end
+
+    def create_affiliation(person, organization, organization_address = nil)
+      AffiliationServices::CreateFromRegistration.call(
         person: person,
-        organization: organization
-      ) do |aff|
-        aff.title = field_value("agency_position")
-        aff.start_date = Date.current
-      end
+        organization: organization,
+        job_title: field_value(ORGANIZATION_POSITION_IDENTIFIER),
+        training_date: @event.start_date,
+        organization_address: organization_address
+      )
     end
 
     def create_agency_address(organization)
-      new_city = field_value("agency_city")&.strip
-      new_state = field_value("agency_state")&.strip
-
-      existing = organization.addresses.find_by(
-        "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
-        new_city&.downcase, new_state&.downcase.to_s
-      )
-
-      if existing
-        existing.update!(
-          street_address: field_value("agency_street"),
-          zip_code: field_value("agency_zip"),
-          primary: true,
-          inactive: false
-        )
-        return existing
-      end
-
-      organization.addresses.where(primary: true).update_all(primary: false, inactive: true)
-
-      organization.addresses.create!(
+      OrganizationServices::UpsertAddress.call(
+        organization: organization,
         street_address: field_value("agency_street"),
-        city: new_city,
-        state: new_state,
+        city: field_value("agency_city"),
+        state: field_value("agency_state"),
         zip_code: field_value("agency_zip"),
-        locality: "Unknown",
-        address_type: "work",
-        primary: true
+        country: field_value("agency_country")
       )
     end
 
     def assign_tags(person, organization)
-      sector_ids = collect_ids_from_checkboxes("primary_service_area_single") +
-                   collect_ids_from_checkboxes("primary_service_area")
+      primary_sector_ids = collect_sector_ids(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
+      additional_sector_ids = collect_sector_ids(FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS)
       primary_age_ids = collect_ids_from_checkboxes("primary_age_group")
       additional_age_ids = collect_ids_from_checkboxes("additional_age_group")
 
-      if sector_ids.any?
-        sectors = Sector.where(id: sector_ids)
-        assign_primary_sectors(person, sectors)
-        organization.sectors = (organization.sectors + sectors).uniq if organization
+      if primary_sector_ids.any? || additional_sector_ids.any?
+        person.tag_sectors(primary_ids: primary_sector_ids, additional_ids: additional_sector_ids)
+        # Organizations aggregate sectors across many people and have no single
+        # "primary", so union everyone's selections in as additional tags rather
+        # than churning the org's primary on each registration.
+        organization&.tag_sectors(primary_ids: [], additional_ids: primary_sector_ids + additional_sector_ids)
       end
 
       if primary_age_ids.any? || additional_age_ids.any?
@@ -264,11 +343,8 @@ module EventRegistrationServices
       end
     end
 
-    def assign_primary_sectors(person, sectors)
-      sectors.each do |sector|
-        item = person.sectorable_items.find_or_initialize_by(sector: sector)
-        item.update!(is_primary: true)
-      end
+    def collect_sector_ids(identifiers)
+      identifiers.flat_map { |id| collect_ids_from_checkboxes(id) }
     end
 
     def collect_ids_from_checkboxes(identifier)
@@ -286,7 +362,8 @@ module EventRegistrationServices
         ce_credit_requested: ce_credit_requested?,
         ce_hours_requested: ce_hours_requested,
         w9_requested: w9_requested?,
-        invoice_requested: invoice_requested?
+        invoice_requested: invoice_requested?,
+        expected_payment_method: field_value("payment_method")&.strip.presence
       )
     end
 

@@ -27,7 +27,7 @@ class OrganizationsController < ApplicationController
                                                 .count(:person_id)
       @program_statuses = Organization.program_statuses_by_id(org_ids)
 
-      render :organization_results
+      render :organizations_results
     else
       set_index_variables
       render :index
@@ -212,7 +212,7 @@ class OrganizationsController < ApplicationController
       :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
-      affiliations: :person
+      affiliations: { person: :user }
     ).find(params[:id])
   end
 
@@ -239,6 +239,7 @@ class OrganizationsController < ApplicationController
         :title,
         :start_date,
         :end_date,
+        :organization_address_id,
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],

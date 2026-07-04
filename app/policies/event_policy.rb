@@ -115,12 +115,15 @@ class EventPolicy < ApplicationPolicy
                   :videoconference_url,
                   :videoconference_label,
                   :videoconference_passcode,
+                  :short_description,
                   :rhino_header,
                   :rhino_description,
                   :event_details,
                   :event_details_label,
                   :ce_hours_details,
                   :ce_hours_details_label,
+                  :ce_hours_offered,
+                  :ce_hours_cost,
                   :autoshow_cost,
                   :autoshow_date,
                   :autoshow_location,
@@ -177,11 +180,14 @@ class EventPolicy < ApplicationPolicy
     if authenticated?
       relation
         .joins(
-          "LEFT OUTER JOIN event_registrations
-             ON event_registrations.event_id = events.id
-             AND event_registrations.status IN ('registered', 'attended', 'incomplete_attendance')
-           LEFT OUTER JOIN people
-             ON people.id = event_registrations.registrant_id"
+          ActiveRecord::Base.sanitize_sql_array([
+            "LEFT OUTER JOIN event_registrations
+               ON event_registrations.event_id = events.id
+               AND event_registrations.status IN (?)
+             LEFT OUTER JOIN people
+               ON people.id = event_registrations.registrant_id",
+            EventRegistration::ACTIVE_STATUSES
+          ])
         )
         .published
         .where(

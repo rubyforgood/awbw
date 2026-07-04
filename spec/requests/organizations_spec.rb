@@ -47,7 +47,7 @@ RSpec.describe "/organizations", type: :request do
       reinstate_org = create(:organization, name: "Reinstate Org", organization_status: organization_status)
       create(:affiliation, organization: reinstate_org, person: create(:person), title: "Facilitator", end_date: 1.year.ago.to_date)
 
-      get organizations_url, headers: { "Turbo-Frame" => "organization_results" }
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
 
       expect(response).to be_successful
       page = Capybara.string(response.body)
@@ -64,7 +64,7 @@ RSpec.describe "/organizations", type: :request do
       create(:affiliation, organization: organization, person: person)
       person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
 
-      get organizations_url, headers: { "Turbo-Frame" => "organization_results" }
+      get organizations_url, headers: { "Turbo-Frame" => "organizations_results" }
 
       expect(response).to be_successful
       expect(response.body).to include("13-17")
@@ -246,6 +246,25 @@ RSpec.describe "/organizations", type: :request do
         organization = Organization.create!(valid_attributes)
         patch organization_url(organization), params: { organization: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
+    context "linking an affiliation to an organization address" do
+      it "saves the chosen organization_address_id on the affiliation" do
+        organization = Organization.create!(valid_attributes)
+        address = create(:address, addressable: organization)
+        person = create(:person)
+        affiliation = create(:affiliation, organization: organization, person: person)
+
+        patch organization_url(organization), params: {
+          organization: {
+            affiliations_attributes: {
+              "0" => { id: affiliation.id, person_id: person.id, organization_address_id: address.id }
+            }
+          }
+        }
+
+        expect(affiliation.reload.organization_address_id).to eq(address.id)
       end
     end
   end

@@ -18,6 +18,20 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("Organization")
         expect(response.body).to include("AWBW")
       end
+
+      it "resolves the sector/age-group ids stored behind the professional fields to names" do
+        sector = create(:sector, :published, name: "Mental Health")
+        sector_field = create(:form_field, form: submission.form, name: "Additional sectors",
+                              answer_type: :multi_select_checkbox, field_identifier: "additional_sectors")
+        create(:form_answer, form_submission: submission, form_field: sector_field,
+               submitted_answer: "#{sector.id}, Other: Equine therapy")
+
+        get form_submission_path(submission)
+
+        # The stored ids resolve to names; the free-text "Other:" answer passes through.
+        expect(response.body).to include("Mental Health, Other: Equine therapy")
+        expect(response.body).not_to match(/>\s*#{sector.id},/)
+      end
     end
 
     context "when arriving from the bulk payments index" do

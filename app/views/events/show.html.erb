@@ -108,7 +108,7 @@
 
   <% if @event.bulk_payment_form %>
     <div class="mt-4">
-      <%= link_to "Bulk Payment",
+      <%= link_to Form::BULK_PAYMENT_PUBLIC_NAME,
                   new_event_bulk_payment_path(@event),
                   class: "btn px-10 py-2 text-2xl uppercase text-white hover:bg-white",
                   style: "font-family: 'Telefon Bold', sans-serif; background-color: rgb(22, 101, 52); border: 3px solid rgb(22, 101, 52);" %>

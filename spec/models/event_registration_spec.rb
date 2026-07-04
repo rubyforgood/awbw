@@ -36,17 +36,164 @@ RSpec.describe EventRegistration, type: :model do
       reg = create(:event_registration, status: "no_show")
       expect(reg).not_to be_active
     end
+
+    it "returns false for transferred_out status" do
+      reg = create(:event_registration, status: "transferred_out")
+      expect(reg).not_to be_active
+    end
+
+    it "returns true for transferred_in status" do
+      reg = create(:event_registration, status: "transferred_in")
+      expect(reg).to be_active
+    end
   end
 
   describe ".active" do
     it "returns only registrations with active statuses" do
       active_reg = create(:event_registration, status: "registered")
+      transferred_in_reg = create(:event_registration, status: "transferred_in")
       cancelled_reg = create(:event_registration, status: "cancelled")
       no_show_reg = create(:event_registration, status: "no_show")
+      transferred_out_reg = create(:event_registration, status: "transferred_out")
 
       results = EventRegistration.active
-      expect(results).to include(active_reg)
-      expect(results).not_to include(cancelled_reg, no_show_reg)
+      expect(results).to include(active_reg, transferred_in_reg)
+      expect(results).not_to include(cancelled_reg, no_show_reg, transferred_out_reg)
+    end
+  end
+
+  describe "#sync_attendance_status_to_days!" do
+    # A two-day event: start and end one day apart → day_count == 2.
+    let(:event) { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }
+    let(:registration) { create(:event_registration, event: event, status: "registered") }
+
+    it "flips registered → attended when all days are complete" do
+      registration.update!(completed_day_1: true, completed_day_2: true)
+      expect(registration.sync_attendance_status_to_days!).to be(true)
+      expect(registration.reload.status).to eq("attended")
+    end
+
+    it "flips to incomplete_attendance when only some days are complete" do
+      registration.update!(completed_day_1: true)
+      expect(registration.sync_attendance_status_to_days!).to be(true)
+      expect(registration.reload.status).to eq("incomplete_attendance")
+    end
+
+    it "rolls back to registered when no days are complete" do
+      registration.update!(status: "attended", completed_day_1: false, completed_day_2: false)
+      expect(registration.sync_attendance_status_to_days!).to be(true)
+      expect(registration.reload.status).to eq("registered")
+    end
+
+    it "treats a one-day event as registered/attended with no partial state" do
+      one_day = create(:event, start_date: 12.days.from_now, end_date: 12.days.from_now)
+      reg = create(:event_registration, event: one_day, status: "registered", completed_day_1: true)
+      expect(reg.sync_attendance_status_to_days!).to be(true)
+      expect(reg.reload.status).to eq("attended")
+    end
+
+    it "returns false and leaves the status untouched when it already matches" do
+      registration.update!(completed_day_1: true, completed_day_2: true, status: "attended")
+      expect(registration.sync_attendance_status_to_days!).to be(false)
+      expect(registration.reload.status).to eq("attended")
+    end
+
+    it "never overrides a deliberate inactive status (cancelled / no_show)" do
+      %w[ cancelled no_show ].each do |inactive|
+        reg = create(:event_registration, event: event, status: inactive, completed_day_1: true, completed_day_2: true)
+        expect(reg.sync_attendance_status_to_days!).to be(false)
+        expect(reg.reload.status).to eq(inactive)
+      end
+    end
+  end
+
+  describe "#deletable?" do
+    it "returns true for a plain registration with no allocations or attendance" do
+      reg = create(:event_registration, status: "registered")
+      expect(reg).to be_deletable
+    end
+
+    it "returns false when the registration has a payment allocation" do
+      reg = create(:event_registration, status: "registered")
+      payment = create(:payment, person: reg.registrant, amount_cents: 1000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 1000)
+      expect(reg).not_to be_deletable
+    end
+
+    it "returns false when the registration has a scholarship allocation" do
+      reg = create(:event_registration, status: "registered")
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 1000)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1000)
+      expect(reg).not_to be_deletable
+    end
+
+    it "returns false when the registration has an attendance outcome on record" do
+      expect(create(:event_registration, status: "attended")).not_to be_deletable
+      expect(create(:event_registration, status: "incomplete_attendance")).not_to be_deletable
+      expect(create(:event_registration, status: "no_show")).not_to be_deletable
+    end
+
+    it "returns true for a cancelled registration with no allocations" do
+      # Cancelling is a pre-event withdrawal, not an attendance outcome, so it stays deletable.
+      expect(create(:event_registration, status: "cancelled")).to be_deletable
+    end
+
+    it "returns false for a transferred-out registration" do
+      # The trail to the destination event is history worth keeping.
+      expect(create(:event_registration, status: "transferred_out")).not_to be_deletable
+    end
+
+    it "returns true for a transferred-in registration with no allocations" do
+      # Transferred-in is an ordinary active registration here; the source event's
+      # transferred_out record preserves the transfer history.
+      expect(create(:event_registration, status: "transferred_in")).to be_deletable
+    end
+  end
+
+  describe "#cancel!" do
+    it "marks the registration cancelled" do
+      reg = create(:event_registration, status: "registered")
+      reg.cancel!
+      expect(reg.reload.status).to eq("cancelled")
+    end
+  end
+
+  describe "releasing scholarships when a registration is cancelled" do
+    # Returns a registered registration on a costed event with a $500 scholarship
+    # awarded against it (scholarship_requested flagged, as the real award flow does).
+    def registration_with_scholarship
+      reg = create(:event_registration, event: create(:event, cost_cents: 50_000),
+                                         status: "registered", scholarship_requested: true)
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 50_000)
+      allocation = create(:allocation, source: scholarship, allocatable: reg, amount: 50_000)
+      [ reg, scholarship, allocation ]
+    end
+
+    it "zeroes the scholarship award and its allocation via #cancel!" do
+      reg, scholarship, allocation = registration_with_scholarship
+
+      reg.cancel!
+
+      expect(scholarship.reload.amount_cents).to eq(0)
+      expect(allocation.reload.amount).to eq(0)
+    end
+
+    it "zeroes the scholarship on any transition to cancelled (e.g. admin edit form)" do
+      reg, scholarship, _allocation = registration_with_scholarship
+
+      reg.update!(status: "cancelled")
+
+      expect(scholarship.reload.amount_cents).to eq(0)
+    end
+
+    it "keeps scholarship_requested set and does not re-award when reactivated" do
+      reg, scholarship, _allocation = registration_with_scholarship
+
+      reg.cancel!
+      reg.update!(status: "registered")
+
+      expect(reg.reload.scholarship_requested).to be(true)
+      expect(scholarship.reload.amount_cents).to eq(0)
     end
   end
 
@@ -172,6 +319,110 @@ RSpec.describe EventRegistration, type: :model do
 
       it "returns an unfiltered relation for unknown values" do
         expect(EventRegistration.payment_status("bogus")).to include(paid_reg, unpaid_reg)
+      end
+    end
+
+    describe ".ce_status" do
+      let!(:complete_ce) do
+        create(:event_registration, event: event, ce_credit_requested: true, ce_license_number: "ABC123", ce_hours_requested: 3).tap do |r|
+          create(:allocation, source: create(:payment, amount_cents: event.cost_cents, amount_cents_remaining: event.cost_cents),
+                              allocatable: r, amount: event.cost_cents)
+        end
+      end
+      let!(:missing_ce) { create(:event_registration, event: event, ce_credit_requested: true) }
+      let!(:no_ce) { create(:event_registration, event: event, ce_credit_requested: false) }
+
+      it "maps 'requested' to anyone who asked for CE credit" do
+        results = EventRegistration.ce_status("requested")
+        expect(results).to include(complete_ce, missing_ce)
+        expect(results).not_to include(no_ce)
+      end
+
+      it "maps 'license_not_provided' to CE requests missing a license number" do
+        results = EventRegistration.ce_status("license_not_provided")
+        expect(results).to include(missing_ce)
+        expect(results).not_to include(complete_ce, no_ce)
+      end
+
+      it "maps 'hours_not_provided' to CE requests missing hours" do
+        results = EventRegistration.ce_status("hours_not_provided")
+        expect(results).to include(missing_ce)
+        expect(results).not_to include(complete_ce, no_ce)
+      end
+
+      it "maps 'paid' to CE requests that are paid in full" do
+        results = EventRegistration.ce_status("paid")
+        expect(results).to include(complete_ce)
+        expect(results).not_to include(missing_ce, no_ce)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.ce_status("bogus")).to include(complete_ce, missing_ce, no_ce)
+      end
+    end
+
+    describe ".comment_status" do
+      let!(:no_comment) { create(:event_registration, event: event) }
+      let!(:commented) { create(:event_registration, event: event).tap { |r| create(:comment, commentable: r, body: "Hi") } }
+      let!(:flagged) { create(:event_registration, event: event).tap { |r| create(:comment, commentable: r, body: "Flag", flagged: true) } }
+
+      it "maps 'none' to registrations without comments" do
+        results = EventRegistration.comment_status("none")
+        expect(results).to include(no_comment)
+        expect(results).not_to include(commented, flagged)
+      end
+
+      it "maps 'present' to registrations with any comment" do
+        results = EventRegistration.comment_status("present")
+        expect(results).to include(commented, flagged)
+        expect(results).not_to include(no_comment)
+      end
+
+      it "maps 'flagged' to registrations with a flagged comment" do
+        results = EventRegistration.comment_status("flagged")
+        expect(results).to include(flagged)
+        expect(results).not_to include(no_comment, commented)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.comment_status("bogus")).to include(no_comment, commented, flagged)
+      end
+    end
+
+    describe ".account_status" do
+      # The person factory auto-builds a confirmed user, so each case sets the
+      # registrant's account state explicitly (user: nil for no account).
+      let!(:none_reg) { create(:event_registration, event: event, registrant: create(:person, user: nil)) }
+      let!(:access_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: Time.current))) }
+      let!(:invited_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: nil, welcome_instructions_sent_at: Time.current))) }
+      let!(:no_access_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: nil, welcome_instructions_sent_at: nil))) }
+
+      it "maps 'none' to registrants without an account" do
+        results = EventRegistration.account_status("none")
+        expect(results).to include(none_reg)
+        expect(results).not_to include(access_reg, invited_reg, no_access_reg)
+      end
+
+      it "maps 'has_access' to confirmed, unlocked, active accounts" do
+        results = EventRegistration.account_status("has_access")
+        expect(results).to include(access_reg)
+        expect(results).not_to include(none_reg, invited_reg, no_access_reg)
+      end
+
+      it "maps 'invited' to invited accounts that don't yet have access" do
+        results = EventRegistration.account_status("invited")
+        expect(results).to include(invited_reg)
+        expect(results).not_to include(none_reg, access_reg, no_access_reg)
+      end
+
+      it "maps 'no_access' to accounts that are neither invited nor active" do
+        results = EventRegistration.account_status("no_access")
+        expect(results).to include(no_access_reg)
+        expect(results).not_to include(none_reg, access_reg, invited_reg)
+      end
+
+      it "returns an unfiltered relation for unknown values" do
+        expect(EventRegistration.account_status("bogus")).to include(none_reg, access_reg, invited_reg, no_access_reg)
       end
     end
   end
@@ -334,6 +585,34 @@ RSpec.describe EventRegistration, type: :model do
     it "is false when unpaid and not flagged" do
       reg = create(:event_registration, event: event, registrant: user.person)
       expect(reg.payment_access_granted?).to be false
+    end
+  end
+
+  describe "#videoconference_details_visible?" do
+    let(:user) { create(:user, :with_person) }
+
+    it "is true within a week of the start for a registrant with payment access" do
+      event = create(:event, cost_cents: 1099, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      reg = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      expect(reg.videoconference_details_visible?).to be true
+    end
+
+    it "is false more than a week before the start" do
+      event = create(:event, cost_cents: 1099, start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours)
+      reg = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      expect(reg.videoconference_details_visible?).to be false
+    end
+
+    it "is false within a week when the registrant lacks payment access" do
+      event = create(:event, cost_cents: 1099, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      reg = create(:event_registration, event: event, registrant: user.person)
+      expect(reg.videoconference_details_visible?).to be false
+    end
+
+    it "is true within a week for a free event regardless of payment" do
+      event = create(:event, cost_cents: 0, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      reg = create(:event_registration, event: event, registrant: user.person)
+      expect(reg.videoconference_details_visible?).to be true
     end
   end
 
@@ -543,47 +822,12 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
-  describe "snapshot_registrant_organizations" do
-    it "copies active affiliations to the registration on create" do
+  describe "registration organizations" do
+    it "does not auto-connect the registrant's affiliations on create" do
       org = create(:organization)
       person = create(:person)
       create(:affiliation, person: person, organization: org)
 
-      reg = create(:event_registration, registrant: person)
-      expect(reg.organizations).to include(org)
-    end
-
-    it "copies multiple active affiliations" do
-      org1 = create(:organization)
-      org2 = create(:organization)
-      person = create(:person)
-      create(:affiliation, person: person, organization: org1)
-      create(:affiliation, person: person, organization: org2)
-
-      reg = create(:event_registration, registrant: person)
-      expect(reg.organizations).to contain_exactly(org1, org2)
-    end
-
-    it "skips inactive affiliations" do
-      org = create(:organization)
-      person = create(:person)
-      create(:affiliation, person: person, organization: org, inactive: true)
-
-      reg = create(:event_registration, registrant: person)
-      expect(reg.organizations).to be_empty
-    end
-
-    it "skips affiliations with past end dates" do
-      org = create(:organization)
-      person = create(:person)
-      create(:affiliation, person: person, organization: org, end_date: 1.day.ago)
-
-      reg = create(:event_registration, registrant: person)
-      expect(reg.organizations).to be_empty
-    end
-
-    it "creates no records when registrant has no affiliations" do
-      person = create(:person)
       reg = create(:event_registration, registrant: person)
       expect(reg.organizations).to be_empty
     end

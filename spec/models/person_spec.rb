@@ -394,24 +394,26 @@ RSpec.describe Person, type: :model do
       create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
     end
 
-    describe "#other_service_area_responses" do
-      it "returns free-text Other values from primary service area fields" do
+    describe "#other_sector_responses" do
+      # Exercises the legacy "service area" field identifiers on purpose — they
+      # must still resolve via FormField::SECTOR_FIELD_IDENTIFIERS.
+      it "returns free-text Other values from primary sector fields" do
         answer("primary_service_area", "5, Other: Equine therapy")
         answer("primary_service_area_single", "Other: Music therapy")
 
-        expect(person.other_service_area_responses).to contain_exactly("Equine therapy", "Music therapy")
+        expect(person.other_sector_responses).to contain_exactly("Equine therapy", "Music therapy")
       end
 
       it "ignores answers without an Other value" do
         answer("primary_service_area", "5, 12")
 
-        expect(person.other_service_area_responses).to be_empty
+        expect(person.other_sector_responses).to be_empty
       end
 
       it "does not pull from unrelated fields" do
         answer("primary_age_group", "Other: School")
 
-        expect(person.other_service_area_responses).to be_empty
+        expect(person.other_sector_responses).to be_empty
       end
     end
 
@@ -428,6 +430,36 @@ RSpec.describe Person, type: :model do
 
         expect(person.other_workshop_setting_responses).to be_empty
       end
+    end
+  end
+
+  describe "#mailing_list_consented=" do
+    it "stamps consent and a source when granted with none on file" do
+      person = build(:person, mailing_list_consent_at: nil)
+
+      person.mailing_list_consented = "1"
+
+      expect(person.mailing_list_consent_at).to be_present
+      expect(person.mailing_list_consent_source).to eq("Admin update")
+    end
+
+    it "preserves the original timestamp and source when re-checked" do
+      original = 1.year.ago
+      person = build(:person, mailing_list_consent_at: original, mailing_list_consent_source: "Registration: X")
+
+      person.mailing_list_consented = "1"
+
+      expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
+      expect(person.mailing_list_consent_source).to eq("Registration: X")
+    end
+
+    it "clears the timestamp and source when withdrawn" do
+      person = build(:person, mailing_list_consent_at: Time.current, mailing_list_consent_source: "Registration: X")
+
+      person.mailing_list_consented = "0"
+
+      expect(person.mailing_list_consent_at).to be_nil
+      expect(person.mailing_list_consent_source).to be_nil
     end
   end
 end

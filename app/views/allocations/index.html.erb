@@ -11,7 +11,7 @@
           <i class="fa-solid fa-arrow-left text-xs"></i> Bulk payments
         <% end %>
       <% elsif @allocatable.is_a?(EventRegistration) && params[:return_to] == "registrants" %>
-        <%= link_to registrants_event_path(@allocatable.event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm text-gray-500 hover:text-gray-700" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
         <% end %>
       <% elsif @allocatable.is_a?(EventRegistration) && params[:return_to] == "onboarding" %>
@@ -23,7 +23,7 @@
           <i class="fa-solid fa-arrow-left text-xs"></i> Registration
         <% end %>
       <% elsif @allocatable.respond_to?(:event) %>
-        <%= link_to registrants_event_path(@allocatable.event), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+        <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm text-gray-500 hover:text-gray-700" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
         <% end %>
       <% else %>
@@ -95,7 +95,7 @@
       <div id="discount-form" class="mb-6"></div>
     <% end %>
 
-    <%= render template: "allocations/allocation_results" %>
+    <%= render template: "allocations/allocations_results" %>
   </div>
 <% else %>
   <%# ---- Searchable list of every allocation — chrome modeled on the manage
@@ -115,36 +115,8 @@
     <%= render "search_boxes" %>
 
     <% result_src = allocations_path + "?" + request.query_string %>
-    <%= turbo_frame_tag :allocation_results, src: result_src, data: { turbo: "temporary" } do %>
-      <div class="animate-pulse">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div class="bg-gray-100 px-4 py-3 flex gap-16">
-            <div class="h-4 w-12 bg-gray-200 rounded"></div>
-            <div class="h-4 w-20 bg-gray-200 rounded"></div>
-            <div class="h-4 w-16 bg-gray-200 rounded"></div>
-            <div class="h-4 w-20 bg-gray-200 rounded"></div>
-            <div class="h-4 w-24 bg-gray-200 rounded"></div>
-            <div class="h-4 w-14 bg-gray-200 rounded ml-auto"></div>
-          </div>
-
-          <% 10.times do %>
-            <div class="border-t border-gray-200 px-4 py-3 flex gap-16">
-              <div class="h-4 w-20 bg-gray-200 rounded"></div>
-              <div class="h-4 w-32 bg-gray-200 rounded"></div>
-              <div class="h-4 w-16 bg-gray-200 rounded"></div>
-              <div class="h-4 w-20 bg-gray-200 rounded"></div>
-              <div class="h-4 w-32 bg-gray-200 rounded"></div>
-              <div class="h-4 w-10 bg-gray-200 rounded ml-auto"></div>
-            </div>
-          <% end %>
-        </div>
-
-        <div class="flex justify-center mt-6 space-x-2">
-          <div class="h-8 w-10 bg-gray-200 rounded"></div>
-          <div class="h-8 w-10 bg-gray-200 rounded"></div>
-          <div class="h-8 w-10 bg-gray-200 rounded"></div>
-        </div>
-      </div>
+    <%= turbo_frame_tag :allocations_results, src: result_src, data: { turbo: "temporary" } do %>
+      <%= render "results_skeleton" %>
     <% end %>
   </div>
 <% end %>

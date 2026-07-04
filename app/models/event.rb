@@ -7,6 +7,12 @@ class Event < ApplicationRecord
   # link is available to paid registrants.
   VIDEOCONFERENCE_JOIN_BUFFER = 30.minutes
 
+  # How far ahead of the start the videoconference connection details (join link,
+  # meeting ID, passcode) may be shared. Kept hidden until then so the link isn't
+  # exposed — on the ticket, the videoconference page, or in calendar entries —
+  # more than a week in advance.
+  VIDEOCONFERENCE_DETAILS_LEAD = 7.days
+
   has_rich_text :rhino_header
   has_rich_text :rhino_description
 
@@ -103,6 +109,10 @@ class Event < ApplicationRecord
     forms.find_by(event_forms: { role: "registration" })
   end
 
+  def registration_form_ids
+    event_forms.registration.pluck(:form_id)
+  end
+
   # Whether a signed-in user should register in one click rather than being
   # routed to the registration form. True when no registration form is linked,
   # or when an admin has explicitly opted members out of the form. A linked form
@@ -136,6 +146,13 @@ class Event < ApplicationRecord
     return false unless start_date && end_date
     now = Time.current
     now >= start_date - VIDEOCONFERENCE_JOIN_BUFFER && now <= end_date + VIDEOCONFERENCE_JOIN_BUFFER
+  end
+
+  # Whether the videoconference connection details may be revealed yet: only once
+  # the event is within VIDEOCONFERENCE_DETAILS_LEAD of starting.
+  def videoconference_details_visible?
+    return false unless start_date
+    Time.current >= start_date - VIDEOCONFERENCE_DETAILS_LEAD
   end
 
   def registerable?
@@ -223,6 +240,29 @@ class Event < ApplicationRecord
       dollar_amount = dollar_amount.to_s.gsub(/[^\d.]/, "").to_f
       self.cost_cents = (dollar_amount.to_f * 100).round
     end
+  end
+
+  # Virtual attribute for the total CE cost in dollars (converts to/from
+  # ce_hours_cost_cents), mirroring #cost.
+  def ce_hours_cost
+    return nil if ce_hours_cost_cents.nil?
+    ce_hours_cost_cents / 100.0
+  end
+
+  def ce_hours_cost=(dollar_amount)
+    if dollar_amount.blank?
+      self.ce_hours_cost_cents = nil
+    else
+      dollar_amount = dollar_amount.to_s.gsub(/[^\d.]/, "").to_f
+      self.ce_hours_cost_cents = (dollar_amount * 100).round
+    end
+  end
+
+  # An event grants CE credit when it offers a positive number of hours. Derived
+  # from ce_hours_offered rather than a separate stored flag, so there's a single
+  # source of truth.
+  def ce_eligible?
+    ce_hours_offered.to_f.positive?
   end
 
   def attachable_content_type

@@ -4,6 +4,7 @@ RSpec.describe Affiliation do
   describe 'associations' do
     it { should belong_to(:organization) }
     it { should belong_to(:person) }
+    it { should belong_to(:organization_address).class_name("Address").optional }
   end
 
   describe 'validations' do
@@ -12,6 +13,40 @@ RSpec.describe Affiliation do
     end
     it { should validate_presence_of(:organization_id) }
     # it { should validate_presence_of(:person_id) } # we needed to not have this to support nested attrs
+  end
+
+  describe '#organization_address' do
+    let(:organization) { create(:organization) }
+    let(:address) { create(:address, addressable: organization) }
+
+    it 'is valid when the address belongs to the same organization' do
+      affiliation = build(:affiliation, organization: organization, organization_address: address)
+      expect(affiliation).to be_valid
+    end
+
+    it 'is valid when no address is linked' do
+      affiliation = build(:affiliation, organization: organization, organization_address: nil)
+      expect(affiliation).to be_valid
+    end
+
+    it 'is invalid when the address belongs to a different organization' do
+      other_address = create(:address, addressable: create(:organization))
+      affiliation = build(:affiliation, organization: organization, organization_address: other_address)
+      expect(affiliation).not_to be_valid
+      expect(affiliation.errors[:organization_address_id]).to be_present
+    end
+
+    it "is invalid when the address belongs to a person" do
+      person_address = create(:address, addressable: create(:person))
+      affiliation = build(:affiliation, organization: organization, organization_address: person_address)
+      expect(affiliation).not_to be_valid
+    end
+
+    it 'is nullified when its linked address is destroyed' do
+      affiliation = create(:affiliation, organization: organization, organization_address: address)
+      address.destroy
+      expect(affiliation.reload.organization_address_id).to be_nil
+    end
   end
 
   describe '#active?' do
@@ -92,6 +127,76 @@ RSpec.describe Affiliation do
 
     it 'includes only the exact, case-sensitive title "Facilitator" (whitespace-trimmed)' do
       expect(described_class.facilitators).to contain_exactly(exact, whitespace)
+    end
+  end
+
+  describe '#sync_organization_status_with_affiliations' do
+    let!(:active_status) { OrganizationStatus.find_or_create_by!(name: "Active") }
+    let!(:inactive_status) { OrganizationStatus.find_or_create_by!(name: "Inactive") }
+
+    it 'sets the organization to Inactive when its last active affiliation goes inactive' do
+      org = create(:organization, organization_status: active_status)
+      affiliation = create(:affiliation, organization: org, inactive: false, end_date: nil)
+
+      affiliation.update!(inactive: true)
+
+      expect(org.reload.organization_status).to eq(inactive_status)
+    end
+
+    it 'sets an Inactive organization back to Active when it regains an active affiliation' do
+      org = create(:organization, organization_status: inactive_status)
+
+      create(:affiliation, organization: org, inactive: false, end_date: nil)
+
+      expect(org.reload.organization_status).to eq(active_status)
+    end
+
+    it 'ignores non-facilitator affiliations when deciding status' do
+      org = create(:organization, organization_status: active_status)
+      create(:affiliation, organization: org, title: "Volunteer", inactive: false, end_date: nil)
+
+      expect(org.reload.organization_status).to eq(inactive_status)
+    end
+
+    %w[Pending Reinstate Unknown].each do |status_name|
+      it "leaves a #{status_name} organization untouched when it regains an active affiliation" do
+        status = OrganizationStatus.find_or_create_by!(name: status_name)
+        org = create(:organization, organization_status: status)
+
+        create(:affiliation, organization: org, inactive: false, end_date: nil)
+
+        expect(org.reload.organization_status).to eq(status)
+      end
+    end
+  end
+
+  describe '.active_on' do
+    let(:date) { Date.new(2024, 6, 1) }
+    let!(:spanning) { create(:affiliation, start_date: Date.new(2023, 1, 1), end_date: Date.new(2025, 1, 1)) }
+    let!(:open_ended) { create(:affiliation, start_date: Date.new(2023, 1, 1), end_date: nil) }
+    let!(:ended_before) { create(:affiliation, start_date: Date.new(2020, 1, 1), end_date: Date.new(2021, 1, 1)) }
+    let!(:starts_after) { create(:affiliation, start_date: Date.new(2025, 1, 1), end_date: nil) }
+    let!(:no_dates) { create(:affiliation, start_date: nil, end_date: nil) }
+
+    it 'includes affiliations whose span covers the date' do
+      expect(described_class.active_on(date)).to include(spanning, open_ended)
+    end
+
+    it 'excludes affiliations that ended before the date' do
+      expect(described_class.active_on(date)).not_to include(ended_before)
+    end
+
+    it 'excludes affiliations that start after the date' do
+      expect(described_class.active_on(date)).not_to include(starts_after)
+    end
+
+    it 'includes affiliations with no dates on record' do
+      expect(described_class.active_on(date)).to include(no_dates)
+    end
+
+    it 'ignores the cached inactive flag, judging purely by dates' do
+      flagged = create(:affiliation, start_date: Date.new(2023, 1, 1), end_date: nil, inactive: true)
+      expect(described_class.active_on(date)).to include(flagged)
     end
   end
 

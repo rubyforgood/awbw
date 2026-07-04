@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_29_023519) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -109,6 +109,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.date "end_date"
     t.string "filemaker_code"
     t.boolean "inactive", default: false, null: false
+    t.bigint "organization_address_id"
     t.integer "organization_agency_id"
     t.integer "organization_id", null: false
     t.bigint "person_id", null: false
@@ -118,6 +119,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "user_id"
+    t.index ["organization_address_id"], name: "index_affiliations_on_organization_address_id"
     t.index ["organization_agency_id"], name: "index_affiliations_on_organization_agency_id"
     t.index ["organization_id"], name: "index_affiliations_on_organization_id"
     t.index ["person_id"], name: "index_affiliations_on_person_id"
@@ -420,6 +422,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.index ["contactable_type", "contactable_id"], name: "index_contact_methods_on_contactable"
   end
 
+  create_table "continuing_education_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "certificate_sent_at"
+    t.integer "cost_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.bigint "event_registration_id", null: false
+    t.decimal "hours", precision: 5, scale: 2, default: "0.0", null: false
+    t.bigint "professional_license_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["created_by_id"], name: "index_continuing_education_registrations_on_created_by_id"
+    t.index ["event_registration_id"], name: "idx_on_event_registration_id_41b5ee2e9c"
+    t.index ["professional_license_id"], name: "idx_on_professional_license_id_54fea68922"
+    t.index ["updated_by_id"], name: "index_continuing_education_registrations_on_updated_by_id"
+  end
+
   create_table "discounts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "amount_cents", default: 0, null: false
     t.datetime "created_at", null: false
@@ -463,6 +481,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.boolean "ce_credit_requested", default: false, null: false
     t.integer "ce_hours_requested"
     t.string "ce_license_number"
+    t.datetime "certificate_sent_at"
     t.string "checkout_session_id"
     t.boolean "completed_day_1", default: false, null: false
     t.boolean "completed_day_2", default: false, null: false
@@ -471,6 +490,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.boolean "completed_day_5", default: false, null: false
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.string "expected_payment_method"
     t.text "fee_note"
     t.boolean "intends_to_pay", default: false, null: false
     t.boolean "invoice_requested", default: false, null: false
@@ -515,8 +535,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.boolean "autoshow_title", default: true, null: false
     t.boolean "autoshow_videoconference_label", default: true, null: false
     t.boolean "autoshow_videoconference_link", default: true, null: false
+    t.integer "ce_hours_cost_cents"
     t.text "ce_hours_details"
     t.string "ce_hours_details_label", default: "CE hours", null: false
+    t.decimal "ce_hours_offered", precision: 5, scale: 2
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
@@ -541,6 +563,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
     t.datetime "registration_close_date", precision: nil
+    t.text "short_description"
     t.boolean "signed_in_one_click_enabled", default: false, null: false
     t.datetime "start_date", precision: nil
     t.string "title"
@@ -952,13 +975,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.string "email_2_type"
     t.string "email_type"
     t.string "facebook_url"
+    t.string "filemaker_code"
     t.string "first_name", null: false
     t.string "instagram_url"
     t.string "last_name", null: false
     t.string "legal_first_name"
-    t.string "license_number"
-    t.string "license_type"
     t.string "linked_in_url"
+    t.datetime "mailing_list_consent_at"
+    t.string "mailing_list_consent_source"
     t.date "member_since"
     t.text "notes"
     t.boolean "profile_is_searchable", default: true, null: false
@@ -980,6 +1004,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.boolean "profile_show_workshop_variations", default: true, null: false
     t.boolean "profile_show_workshops", default: true, null: false
     t.string "pronouns"
+    t.string "racial_ethnic_identity"
     t.text "shoutout_text"
     t.string "twitter_url"
     t.datetime "updated_at", null: false
@@ -994,6 +1019,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
     t.integer "legacy_id"
     t.string "security_cat"
     t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "professional_licenses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.date "expires_on"
+    t.string "issuing_state"
+    t.string "kind"
+    t.string "number"
+    t.bigint "person_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["created_by_id"], name: "index_professional_licenses_on_created_by_id"
+    t.index ["person_id", "number"], name: "index_professional_licenses_on_person_and_number", unique: true
+    t.index ["person_id"], name: "index_professional_licenses_on_person_id"
+    t.index ["updated_by_id"], name: "index_professional_licenses_on_updated_by_id"
   end
 
   create_table "quotable_item_quotes", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1617,6 +1658,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
   add_foreign_key "action_text_mentions", "action_text_rich_texts"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "affiliations", "addresses", column: "organization_address_id", on_delete: :nullify
   add_foreign_key "affiliations", "organizations"
   add_foreign_key "affiliations", "organizations", column: "organization_agency_id"
   add_foreign_key "affiliations", "people"
@@ -1644,6 +1686,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
   add_foreign_key "community_news", "users", column: "updated_by_id"
   add_foreign_key "community_news", "windows_types"
   add_foreign_key "contact_methods", "addresses"
+  add_foreign_key "continuing_education_registrations", "event_registrations"
+  add_foreign_key "continuing_education_registrations", "professional_licenses"
   add_foreign_key "event_forms", "events"
   add_foreign_key "event_forms", "forms"
   add_foreign_key "event_registration_checklist_completions", "event_registrations"
@@ -1683,6 +1727,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_21_104933) do
   add_foreign_key "payments", "people"
   add_foreign_key "people", "users", column: "created_by_id"
   add_foreign_key "people", "users", column: "updated_by_id"
+  add_foreign_key "professional_licenses", "people"
   add_foreign_key "quotable_item_quotes", "quotes"
   add_foreign_key "quotes", "workshops"
   add_foreign_key "registration_ticket_callouts", "events"

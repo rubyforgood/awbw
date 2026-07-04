@@ -1,8 +1,18 @@
 <% content_for(:page_bg_class, "public") %>
 
 <% reg = @form_submission.person.event_registrations.find_by(event: @event) %>
-<% back_path = reg&.slug.present? ? registration_ticket_path(reg.slug) : event_path(@event) %>
-<% back_label = reg&.slug.present? ? "Back to ticket" : "Back to event" %>
+<%# Viewed from the admin Registrants roster (same-tab nav): return to that
+    registrant's row, not the public ticket. Falls back to ticket/event. %>
+<% if params[:return_to] == "registrants" && reg && allowed_to?(:index?, EventRegistration) %>
+  <% back_path = registrants_event_row_path(@event, params[:return_registration_id].presence || reg.id) %>
+  <% back_label = "Back to registrants" %>
+<% elsif reg&.slug.present? %>
+  <% back_path = registration_ticket_path(reg.slug) %>
+  <% back_label = "Back to ticket" %>
+<% else %>
+  <% back_path = event_path(@event) %>
+  <% back_label = "Back to event" %>
+<% end %>
 <div class="max-w-3xl mx-auto px-4 pt-4">
   <div class="flex flex-wrap items-center gap-2">
     <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
@@ -17,7 +27,7 @@
       <% end %>
     <% end %>
     <% if reg && allowed_to?(:index?, EventRegistration) %>
-      <%= link_to "Registration", edit_event_registration_path(reg), class: "ml-auto admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
+      <%= link_to "Edit registration", edit_event_registration_path(reg), class: "ml-auto admin-only bg-blue-100 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
     <% end %>
   </div>
 </div>
@@ -57,11 +67,9 @@
             </div>
           <% else %>
             <% response = @responses[field.id] %>
-            <div class="<%= field.grid_span_class %> py-2">
+            <div class="<%= field.grid_span_class %> pb-8">
               <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(display_question_label(field, response)) %></dt>
-              <dd class="mt-1 text-sm text-gray-900">
-                <%= display_response_text(field, response) %>
-              </dd>
+              <dd class="mt-0.5 text-base font-semibold text-gray-900 whitespace-pre-line"><%= display_response_text(field, response) %></dd>
             </div>
           <% end %>
         <% end %>
@@ -78,7 +86,7 @@
   <%# ---- SCHOLARSHIP APPLICATION CARD — only when the registrant filled out the
       separate scholarship form (its own role: "scholarship" submission). ---- %>
   <% if @scholarship_submission %>
-    <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden mt-8">
+    <div id="scholarship-application" class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden mt-8 scroll-mt-24">
 
       <%# Card Header %>
       <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
@@ -108,11 +116,9 @@
               </div>
             <% else %>
               <% response = @scholarship_responses[field.id] %>
-              <div class="<%= field.grid_span_class %> py-2">
+              <div class="<%= field.grid_span_class %> pb-8">
                 <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(display_question_label(field, response)) %></dt>
-                <dd class="mt-1 text-sm text-gray-900 whitespace-pre-line">
-                  <%= display_response_text(field, response) %>
-                </dd>
+                <dd class="mt-0.5 text-base font-semibold text-gray-900 whitespace-pre-line"><%= display_response_text(field, response) %></dd>
               </div>
             <% end %>
           <% end %>

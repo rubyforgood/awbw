@@ -8,7 +8,7 @@
     data: {
       controller: "collection",
       collection_search_type_select_outlet: "[data-type-picker]",
-      turbo_frame: "allocation_results",
+      turbo_frame: "allocations_results",
       collection_unselected_class: default_btn,
       collection_selected_class: selected_btn
     }, autocomplete: "off" do %>
@@ -17,7 +17,7 @@
         <div>
           <label for="source_type" class="<%= label_class %>">Source type</label>
           <%= select_tag "source_type[]",
-          options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Credit Card" => "CreditCardPayment", "Stripe" => "ExternalProcessorPayment", "Discount" => "Discount" }, Array(params[:source_type]).first),
+          options_for_select({ "All" => "", "Cash" => "CashPayment", "Check" => "CheckPayment", "Stripe" => "ExternalProcessorPayment", "Discount" => "Discount" }, Array(params[:source_type]).first),
           class: field_class %>
         </div>
         <div>

@@ -1,5 +1,6 @@
 class EventRegistration < ApplicationRecord
   include RemoteSearchable
+  include Registerable
 
   belongs_to :registrant, class_name: "Person"
   belongs_to :event
@@ -8,6 +9,7 @@ class EventRegistration < ApplicationRecord
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :organizations, through: :event_registration_organizations
   has_many :allocations, as: :allocatable
+  has_many :continuing_education_registrations, dependent: :destroy
   has_many :scholarships, -> { distinct },
     through: :allocations, source: :source, source_type: "Scholarship"
   has_many :checklist_completions, class_name: "EventRegistrationChecklistCompletion", dependent: :destroy
@@ -19,11 +21,11 @@ class EventRegistration < ApplicationRecord
   accepts_nested_attributes_for :registrant
 
   before_create :generate_slug
-  after_create :snapshot_registrant_organizations
+  after_update :release_scholarships, if: :status_changed_to_cancelled?
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
-  ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
-  INACTIVE_STATUSES = %w[ cancelled no_show ].freeze
+  ACTIVE_STATUSES = %w[ registered attended incomplete_attendance transferred_in ].freeze
+  INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
 
   # Manual onboarding checklist steps shown on the event's Onboarding tab. Each is
@@ -146,6 +148,63 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
+  # Mirrors ReminderRecipientFilter#matches_ce_status?. The "license"/"hours"
+  # sub-statuses only make sense for someone who requested CE credit, so they're
+  # gated on it. "paid" has no CE-specific payment record yet, so it falls back
+  # to the registrant being paid in full.
+  scope :ce_status, ->(value) {
+    case value
+    when "requested" then where(ce_credit_requested: true)
+    when "license_not_provided" then where(ce_credit_requested: true).where(ce_license_number: [ nil, "" ])
+    when "hours_not_provided" then where(ce_credit_requested: true).where("COALESCE(ce_hours_requested, 0) <= 0")
+    when "paid" then where(ce_credit_requested: true).merge(paid_in_full)
+    else all
+    end
+  }
+  scope :comment_status, ->(value) {
+    commented = Comment.where(commentable_type: "EventRegistration").select(:commentable_id)
+    case value
+    when "none" then where.not(id: commented)
+    when "present" then where(id: commented)
+    when "flagged" then where(id: Comment.where(commentable_type: "EventRegistration", flagged: true).select(:commentable_id))
+    else all
+    end
+  }
+  # Mirrors EventRegistration#account_status (none / has_access / invited /
+  # no_access) as a DB filter, joining the registrant's login account.
+  scope :account_status, ->(value) {
+    # Guard every subquery against NULL person_id (system/audit users) — a NULL in
+    # a NOT IN list makes the whole comparison return no rows.
+    with_user = User.where.not(person_id: nil).select(:person_id)
+    has_access = User.has_access.where.not(person_id: nil).select(:person_id)
+    invited = User.where.not(person_id: nil).where.not(welcome_instructions_sent_at: nil).select(:person_id)
+    case value
+    when "none" then where.not(registrant_id: with_user)
+    when "has_access" then where(registrant_id: has_access)
+    when "invited" then where(registrant_id: invited).where.not(registrant_id: has_access)
+    when "no_access" then where(registrant_id: with_user).where.not(registrant_id: has_access).where.not(registrant_id: invited)
+    else all
+    end
+  }
+  # "linked" = at least one organization linked; "pending" = the registrant
+  # submitted an agency name on the event's registration form but nothing is
+  # linked yet (mirrors the Pending chip on the roster). Needs the event to
+  # resolve its registration form's agency_name field.
+  scope :organization_status, ->(value, event) {
+    linked = EventRegistrationOrganization.select(:event_registration_id)
+    case value
+    when "linked" then where(id: linked)
+    when "pending"
+      field = event.registration_form&.form_fields&.find_by(field_identifier: "agency_name")
+      next none unless field
+      submitted = FormAnswer.joins(:form_submission)
+        .where(form_field_id: field.id, form_submissions: { form_id: event.registration_form.id })
+        .where.not(submitted_answer: [ nil, "" ])
+        .select(Arel.sql("form_submissions.person_id"))
+      where(registrant_id: submitted).where.not(id: linked)
+    else all
+    end
+  }
   scope :keyword, ->(term) {
     return none if term.blank?
 
@@ -195,12 +254,41 @@ class EventRegistration < ApplicationRecord
     status.in?(ACTIVE_STATUSES)
   end
 
-  def checked_in?
-    # checked_in_at.present?
+  # Cancel this registration. Releasing scholarships and sending cancellation
+  # emails hang off the status-change callbacks, so this and every other path to
+  # "cancelled" (e.g. the admin edit form's status dropdown) behave identically.
+  def cancel!
+    update!(status: "cancelled")
   end
 
-  def paid?
-    paid_in_full?
+  # True once the event has happened and an attendance outcome is on record —
+  # attended, partially attended, or a no-show. Cancelled/transferred are not
+  # attendance outcomes. (Distinct from #active?, which is about registration
+  # standing, and #attended?, which is specifically "fully attended".)
+  def attendance_recorded?
+    status.in?(%w[ attended incomplete_attendance no_show ])
+  end
+
+  # Transferred out to another event. The trail to where the registrant went is
+  # history worth keeping, so it blocks deletion. Transferred_in is deliberately
+  # excluded: it's an ordinary active registration here, and the source event's
+  # transferred_out record already preserves the transfer trail.
+  def transferred_out?
+    status == "transferred_out"
+  end
+
+  # Safe to delete only when removing the record would not orphan financial data
+  # or erase history. Allocations tie the registration to a financial source of
+  # any kind (payments, scholarships, and others) and have no dependent: :destroy,
+  # so a registration with any allocation must be kept — even a reverted payment
+  # leaves its (now net-zero) allocation rows. An attendance outcome (attended,
+  # incomplete, or no-show) or a transfer out is likewise history worth keeping.
+  def deletable?
+    !allocations.exists? && !attendance_recorded? && !transferred_out?
+  end
+
+  def checked_in?
+    # checked_in_at.present?
   end
 
   # True when the registrant should be granted access to ticket materials
@@ -211,11 +299,11 @@ class EventRegistration < ApplicationRecord
   #
   # This is the single seam for "may this registrant reach paid content?":
   # any payment-gated resource (the videoconference join link today, recordings
-  # or downloads in the future) should gate on this, NOT on `paid?`. Reporting
-  # surfaces (rosters, CSV exports, dashboard metrics) must keep using `paid?` /
+  # or downloads in the future) should gate on this, NOT on `paid_in_full?`.
+  # Reporting surfaces (rosters, CSV exports, dashboard metrics) must keep using
   # `paid_in_full?` so they still reflect the real balance owed.
   def payment_access_granted?
-    paid? || intends_to_pay?
+    paid_in_full? || intends_to_pay?
   end
 
   # Human-readable payment status for rosters and CSV exports. Assumes the event
@@ -249,59 +337,42 @@ class EventRegistration < ApplicationRecord
     status == "attended"
   end
 
-  # True once the registrant has earned Facilitator Portal access: they completed
-  # both training days (attended) and paid their training fee. Stays false (greying
-  # the portal callout) until then.
-  def portal_access?
-    attended? && paid_in_full?
-  end
-
   # The certificate of completion unlocks once the training has happened, the
   # registrant attended, and any scholarship tasks are complete.
   def certificate_available?
     event.end_date.present? && event.end_date.past? && attended? && scholarship_tasks_met?
   end
 
-  # These read from the loaded `allocations` association so callers that preload
-  # it (e.g. the registrants roster and onboarding matrix) pay no per-row queries;
-  # callers that don't load the association once and reuse it across these methods.
-  def allocations_sum
-    return allocations.to_a.sum(&:amount) if allocations.loaded?
-    allocations.sum(:amount)
+  # An invoice (and receipt) only make sense for a paid event — free events have
+  # nothing to bill or receipt.
+  def invoice_available?
+    event.cost_cents.to_i.positive?
   end
 
-  def remaining_cost
-    [ event.cost_cents - allocations_sum, 0 ].max
+  # A paid-in-full receipt is available once a paid event carries no balance.
+  def receipt_available?
+    invoice_available? && remaining_cost.zero?
   end
 
-  def paid_in_full?
-    return true if event.cost_cents.to_i <= 0
-    allocations_sum >= event.cost_cents.to_i
-  end
-
-  def payments_sum
-    return allocations.to_a.select { |a| a.source_type == Payment.polymorphic_name }.sum(&:amount) if allocations.loaded?
-    allocations.where(source_type: Payment.polymorphic_name).sum(:amount)
-  end
-
-  def partially_paid?
-    !paid_in_full? && payments_sum.to_i.positive?
-  end
-
-  def discounted?
-    return allocations.to_a.any? { |a| a.source_type == "Discount" } if allocations.loaded?
-    allocations.where(source_type: "Discount").exists?
-  end
-
-  # Total comp/discount coverage (excludes payments and scholarships).
-  def discount_sum
-    return allocations.to_a.select { |a| a.source_type == "Discount" }.sum(&:amount) if allocations.loaded?
-    allocations.where(source_type: "Discount").sum(:amount)
+  # Cost source for the Registerable payment interface: the event's price.
+  def cost_cents
+    event.cost_cents
   end
 
   # True when the registrant has supplied a CE license number.
   def ce_license_provided?
     ce_license_number.present?
+  end
+
+  # A short label summarizing the registrant's CE credit standing, matching the
+  # ce_status filter buckets. Nil when CE credit was not requested, so callers
+  # can render a placeholder. "Incomplete" takes precedence over "Paid" because
+  # a missing license/hours is the actionable state regardless of payment.
+  def ce_status_label
+    return unless ce_credit_requested?
+    return "Incomplete" if !ce_license_provided? || ce_hours_requested.to_i <= 0
+    return "Paid" if paid_in_full?
+    "Requested"
   end
 
   # What the registrant owes for their requested CE hours, in cents, at the
@@ -312,6 +383,16 @@ class EventRegistration < ApplicationRecord
 
   def joinable?
     active? && payment_access_granted? && event.videoconference_window_open?
+  end
+
+  # Whether this registrant may see the videoconference connection details yet
+  # (join link, meeting ID, passcode) — on the ticket, the videoconference page,
+  # and in calendar entries. Gated on payment access (paid or intends to pay) AND
+  # the event being within a week of starting, so the link isn't shared early.
+  # Distinct from #joinable?, which is the tight 30-minute "click to join now"
+  # window for the live link.
+  def videoconference_details_visible?
+    payment_access_granted? && event.videoconference_details_visible?
   end
 
   # Bucket the registrant's login account into one of four states for the bulk
@@ -335,6 +416,8 @@ class EventRegistration < ApplicationRecord
     when "incomplete_attendance" then "Incomplete attendance"
     when "cancelled" then "Cancelled"
     when "no_show" then "No show"
+    when "transferred_in" then "Transferred in"
+    when "transferred_out" then "Transferred out"
     else status.humanize
     end
   end
@@ -351,6 +434,35 @@ class EventRegistration < ApplicationRecord
 
   def day_completed?(day)
     DAY_FIELDS.include?("completed_day_#{day}") && public_send("completed_day_#{day}")
+  end
+
+  # How many of the event's in-range days (the first event.day_count of them) are
+  # marked complete on this registration.
+  def completed_day_count
+    DAY_FIELDS.first(event.day_count).count { |field| public_send(field) }
+  end
+
+  # The attendance status implied purely by how many days are marked complete:
+  # none → registered, all → attended, some-but-not-all → incomplete_attendance.
+  # (A one-day event has no partial state: 0 → registered, 1 → attended.)
+  def attendance_status_for_days
+    completed = completed_day_count
+    return "registered" if completed.zero?
+    return "attended" if completed >= event.day_count
+    "incomplete_attendance"
+  end
+
+  # Realign the attendance status to match the completed-day count after a day
+  # checkbox is toggled on the Onboarding matrix. Only auto-managed while the
+  # registration is in an active status — cancelled and no_show are deliberate
+  # manual states we never override by toggling a day. Returns true if the status
+  # actually changed.
+  def sync_attendance_status_to_days!
+    return false unless status.in?(ACTIVE_STATUSES)
+    derived = attendance_status_for_days
+    return false if derived == status
+    update!(status: derived)
+    true
   end
 
   # Program status(es) for THIS registration only: classify each organization
@@ -397,12 +509,6 @@ class EventRegistration < ApplicationRecord
 
   private
 
-  def snapshot_registrant_organizations
-    registrant.affiliations.active.includes(:organization).find_each do |aff|
-      event_registration_organizations.create(organization: aff.organization)
-    end
-  end
-
   def generate_slug
     loop do
       self.slug = SecureRandom.urlsafe_base64(16)
@@ -412,6 +518,14 @@ class EventRegistration < ApplicationRecord
 
   def status_changed_to_cancelled?
     saved_change_to_status? && status == "cancelled"
+  end
+
+  # On cancellation, release any awarded scholarship back to its grant by zeroing
+  # the amount (Scholarship#sync_allocation_amount zeroes the allocation to match).
+  # scholarship_requested is left set on purpose: reactivating won't re-award, but
+  # the registration should still reflect that a scholarship was requested.
+  def release_scholarships
+    scholarships.each { |scholarship| scholarship.update!(amount_cents: 0) }
   end
 
   def send_cancellation_emails

@@ -12,6 +12,19 @@ module EventsHelper
     onboarding_event_path(event_or_id, anchor: onboarding_row_id(registration_id), highlight: registration_id)
   end
 
+  # Stable anchor id for a registrant's row on the Registrants roster, so back
+  # links (e.g. from a viewed submission) can scroll to and highlight it.
+  def registrant_row_id(record_or_id)
+    id = record_or_id.respond_to?(:id) ? record_or_id.id : record_or_id
+    "registrant-row-#{id}"
+  end
+
+  # Path back to a specific registrant's row on the Registrants roster (scrolls
+  # to and highlights it). Accepts an Event or event id, and a registration id.
+  def registrants_event_row_path(event_or_id, registration_id)
+    registrants_event_path(event_or_id, anchor: registrant_row_id(registration_id), highlight: registration_id)
+  end
+
   # Ordered column descriptors for the event Onboarding matrix. The array index
   # is the table-sort column index, so the header row and every body row iterate
   # this same list — keeping header buttons and cell positions aligned no matter
@@ -39,10 +52,12 @@ module EventsHelper
     columns << { key: "scholarship_amount", label: "Scholarship amount", kind: :scholarship_amount, sortable: true, align: "center", toggle: "scholarship_amount" }
     columns << { key: "funder", label: "Scholarship grant", kind: :funder, sortable: true, align: "left", toggle: "funder" }
     columns << { key: "scholarship_tasks_completed", label: "Scholarship tasks done", kind: :scholarship_tasks, sortable: true, align: "center", toggle: "scholarship_tasks_completed" }
-    columns << { key: "ce_requested", label: "CE requested", kind: :ce_requested, sortable: true, align: "center", toggle: "ce_requested" }
-    columns << { key: "ce_hours", label: "CE hours", kind: :ce_hours, sortable: true, align: "center", toggle: "ce_hours" }
-    columns << { key: "ce_amount", label: "CE amount", kind: :ce_amount, sortable: true, align: "center", toggle: "ce_amount" }
-    columns << { key: "ce_license", label: "License #", kind: :ce_license, sortable: true, align: "center", toggle: "ce_license" }
+    if event.ce_eligible?
+      columns << { key: "ce_requested", label: "CE requested", kind: :ce_requested, sortable: true, align: "center", toggle: "ce_requested" }
+      columns << { key: "ce_hours", label: "CE hours", kind: :ce_hours, sortable: true, align: "center", toggle: "ce_hours" }
+      columns << { key: "ce_amount", label: "CE amount", kind: :ce_amount, sortable: true, align: "center", toggle: "ce_amount" }
+      columns << { key: "ce_license", label: "License #", kind: :ce_license, sortable: true, align: "center", toggle: "ce_license" }
+    end
     columns << { key: "fee_note", label: "Fee note", kind: :fee_note, sortable: false, align: "center", toggle: "fee_note" }
     columns << { key: "portal_invite", label: "Portal invite", kind: :portal_invite, sortable: true, align: "center", toggle: "portal_invite" }
     EventRegistration::CHECKLIST_STEPS.each do |step, label|

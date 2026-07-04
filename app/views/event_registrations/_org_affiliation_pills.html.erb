@@ -6,7 +6,6 @@
   <% active = ->(a) { !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) } %>
   <% position = submitted_position.to_s.strip %>
   <% is_submitted_org = submitted_org_name.to_s.strip.present? && org.name.to_s.strip.casecmp?(submitted_org_name.to_s.strip) %>
-  <% role_affiliations = affiliations.reject(&:facilitator?) %>
   <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
     <span class="text-[0.65rem] font-semibold uppercase tracking-wide text-gray-400">Affiliations:</span>
     <% affiliations.each do |a| %>
@@ -14,19 +13,21 @@
       <% color = a_active && !local_assigns[:neutral] ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200" %>
       <% start_month = a.start_date&.strftime("%B %Y") %>
       <% end_month = a.end_date&.strftime("%B %Y") %>
-      <% duration =
+      <% dates =
            if start_month && end_month
-             " from #{start_month} - #{end_month}"
+             "#{start_month} – #{end_month}"
            elsif end_month
-             " until #{end_month}"
+             "until #{end_month}"
            elsif start_month
-             " starting #{start_month}"
+             "since #{start_month}"
+           else
+             "no dates"
            end %>
-      <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "No title")}#{duration}#{" — inactive" unless a_active}" %>
+      <% label = "#{a.facilitator? ? "Facilitator" : (a.title.presence || "No title")} (#{dates})#{" — inactive" unless a_active}" %>
       <% title_attr = a.facilitator? ? "Facilitator role — determines whether the org is active with AWBW" : nil %>
       <span class="<%= badge %> <%= color %>" title="<%= title_attr %>"><%= label %></span>
     <% end %>
-    <% if is_submitted_org && position.present? && role_affiliations.none? { |a| a.title.to_s.casecmp?(position) } %>
+    <% if is_submitted_org && position.present? && affiliations.none? { |a| a.title.to_s.casecmp?(position) } %>
       <span class="<%= badge %> bg-amber-50 text-amber-700 border-amber-200" title="Form: <%= position %>">Title differs from form (form: <%= position %>)</span>
     <% end %>
   </div>

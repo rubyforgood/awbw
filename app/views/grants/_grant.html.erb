@@ -4,7 +4,7 @@
     rather than their formatted text. %>
 <tr class="group hover:bg-green-50/60 transition-colors duration-150">
   <td class="px-4 py-3.5 align-middle" data-sort-value="<%= grant.object.name.to_s.downcase %>">
-    <%= link_to grant.name, grant_path(grant), class: "inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition-colors hover:border-gray-400 hover:bg-gray-50" %>
+    <%= link_to grant.name, grant_path(grant), class: "inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition-colors hover:border-gray-400 hover:bg-gray-50", data: { turbo_frame: "_top" } %>
   </td>
   <td class="px-4 py-3.5 align-middle text-sm text-gray-700" data-sort-value="<%= grant.object.funder_name.to_s.downcase %>"><%= grant_donor_badge(grant) %></td>
   <td class="px-4 py-3.5 align-middle text-sm font-medium text-gray-900 text-right tabular-nums" data-sort-value="<%= grant.object.amount_cents.to_i %>"><%= grant.amount %></td>
@@ -23,7 +23,7 @@
       list on its show page. Sorts by total count. %>
   <td class="px-4 py-3.5 align-middle text-sm text-center" data-sort-value="<%= grant.scholarships_count %>">
     <% if grant.scholarships_count.positive? %>
-      <%= link_to grant.scholarships_link, class: "font-medium text-gray-900 tabular-nums hover:underline", title: "#{grant.completed_scholarships_count} of #{grant.scholarships_count} with tasks completed" do %>
+      <%= link_to grant.scholarships_link, class: "font-medium text-gray-900 tabular-nums hover:underline", title: "#{grant.completed_scholarships_count} of #{grant.scholarships_count} with tasks completed", data: { turbo_frame: "_top" } do %>
         <%= grant.completed_scholarships_count %>/<%= grant.scholarships_count %>
       <% end %>
     <% else %>
@@ -31,4 +31,5 @@
     <% end %>
   </td>
   <td class="px-4 py-3.5 align-middle text-sm text-gray-700 whitespace-nowrap" data-sort-value="<%= grant.object.application_deadline&.iso8601 %>"><%= grant.application_deadline %></td>
+  <td class="px-4 py-3.5 align-middle text-right text-sm"><%= link_to "Edit", edit_grant_path(grant), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
 </tr>

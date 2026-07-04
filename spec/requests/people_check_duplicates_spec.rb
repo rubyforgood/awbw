@@ -123,7 +123,7 @@ RSpec.describe "/people/check_duplicates", type: :request do
       end
     end
 
-    # --- Blocked (exact name + primary email) ---
+    # --- Blocked (exact name + primary email only) ---
 
     context "when exact name and primary email match (blocked)" do
       it "shows the exact match badge and block message" do
@@ -145,10 +145,10 @@ RSpec.describe "/people/check_duplicates", type: :request do
       end
     end
 
-    # --- Name + email match (exact name + secondary/user email) ---
+    # --- Approximate (exact name + secondary/user email): warned but allowed ---
 
-    context "when exact name and secondary email match" do
-      it "shows both name match and email match badges" do
+    context "when exact name and secondary email match (approximate)" do
+      it "shows the approximate match badge and warning, not a block" do
         existing_person.update!(email_2: "jane.secondary@testmail.org")
 
         get check_duplicates_people_path, params: {
@@ -156,19 +156,71 @@ RSpec.describe "/people/check_duplicates", type: :request do
         }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("name match")
-        expect(response.body).to include("email match")
-      end
-
-      it "shows the secondary email warning" do
-        existing_person.update!(email_2: "jane.secondary@testmail.org")
-
-        get check_duplicates_people_path, params: {
-          first_name: "Jane", last_name: "Doe", email: "jane.secondary@testmail.org"
-        }
-
-        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("approximate match")
+        expect(response.body).not_to include("exact match")
         expect(response.body).to include("matching secondary or user email")
+        expect(response.body).not_to include("Please edit the existing record instead")
+      end
+    end
+
+    context "when exact name and user email match (approximate)" do
+      it "shows the approximate match badge and warning, not a block" do
+        get check_duplicates_people_path, params: {
+          first_name: "Jane", last_name: "Doe", email: existing_person.user.email
+        }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("approximate match")
+        expect(response.body).not_to include("exact match")
+        expect(response.body).to include("matching secondary or user email")
+        expect(response.body).not_to include("Please edit the existing record instead")
+      end
+    end
+
+    # --- Legal first name matching ---
+
+    context "when the entered first name matches a stored legal first name" do
+      it "finds the person by their legal first name" do
+        create(:person, first_name: "Bob", last_name: "Mendez", legal_first_name: "Roberto")
+
+        get check_duplicates_people_path, params: {
+          first_name: "Roberto", last_name: "Mendez", email: ""
+        }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Bob Mendez")
+        expect(response.body).to include("name match")
+      end
+    end
+
+    context "when the entered legal first name matches a stored first name" do
+      it "finds the person by the entered legal first name" do
+        create(:person, first_name: "Roberto", last_name: "Mendez")
+
+        get check_duplicates_people_path, params: {
+          first_name: "Bob", last_name: "Mendez", legal_first_name: "Roberto", email: ""
+        }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Roberto Mendez")
+        expect(response.body).to include("name match")
+      end
+    end
+
+    # --- Secondary entered email matching ---
+
+    context "when the entered secondary email matches an existing person" do
+      it "finds the person by the secondary email" do
+        create(:person, first_name: "Carol", last_name: "White", email: nil, email_2: "carol.alt@testmail.org")
+
+        get check_duplicates_people_path, params: {
+          first_name: "Different", last_name: "Name",
+          email: "unrelated@testmail.org", email_2: "carol.alt@testmail.org"
+        }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Carol White")
+        expect(response.body).to include("email match")
       end
     end
 

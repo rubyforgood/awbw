@@ -48,11 +48,11 @@
     <%# Inline add — manual log entries, saved with the registration form. %>
     <div class="space-y-2 border-t border-gray-100 pt-3">
       <%= f.simple_fields_for :notifications, registration.notifications.select(&:new_record?) do |nf| %>
-        <%= render "notifications/notification_fields", f: nf, event_registration: registration %>
+        <%= render "notifications/notification_fields", f: nf, record: registration %>
       <% end %>
       <%= link_to_add_association f, :notifications,
             partial: "notifications/notification_fields",
-            render_options: { locals: { event_registration: registration } },
+            render_options: { locals: { record: registration } },
             class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
         <i class="fa-solid fa-plus text-[0.6rem]"></i>
         Add notification

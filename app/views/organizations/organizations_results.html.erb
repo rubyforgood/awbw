@@ -1,5 +1,5 @@
-<%= turbo_frame_tag :organization_results do %>
-  <%= turbo_stream.replace("organization_count", partial: "organization_count") %>
+<%= turbo_frame_tag :organizations_results do %>
+  <%= turbo_stream.replace("organizations_count", partial: "organizations_count") %>
 
   <div class="rounded bg-white p-6 animate-fade blur-on-submit">
     <% if @organizations.any? %>

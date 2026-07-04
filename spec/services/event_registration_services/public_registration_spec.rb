@@ -24,6 +24,337 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
+  describe "affiliation creation" do
+    let!(:organization) { create(:organization, name: "Helping Hands") }
+
+    def register_with(position:)
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+      )
+      params[field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER)] = position if position
+      described_class.call(event: event, form: form, form_params: params)
+      Person.find_by(email: "sam@example.com")
+    end
+
+    it "creates a job affiliation and a facilitator affiliation from the typed position" do
+      person = register_with(position: "Counselor")
+
+      expect(person.affiliations.where(organization: organization).pluck(:title))
+        .to contain_exactly("Counselor", "Facilitator")
+    end
+
+    it "creates only a facilitator affiliation when no position was typed" do
+      person = register_with(position: nil)
+
+      expect(person.affiliations.where(organization: organization).pluck(:title))
+        .to contain_exactly("Facilitator")
+    end
+
+    it "links the created affiliations to the agency address built from the form" do
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
+        field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER) => "Counselor",
+        field_id("agency_street") => "1 Main St",
+        field_id("agency_city") => "Austin",
+        field_id("agency_state") => "TX",
+        field_id("agency_zip") => "78701",
+        field_id("agency_country") => "USA"
+      )
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by(email: "sam@example.com")
+
+      address = organization.addresses.find_by(city: "Austin")
+      expect(address).to be_present
+      expect(address.country).to eq("USA")
+      linked = person.affiliations.where(organization: organization)
+      expect(linked.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+      expect(linked.map(&:organization_address)).to all(eq(address))
+    end
+
+    it "leaves the affiliations' organization address nil when no agency city was typed" do
+      person = register_with(position: "Counselor")
+
+      expect(person.affiliations.where(organization: organization).map(&:organization_address)).to all(be_nil)
+    end
+  end
+
+  describe "registration organizations" do
+    let!(:organization) { create(:organization, name: "Helping Hands") }
+
+    def register_with_org(org_name)
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => org_name
+      )
+      described_class.call(event: event, form: form, form_params: params)
+      event.event_registrations.find_by!(registrant: Person.find_by(email: "sam@example.com"))
+    end
+
+    it "connects only the organization submitted through the form" do
+      registration = register_with_org("Helping Hands")
+
+      expect(registration.organizations).to contain_exactly(organization)
+    end
+
+    it "does not connect the registrant's other active affiliations" do
+      person = create(:person, email: "sam@example.com", last_name: "Rowe", first_name: "Sam")
+      other_org = create(:organization, name: "Unrelated Org")
+      create(:affiliation, person: person, organization: other_org)
+
+      registration = register_with_org("Helping Hands")
+
+      expect(registration.organizations).to contain_exactly(organization)
+    end
+
+    it "connects no organizations when none is submitted" do
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com")
+      described_class.call(event: event, form: form, form_params: params)
+      registration = event.event_registrations.find_by!(registrant: Person.find_by(email: "sam@example.com"))
+
+      expect(registration.organizations).to be_empty
+    end
+
+    it "adds the new org to the same registration when the registrant applies again" do
+      second_org = create(:organization, name: "Second Org")
+      first = register_with_org("Helping Hands")
+      second = register_with_org("Second Org")
+
+      expect(second).to eq(first)
+      expect(first.organizations).to contain_exactly(organization, second_org)
+    end
+  end
+
+  describe "racial/ethnic identity" do
+    it "stores the racial/ethnic identity on a new registrant" do
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => "Asian"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(Person.find_by!(email: "ada@example.com").racial_ethnic_identity).to eq("Asian")
+    end
+
+    it "overwrites a racial/ethnic identity already on file with the latest answer" do
+      existing = create(:person, first_name: "Ada", last_name: "Lin",
+                                 email: "ada@example.com", racial_ethnic_identity: "Multi-racial")
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => "Asian"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(existing.reload.racial_ethnic_identity).to eq("Asian")
+    end
+
+    it "leaves a racial/ethnic identity on file untouched when the answer is blank" do
+      existing = create(:person, first_name: "Ada", last_name: "Lin",
+                                 email: "ada@example.com", racial_ethnic_identity: "Multi-racial")
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("racial_ethnic_identity") => ""
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(existing.reload.racial_ethnic_identity).to eq("Multi-racial")
+    end
+  end
+
+  describe "expected payment method" do
+    it "records the chosen payment method on a new registration" do
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("payment_method") => "Check"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(EventRegistration.last.expected_payment_method).to eq("Check")
+    end
+
+    it "updates the expected payment method when an existing registrant re-registers" do
+      person = create(:person, first_name: "Pat", last_name: "Doe", email: "pat@example.com")
+      create(:event_registration, event: event, registrant: person, expected_payment_method: "Check")
+      params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(
+        field_id("payment_method") => "Credit card (now)"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(event.event_registrations.find_by(registrant: person).expected_payment_method).to eq("Credit card (now)")
+    end
+  end
+
+  describe "mailing list consent" do
+    it "stamps the consent time and source when the registrant opts in" do
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "Yes" ]
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by!(email: "coco@example.com")
+
+      expect(person.mailing_list_consent_at).to be_present
+      expect(person.mailing_list_consent_source).to eq("#{event.start_date.to_date.iso8601} #{event.title} registration")
+    end
+
+    it "does not record consent when the box is left unchecked" do
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "" ]
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+
+      expect(Person.find_by!(email: "coco@example.com").mailing_list_consent_at).to be_nil
+    end
+
+    it "never re-stamps or clears consent already on file" do
+      original = 1.year.ago
+      create(:person, first_name: "Coco", last_name: "Lee", email: "coco@example.com",
+                      mailing_list_consent_at: original, mailing_list_consent_source: "Earlier")
+      params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
+        field_id("communication_consent") => [ "Yes" ]
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by!(email: "coco@example.com")
+
+      expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
+      expect(person.mailing_list_consent_source).to eq("Earlier")
+    end
+  end
+
+  describe "structured contact and organization data" do
+    it "stores the mailing country on a new registrant's address" do
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("mailing_street") => "1 Main St",
+        field_id("mailing_city") => "Oakland",
+        field_id("mailing_state") => "CA",
+        field_id("mailing_zip") => "94601",
+        field_id("mailing_country") => "USA"
+      )
+
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by!(email: "ada@example.com")
+
+      expect(person.addresses.find_by(primary: true).country).to eq("USA")
+    end
+
+    context "with a matched organization" do
+      let!(:organization) { create(:organization, name: "Helping Hands") }
+
+      def register_with_org(extra)
+        params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+          field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+        ).merge(extra)
+        described_class.call(event: event, form: form, form_params: params)
+      end
+
+      it "fills website, agency type, and address country" do
+        register_with_org(
+          field_id("agency_website") => "helpinghands.org",
+          field_id("agency_type") => "501c3/nonprofit",
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501",
+          field_id("agency_country") => "USA"
+        )
+        organization.reload
+
+        expect(organization.agency_type).to eq("501c3/nonprofit")
+        expect(organization.website_url).to include("helpinghands.org")
+        expect(organization.addresses.find_by(primary: true).country).to eq("USA")
+      end
+
+      it "overwrites an existing website with the latest answer" do
+        organization.update!(website_url: "https://existing.org")
+
+        register_with_org(field_id("agency_website") => "helpinghands.org")
+
+        expect(organization.reload.website_url).to include("helpinghands.org")
+      end
+
+      it "stores the org address as a work address" do
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(organization.addresses.last.address_type).to eq("work")
+      end
+
+      it "makes the first org address primary" do
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(organization.addresses.find_by(city: "Reno")).to be_primary
+      end
+
+      it "does not demote the org's existing primary when another registrant adds an address" do
+        existing = organization.addresses.create!(
+          street_address: "1 First St", city: "Tahoe", state: "CA", zip_code: "96150",
+          locality: "Unknown", address_type: "work", primary: true
+        )
+
+        register_with_org(
+          field_id("agency_street") => "5 Oak Ave",
+          field_id("agency_city") => "Reno",
+          field_id("agency_state") => "NV",
+          field_id("agency_zip") => "89501"
+        )
+
+        expect(existing.reload).to be_primary
+        expect(existing).not_to be_inactive
+        expect(organization.addresses.find_by(city: "Reno")).not_to be_primary
+      end
+    end
+  end
+
+  describe "matching an existing registrant by name" do
+    it "matches a person stored under a nickname when the registrant types their legal first name" do
+      existing = create(:person, first_name: "Bob", legal_first_name: "Robert",
+                                 last_name: "Smith", email: "bob@example.com")
+
+      params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com")
+
+      expect {
+        described_class.call(event: event, form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "matches a person stored under a legal name when the registrant types their nickname" do
+      existing = create(:person, first_name: "Robert", legal_first_name: nil,
+                                 last_name: "Smith", email: "bob@example.com")
+
+      params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com").merge(
+        field_id("nickname") => "Bob"
+      )
+
+      expect {
+        described_class.call(event: event, form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "still creates a new person when the email matches but it is a different name" do
+      create(:person, first_name: "Bob", last_name: "Smith", email: "shared@example.com")
+
+      params = base_form_params(first_name: "Dana", last_name: "Jones", email: "shared@example.com")
+
+      expect {
+        described_class.call(event: event, form: form, form_params: params)
+      }.to change(Person, :count).by(1)
+    end
+  end
+
   describe "an answer longer than its database column" do
     # `city` (like the other mapped person/address columns) is a varchar(255).
     # A longer answer must surface as a form error, not an ActiveRecord::ValueTooLong
@@ -54,26 +385,27 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
-  describe "primary service area tagging" do
+  describe "sector tagging" do
     let!(:primary_sector) { create(:sector, name: "Healthcare") }
-    let!(:other_sector) { create(:sector, name: "Education") }
+    let!(:additional_sector) { create(:sector, name: "Education") }
 
-    it "tags the selected primary service area sectors as primary on the person" do
+    it "marks the dropdown answer primary and the checkbox answers additional" do
       result = described_class.call(
         event: event,
         form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+          field_id("primary_sector_single") => primary_sector.id.to_s,
+          field_id("additional_sectors") => [ additional_sector.id.to_s ]
         )
       )
 
       expect(result.success?).to be true
       person = result.event_registration.registrant
-      primary_item = person.sectorable_items.find_by(sector: primary_sector)
-      expect(primary_item.is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: additional_sector).is_primary).to be false
     end
 
-    it "marks an existing additional sector as primary when later selected" do
+    it "promotes an existing additional sector when later named as primary" do
       person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
       person.sectorable_items.create!(sector: primary_sector, is_primary: false)
 
@@ -81,11 +413,28 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         event: event,
         form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
-          field_id("primary_service_area") => [ primary_sector.id.to_s ]
+          field_id("primary_sector_single") => primary_sector.id.to_s
         )
       )
 
       expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+    end
+
+    it "demotes a prior primary that the registrant did not re-select as primary" do
+      person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
+      person.sectorable_items.create!(sector: additional_sector, is_primary: true)
+
+      described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+          field_id("primary_sector_single") => primary_sector.id.to_s
+        )
+      )
+
+      person.reload
+      expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
+      expect(person.sectorable_items.find_by(sector: additional_sector).is_primary).to be false
     end
   end
 

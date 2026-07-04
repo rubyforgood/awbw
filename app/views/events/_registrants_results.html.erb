@@ -1,5 +1,7 @@
 <%= turbo_frame_tag :registrants_results do %>
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-controller="column-toggle">
+  <%# Scholarship column shows by default only when the event charges a fee. %>
+  <% scholarship_on = @event.cost_cents.to_i > 0 %>
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden blur-on-submit" data-column-toggle-root>
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
       <% current_filter = params[:attendance_status].present? ? nil : (params[:status_filter].presence || "active") %>
       <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Attendance filter">
@@ -15,33 +17,139 @@
         <% end %>
       </nav>
 
-      <label class="inline-flex items-center gap-2 cursor-pointer select-none">
-        <span class="text-sm text-gray-500">User confirmation</span>
+      <div class="flex items-center gap-4">
+        <%# On by default — Organization shows unless the admin hides it. %>
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+               data-controller="column-toggle" data-column-toggle-group-value="organization">
+          <span class="text-sm text-gray-500">Organization</span>
 
-        <input
-          type="checkbox"
-          data-column-toggle-target="toggle"
-          data-action="column-toggle#toggle"
-          class="sr-only"
-        >
+          <input
+            type="checkbox"
+            checked
+            data-column-toggle-target="toggle"
+            data-action="column-toggle#toggle"
+            class="sr-only"
+          >
 
-        <span class="relative inline-block w-9 h-5">
-          <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
-          <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
-        </span>
-      </label>
+          <span class="relative inline-block w-9 h-5">
+            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style="transform: translateX(16px)"></span>
+          </span>
+        </label>
+
+        <% if @ce_eligible %>
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+                 data-controller="column-toggle" data-column-toggle-group-value="ce">
+            <span class="text-sm text-gray-500">CE</span>
+
+            <%# On by default — the CE column shows unless the admin hides it. %>
+            <input
+              type="checkbox"
+              checked
+              data-column-toggle-target="toggle"
+              data-action="column-toggle#toggle"
+              class="sr-only"
+            >
+
+            <span class="relative inline-block w-9 h-5">
+              <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
+              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style="transform: translateX(16px)"></span>
+            </span>
+          </label>
+        <% end %>
+
+        <%# On by default when the event charges a fee; always togglable. %>
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+               data-controller="column-toggle" data-column-toggle-group-value="scholarship">
+          <span class="text-sm text-gray-500">Scholarship</span>
+
+          <input
+            type="checkbox"
+            <%= "checked" if scholarship_on %>
+            data-column-toggle-target="toggle"
+            data-action="column-toggle#toggle"
+            class="sr-only"
+          >
+
+          <span class="relative inline-block w-9 h-5">
+            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full <%= scholarship_on ? "bg-blue-600" : "bg-gray-300" %> transition-colors"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style="transform: <%= scholarship_on ? "translateX(16px)" : "none" %>"></span>
+          </span>
+        </label>
+
+        <%# On by default — Date registered shows unless the admin hides it. %>
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+               data-controller="column-toggle" data-column-toggle-group-value="date">
+          <span class="text-sm text-gray-500">Date registered</span>
+
+          <input
+            type="checkbox"
+            checked
+            data-column-toggle-target="toggle"
+            data-action="column-toggle#toggle"
+            class="sr-only"
+          >
+
+          <span class="relative inline-block w-9 h-5">
+            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-blue-600 transition-colors"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style="transform: translateX(16px)"></span>
+          </span>
+        </label>
+
+        <%# Off by default — Attendance is hidden until the admin reveals it. %>
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+               data-controller="column-toggle" data-column-toggle-group-value="attendance">
+          <span class="text-sm text-gray-500">Attendance</span>
+
+          <input
+            type="checkbox"
+            data-column-toggle-target="toggle"
+            data-action="column-toggle#toggle"
+            class="sr-only"
+          >
+
+          <span class="relative inline-block w-9 h-5">
+            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+          </span>
+        </label>
+
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none"
+               data-controller="column-toggle" data-column-toggle-group-value="confirmed">
+          <span class="text-sm text-gray-500">User confirmation</span>
+
+          <input
+            type="checkbox"
+            data-column-toggle-target="toggle"
+            data-action="column-toggle#toggle"
+            class="sr-only"
+          >
+
+          <span class="relative inline-block w-9 h-5">
+            <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
+            <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+          </span>
+        </label>
+      </div>
     </div>
 
-    <% event_form_ids = @event.form_ids %>
+    <% event_form_ids = @event.registration_form_ids %>
     <% form_submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
-    <% registration_form = @event.registration_form %>
-    <% agency_name_field = registration_form&.form_fields&.find_by(field_identifier: "agency_name") %>
-    <% submitted_org_names = agency_name_field ? FormAnswer.joins(:form_submission).where(form_submissions: { person_id: @event_registrations.map(&:registrant_id), form_id: registration_form.id }, form_field_id: agency_name_field.id).pluck(Arel.sql("form_submissions.person_id"), :submitted_answer).to_h : {} %>
+    <% scholarship_form = @event.scholarship_form %>
+    <% scholarship_submitter_ids = scholarship_form ? FormSubmission.joins(:form_answers).where(form_id: scholarship_form.id, role: "scholarship", person_id: @event_registrations.map(&:registrant_id)).distinct.pluck(:person_id).to_set : Set.new %>
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <% payment_col = @event.cost_cents.to_i > 0 %>
-        <% date_index = payment_col ? 5 : 4 %>
-        <% attendance_index = payment_col ? 6 : 5 %>
+        <% ce_col = @ce_eligible %>
+        <% extra_cols = (payment_col ? 1 : 0) + (ce_col ? 1 : 0) %>
+        <%# Column order: Name, Organization, [CE status], Scholarship, [Payment],
+            Confirmed (hidden), Attendance, Date registered, Status, Edit (far right). %>
+        <% ce_index = 2 %>
+        <% scholarship_index = ce_col ? 3 : 2 %>
+        <% payment_index = scholarship_index + 1 %>
+        <% attendance_index = 4 + extra_cols %>
+        <% date_index = 5 + extra_cols %>
+        <% status_index = 6 + extra_cols %>
         <table class="w-full border-collapse border border-gray-200" data-controller="table-sort">
           <thead class="bg-gray-100">
             <tr>
@@ -52,25 +160,35 @@
                   <%= render "shared/sortable_header", label: "Last", index: 0, key: "last" %>
                 </span>
               </th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-full" aria-sort="none">
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-full" aria-sort="none" data-column-toggle-col="organization">
                 <%= render "shared/sortable_header", label: "Organization", index: 1 %>
               </th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
-                <%= render "shared/sortable_header", label: "Scholarship", index: 2 %>
+
+              <% if ce_col %>
+                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="ce">
+                  <%= render "shared/sortable_header", label: "CE", index: ce_index %>
+                </th>
+              <% end %>
+
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 <%= "hidden" unless scholarship_on %>" aria-sort="none" data-column-toggle-col="scholarship">
+                <%= render "shared/sortable_header", label: "Scholarship", index: scholarship_index %>
               </th>
 
               <% if payment_col %>
                 <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
-                  <%= render "shared/sortable_header", label: "Payment", index: 3 %>
+                  <%= render "shared/sortable_header", label: "Payment", index: payment_index %>
                 </th>
               <% end %>
 
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col>Confirmed</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px] hidden" data-column-toggle-col="confirmed">Confirmed</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" aria-sort="none" data-column-toggle-col="attendance">
+                <%= render "shared/sortable_header", label: "Attendance", index: attendance_index %>
+              </th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="date">
                 <%= render "shared/sortable_header", label: "Date registered", index: date_index %>
               </th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
-                <%= render "shared/sortable_header", label: "Attendance", index: attendance_index %>
+                <%= render "shared/sortable_header", label: "Status", index: status_index %>
               </th>
               <th class="px-4 py-2"></th>
             </tr>
@@ -80,33 +198,54 @@
             <% @event_registrations.each do |registration| %>
               <% person = registration.registrant %>
 
-              <tr class="hover:bg-gray-50 transition-colors duration-150">
+              <% highlighted = params[:highlight].to_s == registration.id.to_s %>
+              <tr id="<%= registrant_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "hover:bg-gray-50" %>">
                 <td class="px-4 py-2" data-sort-first="<%= person.first_name.to_s.downcase %>" data-sort-last="<%= person.last_name.to_s.downcase %>">
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
 
                   <div class="flex items-center gap-1">
-                    <div class="w-52 min-w-0">
-                      <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }, path_params: { return_to: "registrants", event_id: @event.id }) %>
+                    <div class="w-60 min-w-0">
+                      <%= person_profile_button(person, truncate_at: 30, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }, path_params: { return_to: "registrants", event_id: @event.id }, compact: true) %>
                     </div>
 
-                    <% if event_form_ids.any? && (submissions = form_submissions[person.id]) %>
-                      <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
-                      <% tooltip_parts = submissions.map { |name, ts| "#{name} — Submitted #{ts.strftime('%B %d, %Y at %l:%M %P')}" } %>
-                      <% tooltip_parts << "Scholarship requested" if registration.scholarship_requested? %>
-                      <%= link_to event_public_registration_path(@event, **form_show_params),
-                                  class: "text-green-600 hover:text-green-800",
-                                  title: tooltip_parts.join("\n"),
-                                  target: "_blank",
+                    <% form_show_params = registration.slug.present? ? { reg: registration.slug } : { person_id: person.id } %>
+                    <% if event_form_ids.any? %>
+                      <%# Reserve a fixed slot so the comment/warning icons stay aligned
+                          across rows whether or not this registrant submitted a form. %>
+                      <span class="inline-flex w-4 justify-center">
+                        <% if (submissions = form_submissions[person.id]) %>
+                          <% tooltip_parts = submissions.map { |name, ts| "#{name} — Submitted #{ts.strftime('%B %d, %Y at %l:%M %P')}" } %>
+                          <% tooltip_parts << "Scholarship requested" if registration.scholarship_requested? %>
+                          <%= link_to event_public_registration_path(@event, **form_show_params, return_to: "registrants", return_registration_id: registration.id),
+                                      class: "text-blue-600 hover:text-blue-800",
+                                      title: tooltip_parts.join("\n"),
+                                      data: { turbo_frame: "_top" } do %>
+                            <i class="fa-regular fa-file-lines"></i>
+                          <% end %>
+                        <% end %>
+                      </span>
+                    <% end %>
+
+                    <% if scholarship_submitter_ids.include?(person.id) %>
+                      <%= link_to event_public_registration_path(@event, **form_show_params, return_to: "registrants", return_registration_id: registration.id, anchor: "scholarship-application"),
+                                  class: "text-purple-600 hover:text-purple-800",
+                                  title: "Scholarship application submitted",
                                   data: { turbo_frame: "_top" } do %>
-                        <i class="fa-solid fa-file-lines"></i>
+                        <i class="fa-solid fa-hand-holding-heart"></i>
                       <% end %>
-                    <% elsif event_form_ids.any? %>
-                      <i class="fa-regular fa-file-lines text-gray-300" title="No registration form submitted"></i>
                     <% end %>
 
                     <% if registration.comments.any? %>
                       <% latest_comment = registration.comments.first %>
-                      <i class="fa-solid fa-message text-purple-400" title="<%= registration.comments.size %> comment<%= 's' if registration.comments.size != 1 %> — Latest (<%= latest_comment.created_at.strftime('%Y-%m-%d') %>): <%= latest_comment.body.truncate(100) %>"></i>
+                      <% any_flagged = registration.comments.any?(&:flagged?) %>
+                      <%# Flagged → orange filled (a warning); otherwise the comments theme lilac. %>
+                      <% comment_icon = any_flagged ? "fa-solid text-orange-500" : "fa-regular #{DomainTheme.text_class_for(:comments, intensity: 400)}" %>
+                      <%= link_to edit_event_registration_path(registration, return_to: "registrants", anchor: "comments-section"),
+                                  class: "hover:opacity-80",
+                                  title: "#{"Has flagged comments — " if any_flagged}#{registration.comments.size} comment#{"s" if registration.comments.size != 1} — Latest (#{latest_comment.created_at.strftime('%Y-%m-%d')}): #{latest_comment.body.truncate(100)}",
+                                  data: { turbo_frame: "_top" } do %>
+                        <i class="fa-message <%= comment_icon %>"></i>
+                      <% end %>
                     <% end %>
 
                     <% if @duplicate_emails&.include?(person.preferred_email&.downcase) %>
@@ -115,22 +254,22 @@
                   </div>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-gray-800">
+                <td class="px-4 py-2 text-sm text-gray-800" data-column-toggle-col="organization">
                   <% linked_orgs = registration.organizations %>
-                  <% submitted_org_name = submitted_org_names[registration.registrant_id].to_s.strip %>
-                  <% linked_org_names = linked_orgs.map { |org| org.name.to_s.strip.downcase } %>
-                  <%# A submitted name not represented among the linked orgs still needs admin
-                      attention; a name matching a linked org is already resolved. %>
-                  <% needs_linking = submitted_org_name.present? && linked_org_names.exclude?(submitted_org_name.downcase) %>
+                  <% submitted_org_name = @submitted_org_names[registration.registrant_id].to_s.strip %>
+                  <%# A submitted org name needs admin attention only while nothing is linked
+                      yet; once an admin links any org they've made the call, so a non-matching
+                      submitted name is no longer treated as pending. %>
+                  <% needs_linking = submitted_org_name.present? && linked_orgs.none? %>
                   <% editor_path = link_organization_event_registration_path(registration, return_to: "registrants") %>
-                  <% pill_classes = "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-3 py-0.5 transition hover:opacity-80 hover:shadow-sm" %>
+                  <% pill_classes = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 transition hover:opacity-80 hover:shadow-sm" %>
                   <div class="flex flex-wrap gap-1.5">
                     <% linked_orgs.each do |org| %>
                       <%= link_to editor_path,
                                   title: org.name,
                                   class: "#{pill_classes} bg-gray-50 text-gray-500 border-gray-200",
                                   data: { turbo_frame: "_top" } do %>
-                        <span><%= truncate(org.name, length: 40) %></span>
+                        <span><%= truncate(org.name, length: 31) %></span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                       <% end %>
                     <% end %>
@@ -154,13 +293,49 @@
                   </div>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-center">
+                <% if ce_col %>
+                  <td class="px-4 py-2 text-sm text-center" data-column-toggle-col="ce">
+                    <%# CE progression mirrors scholarship's colors. Until a CE registration
+                        record exists it's just "Requested"; once it does, walk through
+                        license → payment → paid. "Create" when CE wasn't requested. %>
+                    <% cer = registration.continuing_education_registrations.first %>
+                    <% if !registration.ce_credit_requested? %>
+                      <% ce_classes = "bg-gray-50 text-gray-400 border-gray-200" %>
+                      <% ce_text = "Create" %>
+                      <% ce_title = "No CE credit requested" %>
+                    <% elsif cer.nil? %>
+                      <% ce_classes = "bg-amber-50 text-amber-700 border-amber-200" %>
+                      <% ce_text = "Requested" %>
+                      <% ce_title = "CE requested — no registration record yet" %>
+                    <% elsif !cer.professional_license&.number_known? %>
+                      <% ce_classes = "bg-amber-50 text-amber-700 border-amber-200" %>
+                      <% ce_text = "No license #" %>
+                      <% ce_title = "CE license number not provided" %>
+                    <% elsif !cer.paid_in_full? %>
+                      <% ce_classes = "bg-blue-50 text-blue-700 border-blue-200" %>
+                      <% ce_text = "Filed" %>
+                      <% ce_title = "CE license filed — #{dollars_from_cents(cer.remaining_cost)} due" %>
+                    <% else %>
+                      <% ce_classes = "bg-green-50 text-green-700 border-green-200" %>
+                      <% ce_text = "Recipient" %>
+                      <% ce_title = "CE paid" %>
+                    <% end %>
+                    <%= link_to edit_event_registration_path(registration, return_to: "registrants"),
+                                title: ce_title,
+                                class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-5 py-0.5 #{ce_classes} transition hover:opacity-80 hover:shadow-sm",
+                                data: { turbo_frame: "_top" } do %>
+                      <span><%= ce_text %></span>
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+                    <% end %>
+                  </td>
+                <% end %>
+
+                <td class="px-4 py-2 text-sm text-center <%= "hidden" unless scholarship_on %>" data-column-toggle-col="scholarship">
                   <% if (s = registration.scholarships.first) %>
                     <% if s.tasks_completed? %>
                       <%= link_to edit_scholarship_path(s, return_to: "registrants"),
                                   class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-green-50 text-green-700 border-green-200 transition hover:opacity-80 hover:shadow-sm",
                                   data: { turbo_frame: "_top" } do %>
-                        <i class="fas fa-graduation-cap"></i>
                         <span>Completed</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                       <% end %>
@@ -168,7 +343,6 @@
                       <%= link_to edit_scholarship_path(s, return_to: "registrants"),
                                   class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-blue-50 text-blue-700 border-blue-200 transition hover:opacity-80 hover:shadow-sm",
                                   data: { turbo_frame: "_top" } do %>
-                        <i class="fas fa-graduation-cap"></i>
                         <span>Recipient</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                       <% end %>
@@ -178,7 +352,6 @@
                       <%= link_to new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
                                   class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-amber-50 text-amber-700 border-amber-200 transition hover:opacity-80 hover:shadow-sm",
                                   data: { turbo_frame: "_top" } do %>
-                        <i class="fas fa-graduation-cap"></i>
                         <span>Requested</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                       <% end %>
@@ -186,7 +359,6 @@
                       <%= link_to new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
                                   class: "inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 bg-gray-50 text-gray-400 border-gray-200 transition hover:opacity-80 hover:shadow-sm",
                                   data: { turbo_frame: "_top" } do %>
-                        <i class="fas fa-graduation-cap"></i>
                         <span>Create</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                       <% end %>
@@ -210,15 +382,6 @@
                        else
                          "bg-amber-50 text-amber-700 border-amber-200"
                        end %>
-                    <% badge_icon = if is_paid
-                         "fa-circle-check"
-                       elsif is_discounted
-                         "fa-tag"
-                       elsif is_partial
-                         "fa-circle-half-stroke"
-                       else
-                         "fa-circle-exclamation"
-                       end %>
                     <% badge_title = if is_paid
                          "Paid in full"
                        elsif is_discounted
@@ -231,7 +394,6 @@
                     <% badge_title = "#{badge_title} · Intends to pay" if !is_paid && registration.intends_to_pay? %>
 
                     <%= link_to allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"), title: badge_title, class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 #{badge_classes} transition hover:opacity-80 hover:shadow-sm", data: { turbo_frame: "_top" } do %>
-                      <i class="fas <%= badge_icon %>"></i>
                       <% if is_paid %>
                         <span>Paid</span>
                       <% else %>
@@ -249,7 +411,7 @@
                   </td>
                 <% end %>
 
-                <td class="px-4 py-2 text-center align-top hidden" data-column-toggle-col>
+                <td class="px-4 py-2 text-center align-top hidden" data-column-toggle-col="confirmed">
                   <% if person.user.present? %>
                     <%= render "users/confirmed_status", user: person.user, invite_params: {} %>
                   <% else %>
@@ -260,8 +422,16 @@
                   <% end %>
                 </td>
 
-                <td class="px-4 py-2 text-sm text-nowrap text-center text-gray-600" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
-                <td class="px-4 py-2 text-sm text-nowrap text-center" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
+                <td class="px-4 py-2 text-sm text-nowrap text-center hidden" data-column-toggle-col="attendance" data-sort-value="<%= registration.status %>"><%= render "event_registrations/attendance_status_badge", registration: registration %></td>
+                <td class="px-4 py-2 text-sm text-nowrap text-center text-gray-600" data-column-toggle-col="date" data-sort-value="<%= registration.created_at.to_i %>" title="<%= registration.created_at.strftime("%B %-d, %Y at %l:%M %P") %>"><%= registration.created_at.strftime("%b %-d, %Y") %></td>
+                <% readiness = @readiness[registration.id] %>
+                <td class="px-4 py-2 text-sm text-center" data-sort-value="<%= readiness.status_sort_key %>">
+                  <%= render "event_registrations/readiness_badge",
+                        status: readiness.status,
+                        label: readiness.status_label,
+                        issues: readiness.status_issues,
+                        subtext: readiness.status_reason %>
+                </td>
                 <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
               </tr>
             <% end %>

@@ -92,11 +92,15 @@ class EventsController < ApplicationController
     authorize! @event, to: :registrants?
     @event = @event.decorate
     scope = @event.event_registrations
-      .includes(:comments, :organizations, registrant: [ :user, :contact_methods, { avatar_attachment: :blob }, { affiliations: :organization } ])
+      .includes(:comments, :organizations, :allocations, :scholarships, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, :contact_methods, { avatar_attachment: :blob }, { affiliations: :organization } ])
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
     scope = scope.scholarship_status(params[:scholarship]) if params[:scholarship].present?
+    scope = scope.ce_status(params[:ce_status]) if params[:ce_status].present?
+    scope = scope.comment_status(params[:comment_status]) if params[:comment_status].present?
+    scope = scope.organization_status(params[:org_status], @event) if params[:org_status].present?
+    scope = scope.account_status(params[:account_status]) if params[:account_status].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
     scope = scope.registrant_state(params[:state]) if params[:state].present?
     scope = scope.registrant_county(params[:county]) if params[:county].present?
@@ -113,8 +117,17 @@ class EventsController < ApplicationController
       scope = scope.active if @status_filter == "active"
     end
 
-    @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name"))
+    @event_registrations = scope.order(Arel.sql("people.first_name, people.last_name")).to_a
     @dashboard = EventDashboard.new(@event)
+    @ce_eligible = @event.ce_eligible?
+
+    @submitted_org_names = submitted_org_names_for(@event_registrations)
+    @readiness = @event_registrations.to_h do |registration|
+      [ registration.id, EventRegistrationReadiness.new(registration) ]
+    end
+    if params[:readiness].in?(%w[ not_ready ready certificate_due completed ])
+      @event_registrations.select! { |r| @readiness[r.id].status.to_s == params[:readiness] }
+    end
 
     emails = @event_registrations.map { |r| r.registrant.preferred_email&.downcase }.compact
     @duplicate_emails = emails.tally.select { |_, count| count > 1 }.keys.to_set
@@ -297,30 +310,15 @@ class EventsController < ApplicationController
       return
     end
 
-    person_id = params[:person_id].presence
-    organization_id = params[:organization_id].presence
-
-    if organization_id.present? && person_id.blank?
-      payer_type = "Organization"
-    elsif person_id.present? && organization_id.blank?
-      payer_type = "Person"
-    elsif person_id.present? && organization_id.present?
-      payer_type = params[:payer_type].presence || "Organization"
-    else
-      person_id = submission.person_id
-      payer_type = "Person"
-    end
-
     payment = submission.build_payment(
-      person_id: person_id,
-      organization_id: organization_id,
-      payer_type: payer_type,
       amount_cents: (params[:amount_dollars].to_d * 100).to_i,
       currency: params[:currency].presence || "usd",
       type: payment_type,
       check_number: params[:check_number].presence,
       memo: params[:memo].presence
     )
+    payment.payer_sgid = params[:payer_sgid]
+    payment.additional_designation_sgid = params[:additional_designation_sgid]
 
     if payment.save
       @payment = payment
@@ -339,6 +337,7 @@ class EventsController < ApplicationController
   def preview_reminder
     authorize! @event
     @event = @event.decorate
+    @ce_eligible = @event.ce_eligible?
     @event_registrations = @event.event_registrations
       .includes(
         :event, :organizations, :comments,
@@ -350,8 +349,11 @@ class EventsController < ApplicationController
 
     # Filters keep every registrant in the list and only flag who still matches,
     # so the recipient checkboxes pre-check the matched set rather than removing
-    # rows. See app/views/events/_reminder_recipients.html.erb.
-    recipient_filter = ReminderRecipientFilter.new(@event_registrations, params)
+    # rows. See app/views/events/_reminder_recipients.html.erb. The dropdown
+    # filters reuse the registrants-roster scopes (via the event), so both pages
+    # stay in sync; @dashboard supplies the state/county options.
+    @dashboard = EventDashboard.new(@event)
+    recipient_filter = ReminderRecipientFilter.new(@event_registrations, params, event: @event)
     @matched_ids = recipient_filter.matched_ids
     @filtering = recipient_filter.filtering?
 
@@ -557,18 +559,35 @@ class EventsController < ApplicationController
       .sum(:amount)
   end
 
+  # Maps registrant person_id => the organization name they typed on the
+  # registration form (the `agency_name` answer), in one batch query. Drives both
+  # the roster's Pending/None org chip and the readiness "Organization not linked"
+  # check, so both read the same resolved answer.
+  def submitted_org_names_for(registrations)
+    registration_form = @event.registration_form
+    field = registration_form&.form_fields&.find_by(field_identifier: "agency_name")
+    return {} unless field
+
+    FormAnswer.joins(:form_submission)
+      .where(form_submissions: { person_id: registrations.map(&:registrant_id), form_id: registration_form.id }, form_field_id: field.id)
+      .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
+      .to_h
+  end
+
   def event_registrations_csv_string
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
+    include_ce = @event.ce_eligible?
     headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Intends to pay", "Payment total" ]
+    headers << "CE status" if include_ce
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
-        csv_out << event_registration_csv_row(registration, cost_required)
+        csv_out << event_registration_csv_row(registration, cost_required, include_ce)
       end
     end
   end
 
-  def event_registration_csv_row(registration, cost_required)
+  def event_registration_csv_row(registration, cost_required, include_ce = false)
     person = registration.registrant
     orgs = person.affiliations
       .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
@@ -577,7 +596,7 @@ class EventsController < ApplicationController
     total_cents = registration.allocations_sum
     payment_total = total_cents.positive? ? format("%.2f", total_cents / 100.0) : ""
     payment_status = cost_required ? registration.payment_status_label : ""
-    [
+    row = [
       person.first_name,
       person.last_name,
       person.preferred_email.presence || "",
@@ -589,17 +608,20 @@ class EventsController < ApplicationController
       registration.intends_to_pay? ? "Yes" : "No",
       payment_total
     ]
+    row << registration.ce_status_label.to_s if include_ce
+    row
   end
 
   def onboarding_csv_string
     require "csv"
     cost_required = @event.cost_cents.to_i > 0
+    include_ce = @event.ce_eligible?
     day_count = @event.day_count
     headers = [ "First name", "Last name", "Email", "Organization", "Program type" ]
     headers += [ "Payment status", "Fees due", "Paid amount" ] if cost_required
     headers << "Fee note"
     headers += [ "Discounted amount", "Scholarship amount", "Scholarship grant", "Scholarship tasks completed" ]
-    headers += [ "CE requested", "CE hours", "CE amount", "CE license" ]
+    headers += [ "CE requested", "CE hours", "CE amount", "CE license" ] if include_ce
     headers += EventRegistration::CHECKLIST_STEPS.values
     headers += [ "Portal user status", "Portal access" ]
     headers += (1..day_count).map { |day| "Day #{day}" }
@@ -608,12 +630,12 @@ class EventsController < ApplicationController
 
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
-        csv_out << onboarding_csv_row(registration, cost_required, day_count)
+        csv_out << onboarding_csv_row(registration, cost_required, day_count, include_ce)
       end
     end
   end
 
-  def onboarding_csv_row(registration, cost_required, day_count)
+  def onboarding_csv_row(registration, cost_required, day_count, include_ce = false)
     person = registration.registrant
     scholarship = registration.scholarships.first
     statuses = registration.program_statuses.map { |status| status.to_s.titleize }.join(", ")
@@ -636,11 +658,13 @@ class EventsController < ApplicationController
     row << (scholarship ? helpers.dollars_from_cents(scholarship.amount_cents) : "")
     row << (scholarship ? (scholarship.grant&.name.presence || "Unfunded") : "")
     row << onboarding_scholarship_tasks_csv(registration)
-    ce_hours = registration.ce_hours_requested.to_i
-    row << (registration.ce_credit_requested? ? "Yes" : "No")
-    row << (ce_hours.positive? ? ce_hours : "")
-    row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
-    row << registration.ce_license_number.to_s
+    if include_ce
+      ce_hours = registration.ce_hours_requested.to_i
+      row << (registration.ce_credit_requested? ? "Yes" : "No")
+      row << (ce_hours.positive? ? ce_hours : "")
+      row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
+      row << registration.ce_license_number.to_s
+    end
     EventRegistration::CHECKLIST_STEPS.each_key do |step|
       row << (registration.checklist_step_completed?(step) ? "Yes" : "No")
     end
