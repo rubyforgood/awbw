@@ -10,6 +10,7 @@ class Grant < ApplicationRecord
   validates :name, presence: true
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
   validates :donor_type, inclusion: { in: DONOR_TYPES }
+  validate :amount_covers_scholarships_already_issued
 
   scope :by_deadline, -> { order(Arel.sql("application_deadline IS NULL, application_deadline ASC")) }
 
@@ -112,6 +113,18 @@ class Grant < ApplicationRecord
   end
 
   private
+
+  # A grant's amount can't be lowered below what has already been awarded against
+  # it — the scholarships are committed, so the grant must at least cover them.
+  # Mirrors Scholarship#within_grant_budget from the other side of the ledger.
+  def amount_covers_scholarships_already_issued
+    return unless amount_cents
+
+    issued = scholarships_total_cents
+    if amount_cents < issued
+      errors.add(:amount_cents, "can't be less than the #{MoneyFormatter.dollars_from_cents(issued)} already awarded in scholarships")
+    end
+  end
 
   def text_to_list(text)
     text.to_s.split("\n").map(&:strip).reject(&:blank?)
