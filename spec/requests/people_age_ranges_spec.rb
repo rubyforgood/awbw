@@ -104,6 +104,34 @@ RSpec.describe "Person age ranges", type: :request do
     end
   end
 
+  describe "duplicate age-range selections" do
+    it "dedupes instead of raising RecordNotUnique" do
+      expect {
+        update_person(age_items: [
+          { category_id: children.id, is_primary: "0" },
+          { category_id: children.id, is_primary: "1" }
+        ])
+      }.not_to raise_error
+
+      expect(response).to have_http_status(:found)
+      person.reload
+      expect(person.categorizable_items.where(category: children).count).to eq(1)
+      # The primary flag from the duplicate is folded onto the kept tagging.
+      expect(person.primary_age_groups).to contain_exactly(children)
+    end
+
+    it "dedupes a new selection that duplicates an already-tagged range" do
+      person.categories << children
+
+      expect {
+        update_person(age_items: [ { category_id: children.id, is_primary: "1" } ])
+      }.not_to raise_error
+
+      person.reload
+      expect(person.categorizable_items.where(category: children).count).to eq(1)
+    end
+  end
+
   describe "more than one primary age range" do
     it "fails validation with the same single-primary rule as sectors" do
       update_person(age_items: [

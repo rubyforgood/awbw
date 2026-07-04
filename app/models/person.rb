@@ -81,6 +81,10 @@ class Person < ApplicationRecord
            class_name: "CategorizableItem", as: :categorizable, inverse_of: :categorizable
   accepts_nested_attributes_for :age_range_categorizable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["category_id"].blank? }
+  # The picker can submit the same age range twice (two new rows), which the
+  # CategorizableItem uniqueness validation can't catch — both are unsaved, so
+  # both INSERT and hit the DB unique index. Collapse duplicates before validation.
+  before_validation :dedupe_age_range_items
   accepts_nested_attributes_for :user, update_only: true
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
     reject_if: proc { |attrs| attrs["organization_id"].blank? }
@@ -299,6 +303,22 @@ class Person < ApplicationRecord
     return if primary_count <= 1
 
     errors.add(:base, "Only one age range can be marked as primary")
+  end
+
+  # Keep one tagging per age-range category. Prefer the persisted row, fold any
+  # duplicate's primary flag onto the keeper, and drop the extras (destroy if
+  # persisted, otherwise remove from the unsaved set).
+  def dedupe_age_range_items
+    live = age_range_categorizable_items.reject(&:marked_for_destruction?)
+    live.group_by(&:category_id).each_value do |items|
+      next if items.size <= 1
+
+      keeper = items.find(&:persisted?) || items.first
+      keeper.is_primary = true if items.any?(&:is_primary?)
+      (items - [ keeper ]).each do |dup|
+        dup.persisted? ? dup.mark_for_destruction : age_range_categorizable_items.delete(dup)
+      end
+    end
   end
 
   def other_form_responses(identifiers)
