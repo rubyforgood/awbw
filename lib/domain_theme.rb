@@ -8,8 +8,8 @@ module DomainTheme
     resources:                :violet,
     community_news:           :orange,
     stories:                  :fuchsia,
-    events:                   :blue,
-    people:                   :sky,
+    events:                   :teal,
+    people:                   :cyan,
     organizations:            :emerald,
     quotes:                   :slate,
     grants:                   :green,
@@ -21,12 +21,12 @@ module DomainTheme
 
     forms:                    :purple,
     faqs:                     :pink,
-    video_recordings:         :cyan,
+    video_recordings:         :sky,
 
     workshop_ideas:           :indigo,
     workshop_variation_ideas: :purple,
     story_ideas:              :fuchsia,
-    event_registrations:      :blue,
+    event_registrations:      :teal,
 
     banners:                  :yellow,
     users:                    :rose,
