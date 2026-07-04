@@ -55,6 +55,7 @@ class PersonPolicy < ApplicationPolicy
   def has_associated_data?
     record.user.present? ||
       record.affiliations.exists? ||
-      record.stories_as_spotlighted_facilitator.exists?
+      record.stories_as_spotlighted_facilitator.exists? ||
+      record.stories_as_author.exists?
   end
 end
