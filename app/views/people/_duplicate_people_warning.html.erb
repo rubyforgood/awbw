@@ -21,7 +21,7 @@
         <div class="flex-1">
           <h3 class="text-sm font-medium text-yellow-800">Possible duplicate person</h3>
 
-          <p class="text-sm text-yellow-700 mt-1">We found existing people with a similar name or email. <%= link_to "View details", check_duplicates_people_path(first_name: @first_name, last_name: @last_name, email: @email), target: "_blank", class: "underline hover:text-yellow-900" %></p>
+          <p class="text-sm text-yellow-700 mt-1">We found existing people with a similar name or email. <%= link_to "View details", check_duplicates_people_path(first_name: @first_name, last_name: @last_name, email: @email, legal_first_name: @legal_first_name, email_2: @email_2), target: "_blank", class: "underline hover:text-yellow-900" %></p>
 
           <div class="mt-3 bg-white">
             <ul class="divide-y divide-gray-300 border border-gray-300 rounded-md text-sm overflow-y-auto">
@@ -30,11 +30,9 @@
                   <%= link_to dup[:name], person_path(dup[:id]), target: "_blank", class: "text-blue-600 hover:text-blue-800 underline" %>
 
                   <% if dup[:blocked] %>
-                    <% if dup[:match_type] == "approximate" %>
-                      <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">approximate match</span>
-                    <% else %>
-                      <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">exact match</span>
-                    <% end %>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">exact match</span>
+                  <% elsif dup[:match_type] == "approximate" %>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">approximate match</span>
                   <% else %>
                     <% if dup[:name_match] %>
                       <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700">name match</span>
@@ -64,17 +62,12 @@
           </div>
 
           <% if @blocked %>
-            <% if @duplicates.any? { |d| d[:match_type] == "exact" } %>
-              <p class="text-sm text-red-600 font-medium m-2">An <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">existing user</span> with this email already exists.</p>
-              <p class="text-sm text-gray-500 mb-6">
-                Edit the existing user or change this user's email.
-              </p>
-            <% else %>
-              <p class="text-sm text-orange-600 font-medium m-2">A person with this name has a matching <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">secondary or user email</span>.</p>
-              <p class="text-sm text-gray-500 mb-6">
-                Edit the existing person or change this email.
-              </p>
-            <% end %>
+            <p class="text-sm text-red-600 font-medium m-2">An <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">existing user</span> with this email already exists.</p>
+            <p class="text-sm text-gray-500 mb-6">
+              Edit the existing user or change this user's email.
+            </p>
+          <% elsif @duplicates.any? { |d| d[:match_type] == "approximate" } %>
+            <p class="text-sm text-orange-600 font-medium m-2">A person with this name has a matching <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700">secondary or user email</span>. Confirm this is a different person before continuing.</p>
           <% end %>
 
           <% unless @blocked %>
