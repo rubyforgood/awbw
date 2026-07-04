@@ -182,6 +182,61 @@ RSpec.describe "Event registration edit page", type: :system do
     end
   end
 
+  describe "per-day attendance checkboxes" do
+    it "renders a checkbox per event day, reflecting stored state, and persists changes" do
+      registration.update!(completed_day_1: true)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      # The event spans 3 days, so Days 1-3 show (and no Day 4).
+      expect(page).to have_field("Day 1", checked: true)
+      expect(page).to have_field("Day 2", checked: false)
+      expect(page).to have_field("Day 3", checked: false)
+      expect(page).to have_no_field("Day 4")
+
+      check "Day 2", allow_label_click: true
+      click_on "Save changes"
+
+      expect(page).to have_current_path(registrants_event_path(event))
+      expect(registration.reload.completed_day_1).to be(true)
+      expect(registration.completed_day_2).to be(true)
+    end
+
+    it "derives the attendance status from the checked days and saves both together" do
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      badge = "[data-attendance-status-target='dirty']"
+      expect(page).to have_no_css(badge, visible: true)
+
+      # Checking every day rolls the status forward to Attended (mirrors onboarding).
+      check "Day 1", allow_label_click: true
+      check "Day 2", allow_label_click: true
+      check "Day 3", allow_label_click: true
+
+      expect(page).to have_css(badge, visible: true, text: "Unsaved")
+      expect(page).to have_select("event_registration[status]", selected: "Attended")
+
+      click_on "Save changes"
+
+      expect(registration.reload.status).to eq("attended")
+      expect(registration.completed_day_count).to eq(3)
+    end
+
+    it "leaves an inactive status untouched when days are toggled" do
+      registration.update!(status: "cancelled")
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      check "Day 1", allow_label_click: true
+
+      # Cancelled is a deliberate manual state, so toggling a day never overrides it.
+      expect(page).to have_select("event_registration[status]", selected: "Cancelled")
+    end
+  end
+
   describe "notifications box" do
     it "lists notifications sent to the registrant" do
       create(:notification,

@@ -81,7 +81,9 @@
                data-controller="attendance-status"
                data-attendance-status-colors-value="<%= status_icon_colors.to_json %>"
                data-attendance-status-icons-value="<%= status_icons.to_json %>"
-               data-attendance-status-initial-value="<%= f.object.status %>">
+               data-attendance-status-initial-value="<%= f.object.status %>"
+               data-attendance-status-active-statuses-value="<%= EventRegistration::ACTIVE_STATUSES.to_json %>"
+               data-attendance-status-day-count-value="<%= f.object.event.day_count %>">
             <div class="mb-1 flex items-center justify-between gap-2">
               <span class="text-xs font-medium text-gray-400">Registration status</span>
               <span data-attendance-status-target="dirty"
@@ -100,6 +102,24 @@
                     class: "w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none cursor-pointer",
                     data: { "attendance-status-target": "select", action: "attendance-status#update" },
                     "aria-label": "Registration status" %>
+            </div>
+
+            <%# ---- Per-day attendance — the same checkmarks as the Onboarding
+                matrix. Toggling a day rolls the status above forward/back (see the
+                attendance-status controller), and the boxes save with the form. ---- %>
+            <div class="mt-3">
+              <span class="mb-1.5 block text-xs font-medium text-gray-400">Days attended</span>
+              <div class="flex flex-wrap gap-1.5">
+                <% (1..f.object.event.day_count).each do |day| %>
+                  <label class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium cursor-pointer transition-colors border-gray-200 text-gray-500 has-[:checked]:border-green-300 has-[:checked]:bg-green-50 has-[:checked]:text-green-700">
+                    <%= f.check_box "completed_day_#{day}",
+                          "aria-label": "Day #{day}",
+                          data: { "attendance-status-target": "day", action: "attendance-status#deriveFromDays" },
+                          class: "h-3.5 w-3.5 rounded border-gray-300 text-green-600 focus:ring-green-200 cursor-pointer" %>
+                    Day <%= day %>
+                  </label>
+                <% end %>
+              </div>
             </div>
           </div>
         </div>
