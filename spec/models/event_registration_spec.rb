@@ -137,6 +137,25 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#cancel!" do
+    it "marks the registration cancelled" do
+      reg = create(:event_registration, status: "registered")
+      reg.cancel!
+      expect(reg.reload.status).to eq("cancelled")
+    end
+
+    it "zeroes any scholarship award and its allocation" do
+      reg = create(:event_registration, event: create(:event, cost_cents: 50_000), status: "registered")
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 50_000)
+      allocation = create(:allocation, source: scholarship, allocatable: reg, amount: 50_000)
+
+      reg.cancel!
+
+      expect(scholarship.reload.amount_cents).to eq(0)
+      expect(allocation.reload.amount).to eq(0)
+    end
+  end
+
   describe ".registrant_ids" do
     it "returns registrations for the registrants in a hyphenated id list" do
       person_a = create(:person)

@@ -253,6 +253,18 @@ class EventRegistration < ApplicationRecord
     status.in?(ACTIVE_STATUSES)
   end
 
+  # Public self-service cancellation: mark the registration cancelled and release
+  # any scholarship award back to its grant by zeroing the scholarship amount
+  # (which syncs its allocation to 0 via Scholarship#sync_allocation_amount). The
+  # allocation rows remain, so financial history is preserved and the record stays
+  # non-deletable. Setting status fires the cancellation emails via after_commit.
+  def cancel!
+    transaction do
+      scholarships.each { |scholarship| scholarship.update!(amount_cents: 0) }
+      update!(status: "cancelled")
+    end
+  end
+
   def attendance_recorded?
     status.in?(%w[ attended incomplete_attendance ])
   end
