@@ -108,6 +108,46 @@ RSpec.describe "EventRegistrations", type: :request do
       end
     end
 
+    describe "PATCH /event_registrations/:id/update_onboarding" do
+      # Two-day event (day_count == 2) so a single day is a partial attendance.
+      let(:two_day_event) { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }
+      let(:registration) { create(:event_registration, event: two_day_event, status: "registered") }
+
+      def toggle_day(field, value)
+        patch update_onboarding_event_registration_path(registration),
+              params: { field: field, value: value },
+              headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      end
+
+      it "flips registered → incomplete_attendance when one day is checked" do
+        toggle_day("completed_day_1", "1")
+        expect(registration.reload.status).to eq("incomplete_attendance")
+      end
+
+      it "flips to attended once both days are checked" do
+        registration.update!(completed_day_1: true, status: "incomplete_attendance")
+        toggle_day("completed_day_2", "1")
+        expect(registration.reload.status).to eq("attended")
+      end
+
+      it "rolls back to registered when the last checked day is unchecked" do
+        registration.update!(completed_day_1: true, status: "incomplete_attendance")
+        toggle_day("completed_day_1", "0")
+        expect(registration.reload.status).to eq("registered")
+      end
+
+      it "re-renders the attendance badge in the turbo stream when the status changes" do
+        toggle_day("completed_day_1", "1")
+        expect(response.body).to include("attendance_status_event_registration_#{registration.id}")
+      end
+
+      it "does not touch a cancelled registration" do
+        registration.update!(status: "cancelled")
+        toggle_day("completed_day_1", "1")
+        expect(registration.reload.status).to eq("cancelled")
+      end
+    end
+
     describe "POST /event_registrations" do
       it "creates registration and redirects admin to confirm page" do
         expect {
