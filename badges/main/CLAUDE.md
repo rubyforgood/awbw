@@ -197,6 +197,31 @@ it needs a `page_bg_class` and register it:**
 - **Match neighboring pages.** Use the same marker as sibling views with the same authorization
   level rather than inventing a new value.
 
+## Lazy index/filter frames
+
+Filterable index pages load their rows lazily in a Turbo frame so changing a
+filter swaps just the results, not the whole page (grants, people, users,
+organizations, stories, community_news, video_recordings, monthly_reports,
+bookmarks, payments, resources, workshops, notifications, allocations all follow
+this). Match the existing pattern:
+
+- `index.html.erb` renders the header, the filter/search form, and a skeleton
+  inside `<%= turbo_frame_tag :<resource>_results, src: result_src, data: { turbo: "temporary" } %>`.
+- The controller `index` branches on `turbo_frame_request?`: the frame request
+  builds the filtered/paginated scope and renders the results view; otherwise it
+  renders the full `index`.
+- **Name the frame-response view after its Turbo frame tag id** — the
+  `turbo_frame_tag` id, the controller render target, and the view filename are
+  one shared `<resource>_results` token (e.g. `turbo_frame_tag :grants_results` ←
+  `render :grants_results` ← `app/views/grants/grants_results.html.erb`). This
+  keeps the view discoverable from the frame tag, and `_results` reflects that the
+  frame holds the filtered result set. **Never name it `index_lazy`** — that old
+  name has been removed.
+- **Never change a frame tag id to rename a view.** Turbo matches on the id, so
+  it must stay identical across `index.html.erb`, the results view, the filter
+  form's `data-turbo-frame`, request-spec `Turbo-Frame` headers, and
+  `turbo-frame#…` view-spec selectors. Only the filename and render target change.
+
 ## JavaScript
 
 - ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
@@ -252,10 +277,10 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - Use `docs/pull_request_template.md` for PR description structure
 - **Remove the `Closes …` line when there's no ticket** — it's a template placeholder. Keep it (with a real issue link) only when the PR closes a tracked ticket; otherwise drop the line entirely rather than leaving the placeholder.
 - **Keep descriptions as short as possible** — a few terse bullets, not paragraphs. Cut anything a reviewer can see from the diff; only keep what explains *why*.
-- **Start the description with a review-depth tag** on its own single line, prefixed with `🤖 PR, suggested 👤 review level: `, followed by a blank line, then the rest of the description. The tag is the prefix, the icon, the level name, and the short note on what that level means — e.g. `🤖 PR, suggested 👤 review level: 👀 Skim — view-only: markup/copy/styling, no logic or data changes`. Always spell out the meaning inline; never post the icon and name alone. The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
-  - **👀 Skim** — view-only: markup/copy/styling, no logic or data changes
-  - **📖 Read** — light-logic: small, contained logic changes with low blast radius
-  - **🔬 Inspect** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
+- **Start the description with a review-depth tag** on its own single line, in the form `🤖 suggested review level: <N> <Name> <icon> <reason>`, followed by a blank line, then the rest of the description. The tag is the prefix, the level number, the level name, its icon, and a short reason — e.g. `🤖 suggested review level: 5 Inspect 🔬 substantive logic across 13 admin pages incl. filter behavior`. Always spell out the reason inline; never post the number/name/icon alone. The number is a 1–5 scale with three named levels (2 and 4 are unused in-betweens). The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
+  - **1 Skim 👀** — view-only: markup/copy/styling, no logic or data changes
+  - **3 Read 📖** — light-logic: small, contained logic changes with low blast radius
+  - **5 Inspect 🔬** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
 - Use bullet points, not paragraphs, when filling out each section
 - Description must explain why the change was made, not just what
 - Include screenshots for UI changes

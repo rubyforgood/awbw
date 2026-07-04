@@ -47,7 +47,7 @@ RSpec.describe "/stories", type: :request do
 
     describe "GET /index" do
       it "returns all stories" do
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "story_results" }
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include(published_story.title)
         expect(response.body).to include(public_story.title)
         expect(response.body).to include(private_story.title)
@@ -61,13 +61,13 @@ RSpec.describe "/stories", type: :request do
           published: true
         ))
 
-        get stories_url(organization_id: organization.id), headers: { "Turbo-Frame" => "story_results" }
+        get stories_url(organization_id: organization.id), headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include(published_story.title)
         expect(response.body).not_to include(story_in_other_org.title)
       end
 
       it "shows the empty-state message when no stories match" do
-        get stories_url(title: "no-such-story-zzz"), headers: { "Turbo-Frame" => "story_results" }
+        get stories_url(title: "no-such-story-zzz"), headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include("No stories found")
       end
 
@@ -76,7 +76,7 @@ RSpec.describe "/stories", type: :request do
         title_only = Story.create!(base_attributes.merge(title: "Best Story Other", rhino_body: "something else", published: true))
         body_only = Story.create!(base_attributes.merge(title: "Unrelated Tale", rhino_body: "healing through art", published: true))
 
-        get stories_url(title: "Best Story", query: "healing"), headers: { "Turbo-Frame" => "story_results" }
+        get stories_url(title: "Best Story", query: "healing"), headers: { "Turbo-Frame" => "stories_results" }
 
         expect(response.body).to include(match.title)
         expect(response.body).not_to include(title_only.title)
@@ -84,7 +84,7 @@ RSpec.describe "/stories", type: :request do
       end
 
       describe "external link handling" do
-        let(:turbo_headers) { { "Turbo-Frame" => "story_results" } }
+        let(:turbo_headers) { { "Turbo-Frame" => "stories_results" } }
 
         let!(:external_story) do
           create(:story, :published, title: "External Story", website_url: "https://example.com/article")
@@ -117,7 +117,7 @@ RSpec.describe "/stories", type: :request do
       end
 
       describe "sorting" do
-        let(:turbo_headers) { { "Turbo-Frame" => "story_results" } }
+        let(:turbo_headers) { { "Turbo-Frame" => "stories_results" } }
 
         let(:org_alpha) { create(:organization, name: "Alpha Org") }
         let(:org_zulu) { create(:organization, name: "Zulu Org") }
@@ -239,7 +239,7 @@ RSpec.describe "/stories", type: :request do
 
     describe "GET /index" do
       it "only shows published stories" do
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "story_results" }
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
 
         expect(response.body).to include(published_story.title)
         expect(response.body).to include(public_story.title)
@@ -248,7 +248,7 @@ RSpec.describe "/stories", type: :request do
 
       it "does not show Details button for external stories" do
         external_story = create(:story, :published, title: "External Story", website_url: "https://example.com")
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "story_results" }
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).not_to include("Details")
         expect(response.body).to include('href="https://example.com"')
       end
@@ -280,7 +280,7 @@ RSpec.describe "/stories", type: :request do
   describe "as guest" do
     describe "GET /index" do
       it "only shows publicly_visible stories" do
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "story_results" }
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
 
         expect(response.body).to include(public_story.title)
         expect(response.body).not_to include(published_story.title)

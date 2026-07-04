@@ -1,0 +1,119 @@
+<%= turbo_stream.replace("stories_count", partial: "stories_count") %>
+<%
+  sort_base = params.permit(:title, :query, :published, :year, :number_of_items_per_page).to_h.symbolize_keys
+  sort_icon = ->(column) {
+    if @sort == column
+      @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
+    else
+      "fa-sort"
+    end
+  }
+  sort_link = ->(column, label) {
+    link_to stories_path(sort_base.merge(sort: column, direction: (@sort == column && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
+            data: { turbo_frame: "stories_results" },
+            class: "inline-flex items-center gap-1 text-gray-700 hover:text-gray-900" do
+      concat label
+      concat content_tag(:i, "", class: "fa-solid #{sort_icon.call(column)} text-xs opacity-70")
+    end
+  }
+%>
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @stories.any? %>">
+  <table class="w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("title", "Title") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("windows_type", "Windows audience") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("workshop", "Workshop") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("author", "Author") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("organization", "Organization") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("updated_at", "Updated At") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody class="divide-y divide-gray-100">
+      <% if @stories.any? %>
+        <% @stories.each do |story| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2 text-sm text-gray-800 flex items-center gap-2">
+              <!-- BOOKMARK -->
+              <span class="pointer-events-auto"><%= render "bookmarks/editable_bookmark_icon", resource: story %></span>
+
+              <%= render "assets/display_image",
+                               resource: story,
+                               width: 24, height: 14,
+                               variant: :index,
+                               link_to_object: true,
+                               file: story.display_image %>
+
+              <!-- TITLE + BADGES -->
+              <span class="inline-flex items-center gap-2">
+                <%= link_to title_with_badges(story).html_safe,
+                                  story_path(story),
+                                  target: story.external_link? ? "_blank" : "", rel: "noopener noreferrer",
+                                  data: { turbo_frame: "_top" },
+                                  class: "font-bold hover:text-indigo-800 hover:underline" %>
+              </span>
+            </td>
+
+            <td class="px-4 py-2 text-sm text-gray-800"><%= story.windows_type&.short_name %></td>
+
+            <td class="px-4 py-2 text-sm text-gray-800">
+              <span title="<%= story.workshop&.title %>"><%= story.workshop&.title&.truncate(30) %></span>
+            </td>
+
+            <td class="px-4 py-2 text-sm text-gray-800"><%= story.created_by.name %></td>
+
+            <td class="px-4 py-2 text-sm text-gray-800">
+              <span title="<%= story.organization&.name %>"><%= story.organization&.name&.truncate(30) %></span>
+            </td>
+
+            <td class="px-4 py-2 text-sm text-gray-500"><%= story.updated_at.strftime("%b %d, %Y") %></td>
+
+            <td class="px-4 py-2 text-sm text-gray-500">
+              <% if story.external_link? %>
+                <%= link_to "View", story.link_target,
+                                  target: "_blank", rel: "noopener noreferrer",
+                                  class: "btn btn-secondary-outline" %>
+                <% if allowed_to?(:edit?, story) %>
+                  <%= link_to "Details", story_path(story, no_redirect: true),
+                                    data: { turbo_frame: "_top" },
+                                    class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+                <% end %>
+              <% else %>
+                <%= link_to "View", story_path(story),
+                                  data: { turbo_frame: "_top" },
+                                  class: "btn btn-secondary-outline" %>
+              <% end %>
+              <% if allowed_to?(:edit?, story) %>
+                <%= link_to "Edit", edit_story_path(story),
+                                  data: {turbo_frame: "_top"},
+                                  class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="7" class="text-center py-16">
+            <h2 class="text-gray-600 text-lg mb-2">No stories found</h2>
+            <% if allowed_to?(:new?, Story) %>
+              <div class="admin-only bg-blue-100 p-3">
+                <%= link_to "Create a story",
+                            new_story_path,
+                            data: {turbo_frame: "_top"},
+                            class: "btn btn-primary" %>
+              </div>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<% if @stories.any? %>
+  <!-- Pagination -->
+  <div class="mt-6 flex justify-center">
+    <div class="pagination mt-6"><%= tailwind_paginate @stories %></div>
+  </div>
+<% end %>

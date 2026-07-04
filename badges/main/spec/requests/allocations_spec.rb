@@ -25,7 +25,7 @@ RSpec.describe "Allocations", type: :request do
     end
 
     it "renders the results turbo frame" do
-      get allocations_path, headers: { "Turbo-Frame" => "allocation_results" }
+      get allocations_path, headers: { "Turbo-Frame" => "allocations_results" }
 
       expect(response).to have_http_status(:success)
     end

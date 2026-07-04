@@ -41,14 +41,14 @@ RSpec.describe "community_news/index", type: :view do
 
   it "renders a list of community_news" do
     allow(view).to receive(:turbo_frame_request?).and_return(true)
-    render template: "community_news/index_lazy"
+    render template: "community_news/community_news_results"
     expect(rendered).to include(community_news1.title, community_news2.title)
   end
 
   it "renders a friendly message when no community_news exist" do
     assign(:community_news, paginated([]))
     allow(view).to receive(:turbo_frame_request?).and_return(true)
-    render template: "community_news/index_lazy"
+    render template: "community_news/community_news_results"
     expect(rendered).to include("No community news yet")
   end
 end

@@ -21,7 +21,7 @@ class ResourcesController < ApplicationController
 
       track_index_intent(Resource, @resources, params)
 
-      render :resource_results
+      render :resources_results
     else
       render :index
     end

@@ -1,0 +1,41 @@
+<div class="rounded-xl bg-white p-6">
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse border border-gray-200 animate-pulse">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Name</th>
+          <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-1/6">Affiliated since</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/5">Primary sector</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Primary age range</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/4">Affiliation(s)</th>
+          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Socials</th>
+          <% if allowed_to?(:manage?, Person) %>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% 8.times do %>
+          <tr>
+            <td class="px-4 py-3"><div class="h-4 w-32 bg-gray-200 rounded"></div></td>
+            <td class="px-4 py-3 text-center"><div class="h-4 w-12 bg-gray-200 rounded mx-auto"></div></td>
+            <td class="px-4 py-3"><div class="h-4 w-20 bg-gray-200 rounded"></div></td>
+            <td class="px-4 py-3"><div class="h-4 w-16 bg-gray-200 rounded"></div></td>
+            <td class="px-4 py-3"><div class="h-4 w-36 bg-gray-200 rounded"></div></td>
+            <td class="px-4 py-3"><div class="h-4 w-16 bg-gray-200 rounded"></div></td>
+            <% if allowed_to?(:manage?, Person) %>
+              <td class="px-4 py-3 text-center"><div class="h-4 w-12 bg-gray-200 rounded mx-auto"></div></td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Pagination skeleton -->
+<div class="mt-6 flex justify-center space-x-2 animate-pulse">
+  <div class="h-8 w-10 bg-gray-200 rounded"></div>
+  <div class="h-8 w-10 bg-gray-200 rounded"></div>
+  <div class="h-8 w-10 bg-gray-200 rounded"></div>
+</div>

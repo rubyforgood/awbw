@@ -24,11 +24,11 @@ RSpec.describe "organizations/index", type: :view do
 
   it "renders the skeleton loader" do
     render
-    expect(rendered).to have_css("turbo-frame#organization_results")
+    expect(rendered).to have_css("turbo-frame#organizations_results")
   end
 
   it "renders a list of organizations" do
-    render template: "organizations/organization_results"
+    render template: "organizations/organizations_results"
     expect(rendered).to match(organization1.name)
     expect(rendered).to match(organization2.name)
   end

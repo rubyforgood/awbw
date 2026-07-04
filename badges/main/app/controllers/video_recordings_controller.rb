@@ -15,7 +15,7 @@ class VideoRecordingsController < ApplicationController
       @count_display = filtered.size == base_scope.size ? base_scope.size : "#{filtered.count}/#{base_scope.count}"
       @video_recordings = filtered.order(:position).paginate(page: params[:page], per_page: per_page).decorate
 
-      render :index_lazy
+      render :video_recordings_results
     else
       @sectors = Sector.published.order(:name)
       @category_types = CategoryType.published.general.order(:name).decorate
