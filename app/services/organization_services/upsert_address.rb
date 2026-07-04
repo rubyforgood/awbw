@@ -19,10 +19,10 @@ module OrganizationServices
     def initialize(organization:, city: nil, state: nil, street_address: nil, zip_code: nil, country: nil)
       @organization = organization
       @city = city&.strip
-      @state = state&.strip
+      @state = state&.strip.presence
       @street_address = street_address
       @zip_code = zip_code
-      @country = country&.strip
+      @country = country&.strip.presence
     end
 
     def call
