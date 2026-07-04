@@ -22,8 +22,11 @@ module PersonHelper
     full_name = display_name || person.try(:name) || person.to_s
     hover_title = [ full_name, subtitle ].compact_blank.join(" — ")
 
-    unconfirmed_email = person.user&.unconfirmed_email
-    show_email_change = unconfirmed_email.present? && allowed_to?(:show_email_change?, person)
+    # Only touch person.user when the viewer is actually allowed to see a pending
+    # email change — this keeps the button from firing an N+1 :user lookup per row
+    # for anonymous/public viewers on people-heavy pages (e.g. organizations#show).
+    unconfirmed_email = person.user&.unconfirmed_email if allowed_to?(:show_email_change?, person)
+    show_email_change = unconfirmed_email.present?
 
     link_to person_path(person, **path_params),
             data: { turbo_prefetch: false }.merge(data),
