@@ -32,6 +32,10 @@ RSpec.describe "Person edit associated records", type: :request do
       expect(response.body).to include(form_submissions_path(person_id: person.id))
       expect(response.body).to include(payments_path(person_id: person.id))
       expect(response.body).to include(notifications_path(email: person.preferred_email))
+
+      # Custom card labels
+      expect(response.body).to include("Grants (as donor)")
+      expect(response.body).to include("Communications")
     end
   end
 end
