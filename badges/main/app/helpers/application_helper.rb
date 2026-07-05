@@ -256,7 +256,13 @@ module ApplicationHelper
     people:              "fa-user",
     organizations:       "fa-building",
     workshops:           "fa-chalkboard-user",
-    resources:           "fa-book"
+    workshop_variations: "fa-shapes",
+    resources:           "fa-book",
+    scholarships:        "fa-graduation-cap",
+    notifications:       "fa-bell",
+    grants:              "fa-hand-holding-dollar",
+    form_submissions:    "fa-file-signature",
+    payments:            "fa-money-check-dollar"
   }.freeze
 
   # Themed card-style link to a filtered index. The collection drives the

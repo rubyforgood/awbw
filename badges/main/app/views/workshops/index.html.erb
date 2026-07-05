@@ -51,6 +51,8 @@
       <%= render "workshops_count" %>
     <% end %>
 
+    <%= render "shared/filtered_to", record: @author, clear_path: workshops_path %>
+
     <!-- Workshops List -->
     <% result_src = workshops_path + "?" + request.query_string %>
 

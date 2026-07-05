@@ -2,6 +2,7 @@ class WorkshopVariationsController < ApplicationController
   include AhoyTracking
   def index
     authorize!
+    @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
 
     base_scope = WorkshopVariation.includes(:workshop, :author, created_by: :person)
                                   .joins(:workshop).where(workshops: { published: true })

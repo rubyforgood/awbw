@@ -4,6 +4,47 @@ RSpec.describe "FormSubmissions", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:submission) { create(:form_submission) }
 
+  describe "GET /form_submissions" do
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "lists a person's submissions and links each to its detail page" do
+        person = create(:person, first_name: "Priya", last_name: "Patel")
+        other = create(:person)
+        mine = create(:form_submission, person: person)
+        theirs = create(:form_submission, person: other)
+
+        get form_submissions_path(person_id: person.id)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Priya Patel")
+        expect(response.body).to include(form_submission_path(mine))
+        expect(response.body).not_to include(form_submission_path(theirs))
+      end
+
+      it "each View link carries a return_to back to the person's index" do
+        person = create(:person)
+        submission = create(:form_submission, person: person)
+
+        get form_submissions_path(person_id: person.id)
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions", person_id: person.id))
+        )
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in create(:user) }
+
+      it "redirects away" do
+        get form_submissions_path
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "GET /form_submissions/:id" do
     context "as an admin" do
       before { sign_in admin }
@@ -17,6 +58,13 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Organization")
         expect(response.body).to include("AWBW")
+      end
+
+      it "shows a back link to the form submissions index when arriving from it" do
+        get form_submission_path(submission, return_to: "form_submissions", person_id: submission.person_id)
+
+        expect(response.body).to include(form_submissions_path(person_id: submission.person_id))
+        expect(response.body).to include("Back to form submissions")
       end
 
       it "resolves the sector/age-group ids stored behind the professional fields to names" do

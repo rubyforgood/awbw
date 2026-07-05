@@ -5,6 +5,7 @@ class CommunityNewsController < ApplicationController
 
   def index
     authorize!
+    @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
       base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset, :author,

@@ -46,6 +46,7 @@ class WorkshopSearchService
     filter_by_title
     filter_by_query
     filter_by_author_name
+    filter_by_author_id
     filter_by_categories
     filter_by_sectors
     filter_by_tag_names
@@ -77,6 +78,11 @@ class WorkshopSearchService
   def filter_by_author_name
     return unless params[:author_name].present?
     @workshops = search_by_author_name(@workshops, params[:author_name])
+  end
+
+  def filter_by_author_id
+    return unless params[:author_id].present?
+    @workshops = @workshops.where(author_id: params[:author_id])
   end
 
   def filter_by_categories

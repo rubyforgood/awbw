@@ -25,6 +25,8 @@
     <!-- Divider -->
     <div class="w-full mt-6"><hr class="border-gray-300 mb-6"></div>
 
+    <%= render "shared/filtered_to", record: @author, clear_path: resources_path %>
+
     <!-- Results Table -->
     <% result_src = resources_path + "?" + request.query_string %>
 
