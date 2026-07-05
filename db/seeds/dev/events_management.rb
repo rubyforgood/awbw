@@ -1434,7 +1434,7 @@ if facilitator_training && registration_form
   end
 
   submit_agency_name = ->(registration, value) do
-    submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration")
+    submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration", event: registration.event)
     if agency_field
       answer = submission.form_answers.find_or_initialize_by(form_field: agency_field)
       answer.update!(submitted_answer: value.to_s, question_name_when_answered: agency_field.name)
@@ -1482,7 +1482,7 @@ if facilitator_training && registration_form
     Array(scenario[:orgs]).each { |org| link_org.call(registration, org) }
     submit_agency_name.call(registration, scenario[:agency]) if scenario.key?(:agency)
     if scenario[:position].present? && agency_position_field
-      submission = FormSubmission.find_or_create_by!(person: person, form: registration_form, role: "registration")
+      submission = FormSubmission.find_or_create_by!(person: person, form: registration_form, role: "registration", event: registration.event)
       answer = submission.form_answers.find_or_initialize_by(form_field: agency_position_field)
       answer.update!(submitted_answer: scenario[:position], question_name_when_answered: agency_position_field.name)
     end
@@ -1532,7 +1532,7 @@ if facilitator_training && registration_form
   position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
   submit_field = ->(registration, field, value) do
     if field
-    submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration")
+    submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration", event: registration.event)
       answer = submission.form_answers.find_or_initialize_by(form_field: field)
       answer.update!(submitted_answer: value.to_s, question_name_when_answered: field.name)
     end
