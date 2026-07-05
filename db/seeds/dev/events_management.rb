@@ -1032,7 +1032,7 @@ form_submissions.each do |data|
   next unless data[:person] && data[:form]
   next if FormSubmission.exists?(person: data[:person], form: data[:form])
 
-  pf = FormSubmission.create!(person: data[:person], form: data[:form], event: data[:event])
+  pf = FormSubmission.create!(person: data[:person], form: data[:form], event: data[:event], role: "registration")
 
   # Fill in required text fields with sample data
   data[:form].form_fields.where(answer_type: [ :free_form_input_one_line, :free_form_input_paragraph ]).each do |field|
@@ -1218,7 +1218,7 @@ if facilitator_training && (reg_form = facilitator_training.registration_form)
   facilitator_training.event_registrations.active.includes(:registrant).each do |registration|
     person = registration.registrant
     next unless person&.email.to_s.start_with?("facilitator.cohort.")
-    FormSubmission.find_or_create_by!(person: person, form: reg_form) do |fs|
+    FormSubmission.find_or_create_by!(person: person, form: reg_form, role: "registration") do |fs|
       fs.event = facilitator_training
     end
   end
@@ -1434,7 +1434,7 @@ if facilitator_training && registration_form
   end
 
   submit_agency_name = ->(registration, value) do
-    submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form)
+    submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration")
     if agency_field
       answer = submission.form_answers.find_or_initialize_by(form_field: agency_field)
       answer.update!(submitted_answer: value.to_s, question_name_when_answered: agency_field.name)
@@ -1482,7 +1482,7 @@ if facilitator_training && registration_form
     Array(scenario[:orgs]).each { |org| link_org.call(registration, org) }
     submit_agency_name.call(registration, scenario[:agency]) if scenario.key?(:agency)
     if scenario[:position].present? && agency_position_field
-      submission = FormSubmission.find_or_create_by!(person: person, form: registration_form)
+      submission = FormSubmission.find_or_create_by!(person: person, form: registration_form, role: "registration")
       answer = submission.form_answers.find_or_initialize_by(form_field: agency_position_field)
       answer.update!(submitted_answer: scenario[:position], question_name_when_answered: agency_position_field.name)
     end
@@ -1501,7 +1501,7 @@ if facilitator_training && registration_form
       reg.status = "registered"
     end
     [ "Greenfield Survivor Services", "Harbor Light Counseling" ].each do |org_name|
-      submission = FormSubmission.create!(person: demo_multi, form: registration_form, event: facilitator_training)
+      submission = FormSubmission.create!(person: demo_multi, form: registration_form, event: facilitator_training, role: "registration")
       submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
     end
   end
@@ -1521,7 +1521,7 @@ if facilitator_training && registration_form
       reg.status = "registered"
     end
     [ fuzzy_agency, fuzzy_agency_2 ].each do |org_name|
-      submission = FormSubmission.create!(person: demo_fuzzy_multi, form: registration_form, event: facilitator_training)
+      submission = FormSubmission.create!(person: demo_fuzzy_multi, form: registration_form, event: facilitator_training, role: "registration")
       submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
     end
   end
@@ -1532,7 +1532,7 @@ if facilitator_training && registration_form
   position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
   submit_field = ->(registration, field, value) do
     if field
-      submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form)
+    submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration")
       answer = submission.form_answers.find_or_initialize_by(form_field: field)
       answer.update!(submitted_answer: value.to_s, question_name_when_answered: field.name)
     end
@@ -1596,7 +1596,7 @@ if facilitator_training && registration_form
     person = Person.create!(email: "affdemo.6@seed.example.com", first_name: "Demo Affiliation", last_name: "A6 Applied twice, two orgs")
     registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
     [ aff_org, other_org ].each do |org|
-      submission = FormSubmission.create!(person: person, form: registration_form, event: facilitator_training)
+      submission = FormSubmission.create!(person: person, form: registration_form, event: facilitator_training, role: "registration")
       submission.form_answers.create!(form_field: agency_field, submitted_answer: org.name, question_name_when_answered: agency_field.name) if agency_field
       link_org.call(registration, org)
     end

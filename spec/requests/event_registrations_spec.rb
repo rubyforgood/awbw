@@ -607,8 +607,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
           get link_organization_event_registration_path(existing_registration)
 
-          expect(response.body).to include(event_public_registration_path(event))
-          expect(response.body).to include("reg=#{existing_registration.slug}")
+          expect(response.body).to include(event_event_form_submissions_path(event, person_id: existing_registration.registrant_id))
           expect(response.body).to include("form_submission_id=#{submission.id}")
         end
 

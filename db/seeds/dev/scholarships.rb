@@ -307,7 +307,7 @@ ensure_registration_submission = ->(person, event) do
   reg_form = event.registration_form
   return unless reg_form
 
-  submission = FormSubmission.find_or_create_by!(person: person, form: reg_form) do |fs|
+  submission = FormSubmission.find_or_create_by!(person: person, form: reg_form, role: "registration") do |fs|
     fs.event = event
   end
   reg_form.form_fields.where.not(answer_type: :group_header).each do |field|

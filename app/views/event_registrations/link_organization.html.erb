@@ -25,7 +25,6 @@
         as the source answer admins reconcile against; rendered grey/neutral. A
         registrant can have more than one submission, so each is listed with its
         own green link to that submission's public view. === %>
-    <% form_show_params = @event_registration.slug.present? ? { reg: @event_registration.slug } : { person_id: @person.id } %>
     <%# Each submitted org that isn't in the DB gets a "Create and link" row, the
         expected next step — so those take the solid (primary) style and "Link
         organization" is demoted to the outline style. %>
@@ -47,7 +46,7 @@
                 <%# The whole card links to this specific submission's public view;
                     the green form-submission icon (also used on the registrants list)
                     sits inline as the affordance. %>
-                <%= link_to event_public_registration_path(@event_registration.event, **form_show_params, form_submission_id: entry[:submission].id, return_to: "link_organization", link_org_return_to: params[:return_to]),
+                <%= link_to event_event_form_submissions_path(@event_registration.event, person_id: @person.id, form_submission_id: entry[:submission].id, return_to: "link_organization", link_org_return_to: params[:return_to]),
                             target: "_blank", rel: "noopener",
                             class: "flex items-start gap-2 group hover:text-green-800",
                             title: multiple ? "View submission ##{i + 1}" : "View form submission",
@@ -63,7 +62,7 @@
           </ul>
         <% elsif @form_submission %>
           <p class="text-sm text-gray-500">
-            No organization was submitted on the <%= link_to "registration form submission", event_public_registration_path(@event_registration.event, **form_show_params, form_submission_id: @form_submission.id, return_to: "link_organization", link_org_return_to: params[:return_to]), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %>.
+            No organization was submitted on the <%= link_to "registration form submission", event_event_form_submissions_path(@event_registration.event, person_id: @person.id, form_submission_id: @form_submission.id, return_to: "link_organization", link_org_return_to: params[:return_to]), target: "_blank", class: "text-blue-600 hover:underline", data: { turbo_frame: "_top" } %>.
           </p>
         <% else %>
           <p class="text-sm text-gray-500">No registration form was submitted.</p>
