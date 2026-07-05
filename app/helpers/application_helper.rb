@@ -260,7 +260,8 @@ module ApplicationHelper
     scholarships:        "fa-graduation-cap",
     notifications:       "fa-bell",
     grants:              "fa-hand-holding-dollar",
-    form_submissions:    "fa-file-signature"
+    form_submissions:    "fa-file-signature",
+    payments:            "fa-money-check-dollar"
   }.freeze
 
   # Themed card-style link to a filtered index. The collection drives the

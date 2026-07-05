@@ -7,5 +7,6 @@
   <li><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
   <li><%= index_button person.grants, params: { donor_id: person.id, donor_type: "Person" } %></li>
   <li><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
+  <li><%= index_button Payment.where(person_id: person.id), params: { person_id: person.id } %></li>
   <li><%= index_button notifications, params: { email: email } %></li>
 </ul>
