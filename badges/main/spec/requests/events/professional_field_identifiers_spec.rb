@@ -125,11 +125,11 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
 
           # Sector chips render only for tagged sectors, so their presence proves the tag.
           expect(page.text).to include("Education", "Mental Health", "Equine therapy")
-          # Age categories all render as checkboxes; the tagged ones are checked, with
-          # the primary toggle set only on the primary age group.
-          expect(membership_checked?(page, age_adults)).to be(true)
-          expect(membership_checked?(page, age_teens)).to be(true)
-          expect(membership_checked?(page, age_children)).to be(true)
+          # Age ranges render as cocoon chips; a chip exists only for a tagged range,
+          # with the primary star checked only on the primary age group.
+          expect(age_tagged?(page, age_adults)).to be(true)
+          expect(age_tagged?(page, age_teens)).to be(true)
+          expect(age_tagged?(page, age_children)).to be(true)
           expect(primary_age_checked?(page, age_adults)).to be(true)
           expect(primary_age_checked?(page, age_teens)).to be(false)
         end
@@ -187,13 +187,22 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
     dom.css("input[type=checkbox][name='public_registration[form_fields][#{field.id}][]']").map { |node| node["value"] }
   end
 
-  def membership_checked?(page, category)
-    box = page.at_css("input[name='person[category_ids][]'][value='#{category.id}']")
-    box&.key?("checked") || false
+  # The age cocoon nested-attributes index whose category_id field holds this
+  # category, or nil when the range isn't tagged (no chip rendered).
+  def age_field_index(page, category)
+    field = page.at_css("input[name^='person[age_range_categorizable_items_attributes]'][name$='[category_id]'][value='#{category.id}']")
+    field && field["name"][/attributes\]\[(\d+)\]/, 1]
+  end
+
+  def age_tagged?(page, category)
+    age_field_index(page, category).present?
   end
 
   def primary_age_checked?(page, category)
-    box = page.at_css("input[name='person[primary_age_category_ids][]'][value='#{category.id}']")
+    index = age_field_index(page, category)
+    return false unless index
+
+    box = page.at_css("input[type=checkbox][name='person[age_range_categorizable_items_attributes][#{index}][is_primary]']")
     box&.key?("checked") || false
   end
 

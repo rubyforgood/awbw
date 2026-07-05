@@ -300,6 +300,7 @@ end
 - `paginated_fields` — Client-side pagination of nested fields
 - `password_toggle` — Show/hide password fields
 - `prefetch_lazy` — Prefetch lazy-loaded content
+- `primary_tag` — Shared single-primary star for the sector and age-range cocoon chip editors (clears other stars, highlights via configurable classes, no reorder)
 - `print_options` — Print options toggle for analytics
 - `reminder_preview` — Live-preview a custom message in the reminder email as the admin types it on the bulk-reminder page
 - `remote_select` — AJAX-powered select dropdown
