@@ -35,7 +35,6 @@ en:
   # rename "Communications" everywhere it appears in the UI.
   communications:
     title: "Communications"
-    log_title: "Communication log"
     detail_title: "Communication"
     back_link: "← Back to communications"
     empty: "No communications found."
