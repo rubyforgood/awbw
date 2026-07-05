@@ -103,10 +103,9 @@ module Events
         return
       end
 
-      # A specific submission can be requested by id (a registrant may have more
-      # than one); scope it to this form and person so the id can't reach another
-      # person's submission. Otherwise show their first submission for the form.
-      submissions = @registration_form.form_submissions.where(person: person)
+      # Scope submissions to this event so a person registered for multiple
+      # events that share the same form sees only the answers for this one.
+      submissions = @registration_form.form_submissions.where(person: person, event: @event)
       @form_submission = if params[:form_submission_id].present?
         submissions.find_by(id: params[:form_submission_id])
       else

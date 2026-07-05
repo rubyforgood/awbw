@@ -573,7 +573,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
   describe "GET show" do
     let(:person) { create(:person) }
 
-    before { create(:form_submission, person: person, form: form) }
+    before { create(:form_submission, person: person, form: form, event: event) }
 
     it "renders header and field-label HTML unescaped on the response page" do
       create(:form_field, form: form, answer_type: :group_header, name: "<strong>Your details</strong>")

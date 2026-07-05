@@ -426,7 +426,7 @@ module EventRegistrationServices
     end
 
     def update_form_submission(person)
-      submission = FormSubmission.find_or_create_by!(person: person, form: @registration_form, role: "registration") do |record|
+      submission = FormSubmission.find_or_create_by!(person: person, form: @registration_form, role: "registration", event: @event) do |record|
         record.event = @event
       end
       save_form_answers(submission)
@@ -457,7 +457,7 @@ module EventRegistrationServices
       return unless @scholarship_requested && @scholarship_form && @scholarship_params.present?
 
       submission = FormSubmission.find_or_create_by!(
-        person: person, form: @scholarship_form, role: "scholarship"
+        person: person, form: @scholarship_form, role: "scholarship", event: @event
       ) do |record|
         record.event = @event
       end
