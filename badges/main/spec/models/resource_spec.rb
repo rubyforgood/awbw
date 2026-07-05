@@ -2,13 +2,37 @@ require 'rails_helper'
 
 RSpec.describe Resource do
   it_behaves_like "featureable", factory: :resource
+  it_behaves_like "author_creditable", factory: :resource
 
   it { should have_many(:reports) } # As owner
 
   describe 'associations' do
+    it { should belong_to(:author).class_name("Person").optional }
+
     # Nested Attributes
     it { should accept_nested_attributes_for(:primary_asset).allow_destroy(true) }
     it { should accept_nested_attributes_for(:gallery_assets).allow_destroy(true) }
+  end
+
+  describe "#author_person" do
+    let(:creator) { create(:user, :with_person) }
+    let(:facilitator) { create(:person) }
+
+    it "returns the explicitly chosen author when present" do
+      resource = create(:resource, created_by: creator, author: facilitator)
+      expect(resource.author_person).to eq(facilitator)
+    end
+
+    it "falls back to the creating user's person when no author is set" do
+      resource = create(:resource, created_by: creator, author: nil)
+      expect(resource.author_person).to eq(creator.person)
+    end
+
+    it "credits the author over the creator via author_credit" do
+      resource = create(:resource, created_by: creator, author: facilitator,
+                                   author_credit_preference: "full_name")
+      expect(resource.author_credit).to eq(facilitator.full_name)
+    end
   end
 
   describe 'validations' do
