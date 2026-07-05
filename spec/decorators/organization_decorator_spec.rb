@@ -41,4 +41,21 @@ RSpec.describe OrganizationDecorator do
       expect(organization.decorate.program_status_badge(nil)).to be_nil
     end
   end
+
+  describe "#agency_type_option" do
+    it "returns a recognized type unchanged" do
+      organization = create(:organization, agency_type: "For-profit")
+      expect(organization.decorate.agency_type_option).to eq("For-profit")
+    end
+
+    it "folds a legacy 'Other' label into the catch-all 'Other'" do
+      organization = create(:organization, agency_type: "Other (please specify below)")
+      expect(organization.decorate.agency_type_option).to eq("Other")
+    end
+
+    it "leaves a blank value blank" do
+      organization = create(:organization, agency_type: "")
+      expect(organization.decorate.agency_type_option).to eq("")
+    end
+  end
 end
