@@ -61,6 +61,15 @@ module AuthorCreditable
     format_person_credit(created_by&.person)
   end
 
+  # The person the credit should link to, or nil when the displayed credit is an
+  # anonymous, legacy free-text, or generic label that must not resolve to a
+  # profile. Mirrors author_credit's precedence so the linked person always
+  # matches the shown name.
+  def author_credit_person
+    return nil if author_credit_preference == "anonymous"
+    primary_author_person || (created_by&.person if legacy_author_name_text.blank?)
+  end
+
   # Shown when there is no credited person or legacy name. Overridable per model
   # (e.g. Workshop shows "Facilitator").
   def missing_author_label
@@ -121,8 +130,10 @@ module AuthorCreditable
     # explicit author, then any legacy sources, then the creating user's person.
     def order_by_author(direction)
       ascending = direction.to_s.casecmp("asc").zero?
+      # By first name then last name, matching the credit displayed by default
+      # ("First Last"), so the ordering follows the visible column.
       joins(credited_person_join_sql)
-        .reorder(coalesced_author_arel(:last_name, ascending), coalesced_author_arel(:first_name, ascending))
+        .reorder(coalesced_author_arel(:first_name, ascending), coalesced_author_arel(:last_name, ascending))
     end
 
     private

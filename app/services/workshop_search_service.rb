@@ -161,27 +161,10 @@ class WorkshopSearchService
   def search_by_author_name(workshops, author_name)
     return workshops if author_name.blank?
 
-    sanitized = author_name.strip.gsub(/\s+/, "")
-    # `created_by: :person` joins `people` (the creator's person); the explicit
-    # author is a second join to the same table, so alias it `author_person`.
-    workshops.left_outer_joins(created_by: :person)
-             .joins("LEFT OUTER JOIN people author_person ON author_person.id = workshops.author_id")
-             .where(
-               "LOWER(REPLACE(workshops.full_name, ' ', '')) LIKE :name
-                OR LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
-                OR LOWER(REPLACE(CONCAT(users.last_name, users.first_name), ' ', '')) LIKE :name
-                OR LOWER(REPLACE(users.first_name, ' ', '')) LIKE :name
-                OR LOWER(REPLACE(users.last_name, ' ', '')) LIKE :name
-                OR LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name
-                OR LOWER(REPLACE(CONCAT(people.last_name, people.first_name), ' ', '')) LIKE :name
-                OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
-                OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name
-                OR LOWER(REPLACE(CONCAT(author_person.first_name, author_person.last_name), ' ', '')) LIKE :name
-                OR LOWER(REPLACE(CONCAT(author_person.last_name, author_person.first_name), ' ', '')) LIKE :name
-                OR LOWER(REPLACE(author_person.first_name, ' ', '')) LIKE :name
-                OR LOWER(REPLACE(author_person.last_name, ' ', '')) LIKE :name",
-               name: "%#{sanitized}%"
-             )
+    # Credited-author name match (explicit author + legacy full_name + creator),
+    # shared via AuthorCreditable#by_credited_person_name. Isolated in an id
+    # subquery so its person joins don't collide with the current scope's joins.
+    workshops.where(id: workshops.by_credited_person_name(author_name).select("workshops.id"))
   end
 
   def search_by_categories(workshops, categories)
@@ -237,6 +220,8 @@ class WorkshopSearchService
       @workshops = @workshops.order(bookmarks_count: :desc, title: :asc)
     when "title"
       @workshops = @workshops.order(Arel.sql(TITLE_SORT_SQL))
+    when "author"
+      @workshops = @workshops.order_by_author("asc")
     when "keywords"
       # already ordered
     else
@@ -248,6 +233,15 @@ class WorkshopSearchService
   # --- Handle distinct + order by FIELD(id, ...) for complex joins ---
   def resolve_ids_order
     return if sort.in?(%w[keywords popularity])
+
+    if sort == "author"
+      # order_by_author already ordered @workshops via joined COALESCE columns;
+      # preserve that order through the id round-trip, deduping join fan-out in Ruby.
+      ids = @workshops.pluck(:id).uniq
+      @workshops = ids.empty? ? Workshop.none :
+        Workshop.where(id: ids).order(Arel.sql("FIELD(id, #{ids.join(',')})"))
+      return
+    end
 
     sort_columns =
       case sort

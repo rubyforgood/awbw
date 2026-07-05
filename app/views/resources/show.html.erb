@@ -28,14 +28,9 @@
         <div class="flex flex-col gap-1">
           <% unless @resource.toolkit_and_form? %>
             <div class="flex items-center text-gray-600 text-sm gap-2">
-              <% credited_name = @resource.credited_author_name %>
-              <% link_person = @resource.credited_author_link_person %>
+              <% credited_name = @resource.author_credit %>
               <span>
-                <% if link_person&.profile_is_searchable %>
-                  <%= link_to credited_name, person_path(link_person), class: "hover:underline" %>
-                <% else %>
-                  <%= credited_name %>
-                <% end %>
+                <%= credited_author_link(@resource, class: "hover:underline") %>
               </span>
               <% unless @resource.story? %>
                 <span class="<%= "border-l border-gray-400 pl-2" if credited_name.present? %>">

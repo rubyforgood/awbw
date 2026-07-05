@@ -1,6 +1,44 @@
 require "rails_helper"
 
 RSpec.describe ApplicationHelper, type: :helper do
+  describe "#credited_author_link" do
+    let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
+
+    it "links to the person profile when the credit resolves to a searchable person" do
+      allow(person).to receive(:profile_is_searchable).and_return(true)
+      workshop = create(:workshop, author_credit_preference: "full_name")
+      allow(workshop).to receive(:author).and_return(person)
+
+      html = helper.credited_author_link(workshop)
+      expect(html).to include("<a")
+      expect(html).to include(person_path(person))
+      expect(html).to include("Ada Lovelace")
+    end
+
+    it "renders plain text when the person profile is not searchable" do
+      allow(person).to receive(:profile_is_searchable).and_return(false)
+      workshop = create(:workshop, author_credit_preference: "full_name")
+      allow(workshop).to receive(:author).and_return(person)
+
+      expect(helper.credited_author_link(workshop)).to eq("Ada Lovelace")
+    end
+
+    it "never links an anonymous credit, even to a searchable person" do
+      allow(person).to receive(:profile_is_searchable).and_return(true)
+      workshop = create(:workshop, author_credit_preference: "anonymous")
+      allow(workshop).to receive(:author).and_return(person)
+
+      expect(helper.credited_author_link(workshop)).to eq("Anonymous")
+    end
+
+    it "renders a legacy free-text author as plain text with no link" do
+      workshop = create(:workshop, author: nil, full_name: "Jane Legacy",
+                                   created_by: create(:user, person: nil))
+
+      expect(helper.credited_author_link(workshop)).to eq("Jane Legacy")
+    end
+  end
+
   describe "#dollars_from_cents" do
     it "drops the cents for whole-dollar amounts and adds thousands separators" do
       expect(helper.dollars_from_cents(150_000)).to eq("$1,500")
