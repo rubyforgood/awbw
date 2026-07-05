@@ -31,6 +31,19 @@
 
 en:
   hello: "Hello world"
+  # Public-facing name for the notifications feature. Change these values to
+  # rename "Communications" everywhere it appears in the UI.
+  communications:
+    title: "Communications"
+    detail_title: "Communication"
+    back_link: "← Back to communications"
+    empty: "No communications found."
+    add: "Add communication"
+    resent: "Communication has been resent successfully."
+    registration_title: "Registration communications"
+    scholarship_title: "Scholarship communications"
+    none_for_person: "No communications for this person yet."
+    none_for_registrant: "No communications for this registrant yet."
   activerecord:
     attributes:
       workshop_variation:

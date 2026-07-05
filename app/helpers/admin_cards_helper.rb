@@ -31,7 +31,7 @@ module AdminCardsHelper
       model_card(:quotes, icon: "💬", intensity: 100),
       custom_card("Events revenue", revenue_events_path, icon: "📊", color: :blue),
       model_card(:scholarships, icon: "🎓"),
-      model_card(:notifications, icon: "🔔"),
+      model_card(:notifications, icon: "🔔", title: t("communications.title")),
       model_card(:story_ideas, icon: "✍🏾️", intensity: 100),
       custom_card("Tags", tags_path, icon: "🏷️", color: :lime, intensity: 100),
       model_card(:workshop_ideas, icon: "💡", intensity: 100),
