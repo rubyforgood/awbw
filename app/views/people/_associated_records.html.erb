@@ -4,6 +4,11 @@
 <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2">
   <li><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
   <li><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
+  <li><%= index_button person.stories_as_author, params: { author_id: person.id } %></li>
+  <li><%= index_button person.workshops_as_author, params: { author_id: person.id } %></li>
+  <li><%= index_button person.workshop_variations_as_author, params: { author_id: person.id } %></li>
+  <li><%= index_button person.community_news_as_author, params: { author_id: person.id } %></li>
+  <li><%= index_button person.resources_as_author, params: { author_id: person.id } %></li>
   <li><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
   <li><%= index_button person.grants, params: { donor_id: person.id, donor_type: "Person" } %></li>
   <li><%= index_button person.form_submissions, params: { person_id: person.id } %></li>

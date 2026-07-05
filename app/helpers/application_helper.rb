@@ -256,6 +256,7 @@ module ApplicationHelper
     people:              "fa-user",
     organizations:       "fa-building",
     workshops:           "fa-chalkboard-user",
+    workshop_variations: "fa-shapes",
     resources:           "fa-book",
     scholarships:        "fa-graduation-cap",
     notifications:       "fa-bell",

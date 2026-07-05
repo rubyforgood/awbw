@@ -5,6 +5,7 @@ class ResourcesController < ApplicationController
 
   def index
     authorize!
+    @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 18

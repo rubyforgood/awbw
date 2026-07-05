@@ -40,12 +40,7 @@
 
     <%= render "filters" %>
 
-    <% if @donor %>
-      <div class="mb-4 flex items-center gap-2 text-sm text-gray-600">
-        <span>Filtered to <span class="font-medium text-gray-900"><%= @donor.try(:name) || @donor.try(:full_name) %></span></span>
-        <%= link_to "Clear", grants_path, class: "text-blue-600 hover:underline" %>
-      </div>
-    <% end %>
+    <%= render "shared/filtered_to", record: @donor, clear_path: grants_path %>
 
     <%# Results load in a turbo frame so the filter form (outside the frame) can
         swap just the table — blurring the old rows while the next page loads and

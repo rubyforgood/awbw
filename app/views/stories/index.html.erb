@@ -20,6 +20,8 @@
 
     <%= render "search_boxes" %>
 
+    <%= render "shared/filtered_to", record: @author, clear_path: stories_path %>
+
     <%= render "stories_count" %>
 
     <% result_src = stories_path + "?" + request.query_string %>
