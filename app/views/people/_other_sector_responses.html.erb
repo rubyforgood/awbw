@@ -1,0 +1,20 @@
+<%# Chips for a person's free-text "Other" sector responses (OtherResponse
+    records). Read-only on the profile; on the edit form (dismissable: true)
+    each chip carries an × that dismisses it (hides it from the profile/edit).
+    Renders bare chips — the caller supplies the surrounding flex container. %>
+<% responses ||= [] %>
+<% dismissable = local_assigns.fetch(:dismissable, false) %>
+<% responses.each do |response| %>
+  <span class="inline-flex items-center rounded-md border border-gray-300 bg-white text-gray-600 px-3 py-1 text-sm font-medium"
+        title="Other response entered during registration">
+    <%= response.text %>
+    <span class="ml-1 text-xs text-gray-400">(other)</span>
+    <% if dismissable %>
+      <%= link_to "×",
+                  other_response_path(response, other_response: { status: "dismissed" }, return_to: "person_edit"),
+                  data: { turbo_method: :patch },
+                  class: "ml-2 -mr-1 px-1 leading-none text-gray-400 hover:text-red-600",
+                  title: "Hide this response from the profile" %>
+    <% end %>
+  </span>
+<% end %>

@@ -14,9 +14,9 @@ RSpec.describe "Person Other form responses", type: :request do
   before { sign_in admin }
 
   describe "profile page" do
-    it "shows the Other service area as a free-text chip, not the primary sector" do
+    it "shows the Other sector as a free-text chip, not the primary sector" do
       person.update!(profile_show_sectors: true)
-      answer("primary_service_area", "Other: Equine therapy")
+      create(:other_response, person: person, kind: "sector", text: "Equine therapy")
 
       get person_path(person)
 
@@ -26,15 +26,25 @@ RSpec.describe "Person Other form responses", type: :request do
       equine_chip = response.body[/Equine therapy.{0,80}/m]
       expect(equine_chip).to include("(other)")
     end
+
+    it "hides a dismissed Other sector" do
+      person.update!(profile_show_sectors: true)
+      create(:other_response, :dismissed, person: person, kind: "sector", text: "Equine therapy")
+
+      get person_path(person)
+
+      expect(response.body).not_to include("Equine therapy")
+    end
   end
 
   describe "edit page" do
-    it "shows the Other service area in the sectors section" do
-      answer("primary_service_area_single", "Other: Music therapy")
+    it "shows the Other sector in the sectors section with a dismiss control" do
+      create(:other_response, person: person, kind: "sector", text: "Music therapy")
 
       get edit_person_path(person)
 
       expect(response.body).to include("Music therapy")
+      expect(response.body).to include("Hide this response from the profile")
     end
 
     it "shows the Other workshop setting near the category checkboxes" do

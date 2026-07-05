@@ -172,6 +172,11 @@ Rails.application.routes.draw do
     resources :comments, only: [ :index, :create, :update ]
   end
   resources :faqs
+  resources :other_responses, only: [ :index, :update ] do
+    collection do
+      post :promote
+    end
+  end
   resources :notifications, only: [ :index, :show, :update ] do
     member do
       post :resend

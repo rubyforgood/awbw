@@ -102,6 +102,7 @@ This codebase (Rails 8.1)
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
+| `OtherResponse` | A free-text "Other" a person typed on a tag-backed form question (`kind: "sector"` today), captured at registration so a curator can `promote` it into a real `Sector` tag, `keep` it as a chip, or `dismiss` it (hide from profile/edit). Reviewed at `/other_responses` |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
 | `Grant` | Donated funds (polymorphic `donor`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
 | `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |

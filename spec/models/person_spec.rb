@@ -421,23 +421,17 @@ RSpec.describe Person, type: :model do
     end
 
     describe "#other_sector_responses" do
-      # Exercises the legacy "service area" field identifiers on purpose — they
-      # must still resolve via FormField::SECTOR_FIELD_IDENTIFIERS.
-      it "returns free-text Other values from primary sector fields" do
-        answer("primary_service_area", "5, Other: Equine therapy")
-        answer("primary_service_area_single", "Other: Music therapy")
+      it "returns the person's visible sector OtherResponses" do
+        create(:other_response, person: person, kind: "sector", text: "Equine therapy")
+        create(:other_response, :kept, person: person, kind: "sector", text: "Music therapy")
 
-        expect(person.other_sector_responses).to contain_exactly("Equine therapy", "Music therapy")
+        expect(person.other_sector_responses.map(&:text))
+          .to contain_exactly("Equine therapy", "Music therapy")
       end
 
-      it "ignores answers without an Other value" do
-        answer("primary_service_area", "5, 12")
-
-        expect(person.other_sector_responses).to be_empty
-      end
-
-      it "does not pull from unrelated fields" do
-        answer("primary_age_group", "Other: School")
+      it "omits dismissed and promoted responses" do
+        create(:other_response, :dismissed, person: person, kind: "sector", text: "Hidden")
+        create(:other_response, :promoted, person: person, kind: "sector", text: "Promoted")
 
         expect(person.other_sector_responses).to be_empty
       end

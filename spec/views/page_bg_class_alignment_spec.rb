@@ -99,6 +99,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/taggings/matrix.html.erb"               => "admin-only bg-blue-100",
     # index
     "app/views/allocations/index.html.erb"             => "admin-only bg-blue-100",
+    "app/views/other_responses/index.html.erb"         => "admin-only bg-blue-100",
     "app/views/banners/index.html.erb"                 => "admin-only bg-blue-100",
     "app/views/comments/index.html.erb"                => "admin-only bg-blue-100",
     "app/views/bookmarks/index.html.erb"               => "admin-only bg-blue-100",

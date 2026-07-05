@@ -1,0 +1,63 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<%= link_to sectors_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1 mb-2" do %>
+  <i class="fa-solid fa-arrow-left text-xs"></i> Sectors
+<% end %>
+<div class="<%= DomainTheme.bg_class_for(:sectors) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Review “Other” sectors</h1>
+        <p class="text-sm text-gray-600 mt-1">
+          Free-text sectors people typed on registration forms, grouped by value.
+          Promote a recurring one into a real sector tag for everyone who typed it.
+        </p>
+      </div>
+    </div>
+
+    <div class="rounded-xl bg-white p-6">
+      <% if @groups.any? %>
+        <table class="w-full border-collapse border border-gray-200">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Response</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-24">People</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/2">Promote to a sector</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @groups.each do |group| %>
+              <tr class="border-t border-gray-200 align-top">
+                <td class="px-4 py-3 text-sm text-gray-800">
+                  <span class="font-medium"><%= group[:display_text] %></span>
+                  <% if group[:status_counts]["kept"].to_i.positive? %>
+                    <span class="ml-1 text-xs text-gray-400">(<%= group[:status_counts]["kept"] %> kept)</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-center text-sm text-gray-700"><%= group[:count] %></td>
+                <td class="px-4 py-3">
+                  <%= form_with url: promote_other_responses_path, method: :post,
+                               class: "flex flex-wrap items-center gap-2" do %>
+                    <%= hidden_field_tag :normalized_text, group[:normalized_text] %>
+                    <%= select_tag :sector_id,
+                                   options_from_collection_for_select(@sectors, :id, :name),
+                                   include_blank: "Existing sector…",
+                                   class: "rounded-md border-gray-300 text-sm" %>
+                    <span class="text-xs text-gray-400">or</span>
+                    <%= text_field_tag :new_sector_name, group[:display_text],
+                                       placeholder: "New sector name",
+                                       class: "rounded-md border-gray-300 text-sm" %>
+                    <%= submit_tag "Promote", class: "btn btn-primary-outline text-sm",
+                                   data: { turbo_confirm: "Promote “#{group[:display_text]}” for all #{group[:count]} people?" } %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="text-gray-500 italic">No “Other” sector responses to review.</p>
+      <% end %>
+    </div>
+  </div>
+</div>

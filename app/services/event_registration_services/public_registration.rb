@@ -442,6 +442,7 @@ module EventRegistrationServices
     def create_form_submission(person)
       submission = FormSubmission.create!(person: person, form: @registration_form, event: @event, role: "registration")
       save_form_answers(submission)
+      capture_other_sector_responses(submission)
       submission
     end
 
@@ -450,7 +451,28 @@ module EventRegistrationServices
         record.event = @event
       end
       save_form_answers(submission)
+      capture_other_sector_responses(submission)
       submission
+    end
+
+    # Materialize the free-text "Other" sector answers as OtherResponse records so
+    # they can be curated (promoted/kept/dismissed). Reuses OtherOption.texts, the
+    # same extraction used to display them, and de-dupes on the person's normalized
+    # value so a repeat registration of the same text doesn't create a second row.
+    def capture_other_sector_responses(submission)
+      submission.form_answers
+        .joins(:form_field)
+        .where(form_fields: { field_identifier: FormField::SECTOR_FIELD_IDENTIFIERS })
+        .each do |answer|
+          OtherOption.texts(answer.submitted_answer).each do |text|
+            submission.person.other_responses.find_or_create_by!(
+              kind: "sector", normalized_text: OtherResponse.normalize(text)
+            ) do |response|
+              response.text = text
+              response.source_form_answer = answer
+            end
+          end
+        end
     end
 
     def save_form_answers(submission)
