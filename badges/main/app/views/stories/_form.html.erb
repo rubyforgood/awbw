@@ -255,18 +255,19 @@
 
   <div class="flex flex-col md:flex-row md:space-x-4">
     <div class="flex-1 mb-4 md:mb-0">
+      <% story_author_id = f.object.author_person&.id || current_user.person_id %>
       <%= f.input :author_id,
                   collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
                   prompt: "Select an author",
-                  required: true,
+                  selected: story_author_id,
+                  hint: "Defaults to the creator; change to credit someone else.",
                   label: (f.object.author ? (
                     link_to "Story author",
                             person_path(f.object.author),
                             class: "hover:underline") : "Story author").html_safe,
                   label_html: { class: "block font-medium mb-1 text-gray-700" },
                   input_html: {
-                    required: true,
-                    class: select_caret_class(blank: f.object.author_id.blank?),
+                    class: select_caret_class(blank: story_author_id.blank?),
                     style: custom_caret_style,
                     onchange: select_caret_onchange
                   } %>

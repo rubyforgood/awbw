@@ -16,7 +16,7 @@ class WorkshopsController < ApplicationController
       track_index_intent(Workshop, search_service.workshops, params)
 
       @workshops = authorized_scope(search_service.workshops
-                                                  .includes(:categories, :windows_type, :bookmarks,
+                                                  .includes(:categories, :windows_type, :bookmarks, :author,
                                                             created_by: [ :person ], primary_asset: [ :file_attachment ]))
                                                   .paginate(page: params[:page], per_page: params[:per_page] || 12)
 
@@ -198,6 +198,7 @@ class WorkshopsController < ApplicationController
     potential_series = potential_series.where.not(id: @workshop.id) if @workshop.persisted?
     @potential_series_workshops = authorized_scope(potential_series).order(:title)
     @windows_types = WindowsType.all
+    @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
     @workshop_ideas = authorized_scope(WorkshopIdea.order(created_at: :desc))
                                   .map { |wi|
                                     [ "#{wi.created_at.strftime("%Y-%m-%d")
@@ -225,7 +226,7 @@ class WorkshopsController < ApplicationController
   def workshop_params
     params.require(:workshop).permit(
       :title, :featured, :published,
-      :full_name, :created_by_id, :windows_type_id, :workshop_idea_id, :author_credit_preference,
+      :full_name, :author_id, :windows_type_id, :workshop_idea_id, :author_credit_preference,
       :month, :year,
       :publicly_visible,
       :publicly_featured,

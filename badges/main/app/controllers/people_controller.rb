@@ -44,7 +44,9 @@ class PeopleController < ApplicationController
 
       case section
       when "workshops"
-        @workshops = @person.user&.workshops&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        # Credit the person for workshops they authored — not ones their user
+        # merely created (created_by is a pure audit trail).
+        @workshops = @person.workshops_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshops", locals: { person: @person, workshops: @workshops }
       when "workshop_variations"
         # Credit the person for variations they authored — not ones their user

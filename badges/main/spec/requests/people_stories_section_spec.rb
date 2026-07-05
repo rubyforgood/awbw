@@ -30,8 +30,9 @@ RSpec.describe "Person profile stories section", type: :request do
     expect(response.body).to include("Spotlight Story")
   end
 
-  it "excludes stories the person's user merely created (audit trail only)" do
-    create(:story, :published, title: "Only Created Story", created_by: owner_user)
+  it "excludes stories the person only created but credited to someone else" do
+    create(:story, :published, title: "Only Created Story",
+                               created_by: owner_user, author: create(:person))
 
     get_stories_section
 

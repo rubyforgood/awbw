@@ -159,5 +159,23 @@ RSpec.describe Story, type: :model do
       expect(results).to include(org_story)
       expect(results).not_to include(published_story, draft_story, old_story)
     end
+
+    context 'when the query matches a credited person name' do
+      let(:creator) { create(:user, person: create(:person, first_name: 'Zephyrina', last_name: 'Quackenbush')) }
+      let(:facilitator) { create(:person, first_name: 'Bartholomew', last_name: 'Snazzlepants') }
+      let!(:authored_story) { create(:story, :published, title: 'No Name Match', created_by: creator, author: facilitator) }
+
+      it 'finds stories by the explicit author name' do
+        results = Story.search_by_params(query: 'Bartholomew')
+        expect(results).to include(authored_story)
+        expect(results).not_to include(published_story)
+      end
+
+      it "finds stories by the creating user's person name" do
+        created_story = create(:story, :published, title: 'Creator Only', created_by: creator)
+        results = Story.search_by_params(query: 'Zephyrina')
+        expect(results).to include(created_story)
+      end
+    end
   end
 end
