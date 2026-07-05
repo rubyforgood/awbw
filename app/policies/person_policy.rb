@@ -59,6 +59,7 @@ class PersonPolicy < ApplicationPolicy
       record.stories_as_author.exists? ||
       record.workshop_variations_as_author.exists? ||
       record.workshops_as_author.exists? ||
-      record.community_news_as_author.exists?
+      record.community_news_as_author.exists? ||
+      record.resources_as_author.exists?
   end
 end
