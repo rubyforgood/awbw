@@ -26,6 +26,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
     profile_show_workshops: "mb-3\">Workshops authored</h2>",
     profile_show_workshop_variations: "Workshop variations authored",
     profile_show_stories: "Stories authored/featured",
+    profile_show_resources: "mb-3\">Resources authored</h2>",
     profile_show_events_registered: "Participation history"
   }.each do |flag, marker|
     describe "##{flag}" do

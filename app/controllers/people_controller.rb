@@ -60,6 +60,11 @@ class PeopleController < ApplicationController
           @person.stories_as_spotlighted_facilitator.pluck(:id)
         @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
+      when "resources"
+        # Credit the person for resources they authored — not ones their user
+        # merely entered (created_by is a pure audit trail).
+        @resources = @person.resources_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/resources", locals: { person: @person, resources: @resources }
       when "events"
         @event_registrations = @person.event_registrations.active.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
@@ -480,6 +485,7 @@ class PeopleController < ApplicationController
       :profile_show_workshops,
       :profile_show_workshop_ideas,
       :profile_show_workshop_logs,
+      :profile_show_resources,
       :member_since,
       :linked_in_url,
       :facebook_url,

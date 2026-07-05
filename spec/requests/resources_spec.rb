@@ -107,6 +107,16 @@ RSpec.describe "/resources", type: :request do
 
         expect(response).to redirect_to(resource_url(Resource.last))
       end
+
+      it "credits the chosen person as author and records the creator" do
+        facilitator = create(:person)
+
+        post resources_url, params: { resource: valid_attributes.merge(author_id: facilitator.id) }
+
+        resource = Resource.last
+        expect(resource.author).to eq(facilitator)
+        expect(resource.created_by).to eq(user)
+      end
     end
 
     context "with invalid parameters" do

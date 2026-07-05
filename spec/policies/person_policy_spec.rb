@@ -197,6 +197,21 @@ RSpec.describe PersonPolicy, type: :policy do
         expect(policy).not_to be_allowed_to(:destroy?)
       end
     end
+
+    context "when person has authored resources" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      before do
+        create(:resource, author: person)
+      end
+
+      it "is not allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).not_to be_allowed_to(:destroy?)
+      end
+    end
   end
 
   describe "relation_scope" do

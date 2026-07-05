@@ -56,6 +56,39 @@
 
   </div>
 
+  <!-- Author -->
+  <div class="flex flex-col md:flex-row md:space-x-4 mb-6">
+    <div class="flex-1 mb-4 md:mb-0" data-controller="searchable-select" data-searchable-select-mode-value="person">
+      <%= f.input :author_id,
+                  as: :select,
+                  collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                  include_blank: "Select an author",
+                  selected: (f.object.author_person&.id || current_user.person_id),
+                  label: (f.object.author ? (
+                    link_to "Resource author",
+                            person_path(f.object.author),
+                            class: "hover:underline") : "Resource author").html_safe,
+                  label_html: { class: "block font-medium mb-1 text-gray-700" },
+                  input_html: { class: "w-full rounded border-gray-300",
+                                data: { searchable_select_target: "select" } } %>
+      <% if f.object.legacy_author_name.present? %>
+        <p class="mt-1 text-xs text-gray-500 italic">Legacy author credit: <%= f.object.legacy_author_name %></p>
+      <% end %>
+    </div>
+
+    <div class="flex-1 mb-4 md:mb-0">
+      <%= f.input :author_credit_preference,
+                  as: :select,
+                  collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
+                  include_blank: "Select a preference",
+                  selected: f.object.author_credit_preference || "full_name",
+                  label: "Author credit preference",
+                  hint: "Controls how the author’s name is displayed",
+                  label_html: { class: "block font-medium mb-1 text-gray-700" },
+                  input_html: { class: "w-full rounded border-gray-300" } %>
+    </div>
+  </div>
+
   <!-- Second Row -->
   <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
     <%= rhino_editor(f, :body, label: "Description") %>

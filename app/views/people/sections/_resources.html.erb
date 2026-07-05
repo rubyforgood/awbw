@@ -1,0 +1,14 @@
+<%= turbo_frame_tag "person_resources_section" do %>
+  <% if resources.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6 blur-on-submit">
+      <% resources.each do |resource| %>
+        <%= render "show_card", record: resource.decorate, title_font_size: "text-sm" %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center">
+      <%= tailwind_paginate resources, params: { section: "resources" } %>
+    </div>
+  <% else %>
+    <p class="text-gray-500 italic">No resources yet.</p>
+  <% end %>
+<% end %>
