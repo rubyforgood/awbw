@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_05_005115) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_05_011531) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -384,7 +384,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_05_005115) do
   end
 
   create_table "community_news", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.integer "author_id", null: false
+    t.string "author_credit_preference", default: "full_name"
+    t.bigint "author_id"
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
@@ -397,6 +398,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_05_005115) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
+    t.integer "user_author_id"
     t.integer "windows_type_id"
     t.string "youtube_url"
     t.index ["author_id"], name: "index_community_news_on_author_id"
@@ -404,6 +406,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_05_005115) do
     t.index ["created_by_id"], name: "index_community_news_on_created_by_id"
     t.index ["organization_id"], name: "index_community_news_on_organization_id"
     t.index ["updated_by_id"], name: "index_community_news_on_updated_by_id"
+    t.index ["user_author_id"], name: "index_community_news_on_user_author_id"
     t.index ["windows_type_id"], name: "index_community_news_on_windows_type_id"
   end
 
@@ -1687,9 +1690,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_05_005115) do
   add_foreign_key "comments", "users", column: "created_by_id"
   add_foreign_key "comments", "users", column: "updated_by_id"
   add_foreign_key "community_news", "organizations"
-  add_foreign_key "community_news", "users", column: "author_id"
+  add_foreign_key "community_news", "people", column: "author_id"
   add_foreign_key "community_news", "users", column: "created_by_id"
   add_foreign_key "community_news", "users", column: "updated_by_id"
+  add_foreign_key "community_news", "users", column: "user_author_id"
   add_foreign_key "community_news", "windows_types"
   add_foreign_key "contact_methods", "addresses"
   add_foreign_key "continuing_education_registrations", "event_registrations"

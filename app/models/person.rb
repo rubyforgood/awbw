@@ -28,6 +28,8 @@ class Person < ApplicationRecord
            foreign_key: :author_id, dependent: :restrict_with_error
   has_many :workshops_as_author, inverse_of: :author, class_name: "Workshop", foreign_key: :author_id,
            dependent: :restrict_with_error
+  has_many :community_news_as_author, inverse_of: :author, class_name: "CommunityNews", foreign_key: :author_id,
+           dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
   has_many :event_staffs, dependent: :destroy
