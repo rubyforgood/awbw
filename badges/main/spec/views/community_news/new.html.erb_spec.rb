@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "community_news/new", type: :view do
-  let(:admin) { create(:user, :admin) }
+  let(:admin) { create(:user, :admin, :with_person) }
 
   before(:each) do
     sign_in admin
@@ -15,7 +15,7 @@ RSpec.describe "community_news/new", type: :view do
       youtube_url: "MyString",
       published: false,
       featured: false,
-      author: create(:user),
+      author: create(:person),
       reference_url: "MyString",
       organization: nil,
       windows_type: nil,
@@ -23,11 +23,7 @@ RSpec.describe "community_news/new", type: :view do
       updated_by: create(:user),
     ))
 
-    assign(:authors, [
-      [ "User 1", create(:user).id ],
-      [ admin.full_name, admin.id ],
-      [ "User 2", create(:user).id ]
-    ])
+    assign(:people, [ create(:person), admin.person, create(:person) ])
   end
 
   it "renders new community_news form" do
@@ -46,19 +42,21 @@ RSpec.describe "community_news/new", type: :view do
 
       assert_select "select[name=?]", "community_news[author_id]"
 
+      assert_select "select[name=?]", "community_news[author_credit_preference]"
+
       assert_select "textarea[name=?]", "community_news[reference_url]"
 
       assert_select "select[name=?]", "community_news[organization_id]"
     end
   end
 
-  it "defaults author_id to current_user" do
+  it "defaults author_id to the current user's person" do
     assign(:community_news, CommunityNews.new())
 
     render
 
     assert_select "select[name=?]", "community_news[author_id]" do
-      assert_select "option[selected=?][value=?]", "selected", admin.id.to_s
+      assert_select "option[selected=?][value=?]", "selected", admin.person.id.to_s
     end
   end
 end

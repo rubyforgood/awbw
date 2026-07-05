@@ -1,11 +1,14 @@
 class CommunityNews < ApplicationRecord
-  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable, AuthorCreditable
 
   has_rich_text :rhino_body
 
   belongs_to :organization, optional: true
   belongs_to :windows_type, optional: true
-  belongs_to :author, class_name: "User", optional: true
+  belongs_to :author, class_name: "Person", inverse_of: :community_news_as_author, optional: true
+  # Legacy "display author" pick, before author became a person. Kept so
+  # existing rows credit the chosen person without a backfill.
+  belongs_to :user_author, class_name: "User", foreign_key: :user_author_id, optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -25,9 +28,17 @@ class CommunityNews < ApplicationRecord
   has_many :sectors, through: :sectorable_items
 
   # Validations
-  validates :author_id, presence: true
+  # author is required in the form; left optional at the model so legacy rows
+  # (created before author became a person) remain valid.
   validates :title, presence: true, length: { maximum: 150 }
   validates :rhino_body, presence: true
+
+  # Credit the explicit person author, then the legacy display-author user's
+  # person, then the creating user's person — so existing rows keep their
+  # attribution without a backfill. Overrides AuthorCreditable's default.
+  def author_person
+    author || user_author&.person || created_by&.person
+  end
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
@@ -41,7 +52,7 @@ class CommunityNews < ApplicationRecord
   search_scope :search do
     attributes :title, :published, person_first: "people.first_name", person_last: "people.last_name"
 
-    scope { join_rich_texts.left_joins(author: :person) }
+    scope { join_rich_texts.left_joins(:author) }
     attributes action_text_body: "action_text_rich_texts.plain_text_body"
   end
 
