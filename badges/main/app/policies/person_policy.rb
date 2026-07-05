@@ -56,6 +56,7 @@ class PersonPolicy < ApplicationPolicy
     record.user.present? ||
       record.affiliations.exists? ||
       record.stories_as_spotlighted_facilitator.exists? ||
-      record.stories_as_author.exists?
+      record.stories_as_author.exists? ||
+      record.workshop_variations_as_author.exists?
   end
 end
