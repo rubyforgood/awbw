@@ -51,7 +51,7 @@ class NotificationsController < ApplicationController
       root_notification_id: root_id
     )
 
-    redirect_to @notification, notice: "Notification email has been resent successfully."
+    redirect_to @notification, notice: t("communications.resent")
   end
 
   private
