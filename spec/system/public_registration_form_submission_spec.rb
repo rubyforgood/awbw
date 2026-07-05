@@ -232,7 +232,7 @@ RSpec.describe "Public form submissions", type: :system do
       choose_bp_radio bp_field("payment_method"), "Check"
 
       click_button "Submit"
-      expect(page).to have_content("bulk payment information has been submitted")
+      expect(page).to have_content("payment information has been submitted")
 
       person = Person.find_by!(email: "pat.morgan@example.com")
       expect(person).to have_attributes(first_name: "Pat", last_name: "Morgan")
@@ -262,7 +262,7 @@ RSpec.describe "Public form submissions", type: :system do
       choose_bp_radio bp_field("payment_method"), "Check"
 
       expect { click_button "Submit" }.not_to change(Person, :count)
-      expect(page).to have_content("bulk payment information has been submitted")
+      expect(page).to have_content("payment information has been submitted")
 
       submission = FormSubmission.bulk_payment.find_by!(person: logged_in_person, event: event)
       expect(answers_by_identifier(submission)).to include(

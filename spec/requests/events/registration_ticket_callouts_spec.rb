@@ -43,7 +43,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
       get event_registration_ticket_callout_path(event, callout)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include(resource_download_path(resource))
+      expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
     end
 
     it "does not find a callout belonging to a different event" do
@@ -68,7 +68,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Read this first.")
-        expect(response.body).to include(resource_download_path(resource))
+        expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
       end
     end
 
@@ -83,7 +83,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
         get event_registration_ticket_callout_path(event, callout)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).not_to include(resource_download_path(resource))
+        expect(response.body).not_to include("fa-download")
       end
     end
   end

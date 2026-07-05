@@ -105,19 +105,15 @@
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
     <div class="flex flex-col">
+      <% agency_type_option = f.object.decorate.agency_type_option %>
       <%= f.input :agency_type,
                   label: "Organization Type",
                   as: :select,
                   required: true,
-                  collection: [
-                    "501c3/nonprofit",
-                    "For-profit",
-                    "Government agency",
-                    "Other (please specify below)"
-                  ],
-                  selected: f.object.agency_type,
+                  collection: Organization::AGENCY_TYPES,
+                  selected: agency_type_option,
                   input_html: {
-                    value: f.object.agency_type,
+                    value: agency_type_option,
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
       <%= f.input :agency_type_other,
@@ -160,17 +156,11 @@
       </div>
     <% end %>
 
-    <% if params[:admin] && allowed_to?(:manage?, Organization) %>
-      <%= f.input :organization_status_id,
-                  as: :select,
-                  collection: @organization_statuses,
-                  include_blank: true,
-                  label: "Status",
-                  required: true,
-                  input_html: {
-                    class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                  } %>
-    <% else %>
+    <% facilitator_status_name = f.object.affiliations.facilitators.active.exists? ? "Active" : "Inactive" %>
+    <% status_matches_affiliations = f.object.organization_status&.name == facilitator_status_name %>
+    <% show_status_select = allowed_to?(:manage?, Organization) &&
+         (params[:admin] || (f.object.persisted? && !status_matches_affiliations)) %>
+    <% unless show_status_select %>
       <%= f.hidden_field :organization_status_id, value: f.object.organization_status_id || OrganizationStatus.find_by(name: "Active")&.id %>
     <% end %>
   </div>
@@ -252,7 +242,24 @@
       Affiliations
     </div>
 
-    <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 mb-4 shadow-sm">
+    <div class="relative rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 mb-4 shadow-sm">
+      <% if show_status_select %>
+        <div class="absolute top-4 right-4 z-10 w-56">
+          <%= f.input :organization_status_id,
+                      as: :select,
+                      collection: @organization_statuses,
+                      include_blank: true,
+                      label: "Organization status",
+                      required: true,
+                      wrapper_html: { class: "mb-0" },
+                      input_html: {
+                        class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      } %>
+          <% unless status_matches_affiliations %>
+            <p class="mt-1 text-xs text-red-600">Does not match affiliations status</p>
+          <% end %>
+        </div>
+      <% end %>
       <% org_earliest_aff = f.object.persisted? ? f.object.affiliations.minimum(:start_date) : nil %>
       <% org_aff_ended = f.object.persisted? && f.object.affiliations.any? && !f.object.affiliations.active.exists? %>
       <% org_latest_end = f.object.persisted? ? f.object.affiliations.maximum(:end_date) : nil %>

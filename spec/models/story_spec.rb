@@ -3,6 +3,27 @@ require 'rails_helper'
 RSpec.describe Story, type: :model do
   it_behaves_like "author_creditable", factory: :story
 
+  describe "#author_person" do
+    let(:creator) { create(:user, :with_person) }
+    let(:facilitator) { create(:person) }
+
+    it "returns the explicitly chosen author when present" do
+      story = create(:story, created_by: creator, author: facilitator)
+      expect(story.author_person).to eq(facilitator)
+    end
+
+    it "falls back to the creating user's person when no author is set" do
+      story = create(:story, created_by: creator, author: nil)
+      expect(story.author_person).to eq(creator.person)
+    end
+
+    it "credits the author over the creator via author_credit" do
+      story = create(:story, created_by: creator, author: facilitator,
+                             author_credit_preference: "full_name")
+      expect(story.author_credit).to eq(facilitator.full_name)
+    end
+  end
+
   describe "#attach_assets_from_idea!" do
     let(:idea) { create(:story_idea) }
     let(:story) { create(:story, story_idea: idea) }
@@ -137,6 +158,24 @@ RSpec.describe Story, type: :model do
       results = Story.search_by_params(organization_id: organization.id)
       expect(results).to include(org_story)
       expect(results).not_to include(published_story, draft_story, old_story)
+    end
+
+    context 'when the query matches a credited person name' do
+      let(:creator) { create(:user, person: create(:person, first_name: 'Zephyrina', last_name: 'Quackenbush')) }
+      let(:facilitator) { create(:person, first_name: 'Bartholomew', last_name: 'Snazzlepants') }
+      let!(:authored_story) { create(:story, :published, title: 'No Name Match', created_by: creator, author: facilitator) }
+
+      it 'finds stories by the explicit author name' do
+        results = Story.search_by_params(query: 'Bartholomew')
+        expect(results).to include(authored_story)
+        expect(results).not_to include(published_story)
+      end
+
+      it "finds stories by the creating user's person name" do
+        created_story = create(:story, :published, title: 'Creator Only', created_by: creator)
+        results = Story.search_by_params(query: 'Zephyrina')
+        expect(results).to include(created_story)
+      end
     end
   end
 end

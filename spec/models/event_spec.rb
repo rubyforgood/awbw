@@ -261,6 +261,23 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#registration_form_ids" do
+    it "returns only the ids of forms linked with the registration role" do
+      event = create(:event)
+      registration_form = create(:form, name: "Registration")
+      bulk_payment_form = create(:form, name: "Bulk payment")
+      create(:event_form, event: event, form: registration_form, role: "registration")
+      create(:event_form, event: event, form: bulk_payment_form, role: "bulk_payment")
+
+      expect(event.registration_form_ids).to contain_exactly(registration_form.id)
+    end
+
+    it "returns an empty array when no registration form is linked" do
+      event = create(:event)
+      expect(event.registration_form_ids).to eq([])
+    end
+  end
+
   describe "#one_click_for_signed_in?" do
     it "is true when no registration form is linked" do
       event = create(:event)
@@ -313,6 +330,38 @@ RSpec.describe Event, type: :model do
     it 'returns empty for non-matching query' do
       results = Event.search_by_params(query: 'nonexistent')
       expect(results).not_to include(art_event, music_event)
+    end
+  end
+
+  describe "#ce_hours_cost (dollars)" do
+    it "is nil when no cost is set" do
+      expect(build(:event, ce_hours_cost_cents: nil).ce_hours_cost).to be_nil
+    end
+
+    it "reads the stored cost back in dollars" do
+      expect(build(:event, ce_hours_cost_cents: 15_000).ce_hours_cost).to eq(150)
+    end
+
+    it "converts a dollar amount to cents on assignment" do
+      expect(build(:event, ce_hours_cost: 150).ce_hours_cost_cents).to eq(15_000)
+    end
+
+    it "clears the cents when assigned blank" do
+      expect(build(:event, ce_hours_cost: "").ce_hours_cost_cents).to be_nil
+    end
+  end
+
+  describe "#ce_eligible?" do
+    it "is true when the event offers a positive number of CE hours" do
+      expect(build(:event, ce_hours_offered: 6)).to be_ce_eligible
+    end
+
+    it "is false when no CE hours are offered" do
+      expect(build(:event, ce_hours_offered: nil)).not_to be_ce_eligible
+    end
+
+    it "is false when CE hours are zero" do
+      expect(build(:event, ce_hours_offered: 0)).not_to be_ce_eligible
     end
   end
 end

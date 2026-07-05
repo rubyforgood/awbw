@@ -11,7 +11,7 @@
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:users, intensity: 100) %> <%= DomainTheme.text_class_for(:users, intensity: 600) %>">
       <i class="fa-solid fa-bell"></i>
     </span>
-    <h2 class="text-sm font-semibold text-gray-700">Registration communications</h2>
+    <h2 class="text-sm font-semibold text-gray-700"><%= t("communications.registration_title") %></h2>
     <% if email.present? %>
       <%= link_to notifications_path(email: email),
                   class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
@@ -42,20 +42,20 @@
         <div data-paginated-fields-target="nav"></div>
       </div>
     <% else %>
-      <p class="text-sm text-gray-400">No notifications for this registrant yet.</p>
+      <p class="text-sm text-gray-400"><%= t("communications.none_for_registrant") %></p>
     <% end %>
 
     <%# Inline add — manual log entries, saved with the registration form. %>
     <div class="space-y-2 border-t border-gray-100 pt-3">
       <%= f.simple_fields_for :notifications, registration.notifications.select(&:new_record?) do |nf| %>
-        <%= render "notifications/notification_fields", f: nf, event_registration: registration %>
+        <%= render "notifications/notification_fields", f: nf, record: registration %>
       <% end %>
       <%= link_to_add_association f, :notifications,
             partial: "notifications/notification_fields",
-            render_options: { locals: { event_registration: registration } },
+            render_options: { locals: { record: registration } },
             class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
         <i class="fa-solid fa-plus text-[0.6rem]"></i>
-        Add notification
+        <%= t("communications.add") %>
       <% end %>
     </div>
   </div>

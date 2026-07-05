@@ -82,7 +82,6 @@
       <%# Grand total — full-width headline read as an inline equation:
           $grand = $registration + $scholarships + $cont_ed. Left-aligned; the headline
           figure dominates while the addends stay muted, and the row wraps on mobile. %>
-      <% show_bulk_payments = @dashboard.unallocated_bulk_payment_cents.positive? %>
       <%# Each equation term is colorless at rest and reveals its domain color on
           hover — a tinted fill + darker border, matching the amber bulk-payments
           term's look but per-domain. border-transparent reserves the border so
@@ -103,9 +102,9 @@
               Each addend links to where its money is managed. %>
           <div class="lg:shrink-0 lg:pt-2">
             <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <%= link_to dollars_from_cents(@dashboard.grand_total_cents), registrants_event_path(@event),
+              <%= link_to dollars_from_cents(@dashboard.grand_total_cents), revenue_events_path(return_to: "dashboard", event_id: @event.id),
                     class: "text-3xl sm:text-4xl font-bold #{DomainTheme.text_class_for(:event_dashboard, intensity: 700)} tabular-nums #{addend_class.call(:event_dashboard)}",
-                    title: "View all registrants" %>
+                    title: "View the event revenue report" %>
               <span class="text-2xl font-light text-gray-300 select-none">=</span>
               <%= link_to registrants_event_path(@event), class: addend_class.call(:payments), title: "Manage registrants" do %>
                 <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.registration_subtotal_cents) %></p>
@@ -121,8 +120,8 @@
                 <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_total_cents) %></p>
                 <p class="hidden lg:block text-xs text-gray-500">CE fees</p>
               <% end %>
-              <% if show_bulk_payments %>
-                <span class="text-2xl font-light text-gray-300 select-none">+</span>
+              <span class="text-2xl font-light text-gray-300 select-none">+</span>
+              <% if @dashboard.unallocated_bulk_payment_cents.positive? %>
                 <%# Styled like the "Amount due" subcard on a registration: a little
                     amber-bordered card with a warning icon, since unallocated bulk
                     payment money still needs action. %>
@@ -133,9 +132,14 @@
                   </p>
                   <p class="hidden lg:block text-xs text-gray-500">Unallocated bulk payments</p>
                 <% end %>
+              <% else %>
+                <%= link_to bulk_payments_event_path(@event), class: addend_class.call(:bulk_payments), title: "View bulk payments" do %>
+                  <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:bulk_payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.unallocated_bulk_payment_cents) %></p>
+                  <p class="hidden lg:block text-xs text-gray-500">Bulk payments</p>
+                <% end %>
               <% end %>
             </div>
-            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees<%= " + unallocated bulk payments" if show_bulk_payments %></p>
+            <p class="mt-1 text-xs text-gray-500 lg:hidden">Registration fees + scholarships + CE fees + bulk payments</p>
           </div>
 
           <%# Cash view of the same money: what's collected (registration paid +

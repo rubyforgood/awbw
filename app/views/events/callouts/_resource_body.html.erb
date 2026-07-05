@@ -8,7 +8,7 @@
     <% unless resource.single_page_pdf? %>
       <span class="text-xs text-gray-500">The preview shows the first page only — download to get all pages.</span>
     <% end %>
-    <%= link_to resource_download_path(resource), download: true, class: "btn btn-utility" do %>
+    <%= link_to url_for(resource.downloadable_asset.file), download: true, class: "btn btn-utility" do %>
       Download <i class="fa-solid fa-download"></i>
     <% end %>
   </div>

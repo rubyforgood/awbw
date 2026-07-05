@@ -52,9 +52,9 @@ module EventRegistrationServices
 
         organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
         if organization
-          create_affiliation(person, organization)
           sync_organization_profile(organization)
-          create_agency_address(organization) if field_value("agency_city").present?
+          agency_address = create_agency_address(organization)
+          create_affiliation(person, organization, agency_address)
         end
 
         assign_tags(person, organization)
@@ -187,7 +187,24 @@ module EventRegistrationServices
 
     def sync_organization_profile(organization)
       apply_value(organization, :website_url, field_value("agency_website"))
-      apply_value(organization, :agency_type, field_value("agency_type"))
+      sync_agency_type(organization)
+    end
+
+    # The "Organization Type" answer folds an "Other" choice's free text in as
+    # "Other: <text>" (a specify option). Split the option label from the typed
+    # text: the label drives agency_type and the stripped text fills
+    # agency_type_other, which is cleared for the non-"Other" classifications so
+    # no stale free text lingers. Follows the same latest-wins / never-clobber-on-
+    # blank contract as apply_value.
+    def sync_agency_type(organization)
+      raw = field_value("agency_type")&.strip
+      return if raw.blank?
+
+      label, _separator, specified = raw.partition(":")
+      label = label.strip
+      return if label.blank?
+      other_text = FormField.other_option?(label) ? specified.strip.presence : nil
+      organization.update!(agency_type: label, agency_type_other: other_text)
     end
 
     # Write value onto attribute when a non-blank value was submitted, overwriting
@@ -302,49 +319,24 @@ module EventRegistrationServices
         .find_or_create_by!(organization: organization)
     end
 
-    def create_affiliation(person, organization)
+    def create_affiliation(person, organization, organization_address = nil)
       AffiliationServices::CreateFromRegistration.call(
         person: person,
         organization: organization,
         job_title: field_value(ORGANIZATION_POSITION_IDENTIFIER),
-        training_date: @event.start_date
+        training_date: @event.start_date,
+        organization_address: organization_address
       )
     end
 
     def create_agency_address(organization)
-      new_city = field_value("agency_city")&.strip
-      new_state = field_value("agency_state")&.strip
-
-      existing = organization.addresses.find_by(
-        "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
-        new_city&.downcase, new_state&.downcase.to_s
-      )
-
-      # Unlike a person's mailing address, an organization accumulates work
-      # addresses from every registrant, so we never demote its existing primary:
-      # a registrant's address becomes primary only when the org has none yet.
-      make_primary = organization.addresses.active.where(primary: true).none?
-
-      if existing
-        existing.update!(
-          street_address: field_value("agency_street"),
-          zip_code: field_value("agency_zip"),
-          primary: existing.primary? || make_primary,
-          inactive: false
-        )
-        apply_value(existing, :country, field_value("agency_country"))
-        return existing
-      end
-
-      organization.addresses.create!(
+      OrganizationServices::UpsertAddress.call(
+        organization: organization,
         street_address: field_value("agency_street"),
-        city: new_city,
-        state: new_state,
+        city: field_value("agency_city"),
+        state: field_value("agency_state"),
         zip_code: field_value("agency_zip"),
-        country: field_value("agency_country")&.strip,
-        locality: "Unknown",
-        address_type: "work",
-        primary: make_primary
+        country: field_value("agency_country")
       )
     end
 

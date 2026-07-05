@@ -51,7 +51,7 @@ RSpec.describe "Events::Registrations", type: :request do
       it "renders the consolidated magic callout cards" do
         get registration_ticket_path(registration.slug)
         expect(response.body).to include("view your balance")
-        expect(response.body).to include("W-9, invoice, and letter to supervisors")
+        expect(response.body).to include("W-9, invoice, and receipt")
         expect(response.body).to include("Worksheets and resources for the training")
         expect(response.body).to include("Frequently asked questions")
       end
@@ -105,9 +105,67 @@ RSpec.describe "Events::Registrations", type: :request do
       end
     end
 
+    context "for a free event" do
+      let(:event) { create(:event, cost_cents: 0) }
+
+      it "redirects to the ticket (nothing to invoice)" do
+        get registration_invoice_path(registration.slug)
+        expect(response).to redirect_to(registration_ticket_path(registration.slug))
+      end
+    end
+
     context "with an invalid slug" do
       it "returns 404" do
         get registration_invoice_path("nonexistent-slug")
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+  end
+
+  describe "GET /registration/:slug/receipt" do
+    let(:event) { create(:event, title: "AWBW 2-Day Art Facilitator Training", cost_cents: 150_000) }
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+
+    context "when paid in full" do
+      before { create(:allocation, allocatable: registration, amount: 150_000) }
+
+      it "renders the receipt with a zero balance" do
+        get registration_receipt_path(registration.slug)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("RECEIPT")
+        expect(response.body).to include("Paid in full")
+        expect(response.body).to include("AWBW 2-Day Art Facilitator Training")
+        expect(response.body).to include("Balance due")
+      end
+
+      context "as a guest" do
+        before { sign_out user }
+
+        it "renders the receipt (slug is authorization)" do
+          get registration_receipt_path(registration.slug)
+          expect(response).to have_http_status(:success)
+        end
+      end
+    end
+
+    it "redirects to the ticket when a balance is still due" do
+      get registration_receipt_path(registration.slug)
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+
+    context "for a free event" do
+      let(:event) { create(:event, cost_cents: 0) }
+
+      it "redirects to the ticket (nothing to receipt)" do
+        get registration_receipt_path(registration.slug)
+        expect(response).to redirect_to(registration_ticket_path(registration.slug))
+      end
+    end
+
+    context "with an invalid slug" do
+      it "returns 404" do
+        get registration_receipt_path("nonexistent-slug")
         expect(response).to have_http_status(:not_found)
       end
     end
@@ -254,10 +312,18 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).not_to include("/documents/awbw-w9.pdf")
     end
 
-    it "links to the letter-to-supervisors resource page below the invoice when present, returning to forms" do
-      letter = create(:resource, title: "Letter to Supervisors", kind: "Form")
+    it "omits the receipt link until the balance is paid in full" do
       get registration_forms_path(registration.slug)
-      expect(response.body.index(registration_invoice_path(registration.slug, return_to: "forms"))).to be < response.body.index(registration_resource_path(registration.slug, letter, return_to: "forms"))
+      expect(response.body).not_to include(registration_receipt_path(registration.slug))
+    end
+
+    it "links to the receipt once paid in full, returning to forms" do
+      paid_event = create(:event, cost_cents: 150_000)
+      paid_registration = create(:event_registration, event: paid_event, registrant: user.person)
+      create(:allocation, allocatable: paid_registration, amount: 150_000)
+
+      get registration_forms_path(paid_registration.slug)
+      expect(response.body).to include(registration_receipt_path(paid_registration.slug, return_to: "forms"))
     end
   end
 
@@ -265,7 +331,7 @@ RSpec.describe "Events::Registrations", type: :request do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     it "links each handout to its registrant resource page, returning to handouts" do
-      handout = create(:resource, title: "AHA Moments", kind: "Handout")
+      handout = create(:resource, title: "Aha Moments", kind: "Handout")
       get registration_handouts_path(registration.slug)
       expect(response).to have_http_status(:success)
       expect(response.body).to include(registration_resource_path(registration.slug, handout, return_to: "handouts"))
@@ -281,19 +347,19 @@ RSpec.describe "Events::Registrations", type: :request do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     it "renders the resource with a back-to-ticket link and a download button" do
-      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+      resource = create(:resource, title: "Aha Moments", kind: "Handout")
       create(:downloadable_asset, owner: resource)
 
       get registration_resource_path(registration.slug, resource)
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("AHA Moments")
+      expect(response.body).to include("Aha Moments")
       expect(response.body).to include(registration_ticket_path(registration.slug))
-      expect(response.body).to include(resource_download_path(resource))
+      expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
     end
 
     it "prompts to download for all pages on a multi-page resource" do
-      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+      resource = create(:resource, title: "Aha Moments", kind: "Handout")
       create(:downloadable_asset, owner: resource)
 
       get registration_resource_path(registration.slug, resource)
@@ -311,7 +377,7 @@ RSpec.describe "Events::Registrations", type: :request do
     end
 
     it "is reachable by slug without logging in" do
-      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+      resource = create(:resource, title: "Aha Moments", kind: "Handout")
 
       get registration_resource_path(registration.slug, resource)
 
@@ -319,7 +385,7 @@ RSpec.describe "Events::Registrations", type: :request do
     end
 
     it "returns to the handouts callout with a 'Handouts detail' header when reached from handouts" do
-      resource = create(:resource, title: "AHA Moments", kind: "Handout")
+      resource = create(:resource, title: "Aha Moments", kind: "Handout")
 
       get registration_resource_path(registration.slug, resource, return_to: "handouts")
 
@@ -327,7 +393,7 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Back to handouts")
       expect(response.body).not_to include("Back to ticket")
       expect(response.body).to include("Handouts detail")
-      expect(response.body).to include("AHA Moments")
+      expect(response.body).to include("Aha Moments")
     end
 
     it "returns to the forms callout with a 'Forms detail' header when reached from forms" do
@@ -339,25 +405,6 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Back to forms")
       expect(response.body).to include("Forms detail")
       expect(response.body).to include("Letter to Supervisors")
-    end
-  end
-
-  describe "GET /registration/:slug/portal" do
-    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
-
-    it "shows the attendance and payment requirements, no home link until granted" do
-      get registration_portal_path(registration.slug)
-      expect(response).to have_http_status(:success)
-      expect(response.body).to include("Attended both training days")
-      expect(response.body).to include("Training fee paid")
-      expect(response.body).not_to include("Go to the home screen")
-    end
-
-    it "shows the home-screen link once attendance and payment are met" do
-      registration.update!(status: "attended")
-      create(:allocation, allocatable: registration, amount: event.cost_cents)
-      get registration_portal_path(registration.slug)
-      expect(response.body).to include("Go to the home screen")
     end
   end
 
@@ -448,6 +495,19 @@ RSpec.describe "Events::Registrations", type: :request do
 
       expect(response).to redirect_to(registration_ticket_path(registration.slug))
       expect(flash[:alert]).to eq("Registration is already cancelled.")
+    end
+
+    it "zeroes any scholarship award when cancelling" do
+      costed_registration = create(:event_registration, event: create(:event, cost_cents: 50_000),
+                                                         registrant: user.person, status: "registered")
+      scholarship = create(:scholarship, recipient: user.person, amount_cents: 50_000)
+      allocation = create(:allocation, source: scholarship, allocatable: costed_registration, amount: 50_000)
+
+      post registration_cancel_path(costed_registration.slug)
+
+      expect(costed_registration.reload.status).to eq("cancelled")
+      expect(scholarship.reload.amount_cents).to eq(0)
+      expect(allocation.reload.amount).to eq(0)
     end
 
     context "as a guest" do
@@ -661,56 +721,6 @@ RSpec.describe "Events::Registrations", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.media_type).to eq("text/vnd.turbo-stream.html")
         expect(flash.now[:alert]).to eq("Cannot register")
-      end
-    end
-  end
-
-  describe "DELETE /events/:event_id/registrations" do
-    context "when registration exists" do
-      let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
-
-      it "destroys registration and returns turbo stream" do
-        expect {
-          delete event_registrant_registration_path(event_id: event.id),
-            headers: turbo_headers
-        }.to change(EventRegistration, :count).by(-1)
-
-        expect(response).to have_http_status(:ok)
-        expect(response.media_type).to eq("text/vnd.turbo-stream.html")
-        expect(flash.now[:notice]).to eq("You are no longer registered.")
-      end
-    end
-
-    context "when registration does not exist" do
-      it "returns turbo stream with alert" do
-        delete event_registrant_registration_path(event_id: event.id),
-          headers: turbo_headers
-
-        expect(response).to have_http_status(:ok)
-        expect(response.media_type).to eq("text/vnd.turbo-stream.html")
-        expect(flash.now[:alert]).to eq("Registration not found")
-      end
-    end
-
-    context "when destroy fails" do
-      let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
-
-      before do
-        allow_any_instance_of(EventRegistration)
-          .to receive(:destroy)
-          .and_return(false)
-        allow_any_instance_of(EventRegistration)
-          .to receive_message_chain(:errors, :full_messages)
-          .and_return([ "Cannot delete" ])
-      end
-
-      it "returns turbo stream with alert" do
-        delete event_registrant_registration_path(event_id: event.id),
-          headers: turbo_headers
-
-        expect(response).to have_http_status(:ok)
-        expect(response.media_type).to eq("text/vnd.turbo-stream.html")
-        expect(flash.now[:alert]).to eq("Cannot delete")
       end
     end
   end

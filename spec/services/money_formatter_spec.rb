@@ -19,6 +19,18 @@ RSpec.describe MoneyFormatter do
     end
   end
 
+  describe ".signed_dollars_from_cents" do
+    it "keeps a leading minus for negative amounts" do
+      expect(described_class.signed_dollars_from_cents(-120_000)).to eq("-$1,200")
+      expect(described_class.signed_dollars_from_cents(-75_050)).to eq("-$750.50")
+    end
+
+    it "matches dollars_from_cents for zero and positive amounts" do
+      expect(described_class.signed_dollars_from_cents(150_000)).to eq("$1,500")
+      expect(described_class.signed_dollars_from_cents(0)).to eq("$0")
+    end
+  end
+
   describe ".compact_from_cents" do
     it "uses plain dollars under a thousand" do
       expect(described_class.compact_from_cents(75_000)).to eq("$750")

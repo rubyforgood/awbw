@@ -32,6 +32,25 @@ class EventDashboard
     scholarships.sum(:amount_cents)
   end
 
+  # Scholarship dollars drawn from a funder/grant — money a grant pays toward
+  # registration cost, so it counts as revenue. Paired with
+  # unfunded_scholarship_cents, these sum to scholarship_total_cents.
+  def funded_scholarship_cents
+    scholarships.where.not(grant_id: nil).sum(:amount_cents)
+  end
+
+  # Scholarship dollars awarded without a grant behind them — cost the org comps
+  # directly, so no money actually changes hands.
+  def unfunded_scholarship_cents
+    scholarships.where(grant_id: nil).sum(:amount_cents)
+  end
+
+  # Registration cost waived via discounts — money the org gives up from its own
+  # pocket (like an unfunded scholarship).
+  def discount_cents
+    registration_allocations.where(source_type: "Discount").sum(:amount)
+  end
+
   def scholarship_recipient_count
     scholarships.distinct.count(:recipient_id)
   end
@@ -255,7 +274,8 @@ class EventDashboard
   end
 
   # Unique orgs from both the snapshot taken at registration time and the
-  # registrants' currently-active affiliations.
+  # registrants' affiliations that were active at the time of the event
+  # (#reference_date).
   def organizations
     @organizations ||= Organization.where(id: organization_ids).order(:name)
   end
@@ -300,14 +320,15 @@ class EventDashboard
   end
 
   # Distinct registrant ids per organization, across the registration-time
-  # snapshot and registrants' currently-active affiliations.
+  # snapshot and registrants' affiliations active at the time of the event
+  # (#reference_date).
   def organization_registrant_ids_by_org
     @organization_registrant_ids_by_org ||= begin
       snapshot = EventRegistrationOrganization
         .joins(:event_registration)
         .where(event_registration_id: active_registration_ids)
         .pluck(:organization_id, "event_registrations.registrant_id")
-      affiliated = Affiliation.active
+      affiliated = Affiliation.active_on(reference_date)
         .where(person_id: registrant_ids)
         .pluck(:organization_id, :person_id)
       (snapshot + affiliated).each_with_object(Hash.new { |hash, key| hash[key] = Set.new }) do |(organization_id, person_id), map|
@@ -650,23 +671,37 @@ class EventDashboard
   def program_status_for(organization)
     reference = registrant_affiliations_by_org[organization.id]
       &.select(&:facilitator?)
-      &.min_by { |affiliation| affiliation.start_date || Date.current }
-    return organization.facilitator_status(reference) if reference
+      &.min_by { |affiliation| affiliation.start_date || reference_date }
+    if reference
+      return organization.facilitator_status_on(reference.start_date || reference_date,
+                                                excluding_affiliation_id: reference.id)
+    end
 
-    # The registrant has no facilitator affiliation to this org yet (admins create
-    # those manually after the fact). Classify the org as of today rather than
-    # treating it as new by default, so an org that already has an active
-    # facilitator reads as :ongoing and a lapsed one as :reinstated.
-    organization.facilitator_status_on(Date.current)
+    # The registrant has no facilitator affiliation to this org as of the event
+    # (admins create those manually after the fact). Classify the org as it stood
+    # at the time of the event rather than today, so an org that already had an
+    # active facilitator reads as :ongoing and a lapsed one as :reinstated — and
+    # the breakdown doesn't drift as affiliations change afterward.
+    organization.facilitator_status_on(reference_date)
   end
 
-  # This event's active registrants' active affiliations, grouped by organization
-  # id — the reference points for the program-status breakdown.
+  # This event's active registrants' affiliations that overlapped the event date,
+  # grouped by organization id — the reference points for the program-status
+  # breakdown. Anchored to the event (#reference_date) rather than "now" so the
+  # breakdown reflects the programs as they stood at the time of the event.
   def registrant_affiliations_by_org
-    @registrant_affiliations_by_org ||= Affiliation.active
+    @registrant_affiliations_by_org ||= Affiliation.active_on(reference_date)
       .where(person_id: registrant_ids)
       .includes(:organization)
       .group_by(&:organization_id)
+  end
+
+  # The fixed point in time the organization breakdown is reported as of: the
+  # event's start. Everything keyed off affiliations being "active" uses this
+  # instead of the current date, so revisiting a past event always shows the same
+  # numbers regardless of affiliations that have started or ended since.
+  def reference_date
+    @reference_date ||= (event.start_date || Date.current).to_date
   end
 
   def scholarship_applicant_ids
@@ -779,7 +814,7 @@ class EventDashboard
       snapshot_ids = EventRegistrationOrganization
         .where(event_registration_id: active_registration_ids)
         .pluck(:organization_id)
-      affiliated_ids = Affiliation.active
+      affiliated_ids = Affiliation.active_on(reference_date)
         .where(person_id: registrant_ids)
         .pluck(:organization_id)
       (snapshot_ids + affiliated_ids).compact.uniq

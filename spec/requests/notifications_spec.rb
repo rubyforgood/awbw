@@ -263,7 +263,7 @@ RSpec.describe "Notifications", type: :request do
 
         expect(response).to redirect_to(notification_path(notification))
         follow_redirect!
-        expect(response.body).to include("Notification email has been resent successfully")
+        expect(response.body).to include("Communication has been resent successfully")
       end
 
       it "denies resending Devise-originated notifications" do

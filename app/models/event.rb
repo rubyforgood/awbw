@@ -92,6 +92,8 @@ class Event < ApplicationRecord
   # Events flagged as facilitator trainings (the "TAC" a scholarship recipient
   # attends). Drives the scholarship index's training column.
   scope :facilitator_trainings, -> { where(facilitator_training: true) }
+  # Events that charge a registration fee (cost_cents may be nil for free ones).
+  scope :paid, -> { where("cost_cents > 0") }
 
   def self.search_by_params(params)
     stories = is_a?(ActiveRecord::Relation) ? self : all
@@ -105,6 +107,10 @@ class Event < ApplicationRecord
 
   def registration_form
     forms.find_by(event_forms: { role: "registration" })
+  end
+
+  def registration_form_ids
+    event_forms.registration.pluck(:form_id)
   end
 
   # Whether a signed-in user should register in one click rather than being
@@ -234,6 +240,29 @@ class Event < ApplicationRecord
       dollar_amount = dollar_amount.to_s.gsub(/[^\d.]/, "").to_f
       self.cost_cents = (dollar_amount.to_f * 100).round
     end
+  end
+
+  # Virtual attribute for the total CE cost in dollars (converts to/from
+  # ce_hours_cost_cents), mirroring #cost.
+  def ce_hours_cost
+    return nil if ce_hours_cost_cents.nil?
+    ce_hours_cost_cents / 100.0
+  end
+
+  def ce_hours_cost=(dollar_amount)
+    if dollar_amount.blank?
+      self.ce_hours_cost_cents = nil
+    else
+      dollar_amount = dollar_amount.to_s.gsub(/[^\d.]/, "").to_f
+      self.ce_hours_cost_cents = (dollar_amount * 100).round
+    end
+  end
+
+  # An event grants CE credit when it offers a positive number of hours. Derived
+  # from ce_hours_offered rather than a separate stored flag, so there's a single
+  # source of truth.
+  def ce_eligible?
+    ce_hours_offered.to_f.positive?
   end
 
   def attachable_content_type

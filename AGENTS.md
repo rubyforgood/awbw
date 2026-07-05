@@ -49,9 +49,9 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~78 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~29 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~30 files |
 | `app/jobs/` | SolidQueue background jobs | 3 files |
-| `app/models/concerns/` | Shared model modules | 15 concerns |
+| `app/models/concerns/` | Shared model modules | 16 concerns |
 
 ### Presentation
 
@@ -62,7 +62,7 @@ This codebase (Rails 8.1)
 | `app/decorators/` | Draper decorators for view logic | ~38 files |
 | `app/policies/` | ActionPolicy authorization rules | ~49 files |
 | `app/presenters/` | Presentation objects | 3 files |
-| `app/helpers/` | View helpers | ~24 files |
+| `app/helpers/` | View helpers | ~25 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -104,6 +104,8 @@ This codebase (Rails 8.1)
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
 | `Grant` | Donated funds (polymorphic `donor`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
 | `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
+| `ProfessionalLicense` | A license a `Person` holds (`number`, `kind`, `issuing_state`, `expires_on`); a null `number` is a placeholder. `find_or_create_for` keeps one license per (person, number) |
+| `ContinuingEducationRegistration` | A registrant's CE for one event against one `ProfessionalLicense`; billable `allocatable` (`Registerable`) with stored `hours` + `cost_cents` (default from the event). Payment is computed (no stored status); the certificate is delivered via `certificate_sent_at` and gated by its own `certificate_available?` |
 | `Report` | STI base class for MonthlyReport |
 | `WorkshopLog` | Standalone model for workshop log submissions (attendance, form fields) |
 
@@ -133,6 +135,7 @@ This codebase (Rails 8.1)
 | `NameFilterable` | Name-based filtering |
 | `Publishable` | `published`, `publicly_visible` scopes |
 | `PunctuationStrippable` | Strips punctuation from strings |
+| `Registerable` | Shared payment (`allocations_sum`/`paid?`/`remaining_cost`/…) + certificate (`certificate_sent?`, `mark_certificate_sent!`) interface for `EventRegistration` and `ContinuingEducationRegistration`; includers supply `cost_cents` + their own `certificate_available?` |
 | `RemoteSearchable` | AJAX remote search by column |
 | `RichTextSearchable` | Full-text search on ActionText rich_text fields |
 | `SectorsTaggable` | Enforces a single primary sector for sector-tagged owners |
@@ -181,6 +184,7 @@ end
 ### Business Logic
 
 - `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total)
+- `EventRevenueReport` — Cross-event revenue report grouped by calendar year (money in vs org subsidy vs net, projected CE, chart series) for the CEO revenue page
 - `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration
@@ -198,12 +202,17 @@ end
 
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
+- `EventRegistrationReadiness` — Computes a registration's lifecycle `status` (`:not_ready` → `:ready` → `:certificate_due` → `:completed`) from a pre-event "event ready" checklist, a post-event "completion work" checklist (attendance, scholarship tasks), and certificate delivery, returning the specific outstanding reasons. Reads payment/certificate state via `Registerable` (`paid_in_full?`, `certificate_sent?`) on both the registration and its `continuing_education_registrations`. Drives the registrants roster's single far-right Status badge column (with a short reason under "Not ready" and a cert-type note under "Certificate pending") and its matching filter
 - `ReminderRecipientFilter` — Decides which event registrations stay checked on the bulk reminder page given the admin's filters (matches in memory, returns matching ids)
 - `MagicTicketCallouts` — Code-defined ("magic") ticket callout cards (payment, certificate, scholarship, CE hours, art supplies, forms, handouts, portal, videoconference, FAQ), each with its own visibility rule; rendered through the same `_callout_card` partial as admin-configured `RegistrationTicketCallout`s. Their public show pages live under `app/views/events/callouts/` and are served by `Events::CalloutsController` (slug-authorized, no login)
 
 ### Affiliations
 
-- `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation
+- `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation. Accepts an optional `organization_address:` and sets it on every affiliation it creates (the registrant's typed agency address, upserted onto the org); when an affiliation already exists and is skipped, it backfills that address onto the existing one only if it has none (an admin-set address is never overwritten)
+
+### Organizations
+
+- `OrganizationServices::UpsertAddress` — Find-or-create an organization's "work" address from a registrant's submitted agency fields (street/city/state/zip/country). Updates the matching city/state address in place, else adds a new one; never demotes the org's existing primary (a registrant's address becomes primary only when the org has none yet). Returns nil when no city is given. Shared by `PublicRegistration` and the admin org-linking actions so both build the org address identically before linking the affiliation to it
 
 ### Notifications
 
@@ -292,6 +301,7 @@ end
 - `paginated_fields` — Client-side pagination of nested fields
 - `password_toggle` — Show/hide password fields
 - `prefetch_lazy` — Prefetch lazy-loaded content
+- `primary_tag` — Shared single-primary star for the sector and age-range cocoon chip editors (clears other stars, highlights via configurable classes, no reorder)
 - `print_options` — Print options toggle for analytics
 - `reminder_preview` — Live-preview a custom message in the reminder email as the admin types it on the bulk-reminder page
 - `remote_select` — AJAX-powered select dropdown
@@ -344,7 +354,7 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 | `spec/routing/` | ~13 | Route definition tests |
 | `spec/policies/` | ~9 | Authorization policy tests |
 | `spec/decorators/` | ~10 | Decorator tests |
-| `spec/services/` | ~12 | Service object tests |
+| `spec/services/` | ~13 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
 | `spec/helpers/` | ~1 | Helper tests |
 | `spec/factories/` | ~53 | FactoryBot factory definitions |

@@ -24,6 +24,7 @@
       </div>
     </div>
 
+    <%= render "shared/filtered_to", record: @recipient, clear_path: scholarships_path %>
     <% if @funder_groups.any? %>
       <div class="space-y-4">
         <%= render partial: "funder_group", collection: @funder_groups, as: :funder_group %>

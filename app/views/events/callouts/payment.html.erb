@@ -35,18 +35,6 @@
                     class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
     </div>
 
-    <%= link_to registration_invoice_path(@event_registration.slug, return_to: "payment"), target: "_blank", rel: "noopener",
-                  class: "mt-10 flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
-      <i class="fa-solid fa-file-invoice-dollar text-gray-400 text-xl shrink-0"></i>
-
-      <div class="flex-1 min-w-0 text-left">
-        <p class="font-semibold text-gray-900">View invoice</p>
-        <p class="text-sm text-gray-500">Itemized invoice for this registration</p>
-      </div>
-
-      <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
-    <% end %>
-
     <details class="mt-6">
       <summary class="cursor-pointer text-sm text-gray-500 hover:text-gray-700">Prefer to pay by check?</summary>
 
@@ -58,5 +46,33 @@
         <p>Payment is due no later than 5:00 PM PT on April 9th. We'll send more information after your payment is received, so we encourage you to submit it as soon as possible.</p>
       </div>
     </details>
+  <% end %>
+
+  <%# Documents for paid events, available regardless of balance: the invoice
+      always, and the paid-in-full receipt once there's no balance due. %>
+  <% if @event_registration.invoice_available? %>
+    <div class="mt-10 space-y-3">
+      <%= link_to registration_invoice_path(@event_registration.slug, return_to: "payment"), target: "_blank", rel: "noopener",
+                    class: "flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
+        <i class="fa-solid fa-file-invoice-dollar text-gray-400 text-xl shrink-0"></i>
+        <div class="flex-1 min-w-0 text-left">
+          <p class="font-semibold text-gray-900">View invoice</p>
+          <p class="text-sm text-gray-500">Itemized invoice for this registration</p>
+        </div>
+        <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
+      <% end %>
+
+      <% if @event_registration.receipt_available? %>
+        <%= link_to registration_receipt_path(@event_registration.slug, return_to: "payment"), target: "_blank", rel: "noopener",
+                      class: "flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
+          <i class="fa-solid fa-receipt text-gray-400 text-xl shrink-0"></i>
+          <div class="flex-1 min-w-0 text-left">
+            <p class="font-semibold text-gray-900">View receipt</p>
+            <p class="text-sm text-gray-500">Paid-in-full receipt for this registration</p>
+          </div>
+          <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
+        <% end %>
+      <% end %>
+    </div>
   <% end %>
 <% end %>

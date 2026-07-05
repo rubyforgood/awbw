@@ -26,6 +26,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
     profile_show_workshops: "mb-3\">Workshops authored</h2>",
     profile_show_workshop_variations: "Workshop variations authored",
     profile_show_stories: "Stories authored/featured",
+    profile_show_resources: "mb-3\">Resources authored</h2>",
     profile_show_events_registered: "Participation history"
   }.each do |flag, marker|
     describe "##{flag}" do
@@ -154,6 +155,31 @@ RSpec.describe "Person profile flag visibility", type: :request do
         sign_in admin
         get person_path(person)
         expect(response.body).to include(email)
+      end
+    end
+
+    context "with a pending email change" do
+      before do
+        person.update!(profile_show_email: true)
+        person.user.update_columns(unconfirmed_email: "aisha.new@example.com")
+      end
+
+      it "shows the pending address inline on own profile, not just in the hover title" do
+        sign_in owner_user
+        get person_path(person)
+        expect(response.body).to include("Email change to <strong class=\"font-semibold\">aisha.new@example.com</strong> pending")
+      end
+
+      it "shows the pending address inline when admin views profile" do
+        sign_in admin
+        get person_path(person)
+        expect(response.body).to include("Email change to <strong class=\"font-semibold\">aisha.new@example.com</strong> pending")
+      end
+
+      it "hides the pending change from other viewers" do
+        sign_in create(:user)
+        get person_path(person)
+        expect(response.body).not_to include("aisha.new@example.com")
       end
     end
   end

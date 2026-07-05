@@ -13,6 +13,10 @@ class ScholarshipsController < ApplicationController
       { grant: :donor },
       { recipient: [ { affiliations: { organization: :addresses } }, { event_registrations: :event } ] }
     )
+    if params[:recipient_id].present?
+      scholarships = scholarships.where(recipient_id: params[:recipient_id])
+      @recipient = Person.find_by(id: params[:recipient_id])
+    end
     @funder_groups = ScholarshipsGrouping.new(scholarships).funder_groups
     @scholarships_count = scholarships.size
   end
@@ -35,6 +39,7 @@ class ScholarshipsController < ApplicationController
     @scholarship = Scholarship.new(recipient: @allocatable.registrant)
     @grants = Grant.selectable_for(@scholarship)
     authorize! @scholarship
+    load_scholarship_submission
   end
 
   def create

@@ -1,22 +1,43 @@
 require 'rails_helper'
 
 RSpec.describe CommunityNews, type: :model do
+  it_behaves_like "author_creditable", factory: :community_news
+
+  describe "#author_person" do
+    let(:creator) { create(:user, :with_person) }
+    let(:legacy_user_author) { create(:user, :with_person) }
+    let(:person) { create(:person) }
+
+    it "returns the explicit person author when present" do
+      news = create(:community_news, created_by: creator, author: person)
+      expect(news.author_person).to eq(person)
+    end
+
+    it "falls back to the legacy display-author user's person" do
+      news = create(:community_news, created_by: creator, author: nil, user_author: legacy_user_author)
+      expect(news.author_person).to eq(legacy_user_author.person)
+    end
+
+    it "falls back to the creating user's person when nothing else is set" do
+      news = create(:community_news, created_by: creator, author: nil, user_author: nil)
+      expect(news.author_person).to eq(creator.person)
+    end
+  end
+
   describe '.search' do
     let(:person) { create(:person, first_name: 'John', last_name: 'Doe') }
-    let(:user_with_person) { person.user }
-    let(:user_without_person) { create(:user, person: nil) }
 
     let!(:community_news_with_person) do
       create(:community_news,
              title: 'Breaking News',
-             author: user_with_person,
+             author: person,
              rhino_body: '<p>This is important content about technology</p>')
     end
 
     let!(:community_news_without_person) do
       create(:community_news,
              title: 'Special Report',
-             author: user_without_person,
+             author: nil,
              rhino_body: '<p>Burgers and fries are delicious</p>')
     end
 
@@ -158,19 +179,18 @@ RSpec.describe CommunityNews, type: :model do
 
   describe '.search_by_params' do
     let(:person) { create(:person, first_name: 'John', last_name: 'Doe') }
-    let(:user_with_person) { person.user }
 
     let!(:news_alpha) do
       create(:community_news, :published,
              title: 'Alpha Community Update',
-             author: user_with_person,
+             author: person,
              created_at: Date.new(2025, 6, 15))
     end
 
     let!(:news_beta) do
       create(:community_news,
              title: 'Beta Draft Article',
-             author: user_with_person,
+             author: person,
              created_at: Date.new(2026, 3, 1))
     end
 
@@ -210,7 +230,7 @@ RSpec.describe CommunityNews, type: :model do
 
     it 'filters by organization_id' do
       organization = create(:organization)
-      org_news = create(:community_news, author: user_with_person, organization: organization)
+      org_news = create(:community_news, author: person, organization: organization)
 
       results = CommunityNews.search_by_params(organization_id: organization.id)
       expect(results).to include(org_news)

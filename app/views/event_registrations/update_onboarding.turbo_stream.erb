@@ -3,3 +3,9 @@
 <%= turbo_stream.replace dom_id(@event_registration, @field) do %>
   <%= render "events/onboarding/cell", registration: @event_registration, field: @field %>
 <% end %>
+<%# A day toggle may have rolled the attendance status forward/back — refresh the badge too. %>
+<% if @status_synced %>
+  <%= turbo_stream.replace dom_id(@event_registration, :attendance_status) do %>
+    <%= render "event_registrations/attendance_status_badge", registration: @event_registration %>
+  <% end %>
+<% end %>

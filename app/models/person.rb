@@ -9,6 +9,7 @@ class Person < ApplicationRecord
   has_one :user, inverse_of: :person, dependent: :nullify
   has_many :affiliations, dependent: :destroy
   has_many :organizations, through: :affiliations
+  has_many :professional_licenses, dependent: :destroy
   has_many :communal_reports, through: :organizations, source: :reports
   has_many :windows_types, through: :organizations
 
@@ -17,8 +18,19 @@ class Person < ApplicationRecord
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
+  has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
+           dependent: :restrict_with_error
+  has_many :stories_as_author, inverse_of: :author, class_name: "Story", foreign_key: :author_id,
+           dependent: :restrict_with_error
+  has_many :workshop_variations_as_author, inverse_of: :author, class_name: "WorkshopVariation",
+           foreign_key: :author_id, dependent: :restrict_with_error
+  has_many :workshops_as_author, inverse_of: :author, class_name: "Workshop", foreign_key: :author_id,
+           dependent: :restrict_with_error
+  has_many :community_news_as_author, inverse_of: :author, class_name: "CommunityNews", foreign_key: :author_id,
+           dependent: :restrict_with_error
+  has_many :resources_as_author, inverse_of: :author, class_name: "Resource", foreign_key: :author_id,
            dependent: :restrict_with_error
   # has_many through
   has_many :event_registrations, foreign_key: :registrant_id, dependent: :destroy
@@ -55,6 +67,11 @@ class Person < ApplicationRecord
   CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
   validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
+  # Mirrors SectorsTaggable's single-primary rule for age ranges — the chip
+  # editor's single-star JS is the first line of defense, this guards imports,
+  # the console, and bad form posts. Person-only: organizations aggregate
+  # several members' primary age groups, so they legitimately have more than one.
+  validate :at_most_one_primary_age_range
   # TODO: add validation for zip code containing only numbers
   # TODO: add validation on STATE
   # TODO: add validation on phone number type
@@ -65,10 +82,24 @@ class Person < ApplicationRecord
   accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
+  # Age ranges edit through cocoon nested fields like sectors. A scoped view of
+  # categorizable_items (AgeRange categories only) so the form's add/remove and
+  # primary toggle round-trip as nested attributes — the is_primary flag splits
+  # primary vs additional, no separate primary_age_category_ids param needed.
+  has_many :age_range_categorizable_items,
+           -> { joins(category: :category_type).where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE }) },
+           class_name: "CategorizableItem", as: :categorizable, inverse_of: :categorizable
+  accepts_nested_attributes_for :age_range_categorizable_items, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs["category_id"].blank? }
+  # The picker can submit the same age range twice (two new rows), which the
+  # CategorizableItem uniqueness validation can't catch — both are unsaved, so
+  # both INSERT and hit the DB unique index. Collapse duplicates before validation.
+  before_validation :dedupe_age_range_items
   accepts_nested_attributes_for :user, update_only: true
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
     reject_if: proc { |attrs| attrs["organization_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
+  accepts_nested_attributes_for :notifications, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   # Search Cop
   include SearchCop
@@ -265,7 +296,40 @@ class Person < ApplicationRecord
     other_form_responses(OTHER_WORKSHOP_SETTING_IDENTIFIERS)
   end
 
+  # The age-range nested items in category position order for the cocoon chip
+  # editor. Reads the same association the form's nested attributes build into, so
+  # unsaved picks survive a failed save (and aren't primary-first — starring
+  # shouldn't reshuffle them). Display surfaces lead with the primary instead.
+  def age_range_items_ordered
+    age_range_categorizable_items.sort_by { |item| [ item.category&.position || 0, item.category&.name.to_s ] }
+  end
+
   private
+
+  # Count the in-memory set (not a DB query): nested attributes build the items in
+  # one transaction, so a row-level check would see none persisted yet.
+  def at_most_one_primary_age_range
+    primary_count = age_range_categorizable_items.reject(&:marked_for_destruction?).count(&:is_primary?)
+    return if primary_count <= 1
+
+    errors.add(:base, "Only one age range can be marked as primary")
+  end
+
+  # Keep one tagging per age-range category. Prefer the persisted row, fold any
+  # duplicate's primary flag onto the keeper, and drop the extras (destroy if
+  # persisted, otherwise remove from the unsaved set).
+  def dedupe_age_range_items
+    live = age_range_categorizable_items.reject(&:marked_for_destruction?)
+    live.group_by(&:category_id).each_value do |items|
+      next if items.size <= 1
+
+      keeper = items.find(&:persisted?) || items.first
+      keeper.is_primary = true if items.any?(&:is_primary?)
+      (items - [ keeper ]).each do |dup|
+        dup.persisted? ? dup.mark_for_destruction : age_range_categorizable_items.delete(dup)
+      end
+    end
+  end
 
   def other_form_responses(identifiers)
     form_submissions

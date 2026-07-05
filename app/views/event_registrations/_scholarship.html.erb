@@ -2,7 +2,10 @@
     not create or destroy an award on its own. Awarding is a deliberate action
     via "Add scholarship". On save, the controller cleans up an unrequested
     scholarship only when it is an empty stub (no amount, tasks incomplete). ---- %>
-<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<% scholarship_active = scholarship.present? || event_registration.scholarship_requested %>
+<section class="overflow-hidden rounded-xl border shadow-sm transition-colors <%= scholarship_active ? "border-fuchsia-200 bg-fuchsia-50" : "border-gray-200 bg-white" %>"
+         data-controller="scholarship-requested"
+         data-scholarship-requested-initial-value="<%= event_registration.scholarship_requested %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
       <i class="fa-solid fa-graduation-cap"></i>
@@ -12,9 +15,7 @@
 
   <div class="space-y-3 p-4">
     <% unless scholarship %>
-      <label class="flex items-center gap-2.5 cursor-pointer"
-             data-controller="scholarship-requested"
-             data-scholarship-requested-initial-value="<%= event_registration.scholarship_requested %>">
+      <label class="flex items-center gap-2.5 cursor-pointer">
         <input type="hidden" name="event_registration[scholarship_requested]" value="0" autocomplete="off">
         <input type="checkbox"
                name="event_registration[scholarship_requested]"

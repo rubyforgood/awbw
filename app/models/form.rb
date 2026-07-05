@@ -1,4 +1,9 @@
 class Form < ApplicationRecord
+  # Public-facing name for the "bulk payment" form — what visitors see on the
+  # event page CTA and the form heading. Internal/admin labels still say "Bulk
+  # payment" (the form role). Single source of truth so both ends stay in sync.
+  BULK_PAYMENT_PUBLIC_NAME = "Pay for Participant(s)".freeze
+
   belongs_to :owner, polymorphic: true, optional: true
   has_many :form_fields, dependent: :destroy, inverse_of: :form
   has_many :event_forms, dependent: :destroy

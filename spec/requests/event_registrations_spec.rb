@@ -108,6 +108,46 @@ RSpec.describe "EventRegistrations", type: :request do
       end
     end
 
+    describe "PATCH /event_registrations/:id/update_onboarding" do
+      # Two-day event (day_count == 2) so a single day is a partial attendance.
+      let(:two_day_event) { create(:event, start_date: 12.days.from_now, end_date: 13.days.from_now) }
+      let(:registration) { create(:event_registration, event: two_day_event, status: "registered") }
+
+      def toggle_day(field, value)
+        patch update_onboarding_event_registration_path(registration),
+              params: { field: field, value: value },
+              headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      end
+
+      it "flips registered → incomplete_attendance when one day is checked" do
+        toggle_day("completed_day_1", "1")
+        expect(registration.reload.status).to eq("incomplete_attendance")
+      end
+
+      it "flips to attended once both days are checked" do
+        registration.update!(completed_day_1: true, status: "incomplete_attendance")
+        toggle_day("completed_day_2", "1")
+        expect(registration.reload.status).to eq("attended")
+      end
+
+      it "rolls back to registered when the last checked day is unchecked" do
+        registration.update!(completed_day_1: true, status: "incomplete_attendance")
+        toggle_day("completed_day_1", "0")
+        expect(registration.reload.status).to eq("registered")
+      end
+
+      it "re-renders the attendance badge in the turbo stream when the status changes" do
+        toggle_day("completed_day_1", "1")
+        expect(response.body).to include("attendance_status_event_registration_#{registration.id}")
+      end
+
+      it "does not touch a cancelled registration" do
+        registration.update!(status: "cancelled")
+        toggle_day("completed_day_1", "1")
+        expect(registration.reload.status).to eq("cancelled")
+      end
+    end
+
     describe "POST /event_registrations" do
       it "creates registration and redirects admin to confirm page" do
         expect {
@@ -234,6 +274,24 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("name=\"event_registration[expected_payment_method]\"")
         expect(response.body).to include("<option selected=\"selected\" value=\"Check\">Check</option>")
       end
+
+      it "shows a Delete button for a deletable registration" do
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("fa-trash-can")
+        expect(response.body).not_to include("reverted payments still count")
+      end
+
+      it "hides Delete and explains why for a registration with payment records" do
+        payment = create(:payment, person: regular_user.person, amount_cents: 1000, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: existing_registration, amount: 1000)
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).not_to include("fa-trash-can")
+        expect(response.body).to include("financial records")
+        expect(response.body).to include("reverted payments still count")
+      end
     end
 
     describe "PATCH /event_registrations/:id" do
@@ -320,6 +378,16 @@ RSpec.describe "EventRegistrations", type: :request do
         expect { unrequest(existing_registration) }
           .not_to change { existing_registration.scholarships.count }
       end
+
+      it "zeroes a funded scholarship when the status is set to cancelled" do
+        scholarship = link_scholarship(existing_registration, amount_cents: 1000)
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { status: "cancelled" } }
+
+        expect(existing_registration.reload.status).to eq("cancelled")
+        expect(scholarship.reload.amount_cents).to eq(0)
+      end
     end
 
     describe "PATCH /event_registrations/:id logging a notification" do
@@ -355,6 +423,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect {
           delete event_registration_path(existing_registration)
         }.to change(EventRegistration, :count).by(-1)
+      end
+
+      it "refuses to delete a registration with payments on record" do
+        payment = create(:payment, person: regular_user.person, amount_cents: 1000, amount_cents_remaining: nil)
+        create(:allocation, source: payment, allocatable: existing_registration, amount: 1000)
+
+        expect {
+          delete event_registration_path(existing_registration)
+        }.not_to change(EventRegistration, :count)
+
+        expect(flash[:alert]).to include("can't be deleted")
       end
     end
 
@@ -495,6 +574,15 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("Title differs from form")
         end
 
+        it "does not show a title-comparison badge when a facilitator affiliation matches the submitted 'Facilitator' position" do
+          create(:affiliation, person: regular_user.person, organization: organization, title: "Facilitator")
+          submit_form(org_name: organization.name, position: "Facilitator")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).not_to include("Title differs from form")
+        end
+
         it "shows 'Title differs from form' when the affiliation title differs from the submitted position" do
           create(:affiliation, person: regular_user.person, organization: organization, title: "Counselor")
           submit_form(org_name: organization.name, position: "Director")
@@ -572,6 +660,24 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(response.body).to include("No organization was submitted on the")
           expect(response.body).not_to include("No registration form was submitted")
+        end
+
+        it "shows a 'Pending' badge next to the submitted org when nothing is linked" do
+          existing_registration.event_registration_organizations.destroy_all
+          submit_form(org_name: "Riverside Healing Arts Collective")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).to include("Riverside Healing Arts Collective")
+          expect(response.body).to include(">Pending<")
+        end
+
+        it "does not show the 'Pending' badge once an organization is linked" do
+          submit_form(org_name: "Riverside Healing Arts Collective")
+
+          get link_organization_event_registration_path(existing_registration)
+
+          expect(response.body).not_to include(">Pending<")
         end
 
         it "shows 'Create org & link' when the submitted org has no existing match" do
@@ -662,6 +768,25 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
             .to contain_exactly("Facilitator")
         end
+
+        it "builds the org address from the submission and links the affiliations to it" do
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701", "agency_country" => "USA" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          address = organization.addresses.find_by(city: "Austin")
+          expect(address).to be_present
+          expect(address.country).to eq("USA")
+          expect(regular_user.person.affiliations.where(organization: organization).map(&:organization_address))
+            .to all(eq(address))
+        end
       end
 
       describe "POST /event_registrations/:id/create_organization" do
@@ -696,6 +821,27 @@ RSpec.describe "EventRegistrations", type: :request do
           organization = Organization.find_by(name: "Brand New Org")
           expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
             .to contain_exactly("Counselor", "Facilitator")
+        end
+
+        it "builds the new org's address from the submission and links the affiliations to it" do
+          create(:organization_status, name: "Active")
+          reg_form = create(:form, name: "Reg form")
+          name_field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_NAME_IDENTIFIER)
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
+          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          post create_organization_event_registration_path(existing_registration)
+
+          organization = Organization.find_by(name: "Brand New Org")
+          address = organization.addresses.find_by(city: "Austin")
+          expect(address).to be_present
+          expect(regular_user.person.affiliations.where(organization: organization).map(&:organization_address))
+            .to all(eq(address))
         end
 
         it "links an existing org instead of creating a duplicate" do

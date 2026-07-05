@@ -40,6 +40,21 @@ RSpec.describe "/workshops", type: :request do
     end
   end
 
+  # --- SECTOR FILTER LABELS --------------------------------------------------
+  describe "sector filter dropdown labels" do
+    let(:admin) { create(:user, :admin) }
+    let!(:sector) { create(:sector, :published, name: "LGBTQIA+") }
+
+    before { sign_in admin }
+
+    it "renders sector names with their canonical casing, not sentence case" do
+      get workshops_url
+
+      expect(response.body).to include("LGBTQIA+")
+      expect(response.body).not_to include("Lgbtqia+")
+    end
+  end
+
   # --- DESTROY ---------------------------------------------------------------
   describe "DELETE /destroy" do
     let(:user) { create(:user) }
@@ -102,6 +117,33 @@ RSpec.describe "/workshops", type: :request do
   end
 
   # --- RECORD NOT UNIQUE HANDLING -----------------------------------------------
+  describe "author crediting" do
+    let(:admin) { create(:user, :admin) }
+    let!(:windows_type) { create(:windows_type) }
+
+    before { sign_in admin }
+
+    it "records the current user as created_by regardless of the submitted value" do
+      someone_else = create(:user)
+      post workshops_url, params: {
+        workshop: { title: "Audit Workshop", windows_type_id: windows_type.id,
+                    category_ids: [ "" ], created_by_id: someone_else.id }
+      }
+
+      expect(Workshop.last.created_by).to eq(admin)
+    end
+
+    it "assigns the chosen person as author" do
+      facilitator = create(:person)
+      post workshops_url, params: {
+        workshop: { title: "Authored Workshop", windows_type_id: windows_type.id,
+                    category_ids: [ "" ], author_id: facilitator.id }
+      }
+
+      expect(Workshop.last.author).to eq(facilitator)
+    end
+  end
+
   describe "RecordNotUnique handling" do
     let(:admin) { create(:user, :admin) }
 

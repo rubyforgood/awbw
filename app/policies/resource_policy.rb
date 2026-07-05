@@ -18,7 +18,7 @@ class ResourcePolicy < ApplicationPolicy
   end
 
   def download?
-    true
+    show?
   end
 
   def filter_published?

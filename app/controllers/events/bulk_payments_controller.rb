@@ -45,7 +45,7 @@ module Events
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
         else
           redirect_to bulk_payment_ticket_path(result.form_submission.slug),
-                      notice: "Your bulk payment information has been submitted."
+                      notice: "Your payment information has been submitted."
         end
       else
         @form_fields = visible_form_fields
@@ -129,7 +129,7 @@ module Events
     def set_form
       @form = @event.bulk_payment_form
       unless @form
-        redirect_to event_path(@event), alert: "Bulk payment form is not available for this event."
+        redirect_to event_path(@event), alert: "#{Form::BULK_PAYMENT_PUBLIC_NAME} form is not available for this event."
       end
     end
 
@@ -171,7 +171,7 @@ module Events
         line_items: [ {
           price_data: {
             currency: "usd",
-            product_data: { name: "Bulk Payment (#{qty} attendees): #{@event.title}" },
+            product_data: { name: "#{Form::BULK_PAYMENT_PUBLIC_NAME} (#{qty} attendees): #{@event.title}" },
             unit_amount: unit_amount
           },
           quantity: qty

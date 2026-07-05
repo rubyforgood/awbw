@@ -15,6 +15,8 @@
 
     <%= render "search_boxes" %>
 
+    <%= render "shared/filtered_to", record: @author, clear_path: workshop_variations_path %>
+
     <div class="rounded-xl bg-white p-6">
       <div class="overflow-x-auto">
         <table class="table table-responsive table-bordered table-curved">
@@ -71,13 +73,13 @@
                 <% end %>
               </td>
               <td class="px-4 py-2 text-sm text-gray-800 text-center">
-                <% display_name = workshop_variation.workshop_variation_idea&.author_credit || workshop_variation.created_by&.name %>
-                <% if workshop_variation.created_by&.person %>
-                  <%= link_to display_name,
-                              person_path(workshop_variation.created_by.person),
+                <% credited_person = workshop_variation.author_person %>
+                <% if credited_person %>
+                  <%= link_to workshop_variation.author_credit,
+                              person_path(credited_person),
                               class: "text-gray-500 hover:text-gray-700" %>
-                <% elsif display_name %>
-                  <%= display_name %>
+                <% else %>
+                  <%= workshop_variation.author_credit %>
                 <% end %>
               </td>
               <td class="px-4 py-2 text-sm text-center whitespace-nowrap">

@@ -31,6 +31,10 @@ RSpec.describe "/grants", type: :request do
     before { sign_in admin }
 
     describe "GET /index" do
+      # The grant rows load inside the grants_results turbo frame, so row-level
+      # assertions issue the frame request (Turbo-Frame header) the browser sends.
+      let(:frame_headers) { { "Turbo-Frame" => "grants_results" } }
+
       it "renders a successful response" do
         create(:grant)
         get grants_url
@@ -42,6 +46,93 @@ RSpec.describe "/grants", type: :request do
         get grants_url(from_scholarship: scholarship.id)
         expect(response.body).to include(edit_scholarship_path(scholarship))
         expect(response.body).to include("Scholarship")
+      end
+
+      it "renders a per-row Edit link" do
+        grant = create(:grant)
+        get grants_url, headers: frame_headers
+        expect(response.body).to include(edit_grant_path(grant))
+      end
+
+      it "filters by funds remaining" do
+        available = create(:grant, name: "Has funds", amount_cents: 100_000)
+        issued = create(:grant, name: "All issued", amount_cents: 30_000)
+        create(:scholarship, grant: issued, amount_cents: 30_000)
+
+        get grants_url(funds: "available"), headers: frame_headers
+        expect(response.body).to include("Has funds")
+        expect(response.body).not_to include("All issued")
+
+        get grants_url(funds: "none"), headers: frame_headers
+        expect(response.body).to include("All issued")
+        expect(response.body).not_to include("Has funds")
+      end
+
+      it "filters by donor type" do
+        org_grant = create(:grant, name: "Org grant", donor: create(:organization))
+        person_grant = create(:grant, name: "Person grant", donor: create(:person))
+
+        get grants_url(donor_type: "Organization"), headers: frame_headers
+        expect(response.body).to include("Org grant")
+        expect(response.body).not_to include("Person grant")
+
+        get grants_url(donor_type: "Person"), headers: frame_headers
+        expect(response.body).to include("Person grant")
+        expect(response.body).not_to include("Org grant")
+      end
+
+      it "filters by grant name" do
+        create(:grant, name: "Healing Arts Fund")
+        create(:grant, name: "Music Therapy Grant")
+
+        get grants_url(name: "healing"), headers: frame_headers
+        expect(response.body).to include("Healing Arts Fund")
+        expect(response.body).not_to include("Music Therapy Grant")
+      end
+
+      it "filters by donor name across organizations and people" do
+        org_grant = create(:grant, name: "Org-funded", donor: create(:organization, name: "Acme Foundation"))
+        person_grant = create(:grant, name: "Person-funded", donor: create(:person, first_name: "Jane", last_name: "Donor"))
+        create(:grant, name: "Other grant", donor: create(:organization, name: "Unrelated Inc"))
+
+        get grants_url(donor_name: "acme"), headers: frame_headers
+        expect(response.body).to include("Org-funded")
+        expect(response.body).not_to include("Other grant")
+
+        get grants_url(donor_name: "jane donor"), headers: frame_headers
+        expect(response.body).to include("Person-funded")
+        expect(response.body).not_to include("Other grant")
+      end
+
+      it "filters by task completion" do
+        all_done = create(:grant, name: "All done")
+        create(:scholarship, grant: all_done, tasks_completed: true)
+        outstanding = create(:grant, name: "Has outstanding")
+        create(:scholarship, grant: outstanding, tasks_completed: false)
+
+        get grants_url(tasks: "completed"), headers: frame_headers
+        expect(response.body).to include("All done")
+        expect(response.body).not_to include("Has outstanding")
+
+        get grants_url(tasks: "outstanding"), headers: frame_headers
+        expect(response.body).to include("Has outstanding")
+        expect(response.body).not_to include("All done")
+      end
+
+      it "scopes to a single donor via donor_id and names it in the banner" do
+        donor = create(:person, first_name: "Dana", last_name: "Donor")
+        create(:grant, name: "Dana Fund", donor: donor)
+        create(:grant, name: "Other Fund", donor: create(:organization, name: "Big Org"))
+
+        # Banner renders on the full page (donor resolved in the non-frame branch).
+        get grants_url(donor_id: donor.id, donor_type: "Person")
+        expect(response.body).to include("Filtered to")
+        expect(response.body).to include("Dana Donor")
+
+        # Rows are scoped to that donor inside the results frame.
+        get grants_url(donor_id: donor.id, donor_type: "Person"), headers: frame_headers
+        expect(response.body).to include("Dana Fund")
+        expect(response.body).not_to include("Other Fund")
       end
     end
 

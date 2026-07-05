@@ -1,6 +1,6 @@
 module Events
   # Public show pages for a registration ticket's magic callouts (payment, CE,
-  # scholarship, forms, handouts, portal, videoconference, FAQ, certificate).
+  # scholarship, forms, handouts, videoconference, FAQ, certificate).
   # Each is reachable by the registration slug — the slug is the authorization,
   # so no login is required (mirrors the public ticket/invoice pages).
   class CalloutsController < ApplicationController
@@ -14,9 +14,23 @@ module Events
     HANDOUT_RESOURCE_TITLES = [
       "2-Day AWBW Facilitator Training Worksheets & Handouts",
       "AWBW Training Workshop Worksheets",
-      "AHA Moments",
-      "Inviting and Responding to Participants' Sharing"
+      "Aha Moments",
+      "Inviting and Responding to Participants' Sharing",
+      "Letter to Supervisors"
     ].freeze
+
+    HANDOUT_SUBTITLES = {
+      "2-Day AWBW Facilitator Training Worksheets & Handouts" =>
+        "List of resources and worksheets we will reference and utilize during the training. You do not need to print them out, it may be helpful for you to access the links during the training.",
+      "AWBW Training Workshop Worksheets" =>
+        "Worksheets you can create on during all 5 of the art workshops at the training. Any art materials are welcomed during creation.",
+      "Aha Moments" =>
+        "Worksheet you can use to reflect on the workshop, its impact, and how you'd like to apply it.",
+      "Inviting and Responding to Participants' Sharing" =>
+        "A resource to invite and support sharing, active listening, and connection during breakout rooms.",
+      "Letter to Supervisors" =>
+        "Letter you can share to help relieve you from competing responsibilities during the two training days. So you can secure the time and space needed to fully engage in the training."
+    }.freeze
 
     # Payment page: the full allocation ledger with the running balance due.
     def payment
@@ -48,8 +62,9 @@ module Events
     def ce
     end
 
-    # Forms page: callout-card links to the W-9 and letter-to-supervisors
-    # resource pages (when seeded) and the invoice, each returning to forms.
+    # Forms page: callout-card links to the W-9 (when seeded) and, for paid
+    # events, the invoice and the paid-in-full receipt (once settled), each
+    # returning to forms.
     def forms
       @form_cards = build_form_cards
     end
@@ -63,7 +78,7 @@ module Events
         resource = by_title[title]
         next unless resource
         resource_card(icon: "fa-solid fa-file-pdf", title: resource.title,
-                      subtitle: "Open this training resource",
+                      subtitle: HANDOUT_SUBTITLES[resource.title] || "Open this training resource",
                       href: registration_resource_path(@event_registration.slug, resource, return_to: "handouts"), target: nil)
       end
     end
@@ -74,10 +89,6 @@ module Events
     # ticket context.
     def resource
       @resource = Resource.find(params[:resource_id]).decorate
-    end
-
-    # Facilitator Portal access info, with a link to the home screen.
-    def portal
     end
 
     # Videoconference page: the join link and add-to-calendar options.
@@ -103,9 +114,9 @@ module Events
       @event = @event_registration.event
     end
 
-    # Builds the callout-card links shown on the forms page. The W-9 and the
-    # letter to supervisors open in their own resource page (preview + download)
-    # when seeded; the invoice is always available.
+    # Builds the callout-card links shown on the forms page. The W-9 opens in its
+    # own resource page (preview + download) when seeded; the invoice and the
+    # paid-in-full receipt (once settled) show for paid events. Each returns to forms.
     def build_form_cards
       cards = []
       w9 = Resource.find_by(title: "W-9")
@@ -114,14 +125,15 @@ module Events
                                subtitle: "AWBW's W-9 tax form for your records",
                                href: registration_resource_path(@event_registration.slug, w9, return_to: "forms"), target: nil)
       end
-      cards << resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
-                             subtitle: "Itemized invoice for this registration",
-                             href: registration_invoice_path(@event_registration.slug, return_to: "forms"))
-      letter = Resource.find_by(title: "Letter to Supervisors")
-      if letter
-        cards << resource_card(icon: "fa-solid fa-file-arrow-down", title: "Letter to supervisors",
-                               subtitle: "Share to request release time",
-                               href: registration_resource_path(@event_registration.slug, letter, return_to: "forms"), target: nil)
+      if @event_registration.invoice_available?
+        cards << resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
+                               subtitle: "Itemized invoice for this registration",
+                               href: registration_invoice_path(@event_registration.slug, return_to: "forms"))
+      end
+      if @event_registration.receipt_available?
+        cards << resource_card(icon: "fa-solid fa-receipt", title: "View receipt",
+                               subtitle: "Paid-in-full receipt for this registration",
+                               href: registration_receipt_path(@event_registration.slug, return_to: "forms"))
       end
       cards
     end

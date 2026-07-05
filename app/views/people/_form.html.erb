@@ -30,6 +30,12 @@
                 <div>
                   <label class="block text-md font-medium text-gray-700 mb-1">Primary email</label>
                   <span class="text-gray-900 font-medium"><%= f.object.user&.email %></span>
+                  <% if f.object.user.unconfirmed_email.present? && allowed_to?(:show_email_change?, f.object) %>
+                    <div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-50 border border-yellow-300 rounded-full text-xs font-medium text-yellow-800" title="Only the person and admins can see this pending change; it is hidden from other profile visitors.">
+                      <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+                      Change to <strong><%= f.object.user.unconfirmed_email %></strong> awaiting confirmation
+                    </div>
+                  <% end %>
 
                   <p class="text-sm text-gray-500 mt-1">
                     Only
@@ -116,52 +122,90 @@
     </div>
   </div>
 
-  <!-- Sectors -->
-  <div class="form-group space-y-4">
-    <div class="font-semibold text-gray-700 mb-2">
-      Sectors
-    </div>
-    <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm
-                flex flex-wrap items-center gap-2"
-         data-controller="primary-sector">
-      <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
-      <%= f.simple_fields_for :sectorable_items, sectors_owner.sectorable_items_primary_first do |sfi| %>
-        <%= render "shared/sectorable_item_fields", f: sfi, show_admin_flags: true %>
-      <% end %>
+  <!-- Sectors + Age ranges (split width; both wrap their chips) -->
+  <%# Tells the controller which category types this form edits via category_ids
+      (workshop settings); saving replaces only those and preserves any other type
+      the form never shows. Age ranges are edited as nested attributes, separately. %>
+  <%= hidden_field_tag "person[category_ids][]", "" %>
+  <%# Always submit the managed_category_type_ids key (blank included) so
+      assign_associations takes the preserve branch even when there are no managed
+      types — otherwise the key vanishes and it replaces categories, dropping the
+      person's age ranges and other-type taggings. %>
+  <%= hidden_field_tag "person[managed_category_type_ids][]", "" %>
+  <% (@managed_category_type_ids || []).each do |type_id| %>
+    <%= hidden_field_tag "person[managed_category_type_ids][]", type_id %>
+  <% end %>
+  <div class="flex flex-wrap gap-4 items-stretch">
+    <!-- Sectors -->
+    <div class="form-group flex flex-col flex-1 min-w-[20rem]">
+      <div class="font-semibold text-gray-700 mb-2">
+        Sectors
+      </div>
+      <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm
+                  flex flex-wrap items-center content-start gap-2 flex-1"
+           data-controller="primary-tag"
+           data-primary-tag-primary-class="border-lime-500 bg-lime-200"
+           data-primary-tag-default-class="border-gray-300 bg-white">
+        <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
+        <%= f.simple_fields_for :sectorable_items, sectors_owner.sectorable_items_ordered do |sfi| %>
+          <%= render "shared/sectorable_item_fields", f: sfi, show_admin_flags: true %>
+        <% end %>
 
-      <%= link_to_add_association "➕ Add Sector",
-                                  f,
-                                  :sectorable_items,
-                                  partial: "shared/sectorable_item_fields",
-                                  render_options: {
-                                    locals: { collection: (@sectors_collection || [])
-                                      .reject { |_, id| (@current_sector_ids || []).include?(id) },
-                                              show_admin_flags: true } },
-                                  class: "btn btn-secondary-outline" %>
-      <%= render "people/other_responses", responses: @person.other_sector_responses %>
+        <%= link_to_add_association "➕ Add Sector",
+                                    f,
+                                    :sectorable_items,
+                                    partial: "shared/sectorable_item_fields",
+                                    render_options: {
+                                      locals: { collection: (@sectors_collection || [])
+                                        .reject { |_, id| (@current_sector_ids || []).include?(id) },
+                                                show_admin_flags: true } },
+                                    class: "btn btn-secondary-outline" %>
+        <%= render "people/other_responses", responses: @person.other_sector_responses %>
+      </div>
     </div>
+
+    <!-- Age ranges -->
+    <% if @age_ranges_collection.present? %>
+      <div class="form-group flex flex-col flex-1 min-w-[20rem]">
+        <div class="font-semibold text-gray-700 mb-2">
+          Age ranges
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm
+                    flex flex-wrap items-center content-start gap-2 flex-1"
+             data-controller="primary-tag"
+             data-primary-tag-primary-class="border-amber-300 bg-amber-50"
+             data-primary-tag-default-class="border-gray-300 bg-white">
+        <% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
+        <%= f.simple_fields_for :age_range_categorizable_items, age_owner.age_range_items_ordered do |afi| %>
+          <%= render "shared/age_range_item_fields", f: afi %>
+        <% end %>
+
+        <%= link_to_add_association "➕ Add age range",
+                                    f,
+                                    :age_range_categorizable_items,
+                                    partial: "shared/age_range_item_fields",
+                                    render_options: {
+                                      locals: { collection: (@age_ranges_collection || [])
+                                        .reject { |_, id| (@current_age_range_category_ids || []).include?(id) } } },
+                                    class: "btn btn-secondary-outline" %>
+        </div>
+      </div>
+    <% end %>
   </div>
 
-  <!-- Profile-specific Categories -->
-  <% if @person_categories_grouped.present? %>
-    <% primary_age_ids = @person.primary_age_category_ids %>
+  <!-- Profile-specific Categories (other than age ranges) -->
+  <% other_category_types = (@person_categories_grouped || {}).reject { |type, _| type.name == "AgeRange" } %>
+  <% if other_category_types.present? %>
     <div class="form-group space-y-4">
-      <%# Ensures the primary-age param is always submitted so unchecking every
-          toggle clears the primary flags. %>
-      <%= hidden_field_tag "person[primary_age_category_ids][]", "" %>
-      <% @person_categories_grouped.each do |type, cats| %>
-        <% is_age = type.name == "AgeRange" %>
+      <% other_category_types.each do |type, cats| %>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
           <h3 class="font-semibold text-gray-700 mb-3"><%= type.display_label %></h3>
-          <% if is_age %>
-            <p class="text-sm text-gray-500 mb-3">Check every age group served, then mark the primary ones.</p>
-          <% end %>
           <div class="flex flex-wrap gap-3">
             <% cats.each do |category| %>
               <%= render "shared/category_checkbox", param_key: "person", category: category,
                          checked: @person.category_ids.include?(category.id),
-                         is_age: is_age,
-                         primary_checked: is_age && primary_age_ids.include?(category.id) %>
+                         is_age: false,
+                         primary_checked: false %>
             <% end %>
           </div>
         </div>
@@ -326,18 +370,6 @@
                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                       },
                       hint: "Shown on an event's scholarship recipients page if designated for a shout-out" %>
-
-          <div class="flex flex-col sm:flex-row gap-4 items-start">
-            <%= f.input :license_type,
-                        label: "License type",
-                        input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full sm:w-1/2" } %>
-
-            <%= f.input :license_number,
-                        label: "License number",
-                        input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full sm:w-1/2" } %>
-          </div>
         </div>
       </div>
     </div>
@@ -466,6 +498,7 @@
           <%= f.input :profile_show_workshops, label: "Show workshops" %>
           <%= f.input :profile_show_workshop_variations, label: "Show workshop variations" %>
           <%= f.input :profile_show_stories, label: "Show stories" %>
+          <%= f.input :profile_show_resources, label: "Show resources" %>
           <%= f.input :profile_show_events_registered, label: "Show registrations" %>
         </div>
 
@@ -480,6 +513,11 @@
   </div>
 
   <% if f.object.persisted? %>
+    <!-- Notifications -->
+    <% if allowed_to?(:index?, with: NotificationPolicy) %>
+      <%= render "notifications", f: f %>
+    <% end %>
+
     <!-- Comments -->
     <% if allowed_to?(:manage?, Comment) %>
       <div class="admin-only bg-blue-100 form-group space-y-4" id="comments-section">

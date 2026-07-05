@@ -1,0 +1,4 @@
+<%# Rendered in the page header and replaced via turbo_stream from _results when
+    the frame reloads, so the badge reflects the active filters. @grants is nil on
+    the initial full-page render (the frame fills it in moments later). %>
+<span id="grants_count" class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-sm font-semibold text-green-700"><%= @grants&.total_entries %></span>

@@ -46,6 +46,7 @@ class WorkshopSearchService
     filter_by_title
     filter_by_query
     filter_by_author_name
+    filter_by_author_id
     filter_by_categories
     filter_by_sectors
     filter_by_tag_names
@@ -77,6 +78,11 @@ class WorkshopSearchService
   def filter_by_author_name
     return unless params[:author_name].present?
     @workshops = search_by_author_name(@workshops, params[:author_name])
+  end
+
+  def filter_by_author_id
+    return unless params[:author_id].present?
+    @workshops = @workshops.where(author_id: params[:author_id])
   end
 
   def filter_by_categories
@@ -156,7 +162,10 @@ class WorkshopSearchService
     return workshops if author_name.blank?
 
     sanitized = author_name.strip.gsub(/\s+/, "")
+    # `created_by: :person` joins `people` (the creator's person); the explicit
+    # author is a second join to the same table, so alias it `author_person`.
     workshops.left_outer_joins(created_by: :person)
+             .joins("LEFT OUTER JOIN people author_person ON author_person.id = workshops.author_id")
              .where(
                "LOWER(REPLACE(workshops.full_name, ' ', '')) LIKE :name
                 OR LOWER(REPLACE(CONCAT(users.first_name, users.last_name), ' ', '')) LIKE :name
@@ -166,7 +175,11 @@ class WorkshopSearchService
                 OR LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name
                 OR LOWER(REPLACE(CONCAT(people.last_name, people.first_name), ' ', '')) LIKE :name
                 OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
-                OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name",
+                OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name
+                OR LOWER(REPLACE(CONCAT(author_person.first_name, author_person.last_name), ' ', '')) LIKE :name
+                OR LOWER(REPLACE(CONCAT(author_person.last_name, author_person.first_name), ' ', '')) LIKE :name
+                OR LOWER(REPLACE(author_person.first_name, ' ', '')) LIKE :name
+                OR LOWER(REPLACE(author_person.last_name, ' ', '')) LIKE :name",
                name: "%#{sanitized}%"
              )
   end

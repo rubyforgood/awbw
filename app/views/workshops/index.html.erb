@@ -29,7 +29,7 @@
   <!-- Search Form -->
   <div class="w-full">
     <%= form_tag(workshops_path, method: :get,
-                 data: {turbo_stream: true, turbo_frame: "workshop_results",
+                 data: {turbo_stream: true, turbo_frame: "workshops_results",
                         controller: "collection share-url"}, autocomplete: "off", class: "space-y-6") do %>
       <%= render "filters" %>
 
@@ -51,67 +51,13 @@
       <%= render "workshops_count" %>
     <% end %>
 
+    <%= render "shared/filtered_to", record: @author, clear_path: workshops_path %>
+
     <!-- Workshops List -->
     <% result_src = workshops_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag "workshop_results", src: result_src, autoscroll: "start", data: {turbo: "temporary"} do %>
-      <div class="mt-6">
-        <div class="space-y-4 animate-pulse">
-          <% 3.times do %>
-            <div class="flex flex-col sm:flex-row border-b border-gray-200 bg-white gap-4 p-4">
-              <!-- Skeleton -->
-              <div class="flex-shrink-0 w-full sm:w-32 h-32 sm:h-24 bg-gray-200 rounded"></div>
-
-              <!-- Content -->
-              <div class="flex flex-col sm:flex-row gap-4 flex-1">
-                <!-- Title / metadata -->
-                <div class="flex flex-1 gap-4">
-                  <!-- Bookmark placeholder -->
-                  <div class="flex-shrink-0 pt-1 w-6">
-                    <div class="w-5 h-5 bg-gray-200 rounded"></div>
-                  </div>
-
-                  <!-- Title + metadata -->
-                  <div class="flex flex-col gap-2 flex-1 min-w-0">
-                    <!-- Badge -->
-                    <div class="h-5 w-32 bg-gray-200 rounded-full"></div>
-
-                    <!-- Title -->
-                    <div class="h-6 w-3/4 bg-gray-300 rounded"></div>
-
-                    <!-- Author + date -->
-                    <div class="h-4 w-1/2 bg-gray-200 rounded"></div>
-
-                    <!-- Bookmark count -->
-                    <div class="h-4 w-40 bg-gray-200 rounded"></div>
-
-                    <!-- Age ranges -->
-                    <div class="h-4 w-48 bg-gray-200 rounded"></div>
-                  </div>
-                </div>
-
-                <!-- Description -->
-                <div class="flex flex-1 gap-4 pr-4 sm:pr-3">
-                  <!-- Empty bookmark spacer -->
-                  <div class="w-6 flex-shrink-0"></div>
-
-                  <!-- Description text -->
-                  <div class="flex-1 space-y-2">
-                    <div class="h-4 w-full bg-gray-200 rounded"></div>
-
-                    <div class="h-4 w-5/6 bg-gray-200 rounded"></div>
-
-                    <div class="h-4 w-2/3 bg-gray-200 rounded"></div>
-
-                    <!-- Tags -->
-                    <div class="mt-3 h-4 w-1/2 bg-gray-200 rounded"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      </div>
+    <%= turbo_frame_tag "workshops_results", src: result_src, autoscroll: "start", data: {turbo: "temporary"} do %>
+      <%= render "results_skeleton" %>
     <% end %>
   </div>
 </div>

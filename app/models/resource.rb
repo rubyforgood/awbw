@@ -1,5 +1,5 @@
 class Resource < ApplicationRecord
-  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include AuthorCreditable, Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include Mentionable
@@ -20,6 +20,7 @@ class Resource < ApplicationRecord
   has_rich_text :rhino_body
 
   belongs_to :created_by, class_name: "User"
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :workshop, optional: true
   belongs_to :windows_type, optional: true
   has_one :form, as: :owner
@@ -74,7 +75,7 @@ class Resource < ApplicationRecord
 
   include SearchCop
   search_scope :search do
-    attributes all: [ :title, :author ]
+    attributes all: [ :title, :legacy_author_name ]
     options :all, type: :text, default: true, default_operator: :or
 
     scope { join_rich_texts }
@@ -112,6 +113,7 @@ class Resource < ApplicationRecord
     resources = resources.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.kinds(params[:kinds]) if params[:kinds].present?
+    resources = resources.where(author_id: params[:author_id]) if params[:author_id].present?
     if visibility_params_present?(params)
       resources = apply_visibility_filters(resources, params)
     elsif params[:published].present?

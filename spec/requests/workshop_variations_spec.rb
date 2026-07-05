@@ -183,6 +183,17 @@ RSpec.describe "/workshop_variations", type: :request do
 
           expect(response).to redirect_to(workshop_variation_path(WorkshopVariation.last))
         end
+
+        it "credits the chosen person as author and records the creator" do
+          facilitator = create(:person)
+
+          post workshop_variations_path,
+               params: { workshop_variation: valid_attributes.merge(author_id: facilitator.id) }
+
+          variation = WorkshopVariation.last
+          expect(variation.author).to eq(facilitator)
+          expect(variation.created_by).to eq(admin)
+        end
       end
 
       context "with invalid params" do

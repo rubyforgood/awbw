@@ -1,20 +1,6 @@
 Rails.application.routes.draw do
-  # temporary direct routes to images for migration audit
-  resources :attachments, only: [ :show ]
-  resources :media_files, only: [ :show ]
-  # namespace :assets do
-  #   resources :primary_assets, only: [ :show ]
-  #   resources :gallery_assets, only: [ :show ]
-  # end
   resources :primary_assets
   resources :rich_text_assets
-
-  namespace :images do
-    resources :primary_images, only: [ :show ]
-    resources :gallery_images, only: [ :show ]
-    resources :rich_texts, only: [ :show ]
-  end
-  resources :images, only: [ :show ]
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   authenticate :user, ->(user) { user.super_user? } do
@@ -92,6 +78,7 @@ Rails.application.routes.draw do
   post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payments#resend_confirmation", as: :bulk_payment_resend_confirmation
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
+  get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
   get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
   get "registration/:slug/faq", to: "events/callouts#faq", as: :registration_faq
   get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment
@@ -100,7 +87,6 @@ Rails.application.routes.draw do
   get "registration/:slug/forms", to: "events/callouts#forms", as: :registration_forms
   get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
   get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
-  get "registration/:slug/portal", to: "events/callouts#portal", as: :registration_portal
   get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
@@ -126,7 +112,7 @@ Rails.application.routes.draw do
       patch :update_sections
     end
   end
-  resources :form_submissions, only: [ :show ]
+  resources :form_submissions, only: [ :index, :show ]
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
     member { patch :toggle_tasks }
@@ -137,6 +123,9 @@ Rails.application.routes.draw do
     end
   end
   resources :events do
+    collection do
+      get :revenue
+    end
     member do
       get :dashboard
       get :sample_ticket
@@ -159,7 +148,7 @@ Rails.application.routes.draw do
       post :create_bulk_payment
     end
     resources :registration_ticket_callouts, only: [ :show, :update ]
-    resource :registrations, only: %i[ create destroy ], module: :events, as: :registrant_registration
+    resource :registrations, only: %i[ create ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
     resource :bulk_payment, only: [ :new, :create, :show ], module: :events
     resource :invoice, only: [ :show ], module: :events

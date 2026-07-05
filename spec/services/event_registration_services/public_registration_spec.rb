@@ -49,6 +49,33 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(person.affiliations.where(organization: organization).pluck(:title))
         .to contain_exactly("Facilitator")
     end
+
+    it "links the created affiliations to the agency address built from the form" do
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
+        field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER) => "Counselor",
+        field_id("agency_street") => "1 Main St",
+        field_id("agency_city") => "Austin",
+        field_id("agency_state") => "TX",
+        field_id("agency_zip") => "78701",
+        field_id("agency_country") => "USA"
+      )
+      described_class.call(event: event, form: form, form_params: params)
+      person = Person.find_by(email: "sam@example.com")
+
+      address = organization.addresses.find_by(city: "Austin")
+      expect(address).to be_present
+      expect(address.country).to eq("USA")
+      linked = person.affiliations.where(organization: organization)
+      expect(linked.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+      expect(linked.map(&:organization_address)).to all(eq(address))
+    end
+
+    it "leaves the affiliations' organization address nil when no agency city was typed" do
+      person = register_with(position: "Counselor")
+
+      expect(person.affiliations.where(organization: organization).map(&:organization_address)).to all(be_nil)
+    end
   end
 
   describe "registration organizations" do
@@ -285,6 +312,59 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         expect(existing).not_to be_inactive
         expect(organization.addresses.find_by(city: "Reno")).not_to be_primary
       end
+    end
+  end
+
+  describe "organization type sync" do
+    let!(:organization) { create(:organization, name: "Helping Hands") }
+
+    def register_with_agency_type(value)
+      params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
+        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
+        field_id("agency_type") => value
+      )
+      described_class.call(event: event, form: form, form_params: params)
+      organization.reload
+    end
+
+    it "folds an 'Other' answer into agency_type and the stripped free text into agency_type_other" do
+      register_with_agency_type("Other: Equine therapy")
+
+      expect(organization.agency_type).to eq("Other")
+      expect(organization.agency_type_other).to eq("Equine therapy")
+    end
+
+    it "stores the answer as 'Other: <text>' on the form submission, like other specify options" do
+      register_with_agency_type("Other: Equine therapy")
+
+      answer = FormAnswer.joins(:form_field)
+        .find_by(form_fields: { field_identifier: "agency_type" })
+      expect(answer.submitted_answer).to eq("Other: Equine therapy")
+    end
+
+    it "stores a non-'Other' classification with no agency_type_other" do
+      register_with_agency_type("501c3/nonprofit")
+
+      expect(organization.agency_type).to eq("501c3/nonprofit")
+      expect(organization.agency_type_other).to be_nil
+    end
+
+    it "overwrites a previously stored type with the latest registrant's answer" do
+      organization.update!(agency_type: "501c3/nonprofit", agency_type_other: nil)
+
+      register_with_agency_type("Other: Equine therapy")
+
+      expect(organization.agency_type).to eq("Other")
+      expect(organization.agency_type_other).to eq("Equine therapy")
+    end
+
+    it "clears a stale agency_type_other when the latest answer is no longer 'Other'" do
+      organization.update!(agency_type: "Other", agency_type_other: "Equine therapy")
+
+      register_with_agency_type("Government agency")
+
+      expect(organization.agency_type).to eq("Government agency")
+      expect(organization.agency_type_other).to be_nil
     end
   end
 

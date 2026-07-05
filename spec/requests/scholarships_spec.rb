@@ -98,6 +98,40 @@ RSpec.describe "Scholarships", type: :request do
     end
   end
 
+  describe "GET /scholarships/new" do
+    it "shows the registrant's scholarship form answers with a link to the full submission" do
+      form = create(:form, name: "Registration Form")
+      create(:event_form, event: event, form: form, role: "registration")
+      field = create(:form_field, form: form, section: "scholarship",
+                     name: "Why do you need a scholarship?", answer_type: :free_form_input_paragraph)
+      submission = create(:form_submission, person: registration.registrant, form: form)
+      create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Limited budget")
+
+      get new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants")
+
+      expect(response.body).to include("Form submission")
+      expect(response.body).to include("Why do you need a scholarship?")
+      expect(response.body).to include("Limited budget")
+      expect(response.body).to include("View full submission")
+      expect(response.body).to include(event_public_registration_path(event, reg: registration.slug))
+    end
+
+    it "shows answers submitted on the event's dedicated scholarship form" do
+      scholarship_form = create(:form, name: "Scholarship Application")
+      create(:event_form, event: event, form: scholarship_form, role: "scholarship")
+      field = create(:form_field, form: scholarship_form, section: "scholarship",
+                     name: "How much can you contribute?", answer_type: :free_form_input_one_line)
+      submission = create(:form_submission, person: registration.registrant, form: scholarship_form, role: "scholarship")
+      create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "$250")
+
+      get new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registration")
+
+      expect(response.body).to include("Form submission")
+      expect(response.body).to include("How much can you contribute?")
+      expect(response.body).to include("$250")
+    end
+  end
+
   describe "PATCH /scholarships/:id from the registration Edit link" do
     it "returns to the event registration edit page" do
       patch scholarship_path(scholarship, return_to: "registration"),
@@ -137,10 +171,10 @@ RSpec.describe "Scholarships", type: :request do
   end
 
   describe "back link follows the page the user came from" do
-    it "links the new page back to the registrants roster when return_to=registrants" do
+    it "links the new page back to the registrants roster (anchored to the row) when return_to=registrants" do
       get new_scholarship_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants")
 
-      expect(response.body).to include("href=\"#{registrants_event_path(event)}\"")
+      expect(response.body).to include("href=\"#{registrants_event_path(event, highlight: registration.id, anchor: "registrant-row-#{registration.id}")}\"")
       expect(response.body).not_to include("href=\"#{edit_event_registration_path(registration)}\"")
     end
 
@@ -150,10 +184,10 @@ RSpec.describe "Scholarships", type: :request do
       expect(response.body).to include("href=\"#{edit_event_registration_path(registration)}\"")
     end
 
-    it "links the edit page back to the registrants roster when return_to=registrants" do
+    it "links the edit page back to the registrants roster (anchored to the row) when return_to=registrants" do
       get edit_scholarship_path(scholarship, return_to: "registrants")
 
-      expect(response.body).to include("href=\"#{registrants_event_path(event)}\"")
+      expect(response.body).to include("href=\"#{registrants_event_path(event, highlight: registration.id, anchor: "registrant-row-#{registration.id}")}\"")
     end
 
     it "links the edit page back to the registration when return_to=registration" do
@@ -321,6 +355,19 @@ RSpec.describe "GET /scholarships (index)", type: :request do
       get scholarships_path
 
       expect(response.body).to include(grant_path(grant, from_scholarships: true))
+    end
+
+    it "filters to a single recipient when recipient_id is given" do
+      recipient = create(:person, first_name: "Carmen", last_name: "Gomez")
+      other = create(:person, first_name: "Jane", last_name: "Doe")
+      create(:scholarship, recipient: recipient)
+      create(:scholarship, recipient: other)
+
+      get scholarships_path(recipient_id: recipient.id)
+
+      expect(response.body).to include("Filtered to")
+      expect(response.body).to include("Carmen Gomez")
+      expect(response.body).not_to include("Jane Doe")
     end
   end
 end

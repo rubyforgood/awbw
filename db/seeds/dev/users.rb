@@ -182,6 +182,17 @@ unless invited_no_person.welcome_instructions_token.present?
   )
 end
 
+# Base user Aisha with a primary email change awaiting confirmation. Set the
+# reconfirmation columns directly so no confirmation email is sent on reseed.
+aisha = User.find_by!(email: "aisha.user@example.com")
+unless aisha.unconfirmed_email.present?
+  aisha.update_columns(
+    unconfirmed_email: "aisha.new@example.com",
+    confirmation_token: Devise.friendly_token,
+    confirmation_sent_at: 1.day.ago
+  )
+end
+
 # Reset only these dev users' passwords (mirrors the base seed reset), so they
 # stay loggable-in after a reseed without touching any other user.
 dev_user_emails = %w[

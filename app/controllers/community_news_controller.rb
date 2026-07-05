@@ -5,16 +5,29 @@ class CommunityNewsController < ApplicationController
 
   def index
     authorize!
+    @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset,
-                                                             :author, :organization, author: :person ]))
+      base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset, :author,
+                                                             :organization, { user_author: :person }, { created_by: :person } ]))
       filtered = base_scope.search_by_params(params)
       @sort = %w[created_at title author organization].include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
       filtered = case @sort
       when "author"
-        filtered.left_joins(author: :person).reorder("people.last_name #{@sort_direction}, people.first_name #{@sort_direction}")
+        # Match author_credit, which renders author_person: author, then the
+        # legacy user_author's person, then created_by's person. The join order
+        # fixes the people aliases (people_users, people_users_2), so keep it.
+        author_person_column = ->(field) {
+          Arel::Nodes::NamedFunction.new("COALESCE", [
+            Person.arel_table[field],
+            Person.arel_table.alias("people_users")[field],
+            Person.arel_table.alias("people_users_2")[field]
+          ])
+        }
+        dir = @sort_direction.to_sym
+        filtered.left_joins(:author, { user_author: :person }, { created_by: :person })
+                .reorder(author_person_column.call(:last_name).public_send(dir), author_person_column.call(:first_name).public_send(dir))
       when "organization"
         filtered.left_joins(:organization).reorder("organizations.name #{@sort_direction}")
       else
@@ -23,7 +36,7 @@ class CommunityNewsController < ApplicationController
       @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
       @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
 
-      render :index_lazy
+      render :community_news_results
     else
       @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
       render :index
@@ -60,6 +73,7 @@ class CommunityNewsController < ApplicationController
 
   def create
     @community_news = CommunityNews.new(community_news_params)
+    @community_news.created_by = current_user
     authorize! @community_news
 
     success = false
@@ -119,9 +133,9 @@ class CommunityNewsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @organizations = authorized_scope(Organization.all).order(:name).pluck(:name, :id).sort_by(&:first)
-    @authors = authorized_scope(User.has_access.or(User.where(id: @community_news.author_id)))
-                   .includes(:person)
-                   .map { |u| [ u.full_name, u.id ] }.sort_by(&:first)
+    # Author is any person, not just active-login users, so facilitators
+    # without a confirmed account can still be credited.
+    @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
     @categories_grouped =
       Category
         .includes(:category_type)
@@ -147,7 +161,7 @@ class CommunityNewsController < ApplicationController
       :title, :rhino_body, :published, :featured, :publicly_visible, :publicly_featured,
       :reference_url, :youtube_url,
       :organization_id,
-      :author_id, :created_by_id, :updated_by_id,
+      :author_id, :author_credit_preference, :created_by_id, :updated_by_id,
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],

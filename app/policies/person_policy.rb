@@ -13,6 +13,10 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def show_email_change?
+    admin? || owner?
+  end
+
   def checkout?
     admin?
   end
@@ -51,6 +55,11 @@ class PersonPolicy < ApplicationPolicy
   def has_associated_data?
     record.user.present? ||
       record.affiliations.exists? ||
-      record.stories_as_spotlighted_facilitator.exists?
+      record.stories_as_spotlighted_facilitator.exists? ||
+      record.stories_as_author.exists? ||
+      record.workshop_variations_as_author.exists? ||
+      record.workshops_as_author.exists? ||
+      record.community_news_as_author.exists? ||
+      record.resources_as_author.exists?
   end
 end

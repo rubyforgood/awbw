@@ -44,15 +44,27 @@ class PeopleController < ApplicationController
 
       case section
       when "workshops"
-        @workshops = @person.user&.workshops&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        # Credit the person for workshops they authored — not ones their user
+        # merely created (created_by is a pure audit trail).
+        @workshops = @person.workshops_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshops", locals: { person: @person, workshops: @workshops }
       when "workshop_variations"
-        @workshop_variations = @person.user&.workshop_variations_as_creator&.order(created_at: :desc)&.paginate(page: params[:page], per_page: per_page) || []
+        # Credit the person for variations they authored — not ones their user
+        # merely entered (created_by is a pure audit trail).
+        @workshop_variations = @person.workshop_variations_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variations", locals: { person: @person, workshop_variations: @workshop_variations }
       when "stories"
-        story_ids = @person.user&.stories_as_creator&.pluck(:id).to_a + @person.stories_as_spotlighted_facilitator.pluck(:id)
+        # Credit the person for stories they authored or were spotlighted in —
+        # not ones their user merely entered (created_by is a pure audit trail).
+        story_ids = @person.stories_as_author.pluck(:id) +
+          @person.stories_as_spotlighted_facilitator.pluck(:id)
         @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
+      when "resources"
+        # Credit the person for resources they authored — not ones their user
+        # merely entered (created_by is a pure audit trail).
+        @resources = @person.resources_as_author.order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        render partial: "people/sections/resources", locals: { person: @person, resources: @resources }
       when "events"
         @event_registrations = @person.event_registrations.active.includes(:event).order("events.start_date DESC").references(:events).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/events", locals: { person: @person, event_registrations: @event_registrations }
@@ -171,12 +183,16 @@ class PeopleController < ApplicationController
       @duplicates = find_duplicate_people(
         @person.first_name,
         @person.last_name,
-        @person.email
+        @person.email,
+        legal_first_name: @person.legal_first_name,
+        email_2: @person.email_2
       )
       if @duplicates.any?
         @first_name = @person.first_name
         @last_name = @person.last_name
         @email = @person.email
+        @legal_first_name = @person.legal_first_name
+        @email_2 = @person.email_2
         @blocked = @duplicates.any? { |d| d[:blocked] }
         set_form_variables
         respond_to do |format|
@@ -209,6 +225,10 @@ class PeopleController < ApplicationController
     @person.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @person.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
+    # Inline-logged notifications are addressed to the person.
+    recipient_email = @person.preferred_email.presence || "n/a"
+    @person.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
+
     if @person.save
       assign_associations(@person) if params.dig(:person, :category_ids)
       redirect_to person_update_return_path, notice: "Person was successfully updated."
@@ -233,7 +253,12 @@ class PeopleController < ApplicationController
     @first_name = params[:first_name]
     @last_name = params[:last_name]
     @email = params[:email]
-    @duplicates = find_duplicate_people(@first_name, @last_name, @email)
+    @legal_first_name = params[:legal_first_name]
+    @email_2 = params[:email_2]
+    @duplicates = find_duplicate_people(
+      @first_name, @last_name, @email,
+      legal_first_name: @legal_first_name, email_2: @email_2
+    )
     @blocked = @duplicates.any? { |d| d[:blocked] }
   end
 
@@ -280,42 +305,73 @@ class PeopleController < ApplicationController
       .group_by(&:category_type)
       .select { |type, _| type&.profile_specific? }
       .sort_by { |type, _| type&.name.to_s.downcase }
+
+    # Age ranges edit as their own sectors-style cocoon chip picker (AgeRange
+    # isn't a profile_specific type, so it never appears in
+    # @person_categories_grouped). Tagged via age_range_categorizable_items nested
+    # attributes, not category_ids.
+    @age_range_type = CategoryType.find_by(name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE)
+    age_ranges = @age_range_type ? @age_range_type.categories.published.order(:position, :name) : Category.none
+    @age_ranges_collection = age_ranges.pluck(:name, :id)
+    @current_age_range_category_ids = @person.age_range_categorizable_items.map(&:category_id)
+
+    # The category types this form edits via category_ids — the profile-specific
+    # types shown below (workshop settings). assign_associations preserves taggings
+    # of any other type (age ranges included, handled by nested attributes), so
+    # saving the form can't drop a person's other category connections.
+    @managed_category_type_ids = @person_categories_grouped.map { |type, _| type.id }
   end
 
-  def find_duplicate_people(first_name, last_name, email)
+  def find_duplicate_people(first_name, last_name, email, legal_first_name: nil, email_2: nil)
     duplicates = []
     duplicate_ids = Set.new
 
-    # Check for name matches (exact + nickname variants)
-    # Normalize removes periods and extra whitespace: "J. R." -> "jr"
+    # Entered emails (primary + secondary) drive both email matching and match
+    # classification. example.com addresses are seed/placeholder data, so they're
+    # excluded from the DB lookup.
+    entered_emails = [ email, email_2 ].filter_map { |e| e.presence&.downcase }.uniq
+    query_emails = entered_emails.reject { |e| e.end_with?("@example.com") }
+
+    # Entered first-name forms: the first name and legal first name, normalized.
+    # Normalize removes periods and extra whitespace: "J. R." -> "jr".
+    entered_first_forms = [ first_name, legal_first_name ].filter_map { |n| NicknameMap.normalize(n).presence }.uniq
+    normalized_last = NicknameMap.normalize(last_name)
+
+    # Check for name matches (exact + nickname variants), comparing both the
+    # entered first name and legal first name (and their nickname variants)
+    # against the stored first name and legal first name.
     if first_name.presence && last_name.presence
       first_variants = NicknameMap.variants_for(first_name)
-      normalized_last = NicknameMap.normalize(last_name)
-      normalized_first = NicknameMap.normalize(first_name)
+      first_variants += NicknameMap.variants_for(legal_first_name) if legal_first_name.present?
+      first_variants = first_variants.uniq
 
       name_matches = Person.includes(:user)
                            .where("REPLACE(REPLACE(LOWER(last_name), '.', ''), ' ', '') = ?", normalized_last)
-                           .where("REPLACE(REPLACE(LOWER(first_name), '.', ''), ' ', '') IN (?)", first_variants)
+                           .where(
+                             "REPLACE(REPLACE(LOWER(first_name), '.', ''), ' ', '') IN (:variants) OR " \
+                             "REPLACE(REPLACE(LOWER(legal_first_name), '.', ''), ' ', '') IN (:variants)",
+                             variants: first_variants
+                           )
                            .limit(10)
 
       name_matches.each do |person|
         next if duplicate_ids.include?(person.id)
 
         duplicate_ids.add(person.id)
-        exact_name = NicknameMap.normalize(person.first_name) == normalized_first
-        duplicates << format_duplicate(person, exact: exact_name, entered_email: email)
+        exact_name = exact_first_name_match?(entered_first_forms, person)
+        duplicates << format_duplicate(person, exact: exact_name, entered_email: email, entered_emails: entered_emails)
       end
     end
 
-    # Check for email matches (skip example.com)
+    # Check for email matches on the primary or secondary entered email.
     # Only match person.email when person has no user (otherwise it's a stale copy of user.email)
-    if email.presence && !email.downcase.end_with?("@example.com") && duplicates.size < 10
-      email_lower = email.downcase
+    if query_emails.any? && duplicates.size < 10
       email_query = Person.includes(:user)
                           .left_joins(:user)
                           .where(
-                            "(users.id IS NULL AND LOWER(people.email) = :email) OR LOWER(people.email_2) = :email OR LOWER(users.email) = :email",
-                            email: email_lower
+                            "(users.id IS NULL AND LOWER(people.email) IN (:emails)) OR " \
+                            "LOWER(people.email_2) IN (:emails) OR LOWER(users.email) IN (:emails)",
+                            emails: query_emails
                           )
                           .limit(10)
 
@@ -323,10 +379,10 @@ class PeopleController < ApplicationController
         next if duplicate_ids.include?(person.id)
 
         duplicate_ids.add(person.id)
-        name_matches = first_name.present? && last_name.present? &&
-          NicknameMap.normalize(person.first_name) == NicknameMap.normalize(first_name) &&
-          NicknameMap.normalize(person.last_name) == NicknameMap.normalize(last_name)
-        duplicates << format_duplicate(person, exact: name_matches, entered_email: email)
+        exact_name = last_name.present? &&
+          NicknameMap.normalize(person.last_name) == normalized_last &&
+          exact_first_name_match?(entered_first_forms, person)
+        duplicates << format_duplicate(person, exact: exact_name, entered_email: email, entered_emails: entered_emails)
         break if duplicates.size >= 10
       end
     end
@@ -335,19 +391,31 @@ class PeopleController < ApplicationController
     duplicates.sort_by { |d| [ d[:blocked] ? -1 : 0, sort_order[d[:match_type]] || 4 ] }
   end
 
-  def format_duplicate(person, exact: true, entered_email: nil)
+  # True when any entered first-name form (first or legal, normalized) matches
+  # the stored person's first name or legal first name directly — a real name
+  # match rather than only a nickname bridge.
+  def exact_first_name_match?(entered_first_forms, person)
+    stored_forms = [ person.first_name, person.legal_first_name ].filter_map { |n| NicknameMap.normalize(n).presence }
+    (entered_first_forms & stored_forms).any?
+  end
+
+  def format_duplicate(person, exact: true, entered_email: nil, entered_emails: nil)
+    entered_emails = (Array(entered_emails).presence || [ entered_email ]).filter_map { |e| e.presence&.downcase }.uniq
+
     labeled_emails = []
     # Skip person.email when person has a user (it's a stale copy of user.email)
     labeled_emails << { label: "Email", value: person.email } if person.email.present? && person.user.blank?
     labeled_emails << { label: "Secondary email", value: person.email_2 } if person.email_2.present?
     labeled_emails << { label: "User email", value: person.user.email } if person.user&.email.present?
     emails = labeled_emails.map { |e| e[:value] }.uniq
-    any_email_match = entered_email.present? &&
-      emails.any? { |e| e.downcase == entered_email.downcase }
+    any_email_match = emails.any? { |e| entered_emails.include?(e.downcase) }
     primary_email_match = exact && entered_email.present? &&
       person.email.present? && person.email.downcase == entered_email.downcase
     secondary_email_match = exact && any_email_match && !primary_email_match
 
+    # Exact name + primary email is an "exact" match and blocks creation. Exact
+    # name plus a secondary or user email is "approximate" — the admin is warned
+    # but can still create the person (they may legitimately share an email).
     match_type = if primary_email_match
       "exact"
     elsif secondary_email_match
@@ -391,8 +459,6 @@ class PeopleController < ApplicationController
       :street_address, :city, :state, :zip, :country, :mailing_address_type,
       :best_time_to_call,
       :date_of_birth,
-      :license_number,
-      :license_type,
       :credentials,
       :racial_ethnic_identity,
       :filemaker_code,
@@ -419,6 +485,7 @@ class PeopleController < ApplicationController
       :profile_show_workshops,
       :profile_show_workshop_ideas,
       :profile_show_workshop_logs,
+      :profile_show_resources,
       :member_since,
       :linked_in_url,
       :facebook_url,
@@ -426,8 +493,8 @@ class PeopleController < ApplicationController
       :youtube_url,
       :twitter_url,
       :created_by_id, :updated_by_id,
-      category_ids: [],
       sectorable_items_attributes: [ :id, :sector_id, :is_leader, :is_primary, :_destroy ],
+      age_range_categorizable_items_attributes: [ :id, :category_id, :is_primary, :_destroy ],
       addresses_attributes: [
         :id,
         :address_type,
@@ -491,6 +558,7 @@ class PeopleController < ApplicationController
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id ]
     )
   end
 end

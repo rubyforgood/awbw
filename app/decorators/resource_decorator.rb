@@ -13,7 +13,23 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def truncated_author
-    h.truncate author, length: 20
+    h.truncate credited_author_name, length: 20
+  end
+
+  # Name shown on the author/credit line: the chosen person's credit when a
+  # person author is set, otherwise the preserved legacy free-text author,
+  # otherwise the creating user's person credit (AuthorCreditable fallback).
+  def credited_author_name
+    return author_credit if author.present?
+    legacy_author_name.presence || author_credit
+  end
+
+  # The person to link the credit to, when there is a linkable one. A legacy
+  # free-text author is just a string, so it links nowhere.
+  def credited_author_link_person
+    return author if author.present?
+    return nil if legacy_author_name.present?
+    created_by&.person
   end
 
   def truncated_title
@@ -37,7 +53,7 @@ class ResourceDecorator < ApplicationDecorator
   end
 
   def author_full_name
-    author || created_by.name
+    credited_author_name
   end
 
   def display_date

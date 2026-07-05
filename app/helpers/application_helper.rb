@@ -256,7 +256,13 @@ module ApplicationHelper
     people:              "fa-user",
     organizations:       "fa-building",
     workshops:           "fa-chalkboard-user",
-    resources:           "fa-book"
+    workshop_variations: "fa-shapes",
+    resources:           "fa-book",
+    scholarships:        "fa-graduation-cap",
+    notifications:       "fa-bell",
+    grants:              "fa-hand-holding-dollar",
+    form_submissions:    "fa-file-signature",
+    payments:            "fa-money-check-dollar"
   }.freeze
 
   # Themed card-style link to a filtered index. The collection drives the
@@ -449,6 +455,11 @@ module ApplicationHelper
   # a whole number of dollars: 150000 → "$1,500", 75050 → "$750.50".
   def dollars_from_cents(cents)
     MoneyFormatter.dollars_from_cents(cents)
+  end
+
+  # Like dollars_from_cents but preserves a leading minus for negative amounts.
+  def signed_dollars_from_cents(cents)
+    MoneyFormatter.signed_dollars_from_cents(cents)
   end
 
   def navbar_bg_class

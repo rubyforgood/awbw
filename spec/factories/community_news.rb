@@ -6,7 +6,6 @@ FactoryBot.define do
     rhino_body { "<p>Test content</p>" }
     # reference_url { nil }
     # youtube_url { nil }
-    association :author, factory: :user
     association :created_by, factory: :user
     association :updated_by, factory: :user
 

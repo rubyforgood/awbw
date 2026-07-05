@@ -91,6 +91,32 @@ RSpec.describe PersonPolicy, type: :policy do
     end
   end
 
+  describe "#show_email_change?" do
+    context "with admin user" do
+      subject { policy_for(record: owned_person, user: admin_user) }
+
+      it { is_expected.to be_allowed_to(:show_email_change?) }
+    end
+
+    context "with owner" do
+      subject { policy_for(record: owned_person, user: owner_user) }
+
+      it { is_expected.to be_allowed_to(:show_email_change?) }
+    end
+
+    context "with regular user who is not the owner" do
+      subject { policy_for(record: searchable_person, user: regular_user) }
+
+      it { is_expected.not_to be_allowed_to(:show_email_change?) }
+    end
+
+    context "with no user" do
+      subject { policy_for(record: searchable_person, user: nil) }
+
+      it { is_expected.not_to be_allowed_to(:show_email_change?) }
+    end
+  end
+
   describe "#edit?" do
     context "with admin user" do
       subject { policy_for(record: searchable_person, user: admin_user) }
@@ -108,6 +134,83 @@ RSpec.describe PersonPolicy, type: :policy do
       subject { policy_for(record: searchable_person, user: regular_user) }
 
       it { is_expected.not_to be_allowed_to(:edit?) }
+    end
+  end
+
+  describe "#destroy?" do
+    context "when person has authored stories" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      before do
+        create(:story, author: person)
+      end
+
+      it "is not allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).not_to be_allowed_to(:destroy?)
+      end
+    end
+
+    context "when person has authored workshop variations" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      before do
+        create(:workshop_variation, author: person)
+      end
+
+      it "is not allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).not_to be_allowed_to(:destroy?)
+      end
+    end
+
+    context "when person has authored workshops" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      before do
+        create(:workshop, author: person)
+      end
+
+      it "is not allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).not_to be_allowed_to(:destroy?)
+      end
+    end
+
+    context "when person has authored community news" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      before do
+        create(:community_news, author: person)
+      end
+
+      it "is not allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).not_to be_allowed_to(:destroy?)
+      end
+    end
+
+    context "when person has authored resources" do
+      let(:admin) { create(:user, :admin) }
+      let(:person) { create(:person, user: nil) }
+
+      before do
+        create(:resource, author: person)
+      end
+
+      it "is not allowed" do
+        policy = policy_for(record: person, user: admin)
+
+        expect(policy).not_to be_allowed_to(:destroy?)
+      end
     end
   end
 
