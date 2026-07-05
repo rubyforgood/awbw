@@ -35,7 +35,7 @@ RSpec.describe "Person edit associated records", type: :request do
 
       # Custom card labels
       expect(response.body).to include("Grants (as donor)")
-      expect(response.body).to include("Communications")
+      expect(response.body).to include("Communications (universal)")
     end
   end
 end

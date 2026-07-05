@@ -4,7 +4,7 @@
 <%# Multi-column layout so cards flow top-to-bottom then to the next column.
     Keep the cards in alphabetical order by label. %>
 <ul class="columns-1 sm:columns-2 md:columns-3 gap-x-6">
-  <li class="break-inside-avoid mb-2"><%= index_button notifications, params: { email: email }, label: t("communications.title") %></li>
+  <li class="break-inside-avoid mb-2"><%= index_button notifications, params: { email: email }, label: "#{t("communications.title")} (universal)" %></li>
   <li class="break-inside-avoid mb-2"><%= index_button person.community_news_as_author, params: { author_id: person.id } %></li>
   <li class="break-inside-avoid mb-2"><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
   <li class="break-inside-avoid mb-2"><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
