@@ -21,6 +21,17 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include(form_submission_path(mine))
         expect(response.body).not_to include(form_submission_path(theirs))
       end
+
+      it "each View link carries a return_to back to the person's index" do
+        person = create(:person)
+        submission = create(:form_submission, person: person)
+
+        get form_submissions_path(person_id: person.id)
+
+        expect(response.body).to include(
+          CGI.escapeHTML(form_submission_path(submission, return_to: "form_submissions", person_id: person.id))
+        )
+      end
     end
 
     context "as a non-admin" do
@@ -47,6 +58,13 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Organization")
         expect(response.body).to include("AWBW")
+      end
+
+      it "shows a back link to the form submissions index when arriving from it" do
+        get form_submission_path(submission, return_to: "form_submissions", person_id: submission.person_id)
+
+        expect(response.body).to include(form_submissions_path(person_id: submission.person_id))
+        expect(response.body).to include("Back to form submissions")
       end
 
       it "resolves the sector/age-group ids stored behind the professional fields to names" do
