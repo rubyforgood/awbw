@@ -106,7 +106,7 @@
                                     person_path(f.object.author),
                                     class: "hover:underline") : "Variation author").html_safe,
                           collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
-                          selected: (f.object.author_id || current_user.person_id),
+                          selected: (f.object.author_person&.id || current_user.person_id),
                           input_html: { class: "w-full rounded-lg px-3 py-2",
                                         data: { searchable_select_target: "select" } } %>
               </div>
