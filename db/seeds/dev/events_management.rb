@@ -1532,7 +1532,7 @@ if facilitator_training && registration_form
   position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
   submit_field = ->(registration, field, value) do
     if field
-    submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration", event: registration.event)
+      submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration", event: registration.event)
       answer = submission.form_answers.find_or_initialize_by(form_field: field)
       answer.update!(submitted_answer: value.to_s, question_name_when_answered: field.name)
     end
