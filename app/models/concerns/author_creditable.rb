@@ -20,7 +20,7 @@ module AuthorCreditable
   }.freeze
 
   # The person whose name is credited: the explicitly chosen author when the
-  # model has one (e.g. Story), otherwise the creating user's person.
+  # model has one (e.g. Story, Workshop), otherwise the creating user's person.
   def author_person
     (author if respond_to?(:author)) || created_by&.person
   end

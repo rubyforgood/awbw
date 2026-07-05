@@ -1566,6 +1566,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_05_005115) do
     t.text "age_range", size: :long
     t.text "age_range_spanish", size: :long
     t.string "author_credit_preference"
+    t.bigint "author_id"
     t.string "author_location"
     t.text "closing", size: :long
     t.text "closing_spanish", size: :long
@@ -1646,6 +1647,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_05_005115) do
     t.integer "windows_type_id"
     t.bigint "workshop_idea_id"
     t.integer "year"
+    t.index ["author_id"], name: "index_workshops_on_author_id"
     t.index ["created_at"], name: "index_workshops_on_created_at"
     t.index ["created_by_id"], name: "index_workshops_on_created_by_id"
     t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
@@ -1797,6 +1799,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_05_005115) do
   add_foreign_key "workshop_variations", "windows_types"
   add_foreign_key "workshop_variations", "workshop_variation_ideas"
   add_foreign_key "workshop_variations", "workshops"
+  add_foreign_key "workshops", "people", column: "author_id"
   add_foreign_key "workshops", "users", column: "created_by_id"
   add_foreign_key "workshops", "windows_types"
   add_foreign_key "workshops", "workshop_ideas"
