@@ -23,6 +23,7 @@ class WorkshopVariation < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :windows_type, optional: true
   belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :workshop_variation_idea, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy

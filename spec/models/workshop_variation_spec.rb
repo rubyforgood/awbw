@@ -7,7 +7,29 @@ RSpec.describe WorkshopVariation do
     it { should belong_to(:workshop).optional }
     it { should belong_to(:windows_type).optional }
     it { should belong_to(:created_by).class_name("User").optional }
+    it { should belong_to(:author).class_name("Person").optional }
     it { should belong_to(:workshop_variation_idea).optional }
+  end
+
+  describe "#author_person" do
+    let(:creator) { create(:user, :with_person) }
+    let(:facilitator) { create(:person) }
+
+    it "returns the explicitly chosen author when present" do
+      variation = create(:workshop_variation, created_by: creator, author: facilitator)
+      expect(variation.author_person).to eq(facilitator)
+    end
+
+    it "falls back to the creating user's person when no author is set" do
+      variation = create(:workshop_variation, created_by: creator, author: nil)
+      expect(variation.author_person).to eq(creator.person)
+    end
+
+    it "credits the author over the creator via author_credit" do
+      variation = create(:workshop_variation, created_by: creator, author: facilitator,
+                                              author_credit_preference: "full_name")
+      expect(variation.author_credit).to eq(facilitator.full_name)
+    end
   end
 
   describe "validations" do
