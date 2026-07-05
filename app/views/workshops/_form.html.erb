@@ -56,13 +56,17 @@
           <% end %>
 
           <div data-controller="searchable-select" data-searchable-select-mode-value="person">
-            <%= f.input :created_by_id,
+            <%= f.input :author_id,
                         as: :select,
-                        label: "Author",
-                        collection: User.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)")),
+                        label: (f.object.author ? (
+                          link_to "Author",
+                                  person_path(f.object.author),
+                                  class: "hover:underline") : "Author").html_safe,
+                        collection: @people,
                         label_method: :full_name_with_email,
                         value_method: :id,
-                        hint: "aka Created By",
+                        selected: (f.object.author_person&.id || current_user.person_id),
+                        hint: "Credited author — any person, not just active users. Defaults to the creator; change to credit someone else.",
                         input_html: {
                           class: "block w-full rounded-md border-gray-300 shadow-sm
                           focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
@@ -118,8 +122,6 @@
 
           <%# end %>
         </div>
-      <% else %>
-        <%= f.hidden_field :created_by_id, value: current_user&.id %>
       <% end %>
     </div>
 

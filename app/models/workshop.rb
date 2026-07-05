@@ -25,6 +25,7 @@ class Workshop < ApplicationRecord
 
   belongs_to :windows_type, optional: true
   belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :workshop_idea, optional: true
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -185,7 +186,7 @@ class Workshop < ApplicationRecord
   end
 
   def author_name
-    created_by&.name || full_name.presence
+    author_person&.full_name.presence || full_name.presence
   end
 
   def date

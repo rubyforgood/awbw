@@ -53,9 +53,10 @@
         <!-- Author + date -->
         <div class="text-sm text-gray-600 leading-tight">
           By:
-          <% if workshop.created_by&.person %>
+          <% credited_person = workshop.author_person %>
+          <% if credited_person %>
             <%= link_to workshop.author_name,
-                        person_path(workshop.created_by.person),
+                        person_path(credited_person),
                         class: "hover:underline",
                         data: { turbo: false } %>
           <% else %>
