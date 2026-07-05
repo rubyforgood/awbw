@@ -1,5 +1,4 @@
 <%= simple_form_for(@community_news, html: { class: "space-y-8" }) do |f| %>
-  <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>
   <%= f.hidden_field :updated_by_id, value: current_user&.id %>
 
   <%= render 'shared/errors', resource: @community_news if @community_news.errors.any? %>
@@ -50,12 +49,19 @@
 
     <%= f.input :author_id,
                 as: :select,
-                label: "Display author",
+                label: "Author",
                 required: true,
-                collection: @authors,
-                selected: f.object.author_id ||
-                  current_user&.id ||
-                  User.where("first_name like 'awbw%' or last_name like 'awbw%'").last&.id,
+                collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                selected: f.object.author_id || current_user&.person_id,
+                input_html: { required: true,
+                              class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+
+    <%= f.input :author_credit_preference,
+                as: :select,
+                label: "Author credit preference",
+                hint: "Controls how the author's name is displayed",
+                collection: AuthorCreditable::ADMIN_FORM_OPTIONS,
+                selected: f.object.author_credit_preference,
                 input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
   </div>
   <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>

@@ -27,7 +27,14 @@
 
           <!-- Meta Data (exact screenshot style) -->
           <div class="text-sm text-gray-600 space-y-0.5 mb-6">
-            <p><strong>By:</strong> <%= @community_news.created_by.name %></p>
+            <p><strong>By:</strong>
+              <% credited_person = @community_news.author_person %>
+              <% if credited_person&.profile_is_searchable %>
+                <%= link_to @community_news.author_credit, person_path(credited_person) %>
+              <% else %>
+                <%= @community_news.author_credit %>
+              <% end %>
+            </p>
             <p><strong>Organization Name:</strong> <%= @community_news.organization&.name %></p>
           </div>
 
