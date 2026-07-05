@@ -51,4 +51,25 @@ RSpec.describe SectorsTaggable do
       expect(person.sectorable_items.find_by(sector: health).is_primary).to be true
     end
   end
+
+  describe "ordering" do
+    before do
+      # Healthcare is the primary but sorts last alphabetically.
+      person.sectorable_items.create!(sector: education, is_primary: false)
+      person.sectorable_items.create!(sector: housing, is_primary: false)
+      person.sectorable_items.create!(sector: health, is_primary: true)
+    end
+
+    it "#sectorable_items_primary_first leads with the primary (for display)" do
+      names = person.sectorable_items_primary_first.map { |item| item.sector.name }
+
+      expect(names).to eq([ "Healthcare", "Education", "Housing" ])
+    end
+
+    it "#sectorable_items_ordered keeps alphabetical order, not primary first (for the edit form)" do
+      names = person.sectorable_items_ordered.map { |item| item.sector.name }
+
+      expect(names).to eq([ "Education", "Healthcare", "Housing" ])
+    end
+  end
 end

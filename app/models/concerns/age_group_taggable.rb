@@ -32,7 +32,7 @@ module AgeGroupTaggable
   # only updates existing items rather than creating them.
   def apply_primary_age_groups!(primary_category_ids)
     primary = sanitize_age_ids(primary_category_ids).to_set
-    age_range_categorizable_items.includes(:category).find_each do |item|
+    age_range_items_relation.includes(:category).find_each do |item|
       desired = primary.include?(item.category_id)
       item.update!(is_primary: desired) if item.is_primary? != desired
     end
@@ -64,7 +64,9 @@ module AgeGroupTaggable
     item.category&.category_type&.name == AGE_RANGE_CATEGORY_TYPE
   end
 
-  def age_range_categorizable_items
+  # Query relation of this record's AgeRange categorizable_items. Named to avoid
+  # colliding with Person's age_range_categorizable_items nested association.
+  def age_range_items_relation
     categorizable_items
       .joins(category: :category_type)
       .where(category_types: { name: AGE_RANGE_CATEGORY_TYPE })
