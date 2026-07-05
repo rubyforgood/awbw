@@ -3,6 +3,27 @@ require 'rails_helper'
 RSpec.describe Story, type: :model do
   it_behaves_like "author_creditable", factory: :story
 
+  describe "#author_person" do
+    let(:creator) { create(:user, :with_person) }
+    let(:facilitator) { create(:person) }
+
+    it "returns the explicitly chosen author when present" do
+      story = create(:story, created_by: creator, author: facilitator)
+      expect(story.author_person).to eq(facilitator)
+    end
+
+    it "falls back to the creating user's person when no author is set" do
+      story = create(:story, created_by: creator, author: nil)
+      expect(story.author_person).to eq(creator.person)
+    end
+
+    it "credits the author over the creator via author_credit" do
+      story = create(:story, created_by: creator, author: facilitator,
+                             author_credit_preference: "full_name")
+      expect(story.author_credit).to eq(facilitator.full_name)
+    end
+  end
+
   describe "#attach_assets_from_idea!" do
     let(:idea) { create(:story_idea) }
     let(:story) { create(:story, story_idea: idea) }

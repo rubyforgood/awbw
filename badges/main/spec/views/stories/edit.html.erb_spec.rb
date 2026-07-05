@@ -32,7 +32,7 @@ RSpec.describe "stories/edit", type: :view do
 
       assert_select "select[name=?]", "story[author_credit_preference]"
 
-      assert_select "select[name=?]", "story[created_by_id]"
+      assert_select "select[name=?]", "story[author_id]"
     end
   end
 

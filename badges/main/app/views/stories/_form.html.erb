@@ -250,39 +250,23 @@
         <br>
         <div class="italic"><%= link_to story_idea.author_credit_preference, edit_story_idea_path(story_idea, anchor: "publish-preferences"), class: "hover:underline hover:text-blue-600" %></div>
       </div>
-
-      <% if f.object.persisted? %>
-        <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
-          Last updated by:
-          <br>
-          <%= f.object.updated_by&.full_name %>
-          <br>
-          <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
-        </div>
-      <% end %>
-    </div>
-  <% elsif f.object.persisted? %>
-    <div class="flex-1 mb-4 md:mb-0 ms-3 ps-3 text-gray-500">
-      Last updated by:
-      <br>
-      <%= f.object.updated_by&.full_name %>
-      <br>
-      <%= f.object.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %>
     </div>
   <% end %>
 
   <div class="flex flex-col md:flex-row md:space-x-4">
     <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :created_by_id,
-                  collection: @users.map { |u| [ u.full_name_with_email, u.id ] },
+      <%= f.input :author_id,
+                  collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
                   prompt: "Select an author",
-                  label: (f.object.created_by&.person ? (
+                  required: true,
+                  label: (f.object.author ? (
                     link_to "Story author",
-                            person_path(f.object.created_by.person),
+                            person_path(f.object.author),
                             class: "hover:underline") : "Story author").html_safe,
                   label_html: { class: "block font-medium mb-1 text-gray-700" },
                   input_html: {
-                    class: select_caret_class(blank: f.object.created_by_id.blank?),
+                    required: true,
+                    class: select_caret_class(blank: f.object.author_id.blank?),
                     style: custom_caret_style,
                     onchange: select_caret_onchange
                   } %>

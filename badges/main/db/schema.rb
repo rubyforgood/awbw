@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_29_023519) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_04_193542) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1208,6 +1208,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_023519) do
 
   create_table "stories", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "author_credit_preference"
+    t.bigint "author_id"
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
@@ -1227,6 +1228,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_023519) do
     t.integer "windows_type_id", null: false
     t.integer "workshop_id"
     t.string "youtube_url"
+    t.index ["author_id"], name: "index_stories_on_author_id"
     t.index ["created_by_id"], name: "index_stories_on_created_by_id"
     t.index ["organization_id"], name: "index_stories_on_organization_id"
     t.index ["published"], name: "index_stories_on_published"
@@ -1746,6 +1748,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_023519) do
   add_foreign_key "scholarships", "people", column: "recipient_id"
   add_foreign_key "sectorable_items", "sectors"
   add_foreign_key "stories", "organizations"
+  add_foreign_key "stories", "people", column: "author_id"
   add_foreign_key "stories", "people", column: "spotlighted_facilitator_id"
   add_foreign_key "stories", "story_ideas"
   add_foreign_key "stories", "users", column: "created_by_id"

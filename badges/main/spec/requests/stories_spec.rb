@@ -196,6 +196,18 @@ RSpec.describe "/stories", type: :request do
           expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
         end
 
+        it "sorts by the credited author, not the creator, when they differ" do
+          # Explicit authors invert the creators: story_a is created by Alice but
+          # authored by Zeke; story_z is created by Zara but authored by Aaron.
+          # The column shows the author, so the sort must key off it too — keying
+          # off the creator would put Alpha before Zulu.
+          story_a.update!(author: create(:person, first_name: "Zeke", last_name: "Zimmer"))
+          story_z.update!(author: create(:person, first_name: "Aaron", last_name: "Adams"))
+
+          get stories_url, params: { sort: "author", direction: "asc" }, headers: turbo_headers
+          expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
+        end
+
         it "sorts by organization asc" do
           get stories_url, params: { sort: "organization", direction: "asc" }, headers: turbo_headers
           expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
@@ -227,6 +239,20 @@ RSpec.describe "/stories", type: :request do
         }.to change(Story, :count).by(1)
 
         expect(response).to redirect_to(story_url(Story.last))
+      end
+
+      it "records the current user as created_by regardless of submitted value" do
+        someone_else = create(:user)
+        post stories_url, params: { story: base_attributes.merge(created_by_id: someone_else.id) }
+
+        expect(Story.last.created_by).to eq(admin)
+      end
+
+      it "assigns the chosen person as author" do
+        facilitator = create(:person)
+        post stories_url, params: { story: base_attributes.merge(author_id: facilitator.id) }
+
+        expect(Story.last.author).to eq(facilitator)
       end
     end
   end

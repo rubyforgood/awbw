@@ -10,6 +10,7 @@ class Story < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :spotlighted_facilitator, class_name: "Person",
              foreign_key: "spotlighted_facilitator_id", optional: true
+  belongs_to :author, class_name: "Person", optional: true
   belongs_to :story_idea, optional: true
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
