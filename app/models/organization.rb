@@ -31,6 +31,14 @@ class Organization < ApplicationRecord
       saver: { quality: 80 }
   end
 
+  # The organization classifications offered by the org form and the registration
+  # form's "Organization Type" question, in display order. "Other" is the generic
+  # catch-all; any stored value not in this list (e.g. a legacy label like the
+  # pre-rename "Other (please specify below)") is folded into it for display so an
+  # unmatched select can't silently save as the first option.
+  AGENCY_TYPE_OTHER = "Other"
+  AGENCY_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", AGENCY_TYPE_OTHER ].freeze
+
   # Validations
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],
