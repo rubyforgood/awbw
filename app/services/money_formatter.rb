@@ -11,6 +11,14 @@ class MoneyFormatter
     ActiveSupport::NumberHelper.number_to_currency(cents / 100.0, precision: precision)
   end
 
+  # Like dollars_from_cents but keeps a leading minus for negative amounts, so a
+  # net figure reads clearly when more went out than came in: -120000 => "-$1,200".
+  def self.signed_dollars_from_cents(cents)
+    cents = cents.to_i
+    return dollars_from_cents(cents) unless cents.negative?
+    "-#{dollars_from_cents(cents.abs)}"
+  end
+
   # Abbreviated for tight UI like the grant picker: plain under $1k ("$750"),
   # "k" for thousands ("$12.5k"), "m" for millions ("$1.2m"). One decimal place,
   # trailing .0 dropped. Lossy on purpose — use dollars_from_cents for exact values.

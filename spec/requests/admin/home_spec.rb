@@ -42,5 +42,12 @@ RSpec.describe "Admin::Home", type: :request do
       get admin_path
       expect(response).to have_http_status(:ok)
     end
+
+    it "links to the event revenue report and still surfaces payments" do
+      get admin_path
+      expect(response.body).to include("Events revenue")
+      expect(response.body).to include(revenue_events_path)
+      expect(response.body).to include("Payments")
+    end
   end
 end

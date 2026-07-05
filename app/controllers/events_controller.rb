@@ -17,6 +17,16 @@ class EventsController < ApplicationController
     track_view(@event)
   end
 
+  # Cross-event revenue report across every paid event (those that charge a
+  # registration fee). The KPI strip leads with the year of the event the CEO
+  # navigated from (when arriving from a dashboard), otherwise the current year.
+  def revenue
+    authorize!
+    @events = Event.paid.order(start_date: :desc).map(&:decorate)
+    origin_event = Event.find_by(id: params[:event_id]) if params[:event_id].present?
+    @report = EventRevenueReport.new(@events, featured_year: origin_event&.start_date&.year)
+  end
+
   def new
     authorize!
     @event = Event.new.decorate

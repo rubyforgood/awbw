@@ -1,0 +1,13 @@
+<% note = local_assigns[:note] %>
+<% card_class = local_assigns.fetch(:card_class, "border-gray-200 bg-white") %>
+<div class="rounded-xl border <%= card_class %> p-4">
+  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500"><%= label %></div>
+  <div class="mt-1 text-2xl font-bold tabular-nums <%= value_class %>"><%= value %></div>
+  <% if note %>
+    <div class="text-xs italic text-gray-400 whitespace-nowrap">(<%= note %>)</div>
+  <% end %>
+  <% delta = revenue_delta(cents, prior_cents) %>
+  <% if delta %>
+    <div class="mt-1 flex items-center gap-1.5"><%= delta %><span class="text-xs text-gray-400">vs <%= prior_year %></span></div>
+  <% end %>
+</div>
