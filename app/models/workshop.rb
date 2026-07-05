@@ -185,6 +185,21 @@ class Workshop < ApplicationRecord
     Sector.all.map { |sector| Hash[sector.name, sector.workshops] }.flatten
   end
 
+  # Legacy free-text author name (pre-person authors), still named `full_name`.
+  # Folded into credit display, credited-name search, and sort.
+  def self.legacy_author_name_columns
+    [ "workshops.full_name" ]
+  end
+
+  def legacy_author_name_text
+    full_name
+  end
+
+  # With no credited person or legacy name, attribute to the generic facilitator.
+  def missing_author_label
+    "Facilitator"
+  end
+
   def author_name
     author_person&.full_name.presence || full_name.presence
   end

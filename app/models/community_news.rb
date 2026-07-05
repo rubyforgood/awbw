@@ -8,7 +8,7 @@ class CommunityNews < ApplicationRecord
   belongs_to :author, class_name: "Person", inverse_of: :community_news_as_author, optional: true
   # Legacy "display author" pick, before author became a person. Kept so
   # existing rows credit the chosen person without a backfill.
-  belongs_to :user_author, class_name: "User", foreign_key: :user_author_id, optional: true
+  belongs_to :legacy_author_user, class_name: "User", foreign_key: :legacy_author_user_id, optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -34,10 +34,16 @@ class CommunityNews < ApplicationRecord
   validates :rhino_body, presence: true
 
   # Credit the explicit person author, then the legacy display-author user's
-  # person, then the creating user's person — so existing rows keep their
-  # attribution without a backfill. Overrides AuthorCreditable's default.
-  def author_person
-    author || user_author&.person || created_by&.person
+  # person (the creating user's person is AuthorCreditable's final fallback) —
+  # so existing rows keep their attribution without a backfill.
+  def primary_author_person
+    author || legacy_author_user&.person
+  end
+
+  # Fold the legacy display-author user's person into credited-name search and
+  # sort, matching author_person's precedence.
+  def self.legacy_credited_user_columns
+    [ [ "legacy_author_user_id", "credited_legacy_author" ] ]
   end
 
   # Nested attributes
@@ -72,6 +78,14 @@ class CommunityNews < ApplicationRecord
     else
       conditions[:published] = params[:published] if params[:published].present?
       community_news = self.search(conditions)
+    end
+
+    # SearchCop's free-text query covers title + body + the explicit author. Also
+    # match the credited author/legacy author/creator by name, OR-ed in via id
+    # subqueries so the extra person joins stay isolated from SearchCop's joins.
+    if params[:query].present?
+      community_news = self.where(id: community_news.select("community_news.id"))
+                           .or(self.where(id: by_credited_person_name(params[:query]).select("community_news.id")))
     end
 
     community_news = community_news.by_year(params[:year]) if params[:year].present? && params[:year].match?(/\A\d{4}\z/)

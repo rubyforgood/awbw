@@ -5,7 +5,7 @@ RSpec.describe CommunityNews, type: :model do
 
   describe "#author_person" do
     let(:creator) { create(:user, :with_person) }
-    let(:legacy_user_author) { create(:user, :with_person) }
+    let(:legacy_author_user) { create(:user, :with_person) }
     let(:person) { create(:person) }
 
     it "returns the explicit person author when present" do
@@ -14,12 +14,12 @@ RSpec.describe CommunityNews, type: :model do
     end
 
     it "falls back to the legacy display-author user's person" do
-      news = create(:community_news, created_by: creator, author: nil, user_author: legacy_user_author)
-      expect(news.author_person).to eq(legacy_user_author.person)
+      news = create(:community_news, created_by: creator, author: nil, legacy_author_user: legacy_author_user)
+      expect(news.author_person).to eq(legacy_author_user.person)
     end
 
     it "falls back to the creating user's person when nothing else is set" do
-      news = create(:community_news, created_by: creator, author: nil, user_author: nil)
+      news = create(:community_news, created_by: creator, author: nil, legacy_author_user: nil)
       expect(news.author_person).to eq(creator.person)
     end
   end

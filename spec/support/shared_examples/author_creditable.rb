@@ -39,19 +39,61 @@ RSpec.shared_examples "author_creditable" do |factory:|
       end
     end
 
-    context "when author_credit_preference is nil", unless: described_class.validators_on(:author_credit_preference).any? { |v| v.is_a?(ActiveModel::Validations::PresenceValidator) } do
-      it "falls back to the person's display name" do
+    context "when the preference is unset" do
+      it "defaults new records to full_name" do
+        expect(described_class.new.author_credit_preference).to eq("full_name")
+      end
+
+      it "treats a blank preference as full_name at read time" do
+        record.author_credit_preference = nil
+        expect(record.author_credit).to eq(person.full_name)
+      end
+
+      it "normalizes a blank preference to full_name on save (no backfill)" do
         record.update!(author_credit_preference: nil)
-        expect(record.author_credit).to eq(person.name)
+        expect(record.reload.author_credit_preference).to eq("full_name")
       end
     end
 
-    context "when user has no person" do
-      it "returns Anonymous" do
+    context "when the preference is not one of the allowed values" do
+      it "is invalid" do
+        record.author_credit_preference = "sideways"
+        expect(record).not_to be_valid
+        expect(record.errors[:author_credit_preference]).to be_present
+      end
+    end
+
+    context "when there is no credited person" do
+      it "falls back to the model's missing_author_label" do
         user_without_person = create(:user, person: nil)
         record.update!(created_by: user_without_person)
-        expect(record.author_credit).to eq("Anonymous")
+        expect(record.author_credit).to eq(record.missing_author_label)
+        expect(record.missing_author_label).to be_present
       end
+    end
+  end
+
+  describe ".by_credited_person_name" do
+    let(:author_user) { create(:user, :with_person) }
+    let!(:record) { create(factory, created_by: author_user) }
+
+    it "matches the creating user's person by name" do
+      author_user.person.update!(first_name: "Zephyrine", last_name: "Quixotel")
+      expect(described_class.by_credited_person_name("Zephyrine")).to include(record)
+      expect(described_class.by_credited_person_name("Quixotel")).to include(record)
+    end
+
+    it "does not match an unrelated name" do
+      author_user.person.update!(first_name: "Zephyrine", last_name: "Quixotel")
+      expect(described_class.by_credited_person_name("Nonexistententry")).not_to include(record)
+    end
+  end
+
+  describe ".order_by_author" do
+    it "runs without error in both directions" do
+      create(factory)
+      expect { described_class.order_by_author("asc").to_a }.not_to raise_error
+      expect { described_class.order_by_author("desc").to_a }.not_to raise_error
     end
   end
 end

@@ -36,7 +36,6 @@ class WorkshopVariationIdea < ApplicationRecord
   validates :organization_id, presence: true
   validates :workshop_id, presence: true
   validates :windows_type_id, presence: true
-  validates :author_credit_preference, presence: true
   validates :permission_given, acceptance: true
   validates :rhino_body, presence: true
 

@@ -54,28 +54,8 @@ class Story < ApplicationRecord
     options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
-  # Matches the credited author by name: the creator's person (`people`) and the
-  # explicit author (a second join to the same table, aliased `author_person`).
-  # SearchCop can't join one table twice, so this is a plain scope OR-ed into the
-  # full-text results in `search_by_params`.
-  scope :by_credited_person_name, ->(query) {
-    sanitized = query.to_s.strip.gsub(/\s+/, "")
-    return none if sanitized.blank?
-
-    left_joins(created_by: :person)
-      .joins("LEFT OUTER JOIN people author_person ON author_person.id = stories.author_id")
-      .where(
-        "LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name
-         OR LOWER(REPLACE(CONCAT(people.last_name, people.first_name), ' ', '')) LIKE :name
-         OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
-         OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name
-         OR LOWER(REPLACE(CONCAT(author_person.first_name, author_person.last_name), ' ', '')) LIKE :name
-         OR LOWER(REPLACE(CONCAT(author_person.last_name, author_person.first_name), ' ', '')) LIKE :name
-         OR LOWER(REPLACE(author_person.first_name, ' ', '')) LIKE :name
-         OR LOWER(REPLACE(author_person.last_name, ' ', '')) LIKE :name",
-        name: "%#{sanitized}%"
-      )
-  }
+  # Credited-author name search (explicit author + creator fallback) comes from
+  # AuthorCreditable#by_credited_person_name, OR-ed into full-text results below.
 
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable

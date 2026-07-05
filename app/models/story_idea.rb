@@ -41,7 +41,6 @@ class StoryIdea < ApplicationRecord
   validates :organization_id, presence: true
   validates :windows_type_id, presence: true
   validates :permission_given, presence: true
-  validates :author_credit_preference, presence: true
   validates :rhino_body, presence: true
 
   # Nested attributes

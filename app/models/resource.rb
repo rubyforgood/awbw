@@ -83,6 +83,16 @@ class Resource < ApplicationRecord
     options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
+  # Fold the legacy free-text author into credit display, credited-name search,
+  # and sort.
+  def self.legacy_author_name_columns
+    [ "resources.legacy_author_name" ]
+  end
+
+  def legacy_author_name_text
+    legacy_author_name
+  end
+
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
   scope :by_featured_first, -> { order(featured: :desc, created_at: :desc) }
@@ -107,7 +117,13 @@ class Resource < ApplicationRecord
 
   def self.search_by_params(params)
     resources = is_a?(ActiveRecord::Relation) ? self : all
-    resources = resources.search(params[:query]) if params[:query].present? # SearchCop incl title, author, body
+    if params[:query].present?
+      # SearchCop covers title + legacy author name + body; OR in the credited
+      # author/creator person name via id subqueries (isolated person joins).
+      by_text = resources.search(params[:query]).select("resources.id")
+      by_person = resources.by_credited_person_name(params[:query]).select("resources.id")
+      resources = resources.where(id: by_text).or(resources.where(id: by_person))
+    end
     resources = resources.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     resources = resources.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     resources = resources.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
