@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_05_013635) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_05_014631) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -997,6 +997,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_05_013635) do
     t.boolean "profile_show_member_since", default: true, null: false
     t.boolean "profile_show_phone", default: true, null: false
     t.boolean "profile_show_pronouns", default: true, null: false
+    t.boolean "profile_show_resources", default: true, null: false
     t.boolean "profile_show_sectors", default: true, null: false
     t.boolean "profile_show_social_media", default: true, null: false
     t.boolean "profile_show_stories", default: true, null: false

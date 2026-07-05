@@ -200,7 +200,8 @@
       <!-- AUTHORED SECTION -->
       <% if @person.profile_show_workshops? ||
               @person.profile_show_workshop_variations? ||
-              @person.profile_show_stories?  %>
+              @person.profile_show_stories? ||
+              @person.profile_show_resources?  %>
       <div class="person-only <%= DomainTheme.bg_class_for(:workshops) %> border <%= DomainTheme.border_class_for(:workshops) %> rounded-lg shadow-sm">
         <!-- Header -->
         <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b <%= DomainTheme.border_class_for(:workshops) %>">
@@ -234,6 +235,15 @@
               <h2 class="text-lg font-semibold text-gray-800 mb-3">Stories authored/featured</h2>
               <%= turbo_frame_tag "person_stories_section", src: person_path(@person, section: "stories"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading stories...</p>
+              <% end %>
+            </div>
+          <% end %>
+          <!-- Resources authored -->
+          <% if @person.profile_show_resources? %>
+            <div class="p-3">
+              <h2 class="text-lg font-semibold text-gray-800 mb-3">Resources authored</h2>
+              <%= turbo_frame_tag "person_resources_section", src: person_path(@person, section: "resources"), loading: :lazy do %>
+                <p class="text-gray-500 italic">Loading resources...</p>
               <% end %>
             </div>
           <% end %>
