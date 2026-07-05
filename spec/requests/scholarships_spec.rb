@@ -356,6 +356,19 @@ RSpec.describe "GET /scholarships (index)", type: :request do
 
       expect(response.body).to include(grant_path(grant, from_scholarships: true))
     end
+
+    it "filters to a single recipient when recipient_id is given" do
+      recipient = create(:person, first_name: "Carmen", last_name: "Gomez")
+      other = create(:person, first_name: "Jane", last_name: "Doe")
+      create(:scholarship, recipient: recipient)
+      create(:scholarship, recipient: other)
+
+      get scholarships_path(recipient_id: recipient.id)
+
+      expect(response.body).to include("Filtered to")
+      expect(response.body).to include("Carmen Gomez")
+      expect(response.body).not_to include("Jane Doe")
+    end
   end
 end
 

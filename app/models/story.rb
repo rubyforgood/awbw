@@ -114,6 +114,7 @@ class Story < ApplicationRecord
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.where(organization_id: params[:organization_id]) if params[:organization_id].present?
+    stories = stories.where(author_id: params[:author_id]) if params[:author_id].present?
     stories
   end
 

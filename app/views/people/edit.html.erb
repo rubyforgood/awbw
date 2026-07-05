@@ -40,5 +40,13 @@
             <%= render "form" %>
             <%= render "shared/audit_info", resource: @person %>
           </div>
+          <div class="bg-white rounded p-6">
+            <div class="font-semibold text-gray-700 mb-2">
+              Associated records
+            </div>
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+              <%= render "associated_records", person: @person %>
+            </div>
+          </div>
         </div>
 </div>

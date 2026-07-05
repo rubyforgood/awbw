@@ -113,6 +113,7 @@ class Resource < ApplicationRecord
     resources = resources.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.kinds(params[:kinds]) if params[:kinds].present?
+    resources = resources.where(author_id: params[:author_id]) if params[:author_id].present?
     if visibility_params_present?(params)
       resources = apply_visibility_filters(resources, params)
     elsif params[:published].present?

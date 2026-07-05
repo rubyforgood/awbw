@@ -40,6 +40,8 @@
 
     <%= render "filters" %>
 
+    <%= render "shared/filtered_to", record: @donor, clear_path: grants_path %>
+
     <%# Results load in a turbo frame so the filter form (outside the frame) can
         swap just the table — blurring the old rows while the next page loads and
         keeping the search inputs focused. %>

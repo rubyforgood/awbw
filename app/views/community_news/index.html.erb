@@ -20,6 +20,8 @@
 
     <%= render "search_boxes" %>
 
+    <%= render "shared/filtered_to", record: @author, clear_path: community_news_index_path %>
+
     <%= render "community_news_count" %>
 
     <% result_src = community_news_index_path + "?" + request.query_string %>

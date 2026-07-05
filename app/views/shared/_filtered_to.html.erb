@@ -1,0 +1,9 @@
+<%# Small "Filtered to <name>" banner shown on an index scoped to one record
+    (e.g. reached from a person/org edit page). Pass the record being filtered
+    to and the path that clears the filter. %>
+<% if record %>
+  <div class="mb-4 flex items-center gap-2 text-sm text-gray-600">
+    <span>Filtered to <span class="font-medium text-gray-900"><%= record.try(:name) || record.try(:full_name) %></span></span>
+    <%= link_to "Clear", clear_path, class: "text-blue-600 hover:underline" %>
+  </div>
+<% end %>
