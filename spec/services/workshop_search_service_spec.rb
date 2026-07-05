@@ -432,6 +432,19 @@ RSpec.describe WorkshopSearchService, type: :service do
         service = WorkshopSearchService.new({ author_name: "" }, user: user).call
         expect(service.workshops).to include(workshop_by_user, workshop_no_match)
       end
+
+      context "with an explicit person author who is not the creator" do
+        let!(:facilitator) { create(:person, first_name: "Bartholomew", last_name: "Snazzlepants") }
+        let!(:workshop_by_author) do
+          create(:workshop, :published, title: "Authored Workshop", created_by: author_user, author: facilitator)
+        end
+
+        it "finds workshops by the credited author's name" do
+          service = WorkshopSearchService.new({ author_name: "Bartholomew" }, user: user).call
+          expect(service.workshops).to include(workshop_by_author)
+          expect(service.workshops).not_to include(workshop_no_match)
+        end
+      end
     end
   end
 end
