@@ -203,7 +203,7 @@ RSpec.describe "Event registration edit page", type: :system do
       visit edit_event_registration_path(registration)
 
       within("section", text: "Registration communications") do
-        click_on "Add notification"
+        click_on "Add communication"
         fill_in "Subject", with: "Called about parking"
       end
 
