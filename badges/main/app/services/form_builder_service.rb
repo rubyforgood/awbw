@@ -406,10 +406,7 @@ class FormBuilderService
                          key: "agency_website", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization Type", :single_select_radio,
                          key: "agency_type", group: "person_contact_info", required: false,
-                         options: [
-                           "501c3/nonprofit", "For-profit", "Government agency",
-                           "Other (please specify below)"
-                         ])
+                         options: Organization::AGENCY_TYPES)
     position = add_field(form, position, "Organization Street Address", :free_form_input_one_line,
                          key: "agency_street", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization City", :free_form_input_one_line,
