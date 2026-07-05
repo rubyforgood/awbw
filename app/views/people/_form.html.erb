@@ -127,6 +127,11 @@
       (workshop settings); saving replaces only those and preserves any other type
       the form never shows. Age ranges are edited as nested attributes, separately. %>
   <%= hidden_field_tag "person[category_ids][]", "" %>
+  <%# Always submit the managed_category_type_ids key (blank included) so
+      assign_associations takes the preserve branch even when there are no managed
+      types — otherwise the key vanishes and it replaces categories, dropping the
+      person's age ranges and other-type taggings. %>
+  <%= hidden_field_tag "person[managed_category_type_ids][]", "" %>
   <% (@managed_category_type_ids || []).each do |type_id| %>
     <%= hidden_field_tag "person[managed_category_type_ids][]", type_id %>
   <% end %>

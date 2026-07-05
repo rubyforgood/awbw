@@ -52,6 +52,22 @@ RSpec.describe "Person age ranges", type: :request do
       expect(body.index("Children (0-12)")).to be < body.index("Teens (13-17)")
       expect(body.index("Teens (13-17)")).to be < body.index("Adults (18+)")
     end
+
+    # Guards against silent category loss: assign_associations only preserves
+    # unmanaged taggings when the managed_category_type_ids key is posted. With no
+    # profile-specific (managed) types, the per-type hidden fields render nothing,
+    # so the form must still emit a blank one — otherwise the browser drops the key
+    # and saving replaces categories, wiping age ranges and other-type taggings.
+    it "always renders a blank managed_category_type_ids field, even with no managed types" do
+      expect(CategoryType.profile_specific).to be_empty
+
+      get edit_person_path(person)
+
+      dom = Nokogiri::HTML(response.body)
+      blank = dom.css("input[type=hidden][name='person[managed_category_type_ids][]']")
+                 .any? { |node| node["value"].to_s.empty? }
+      expect(blank).to be(true)
+    end
   end
 
   describe "saving age ranges" do
