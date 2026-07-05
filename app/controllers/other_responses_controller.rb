@@ -5,8 +5,10 @@ class OtherResponsesController < ApplicationController
   # people, grouped with a count so a curator can decide what to promote.
   def index
     authorize!
+    @status_filter = params[:status].presence_in(OtherResponse::VISIBLE_STATUSES)
+    statuses = @status_filter ? [ @status_filter ] : OtherResponse::VISIBLE_STATUSES
     responses = OtherResponse
-      .sectors.where(status: OtherResponse::VISIBLE_STATUSES)
+      .sectors.where(status: statuses)
       .includes(:person)
 
     @groups = responses.group_by(&:normalized_text).map do |_normalized, rows|
@@ -19,6 +21,25 @@ class OtherResponsesController < ApplicationController
     end.sort_by { |group| [ -group[:count], group[:display_text].downcase ] }
 
     @sectors = Sector.excluding_other.order(:name)
+  end
+
+  # Bulk keep/dismiss every visible person who typed this value, from the review
+  # queue. Keep leaves it as a free-text chip; dismiss hides it from profiles.
+  def curate
+    authorize! to: :update?
+    status = params[:status]
+    unless %w[kept dismissed].include?(status)
+      return redirect_to other_responses_path, alert: "Choose keep or dismiss."
+    end
+
+    scope = OtherResponse.sectors.where(status: OtherResponse::VISIBLE_STATUSES)
+      .where(normalized_text: OtherResponse.normalize(params[:normalized_text]))
+    count = scope.count
+    scope.find_each { |response| response.update!(status: status) }
+
+    verb = status == "kept" ? "Kept" : "Dismissed"
+    redirect_to other_responses_path(status: params[:return_status].presence),
+                status: :see_other, notice: "#{verb} #{count} response(s)."
   end
 
   # Curate a single response — the profile-edit "×" dismisses, and the review

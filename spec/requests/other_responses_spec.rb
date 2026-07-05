@@ -23,6 +23,52 @@ RSpec.describe "OtherResponses", type: :request do
       expect(response.body).to include("Equine therapy")
       expect(response.body).not_to include("Hidden one")
     end
+
+    it "filters to a single status" do
+      sign_in admin
+      create(:other_response, kind: "sector", text: "Pending value")
+      create(:other_response, :kept, kind: "sector", text: "Kept value")
+
+      get other_responses_path(status: "kept")
+
+      expect(response.body).to include("Kept value")
+      expect(response.body).not_to include("Pending value")
+    end
+  end
+
+  describe "POST /other_responses/curate (bulk)" do
+    it "keeps every visible person who typed the value" do
+      sign_in admin
+      one = create(:other_response, kind: "sector", text: "Equine therapy")
+      two = create(:other_response, kind: "sector", text: "equine therapy")
+
+      post curate_other_responses_path,
+           params: { normalized_text: "equine therapy", status: "kept" }
+
+      expect(one.reload.status).to eq("kept")
+      expect(two.reload.status).to eq("kept")
+    end
+
+    it "dismisses every visible person who typed the value" do
+      sign_in admin
+      response_record = create(:other_response, :kept, kind: "sector", text: "Equine therapy")
+
+      post curate_other_responses_path,
+           params: { normalized_text: "equine therapy", status: "dismissed" }
+
+      expect(response_record.reload.status).to eq("dismissed")
+    end
+
+    it "rejects an unsupported status" do
+      sign_in admin
+      response_record = create(:other_response, kind: "sector", text: "Equine therapy")
+
+      post curate_other_responses_path,
+           params: { normalized_text: "equine therapy", status: "promoted" }
+
+      expect(response).to redirect_to(other_responses_path)
+      expect(response_record.reload.status).to eq("pending")
+    end
   end
 
   describe "PATCH /other_responses/:id (dismiss)" do

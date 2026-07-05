@@ -175,6 +175,7 @@ Rails.application.routes.draw do
   resources :other_responses, only: [ :index, :update ] do
     collection do
       post :promote
+      post :curate
     end
   end
   resources :notifications, only: [ :index, :show, :update ] do

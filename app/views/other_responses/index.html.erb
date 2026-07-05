@@ -15,6 +15,15 @@
       </div>
     </div>
 
+    <!-- Status filter -->
+    <div class="flex items-center gap-2 text-sm">
+      <% [ [ "All", nil ], [ "Pending", "pending" ], [ "Kept", "kept" ] ].each do |label, value| %>
+        <% active = @status_filter == value %>
+        <%= link_to label, other_responses_path(status: value),
+                    class: "px-3 py-1 rounded-full #{active ? "bg-gray-800 text-white" : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-100"}" %>
+      <% end %>
+    </div>
+
     <div class="rounded-xl bg-white p-6">
       <% if @groups.any? %>
         <table class="w-full border-collapse border border-gray-200">
@@ -50,6 +59,13 @@
                     <%= submit_tag "Promote", class: "btn btn-primary-outline text-sm",
                                    data: { turbo_confirm: "Promote “#{group[:display_text]}” for all #{group[:count]} people?" } %>
                   <% end %>
+                  <div class="flex items-center gap-3 mt-2 text-sm">
+                    <%= button_to "Keep all", curate_other_responses_path(normalized_text: group[:normalized_text], status: "kept", return_status: @status_filter),
+                                  class: "text-gray-500 hover:text-gray-700" %>
+                    <%= button_to "Dismiss all", curate_other_responses_path(normalized_text: group[:normalized_text], status: "dismissed", return_status: @status_filter),
+                                  class: "text-gray-500 hover:text-red-600",
+                                  form: { data: { turbo_confirm: "Hide “#{group[:display_text]}” from all #{group[:count]} profiles?" } } %>
+                  </div>
                 </td>
               </tr>
             <% end %>
