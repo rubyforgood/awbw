@@ -99,19 +99,18 @@
                 <%= f.input :position, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
               <% end %>
               <div data-controller="searchable-select" data-searchable-select-mode-value="person">
-                <%= f.input :created_by_id,
+                <%= f.input :author_id,
                           as: :select,
-                          label: "Variation author",
-                          collection: User.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)")),
-                          label_method: :full_name_with_email,
-                          value_method: :id,
-                          selected: (f.object.created_by_id || current_user.id),
+                          label: (f.object.author ? (
+                            link_to "Variation author",
+                                    person_path(f.object.author),
+                                    class: "hover:underline") : "Variation author").html_safe,
+                          collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                          selected: (f.object.author_id || current_user.person_id),
                           input_html: { class: "w-full rounded-lg px-3 py-2",
                                         data: { searchable_select_target: "select" } } %>
               </div>
             </div>
-          <% else %>
-            <%= f.hidden_field :created_by_id, value: current_user.id %>
           <% end %>
         </div>
 

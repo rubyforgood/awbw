@@ -21,6 +21,7 @@ class WorkshopVariationFromIdeaService
       "name", "youtube_url", "position", "workshop_id", "windows_type_id", "organization_id", "author_credit_preference"
     ).merge(
       created_by_id: user.id,
+      author_id: workshop_variation_idea.created_by&.person_id,
       workshop_variation_idea_id: workshop_variation_idea.id,
       inactive: true,
       rhino_body: workshop_variation_idea.rhino_body
