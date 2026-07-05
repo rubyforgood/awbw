@@ -35,6 +35,36 @@ RSpec.describe "Person notifications", type: :request do
     end
   end
 
+  describe "PATCH /people/:id editing a logged notification" do
+    let!(:log) do
+      create(:notification, noticeable: person, recipient_email: person.preferred_email,
+                            channel: "phone", email_subject: "Left a voicemail",
+                            kind: "manual_log", recipient_role: "person", notification_type: 0)
+    end
+
+    it "updates an existing manual notification log in place" do
+      patch person_path(person), params: {
+        person: {
+          notifications_attributes: { "0" => { id: log.id, channel: "email", email_subject: "Sent a reminder" } }
+        }
+      }
+
+      log.reload
+      expect(log.channel).to eq("email")
+      expect(log.email_subject).to eq("Sent a reminder")
+    end
+
+    it "removes a logged notification when marked for destruction" do
+      expect {
+        patch person_path(person), params: {
+          person: {
+            notifications_attributes: { "0" => { id: log.id, _destroy: "1" } }
+          }
+        }
+      }.to change { person.notifications.count }.by(-1)
+    end
+  end
+
   describe "GET /people/:id/edit" do
     it "lists past communications addressed to the person" do
       person = create(:person, user: nil, email: "comms@example.com")

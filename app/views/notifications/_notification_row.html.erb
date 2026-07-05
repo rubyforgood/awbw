@@ -1,0 +1,15 @@
+<%# ---- Read-only display of one communication (date, sender, subject, body).
+    Shared by the notifications box (automated entries) and the view mode of an
+    editable manual-log entry in _notification_fields. ---- %>
+<% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
+<% body = notification.email_body_text.to_s %>
+<div class="flex items-baseline gap-x-2">
+  <span class="shrink-0 whitespace-nowrap text-xs text-gray-400"><%= notification.created_at.strftime("%-m/%-d/%Y") %></span>
+  <span class="shrink-0 whitespace-nowrap text-xs font-medium text-gray-500"><%= notification.sender&.full_name.presence || "AWBW Portal" %></span>
+  <span class="min-w-0 flex-1 truncate text-sm" title="<%= [ subject, body.presence ].compact.join(" — ") %>">
+    <span class="font-semibold text-gray-900"><%= subject %></span>
+    <% if body.present? %>
+      <span class="text-gray-500"><%= body %></span>
+    <% end %>
+  </span>
+</div>

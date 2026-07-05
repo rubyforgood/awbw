@@ -1,0 +1,26 @@
+<%# ---- The editable fields for a manual-log communication (From / Channel /
+    Subject / Body + Remove). Shared by a new entry and the edit mode of a
+    persisted one in _notification_fields. ---- %>
+<div class="grid grid-cols-1 gap-x-4 sm:grid-cols-6">
+  <%= f.input :sender_id,
+              collection: sender_options,
+              include_blank: "AWBW Portal",
+              selected: sender_selected,
+              label: "From",
+              wrapper_html: { class: "sm:col-span-2" } %>
+  <%= f.input :channel,
+              collection: Notification::MANUAL_CHANNELS.map { |c| [ c.titleize, c ] },
+              include_blank: false,
+              selected: channel_default,
+              label: "Channel",
+              wrapper_html: { class: "sm:col-span-1" } %>
+  <%= f.input :email_subject, label: "Subject", placeholder: "Topic or subject line",
+              input_html: { rows: 1 }, wrapper_html: { class: "sm:col-span-3" } %>
+</div>
+
+<%= f.input :email_body_text, as: :text, label: "Body", input_html: { rows: 3, placeholder: "What happened? (e.g. left voicemail, sent reminder)" } %>
+
+<div class="text-right">
+  <%= link_to_remove_association "Remove", f,
+        class: "text-sm text-gray-400 underline hover:text-red-600" %>
+</div>

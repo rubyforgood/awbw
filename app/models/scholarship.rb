@@ -6,7 +6,7 @@ class Scholarship < ApplicationRecord
   has_many :notifications, as: :noticeable, dependent: :destroy
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, reject_if: proc { |attrs| attrs["email_subject"].blank? }
+  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :recipient_must_match_allocation_registrant

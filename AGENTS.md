@@ -285,12 +285,12 @@ end
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
-- `comment_edit_toggle` — Inline comment editing mode
 - `comment_required` — Require a comment body once a topic or body is filled in
 - `confirm_email` — Email confirmation UI
 - `dirty_form` — Unsaved changes detection
 - `dismiss` — Dismissable elements
 - `dropdown` — Dropdown menus with keyboard/click-outside handling
+- `edit_toggle` — Inline view/edit toggle for the comments and communications boxes (configurable view/edit CSS classes)
 - `event_staff_bio` — Loads a selected person's read-only profile bio (with edit link) alongside the editable event-specific bio on the staff form
 - `file_preview` — File upload preview
 - `grant_details` — Swaps a grant's eligibility criteria + tasks when the grant picker changes

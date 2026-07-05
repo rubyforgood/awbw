@@ -233,6 +233,18 @@ RSpec.describe "Scholarships", type: :request do
       expect(note.email_subject).to eq("Called recipient")
       expect(note.recipient_email).to eq(scholarship.recipient.preferred_email.presence || "n/a")
     end
+
+    it "edits an existing logged notification in place" do
+      note = create(:notification, noticeable: scholarship,
+                                   recipient_email: scholarship.recipient.preferred_email.presence || "n/a",
+                                   email_subject: "Called recipient", kind: "manual_log",
+                                   recipient_role: "person", notification_type: 0)
+
+      patch scholarship_path(scholarship),
+            params: { scholarship: { notifications_attributes: { "0" => { id: note.id, email_subject: "Emailed recipient" } } } }
+
+      expect(note.reload.email_subject).to eq("Emailed recipient")
+    end
   end
 
   describe "DELETE /scholarships/:id" do
