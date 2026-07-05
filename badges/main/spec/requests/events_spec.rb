@@ -101,6 +101,43 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "GET /revenue" do
+    let!(:paid_training) { create(:event, title: "TAC 261", facilitator_training: true, cost_cents: 10_000, start_date: Date.new(2026, 5, 1)) }
+    let!(:paid_webinar) { create(:event, title: "Paid webinar", facilitator_training: false, cost_cents: 5_000, start_date: Date.new(2025, 5, 1)) }
+    let!(:older_training) { create(:event, title: "TAC 200", facilitator_training: true, cost_cents: 8_000, start_date: Date.new(2024, 5, 1)) }
+    let!(:free_event) { create(:event, title: "Free open house", cost_cents: 0) }
+
+    context "as admin" do
+      it "lists every paid event grouped by year, with the chart" do
+        sign_in admin
+        get revenue_events_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Event revenue")
+        expect(response.body).to include("Revenue by year")
+        expect(response.body).to include("Fees collected")
+        expect(response.body).to include("TAC 261")
+        expect(response.body).to include("Paid webinar")
+        expect(response.body).to include("2026", "2025", "2024")
+        expect(response.body).not_to include("Free open house")
+      end
+
+      it "returns to the originating event's dashboard when arrived from it" do
+        sign_in admin
+        get revenue_events_path(return_to: "dashboard", event_id: paid_training.id)
+        expect(response.body).to include(dashboard_event_path(paid_training))
+        expect(response.body).to include("← Dashboard")
+      end
+    end
+
+    context "as non-admin" do
+      it "redirects" do
+        sign_in user
+        get revenue_events_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "GET /sample_ticket" do
     context "as admin" do
       before { sign_in admin }

@@ -13,6 +13,12 @@ class EventPolicy < ApplicationPolicy
     admin?
   end
 
+  # The cross-event revenue report aggregates money across every event, so it's
+  # admin-only.
+  def revenue?
+    admin?
+  end
+
   def show?
     return true if admin?
 

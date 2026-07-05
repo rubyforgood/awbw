@@ -61,8 +61,8 @@ This codebase (Rails 8.1)
 | `app/views/` | ERB templates | ~504 files |
 | `app/decorators/` | Draper decorators for view logic | ~38 files |
 | `app/policies/` | ActionPolicy authorization rules | ~49 files |
-| `app/presenters/` | Presentation objects | 4 files |
-| `app/helpers/` | View helpers | ~24 files |
+| `app/presenters/` | Presentation objects | 3 files |
+| `app/helpers/` | View helpers | ~25 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -184,6 +184,7 @@ end
 ### Business Logic
 
 - `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total)
+- `EventRevenueReport` — Cross-event revenue report grouped by calendar year (money in vs org subsidy vs net, projected CE, chart series) for the CEO revenue page
 - `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
 - `WorkshopFromIdeaService` — Converts WorkshopIdea to Workshop with asset migration

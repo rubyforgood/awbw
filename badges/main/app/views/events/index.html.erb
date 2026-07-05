@@ -14,7 +14,10 @@
       </div>
       <div class="text-right text-end">
         <% if allowed_to?(:new?, Event) %>
-          <div class="admin-only bg-blue-100">
+          <div class="admin-only bg-blue-100 flex flex-wrap justify-end gap-2">
+            <%= link_to "Revenue report",
+                        revenue_events_path,
+                        class: "whitespace-nowrap btn btn-secondary-outline" %>
             <%= link_to "New event",
                         new_event_path,
                         class: "whitespace-nowrap btn btn-secondary-outline" %>
