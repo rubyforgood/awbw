@@ -19,10 +19,10 @@ module AuthorCreditable
     "Anonymous" => "anonymous"
   }.freeze
 
-  # The person whose name is credited. Defaults to the creating user's person;
-  # models with a dedicated author association (e.g. Story) override this.
+  # The person whose name is credited: the explicitly chosen author when the
+  # model has one (e.g. Story), otherwise the creating user's person.
   def author_person
-    created_by&.person
+    (author if respond_to?(:author)) || created_by&.person
   end
 
   def author_credit

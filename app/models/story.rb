@@ -90,12 +90,6 @@ class Story < ApplicationRecord
     title
   end
 
-  # AuthorCreditable: prefer the explicitly chosen author, falling back to the
-  # creating user's person so stories predating the author field stay credited.
-  def author_person
-    author || created_by&.person
-  end
-
   def organization_name
     organization&.name
   end
