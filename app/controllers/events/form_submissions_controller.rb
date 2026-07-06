@@ -4,7 +4,7 @@ module Events
     before_action :set_person
 
     def show
-      authorize! @event
+      authorize! @event, to: :form_submissions?
 
       @person = @person.decorate
       @form_submissions = @event.form_submissions
