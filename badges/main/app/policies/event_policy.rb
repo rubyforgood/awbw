@@ -93,6 +93,11 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
+  # Who can view a person's form submissions for this event
+  def form_submissions?
+    manage?
+  end
+
   def preview_reminder?
     manage?
   end

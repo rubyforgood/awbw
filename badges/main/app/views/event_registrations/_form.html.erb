@@ -11,7 +11,6 @@
           echoes the status color. ---- %>
       <% event_form_ids = f.object.event.form_ids %>
       <% submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: f.object.registrant_id).order(Arel.sql("forms.name")).pluck(Arel.sql("forms.name"), :created_at) : [] %>
-      <% form_show_params = f.object.slug.present? ? { reg: f.object.slug } : { person_id: f.object.registrant_id } %>
       <% status_icon_colors = {
            "registered"            => "text-blue-600",
            "attended"              => "text-green-600",
@@ -124,7 +123,7 @@
           <% end %>
 
           <% submissions.each_with_index do |(form_name, ts), i| %>
-            <%= link_to event_public_registration_path(f.object.event, **form_show_params),
+            <%= link_to event_registrant_submissions_path(f.object.event, person_id: f.object.registrant_id),
                         class: "group inline-flex items-center gap-1.5 font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
                         target: "_blank",
                         title: "#{form_name} — submitted #{ts.strftime('%b %-d, %Y')}",

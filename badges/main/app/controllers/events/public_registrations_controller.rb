@@ -12,8 +12,8 @@ module Events
     def new
       authorize! :public_registration, to: :new?
 
-      @form = registration_form
-      unless @form
+      @registration_form = registration_form
+      unless @registration_form
         redirect_to event_path(@event), alert: "Registration form is not available for this event."
         return
       end
@@ -32,7 +32,7 @@ module Events
         return
       end
 
-      @form = registration_form
+      @registration_form = registration_form
       @scholarship = scholarship_mode?
       @scholarship_form = @event.scholarship_form if @scholarship
 
@@ -56,7 +56,7 @@ module Events
 
       result = EventRegistrationServices::PublicRegistration.call(
         event: @event,
-        form: @form,
+        registration_form: @registration_form,
         form_params: registration_params,
         scholarship_requested: @scholarship,
         person: current_user&.person,
@@ -97,16 +97,15 @@ module Events
         return
       end
 
-      @form = registration_form
-      unless @form
+      @registration_form = registration_form
+      unless @registration_form
         redirect_to event_path(@event), alert: "Registration form not found."
         return
       end
 
-      # A specific submission can be requested by id (a registrant may have more
-      # than one); scope it to this form and person so the id can't reach another
-      # person's submission. Otherwise show their first submission for the form.
-      submissions = @form.form_submissions.where(person: person)
+      # Scope submissions to this event so a person registered for multiple
+      # events that share the same form sees only the answers for this one.
+      submissions = @registration_form.form_submissions.where(person: person, event: @event)
       @form_submission = if params[:form_submission_id].present?
         submissions.find_by(id: params[:form_submission_id])
       else
@@ -128,7 +127,7 @@ module Events
     private
 
     def credit_card_payment?(form_params)
-      payment_method_field = @form.form_fields.find_by(field_identifier: "payment_method")
+      payment_method_field = @registration_form.form_fields.find_by(field_identifier: "payment_method")
       return false unless payment_method_field
 
       form_params[payment_method_field.id.to_s]&.downcase == FormBuilderService::PAYMENT_METHOD_PAY_NOW.downcase
@@ -196,7 +195,7 @@ module Events
     end
 
     def split_form_params(all_params)
-      reg_field_ids = @form.form_fields.pluck(:id).map(&:to_s)
+      reg_field_ids = @registration_form.form_fields.pluck(:id).map(&:to_s)
       registration = all_params.slice(*reg_field_ids)
 
       scholarship = {}
@@ -209,25 +208,25 @@ module Events
     end
 
     def visible_form_fields
-      scope = @form.form_fields
+      scope = @registration_form.form_fields
 
       person = current_user&.person
       if person
         # Always hide logged_out_only fields for logged-in users with known data
         known_identifiers = person_known_identifiers(person)
         if known_identifiers.any?
-          known_ids = @form.form_fields
+          known_ids = @registration_form.form_fields
                            .where(visibility: :logged_out_only, field_identifier: known_identifiers)
                            .ids
           scope = scope.where.not(id: known_ids) if known_ids.any?
         end
 
         # Hide logged_out_only headers when all their non-header fields are hidden
-        logged_out_sections = @form.form_fields.where(visibility: :logged_out_only)
+        logged_out_sections = @registration_form.form_fields.where(visibility: :logged_out_only)
                                   .where.not(answer_type: :group_header)
                                   .pluck(:section).uniq.compact
         logged_out_sections.each do |sect|
-          section_field_ids = @form.form_fields.where(section: sect, visibility: :logged_out_only)
+          section_field_ids = @registration_form.form_fields.where(section: sect, visibility: :logged_out_only)
                                   .where.not(answer_type: :group_header).ids
           if section_field_ids.any? && known_identifiers.any? && (section_field_ids - scope.where(id: section_field_ids).ids).any?
             remaining = scope.where(id: section_field_ids).ids
@@ -237,11 +236,11 @@ module Events
           end
         end
 
-        if @form.hide_answered_form_questions?
+        if @registration_form.hide_answered_form_questions?
           answered_field_ids = []
 
           # One-time fields: hide if answered on ANY form submission for this person
-          one_time_field_ids = @form.form_fields.where(visibility: :answers_on_file, one_time: true)
+          one_time_field_ids = @registration_form.form_fields.where(visibility: :answers_on_file, one_time: true)
                                    .where.not(answer_type: :group_header).ids
           if one_time_field_ids.any?
             answered_one_time = FormAnswer.joins(:form_submission)
@@ -255,7 +254,7 @@ module Events
           # Regular fields: hide if answered on a submission for this event
           event_submissions = FormSubmission.where(person: person, event_id: @event.id)
           if event_submissions.exists?
-            regular_field_ids = @form.form_fields.where(visibility: :answers_on_file, one_time: false)
+            regular_field_ids = @registration_form.form_fields.where(visibility: :answers_on_file, one_time: false)
                                      .where.not(answer_type: :group_header).ids
             if regular_field_ids.any?
               answered_regular = FormAnswer.where(form_submission: event_submissions)
@@ -271,10 +270,10 @@ module Events
             scope = scope.where.not(id: answered_field_ids)
 
             # Hide section headers when all their non-header fields are answered
-            answered_sections = @form.form_fields.where(id: answered_field_ids)
+            answered_sections = @registration_form.form_fields.where(id: answered_field_ids)
                                     .pluck(:section).uniq.compact
             answered_sections.each do |sect|
-              section_field_ids = @form.form_fields.where(section: sect, visibility: :answers_on_file)
+              section_field_ids = @registration_form.form_fields.where(section: sect, visibility: :answers_on_file)
                                       .where.not(answer_type: :group_header).ids
               if section_field_ids.any? && (section_field_ids - answered_field_ids).empty?
                 scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :answers_on_file)
@@ -285,11 +284,11 @@ module Events
       end
 
       if @event.cost_cents.to_i <= 0
-        payment_field_ids = @form.form_fields.where(field_identifier: "payment_method").ids
+        payment_field_ids = @registration_form.form_fields.where(field_identifier: "payment_method").ids
         if payment_field_ids.any?
           scope = scope.where.not(id: payment_field_ids)
 
-          header = @form.form_fields.find_by(answer_type: :group_header, name: "Payment Information")
+          header = @registration_form.form_fields.find_by(answer_type: :group_header, name: "Payment Information")
           scope = scope.where.not(id: header.id) if header
         end
       end

@@ -32,7 +32,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
       )
       params[field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER)] = position if position
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
       Person.find_by(email: "sam@example.com")
     end
 
@@ -60,7 +60,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("agency_zip") => "78701",
         field_id("agency_country") => "USA"
       )
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
       person = Person.find_by(email: "sam@example.com")
 
       address = organization.addresses.find_by(city: "Austin")
@@ -85,7 +85,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
         field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => org_name
       )
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
       event.event_registrations.find_by!(registrant: Person.find_by(email: "sam@example.com"))
     end
 
@@ -107,7 +107,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     it "connects no organizations when none is submitted" do
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com")
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
       registration = event.event_registrations.find_by!(registrant: Person.find_by(email: "sam@example.com"))
 
       expect(registration.organizations).to be_empty
@@ -129,7 +129,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("racial_ethnic_identity") => "Asian"
       )
 
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
 
       expect(Person.find_by!(email: "ada@example.com").racial_ethnic_identity).to eq("Asian")
     end
@@ -141,7 +141,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("racial_ethnic_identity") => "Asian"
       )
 
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
 
       expect(existing.reload.racial_ethnic_identity).to eq("Asian")
     end
@@ -153,7 +153,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("racial_ethnic_identity") => ""
       )
 
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
 
       expect(existing.reload.racial_ethnic_identity).to eq("Multi-racial")
     end
@@ -165,7 +165,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("payment_method") => "Check"
       )
 
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
 
       expect(EventRegistration.last.expected_payment_method).to eq("Check")
     end
@@ -177,7 +177,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("payment_method") => "Credit card (now)"
       )
 
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
 
       expect(event.event_registrations.find_by(registrant: person).expected_payment_method).to eq("Credit card (now)")
     end
@@ -189,7 +189,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("communication_consent") => [ "Yes" ]
       )
 
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
       person = Person.find_by!(email: "coco@example.com")
 
       expect(person.mailing_list_consent_at).to be_present
@@ -201,7 +201,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("communication_consent") => [ "" ]
       )
 
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
 
       expect(Person.find_by!(email: "coco@example.com").mailing_list_consent_at).to be_nil
     end
@@ -214,7 +214,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("communication_consent") => [ "Yes" ]
       )
 
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
       person = Person.find_by!(email: "coco@example.com")
 
       expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
@@ -232,7 +232,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id("mailing_country") => "USA"
       )
 
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
       person = Person.find_by!(email: "ada@example.com")
 
       expect(person.addresses.find_by(primary: true).country).to eq("USA")
@@ -245,7 +245,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
           field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
         ).merge(extra)
-        described_class.call(event: event, form: form, form_params: params)
+        described_class.call(event: event, registration_form: form, form_params: params)
       end
 
       it "fills website, agency type, and address country" do
@@ -323,7 +323,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
         field_id("agency_type") => value
       )
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
       organization.reload
     end
 
@@ -376,7 +376,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com")
 
       expect {
-        described_class.call(event: event, form: form, form_params: params)
+        described_class.call(event: event, registration_form: form, form_params: params)
       }.not_to change(Person, :count)
 
       expect(EventRegistration.last.registrant).to eq(existing)
@@ -391,7 +391,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       )
 
       expect {
-        described_class.call(event: event, form: form, form_params: params)
+        described_class.call(event: event, registration_form: form, form_params: params)
       }.not_to change(Person, :count)
 
       expect(EventRegistration.last.registrant).to eq(existing)
@@ -403,7 +403,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       params = base_form_params(first_name: "Dana", last_name: "Jones", email: "shared@example.com")
 
       expect {
-        described_class.call(event: event, form: form, form_params: params)
+        described_class.call(event: event, registration_form: form, form_params: params)
       }.to change(Person, :count).by(1)
     end
   end
@@ -424,7 +424,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "returns a failed result instead of raising" do
       result = nil
       expect {
-        result = described_class.call(event: event, form: form, form_params: params)
+        result = described_class.call(event: event, registration_form: form, form_params: params)
       }.not_to raise_error
 
       expect(result.success?).to be false
@@ -433,7 +433,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     it "does not create a registration" do
       expect {
-        described_class.call(event: event, form: form, form_params: params)
+        described_class.call(event: event, registration_form: form, form_params: params)
       }.not_to change(EventRegistration, :count)
     end
   end
@@ -445,7 +445,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "marks the dropdown answer primary and the checkbox answers additional" do
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
           field_id("primary_sector_single") => primary_sector.id.to_s,
           field_id("additional_sectors") => [ additional_sector.id.to_s ]
@@ -464,7 +464,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
           field_id("primary_sector_single") => primary_sector.id.to_s
         )
@@ -479,7 +479,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
           field_id("primary_sector_single") => primary_sector.id.to_s
         )
@@ -499,7 +499,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "tags primary and additional age groups on the registrant" do
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Al", last_name: "Ng", email: "al@example.com").merge(
           field_id("primary_age_group") => [ young.id.to_s ],
           field_id("additional_age_group") => [ teen.id.to_s ]
@@ -535,7 +535,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     def register_with_ce(answer)
       params = base_form_params(first_name: "Cy", last_name: "Reed", email: "cy@example.com")
       params = params.merge(ce_field.id.to_s => answer) unless answer.nil?
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
     end
 
     it "toggles ce_credit_requested on when answered Yes" do
@@ -618,7 +618,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     def register_with_additional_forms(selections)
       params = base_form_params(first_name: "Wendy", last_name: "Nein", email: "wendy@example.com")
       params = params.merge(additional_forms_field.id.to_s => selections) unless selections.nil?
-      described_class.call(event: event, form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
     end
 
     it "sets both flags when both options are checked" do
@@ -667,7 +667,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "reactivates a cancelled registration" do
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
       )
 
@@ -686,7 +686,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
       )
     end
@@ -698,7 +698,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
       )
     end
@@ -723,7 +723,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "stores the folded \"Other: <text>\" value from a radio field" do
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Jo", last_name: "Vo", email: "jo@example.com").merge(
           radio_field.id.to_s => "Other: a friend told me"
         )
@@ -744,7 +744,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Mo", last_name: "Vo", email: "mo@example.com").merge(
           multi_field.id.to_s => [ "Healing", "Other: poetry therapy" ]
         )
@@ -769,7 +769,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "persists the scholarship answers as a scholarship-role submission tied to the event" do
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Sky", last_name: "Need", email: "sky@example.com"),
         scholarship_requested: true,
         scholarship_form: scholarship_form,
@@ -788,7 +788,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     it "does not create a scholarship submission when no scholarship was requested" do
       result = described_class.call(
         event: event,
-        form: form,
+        registration_form: form,
         form_params: base_form_params(first_name: "Plain", last_name: "Reg", email: "plain@example.com")
       )
 

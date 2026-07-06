@@ -10,8 +10,8 @@
     <% end %>
     <% if allowed_to?(:dashboard?, @event) %>
       <div class="ml-auto flex flex-wrap items-center gap-1">
-        <% if allowed_to?(:edit?, @form) %>
-          <%= link_to "Edit form", edit_form_path(@form, event_id: @event.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 admin-only bg-blue-100" %>
+        <% if allowed_to?(:edit?, @registration_form) %>
+          <%= link_to "Edit form", edit_form_path(@registration_form, event_id: @event.id), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 admin-only bg-blue-100" %>
         <% end %>
         <%= link_to "Edit event", edit_event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1 admin-only bg-blue-100" %>
       </div>
@@ -73,7 +73,7 @@
     <%# Card Header %>
     <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
       <div class="min-w-0">
-        <h2 class="text-xl font-semibold tracking-wide leading-tight"><%= @form.display_name %></h2>
+        <h2 class="text-xl font-semibold tracking-wide leading-tight"><%= @registration_form.display_name %></h2>
       </div>
       <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
@@ -83,7 +83,7 @@
       <% if @event.autoshow_registration_details? %>
         <%= render "events/public_registrations/details", event: @event %>
       <% end %>
-      <%= render "forms/header", form: @form, event: @event %>
+      <%= render "forms/header", form: @registration_form, event: @event %>
 
       <%# The error flash band carries the form-errors controller so it scrolls
           itself into view on connect after a failed submit. %>
