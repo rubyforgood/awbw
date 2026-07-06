@@ -123,7 +123,7 @@
           <% end %>
 
           <% submissions.each_with_index do |(form_name, ts), i| %>
-            <%= link_to event_event_form_submissions_path(f.object.event, person_id: f.object.registrant_id),
+            <%= link_to event_registrant_submissions_path(f.object.event, person_id: f.object.registrant_id),
                         class: "group inline-flex items-center gap-1.5 font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
                         target: "_blank",
                         title: "#{form_name} — submitted #{ts.strftime('%b %-d, %Y')}",

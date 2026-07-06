@@ -214,7 +214,7 @@
                         <% if (submissions = form_submissions[person.id]) %>
                           <% tooltip_parts = submissions.map { |name, ts| "#{name} — Submitted #{ts.strftime('%B %d, %Y at %l:%M %P')}" } %>
                           <% tooltip_parts << "Scholarship requested" if registration.scholarship_requested? %>
-                          <%= link_to event_event_form_submissions_path(@event, person_id: person.id),
+                          <%= link_to event_registrant_submissions_path(@event, person_id: person.id),
                                       class: "text-blue-600 hover:text-blue-800",
                                       title: tooltip_parts.join("\n"),
                                       data: { turbo_frame: "_top" } do %>
