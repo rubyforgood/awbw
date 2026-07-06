@@ -356,8 +356,8 @@ RSpec.describe "Events", type: :request do
 
       it "re-renders the registration form selections the admin had chosen" do
         reg_form = create(:form, :standalone, role: "registration", name: "Custom Registration")
-        create(:form, :standalone, role: "scholarship")
-        create(:form, :standalone, role: "bulk_payment")
+        scholarship_form = create(:form, :standalone, role: "scholarship")
+        bulk_payment_form = create(:form, :standalone, role: "bulk_payment")
 
         post events_path, params: { event: {
           title: "Missing dates",
@@ -366,14 +366,14 @@ RSpec.describe "Events", type: :request do
           end_date_date: "",
           end_date_time: "",
           registration_form_id: reg_form.id,
-          scholarship_enabled: "1",
-          bulk_payment_enabled: "1"
+          scholarship_form_id: scholarship_form.id,
+          bulk_payment_form_id: bulk_payment_form.id
         } }
 
         expect(response).to have_http_status(:unprocessable_content)
         page = Capybara.string(response.body)
-        expect(page).to have_field("event[scholarship_enabled]", checked: true)
-        expect(page).to have_field("event[bulk_payment_enabled]", checked: true)
+        expect(page).to have_field("event[scholarship_form_id]", checked: true)
+        expect(page).to have_field("event[bulk_payment_form_id]", checked: true)
         expect(response.body).to include("value=\"#{reg_form.id}\" selected")
       end
 
