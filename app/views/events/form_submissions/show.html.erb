@@ -24,7 +24,6 @@
 
       <% form_fields.each do |field| %>
         <% next if field.field_identifier == "bulk_payment_attendees" %>
-        <% next if field.group_header? && field.name == "Attendees" %>
 
         <% if field.group_header? %>
           <% sections << current if current && current[:fields].any? %>
@@ -50,6 +49,21 @@
             </div>
           <% end %>
         </div>
+      <% end %>
+
+      <% attendee_field = submission.form.form_fields.find_by(field_identifier: "bulk_payment_attendees") %>
+      <% if attendee_field && (attendee_response = responses[attendee_field.id]) && attendee_response.submitted_answer.present? %>
+        <% attendees = JSON.parse(attendee_response.submitted_answer) rescue [] %>
+        <% if attendees.any? %>
+          <div class="mt-3 space-y-1.5">
+            <% attendees.each do |attendee| %>
+              <div class="flex items-center gap-2 text-sm text-gray-900 bg-gray-50 rounded px-3 py-1.5">
+                <span class="font-medium"><%= attendee["first_name"] %> <%= attendee["last_name"] %></span>
+                <span class="text-gray-500"><%= attendee["email"] %></span>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
       <% end %>
     </div>
   <% end %>
