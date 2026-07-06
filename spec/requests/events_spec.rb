@@ -240,8 +240,8 @@ RSpec.describe "Events", type: :request do
     before { sign_in admin }
 
     it "shows preview links for enabled add-ons" do
-      create(:event_form, event: event, form: create(:form, name: "Scholarship"), role: "scholarship")
-      create(:event_form, event: event, form: create(:form, name: "Bulk"), role: "bulk_payment")
+      create(:event_form, event: event, form: create(:form, :standalone, role: "scholarship", name: "Scholarship"), role: "scholarship")
+      create(:event_form, event: event, form: create(:form, :standalone, role: "bulk_payment", name: "Bulk"), role: "bulk_payment")
       get edit_event_path(event)
       expect(response.body).to include("Preview scholarship form")
       expect(response.body).to include("scholarship_requested=true")
