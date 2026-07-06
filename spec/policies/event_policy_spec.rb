@@ -174,6 +174,34 @@ RSpec.describe EventPolicy, type: :policy do
     end
   end
 
+  describe "#form_submissions?" do
+    let(:owned_event) { build_stubbed :event, created_by: regular_user }
+
+    context "with admin user" do
+      subject { policy_for(record: published_event, user: admin_user) }
+
+      it { is_expected.to be_allowed_to(:form_submissions?) }
+    end
+
+    context "with owner" do
+      subject { policy_for(record: owned_event, user: regular_user) }
+
+      it { is_expected.to be_allowed_to(:form_submissions?) }
+    end
+
+    context "with non-owner regular user" do
+      subject { policy_for(record: published_event, user: regular_user) }
+
+      it { is_expected.not_to be_allowed_to(:form_submissions?) }
+    end
+
+    context "with no user" do
+      subject { policy_for(record: published_event, user: nil) }
+
+      it { is_expected.not_to be_allowed_to(:form_submissions?) }
+    end
+  end
+
   describe "#registrants?" do
     let(:owned_event) { build_stubbed :event, created_by: regular_user }
 

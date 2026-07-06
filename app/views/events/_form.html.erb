@@ -370,34 +370,76 @@
                 <p class="text-xs text-gray-400">Shown in grey beside the Dates, Time, and Fee rows on the details panel.</p>
               </div>
             </div>
-            <div>
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <%= check_box_tag "event[scholarship_enabled]", "1", resubmitted ? params.dig(:event, :scholarship_enabled) == "1" : @event.scholarship_form.present? %>
-                  <span class="text-sm font-medium text-gray-700">Enable scholarship application</span>
-                </label>
-                <p class="text-xs text-gray-500 mt-1">Add a scholarship form so registrants can request financial assistance.</p>
-                <% if @event.scholarship_form.present? %>
-                  <%= link_to new_event_public_registration_path(@event, scholarship_requested: true),
-                              class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
-                              target: "_blank" do %>
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview scholarship form
+            <% if @scholarship_forms.any? %>
+              <div>
+                <% if @scholarship_forms.size == 1 %>
+                  <% single_form = @scholarship_forms.first %>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <%= check_box_tag "event[scholarship_form_id]", single_form.id,
+                          resubmitted ? params.dig(:event, :scholarship_form_id).present? : @event.scholarship_form.present?,
+                          class: "rounded border-gray-300" %>
+                    <span class="text-sm font-medium text-gray-700">Enable scholarship application</span>
+                  </label>
+                  <p class="text-xs text-gray-500 mt-1">Add a scholarship form so registrants can request financial assistance.</p>
+                  <% if @event.scholarship_form.present? %>
+                    <%= link_to new_event_public_registration_path(@event, scholarship_requested: true),
+                                class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
+                                target: "_blank" do %>
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview scholarship form
+                    <% end %>
                   <% end %>
+                <% else %>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Scholarship form</label>
+                  <% default_scholarship_id = if resubmitted
+                                                params.dig(:event, :scholarship_form_id).presence&.to_i
+                                              elsif @event.scholarship_form
+                                                @event.scholarship_form.id
+                                              end %>
+                  <select name="event[scholarship_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
+                    <option value="">Disabled</option>
+                    <% @scholarship_forms.each do |sf| %>
+                      <option value="<%= sf.id %>" <%= "selected" if sf.id == default_scholarship_id %>><%= sf.name %></option>
+                    <% end %>
+                  </select>
+                  <p class="text-xs text-gray-500 mt-1">Select a scholarship form for registrants to request financial assistance.</p>
                 <% end %>
               </div>
+            <% end %>
+            <% if @bulk_payment_forms.any? %>
               <div class="pb-4">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <%= check_box_tag "event[bulk_payment_enabled]", "1", resubmitted ? params.dig(:event, :bulk_payment_enabled) == "1" : @event.bulk_payment_form.present? %>
-                  <span class="text-sm font-medium text-gray-700">Enable bulk payment</span>
-                </label>
-                <p class="text-xs text-gray-500 mt-1">Let one person register and pay for a group of attendees at once.</p>
-                <% if @event.bulk_payment_form.present? %>
-                  <%= link_to new_event_bulk_payment_path(@event),
-                              class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
-                              target: "_blank" do %>
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview bulk payment page
+                <% if @bulk_payment_forms.size == 1 %>
+                  <% single_form = @bulk_payment_forms.first %>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <%= check_box_tag "event[bulk_payment_form_id]", single_form.id,
+                          resubmitted ? params.dig(:event, :bulk_payment_form_id).present? : @event.bulk_payment_form.present?,
+                          class: "rounded border-gray-300" %>
+                    <span class="text-sm font-medium text-gray-700">Enable bulk payment</span>
+                  </label>
+                  <p class="text-xs text-gray-500 mt-1">Let one person register and pay for a group of attendees at once.</p>
+                  <% if @event.bulk_payment_form.present? %>
+                    <%= link_to new_event_bulk_payment_path(@event),
+                                class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
+                                target: "_blank" do %>
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview bulk payment page
+                    <% end %>
                   <% end %>
+                <% else %>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Bulk payment form</label>
+                  <% default_bulk_id = if resubmitted
+                                         params.dig(:event, :bulk_payment_form_id).presence&.to_i
+                                       elsif @event.bulk_payment_form
+                                         @event.bulk_payment_form.id
+                                       end %>
+                  <select name="event[bulk_payment_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
+                    <option value="">Disabled</option>
+                    <% @bulk_payment_forms.each do |bf| %>
+                      <option value="<%= bf.id %>" <%= "selected" if bf.id == default_bulk_id %>><%= bf.name %></option>
+                    <% end %>
+                  </select>
+                  <p class="text-xs text-gray-500 mt-1">Select a bulk payment form for group registrations.</p>
                 <% end %>
               </div>
+            <% end %>
             </div>
           </div>
         </div>

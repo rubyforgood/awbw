@@ -687,37 +687,17 @@ class EventsController < ApplicationController
   end
 
   def assign_event_forms(event)
-    form_id = params.dig(:event, :registration_form_id)
+    assign_event_form(event, :registration, params.dig(:event, :registration_form_id))
+    assign_event_form(event, :scholarship, params.dig(:event, :scholarship_form_id))
+    assign_event_form(event, :bulk_payment, params.dig(:event, :bulk_payment_form_id))
+  end
+
+  def assign_event_form(event, role, form_id)
     if form_id.blank?
-      event.event_forms.registration.destroy_all
-    else
-      form = Form.standalone.find_by(id: form_id)
-      if form
-        existing = event.event_forms.registration.first
-        if existing
-          existing.update!(form: form) unless existing.form_id == form.id.to_i
-        else
-          event.event_forms.create!(form: form, role: "registration")
-        end
-      end
-    end
-
-    if params.dig(:event, :scholarship_enabled) == "1"
-      form = Form.standalone.find_by(role: "scholarship")
-      if form && !event.event_forms.scholarship.exists?
-        event.event_forms.create!(form: form, role: "scholarship")
-      end
-    else
-      event.event_forms.scholarship.destroy_all
-    end
-
-    if params.dig(:event, :bulk_payment_enabled) == "1"
-      form = Form.standalone.find_by(role: "bulk_payment")
-      if form && !event.event_forms.bulk_payment.exists?
-        event.event_forms.create!(form: form, role: "bulk_payment")
-      end
-    else
-      event.event_forms.bulk_payment.destroy_all
+      event.event_forms.where(role: role).destroy_all
+    elsif form = Form.standalone.find_by(id: form_id)
+      ef = event.event_forms.find_or_create_by!(role: role) { |r| r.form = form }
+      ef.update!(form: form) unless ef.form_id == form.id.to_i
     end
   end
 
@@ -727,6 +707,8 @@ class EventsController < ApplicationController
     @event.gallery_assets.build
     @locations = Location.order(:city, :state)
     @registration_forms = Form.standalone.where(role: "registration").order(:name)
+    @scholarship_forms = Form.standalone.where(role: "scholarship").order(:name)
+    @bulk_payment_forms = Form.standalone.where(role: "bulk_payment").order(:name)
     @categories_grouped =
       Category
         .includes(:category_type)

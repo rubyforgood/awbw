@@ -592,7 +592,7 @@ RSpec.describe "Events::Registrations", type: :request do
       ).call
       EventForm.create!(event: event, form: form, role: "registration")
       form = event.registration_form
-      form.form_submissions.create!(person: user.person)
+      form.form_submissions.create!(person: user.person, event: event)
     end
 
     it "allows access with a valid slug" do

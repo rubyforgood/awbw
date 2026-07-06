@@ -23,16 +23,16 @@ module EventRegistrationServices
     ORGANIZATION_NAME_IDENTIFIER = "agency_name".freeze
     ORGANIZATION_POSITION_IDENTIFIER = "agency_position".freeze
 
-    def self.call(event:, form:, form_params:, scholarship_requested: false, person: nil,
+    def self.call(event:, registration_form:, form_params:, scholarship_requested: false, person: nil,
                   scholarship_form: nil, scholarship_params: {})
-      new(event:, form:, form_params:, scholarship_requested:, person:,
+      new(event:, registration_form:, form_params:, scholarship_requested:, person:,
           scholarship_form:, scholarship_params:).call
     end
 
-    def initialize(event:, form:, form_params:, scholarship_requested: false, person: nil,
+    def initialize(event:, registration_form:, form_params:, scholarship_requested: false, person: nil,
                    scholarship_form: nil, scholarship_params: {})
       @event = event
-      @form = form
+      @registration_form = registration_form
       @form_params = form_params
       @scholarship_requested = scholarship_requested
       @person = person
@@ -113,7 +113,7 @@ module EventRegistrationServices
     end
 
     def field_value(key)
-      field = @form.form_fields.find_by(field_identifier: key)
+      field = @registration_form.form_fields.find_by(field_identifier: key)
       return nil unless field
       @form_params[field.id.to_s]
     end
@@ -365,7 +365,7 @@ module EventRegistrationServices
     end
 
     def collect_ids_from_checkboxes(identifier)
-      field = @form.form_fields.find_by(field_identifier: identifier)
+      field = @registration_form.form_fields.find_by(field_identifier: identifier)
       return [] unless field
 
       value = @form_params[field.id.to_s]
@@ -420,13 +420,13 @@ module EventRegistrationServices
     end
 
     def create_form_submission(person)
-      submission = FormSubmission.create!(person: person, form: @form, event: @event)
+      submission = FormSubmission.create!(person: person, form: @registration_form, event: @event, role: "registration")
       save_form_answers(submission)
       submission
     end
 
     def update_form_submission(person)
-      submission = FormSubmission.find_or_create_by!(person: person, form: @form) do |record|
+      submission = FormSubmission.find_or_create_by!(person: person, form: @registration_form, role: "registration", event: @event) do |record|
         record.event = @event
       end
       save_form_answers(submission)
@@ -435,7 +435,7 @@ module EventRegistrationServices
 
     def save_form_answers(submission)
       @form_params.each do |field_id, raw_value|
-        field = @form.form_fields.find_by(id: field_id)
+        field = @registration_form.form_fields.find_by(id: field_id)
         next unless field
         next if field.group_header? || field.field_identifier == "confirm_email"
 
@@ -457,7 +457,7 @@ module EventRegistrationServices
       return unless @scholarship_requested && @scholarship_form && @scholarship_params.present?
 
       submission = FormSubmission.find_or_create_by!(
-        person: person, form: @scholarship_form, role: "scholarship"
+        person: person, form: @scholarship_form, role: "scholarship", event: @event
       ) do |record|
         record.event = @event
       end
