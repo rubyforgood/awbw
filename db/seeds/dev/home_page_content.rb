@@ -34,7 +34,9 @@ puts "Creating CommunityNews…"
                .first_or_create!(
                   body: body_content,
                   rhino_body: "<p>#{body_content}</p>",
-                  author_id: User.all.sample&.id,
+                  author_id: Person.all.sample&.id,
+                  user_author_id: User.all.sample&.id,
+                  author_credit_preference: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES.sample,
                   created_by_id: User.first&.id,
                   updated_by_id: User.first&.id,
                   organization_id: Organization.all.sample&.id,
