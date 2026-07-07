@@ -13,15 +13,30 @@ RSpec.describe MagicTicketCallouts do
   end
 
   describe "#cards" do
-    it "shows the always-present cards for a bare paid-cost registration" do
-      expect(card_titles(registration)).to eq([
-        "Make your payment", "Forms", "Handouts", "Frequently asked questions"
-      ])
+    it "shows payment and forms for a bare paid, non-training registration" do
+      expect(card_titles(registration)).to eq([ "Make your payment", "Forms" ])
     end
 
     it "omits the payment card for a free event" do
       event.update!(cost_cents: 0)
       expect(card_titles(registration)).not_to include("Payment")
+    end
+
+    it "shows Handouts and FAQ only for facilitator trainings" do
+      expect(card_titles(registration)).not_to include("Handouts", "Frequently asked questions")
+
+      event.update!(facilitator_training: true)
+      expect(card_titles(registration)).to include("Handouts", "Frequently asked questions")
+    end
+
+    it "shows the Forms card for facilitator trainings and paid events, but not free non-trainings" do
+      expect(card_titles(registration)).to include("Forms")
+
+      event.update!(cost_cents: 0)
+      expect(card_titles(registration)).not_to include("Forms")
+
+      event.update!(facilitator_training: true)
+      expect(card_titles(registration)).to include("Forms")
     end
 
     it "makes the payment card an action card while a balance is due, reference once paid" do
@@ -117,7 +132,8 @@ RSpec.describe MagicTicketCallouts do
     end
 
     it "places payment first and FAQ last in the full ordering" do
-      event.update!(event_details: "Bring supplies", ce_hours_details: "6 hours",
+      event.update!(facilitator_training: true, event_details: "Bring supplies",
+                    ce_hours_details: "6 hours",
                     videoconference_url: "https://example.zoom.us/j/123",
                     start_date: 3.days.ago, end_date: 2.days.ago)
       registration.update!(status: "attended", scholarship_requested: true, ce_credit_requested: true)

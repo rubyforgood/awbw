@@ -48,12 +48,24 @@ RSpec.describe "Events::Registrations", type: :request do
     end
 
     context "magic callouts" do
+      # A facilitator training shows the full built-in set, including the
+      # training-only Handouts and FAQ cards.
+      let(:event) { create(:event, facilitator_training: true) }
+
       it "renders the consolidated magic callout cards" do
         get registration_ticket_path(registration.slug)
         expect(response.body).to include("view your balance")
         expect(response.body).to include("W-9, invoice, and receipt")
         expect(response.body).to include("Worksheets and resources for the training")
         expect(response.body).to include("Frequently asked questions")
+      end
+
+      it "omits the training-only Handouts and FAQ cards on a non-training event" do
+        non_training = create(:event, facilitator_training: false)
+        reg = create(:event_registration, event: non_training, registrant: user.person)
+        get registration_ticket_path(reg.slug)
+        expect(response.body).not_to include("Worksheets and resources for the training")
+        expect(response.body).not_to include("Frequently asked questions")
       end
     end
 
@@ -223,6 +235,7 @@ RSpec.describe "Events::Registrations", type: :request do
   end
 
   describe "GET /registration/:slug/faq" do
+    let(:event) { create(:event, facilitator_training: true) }
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     it "renders the training FAQ with the folded-in contact link" do
@@ -328,6 +341,7 @@ RSpec.describe "Events::Registrations", type: :request do
   end
 
   describe "GET /registration/:slug/handouts" do
+    let(:event) { create(:event, facilitator_training: true) }
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     it "links each handout to its registrant resource page, returning to handouts" do

@@ -45,9 +45,9 @@ class MagicTicketCallouts
       EditorCard.new(:ce_hours, "fa-solid fa-graduation-cap", "teal", event.ce_hours_details_label, "Continuing education — requirements & how to request", "When a registrant requests CE credit", nil),
       EditorCard.new(:event_details, "fa-solid fa-palette", "blue", event.event_details_label, "Important info for this event — please read", "When the content below is filled in", nil),
       EditorCard.new(nil, "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
-      EditorCard.new(nil, "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and receipt", "Always shown", "Items link to their relevant resources."),
-      EditorCard.new(nil, "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "Always shown", "Items link to their relevant resources."),
-      EditorCard.new(nil, "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "Always shown", nil)
+      EditorCard.new(nil, "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and receipt", "On facilitator trainings and paid events", "Items link to their relevant resources."),
+      EditorCard.new(nil, "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
+      EditorCard.new(nil, "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
     ]
   end
 
@@ -181,9 +181,11 @@ class MagicTicketCallouts
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
-  # Always-present. Its page links to the W-9, the invoice, and the paid-in-full
-  # receipt (once settled).
+  # Its page links to the W-9, the invoice, and the paid-in-full receipt (once
+  # settled). Shown for facilitator trainings and any paid event (whose
+  # registrants need their invoice/receipt) — see Event#show_forms_callout?.
   def forms_card
+    return unless event.show_forms_callout?
     Card.new(icon_class: "fa-solid fa-file-lines", color: "blue",
              title: "Forms",
              subtitle: "W-9, invoice, and receipt",
@@ -191,8 +193,10 @@ class MagicTicketCallouts
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
-  # Always-present. Its page links to the training worksheets and handouts.
+  # Links to the 2-day training worksheets and handouts, so shown only on
+  # facilitator trainings — see Event#show_handouts_callout?.
   def handouts_card
+    return unless event.show_handouts_callout?
     Card.new(icon_class: "fa-solid fa-folder-open", color: "blue",
              title: "Handouts",
              subtitle: "Worksheets and resources for the training",
@@ -200,8 +204,10 @@ class MagicTicketCallouts
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
-  # Always-present reference card linking to the training FAQ page.
+  # Reference card linking to the 2-day training FAQ page, so shown only on
+  # facilitator trainings — see Event#show_faq_callout?.
   def faq_card
+    return unless event.show_faq_callout?
     Card.new(icon_class: "fa-solid fa-circle-question", color: "blue",
              title: "Frequently asked questions",
              subtitle: "Common questions about the 2-day training",
