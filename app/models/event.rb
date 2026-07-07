@@ -121,6 +121,28 @@ class Event < ApplicationRecord
     signed_in_one_click_enabled? || registration_form.nil?
   end
 
+  # Whether the built-in "training" ticket callouts (Handouts, FAQ, Forms) appear
+  # on this event's registration tickets. Their content is written for the 2-Day
+  # AWBW Facilitator Training, so they only belong on those events — a public,
+  # non-training event (often with no registration process) should not surface
+  # training worksheets or "2-day training" FAQ on its ticket. Handouts and FAQ
+  # are pure training curriculum; Forms (W-9, invoice, receipt) also belongs on
+  # any paid event, whose registrants need their invoice and receipt.
+  #
+  # These are the default rules; a later change adds a per-event override so
+  # admins can force a callout on or off from the event's callouts section.
+  def show_handouts_callout?
+    facilitator_training?
+  end
+
+  def show_faq_callout?
+    facilitator_training?
+  end
+
+  def show_forms_callout?
+    facilitator_training? || cost_cents.to_i.positive?
+  end
+
   def scholarship_form
     forms.find_by(event_forms: { role: "scholarship" })
   end
