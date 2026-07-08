@@ -68,12 +68,12 @@
         <% end %>
       </span>
       <div class="grow flex items-start gap-x-2"
-           data-controller="comment-required"
-           data-action="input->comment-required#update">
+           data-controller="field-required"
+           data-action="input->field-required#update">
         <div class="w-1/3 shrink-0">
           <%= f.input_field :topic,
                             placeholder: "Topic",
-                            data: { comment_required_target: "topic" },
+                            data: { field_required_target: "field" },
                             class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
           <p class="text-gray-500 text-xs mt-1">Reason for this note</p>
         </div>
@@ -81,7 +81,7 @@
                           as: :text,
                           rows: 1,
                           required: false,
-                          data: { comment_required_target: "body" },
+                          data: { field_required_target: "field required" },
                           class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
       </div>
       <%= link_to_remove_association "Remove", f,
@@ -98,12 +98,12 @@
         <span class="<%= current_color[0] %> <%= current_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= current_user&.person&.name || current_user&.name %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
       </span>
       <div class="grow flex items-start gap-x-2"
-           data-controller="comment-required"
-           data-action="input->comment-required#update">
+           data-controller="field-required"
+           data-action="input->field-required#update">
         <div class="w-1/3 shrink-0">
           <%= f.input_field :topic,
                             placeholder: "Topic",
-                            data: { comment_required_target: "topic" },
+                            data: { field_required_target: "field" },
                             class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
           <p class="text-gray-500 text-xs mt-1">Reason for this note</p>
         </div>
@@ -112,7 +112,7 @@
                           rows: 2,
                           required: false,
                           placeholder: "Type your comment",
-                          data: { comment_required_target: "body" },
+                          data: { field_required_target: "field required" },
                           class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
       </div>
     </div>
