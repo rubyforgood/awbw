@@ -114,6 +114,10 @@ class Notification < ApplicationRecord
   # edit page) records a contact that already happened — fill in the sensible
   # defaults so it validates without going through the delivery pipeline.
   before_validation :apply_manual_log_defaults, on: :create, if: -> { kind.blank? }
+  # The portal only ever sends autoemails; every other channel is a hand-logged
+  # communication, so a non-autoemail channel implies kind "manual_log". Keep the
+  # two in sync so they can't drift (manual_log? <=> channel != "autoemail").
+  before_validation :classify_manual_channel_as_manual_log, if: -> { channel.present? && channel != "autoemail" }
   # "autoemail" is reserved for messages the portal sends automatically — it can
   # be neither selected in the manual form nor set on a hand-logged (manual_log)
   # communication. Fall back to a manual channel so one is never autoemail (the
@@ -229,5 +233,9 @@ class Notification < ApplicationRecord
 
   def force_manual_log_channel
     self.channel = "email" if channel.blank? || channel == "autoemail"
+  end
+
+  def classify_manual_channel_as_manual_log
+    self.kind = "manual_log"
   end
 end

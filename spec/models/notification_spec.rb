@@ -36,6 +36,18 @@ RSpec.describe Notification do
       notification.valid?
       expect(notification.channel).to eq("autoemail")
     end
+
+    it "classifies any non-autoemail channel as a manual_log, whatever its prior kind" do
+      notification = build_notification(kind: "event_registration_confirmation", channel: "phone")
+      notification.valid?
+      expect(notification.kind).to eq("manual_log")
+    end
+
+    it "leaves the kind of an autoemail alone" do
+      notification = build_notification(kind: "event_registration_confirmation", channel: "autoemail")
+      notification.valid?
+      expect(notification.kind).to eq("event_registration_confirmation")
+    end
   end
 
   describe "KINDS" do
