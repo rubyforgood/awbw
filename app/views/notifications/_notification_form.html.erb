@@ -1,22 +1,40 @@
 <%# ---- The editable fields for a manual-log communication (From / Channel /
     Subject / Body + Remove). Shared by a new entry and the edit mode of a
-    persisted one in _notification_fields. From and Channel stack as compact
-    inline "label + field" rows in a narrow column (comment-field styling, value
-    truncates); Subject and Body sit beside them as two-row textareas. Subject is
-    required once the row is in use (server-side reject_if drops a blank-subject
-    entry), so field-required marks it required as soon as the subject or body is
-    touched — a partially filled entry can't be silently dropped, while an
-    untouched added row stays optional and won't block the parent form. ---- %>
+    persisted one in _notification_fields. From is a non-editable sender chip
+    (same colored badge the comments box uses for the author); Channel is a
+    compact select; Subject and Body sit beside them as two-row textareas.
+    Subject is required once the row is in use (server-side reject_if drops a
+    blank-subject entry), so field-required marks it required as soon as the
+    subject or body is touched — a partially filled entry can't be silently
+    dropped, while an untouched added row stays optional and won't block the
+    parent form. ---- %>
+<% label_colors = [
+  [ "bg-sky-100", "text-sky-800" ],
+  [ "bg-purple-100", "text-purple-800" ],
+  [ "bg-pink-100", "text-pink-800" ],
+  [ "bg-indigo-100", "text-indigo-800" ],
+  [ "bg-orange-100", "text-orange-800" ],
+  [ "bg-yellow-200", "text-yellow-800" ],
+  [ "bg-blue-100", "text-blue-800" ],
+  [ "bg-green-100", "text-green-800" ]
+] %>
+<% sender_user = f.object.sender || current_user %>
+<% sender_color = label_colors[(sender_user&.id || 0) % label_colors.length] %>
+<% sender_first = sender_user&.person&.first_name || sender_user&.name.to_s.split.first %>
 <% select_class = "min-w-0 flex-1 truncate bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
 <div data-controller="field-required" data-action="input->field-required#update">
   <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
-    <%# From and Channel stacked. No blank "AWBW Portal" option — a hand-logged
-        communication must have a real sender; system messages are view-only. %>
     <div class="space-y-2 sm:w-48 sm:shrink-0">
-      <label class="flex items-center gap-2">
+      <%# Invisible spacer matching the Subject/Body field label, so the From row
+          lines up with the top of the Subject input rather than its label. %>
+      <span class="block invisible font-medium mb-1" aria-hidden="true">From</span>
+      <%# From — a non-editable sender chip (the comment-author badge); the sender
+          is whoever logs the communication, submitted via a hidden field. %>
+      <div class="flex items-center gap-2">
         <span class="w-16 shrink-0 text-sm font-medium text-gray-700">From</span>
-        <%= f.select :sender_id, options_for_select(sender_options, sender_selected), { include_blank: false }, class: select_class %>
-      </label>
+        <span class="<%= sender_color[0] %> <%= sender_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate" title="<%= sender_user&.full_name %>"><%= truncate(sender_first.presence || "--", length: 10, omission: "..") %></span>
+      </div>
+      <%= f.hidden_field :sender_id, value: sender_user&.id %>
       <label class="flex items-center gap-2">
         <span class="w-16 shrink-0 text-sm font-medium text-gray-700">Channel</span>
         <%= f.select :channel, options_for_select(Notification::MANUAL_CHANNELS.map { |c| [ c.titleize, c ] }, channel_default), { include_blank: false }, class: select_class %>

@@ -4,10 +4,7 @@
     between them. A new, unsaved entry renders the amber add
     form directly. Only manually logged communications addressed to this record
     render through this partial — automated notifications stay read-only in the
-    notifications box. A blank sender means the system ("AWBW Portal"). ---- %>
-<% sender_users = User.where(super_user: true).includes(:person).to_a %>
-<% sender_users |= [ current_user ] if current_user %>
-<% sender_options = sender_users.sort_by { |u| u.full_name.to_s.downcase }.map { |u| [ u.full_name, u.id ] } %>
+    notifications box. The sender defaults to whoever logs it. ---- %>
 <% channel_default = Notification::MANUAL_CHANNELS.include?(f.object.channel) ? f.object.channel : "email" %>
 <% record = local_assigns[:record] %>
 <div class="nested-fields" data-paginated-fields-target="item">
@@ -24,13 +21,11 @@
       <%= render "notifications/notification_row", notification: f.object, admin: true %>
     </div>
     <div class="rounded-md border border-amber-200 bg-amber-50 p-3" style="display:none" data-edit-toggle-target="edit">
-      <%= render "notifications/notification_form", f: f, sender_options: sender_options,
-            sender_selected: f.object.sender_id, channel_default: channel_default %>
+      <%= render "notifications/notification_form", f: f, channel_default: channel_default %>
     </div>
   <% else %>
     <div class="rounded-md border border-amber-200 bg-amber-50 p-3">
-      <%= render "notifications/notification_form", f: f, sender_options: sender_options,
-            sender_selected: f.object.sender_id || current_user&.id, channel_default: channel_default %>
+      <%= render "notifications/notification_form", f: f, channel_default: channel_default %>
     </div>
   <% end %>
 </div>
