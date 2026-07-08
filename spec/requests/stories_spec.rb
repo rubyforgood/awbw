@@ -320,6 +320,17 @@ RSpec.describe "/stories", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it "resolves a story by its slugged param" do
+        get story_url(public_story)
+        expect(public_story.to_param).to match(/\A\d+-/)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "still resolves a story by its bare numeric id" do
+        get story_url(id: public_story.id)
+        expect(response).to have_http_status(:ok)
+      end
+
       it "cannot view published-only story" do
         get story_url(published_story)
         expect(response).to redirect_to(root_path)

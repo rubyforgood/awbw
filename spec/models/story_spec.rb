@@ -178,4 +178,22 @@ RSpec.describe Story, type: :model do
       end
     end
   end
+
+  describe "#to_param" do
+    it "is the id followed by the title slugged with hyphens, stripping bad URL characters" do
+      story = create(:story, title: "My Great Story! #2 (2026)")
+      expect(story.to_param).to eq("#{story.id}-my-great-story-2-2026")
+    end
+
+    it "tracks the title when it changes" do
+      story = create(:story, title: "Original Title")
+      story.update!(title: "Brand New Title")
+      expect(story.to_param).to eq("#{story.id}-brand-new-title")
+    end
+
+    it "resolves back to the record via the leading id" do
+      story = create(:story, title: "Some Story")
+      expect(Story.find(story.to_param)).to eq(story)
+    end
+  end
 end
