@@ -1,8 +1,9 @@
 <%# ---- Notifications — communications for the scholarship recipient, newest
-    first. Subjects (and the channel icon) are visible to anyone who can see this
-    page; the message body and the ability to add or edit hand-noted
-    communications are admin-only. Automated entries are always read-only.
-    Mirrors the registration notifications box. ---- %>
+    first. Dates, subjects, and the channel icon are visible to anyone who can
+    see this page. An automated ("AWBW Portal") message body stays visible (it is
+    the recipient's own email); a hand-noted communication's body is an internal
+    staff note — admin-only. Adding/editing hand-noted communications is
+    admin-only too. Mirrors the registration notifications box. ---- %>
 <% scholarship = f.object %>
 <% email = scholarship.recipient.preferred_email %>
 <% notifications = email.present? ? Notification.email(email).order(created_at: :desc) : Notification.none %>
@@ -36,7 +37,7 @@
             <% end %>
           <% else %>
             <div data-paginated-fields-target="item">
-              <%= render "notifications/notification_row", notification: notification, show_body: admin %>
+              <%= render "notifications/notification_row", notification: notification, admin: admin %>
             </div>
           <% end %>
         <% end %>

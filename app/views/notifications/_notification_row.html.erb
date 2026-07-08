@@ -1,8 +1,14 @@
 <%# ---- Read-only display of one communication: channel icon + subject (always
-    visible), then the body (admin-only — pass show_body: false to hide it for
-    non-admins, e.g. the recipient viewing their own record). Shared by the
-    notifications box and the view mode of an editable manual-log entry. ---- %>
-<% show_body = local_assigns.fetch(:show_body, true) %>
+    visible), then the body. The body of a hand-noted communication (manual_log)
+    is an internal staff note — admin-only, shown with the admin-only blue
+    styling and hidden from non-admins (no inline text, nothing in the hover
+    title). An automated ("AWBW Portal") message is the recipient's own email, so
+    its body stays visible to everyone. Pass admin: false for a non-admin viewer.
+    Shared by the notifications box and the view mode of an editable manual-log
+    entry. ---- %>
+<% admin = local_assigns.fetch(:admin, true) %>
+<% body_admin_only = notification.manual_log? %>
+<% show_body = admin || !body_admin_only %>
 <% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
 <% body = notification.email_body_text.to_s if show_body %>
 <% sender_name = notification.sender&.full_name.presence || "AWBW Portal" %>
@@ -15,7 +21,12 @@
     <%= notification.decorate.channel_icon %>
     <span class="font-semibold text-gray-900"><%= subject %></span>
     <% if body.present? %>
-      <span class="text-gray-500"><%= body %></span>
+      <% if body_admin_only %>
+        <%# Internal staff note — admin-only, marked with the admin-only blue styling. %>
+        <span class="admin-only bg-blue-100 rounded px-1 text-gray-700"><%= body %></span>
+      <% else %>
+        <span class="text-gray-500"><%= body %></span>
+      <% end %>
     <% end %>
   </span>
 </div>

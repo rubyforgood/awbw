@@ -1,9 +1,10 @@
 <%# ---- Notifications — communications addressed to this person, newest first.
-    Subjects (and the channel icon) are visible to anyone who can see this page,
-    including the person themselves; the message body and the ability to add or
-    edit hand-noted communications are admin-only. Automated entries are always
-    read-only. Links open in a new tab so unsaved edits aren't lost. Mirrors the
-    registration edit notifications section. ---- %>
+    Dates, subjects, and the channel icon are visible to anyone who can see this
+    page, including the person. An automated ("AWBW Portal") message body is the
+    person's own email, so it stays visible to them; a hand-noted communication's
+    body is an internal staff note — admin-only. Adding/editing hand-noted
+    communications is admin-only too. Links open in a new tab so unsaved edits
+    aren't lost. Mirrors the registration edit notifications section. ---- %>
 <% person = f.object %>
 <% email = person.preferred_email %>
 <% notifications = email.present? ? Notification.email(email).order(created_at: :desc) : Notification.none %>
@@ -37,7 +38,7 @@
             <% end %>
           <% else %>
             <div data-paginated-fields-target="item">
-              <%= render "notifications/notification_row", notification: notification, show_body: admin %>
+              <%= render "notifications/notification_row", notification: notification, admin: admin %>
             </div>
           <% end %>
         <% end %>
