@@ -75,16 +75,15 @@ RSpec.describe Asset do
     end
   end
 
-  describe "search-visibility scopes" do
-    let!(:visible) { create(:primary_asset, hidden_from_search: false) }
-    let!(:hidden)  { create(:primary_asset, hidden_from_search: true) }
+  describe ".attached_to_hidden_resource" do
+    it "returns only assets attached to a hidden-from-search resource" do
+      hidden_resource = create(:resource, hidden_from_search: true)
+      shown_resource  = create(:resource, hidden_from_search: false)
+      on_hidden = create(:primary_asset, owner: hidden_resource)
+      create(:primary_asset, owner: shown_resource)
+      create(:primary_asset, owner: create(:workshop))
 
-    it ".searchable returns only non-hidden assets" do
-      expect(Asset.searchable).to contain_exactly(visible)
-    end
-
-    it ".hidden returns only hidden assets" do
-      expect(Asset.hidden).to contain_exactly(hidden)
+      expect(Asset.attached_to_hidden_resource).to contain_exactly(on_hidden)
     end
   end
 

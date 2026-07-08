@@ -77,17 +77,20 @@ RSpec.describe "/asset_library", type: :request do
         expect(response.body).not_to include("A png")
       end
 
-      it "filters by search visibility" do
-        create(:primary_asset, title: "Visible asset", hidden_from_search: false)
-        create(:primary_asset, title: "Concealed asset", hidden_from_search: true)
+      it "filters by the owning resource's search visibility" do
+        hidden_resource = create(:resource, hidden_from_search: true)
+        shown_resource  = create(:resource, hidden_from_search: false)
+        create(:primary_asset, title: "On hidden resource", owner: hidden_resource)
+        create(:primary_asset, title: "On shown resource", owner: shown_resource)
+        create(:primary_asset, title: "On a workshop", owner: create(:workshop))
 
         get asset_library_url(visibility: "hidden"), headers: frame_headers
-        expect(response.body).to include("Concealed asset")
-        expect(response.body).not_to include("Visible asset")
+        expect(response.body).to include("On hidden resource")
+        expect(response.body).not_to include("On shown resource", "On a workshop")
 
         get asset_library_url(visibility: "searchable"), headers: frame_headers
-        expect(response.body).to include("Visible asset")
-        expect(response.body).not_to include("Concealed asset")
+        expect(response.body).to include("On shown resource", "On a workshop")
+        expect(response.body).not_to include("On hidden resource")
       end
 
       it "searches by caption and filename" do

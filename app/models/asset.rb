@@ -64,10 +64,13 @@ class Asset < ApplicationRecord
   belongs_to :owner, polymorphic: true, optional: true, touch: true
   belongs_to :report, optional: true
 
-  # Assets flagged hidden_from_search are excluded when the library search is
-  # scoped to searchable-only; they stay reachable and editable in the library.
-  scope :searchable, -> { where(hidden_from_search: false) }
-  scope :hidden, -> { where(hidden_from_search: true) }
+  # Assets attached to a Resource that is hidden from search. The library's
+  # visibility filter treats these as the "hidden" set; every other asset
+  # (including those on non-hidden resources and on other owner types) is
+  # "searchable". Only Resource owners carry hidden_from_search.
+  scope :attached_to_hidden_resource, -> {
+    where(owner_type: "Resource", owner_id: Resource.where(hidden_from_search: true).select(:id))
+  }
 
   # Admin asset library: keyword search across the asset's own title, its
   # attached filename, the type of record it's attached to (owner_type), and the

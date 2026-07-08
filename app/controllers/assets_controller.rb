@@ -13,8 +13,9 @@ class AssetsController < ApplicationController
       base = base.where(type: params[:type]) if params[:type].present?
       base = base.where(owner_type: params[:owner_type]) if params[:owner_type].present?
       base = base.where(id: Asset.joins(:file_blob).where(active_storage_blobs: { content_type: params[:content_type] })) if params[:content_type].present?
-      base = base.searchable if params[:visibility] == "searchable"
-      base = base.hidden if params[:visibility] == "hidden"
+      hidden_ids = Asset.attached_to_hidden_resource.select(:id)
+      base = base.where(id: hidden_ids) if params[:visibility] == "hidden"
+      base = base.where.not(id: hidden_ids) if params[:visibility] == "searchable"
 
       filtered = base.search(params[:query]).order(created_at: :desc)
       @assets = filtered.paginate(page: params[:page], per_page: per_page)
