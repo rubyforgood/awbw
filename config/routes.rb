@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  # Sink for browser CSP violation reports (policy.report_uri in
+  # config/initializers/content_security_policy.rb).
+  post "/csp-violation-report-endpoint", to: "csp_reports#create"
+
   resources :primary_assets
   resources :rich_text_assets
 

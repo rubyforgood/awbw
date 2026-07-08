@@ -11,7 +11,8 @@ Rails.application.configure do
     policy.img_src     :self, :https, :data
     policy.object_src  :none
     policy.script_src  :self, :https
-    # Specify URI for violation reports
+    # Browsers POST violation reports here; CspReportsController#create logs them
+    # and returns 204. Keep this path in sync with the route.
     policy.report_uri "/csp-violation-report-endpoint"
   end
   # Report violations without enforcing the policy.
