@@ -533,11 +533,10 @@
           <div data-paginated-fields-target="nav"></div>
 
           <button type="button"
-                  class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
-                  style="float:right"
+                  class="float-right text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
                   data-action="click->comment-edit-toggle#toggle">
             <span data-comment-edit-toggle-target="editLabel">Edit Comments</span>
-            <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done Editing</span>
+            <span data-comment-edit-toggle-target="viewLabel" class="hidden">Done Editing</span>
           </button>
           <%= link_to_add_association "➕ Add Comment",
                                       f,

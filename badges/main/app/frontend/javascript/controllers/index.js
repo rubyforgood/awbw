@@ -168,6 +168,9 @@ application.register("form-section-toggle", FormSectionToggleController)
 import ShareUrlController from "./share_url_controller"
 application.register("share-url", ShareUrlController)
 
+import ScrollToTopController from "./scroll_to_top_controller"
+application.register("scroll-to-top", ScrollToTopController)
+
 import SortableController from "./sortable_controller"
 application.register("sortable", SortableController)
 

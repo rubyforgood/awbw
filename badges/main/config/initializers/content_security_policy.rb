@@ -11,8 +11,9 @@ Rails.application.configure do
     policy.img_src     :self, :https, :data
     policy.object_src  :none
     policy.script_src  :self, :https
-    # Specify URI for violation reports
-    policy.report_uri "/csp-violation-report-endpoint"
+    # No report_uri: nothing in the app serves a violation-report endpoint, so
+    # setting one only makes browsers POST reports to a dead path (404 noise in
+    # the console). Reinstate it only alongside a route that accepts the reports.
   end
   # Report violations without enforcing the policy.
   config.content_security_policy_report_only = true

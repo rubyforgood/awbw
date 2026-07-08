@@ -31,14 +31,14 @@ export default class extends Controller {
 
     this.element
       .querySelectorAll(".comment-view")
-      .forEach((el) => (el.style.display = this.editing ? "none" : ""));
+      .forEach((el) => el.classList.toggle("hidden", this.editing));
     this.element
       .querySelectorAll(".comment-edit")
-      .forEach((el) => (el.style.display = this.editing ? "" : "none"));
+      .forEach((el) => el.classList.toggle("hidden", !this.editing));
 
     if (this.hasEditLabelTarget && this.hasViewLabelTarget) {
-      this.editLabelTarget.style.display = this.editing ? "none" : "";
-      this.viewLabelTarget.style.display = this.editing ? "" : "none";
+      this.editLabelTarget.classList.toggle("hidden", this.editing);
+      this.viewLabelTarget.classList.toggle("hidden", !this.editing);
     }
   }
 }
