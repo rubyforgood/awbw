@@ -13,7 +13,6 @@ Rails.application.configure do
     policy.script_src  :self, :https
     # Browsers POST violation reports here; CspReportsController#create logs them
     # and returns 204. Keep this path in sync with the route.
-    policy.report_uri "/csp-violation-report-endpoint"
   end
   # Report violations without enforcing the policy.
   config.content_security_policy_report_only = true
