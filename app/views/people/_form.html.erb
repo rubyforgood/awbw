@@ -513,10 +513,9 @@
   </div>
 
   <% if f.object.persisted? %>
-    <!-- Notifications -->
-    <% if allowed_to?(:index?, with: NotificationPolicy) %>
-      <%= render "notifications", f: f %>
-    <% end %>
+    <%# Communications — subjects are visible to the person; the body and the
+        add/edit controls are admin-only (gated inside the partial). %>
+    <%= render "notifications", f: f %>
 
     <!-- Comments -->
     <% if allowed_to?(:manage?, Comment) %>

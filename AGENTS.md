@@ -285,7 +285,6 @@ end
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
-- `comment_required` — Require a comment body once a topic or body is filled in
 - `confirm_email` — Email confirmation UI
 - `dirty_form` — Unsaved changes detection
 - `dismiss` — Dismissable elements

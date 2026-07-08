@@ -1,12 +1,18 @@
-<%# ---- Read-only display of one communication (date, sender, subject, body).
-    Shared by the notifications box (automated entries) and the view mode of an
-    editable manual-log entry in _notification_fields. ---- %>
+<%# ---- Read-only display of one communication: channel icon + subject (always
+    visible), then the body (admin-only — pass show_body: false to hide it for
+    non-admins, e.g. the recipient viewing their own record). Shared by the
+    notifications box and the view mode of an editable manual-log entry. ---- %>
+<% show_body = local_assigns.fetch(:show_body, true) %>
 <% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
-<% body = notification.email_body_text.to_s %>
+<% body = notification.email_body_text.to_s if show_body %>
+<% sender_name = notification.sender&.full_name.presence || "AWBW Portal" %>
 <div class="flex items-baseline gap-x-2">
   <span class="shrink-0 whitespace-nowrap text-xs text-gray-400"><%= notification.created_at.strftime("%-m/%-d/%Y") %></span>
-  <span class="shrink-0 whitespace-nowrap text-xs font-medium text-gray-500"><%= notification.sender&.full_name.presence || "AWBW Portal" %></span>
+  <%# Fixed, snug width (~"Umberto User") + truncate so the channel icons line up
+      regardless of name length, without a wide gap before the icon. %>
+  <span class="w-[5.5rem] shrink-0 truncate text-xs font-medium text-gray-500" title="<%= sender_name %>"><%= sender_name %></span>
   <span class="min-w-0 flex-1 truncate text-sm" title="<%= [ subject, body.presence ].compact.join(" — ") %>">
+    <%= notification.decorate.channel_icon %>
     <span class="font-semibold text-gray-900"><%= subject %></span>
     <% if body.present? %>
       <span class="text-gray-500"><%= body %></span>

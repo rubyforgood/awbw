@@ -1,21 +1,22 @@
 <%# ---- Notifications — communications for the scholarship recipient, newest
-    first. Automated entries are read-only; manually logged entries addressed to
-    this scholarship can be edited inline (toggle "Edit communications", like the
-    comments box) and new ones added, both saved with the scholarship form.
+    first. Subjects (and the channel icon) are visible to anyone who can see this
+    page; the message body and the ability to add or edit hand-noted
+    communications are admin-only. Automated entries are always read-only.
     Mirrors the registration notifications box. ---- %>
 <% scholarship = f.object %>
 <% email = scholarship.recipient.preferred_email %>
 <% notifications = email.present? ? Notification.email(email).order(created_at: :desc) : Notification.none %>
+<% admin = allowed_to?(:index?, with: NotificationPolicy) %>
 <% new_notifications = scholarship.notifications.select(&:new_record?) %>
-<%# System ("AWBW Portal", sender-less) communications are view-only. %>
-<% editable_notifications = notifications.select { |n| n.manual_log? && n.sender_id.present? && n.noticeable_type == Scholarship.name && n.noticeable_id == scholarship.id } %>
+<%# Only admins can edit; system ("AWBW Portal", sender-less) communications are view-only. %>
+<% editable_notifications = admin ? notifications.select { |n| n.manual_log? && n.sender_id.present? && n.noticeable_type == Scholarship.name && n.noticeable_id == scholarship.id } : [] %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="edit-toggle">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:users, intensity: 100) %> <%= DomainTheme.text_class_for(:users, intensity: 600) %>">
       <i class="fa-solid fa-bell"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700"><%= t("communications.scholarship_title") %></h2>
-    <% if email.present? %>
+    <% if email.present? && admin %>
       <%= link_to notifications_path(email: email),
                   class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
                   target: "_blank", rel: "noopener" do %>
@@ -35,13 +36,15 @@
             <% end %>
           <% else %>
             <div data-paginated-fields-target="item">
-              <%= render "notifications/notification_row", notification: notification %>
+              <%= render "notifications/notification_row", notification: notification, show_body: admin %>
             </div>
           <% end %>
         <% end %>
-        <%# New, unsaved entries — re-rendered here on validation error. %>
-        <%= f.simple_fields_for :notifications, new_notifications do |nf| %>
-          <%= render "notifications/notification_fields", f: nf, record: scholarship %>
+        <% if admin %>
+          <%# New, unsaved entries — re-rendered here on validation error. %>
+          <%= f.simple_fields_for :notifications, new_notifications do |nf| %>
+            <%= render "notifications/notification_fields", f: nf, record: scholarship %>
+          <% end %>
         <% end %>
       </div>
       <div data-paginated-fields-target="nav"></div>
@@ -51,25 +54,27 @@
       <p class="text-sm text-gray-400"><%= t("communications.none_for_scholarship") %></p>
     <% end %>
 
-    <div class="flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
-      <%= link_to_add_association f, :notifications,
-            partial: "notifications/notification_fields",
-            render_options: { locals: { record: scholarship } },
-            data: { association_insertion_node: "#scholarship-notification-list", association_insertion_method: "append" },
-            class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-        <i class="fa-solid fa-plus text-[0.6rem]"></i>
-        <%= t("communications.add") %>
-      <% end %>
+    <% if admin %>
+      <div class="flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+        <%= link_to_add_association f, :notifications,
+              partial: "notifications/notification_fields",
+              render_options: { locals: { record: scholarship } },
+              data: { association_insertion_node: "#scholarship-notification-list", association_insertion_method: "append" },
+              class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
+          <i class="fa-solid fa-plus text-[0.6rem]"></i>
+          <%= t("communications.add") %>
+        <% end %>
 
-      <% if editable_notifications.any? %>
-        <button type="button"
-                class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
-                data-action="edit-toggle#toggle">
-          <i class="fa-solid fa-pen text-[0.6rem]"></i>
-          <span data-edit-toggle-target="editLabel"><%= t("communications.edit") %></span>
-          <span data-edit-toggle-target="viewLabel" style="display:none"><%= t("communications.done_editing") %></span>
-        </button>
-      <% end %>
-    </div>
+        <% if editable_notifications.any? %>
+          <button type="button"
+                  class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+                  data-action="edit-toggle#toggle">
+            <i class="fa-solid fa-pen text-[0.6rem]"></i>
+            <span data-edit-toggle-target="editLabel"><%= t("communications.edit") %></span>
+            <span data-edit-toggle-target="viewLabel" style="display:none"><%= t("communications.done_editing") %></span>
+          </button>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </section>
