@@ -53,6 +53,18 @@ RSpec.describe "/workshop_variations", type: :request do
         expect(response.body).to include(workshop_variation_idea.name)
         expect(response.body).to include("&lt;p&gt;Original idea body content&lt;/p&gt;")
       end
+
+      it "shows the asset-transfer checkbox when the idea has attachments" do
+        idea_with_asset = create(:workshop_variation_idea, workshop: workshop)
+        PrimaryAsset.create!(
+          owner: idea_with_asset,
+          file: fixture_file_upload("spec/fixtures/files/sample.png", "image/png")
+        )
+
+        get new_workshop_variation_path(workshop_variation_idea_id: idea_with_asset.id)
+
+        expect(response.body).to include("transfer attachments from the variation idea")
+      end
     end
 
     describe "POST /create from workshop_variation_idea" do
@@ -254,6 +266,20 @@ RSpec.describe "/workshop_variations", type: :request do
 
         expect(variation.reload.name).to eq("Updated Name")
         expect(response).to redirect_to(workshop_variation_path(variation))
+      end
+
+      it "attaches assets from the idea when promote_idea_assets is true" do
+        idea_with_asset = create(:workshop_variation_idea, workshop: workshop)
+        PrimaryAsset.create!(
+          owner: idea_with_asset,
+          file: fixture_file_upload("spec/fixtures/files/sample.png", "image/png")
+        )
+        variation = create(:workshop_variation, valid_attributes.merge(workshop_variation_idea: idea_with_asset))
+
+        expect {
+          patch workshop_variation_path(variation),
+                params: { workshop_variation: { name: "Updated Name" }, promote_idea_assets: "true" }
+        }.to change { variation.reload.assets.count }.by(1)
       end
     end
   end
