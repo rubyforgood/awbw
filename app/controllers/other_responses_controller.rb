@@ -26,7 +26,7 @@ class OtherResponsesController < ApplicationController
   # Bulk keep/dismiss every visible person who typed this value, from the review
   # queue. Keep leaves it as a free-text chip; dismiss hides it from profiles.
   def curate
-    authorize! to: :update?
+    authorize!
     status = params[:status]
     unless %w[kept dismissed].include?(status)
       return redirect_to other_responses_path, alert: "Choose keep or dismiss."

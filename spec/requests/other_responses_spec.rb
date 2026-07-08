@@ -37,6 +37,12 @@ RSpec.describe "OtherResponses", type: :request do
   end
 
   describe "POST /other_responses/curate (bulk)" do
+    it "requires an admin" do
+      create(:other_response, kind: "sector", text: "Equine therapy")
+      post curate_other_responses_path, params: { normalized_text: "equine therapy", status: "dismissed" }
+      expect(response).not_to have_http_status(:ok)
+    end
+
     it "keeps every visible person who typed the value" do
       sign_in admin
       one = create(:other_response, kind: "sector", text: "Equine therapy")
@@ -85,6 +91,13 @@ RSpec.describe "OtherResponses", type: :request do
   end
 
   describe "POST /other_responses/promote" do
+    it "requires an admin" do
+      sector = create(:sector, name: "Equine Therapy")
+      create(:other_response, kind: "sector", text: "Equine therapy")
+      post promote_other_responses_path, params: { normalized_text: "equine therapy", sector_id: sector.id }
+      expect(response).not_to have_http_status(:ok)
+    end
+
     it "tags every non-dismissed person and marks the responses promoted" do
       sign_in admin
       sector = create(:sector, name: "Equine Therapy")
