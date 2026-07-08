@@ -37,7 +37,7 @@ RSpec.describe "Person notifications", type: :request do
 
   describe "PATCH /people/:id editing a logged notification" do
     let!(:log) do
-      create(:notification, noticeable: person, recipient_email: person.preferred_email,
+      create(:notification, noticeable: person, sender: admin, recipient_email: person.preferred_email,
                             channel: "phone", email_subject: "Left a voicemail",
                             kind: "manual_log", recipient_role: "person", notification_type: 0)
     end
@@ -75,6 +75,27 @@ RSpec.describe "Person notifications", type: :request do
 
       expect(response.body).to include("Communications")
       expect(response.body).to include("Welcome aboard")
+    end
+
+    it "makes a sender-attributed log editable but keeps a system (AWBW Portal) log view-only" do
+      editable = create(:notification, noticeable: person, sender: admin,
+                        recipient_email: person.preferred_email, email_subject: "Called them",
+                        kind: "manual_log", recipient_role: "person", notification_type: 0)
+      system_log = create(:notification, noticeable: person, sender: nil,
+                        recipient_email: person.preferred_email, email_subject: "Automated blast",
+                        kind: "manual_log", recipient_role: "person", notification_type: 0)
+
+      get edit_person_path(person)
+
+      # Both are shown...
+      expect(response.body).to include("Called them")
+      expect(response.body).to include("Automated blast")
+      # ...but only the sender-attributed one gets an editable nested-attributes field.
+      id_fields = Nokogiri::HTML(response.body)
+        .css('input[name*="notifications_attributes"][name$="[id]"]')
+        .map { |input| input["value"] }
+      expect(id_fields).to include(editable.id.to_s)
+      expect(id_fields).not_to include(system_log.id.to_s)
     end
   end
 end

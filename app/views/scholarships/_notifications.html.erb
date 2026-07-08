@@ -7,7 +7,8 @@
 <% email = scholarship.recipient.preferred_email %>
 <% notifications = email.present? ? Notification.email(email).order(created_at: :desc) : Notification.none %>
 <% new_notifications = scholarship.notifications.select(&:new_record?) %>
-<% editable_notifications = notifications.select { |n| n.manual_log? && n.noticeable_type == Scholarship.name && n.noticeable_id == scholarship.id } %>
+<%# System ("AWBW Portal", sender-less) communications are view-only. %>
+<% editable_notifications = notifications.select { |n| n.manual_log? && n.sender_id.present? && n.noticeable_type == Scholarship.name && n.noticeable_id == scholarship.id } %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="edit-toggle">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:users, intensity: 100) %> <%= DomainTheme.text_class_for(:users, intensity: 600) %>">

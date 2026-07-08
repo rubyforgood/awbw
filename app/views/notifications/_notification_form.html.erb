@@ -2,9 +2,11 @@
     Subject / Body + Remove). Shared by a new entry and the edit mode of a
     persisted one in _notification_fields. ---- %>
 <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-6">
+  <%# No blank "AWBW Portal" option — a hand-logged communication must have a
+      real sender; system ("AWBW Portal") communications are view-only. %>
   <%= f.input :sender_id,
               collection: sender_options,
-              include_blank: "AWBW Portal",
+              include_blank: false,
               selected: sender_selected,
               label: "From",
               wrapper_html: { class: "sm:col-span-2" } %>
