@@ -114,6 +114,14 @@ class Asset < ApplicationRecord
     distinct.pluck(:owner_type).compact.sort
   end
 
+  # Distinct attached-file content types present, for the admin index file-type
+  # (jpg/png/pdf/…) filter. Values are content types; labels come from
+  # CONTENT_TYPE_LABELS.
+  def self.present_content_types
+    except(:includes).joins(:file_blob)
+      .distinct.pluck("active_storage_blobs.content_type").compact.sort
+  end
+
   has_one_attached :file, dependent: :purge do |attachable|
     attachable.variant :thumbnail,
       resize_to_limit: [ 256, 256 ],

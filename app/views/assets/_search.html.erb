@@ -30,6 +30,17 @@
             class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2" %>
     </div>
 
+    <!-- FILE TYPE -->
+    <div class="min-w-[160px] pb-2">
+      <label for="content_type" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">
+        File type
+      </label>
+      <%= select_tag :content_type,
+            options_for_select(content_types.map { |ct| [ Asset::CONTENT_TYPE_LABELS[ct] || ct, ct ] }, params[:content_type]),
+            include_blank: "All files",
+            class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2" %>
+    </div>
+
     <!-- ATTACHED TO -->
     <div class="min-w-[160px] pb-2">
       <label for="owner_type" class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">

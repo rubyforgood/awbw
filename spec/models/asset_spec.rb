@@ -74,4 +74,14 @@ RSpec.describe Asset do
       expect(Asset.present_owner_types).to contain_exactly("Story", "Workshop")
     end
   end
+
+  describe ".present_content_types" do
+    it "lists the distinct attached-file content types present" do
+      create(:primary_asset, :with_file)
+      create(:gallery_asset, :with_pdf)
+      create(:primary_asset) # no attachment -- excluded
+
+      expect(Asset.present_content_types).to contain_exactly("application/pdf", "image/png")
+    end
+  end
 end

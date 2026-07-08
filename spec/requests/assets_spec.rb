@@ -68,6 +68,15 @@ RSpec.describe "/asset_library", type: :request do
         expect(response.body).not_to include("On story")
       end
 
+      it "filters by attached file type" do
+        create(:primary_asset, :with_file, title: "A png")
+        create(:gallery_asset, :with_pdf, title: "A pdf")
+
+        get asset_library_url(content_type: "application/pdf"), headers: frame_headers
+        expect(response.body).to include("A pdf")
+        expect(response.body).not_to include("A png")
+      end
+
       it "searches by caption and filename" do
         create(:primary_asset, title: "Distinctive title")
         create(:gallery_asset, :with_file, title: "plain")
