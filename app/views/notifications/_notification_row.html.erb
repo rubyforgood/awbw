@@ -17,15 +17,15 @@
   <%# Fixed, snug width (~"Umberto User") + truncate so the channel icons line up
       regardless of name length, without a wide gap before the icon. %>
   <span class="w-[5.5rem] shrink-0 truncate text-xs font-medium text-gray-500" title="<%= sender_name %>"><%= sender_name %></span>
-  <span class="min-w-0 flex-1 truncate text-sm" title="<%= [ subject, body.presence ].compact.join(" — ") %>">
+  <span class="min-w-0 flex-1 truncate text-sm">
     <%= notification.decorate.channel_icon %>
     <span class="font-semibold text-gray-900"><%= subject %></span>
     <% if body.present? %>
       <% if body_admin_only %>
-        <%# Internal staff note — admin-only, marked with the admin-only blue styling. %>
-        <span class="admin-only bg-blue-100 rounded px-1 text-gray-700"><%= body %></span>
+        <%# Internal staff note — admin-only, marked with the admin-only blue styling. Only the body is hoverable. %>
+        <span class="admin-only bg-blue-100 rounded px-1 text-gray-700" title="<%= body %>"><%= body %></span>
       <% else %>
-        <span class="text-gray-500"><%= body %></span>
+        <span class="text-gray-500" title="<%= body %>"><%= body %></span>
       <% end %>
     <% end %>
   </span>

@@ -24,12 +24,12 @@
     <%# Marked required (shows the asterisk) — a blank subject is dropped on save.
         field-required only enforces it once the row is in use, so an untouched
         added row still won't block the parent form. %>
-    <%= f.input :email_subject, label: "Subject", placeholder: "Topic or subject line", required: true,
+    <%= f.input :email_subject, label: "Subject (visible to user)", placeholder: "Topic or subject line", required: true,
                 input_html: { rows: 1, data: { field_required_target: "field required" } },
                 wrapper_html: { class: "sm:col-span-3" } %>
   </div>
 
-  <%= f.input :email_body_text, as: :text, label: "Body",
+  <%= f.input :email_body_text, as: :text, label: "Body (hidden from user)",
               input_html: { rows: 3, placeholder: "What happened? (e.g. left voicemail, sent reminder)",
                             data: { field_required_target: "field" } } %>
 
