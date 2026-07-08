@@ -48,6 +48,22 @@ RSpec.describe Asset do
     it "matches on the owner type it's attached to" do
       expect(Asset.search("Workshop")).to contain_exactly(attached)
     end
+
+    it "matches on the owner record's title" do
+      befriending = create(:workshop, title: "Befriending")
+      other = create(:workshop, title: "Something else")
+      wanted = create(:primary_asset, title: "no match", owner: befriending)
+      create(:primary_asset, title: "no match", owner: other)
+
+      expect(Asset.search("Befriending")).to contain_exactly(wanted)
+    end
+
+    it "matches on the owner record's name (name-column owners)" do
+      variation = create(:workshop_variation, name: "Watercolor calm")
+      wanted = create(:primary_asset, title: "no match", owner: variation)
+
+      expect(Asset.search("Watercolor")).to contain_exactly(wanted)
+    end
   end
 
   describe ".present_owner_types" do

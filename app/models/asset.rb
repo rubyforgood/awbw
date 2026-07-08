@@ -64,17 +64,44 @@ class Asset < ApplicationRecord
   belongs_to :owner, polymorphic: true, optional: true, touch: true
   belongs_to :report, optional: true
 
-  # Admin image index: keyword search across title, attached filename, and the
-  # type of record the asset is attached to (owner_type). One attachment per
-  # asset (has_one_attached), so the left join never multiplies rows.
+  # Admin asset library: keyword search across the asset's own title, its
+  # attached filename, the type of record it's attached to (owner_type), and the
+  # title/name of the specific owner record (e.g. the workshop title). Owners are
+  # polymorphic, so owner-name matches are resolved per owner_type and folded in
+  # by id. One attachment per asset (has_one_attached), so the left join never
+  # multiplies rows.
   def self.search(query)
     return all if query.blank?
 
     like = "%#{sanitize_sql_like(query)}%"
-    left_joins(:file_blob).where(
+    # except(:includes): these id-only queries must not eager-load the polymorphic
+    # :owner association the controller preloads (it can't be JOINed).
+    matched_ids = except(:includes).left_joins(:file_blob).where(
       "assets.title LIKE :like OR assets.owner_type LIKE :like OR active_storage_blobs.filename LIKE :like",
       like: like
-    )
+    ).ids
+    matched_ids.concat(ids_matching_owner_name(like))
+
+    where(id: matched_ids.uniq)
+  end
+
+  # Asset ids whose owner record's title/name matches. Resolved per owner_type
+  # because owners span models with different name columns (title vs name).
+  def self.ids_matching_owner_name(like)
+    scope = except(:includes)
+    scope.distinct.pluck(:owner_type).compact.flat_map do |owner_type|
+      klass = owner_type.safe_constantize
+      next [] unless klass.respond_to?(:column_names)
+
+      name_columns = %w[title name] & klass.column_names
+      next [] if name_columns.empty?
+
+      condition = name_columns.map { |c| "#{klass.table_name}.#{c} LIKE :like" }.join(" OR ")
+      owner_ids = klass.where(condition, like: like).ids
+      next [] if owner_ids.empty?
+
+      scope.where(owner_type: owner_type, owner_id: owner_ids).ids
+    end
   end
 
   # Distinct STI types present, for the admin index type filter.

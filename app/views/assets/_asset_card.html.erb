@@ -32,7 +32,7 @@
     </div>
 
     <!-- Attached-to record -->
-    <div class="text-xs text-gray-500 truncate">
+    <div class="text-xs text-gray-500 line-clamp-2">
       Attached to:
       <% if asset.owner_path %>
         <%= link_to asset.owner_type_label, asset.owner_path, class: "text-blue-600 hover:underline" %>
