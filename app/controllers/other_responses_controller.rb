@@ -9,10 +9,10 @@ class OtherResponsesController < ApplicationController
     authorize!
     @status_filter = params[:status].presence_in(OtherResponse::VISIBLE_STATUSES)
     statuses = @status_filter ? [ @status_filter ] : OtherResponse::VISIBLE_STATUSES
-    responses = OtherResponse.where(status: statuses).includes(:person, :source_form_answer)
+    responses = OtherResponse.where(status: statuses).includes(:owner, :source_form_answer)
 
     @groups = responses
-      .group_by { |response| [ group_bucket(response), response.normalized_text ] }
+      .group_by { |response| [ response.group_key, response.normalized_text ] }
       .map { |_key, rows| build_group(rows) }
       .sort_by { |group| [ group[:promotable] ? 0 : 1, group[:question_label].downcase, -group[:count], group[:display_text].downcase ] }
 
@@ -45,7 +45,7 @@ class OtherResponsesController < ApplicationController
     @other_response.update!(status: status) if OtherResponse::STATUSES.include?(status)
 
     if params[:return_to] == "person_edit"
-      redirect_to edit_person_path(@other_response.person), status: :see_other
+      redirect_to edit_person_path(@other_response.owner), status: :see_other
     else
       redirect_to other_responses_path, status: :see_other
     end
@@ -61,8 +61,8 @@ class OtherResponsesController < ApplicationController
     return redirect_to other_responses_path, alert: "Pick or name a sector to promote to." unless sector
 
     responses = group_scope.sectors.promotable_now
-    responses.includes(:person).find_each do |response|
-      response.person.tag_sectors(primary_ids: [], additional_ids: [ sector.id ])
+    responses.includes(:owner).find_each do |response|
+      response.owner.tag_sectors(primary_ids: [], additional_ids: [ sector.id ])
       response.update!(status: "promoted", promotable: sector)
     end
 
@@ -74,12 +74,6 @@ class OtherResponsesController < ApplicationController
 
   def set_other_response
     @other_response = OtherResponse.find(params[:id])
-  end
-
-  # Group key: sector "Other"s share one bucket (kind), every other question is
-  # keyed by its field so distinct questions never merge.
-  def group_bucket(response)
-    response.promotable? ? response.kind : "field:#{response.field_identifier}"
   end
 
   def build_group(rows)
@@ -98,16 +92,19 @@ class OtherResponsesController < ApplicationController
   end
 
   def question_label_for(response)
-    return "Sectors" if response.promotable?
-    response.source_form_answer&.question_name_when_answered.presence || response.field_identifier.humanize
+    case response.kind
+    when "sector" then "Sectors"
+    when "organization_type" then "Organization type"
+    else response.source_form_answer&.question_name_when_answered.presence || response.field_identifier.humanize
+    end
   end
 
   # The set of responses a curate/promote action targets, matching how the group
-  # was bucketed: sectors by kind, everything else by field.
+  # was bucketed: captured kinds by kind, generic questions by field.
   def group_scope
     scope = OtherResponse.where(normalized_text: OtherResponse.normalize(params[:normalized_text]))
-    if params[:kind] == "sector"
-      scope.sectors
+    if params[:kind].present? && params[:kind] != "generic"
+      scope.where(kind: params[:kind])
     else
       scope.where(field_identifier: params[:field_identifier])
     end

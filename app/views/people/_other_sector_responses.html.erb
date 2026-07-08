@@ -13,7 +13,7 @@
         title="Other response entered during registration">
     <% if curatable %>
       <%= link_to response.text,
-                  other_responses_path(anchor: response.review_anchor, return_to: return_to, person_id: response.person_id),
+                  other_responses_path(anchor: response.review_anchor, return_to: return_to, person_id: response.owner_id),
                   class: "hover:underline",
                   title: "Review this response — approve or dismiss" %>
     <% else %>

@@ -2,14 +2,14 @@ module OtherResponses
   # Materializes the free-text "Other" answers on a form submission as
   # OtherResponse records so they can be curated (promoted/kept/dismissed).
   #
-  # Only questions whose "Other" can eventually become a real tag are captured
-  # (sectors today; organization type once OrganizationType is a model). Every
-  # other "Other" — and the org-owned agency_type — is left in the form answers,
-  # which stay searchable, rather than stored here. The record still carries
-  # `field_identifier`, so flipping a new question on later is a one-line change
-  # (add it to a promotable kind). OtherOption.texts keys strictly on the
-  # "Other:" prefix, so named specify options ("Word of Mouth: …") and the CE
-  # "Yes: 3" box are ignored. De-dupes per person + question.
+  # Captures the person-owned "Other" answers (sectors today). Organization-type
+  # "Other" is owned by the org and captured separately, where the org is known
+  # (PublicRegistration#sync_agency_type). Questions whose "Other" will never
+  # become a tag are left in the form answers, which stay searchable, rather than
+  # stored here — but the record still carries `field_identifier`, so switching a
+  # new question on later is a one-line change. OtherOption.texts keys strictly
+  # on the "Other:" prefix, so named specify options ("Word of Mouth: …") and the
+  # CE "Yes: 3" box are ignored. De-dupes per person + question.
   #
   # Shared by the registration, scholarship, and bulk-payment submission paths.
   class CaptureFromSubmission
@@ -34,11 +34,11 @@ module OtherResponses
 
     private
 
-    # Capture only the questions whose "Other" is (or will be) promotable — the
-    # rest stay searchable in the form answers.
+    # Capture only the person-owned "Other" questions here — the rest stay
+    # searchable in the form answers (or, for org-type, are captured elsewhere).
     def capturable?(field_identifier)
       field_identifier.present? &&
-        OtherResponse.kind_for(field_identifier).in?(OtherResponse::PROMOTABLE_KINDS)
+        OtherResponse.kind_for(field_identifier).in?(OtherResponse::PERSON_KINDS)
     end
 
     def answers

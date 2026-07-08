@@ -13,9 +13,9 @@ RSpec.describe "OtherResponses", type: :request do
       sign_in admin
       alice = create(:person)
       bob = create(:person)
-      create(:other_response, person: alice, text: "Equine therapy")
-      create(:other_response, person: bob, text: "equine therapy")
-      create(:other_response, :dismissed, person: bob, text: "Hidden one")
+      create(:other_response, owner: alice, text: "Equine therapy")
+      create(:other_response, owner: bob, text: "equine therapy")
+      create(:other_response, :dismissed, owner: bob, text: "Hidden one")
 
       get other_responses_path
 
@@ -32,6 +32,17 @@ RSpec.describe "OtherResponses", type: :request do
 
       expect(response.body).to include("A friend")
       expect(response.body).to include("How did you hear")
+    end
+
+    it "shows organization-type responses labelled, with keep/dismiss but no promote" do
+      sign_in admin
+      create(:other_response, :organization_type, text: "Nonprofit collective")
+
+      get other_responses_path
+
+      expect(response.body).to include("Nonprofit collective")
+      expect(response.body).to include("Organization type")
+      expect(response.body).to include("Dismiss all")
     end
 
     it "filters to a single status" do
@@ -57,7 +68,7 @@ RSpec.describe "OtherResponses", type: :request do
     it "points the eyebrow back to the person when arrived from their page" do
       sign_in admin
       person = create(:person)
-      create(:other_response, person: person, text: "Equine therapy")
+      create(:other_response, owner: person, text: "Equine therapy")
 
       get other_responses_path(return_to: "person_edit", person_id: person.id)
 
@@ -97,6 +108,16 @@ RSpec.describe "OtherResponses", type: :request do
       expect(sector.reload.status).to eq("pending")
     end
 
+    it "dismisses an organization-type group by kind" do
+      sign_in admin
+      org_response = create(:other_response, :organization_type, text: "Nonprofit collective")
+
+      post curate_other_responses_path,
+           params: { kind: "organization_type", field_identifier: "agency_type", normalized_text: "nonprofit collective", status: "dismissed" }
+
+      expect(org_response.reload.status).to eq("dismissed")
+    end
+
     it "rejects an unsupported status" do
       sign_in admin
       response_record = create(:other_response, text: "Equine therapy")
@@ -117,7 +138,7 @@ RSpec.describe "OtherResponses", type: :request do
       patch other_response_path(response_record),
             params: { other_response: { status: "dismissed" }, return_to: "person_edit" }
 
-      expect(response).to redirect_to(edit_person_path(response_record.person))
+      expect(response).to redirect_to(edit_person_path(response_record.owner))
       expect(response_record.reload.status).to eq("dismissed")
     end
   end
@@ -133,22 +154,22 @@ RSpec.describe "OtherResponses", type: :request do
     it "tags every non-dismissed person and marks the responses promoted" do
       sign_in admin
       sector = create(:sector, name: "Equine Therapy")
-      kept = create(:other_response, person: create(:person), text: "Equine therapy")
-      dismissed = create(:other_response, :dismissed, person: create(:person), text: "Equine therapy")
+      kept = create(:other_response, owner: create(:person), text: "Equine therapy")
+      dismissed = create(:other_response, :dismissed, owner: create(:person), text: "Equine therapy")
 
       post promote_other_responses_path,
            params: { kind: "sector", normalized_text: "equine therapy", sector_id: sector.id }
 
       expect(kept.reload.status).to eq("promoted")
-      expect(kept.person.sectors).to include(sector)
+      expect(kept.owner.sectors).to include(sector)
       expect(dismissed.reload.status).to eq("dismissed")
-      expect(dismissed.person.sectors).not_to include(sector)
+      expect(dismissed.owner.sectors).not_to include(sector)
     end
 
     it "mints a new published sector when given a name" do
       sign_in admin
       person = create(:person)
-      create(:other_response, person: person, text: "Equine therapy")
+      create(:other_response, owner: person, text: "Equine therapy")
 
       expect {
         post promote_other_responses_path,
@@ -169,7 +190,7 @@ RSpec.describe "OtherResponses", type: :request do
            params: { field_identifier: "how_did_you_hear", normalized_text: "a friend", sector_id: sector.id }
 
       expect(generic.reload.status).to eq("pending")
-      expect(generic.person.sectors).not_to include(sector)
+      expect(generic.owner.sectors).not_to include(sector)
     end
   end
 end

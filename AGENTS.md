@@ -102,7 +102,7 @@ This codebase (Rails 8.1)
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
-| `OtherResponse` | A free-text "Other" a person typed on a **promotable** form question, captured at submission time (registration, scholarship, bulk payment). Only sectors are captured today (org-type will follow once `OrganizationType` is a model); every other "Other" stays searchable in the form answers. `field_identifier` records the question so a new one can be switched on later; `kind` is derived (`sector` today). Shown on the profile/edit as a chip (admins deep-link into the review queue from it), and curated at `/other_responses`: `promote`, `keep`, or `dismiss`. |
+| `OtherResponse` | A free-text "Other" typed on a form question, captured at submission time (registration, scholarship, bulk payment). Polymorphic `owner`: a **sector** "Other" is owned by the `Person` (promotable into a `Sector`, shown on their profile/edit chip); an **organization_type** "Other" is owned by the `Organization` (stored now, not promotable until `OrganizationType` is a model). `generic` questions aren't captured — that stays searchable in the form answers. `field_identifier` records the question; `kind` is derived. Curated at `/other_responses` (grouped by kind/question): `promote` (sectors only), `keep`, `dismiss`. Admins deep-link there from a person's chip. |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
 | `Grant` | Donated funds (polymorphic `donor`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
 | `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
@@ -215,7 +215,7 @@ end
 
 ### Other responses
 
-- `OtherResponses::CaptureFromSubmission` — Materializes a form submission's free-text "Other" answers as `OtherResponse` records, but only for **promotable** questions (sectors today; org-type later) — everything else is left searchable in the form answers. Uses `OtherOption.texts`, which keys strictly on the `Other:` prefix, so named specify options and the CE `Yes: N` box are ignored; de-dupes per person + question. Shared by the registration, scholarship, and bulk-payment submission paths
+- `OtherResponses::CaptureFromSubmission` — Materializes a form submission's **person-owned** "Other" answers (sectors) as `OtherResponse` records; org-type "Other" is captured separately in `PublicRegistration#sync_agency_type` (owned by the org). Uses `OtherOption.texts`, which keys strictly on the `Other:` prefix, so named specify options and the CE `Yes: N` box are ignored; de-dupes per owner + question. Shared by the registration, scholarship, and bulk-payment submission paths
 
 ### Organizations
 

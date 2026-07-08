@@ -217,6 +217,19 @@ module EventRegistrationServices
       return if label.blank?
       other_text = FormField.other_option?(label) ? specified.strip.presence : nil
       organization.update!(agency_type: label, agency_type_other: other_text)
+      capture_organization_type_other(organization, other_text)
+    end
+
+    # Materialize the org-type "Other" as an OtherResponse owned by the org, so it
+    # joins the curation queue alongside sector "Other"s. Not promotable yet (no
+    # OrganizationType model), but stored now so nothing is lost; de-duped per org.
+    def capture_organization_type_other(organization, text)
+      return if text.blank?
+
+      organization.other_responses.find_or_create_by!(
+        field_identifier: OtherResponse::ORGANIZATION_TYPE_FIELD_IDENTIFIER,
+        normalized_text: OtherResponse.normalize(text)
+      ) { |response| response.text = text }
     end
 
     # Write value onto attribute when a non-blank value was submitted, overwriting

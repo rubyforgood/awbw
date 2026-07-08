@@ -16,16 +16,16 @@ RSpec.describe OtherResponse, type: :model do
 
     it "is unique per person + field + normalized text" do
       person = create(:person)
-      create(:other_response, person: person, field_identifier: "additional_sectors", text: "Equine therapy")
-      dup = build(:other_response, person: person, field_identifier: "additional_sectors", text: "  equine therapy ")
+      create(:other_response, owner: person, field_identifier: "additional_sectors", text: "Equine therapy")
+      dup = build(:other_response, owner: person, field_identifier: "additional_sectors", text: "  equine therapy ")
 
       expect(dup).not_to be_valid
     end
 
     it "allows the same text on a different question" do
       person = create(:person)
-      create(:other_response, person: person, field_identifier: "additional_sectors", text: "Equine therapy")
-      other_question = build(:other_response, person: person, field_identifier: "how_did_you_hear", text: "Equine therapy")
+      create(:other_response, owner: person, field_identifier: "additional_sectors", text: "Equine therapy")
+      other_question = build(:other_response, owner: person, field_identifier: "how_did_you_hear", text: "Equine therapy")
 
       expect(other_question).to be_valid
     end
@@ -39,6 +39,10 @@ RSpec.describe OtherResponse, type: :model do
   describe "kind derivation" do
     it "is sector for a sector field" do
       expect(create(:other_response, field_identifier: "additional_sectors").kind).to eq("sector")
+    end
+
+    it "is organization_type for the agency_type field" do
+      expect(create(:other_response, :organization_type).kind).to eq("organization_type")
     end
 
     it "is generic for any other field" do
@@ -66,6 +70,12 @@ RSpec.describe OtherResponse, type: :model do
     it "only sector responses are promotable" do
       expect(create(:other_response).promotable?).to be(true)
       expect(create(:other_response, :generic).promotable?).to be(false)
+      expect(create(:other_response, :organization_type).promotable?).to be(false)
+    end
+
+    it "an organization owns its organization-type response" do
+      response = create(:other_response, :organization_type)
+      expect(response.owner).to be_a(Organization)
     end
   end
 

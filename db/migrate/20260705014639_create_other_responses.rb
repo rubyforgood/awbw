@@ -8,7 +8,7 @@ class CreateOtherResponses < ActiveRecord::Migration[8.1]
     return if table_exists?(:other_responses)
 
     create_table :other_responses do |t|
-      t.references :person, null: false, foreign_key: true
+      t.references :owner, polymorphic: true, null: false
       t.string :field_identifier, null: false
       t.string :kind, null: false
       t.string :text, null: false
@@ -19,8 +19,8 @@ class CreateOtherResponses < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :other_responses, [ :person_id, :field_identifier, :normalized_text ],
-              unique: true, name: "index_other_responses_on_person_field_text"
+    add_index :other_responses, [ :owner_type, :owner_id, :field_identifier, :normalized_text ],
+              unique: true, name: "index_other_responses_on_owner_field_text"
   end
 
   def down

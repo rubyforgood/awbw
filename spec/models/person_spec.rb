@@ -422,16 +422,16 @@ RSpec.describe Person, type: :model do
 
     describe "#other_sector_responses" do
       it "returns the person's visible sector OtherResponses" do
-        create(:other_response, person: person, kind: "sector", text: "Equine therapy")
-        create(:other_response, :kept, person: person, kind: "sector", text: "Music therapy")
+        create(:other_response, owner: person, kind: "sector", text: "Equine therapy")
+        create(:other_response, :kept, owner: person, kind: "sector", text: "Music therapy")
 
         expect(person.other_sector_responses.map(&:text))
           .to contain_exactly("Equine therapy", "Music therapy")
       end
 
       it "omits dismissed and promoted responses" do
-        create(:other_response, :dismissed, person: person, kind: "sector", text: "Hidden")
-        create(:other_response, :promoted, person: person, kind: "sector", text: "Promoted")
+        create(:other_response, :dismissed, owner: person, kind: "sector", text: "Hidden")
+        create(:other_response, :promoted, owner: person, kind: "sector", text: "Promoted")
 
         expect(person.other_sector_responses).to be_empty
       end

@@ -16,7 +16,7 @@ RSpec.describe "Person Other form responses", type: :request do
   describe "profile page" do
     it "shows the Other sector as a free-text chip, not the primary sector" do
       person.update!(profile_show_sectors: true)
-      create(:other_response, person: person, kind: "sector", text: "Equine therapy")
+      create(:other_response, owner: person, kind: "sector", text: "Equine therapy")
 
       get person_path(person)
 
@@ -29,7 +29,7 @@ RSpec.describe "Person Other form responses", type: :request do
 
     it "hides a dismissed Other sector" do
       person.update!(profile_show_sectors: true)
-      create(:other_response, :dismissed, person: person, kind: "sector", text: "Equine therapy")
+      create(:other_response, :dismissed, owner: person, kind: "sector", text: "Equine therapy")
 
       get person_path(person)
 
@@ -39,7 +39,7 @@ RSpec.describe "Person Other form responses", type: :request do
 
   describe "edit page" do
     it "shows the Other sector with a dismiss control and a link into the review queue" do
-      response_record = create(:other_response, person: person, text: "Music therapy")
+      response_record = create(:other_response, owner: person, text: "Music therapy")
 
       get edit_person_path(person)
 

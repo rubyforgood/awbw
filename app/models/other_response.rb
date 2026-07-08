@@ -1,21 +1,32 @@
 class OtherResponse < ApplicationRecord
-  # A free-text "Other" a person typed on any tag/option-backed form question,
-  # captured at submission time so a curator can promote / keep / dismiss it.
-  # `field_identifier` records which question it came from; `kind` is the coarse
-  # category that decides whether it can be promoted into a real tag.
+  # A free-text "Other" someone typed on a form question whose "Other" can (or
+  # will) become a real tag. Captured at submission time so a curator can
+  # promote / keep / dismiss it. The `owner` is polymorphic because the answer's
+  # subject differs by question: a sector "Other" is about the person, an
+  # organization-type "Other" is about their organization.
   #
-  # - "sector"  → the additional-sectors question; promotable into a Sector, and
-  #               shown on the person's profile beside the sector tags.
-  # - "generic" → any other question's "Other"; auxiliary data reviewed by admins
-  #               (keep/dismiss only), never shown on a profile.
+  # - `sector`            → owned by a Person; promotable into a `Sector`, shown
+  #                         on the person's profile beside the sector tags.
+  # - `organization_type` → owned by an Organization; stored now, but not yet
+  #                         promotable (its promote button is hidden until
+  #                         `OrganizationType` is a model).
   #
-  # Organization-type "Other" is deliberately NOT captured here — it belongs to
-  # the organization (see PublicRegistration#sync_agency_type) and will get its
-  # own promotable path once OrganizationType is a model.
-  KINDS = %w[sector generic].freeze
+  # Questions whose "Other" will never become a tag (`generic`) are not captured
+  # at all — that data stays searchable in the form answers.
+  KINDS = %w[sector organization_type generic].freeze
 
-  # Kinds that can be promoted into a real tag record.
+  # Kinds we materialize as records (the rest stay in the form answers).
+  CAPTURED_KINDS = %w[sector organization_type].freeze
+
+  # Kinds captured against a Person, via their form submission.
+  PERSON_KINDS = %w[sector].freeze
+
+  # Kinds that can be promoted into a real tag today.
   PROMOTABLE_KINDS = %w[sector].freeze
+
+  # The organization-type question. Its "Other" is org-owned (see
+  # PublicRegistration#sync_agency_type).
+  ORGANIZATION_TYPE_FIELD_IDENTIFIER = "agency_type"
 
   # A response starts life as `pending` (awaiting a curator's decision) and is
   # then either promoted into a real tag, kept as auxiliary data, or dismissed.
@@ -25,7 +36,7 @@ class OtherResponse < ApplicationRecord
   # in the review queue).
   VISIBLE_STATUSES = %w[pending kept].freeze
 
-  belongs_to :person
+  belongs_to :owner, polymorphic: true
   belongs_to :promotable, polymorphic: true, optional: true
   belongs_to :source_form_answer, class_name: "FormAnswer", optional: true
 
@@ -36,38 +47,48 @@ class OtherResponse < ApplicationRecord
   validates :text, presence: true
   validates :kind, inclusion: { in: KINDS }
   validates :status, inclusion: { in: STATUSES }
-  validates :normalized_text, uniqueness: { scope: [ :person_id, :field_identifier ] }
+  validates :normalized_text, uniqueness: { scope: [ :owner_type, :owner_id, :field_identifier ] }
 
   scope :sectors, -> { where(kind: "sector") }
   scope :visible, -> { where(status: VISIBLE_STATUSES) }
   scope :pending, -> { where(status: "pending") }
   scope :promotable_now, -> { where.not(status: "dismissed") }
 
-  # The coarse category for a question. Sector fields promote into Sectors;
-  # everything else is generic auxiliary data.
+  # The coarse category (and thus owner + promotability) for a question.
   def self.kind_for(field_identifier)
-    field_identifier.to_s.in?(FormField::SECTOR_FIELD_IDENTIFIERS) ? "sector" : "generic"
+    identifier = field_identifier.to_s
+    if identifier.in?(FormField::SECTOR_FIELD_IDENTIFIERS)
+      "sector"
+    elsif identifier == ORGANIZATION_TYPE_FIELD_IDENTIFIER
+      "organization_type"
+    else
+      "generic"
+    end
   end
 
   # Case/whitespace-insensitive key used both for the unique index and for
-  # grouping the same typed value across many people on the review page.
+  # grouping the same typed value across owners on the review page.
   def self.normalize(value)
     value.to_s.strip.downcase
   end
 
-  # Stable DOM id for a review-page group, so a person's chip can deep-link to
-  # its row. Matches how the review page buckets: sectors by kind, otherwise by
-  # question. Shared by the controller (row id) and the chip link.
+  # Stable DOM id for a review-page group, so a chip can deep-link to its row.
   def self.review_anchor(bucket, normalized_text)
     "other-#{bucket}-#{normalized_text}".parameterize
   end
 
-  def review_anchor
-    self.class.review_anchor(promotable? ? kind : field_identifier, normalized_text)
-  end
-
   def promotable?
     kind.in?(PROMOTABLE_KINDS)
+  end
+
+  # How the review page buckets this response: captured kinds group by kind (all
+  # sector "Other"s together, all org-type together); generic groups by question.
+  def group_key
+    kind == "generic" ? field_identifier : kind
+  end
+
+  def review_anchor
+    self.class.review_anchor(group_key, normalized_text)
   end
 
   def dismiss!

@@ -342,6 +342,20 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(answer.submitted_answer).to eq("Other: Equine therapy")
     end
 
+    it "captures the org-type 'Other' as an OtherResponse owned by the organization" do
+      register_with_agency_type("Other: Equine therapy")
+
+      response = organization.other_responses.sole
+      expect([ response.text, response.kind, response.promotable? ])
+        .to eq([ "Equine therapy", "organization_type", false ])
+    end
+
+    it "does not capture an OtherResponse for a non-'Other' classification" do
+      register_with_agency_type("501c3/nonprofit")
+
+      expect(organization.other_responses).to be_empty
+    end
+
     it "stores a non-'Other' classification with no agency_type_other" do
       register_with_agency_type("501c3/nonprofit")
 
