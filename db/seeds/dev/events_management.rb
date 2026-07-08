@@ -1442,8 +1442,14 @@ if facilitator_training && registration_form
   end
 
   # Recreate from scratch each run so re-seeding refreshes labels and link state.
-  Person.where("email LIKE ? OR email LIKE ?",
-    "orgchip.demo.%@seed.example.com", "affdemo.%@seed.example.com").find_each(&:destroy)
+  # Release any resource authorship first: resources.rb (which runs after this) can
+  # credit these demo people, and Person#resources_as_author is restrict_with_error,
+  # so the destroy below silently fails and the re-create hits the name/email
+  # uniqueness validation. Clearing author_id here keeps the block idempotent.
+  demo_people = Person.where("email LIKE ? OR email LIKE ?",
+    "orgchip.demo.%@seed.example.com", "affdemo.%@seed.example.com")
+  Resource.where(author_id: demo_people).update_all(author_id: nil)
+  demo_people.find_each(&:destroy)
 
   # Each scenario => one registrant. :orgs link real orgs (→ chip shows links);
   # :agency stores a submitted name. A typed name matching an existing org is linked
