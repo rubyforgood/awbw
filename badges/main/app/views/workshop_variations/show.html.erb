@@ -47,8 +47,8 @@
         </div>
       </div>
 
-      <!-- Primary Asset -->
-      <%= render "assets/display_assets", resource: @workshop_variation, link: true %>
+      <!-- Images (uniform-size carousel) -->
+      <%= render "assets/display_assets_carousel", resource: @workshop_variation %>
 
       <!-- URL -->
       <% if @workshop_variation.youtube_url.present? %>
