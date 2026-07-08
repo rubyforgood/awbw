@@ -3,8 +3,8 @@
   <div class="w-full">
     <div class="flex items-start justify-between mb-6">
       <div class="pr-6">
-        <h1 class="text-2xl font-semibold mb-2">Images</h1>
-        <p class="text-gray-600">Every uploaded image and file across the site. Search by title, filename, or the record it's attached to. Click a label to rename it.</p>
+        <h1 class="text-2xl font-semibold mb-2">Asset library</h1>
+        <p class="text-gray-600">Every uploaded image and file across the site. Search by caption, filename, or the record it's attached to. Edit the filename and caption inline.</p>
       </div>
     </div>
 
@@ -12,9 +12,9 @@
 
     <div class="w-full mt-6"><hr class="border-gray-300 mb-6"></div>
 
-    <% result_src = images_path + "?" + request.query_string %>
+    <% result_src = asset_library_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag :images_results, src: result_src, data: { turbo: "temporary" } do %>
+    <%= turbo_frame_tag :assets_results, src: result_src, data: { turbo: "temporary" } do %>
       <%= render "results_skeleton" %>
     <% end %>
   </div>

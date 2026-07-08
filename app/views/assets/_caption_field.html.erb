@@ -1,0 +1,10 @@
+<%= turbo_frame_tag dom_id(asset.object, "caption") do %>
+  <%= form_with url: asset_library_asset_path(asset.object), method: :patch do %>
+    <label class="block text-xs font-semibold uppercase text-gray-400 tracking-wide">Caption</label>
+    <%= text_field_tag "asset[title]", asset.title,
+          placeholder: "Add a caption",
+          onblur: "this.form.requestSubmit()",
+          class: "mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1
+                  focus:ring-blue-500 focus:border-blue-500" %>
+  <% end %>
+<% end %>

@@ -1,18 +1,18 @@
 require "rails_helper"
 
-RSpec.describe "/images", type: :request do
+RSpec.describe "/asset_library", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:frame_headers) { { "Turbo-Frame" => "images_results" } }
+  let(:frame_headers) { { "Turbo-Frame" => "assets_results" } }
 
   describe "authorization" do
     it "redirects non-admins away from the index" do
       sign_in create(:user)
-      get images_url
+      get asset_library_url
       expect(response).to redirect_to(root_path)
     end
 
     it "redirects anonymous users away from the index" do
-      get images_url
+      get asset_library_url
       expect(response).to redirect_to(new_user_session_path)
     end
   end
@@ -23,7 +23,7 @@ RSpec.describe "/images", type: :request do
     describe "GET /index" do
       it "renders a successful response" do
         create(:primary_asset, title: "Hero shot")
-        get images_url
+        get asset_library_url
         expect(response).to be_successful
       end
 
@@ -32,18 +32,22 @@ RSpec.describe "/images", type: :request do
         gallery = create(:gallery_asset, title: "Gallery label")
         rich    = create(:rich_text_asset, title: "Rich label")
 
-        get images_url, headers: frame_headers
+        get asset_library_url, headers: frame_headers
 
         expect(response.body).to include("Primary label", "Gallery label", "Rich label")
         expect(response.body).to include("Primary asset", "Gallery asset", "Rich text asset")
-        expect(response.body).to include(image_path(primary), image_path(gallery), image_path(rich))
+        expect(response.body).to include(
+          asset_library_asset_path(primary),
+          asset_library_asset_path(gallery),
+          asset_library_asset_path(rich)
+        )
       end
 
       it "filters by asset type" do
         create(:primary_asset, title: "A primary")
         create(:gallery_asset, title: "A gallery")
 
-        get images_url(type: "PrimaryAsset"), headers: frame_headers
+        get asset_library_url(type: "PrimaryAsset"), headers: frame_headers
         expect(response.body).to include("A primary")
         expect(response.body).not_to include("A gallery")
       end
@@ -52,40 +56,54 @@ RSpec.describe "/images", type: :request do
         create(:primary_asset, title: "On workshop", owner: create(:workshop))
         create(:primary_asset, title: "On story", owner: create(:story))
 
-        get images_url(owner_type: "Workshop"), headers: frame_headers
+        get asset_library_url(owner_type: "Workshop"), headers: frame_headers
         expect(response.body).to include("On workshop")
         expect(response.body).not_to include("On story")
       end
 
-      it "searches by title and filename" do
+      it "searches by caption and filename" do
         create(:primary_asset, title: "Distinctive title")
         create(:gallery_asset, :with_file, title: "plain")
 
-        get images_url(query: "Distinctive"), headers: frame_headers
+        get asset_library_url(query: "Distinctive"), headers: frame_headers
         expect(response.body).to include("Distinctive title")
         expect(response.body).not_to include(">plain<")
 
-        get images_url(query: "missing.png"), headers: frame_headers
+        get asset_library_url(query: "missing.png"), headers: frame_headers
         expect(response.body).to include("missing.png")
       end
     end
 
     describe "PATCH /update" do
-      it "updates the asset's title (label)" do
+      it "updates the asset's caption (title)" do
         asset = create(:gallery_asset, title: "Old")
-        patch image_url(asset), params: { asset: { title: "New label" } }
+        patch asset_library_asset_url(asset), params: { asset: { title: "New caption" } }
         expect(response).to be_successful
-        expect(asset.reload.title).to eq("New label")
-        expect(response.body).to include("New label")
+        expect(asset.reload.title).to eq("New caption")
+        expect(response.body).to include("New caption")
+      end
+
+      it "renames the download filename" do
+        asset = create(:gallery_asset, :with_file)
+        patch asset_library_asset_url(asset), params: { asset: { filename: "renamed.png" } }
+        expect(response).to be_successful
+        expect(asset.reload.file.filename.to_s).to eq("renamed.png")
+        expect(response.body).to include("renamed.png")
+      end
+
+      it "leaves the caption untouched when only the filename changes" do
+        asset = create(:gallery_asset, :with_file, title: "Keep me")
+        patch asset_library_asset_url(asset), params: { asset: { filename: "renamed.png" } }
+        expect(asset.reload.title).to eq("Keep me")
       end
     end
   end
 
   describe "PATCH /update as a non-admin" do
-    it "does not update the title" do
+    it "does not update the asset" do
       asset = create(:gallery_asset, title: "Old")
       sign_in create(:user)
-      patch image_url(asset), params: { asset: { title: "Hacked" } }
+      patch asset_library_asset_url(asset), params: { asset: { title: "Hacked" } }
       expect(response).to redirect_to(root_path)
       expect(asset.reload.title).to eq("Old")
     end

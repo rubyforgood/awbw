@@ -1,7 +1,10 @@
 Rails.application.routes.draw do
   resources :primary_assets
   resources :rich_text_assets
-  resources :images, only: [ :index, :update ]
+  # Admin asset library. Served at /asset_library rather than /assets because the
+  # sprockets pipeline owns the /assets prefix (and would shadow /assets/:id).
+  get "asset_library", to: "assets#index", as: :asset_library
+  patch "asset_library/:id", to: "assets#update", as: :asset_library_asset
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   authenticate :user, ->(user) { user.super_user? } do

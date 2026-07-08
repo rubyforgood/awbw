@@ -1,0 +1,13 @@
+<%= turbo_frame_tag dom_id(asset.object, "filename") do %>
+  <% if asset.file.attached? %>
+    <%= form_with url: asset_library_asset_path(asset.object), method: :patch do %>
+      <label class="block text-xs font-semibold uppercase text-gray-400 tracking-wide">Filename</label>
+      <%= text_field_tag "asset[filename]", asset.filename,
+            onblur: "this.form.requestSubmit()",
+            class: "mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1
+                    focus:ring-blue-500 focus:border-blue-500" %>
+    <% end %>
+  <% else %>
+    <p class="text-xs text-gray-400">No file attached</p>
+  <% end %>
+<% end %>
