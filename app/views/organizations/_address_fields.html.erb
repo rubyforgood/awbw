@@ -1,9 +1,15 @@
-<div class="nested-fields rounded-lg bg-white border border-gray-200 p-6 mb-4">
-  <div class="text-lg font-semibold text-gray-800 mb-4">
-    Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %>
-  </div>
+<%# Persisted addresses start collapsed to a single-line header; new/blank ones
+    stay expanded so their fields are ready to fill in. Native <details>/<summary>
+    toggles the editable fields on click — no JavaScript needed. %>
+<details class="nested-fields group rounded-lg bg-white border border-gray-200 p-6 mb-4"<%= " open".html_safe unless f.object.persisted? %>>
+  <summary class="flex items-center justify-between gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+    <div class="text-lg font-semibold text-gray-800">
+      Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %>
+    </div>
+    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open:rotate-180"></i>
+  </summary>
 
-  <hr class="mb-6 border-gray-200">
+  <hr class="my-6 border-gray-200">
 
   <!-- LOCATION + DISTRICT + LOCALITY -->
   <%# Organization addresses are always "work" — the type designation only matters
@@ -133,4 +139,4 @@
   <%= link_to_remove_association "Remove",
                                  f,
                                  class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
-</div>
+</details>
