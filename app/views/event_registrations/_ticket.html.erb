@@ -107,9 +107,12 @@
         <%= render "event_registrations/callout_card", callout: card, linked: !preview %>
       <% end %>
 
-      <!-- Custom ticket callouts (admin-configured: actions & reference reading) -->
+      <!-- Ticket callouts: admin-authored (actions & reference reading) plus any
+           built-in cards materialized into editable rows. Hidden (draft/opted-out)
+           and not-yet-dripped callouts are omitted. -->
       <% payment_access = event_registration.payment_access_granted? || @checkout_payment_status == "paid" %>
-      <% event_registration.event.registration_ticket_callouts.each do |callout| %>
+      <% event_registration.event.registration_ticket_callouts.visible.each do |callout| %>
+        <% next if callout.dripping? %>
         <% next if callout.payment_access_gated && !payment_access %>
         <%= render "event_registrations/callout_card",
                    callout: callout,

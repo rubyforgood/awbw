@@ -582,7 +582,11 @@
              data-controller="sortable"
              data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>">
           <%= f.fields_for :registration_ticket_callouts do |rts| %>
-            <%= render "events/registration_ticket_callout_fields", f: rts %>
+            <% if rts.object.magic? %>
+              <%= render "events/registration_ticket_magic_callout_fields", f: rts %>
+            <% else %>
+              <%= render "events/registration_ticket_callout_fields", f: rts %>
+            <% end %>
           <% end %>
         </div>
 

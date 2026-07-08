@@ -147,7 +147,9 @@ Rails.application.routes.draw do
       post :allocate_bulk_payment
       post :create_bulk_payment
     end
-    resources :registration_ticket_callouts, only: [ :show, :update ]
+    resources :registration_ticket_callouts, only: [ :show, :update ] do
+      member { post :restore }
+    end
     resource :registrations, only: %i[ create ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
     resource :bulk_payment, only: [ :new, :create, :show ], module: :events

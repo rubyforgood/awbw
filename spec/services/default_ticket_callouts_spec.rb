@@ -69,4 +69,39 @@ RSpec.describe DefaultTicketCallouts do
       expect(event.registration_ticket_callouts.ordered.map(&:magic_key).compact).to eq(%w[handouts faq])
     end
   end
+
+  describe ".reset" do
+    it "restores an edited magic callout's content, resources, and visibility to default" do
+      resource = create(:resource, title: "AWBW Training Workshop Worksheets")
+      event = create(:event, facilitator_training: true)
+      described_class.seed(event)
+      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+      faq.update!(title: "Custom", description: "<p>Edited</p>", hidden: true)
+      faq.resources << resource
+
+      described_class.reset(faq)
+
+      expect(faq.reload.title).to eq("Frequently asked questions")
+      expect(faq.description).to include("Who is this training designed for?")
+      expect(faq.hidden).to be(false)
+      expect(faq.resources).to be_empty
+    end
+
+    it "keeps the callout's position when restoring" do
+      event = create(:event, facilitator_training: true)
+      described_class.seed(event)
+      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+      original_position = faq.position
+
+      described_class.reset(faq)
+
+      expect(faq.reload.position).to eq(original_position)
+    end
+
+    it "leaves a custom callout untouched" do
+      callout = create(:registration_ticket_callout, title: "Parking", magic_key: nil)
+
+      expect { described_class.reset(callout) }.not_to change { callout.reload.title }
+    end
+  end
 end

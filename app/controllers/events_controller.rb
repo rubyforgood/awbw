@@ -447,6 +447,7 @@ class EventsController < ApplicationController
         if params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@event)
         end
+        DefaultTicketCallouts.seed(@event)
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -475,6 +476,9 @@ class EventsController < ApplicationController
       @event.event_forms.reset
       if @event.update(event_params)
         assign_associations(@event)
+        # Lazily materialize built-in callouts for events created before this
+        # existed — heals on first edit, no data backfill. Idempotent.
+        DefaultTicketCallouts.seed(@event)
         success = true
       else
         raise ActiveRecord::Rollback

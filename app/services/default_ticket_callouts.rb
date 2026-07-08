@@ -54,8 +54,19 @@ class DefaultTicketCallouts
            "The membership fee covers all facilitators connected to the same program or organization for the calendar year, regardless of the number of facilitators participating. Only one membership fee payment is required per program annually." ] }
   ].freeze
 
+  # magic_keys this service knows how to materialize.
+  def self.seedable_keys
+    new(nil).send(:definitions).map { |definition| definition[:magic_key] }
+  end
+
   def self.seed(event)
     new(event).seed
+  end
+
+  # Reset a materialized callout's content and default visibility back to its
+  # built-in template, keeping its position. Used by the "Restore default" action.
+  def self.reset(callout)
+    new(callout.event).reset(callout)
   end
 
   def initialize(event)
@@ -68,6 +79,23 @@ class DefaultTicketCallouts
     existing_keys = @event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
     definitions.reject { |definition| existing_keys.include?(definition[:magic_key]) }
                .map { |definition| create(definition) }
+  end
+
+  def reset(callout)
+    definition = definitions.find { |candidate| candidate[:magic_key] == callout.magic_key }
+    return callout unless definition
+
+    callout.update!(
+      title: definition[:title],
+      subtitle: definition[:subtitle],
+      description: definition[:description],
+      callout_type: definition[:callout_type],
+      icon_class: definition[:icon_class],
+      color_class: definition[:color_class],
+      hidden: definition[:hidden].call(@event)
+    )
+    callout.resources = definition[:resources]&.call || []
+    callout
   end
 
   private

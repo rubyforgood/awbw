@@ -29,6 +29,16 @@ RSpec.describe MagicTicketCallouts do
       expect(card_titles(registration)).to include("Handouts", "Frequently asked questions")
     end
 
+    it "skips a built-in card the event has materialized (it renders from the row instead)" do
+      event.update!(facilitator_training: true)
+      create(:registration_ticket_callout, event:, magic_key: "faq", title: "Frequently asked questions")
+
+      # No duplicate FAQ from the code path; Handouts (not materialized) still renders here.
+      titles = card_titles(registration)
+      expect(titles.count("Frequently asked questions")).to eq(0)
+      expect(titles).to include("Handouts")
+    end
+
     it "shows the Forms card for facilitator trainings and paid events, but not free non-trainings" do
       expect(card_titles(registration)).to include("Forms")
 

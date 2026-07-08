@@ -25,30 +25,34 @@ class MagicTicketCallouts
 
   # A registration-free description of one built-in card, for the event editor's
   # callouts section. `key` is :ce_hours / :event_details for the two whose text
-  # admins edit; nil for the cards the app fully controls (shown greyed out).
-  # `subtitle` mirrors the card's ticket subtitle; `visibility` describes when the
-  # app shows it (rendered next to the "Built in" chip in the editor); `note` is an
-  # optional extra hint on where the card's content comes from.
-  EditorCard = Data.define(:key, :icon_class, :color, :title, :subtitle, :visibility, :note) do
+  # admins edit via event columns; nil for the cards the app fully controls (shown
+  # greyed out). `magic_key` ties the card to its ticket behavior — once an event
+  # has materialized that key into an editable row, the preview is dropped here and
+  # the row is edited in the callout list instead. `subtitle` mirrors the card's
+  # ticket subtitle; `visibility` describes when the app shows it (rendered next to
+  # the "Built in" chip); `note` is an optional hint on where content comes from.
+  EditorCard = Data.define(:key, :magic_key, :icon_class, :color, :title, :subtitle, :visibility, :note) do
     def theme = DomainTheme.swatch(color)
     def editable? = key.present?
   end
 
   # Every built-in card in the order it appears on a ticket, for the editor to
-  # preview the full ticket context. Keep in sync with #cards: add a card method,
-  # add it here.
+  # preview the full ticket context. Cards whose content the event has already
+  # materialized are omitted — they're edited as real rows in the callout list.
+  # Keep in sync with #cards: add a card method, add it here.
   def self.editor_cards(event)
+    materialized = event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
     [
-      EditorCard.new(nil, "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
-      EditorCard.new(nil, "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
-      EditorCard.new(nil, "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
-      EditorCard.new(:ce_hours, "fa-solid fa-graduation-cap", "teal", event.ce_hours_details_label, "Continuing education — requirements & how to request", "When a registrant requests CE credit", nil),
-      EditorCard.new(:event_details, "fa-solid fa-palette", "blue", event.event_details_label, "Important info for this event — please read", "When the content below is filled in", nil),
-      EditorCard.new(nil, "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
-      EditorCard.new(nil, "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and receipt", "On facilitator trainings and paid events", "Items link to their relevant resources."),
-      EditorCard.new(nil, "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
-      EditorCard.new(nil, "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
-    ]
+      EditorCard.new(nil, "payment", "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
+      EditorCard.new(nil, "certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
+      EditorCard.new(nil, "scholarship", "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
+      EditorCard.new(:ce_hours, "ce_hours", "fa-solid fa-graduation-cap", "teal", event.ce_hours_details_label, "Continuing education — requirements & how to request", "When a registrant requests CE credit", nil),
+      EditorCard.new(:event_details, "event_details", "fa-solid fa-palette", "blue", event.event_details_label, "Important info for this event — please read", "When the content below is filled in", nil),
+      EditorCard.new(nil, "videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
+      EditorCard.new(nil, "forms", "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and receipt", "On facilitator trainings and paid events", "Items link to their relevant resources."),
+      EditorCard.new(nil, "handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
+      EditorCard.new(nil, "faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
+    ].reject { |card| materialized.include?(card.magic_key) }
   end
 
   def initialize(event_registration)
@@ -66,6 +70,14 @@ class MagicTicketCallouts
   private
 
   attr_reader :registration, :event
+
+  # A built-in card whose content has been materialized into an editable row for
+  # this event renders from that row (through the custom-callout loop) instead of
+  # here, so we skip it to avoid double-rendering. See DefaultTicketCallouts.
+  def materialized?(magic_key)
+    @materialized_keys ||= event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
+    @materialized_keys.include?(magic_key)
+  end
 
   # Top card: an action card while a balance is due, a reference card once paid
   # in full. Its page lists every allocation with the running balance.
@@ -196,6 +208,7 @@ class MagicTicketCallouts
   # Links to the 2-day training worksheets and handouts, so shown only on
   # facilitator trainings — see Event#show_handouts_callout?.
   def handouts_card
+    return if materialized?("handouts")
     return unless event.show_handouts_callout?
     Card.new(icon_class: "fa-solid fa-folder-open", color: "blue",
              title: "Handouts",
@@ -207,6 +220,7 @@ class MagicTicketCallouts
   # Reference card linking to the 2-day training FAQ page, so shown only on
   # facilitator trainings — see Event#show_faq_callout?.
   def faq_card
+    return if materialized?("faq")
     return unless event.show_faq_callout?
     Card.new(icon_class: "fa-solid fa-circle-question", color: "blue",
              title: "Frequently asked questions",

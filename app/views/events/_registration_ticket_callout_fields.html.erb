@@ -84,10 +84,16 @@
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <label class="flex items-center gap-2 text-sm text-gray-600">
-        <%= f.check_box :payment_access_gated, class: "rounded border-gray-300 text-purple-600" %>
-        Only show once payment is made or committed
-      </label>
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <%= f.check_box :payment_access_gated, class: "rounded border-gray-300 text-purple-600" %>
+          Only show once payment is made or committed
+        </label>
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <%= f.check_box :hidden, class: "rounded border-gray-300 text-purple-600" %>
+          Hidden (prep without showing it on the ticket yet)
+        </label>
+      </div>
       <%= link_to_remove_association "Remove", f,
             class: "text-sm text-gray-400 hover:text-red-600 underline" %>
     </div>

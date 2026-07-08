@@ -54,6 +54,23 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
+    it "redirects a hidden callout's page back to the event" do
+      callout = create(:registration_ticket_callout, :hidden, event:, description: "<p>Draft.</p>")
+
+      get event_registration_ticket_callout_path(event, callout)
+
+      expect(response).to redirect_to(event_path(event))
+    end
+
+    it "redirects a not-yet-dripped callout's page back to the event" do
+      callout = create(:registration_ticket_callout, event:, description: "<p>Later.</p>",
+        display_from: 1.day.from_now)
+
+      get event_registration_ticket_callout_path(event, callout)
+
+      expect(response).to redirect_to(event_path(event))
+    end
+
     context "when linked to a resource with a downloadable file" do
       let(:resource) { create(:resource) }
       let(:callout) do
@@ -105,7 +122,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
         }
       }
 
-      ordered = event.registration_ticket_callouts.reload.ordered
+      ordered = event.registration_ticket_callouts.custom.reload.ordered
       expect(ordered.map(&:title)).to eq(%w[First Second Third])
       expect(ordered.map(&:position)).to eq([ 1, 2, 3 ])
     end
@@ -150,6 +167,57 @@ RSpec.describe "Registration ticket callouts", type: :request do
 
       expect(response).to redirect_to(root_path)
       expect(callout.reload.position).to eq(2)
+    end
+  end
+
+  describe "POST /events/:event_id/registration_ticket_callouts/:id/restore" do
+    it "restores a magic callout to its default for a manager" do
+      sign_in admin
+      training = create(:event, :publicly_visible, facilitator_training: true)
+      callout = create(:registration_ticket_callout, event: training, magic_key: "faq", title: "Edited", hidden: true)
+
+      post restore_event_registration_ticket_callout_path(training, callout)
+
+      expect(response).to redirect_to(edit_event_path(training, expand: "callouts", anchor: "registration_ticket_callouts"))
+      expect(callout.reload.title).to eq("Frequently asked questions")
+      expect(callout.hidden).to be(false)
+    end
+
+    it "is not permitted for a non-manager" do
+      sign_in create(:user)
+      callout = create(:registration_ticket_callout, event:, magic_key: "faq", title: "Edited")
+
+      post restore_event_registration_ticket_callout_path(event, callout)
+
+      expect(response).to redirect_to(root_path)
+      expect(callout.reload.title).to eq("Edited")
+    end
+  end
+
+  describe "seeding built-in callouts on save" do
+    before { sign_in admin }
+
+    it "materializes Handouts and FAQ when an event is updated" do
+      patch event_path(event), params: {
+        event: { title: event.title, start_date: event.start_date, end_date: event.end_date }
+      }
+
+      expect(event.registration_ticket_callouts.magic.pluck(:magic_key)).to contain_exactly("handouts", "faq")
+    end
+  end
+
+  describe "the event editor" do
+    before { sign_in admin }
+
+    it "renders a materialized callout as an editable field with hide and restore controls" do
+      callout = create(:registration_ticket_callout, event:, magic_key: "faq",
+        title: "Frequently asked questions")
+
+      get edit_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][title]\"")
+      expect(response.body).to include(restore_event_registration_ticket_callout_path(event, callout))
     end
   end
 end

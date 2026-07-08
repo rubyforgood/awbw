@@ -10,6 +10,12 @@ class RegistrationTicketCalloutsController < ApplicationController
     @callout = @event.registration_ticket_callouts.find(params[:id])
     authorize! @callout, to: :show?
 
+    # A hidden (draft/opted-out) or not-yet-dripped callout has no public page.
+    if @callout.hidden? || @callout.dripping?
+      redirect_to event_path(@event, reg: params[:reg].presence)
+      return
+    end
+
     if @callout.description.blank? && @callout.resources.empty?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
@@ -30,6 +36,17 @@ class RegistrationTicketCalloutsController < ApplicationController
     else
       head :unprocessable_entity
     end
+  end
+
+  # Reset a materialized built-in callout's content and default visibility back to
+  # its template, keeping its position. Only magic callouts have a default.
+  def restore
+    @callout = @event.registration_ticket_callouts.find(params[:id])
+    authorize! @callout, to: :update?
+
+    DefaultTicketCallouts.reset(@callout) if @callout.magic?
+    redirect_to edit_event_path(@event, expand: "callouts", anchor: "registration_ticket_callouts"),
+                notice: "Restored the #{@callout.title} callout to its default."
   end
 
   private
