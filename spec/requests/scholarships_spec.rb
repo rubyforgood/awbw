@@ -237,7 +237,7 @@ RSpec.describe "Scholarships", type: :request do
     it "edits an existing logged notification in place" do
       note = create(:notification, noticeable: scholarship,
                                    recipient_email: scholarship.recipient.preferred_email.presence || "n/a",
-                                   email_subject: "Called recipient", kind: "manual_log",
+                                   email_subject: "Called recipient", channel: "email", kind: "manual_log",
                                    recipient_role: "person", notification_type: 0)
 
       patch scholarship_path(scholarship),
