@@ -19,6 +19,16 @@ FactoryBot.define do
       end
     end
 
+    trait :with_pdf do
+      after(:build) do |asset|
+        asset.file.attach(
+          io: File.open(Rails.root.join("spec/fixtures/files/sample.pdf")),
+          filename: "sample.pdf",
+          content_type: "application/pdf"
+        )
+      end
+    end
+
     trait :invalid_format do
       after(:build) do |image|
         image.file.attach(

@@ -43,7 +43,17 @@ class AssetDecorator < ApplicationDecorator
     object.file.attached? && object.file.content_type.to_s.start_with?("image/")
   end
 
+  def pdf?
+    object.file.attached? && object.file.content_type == "application/pdf"
+  end
+
+  # A card-sized visual for the file: an image variant for images, a rendered
+  # first-page preview for PDFs (via the Poppler previewer). nil when the file
+  # can't be rendered visually (e.g. Word docs) or isn't attached — the card
+  # falls back to a file-type badge.
   def thumbnail
-    object.file.variant(:thumbnail) if image?
+    return unless object.file.attached? && object.file.representable?
+
+    object.file.representation(resize_to_limit: [ 400, 400 ])
   end
 end

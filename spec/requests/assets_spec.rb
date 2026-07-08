@@ -43,6 +43,13 @@ RSpec.describe "/asset_library", type: :request do
         )
       end
 
+      it "renders a PDF asset without error" do
+        create(:gallery_asset, :with_pdf, title: "A PDF handout")
+        get asset_library_url, headers: frame_headers
+        expect(response).to be_successful
+        expect(response.body).to include("A PDF handout", "sample.pdf")
+      end
+
       it "filters by asset type" do
         create(:primary_asset, title: "A primary")
         create(:gallery_asset, title: "A gallery")
