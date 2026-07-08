@@ -515,7 +515,8 @@
   <% if f.object.persisted? %>
     <%# Communications — subjects are visible to the person; the body and the
         add/edit controls are admin-only (gated inside the partial). %>
-    <%= render "notifications", f: f %>
+    <%= render "notifications/communications", f: f,
+          title_key: "communications.title", none_key: "communications.none_for_person" %>
 
     <!-- Comments -->
     <% if allowed_to?(:manage?, Comment) %>

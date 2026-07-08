@@ -273,6 +273,12 @@ class Person < ApplicationRecord
     user&.email.presence || email.presence || email_2.presence
   end
 
+  # Email the communications box matches notifications against. Uniform accessor
+  # so the shared notifications/_communications partial works across records.
+  def communications_email
+    preferred_email
+  end
+
   remote_searchable_by :first_name, :last_name, :email, :legal_first_name, :email_2
 
   def remote_search_label

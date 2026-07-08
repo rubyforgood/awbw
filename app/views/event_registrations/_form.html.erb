@@ -297,7 +297,8 @@
       <%= render "payment_history", event_registration: f.object %>
 
       <% if allowed_to?(:index?, with: NotificationPolicy) %>
-        <%= render "notifications", f: f %>
+        <%= render "notifications/communications", f: f,
+              title_key: "communications.registration_title", none_key: "communications.none_for_registrant" %>
       <% end %>
 
       <%# ---- Comments ---- %>

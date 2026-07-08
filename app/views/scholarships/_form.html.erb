@@ -195,7 +195,8 @@
   <%# ---- Communications + comments — same boxes as the registration edit page,
       shown once the scholarship exists so there's a record to attach them to. ---- %>
   <% if allowed_to?(:index?, with: NotificationPolicy) %>
-    <%= render "notifications", f: f %>
+    <%= render "notifications/communications", f: f,
+          title_key: "communications.scholarship_title", none_key: "communications.none_for_scholarship" %>
   <% end %>
 
   <%# ---- Comments ---- %>

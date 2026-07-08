@@ -25,6 +25,12 @@ class Scholarship < ApplicationRecord
     self.amount_cents = (value.to_d * 100).to_i if value.present?
   end
 
+  # Email the communications box matches notifications against. Uniform accessor
+  # so the shared notifications/_communications partial works across records.
+  def communications_email
+    recipient&.preferred_email
+  end
+
   private
 
   def within_grant_budget
