@@ -27,9 +27,6 @@
       <% end %>
     </div>
 
-    <!-- Filename (editable) -->
-    <%= render "filename_field", asset: asset %>
-
     <!-- Attached-to record -->
     <div class="text-xs text-gray-500 truncate">
       Attached to:
@@ -42,6 +39,9 @@
         <span class="text-gray-400">&mdash; <%= asset.owner_name %></span>
       <% end %>
     </div>
+
+    <!-- Filename (editable) -->
+    <%= render "filename_field", asset: asset %>
 
     <!-- Caption (editable) -->
     <%= render "caption_field", asset: asset %>
