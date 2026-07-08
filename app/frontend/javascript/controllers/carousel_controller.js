@@ -6,15 +6,18 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 
 // Connects to data-controller="carousel"
+// Pass Swiper overrides via data-carousel-options-value='{ "slidesPerView": 2, ... }'.
+// Any keys provided there win over the defaults below (breakpoints replace wholesale).
 export default class extends Controller {
+  static values = { options: Object }
 
   connect() {
-    this.swiper = new Swiper(this.element, {
+    const defaults = {
       modules: [Navigation],
       loop: true,
       speed: 1400,
       spaceBetween: 30,
-      
+
       breakpoints: {
         320: {
           slidesPerView: 1,
@@ -29,12 +32,14 @@ export default class extends Controller {
           slidesPerView: 4,
         }
       },
-      
+
       navigation: {
         nextEl: '.swiper-button-next-custom',
         prevEl: '.swiper-button-prev-custom',
       }
-    })
+    }
+
+    this.swiper = new Swiper(this.element, { ...defaults, ...this.optionsValue })
   }
 
   disconnect() {

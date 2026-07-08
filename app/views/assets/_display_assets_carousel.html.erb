@@ -1,0 +1,36 @@
+<%# Renders a resource's primary + gallery images as one carousel of uniform-size slides. %>
+<%# Every image is forced into the same fixed aspect box, so there is no hero/thumbnail size split. %>
+<%
+  assets = []
+  assets << resource.primary_asset if resource.respond_to?(:primary_asset) && resource.primary_asset&.file&.attached?
+  assets += resource.gallery_assets.select { |asset| asset.file.attached? } if resource.respond_to?(:gallery_assets)
+%>
+<% if assets.any? %>
+  <div data-controller="carousel"
+       class="relative swiper my-6 max-w-2xl mx-auto"
+       data-carousel-options-value='{ "loop": false, "spaceBetween": 16, "slidesPerView": 1, "breakpoints": {} }'>
+    <div class="swiper-wrapper">
+      <% assets.each_with_index do |asset, idx| %>
+        <div class="swiper-slide">
+          <div class="aspect-[3/2] overflow-hidden rounded-lg bg-gray-100">
+            <%= render "assets/display_image",
+                       item: asset, idx: idx,
+                       variant: :index, width: "full", height: "full",
+                       link: true, item_type: asset.class.name %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if assets.size > 1 %>
+      <button class="swiper-button-next-custom absolute top-1/2 -translate-y-1/2 right-2 w-12 h-12 rounded-full bg-white border border-gray-300 text-gray-700 shadow-md hover:shadow-lg flex items-center justify-center transition hover:bg-gray-50 z-40"
+              aria-label="Next">
+        <i class="fa-solid fa-chevron-right text-xl"></i>
+      </button>
+      <button class="swiper-button-prev-custom absolute top-1/2 -translate-y-1/2 left-2 w-12 h-12 rounded-full bg-white border border-gray-300 text-gray-700 shadow-md hover:shadow-lg flex items-center justify-center transition hover:bg-gray-50 z-40"
+              aria-label="Previous">
+        <i class="fa-solid fa-chevron-left text-xl"></i>
+      </button>
+    <% end %>
+  </div>
+<% end %>
