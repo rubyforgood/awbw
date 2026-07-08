@@ -2,13 +2,37 @@ require "rails_helper"
 
 RSpec.describe DefaultTicketCallouts do
   describe "#seed" do
-    it "materializes the Handouts and FAQ magic callouts" do
+    it "materializes the Handouts, FAQ, and Certificate magic callouts" do
       event = create(:event)
 
       described_class.seed(event)
 
       keys = event.registration_ticket_callouts.magic.pluck(:magic_key)
-      expect(keys).to contain_exactly("handouts", "faq")
+      expect(keys).to contain_exactly("handouts", "faq", "certificate")
+    end
+
+    it "seeds the Videoconference card, dripping a week before start, only once the event has a link" do
+      event = create(:event, start_date: Date.new(2026, 9, 10))
+      described_class.seed(event)
+      expect(event.registration_ticket_callouts.find_by(magic_key: "videoconference")).to be_nil
+
+      event.update!(videoconference_url: "https://example.com/zoom")
+      described_class.seed(event)
+
+      vc = event.registration_ticket_callouts.find_by(magic_key: "videoconference")
+      expect(vc.display_from.to_date).to eq(Date.new(2026, 9, 3))
+      expect(vc.hidden).to be(false)
+    end
+
+    it "defaults Certificate off for a non-training event and on for a facilitator training" do
+      non_training = create(:event, facilitator_training: false)
+      training = create(:event, facilitator_training: true)
+
+      described_class.seed(non_training)
+      described_class.seed(training)
+
+      expect(non_training.registration_ticket_callouts.find_by(magic_key: "certificate").hidden).to be(true)
+      expect(training.registration_ticket_callouts.find_by(magic_key: "certificate").hidden).to be(false)
     end
 
     it "seeds the FAQ card with the default training content" do
@@ -66,7 +90,7 @@ RSpec.describe DefaultTicketCallouts do
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
-      expect(event.registration_ticket_callouts.ordered.map(&:magic_key).compact).to eq(%w[handouts faq])
+      expect(event.registration_ticket_callouts.ordered.map(&:magic_key).compact).to eq(%w[handouts faq certificate])
     end
   end
 

@@ -160,4 +160,22 @@ RSpec.describe MagicTicketCallouts do
       ])
     end
   end
+
+  describe "#card_for" do
+    it "builds the live behavioral card for a materialized magic_key" do
+      event.update!(cost_cents: 5_000)
+      create(:registration_ticket_callout, event:, magic_key: "payment", title: "Payment")
+
+      card = described_class.new(registration).card_for("payment")
+      expect(card.title).to eq("Make your payment")
+      expect(card.badge).to end_with("due")
+    end
+
+    it "returns nil when the card shouldn't show for this registration" do
+      create(:registration_ticket_callout, event:, magic_key: "certificate", title: "Certificate of completion")
+
+      # Certificate isn't unlocked (event not ended, not attended).
+      expect(described_class.new(registration).card_for("certificate")).to be_nil
+    end
+  end
 end

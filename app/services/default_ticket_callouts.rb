@@ -74,10 +74,13 @@ class DefaultTicketCallouts
   end
 
   # Create any not-yet-present magic callouts for the event, appended in
-  # definition order after whatever already exists. Returns the created rows.
+  # definition order after whatever already exists. A definition's optional
+  # `seed_if` gates whether it applies to this event (e.g. skip the
+  # videoconference card until the event has a link). Returns the created rows.
   def seed
     existing_keys = @event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
     definitions.reject { |definition| existing_keys.include?(definition[:magic_key]) }
+               .select { |definition| definition[:seed_if].nil? || definition[:seed_if].call(@event) }
                .map { |definition| create(definition) }
   end
 
@@ -92,7 +95,8 @@ class DefaultTicketCallouts
       callout_type: definition[:callout_type],
       icon_class: definition[:icon_class],
       color_class: definition[:color_class],
-      hidden: definition[:hidden].call(@event)
+      hidden: definition[:hidden].call(@event),
+      display_from: definition[:display_from]&.call(@event)
     )
     callout.resources = definition[:resources]&.call || []
     callout
@@ -100,8 +104,12 @@ class DefaultTicketCallouts
 
   private
 
-  # Ordered built-in callout definitions. `hidden` is a proc so each event
-  # derives its own default; `resources` resolves the linked records.
+  # Ordered built-in callout definitions. `hidden` / `display_from` are procs so
+  # each event derives its own defaults; `resources` resolves the linked records;
+  # `seed_if` gates whether the card applies. Content cards (Handouts, FAQ) render
+  # their own copy; "behavioral" cards (Certificate, Videoconference) render live
+  # per-registration status through MagicTicketCallouts#card_for — the row only
+  # governs visibility, drip date, and order.
   def definitions
     [
       {
@@ -123,6 +131,30 @@ class DefaultTicketCallouts
         color_class: "blue",
         description: faq_html,
         hidden: ->(event) { !event.show_faq_callout? }
+      },
+      {
+        magic_key: "certificate",
+        title: "Certificate of completion",
+        subtitle: "View and download your certificate",
+        callout_type: "action",
+        icon_class: "fa-solid fa-certificate",
+        color_class: "green",
+        # Off by default except on facilitator trainings; admins opt other events
+        # in. When shown, it still only appears once the certificate unlocks.
+        hidden: ->(event) { !event.facilitator_training? }
+      },
+      {
+        magic_key: "videoconference",
+        title: "Videoconference",
+        subtitle: "Join link and how to add it to your calendar",
+        callout_type: "action",
+        icon_class: "fa-solid fa-video",
+        color_class: "blue",
+        hidden: ->(_event) { false },
+        # Drips onto the ticket a week before the event starts, replacing the old
+        # hard-coded "one week prior" rule with a stored, editable date.
+        display_from: ->(event) { event.start_date - 7.days if event.start_date },
+        seed_if: ->(event) { event.videoconference_url.present? }
       }
     ]
   end
@@ -136,7 +168,8 @@ class DefaultTicketCallouts
       callout_type: definition[:callout_type],
       icon_class: definition[:icon_class],
       color_class: definition[:color_class],
-      hidden: definition[:hidden].call(@event)
+      hidden: definition[:hidden].call(@event),
+      display_from: definition[:display_from]&.call(@event)
     )
     definition[:resources]&.call&.each { |resource| callout.resources << resource }
     callout

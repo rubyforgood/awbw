@@ -197,19 +197,19 @@ RSpec.describe "Registration ticket callouts", type: :request do
   describe "seeding built-in callouts on save" do
     before { sign_in admin }
 
-    it "materializes Handouts and FAQ when an event is updated" do
+    it "materializes the built-in callouts when an event is updated" do
       patch event_path(event), params: {
         event: { title: event.title, start_date: event.start_date, end_date: event.end_date }
       }
 
-      expect(event.registration_ticket_callouts.magic.pluck(:magic_key)).to contain_exactly("handouts", "faq")
+      expect(event.registration_ticket_callouts.magic.pluck(:magic_key)).to contain_exactly("handouts", "faq", "certificate")
     end
   end
 
   describe "the event editor" do
     before { sign_in admin }
 
-    it "renders a materialized callout as an editable field with hide and restore controls" do
+    it "renders a materialized content callout as an editable field with hide and restore controls" do
       callout = create(:registration_ticket_callout, event:, magic_key: "faq",
         title: "Frequently asked questions")
 
@@ -217,6 +217,18 @@ RSpec.describe "Registration ticket callouts", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][title]\"")
+      expect(response.body).to include(restore_event_registration_ticket_callout_path(event, callout))
+    end
+
+    it "renders a behavioral magic callout as a control-only row (hide + restore, no content fields)" do
+      callout = create(:registration_ticket_callout, event:, magic_key: "certificate",
+        title: "Certificate of completion")
+
+      get edit_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][hidden]\"")
+      expect(response.body).not_to include("name=\"event[registration_ticket_callouts_attributes][0][description]\"")
       expect(response.body).to include(restore_event_registration_ticket_callout_path(event, callout))
     end
   end

@@ -100,24 +100,35 @@
         </div>
       <% end %>
 
-      <!-- Magic callouts: code-defined cards the app controls (event details, CE
-           hours, requested W-9/invoice). Each knows its own visibility rule. In
-           preview the cards render non-navigating (the sample has no real page). -->
-      <% MagicTicketCallouts.new(event_registration).cards.each do |card| %>
+      <% magic = MagicTicketCallouts.new(event_registration) %>
+
+      <!-- Magic callouts: code-defined cards the app controls, for any built-in
+           the event hasn't materialized (also the fallback for unseeded events).
+           Each knows its own visibility rule. In preview they render non-navigating. -->
+      <% magic.cards.each do |card| %>
         <%= render "event_registrations/callout_card", callout: card, linked: !preview %>
       <% end %>
 
-      <!-- Ticket callouts: admin-authored (actions & reference reading) plus any
-           built-in cards materialized into editable rows. Hidden (draft/opted-out)
-           and not-yet-dripped callouts are omitted. -->
+      <!-- Ticket callouts: admin-authored plus any built-in cards materialized into
+           editable rows, in the one admin-ordered list. Hidden (draft/opted-out) and
+           not-yet-dripped callouts are omitted. A behavioral magic row (payment,
+           certificate, …) renders the app's live card; content/custom rows render
+           their own copy. -->
       <% payment_access = event_registration.payment_access_granted? || @checkout_payment_status == "paid" %>
       <% event_registration.event.registration_ticket_callouts.visible.each do |callout| %>
         <% next if callout.dripping? %>
         <% next if callout.payment_access_gated && !payment_access %>
-        <%= render "event_registrations/callout_card",
-                   callout: callout,
-                   href: event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug),
-                   linked: !preview %>
+        <% if callout.behavioral_magic? %>
+          <% card = magic.card_for(callout.magic_key) %>
+          <% if card %>
+            <%= render "event_registrations/callout_card", callout: card, linked: !preview %>
+          <% end %>
+        <% else %>
+          <%= render "event_registrations/callout_card",
+                     callout: callout,
+                     href: event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug),
+                     linked: !preview %>
+        <% end %>
       <% end %>
 
       <!-- Divider -->

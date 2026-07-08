@@ -55,25 +55,48 @@ class MagicTicketCallouts
     ].reject { |card| materialized.include?(card.magic_key) }
   end
 
+  # magic_key → builder method, in the default order cards appear on a ticket.
+  CARD_BUILDERS = {
+    "payment" => :payment_card,
+    "certificate" => :certificate_card,
+    "scholarship" => :scholarship_status_card,
+    "ce_hours" => :ce_hours_card,
+    "event_details" => :event_details_card,
+    "videoconference" => :videoconference_card,
+    "forms" => :forms_card,
+    "handouts" => :handouts_card,
+    "faq" => :faq_card
+  }.freeze
+
   def initialize(event_registration)
     @registration = event_registration
     @event = event_registration.event
   end
 
-  # The visible cards for this registration, in display order.
+  # The visible built-in cards for this registration, in default order. Cards the
+  # event has materialized into editable rows are omitted here — the ticket renders
+  # those from the row (calling #card_for for behavioral ones), so this is both the
+  # non-materialized set and the fallback for events not yet seeded.
   def cards
-    [ payment_card, certificate_card, scholarship_status_card, ce_hours_card,
-      event_details_card, videoconference_card, forms_card, handouts_card,
-      faq_card ].compact
+    CARD_BUILDERS.reject { |magic_key, _| materialized?(magic_key) }
+                 .filter_map { |_, builder| send(builder) }
+  end
+
+  # The live Card for one behavioral magic_key (payment, certificate, …), or nil
+  # when it shouldn't show for this registration (e.g. certificate not yet
+  # unlocked). The ticket calls this for a materialized behavioral row so the row
+  # governs visibility/order while the app still supplies the dynamic status.
+  def card_for(magic_key)
+    builder = CARD_BUILDERS[magic_key]
+    builder && send(builder)
   end
 
   private
 
   attr_reader :registration, :event
 
-  # A built-in card whose content has been materialized into an editable row for
-  # this event renders from that row (through the custom-callout loop) instead of
-  # here, so we skip it to avoid double-rendering. See DefaultTicketCallouts.
+  # A built-in card the event has materialized into an editable row renders from
+  # that row, not from #cards, so we skip it here to avoid double-rendering.
   def materialized?(magic_key)
     @materialized_keys ||= event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
     @materialized_keys.include?(magic_key)
@@ -208,7 +231,6 @@ class MagicTicketCallouts
   # Links to the 2-day training worksheets and handouts, so shown only on
   # facilitator trainings — see Event#show_handouts_callout?.
   def handouts_card
-    return if materialized?("handouts")
     return unless event.show_handouts_callout?
     Card.new(icon_class: "fa-solid fa-folder-open", color: "blue",
              title: "Handouts",
@@ -220,7 +242,6 @@ class MagicTicketCallouts
   # Reference card linking to the 2-day training FAQ page, so shown only on
   # facilitator trainings — see Event#show_faq_callout?.
   def faq_card
-    return if materialized?("faq")
     return unless event.show_faq_callout?
     Card.new(icon_class: "fa-solid fa-circle-question", color: "blue",
              title: "Frequently asked questions",

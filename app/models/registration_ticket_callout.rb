@@ -15,6 +15,12 @@ class RegistrationTicketCallout < ApplicationRecord
     videoconference forms handouts faq
   ].freeze
 
+  # "Content" magic callouts render their own editable copy/resources (like custom
+  # callouts). "Behavioral" magic callouts (the rest) render live per-registration
+  # status through MagicTicketCallouts#card_for — the row only governs visibility,
+  # drip date, and order.
+  CONTENT_MAGIC_KEYS = %w[ handouts faq ].freeze
+
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
   # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
@@ -61,6 +67,12 @@ class RegistrationTicketCallout < ApplicationRecord
   # one. Magic callouts hide instead of delete and can be reset to default.
   def magic?
     magic_key.present?
+  end
+
+  # A behavioral built-in callout whose card is rendered by MagicTicketCallouts
+  # (live status), as opposed to a content callout that renders from its own row.
+  def behavioral_magic?
+    magic? && CONTENT_MAGIC_KEYS.exclude?(magic_key)
   end
 
   # Whether the callout is drip-scheduled to appear only from a future date.

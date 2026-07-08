@@ -1,0 +1,36 @@
+<%# Editor row for a behavioral built-in ("magic") callout — payment, certificate,
+    videoconference, etc. Its card text and live status are app-controlled, so only
+    its visibility, drip date, and order are editable here: a hide toggle, a drag
+    handle, and "Restore default". Never removable. %>
+<div class="nested-fields registration-ticket-callout-fields flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3"
+     data-sortable-id="<%= f.object.id %>">
+  <div class="cursor-grab text-gray-400 hover:text-gray-600 pt-2 shrink-0" data-sortable-handle title="Drag to reorder">
+    <i class="fa-solid fa-grip-vertical"></i>
+  </div>
+
+  <i class="<%= f.object.display_icon_class %> <%= f.object.theme[:icon] %> w-6 shrink-0 text-center text-xl pt-0.5" aria-hidden="true"></i>
+
+  <div class="flex-1 min-w-0">
+    <div class="flex flex-wrap items-center gap-2 mb-0.5">
+      <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">Built in</span>
+      <span class="text-xs text-gray-400">App-controlled — shows live status on the ticket.</span>
+    </div>
+    <p class="font-semibold text-gray-700"><%= f.object.title %></p>
+    <p class="text-sm text-gray-500"><%= f.object.subtitle %></p>
+    <% if f.object.display_from.present? %>
+      <p class="text-xs text-gray-400 italic mt-0.5">Appears from <%= f.object.display_from.to_fs(:long) %>.</p>
+    <% end %>
+
+    <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+      <label class="flex items-center gap-2 text-sm text-gray-600">
+        <%= f.check_box :hidden, class: "rounded border-gray-300 text-purple-600" %>
+        Hidden (keep this built-in callout off the ticket)
+      </label>
+      <% if f.object.persisted? %>
+        <%= link_to "Restore default", restore_event_registration_ticket_callout_path(@event, f.object),
+              data: { turbo_method: :post, turbo_confirm: "Reset this callout to its default visibility? Save any other changes first — this reloads the form." },
+              class: "text-sm text-gray-400 hover:text-purple-700 underline" %>
+      <% end %>
+    </div>
+  </div>
+</div>
