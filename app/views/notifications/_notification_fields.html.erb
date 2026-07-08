@@ -11,7 +11,10 @@
   <%# Record this communication against its parent (the "Record" column in the
       notifications index) — e.g. an event registration or a person. %>
   <% if record %>
-    <%= f.hidden_field :noticeable_type, value: record.class.name %>
+    <%# `record` may be a Draper decorator, so read the model name via
+        `model_name` (delegated to the underlying class) rather than `class.name`,
+        which would return the decorator (e.g. "PersonDecorator"). %>
+    <%= f.hidden_field :noticeable_type, value: record.model_name.name %>
     <%= f.hidden_field :noticeable_id, value: record.id %>
   <% end %>
 
