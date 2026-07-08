@@ -6,7 +6,7 @@
 <% collection ||= @age_ranges_collection || Category.age_ranges.published.order(:position, :name).pluck(:name, :id) %>
 <% is_primary = f.object&.is_primary? %>
 <div class="nested-fields inline-flex items-center gap-2
-            rounded-md border <%= is_primary ? "border-amber-300 bg-amber-50" : "border-gray-300 bg-white" %>
+            rounded-md border border-lime-300 <%= is_primary ? "bg-lime-200" : "bg-lime-50" %>
             text-gray-700 px-3 py-1 text-sm font-medium transition"
      data-primary-tag-target="chip">
   <% if f.object&.category_id.present? %>

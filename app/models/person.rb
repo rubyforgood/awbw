@@ -149,10 +149,13 @@ class Person < ApplicationRecord
     joins(:affiliations)
       .where(affiliations: { organization_id: organization_id })
       .distinct }
+  scope :sector_leaders, -> {
+    joins(:sectorable_items).where(sectorable_items: { is_leader: true }).distinct }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
+    results = results.sector_leaders if ActiveModel::Type::Boolean.new.cast(params[:sector_leaders_only])
     results = results.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
