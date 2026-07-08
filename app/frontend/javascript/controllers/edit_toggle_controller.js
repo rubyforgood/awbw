@@ -31,8 +31,7 @@ export default class extends Controller {
         const body = this.bodyTargets[i];
         if (textarea && body) {
           const text = textarea.value;
-          body.textContent =
-            text.length > 135 ? text.substring(0, 132) + "..." : text;
+          body.textContent = text
           body.title = text;
         }
       });
