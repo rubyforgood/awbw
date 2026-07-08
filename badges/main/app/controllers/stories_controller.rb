@@ -160,6 +160,8 @@ class StoriesController < ApplicationController
   private
 
   def set_story
+    # Accepts both the bare id ("23") and the slugged param ("23-my-great-story");
+    # ActiveRecord casts the leading id via `to_i`, so both resolve the same story.
     @story = Story.find(params[:id])
   end
 

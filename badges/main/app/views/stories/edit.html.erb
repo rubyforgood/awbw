@@ -20,7 +20,7 @@
           </div>
 
           <% if params[:admin] == 'true' %>
-            <%= turbo_frame_tag "editor_assets_lazy", src: edit_story_path(@story) do %>
+            <%= turbo_frame_tag "editor_assets_lazy", src: edit_story_path(@story.id) do %>
               <%= render "shared/loading" %>
             <% end %>
           <% end %>

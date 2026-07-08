@@ -118,6 +118,15 @@ class Story < ApplicationRecord
     stories
   end
 
+  # Shareable, readable URLs (story_path, polymorphic_path, etc.): the id followed
+  # by the title slugged with hyphens and bad URL characters stripped, e.g.
+  # "23-my-great-story". Rails resolves it back via `id.to_i`, so `/stories/23`
+  # and `/stories/23/edit` (which pass the bare id) keep working.
+  def to_param
+    return id&.to_s if title.blank?
+    "#{id}-#{title.parameterize}"
+  end
+
   def name
     title
   end
