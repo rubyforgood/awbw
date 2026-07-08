@@ -1,5 +1,5 @@
 <%= form_tag asset_library_path, method: :get,
-      data: { turbo_frame: "assets_results" },
+      data: { controller: "collection", turbo_frame: "assets_results" },
       autocomplete: "off",
       class: "space-y-2" do %>
   <div class="flex flex-wrap md:flex-nowrap items-end gap-6">
@@ -27,7 +27,6 @@
       <%= select_tag :type,
             options_for_select(types.map { |t| [ t.underscore.humanize, t ] }, params[:type]),
             include_blank: "All types",
-            onchange: "this.form.requestSubmit()",
             class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2" %>
     </div>
 
@@ -39,14 +38,13 @@
       <%= select_tag :owner_type,
             options_for_select(owner_types.map { |t| [ t.underscore.humanize, t ] }, params[:owner_type]),
             include_blank: "Anything",
-            onchange: "this.form.requestSubmit()",
             class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2" %>
     </div>
 
     <!-- CLEAR FILTERS -->
     <div class="min-w-[120px] pb-3">
       <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1">&nbsp;</label>
-      <%= link_to "Clear filters", asset_library_path, class: "btn btn-utility", data: { turbo_frame: "assets_results" } %>
+      <%= link_to "Clear filters", asset_library_path, class: "btn btn-utility", data: { action: "collection#clearAndSubmit" } %>
     </div>
   </div>
 <% end %>

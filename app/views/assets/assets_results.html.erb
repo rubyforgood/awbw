@@ -2,7 +2,7 @@
   <p class="text-sm text-gray-500 mb-4"><%= @count_display %> <%= "asset".pluralize(@assets.total_entries) %></p>
 
   <% if @assets.any? %>
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade blur-on-submit">
       <% AssetDecorator.decorate_collection(@assets).each do |asset| %>
         <%= render "asset_card", asset: asset %>
       <% end %>
