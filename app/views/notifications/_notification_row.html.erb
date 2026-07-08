@@ -1,13 +1,13 @@
 <%# ---- Read-only display of one communication: channel icon + subject (always
-    visible), then the body. The body of a hand-noted communication (manual_log)
-    is an internal staff note — admin-only, shown with the admin-only blue
-    styling and hidden from non-admins (no inline text, nothing in the hover
-    title). An automated ("AWBW Portal") message is the recipient's own email, so
-    its body stays visible to everyone. Pass admin: false for a non-admin viewer.
-    Shared by the notifications box and the view mode of an editable manual-log
-    entry. ---- %>
+    visible), then the body. The body of a hand-noted communication (any channel
+    but "autoemail") is an internal staff note — admin-only, shown with the
+    admin-only blue styling and hidden from non-admins (no inline text, nothing
+    in the hover title). An automated ("autoemail") message is the recipient's
+    own email, so its body stays visible to everyone. Pass admin: false for a
+    non-admin viewer. Shared by the notifications box and the view mode of an
+    editable communication. ---- %>
 <% admin = local_assigns.fetch(:admin, true) %>
-<% body_admin_only = notification.manual_log? %>
+<% body_admin_only = notification.channel != "autoemail" %>
 <% show_body = admin || !body_admin_only %>
 <% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
 <% body = notification.email_body_text.to_s if show_body %>
