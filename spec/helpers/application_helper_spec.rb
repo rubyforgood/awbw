@@ -37,6 +37,20 @@ RSpec.describe ApplicationHelper, type: :helper do
 
       expect(helper.credited_author_link(workshop)).to eq("Jane Legacy")
     end
+
+    it "shows a creator-fallback credit as plain text, never linking the creator's profile" do
+      creator_person = create(:person, first_name: "Cara", last_name: "Creator")
+      allow(creator_person).to receive(:profile_is_searchable).and_return(true)
+      creator = create(:user)
+      allow(creator).to receive(:person).and_return(creator_person)
+      workshop = create(:workshop, author: nil, full_name: nil, author_credit_preference: "full_name")
+      allow(workshop).to receive(:author).and_return(nil)
+      allow(workshop).to receive(:created_by).and_return(creator)
+
+      result = helper.credited_author_link(workshop)
+      expect(result).to eq("Cara Creator")
+      expect(result).not_to include("<a")
+    end
   end
 
   describe "#dollars_from_cents" do

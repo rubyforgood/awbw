@@ -61,13 +61,14 @@ module AuthorCreditable
     format_person_credit(created_by&.person)
   end
 
-  # The person the credit should link to, or nil when the displayed credit is an
-  # anonymous, legacy free-text, or generic label that must not resolve to a
-  # profile. Mirrors author_credit's precedence so the linked person always
-  # matches the shown name.
+  # The person the credit should link to, or nil when the credit must not resolve
+  # to a profile. Only an explicit/legacy author links: a credit that falls back
+  # to the creating user's person is shown as plain text, because that person
+  # never declared authorship (and the record isn't listed on their profile
+  # either). Anonymous never links.
   def author_credit_person
     return nil if author_credit_preference == "anonymous"
-    primary_author_person || (created_by&.person if legacy_author_name_text.blank?)
+    primary_author_person
   end
 
   # Shown when there is no credited person or legacy name. Overridable per model
