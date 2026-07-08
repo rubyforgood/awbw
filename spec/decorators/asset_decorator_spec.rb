@@ -21,9 +21,21 @@ RSpec.describe AssetDecorator do
       expect(decorated.thumbnail).to be_present
     end
 
+    it "is nil for a PDF (embedded as an iframe instead)" do
+      decorated = described_class.decorate(create(:gallery_asset, :with_pdf))
+      expect(decorated.thumbnail).to be_nil
+    end
+
     it "is nil when no file is attached" do
       decorated = described_class.decorate(create(:gallery_asset))
       expect(decorated.thumbnail).to be_nil
+    end
+  end
+
+  describe "#inline_url" do
+    it "is a same-origin inline blob path" do
+      decorated = described_class.decorate(create(:gallery_asset, :with_pdf))
+      expect(decorated.inline_url).to include("/rails/active_storage/blobs")
     end
   end
 

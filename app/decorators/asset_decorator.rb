@@ -47,13 +47,20 @@ class AssetDecorator < ApplicationDecorator
     object.file.attached? && object.file.content_type == "application/pdf"
   end
 
-  # A card-sized visual for the file: an image variant for images, a rendered
-  # first-page preview for PDFs (via the Poppler previewer). nil when the file
-  # can't be rendered visually (e.g. Word docs) or isn't attached — the card
-  # falls back to a file-type badge.
+  # A card-sized visual for an image: an image variant. nil when the file isn't
+  # an image or isn't attached — the card embeds PDFs directly and falls back to
+  # a file-type badge for everything else.
   def thumbnail
-    return unless object.file.attached? && object.file.representable?
+    return unless image? && object.file.variable?
 
     object.file.representation(resize_to_limit: [ 400, 400 ])
+  end
+
+  # Same-origin inline URL for embedding the file in an <iframe> (the browser's
+  # native, scrollable multi-page PDF viewer).
+  def inline_url
+    return unless object.file.attached?
+
+    h.rails_blob_path(object.file, disposition: "inline")
   end
 end

@@ -1,12 +1,15 @@
 <div class="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
   <!-- Thumbnail -->
   <div class="aspect-square w-full bg-gray-100 flex items-center justify-center overflow-hidden">
-    <% if asset.thumbnail %>
+    <% if asset.pdf? %>
+      <iframe src="<%= asset.inline_url %>" loading="lazy" title="<%= asset.filename %>"
+              class="w-full h-full border-0"></iframe>
+    <% elsif asset.thumbnail %>
       <%= image_tag asset.thumbnail, loading: "lazy", alt: asset.filename,
-            class: "#{asset.image? ? "object-cover" : "object-contain"} w-full h-full" %>
+            class: "object-cover w-full h-full" %>
     <% elsif asset.file.attached? %>
       <div class="flex flex-col items-center text-gray-400">
-        <i class="fa-solid <%= asset.pdf? ? "fa-file-pdf text-red-600" : "fa-file" %> text-4xl"></i>
+        <i class="fa-solid fa-file text-4xl"></i>
         <span class="mt-2 text-xs font-semibold"><%= asset.content_type_label %></span>
       </div>
     <% else %>
