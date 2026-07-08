@@ -115,9 +115,11 @@ class Notification < ApplicationRecord
   # defaults so it validates without going through the delivery pipeline.
   before_validation :apply_manual_log_defaults, on: :create, if: -> { kind.blank? }
   # The portal only ever sends autoemails; every other channel is a hand-logged
-  # communication, so a non-autoemail channel implies kind "manual_log". Keep the
-  # two in sync so they can't drift (manual_log? <=> channel != "autoemail").
-  before_validation :classify_manual_channel_as_manual_log, if: -> { channel.present? && channel != "autoemail" }
+  # communication, so a non-autoemail channel with no kind yet defaults to
+  # "manual_log". We only fill in a *blank* kind — an already-set kind is never
+  # silently overwritten, so a real notification keeps its kind even if some
+  # caller sets a manual channel on it.
+  before_validation :classify_manual_channel_as_manual_log, if: -> { kind.blank? && channel.present? && channel != "autoemail" }
   # "autoemail" is reserved for messages the portal sends automatically — it can
   # be neither selected in the manual form nor set on a hand-logged (manual_log)
   # communication. Fall back to a manual channel so one is never autoemail (the

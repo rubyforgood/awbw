@@ -63,6 +63,20 @@ RSpec.describe "Person notifications", type: :request do
         }
       }.to change { person.notifications.count }.by(-1)
     end
+
+    it "keeps the admin's unsaved edit in the re-rendered form when the save fails validation" do
+      patch person_path(person), params: {
+        person: {
+          notifications_attributes: { "0" => { id: log.id, channel: "not-a-channel", email_subject: "Edited subject" } }
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      # The re-rendered field shows the submitted value, not the stale DB one.
+      expect(response.body).to include("Edited subject")
+      expect(response.body).not_to include("Left a voicemail")
+      expect(log.reload.email_subject).to eq("Left a voicemail")
+    end
   end
 
   describe "GET /people/:id/edit" do

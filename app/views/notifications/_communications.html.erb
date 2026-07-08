@@ -22,6 +22,10 @@
 <%# Admins can edit any hand-noted communication (any channel but "autoemail")
     owned by this record; autoemail system messages are always view-only. %>
 <% editable_notifications = admin ? notifications.select { |n| n.channel != "autoemail" && n.noticeable_type == record_type && n.noticeable_id == record.id } : [] %>
+<%# Edit fields render the record's own in-memory notification object (keyed by
+    id) rather than the fresh query row, so an admin's unsaved inline edits
+    survive a validation re-render instead of reverting to the saved values. %>
+<% own_notifications_by_id = admin ? record.notifications.index_by(&:id) : {} %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="edit-toggle">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:users, intensity: 100) %> <%= DomainTheme.text_class_for(:users, intensity: 600) %>">
@@ -43,7 +47,7 @@
       <div id="<%= list_id %>" class="space-y-2">
         <% notifications.each do |notification| %>
           <% if editable_notifications.include?(notification) %>
-            <%= f.simple_fields_for :notifications, notification do |nf| %>
+            <%= f.simple_fields_for :notifications, own_notifications_by_id.fetch(notification.id, notification) do |nf| %>
               <%= render "notifications/notification_fields", f: nf, record: record %>
             <% end %>
           <% else %>
