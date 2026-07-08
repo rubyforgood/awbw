@@ -82,6 +82,7 @@ class WorkshopVariationsController < ApplicationController
     authorize! @workshop_variation
 
     if @workshop_variation.update(workshop_variation_params)
+      @workshop_variation.attach_assets_from_idea! if params[:promote_idea_assets] == "true"
       flash[:notice] = "Workshop Variation updated successfully."
       redirect_to @workshop_variation
     else
