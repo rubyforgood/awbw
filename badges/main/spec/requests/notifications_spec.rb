@@ -5,12 +5,32 @@ RSpec.describe "Notifications", type: :request do
   let(:regular_user) { create(:user) }
   let(:notification) { create(:notification, recipient_email: regular_user.email) }
 
+  describe "GET /communications (friendly alias)" do
+    before { sign_in admin }
+
+    it "redirects to /notifications" do
+      get "/communications"
+      expect(response).to redirect_to("/notifications")
+    end
+
+    it "preserves filter params on the redirect" do
+      get "/communications", params: { email: "kim" }
+      expect(response).to redirect_to("/notifications?email=kim")
+    end
+  end
+
   describe "GET /notifications" do
     before { sign_in admin }
 
     let(:turbo_headers) { { "Turbo-Frame" => "notifications_results" } }
     let!(:story_notification) { create(:notification, noticeable: create(:story_idea), email_subject: "New story idea") }
     let!(:user_notification) { create(:notification, noticeable: create(:user), email_subject: "Welcome") }
+
+    it "shows the email param in the Email contains box" do
+      get notifications_path, params: { email: "kim.davis@gmail.com" }
+      value = Nokogiri::HTML(response.body).at_css('input[name="email"]')&.[]("value")
+      expect(value).to eq("kim.davis@gmail.com")
+    end
 
     it "filters by email_topic" do
       matching = create(:notification, email_subject: "Confirm your new email address")

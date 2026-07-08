@@ -1,0 +1,96 @@
+<%# ---- Notifications box, shared across records (person, event registration,
+    scholarship). Communications addressed to this record, newest first. Dates,
+    subjects, and the channel icon are visible to anyone who can see the page. An
+    automated ("AWBW Portal") message body stays visible (it is the recipient's
+    own email); a hand-noted communication's body is an internal staff note —
+    admin-only. Adding/editing hand-noted communications is admin-only too. Links
+    open in a new tab so unsaved edits aren't lost.
+
+    Callers pass `f:` (the parent record's form builder) plus the two i18n keys
+    that don't derive cleanly from the record: `title_key` (heading) and
+    `none_key` (empty-state copy). Everything else derives from `record`. ---- %>
+<% record = f.object %>
+<% email = record.communications_email %>
+<% notifications = email.present? ? Notification.email(email).order(created_at: :desc) : Notification.none %>
+<% admin = allowed_to?(:index?, with: NotificationPolicy) %>
+<% new_notifications = record.notifications.select(&:new_record?) %>
+<%# `record` may be a Draper decorator here, so read the model name via
+    `model_name` (delegated to the underlying class) rather than `class.name`,
+    which would return the decorator (e.g. "PersonDecorator"). %>
+<% record_type = record.model_name.name %>
+<% list_id = "#{record.model_name.param_key}-notification-list" %>
+<%# Admins can edit any hand-noted communication (any channel but "autoemail")
+    owned by this record; autoemail system messages are always view-only. %>
+<% editable_notifications = admin ? notifications.select { |n| n.channel != "autoemail" && n.noticeable_type == record_type && n.noticeable_id == record.id } : [] %>
+<%# Edit fields render the record's own in-memory notification object (keyed by
+    id) rather than the fresh query row, so an admin's unsaved inline edits
+    survive a validation re-render instead of reverting to the saved values. %>
+<% own_notifications_by_id = admin ? record.notifications.index_by(&:id) : {} %>
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="edit-toggle">
+  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:users, intensity: 100) %> <%= DomainTheme.text_class_for(:users, intensity: 600) %>">
+      <i class="fa-solid fa-bell"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700"><%= t(title_key) %></h2>
+    <% if email.present? && admin %>
+      <%= link_to notifications_path(email: email),
+                  class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                  target: "_blank", rel: "noopener" do %>
+        View all
+        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="space-y-3 p-4">
+    <div data-controller="paginated-fields" data-paginated-fields-per-page-value="5" class="space-y-2">
+      <div id="<%= list_id %>" class="space-y-2">
+        <% notifications.each do |notification| %>
+          <% if editable_notifications.include?(notification) %>
+            <%= f.simple_fields_for :notifications, own_notifications_by_id.fetch(notification.id, notification) do |nf| %>
+              <%= render "notifications/notification_fields", f: nf, record: record %>
+            <% end %>
+          <% else %>
+            <div data-paginated-fields-target="item">
+              <%= render "notifications/notification_row", notification: notification, admin: admin %>
+            </div>
+          <% end %>
+        <% end %>
+        <% if admin %>
+          <%# New, unsaved entries — re-rendered here on validation error. %>
+          <%= f.simple_fields_for :notifications, new_notifications do |nf| %>
+            <%= render "notifications/notification_fields", f: nf, record: record %>
+          <% end %>
+        <% end %>
+      </div>
+      <div data-paginated-fields-target="nav"></div>
+    </div>
+
+    <% if notifications.empty? && new_notifications.empty? %>
+      <p class="text-sm text-gray-400"><%= t(none_key) %></p>
+    <% end %>
+
+    <% if admin %>
+      <div class="admin-only mt-3 flex items-center justify-between gap-2 rounded-md bg-blue-100 px-3 py-2">
+        <%= link_to_add_association f, :notifications,
+              partial: "notifications/notification_fields",
+              render_options: { locals: { record: record } },
+              data: { association_insertion_node: "##{list_id}", association_insertion_method: "append" },
+              class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
+          <i class="fa-solid fa-plus text-[0.6rem]"></i>
+          <%= t("communications.add") %>
+        <% end %>
+
+        <% if editable_notifications.any? %>
+          <button type="button"
+                  class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+                  data-action="edit-toggle#toggle">
+            <i class="fa-solid fa-pen text-[0.6rem]"></i>
+            <span data-edit-toggle-target="editLabel"><%= t("communications.edit") %></span>
+            <span data-edit-toggle-target="viewLabel" class="hidden"><%= t("communications.done_editing") %></span>
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</section>

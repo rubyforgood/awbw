@@ -297,11 +297,12 @@
       <%= render "payment_history", event_registration: f.object %>
 
       <% if allowed_to?(:index?, with: NotificationPolicy) %>
-        <%= render "notifications", f: f %>
+        <%= render "notifications/communications", f: f,
+              title_key: "communications.registration_title", none_key: "communications.none_for_registrant" %>
       <% end %>
 
       <%# ---- Comments ---- %>
-      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm scroll-mt-24" id="comments-section" data-controller="comment-edit-toggle">
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm scroll-mt-24" id="comments-section" data-controller="edit-toggle">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
           <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:comments, intensity: 100) %> <%= DomainTheme.text_class_for(:comments, intensity: 600) %>">
             <i class="fa-solid fa-message"></i>
@@ -336,11 +337,11 @@
             <button
               type="button"
               class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
-              data-action="click->comment-edit-toggle#toggle"
+              data-action="edit-toggle#toggle"
             >
               <i class="fa-solid fa-pen text-[0.6rem]"></i>
-              <span data-comment-edit-toggle-target="editLabel">Edit comments</span>
-              <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done editing</span>
+              <span data-edit-toggle-target="editLabel">Edit comments</span>
+              <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
             </button>
           </div>
         </div>

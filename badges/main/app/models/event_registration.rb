@@ -15,7 +15,7 @@ class EventRegistration < ApplicationRecord
   has_many :checklist_completions, class_name: "EventRegistrationChecklistCompletion", dependent: :destroy
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, reject_if: proc { |attrs| attrs["email_subject"].blank? }
+  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
   # Lets the registration edit form edit the registrant's shout-out text (which
   # lives on the Person) inline, alongside the registration's own shout-out flag.
   accepts_nested_attributes_for :registrant
@@ -248,6 +248,12 @@ class EventRegistration < ApplicationRecord
 
   def name
     "(#{ registrant&.full_name }) #{ event.start_date.strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
+  end
+
+  # Email the communications box matches notifications against. Uniform accessor
+  # so the shared notifications/_communications partial works across records.
+  def communications_email
+    registrant&.preferred_email
   end
 
   def active?

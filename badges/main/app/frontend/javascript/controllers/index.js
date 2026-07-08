@@ -48,11 +48,11 @@ application.register("confirm-email", ConfirmEmailController)
 import ColumnToggleController from "./column_toggle_controller"
 application.register("column-toggle", ColumnToggleController)
 
-import CommentEditToggleController from "./comment_edit_toggle_controller"
-application.register("comment-edit-toggle", CommentEditToggleController)
+import EditToggleController from "./edit_toggle_controller"
+application.register("edit-toggle", EditToggleController)
 
-import CommentRequiredController from "./comment_required_controller"
-application.register("comment-required", CommentRequiredController)
+import FieldRequiredController from "./field_required_controller"
+application.register("field-required", FieldRequiredController)
 
 import DirtyFormController from "./dirty_form_controller"
 application.register("dirty-form", DirtyFormController)

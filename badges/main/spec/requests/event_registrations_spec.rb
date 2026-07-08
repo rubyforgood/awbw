@@ -416,6 +416,23 @@ RSpec.describe "EventRegistrations", type: :request do
           }
         }.not_to change(Notification, :count)
       end
+
+      it "edits an existing logged notification in place" do
+        note = create(:notification, noticeable: existing_registration,
+                                     recipient_email: existing_registration.registrant.preferred_email,
+                                     channel: "phone", email_subject: "Left a voicemail",
+                                     kind: "manual_log", recipient_role: "person", notification_type: 0)
+
+        patch event_registration_path(existing_registration), params: {
+          event_registration: {
+            notifications_attributes: { "0" => { id: note.id, channel: "email", email_subject: "Sent a reminder" } }
+          }
+        }
+
+        note.reload
+        expect(note.channel).to eq("email")
+        expect(note.email_subject).to eq("Sent a reminder")
+      end
     end
 
     describe "DELETE /event_registrations/:id" do

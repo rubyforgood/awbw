@@ -39,11 +39,14 @@ en:
     back_link: "← Back to communications"
     empty: "No communications found."
     add: "Add communication"
+    edit: "Edit communications"
+    done_editing: "Done editing"
     resent: "Communication has been resent successfully."
     registration_title: "Registration communications"
     scholarship_title: "Scholarship communications"
     none_for_person: "No communications for this person yet."
     none_for_registrant: "No communications for this registrant yet."
+    none_for_scholarship: "No communications for this scholarship yet."
   activerecord:
     attributes:
       workshop_variation:

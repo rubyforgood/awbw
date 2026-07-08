@@ -38,7 +38,7 @@
   </label>
   <div class="grow">
   <% if f.object.persisted? %>
-    <div class="comment-view flex items-center mb-3 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>">
+    <div class="flex items-center mb-3 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" data-edit-toggle-target="view">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
@@ -50,12 +50,12 @@
           <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
         <% end %>
       </span>
-      <span class="text-sm <%= is_age_range_data ? "text-amber-700" : "text-gray-900" %> comment-body truncate" title="<%= [ f.object.topic, f.object.body ].compact_blank.join(" — ") %>">
+      <span class="text-sm <%= is_age_range_data ? "text-amber-700" : "text-gray-900" %> truncate" data-edit-toggle-target="body" title="<%= [ f.object.topic, f.object.body ].compact_blank.join(" — ") %>">
         <% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i><% end %>
-        <% if f.object.topic.present? %><span class="font-bold uppercase tracking-wide"><%= f.object.topic %></span> <% end %><%= truncate(f.object.body, length: 135) %>
+        <% if f.object.topic.present? %><span class="font-bold uppercase tracking-wide"><%= f.object.topic %></span> <% end %><%= f.object.body %>
       </span>
     </div>
-    <div class="comment-edit hidden flex items-start mb-1 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>">
+    <div class="hidden flex items-start mb-1 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" data-edit-toggle-target="edit">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
@@ -68,12 +68,12 @@
         <% end %>
       </span>
       <div class="grow flex items-start gap-x-2"
-           data-controller="comment-required"
-           data-action="input->comment-required#update">
+           data-controller="field-required"
+           data-action="input->field-required#update">
         <div class="w-1/3 shrink-0">
           <%= f.input_field :topic,
                             placeholder: "Topic",
-                            data: { comment_required_target: "topic" },
+                            data: { field_required_target: "field" },
                             class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
           <p class="text-gray-500 text-xs mt-1">Reason for this note</p>
         </div>
@@ -81,7 +81,7 @@
                           as: :text,
                           rows: 1,
                           required: false,
-                          data: { comment_required_target: "body" },
+                          data: { field_required_target: "field required" },
                           class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
       </div>
       <%= link_to_remove_association "Remove", f,
@@ -98,12 +98,12 @@
         <span class="<%= current_color[0] %> <%= current_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= current_user&.person&.name || current_user&.name %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
       </span>
       <div class="grow flex items-start gap-x-2"
-           data-controller="comment-required"
-           data-action="input->comment-required#update">
+           data-controller="field-required"
+           data-action="input->field-required#update">
         <div class="w-1/3 shrink-0">
           <%= f.input_field :topic,
                             placeholder: "Topic",
-                            data: { comment_required_target: "topic" },
+                            data: { field_required_target: "field" },
                             class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
           <p class="text-gray-500 text-xs mt-1">Reason for this note</p>
         </div>
@@ -112,7 +112,7 @@
                           rows: 2,
                           required: false,
                           placeholder: "Type your comment",
-                          data: { comment_required_target: "body" },
+                          data: { field_required_target: "field required" },
                           class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
       </div>
     </div>

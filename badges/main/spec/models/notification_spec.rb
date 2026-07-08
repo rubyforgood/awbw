@@ -8,6 +8,54 @@ RSpec.describe Notification do
     it { should have_many(:child_notifications).class_name('Notification').with_foreign_key(:parent_notification_id) }
   end
 
+  describe "manual log channel" do
+    def build_notification(**attrs)
+      build(:notification, recipient_role: "person", recipient_email: "x@example.com", notification_type: 0, **attrs)
+    end
+
+    it "coerces a hand-logged (manual_log) autoemail channel to email" do
+      notification = build_notification(kind: "manual_log", channel: "autoemail")
+      notification.valid?
+      expect(notification.channel).to eq("email")
+    end
+
+    it "defaults a channel-less hand-logged communication to email, not the autoemail column default" do
+      notification = build_notification(kind: "manual_log", channel: nil)
+      notification.valid?
+      expect(notification.channel).to eq("email")
+    end
+
+    it "keeps a chosen manual channel" do
+      notification = build_notification(kind: "manual_log", channel: "phone")
+      notification.valid?
+      expect(notification.channel).to eq("phone")
+    end
+
+    it "leaves autoemail on a portal-sent notification" do
+      notification = build_notification(kind: "event_registration_confirmation", channel: "autoemail")
+      notification.valid?
+      expect(notification.channel).to eq("autoemail")
+    end
+
+    it "defaults a blank kind with a manual channel to manual_log" do
+      notification = build_notification(kind: nil, channel: "phone")
+      notification.valid?
+      expect(notification.kind).to eq("manual_log")
+    end
+
+    it "does not overwrite an already-set kind when a manual channel is present" do
+      notification = build_notification(kind: "event_registration_confirmation", channel: "phone")
+      notification.valid?
+      expect(notification.kind).to eq("event_registration_confirmation")
+    end
+
+    it "leaves the kind of an autoemail alone" do
+      notification = build_notification(kind: "event_registration_confirmation", channel: "autoemail")
+      notification.valid?
+      expect(notification.kind).to eq("event_registration_confirmation")
+    end
+  end
+
   describe "KINDS" do
     it "includes account_email_change_requested" do
       expect(Notification::KINDS).to include("account_email_change_requested")

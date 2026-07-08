@@ -6,11 +6,12 @@
                       turbo_frame: "notifications_results" },
                       autocomplete: "off",
                 class: "flex items-end gap-3" do |f| %>
-    <div class="flex-1">
+    <div class="flex-[2]">
       <%= f.label :email, "Email contains",
                   class: "block text-sm font-medium text-gray-500 mb-1" %>
 
       <%= f.text_field :email,
+                       value: params[:email],
                        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
                                  focus:ring-blue-500 focus:border-blue-500",
                        oninput: "this.form.requestSubmit()" %>
@@ -30,14 +31,16 @@
                              focus:ring-blue-500 focus:border-blue-500" %>
     </div>
 
-    <div>
+    <%# Fixed, narrow width so the long topic labels don't balloon the closed
+        control; the native option list still expands to the full text. %>
+    <div class="w-32">
       <%= f.label :email_topic, "Email topic",
                   class: "block text-sm font-medium text-gray-500 mb-1" %>
 
       <%= f.select :email_topic,
                    options_for_select(Notification::EMAIL_TOPICS.map(&:first), params[:email_topic]),
                    { include_blank: "All" },
-                   class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
+                   class: "w-full truncate bg-white border border-gray-300 rounded-lg px-3 py-2
                              focus:ring-blue-500 focus:border-blue-500" %>
     </div>
 
@@ -46,6 +49,7 @@
                   class: "block text-sm font-medium text-gray-500 mb-1" %>
 
       <%= f.text_field :subject_line,
+                       value: params[:subject_line],
                        class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
                                  focus:ring-blue-500 focus:border-blue-500",
                        oninput: "this.form.requestSubmit()" %>

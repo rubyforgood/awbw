@@ -239,7 +239,7 @@ this). Match the existing pattern:
 
 Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introduction) and reference docs. Key rules:
 
-**Targets over querySelector** — declare `static targets = [...]` and use `data-[controller]-target` attributes in views. Never use `this.element.querySelector` or `document.getElementById` to find elements that could be targets. Exception: elements outside the controller's scope (e.g., in a parent view).
+**Targets over querySelector** — declare `static targets = [...]` and use `data-[controller]-target` attributes in views. Never use `this.element.querySelector` or `document.getElementById` to find elements that could be targets. **This includes CSS-class lookups: don't select elements by a marker/hook class (`querySelectorAll(".foo-view")`), and don't pass CSS class names in as `Values` to query by — mark the elements as targets and iterate `this.fooTargets` instead.** When two target sets line up one-to-one (e.g. `viewTargets`/`editTargets`), pair them by DOM order. Exception: elements outside the controller's scope (e.g., in a parent view). (Part of the ongoing Stimulus-conventions audit, rubyforgood/awbw#1392.)
 
 **Values API for state** — use `static values = { name: Type }` for any state that persists or drives UI. Do not store state in instance variables when a value would work. Use `[name]ValueChanged()` callbacks for reactive updates instead of manual syncing.
 
