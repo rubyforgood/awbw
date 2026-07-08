@@ -73,10 +73,11 @@
         </div>
 
         <div>
-          <%= f.label :resource_id, "Linked resource", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-          <p class="text-xs text-gray-500 mb-1">Optional. Shows the resource below the content on the call-out's page (PDF first-page preview, etc.), with a download button when the resource has a downloadable file.</p>
-          <%= f.collection_select :resource_id, Resource.order(:title), :id, :title,
-                { include_blank: "None" },
+          <%= f.label :resource_ids, "Linked resources", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+          <p class="text-xs text-gray-500 mb-1">Optional. Shows each resource below the content on the call-out's page (PDF first-page preview, etc.), with a download button when the resource has a downloadable file. Hold ⌘/Ctrl to select more than one.</p>
+          <%= f.collection_select :resource_ids, Resource.order(:title), :id, :title,
+                {},
+                multiple: true, size: 4,
                 class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
         </div>
       </div>

@@ -1080,22 +1080,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_184214) do
     t.index ["stripe_refund_id"], name: "index_refunds_on_stripe_refund_id", unique: true
   end
 
+  create_table "registration_ticket_callout_resources", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "position", null: false
+    t.bigint "registration_ticket_callout_id", null: false
+    t.integer "resource_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["registration_ticket_callout_id", "resource_id"], name: "index_callout_resources_on_callout_and_resource", unique: true
+    t.index ["registration_ticket_callout_id"], name: "index_callout_resources_on_callout_id"
+    t.index ["resource_id"], name: "index_callout_resources_on_resource_id"
+  end
+
   create_table "registration_ticket_callouts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "callout_type", default: "reference", null: false
     t.string "color_class"
     t.datetime "created_at", null: false
     t.text "description"
+    t.datetime "display_from"
     t.bigint "event_id", null: false
+    t.boolean "hidden", default: false, null: false
     t.string "icon_class"
+    t.string "magic_key"
     t.boolean "payment_access_gated", default: false, null: false
     t.integer "position", null: false
-    t.integer "resource_id"
     t.string "subtitle"
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["event_id", "magic_key"], name: "index_registration_ticket_callouts_on_event_id_and_magic_key"
     t.index ["event_id", "position"], name: "index_registration_ticket_callouts_on_event_id_and_position"
     t.index ["event_id"], name: "index_registration_ticket_callouts_on_event_id"
-    t.index ["resource_id"], name: "index_registration_ticket_callouts_on_resource_id"
   end
 
   create_table "report_form_field_answers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1741,8 +1754,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_184214) do
   add_foreign_key "professional_licenses", "people"
   add_foreign_key "quotable_item_quotes", "quotes"
   add_foreign_key "quotes", "workshops"
+  add_foreign_key "registration_ticket_callout_resources", "registration_ticket_callouts", on_delete: :cascade
+  add_foreign_key "registration_ticket_callout_resources", "resources", on_delete: :cascade
   add_foreign_key "registration_ticket_callouts", "events"
-  add_foreign_key "registration_ticket_callouts", "resources", on_delete: :nullify
   add_foreign_key "report_form_field_answers", "answer_options"
   add_foreign_key "report_form_field_answers", "form_fields"
   add_foreign_key "report_form_field_answers", "reports"

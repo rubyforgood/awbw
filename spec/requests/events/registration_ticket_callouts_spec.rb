@@ -110,7 +110,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(ordered.map(&:position)).to eq([ 1, 2, 3 ])
     end
 
-    it "links a callout to a resource through nested attributes" do
+    it "links a callout to resources through nested attributes" do
       resource = create(:resource)
 
       patch event_path(event), params: {
@@ -119,13 +119,13 @@ RSpec.describe "Registration ticket callouts", type: :request do
           start_date: event.start_date,
           end_date: event.end_date,
           registration_ticket_callouts_attributes: {
-            "0" => { title: "Workbook", callout_type: "reference", resource_id: resource.id }
+            "0" => { title: "Workbook", callout_type: "reference", resource_ids: [ resource.id ] }
           }
         }
       }
 
       callout = event.registration_ticket_callouts.reload.find_by(title: "Workbook")
-      expect(callout.resource).to eq(resource)
+      expect(callout.resources).to eq([ resource ])
     end
   end
 

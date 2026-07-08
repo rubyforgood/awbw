@@ -10,7 +10,7 @@ class RegistrationTicketCalloutsController < ApplicationController
     @callout = @event.registration_ticket_callouts.find(params[:id])
     authorize! @callout, to: :show?
 
-    if @callout.description.blank? && @callout.resource.nil?
+    if @callout.description.blank? && @callout.resources.empty?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
     end

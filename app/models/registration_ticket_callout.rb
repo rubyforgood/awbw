@@ -5,6 +5,16 @@ class RegistrationTicketCallout < ApplicationRecord
   # group them on the ticket later.
   CALLOUT_TYPES = %w[ action reference ].freeze
 
+  # Hidden identifiers for the built-in ("magic") callouts. A row carrying one of
+  # these was seeded from a code-defined default (see DefaultTicketCallouts) and
+  # keeps its ticket behavior — badges, per-registration visibility — driven by
+  # that key. Admin-authored callouts have a nil magic_key. Magic callouts are
+  # hidden rather than destroyed so they can be restored to their default.
+  MAGIC_KEYS = %w[
+    payment certificate scholarship ce_hours event_details
+    videoconference forms handouts faq
+  ].freeze
+
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
   # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
@@ -18,10 +28,12 @@ class RegistrationTicketCallout < ApplicationRecord
 
   belongs_to :event
 
-  # Optionally links the callout to a Resource. When present, the callout's
-  # detail page renders the resource's display (PDF first-page preview, etc.)
-  # and a download button beneath the callout's own title/subtitle/content.
-  belongs_to :resource, optional: true
+  # A callout can link many resources, shown in order on its detail page (PDF
+  # previews + download buttons) beneath its own title/subtitle/content — e.g.
+  # the Handouts card's worksheets, or a custom callout's supporting documents.
+  has_many :registration_ticket_callout_resources, -> { ordered }, dependent: :destroy,
+           inverse_of: :registration_ticket_callout
+  has_many :resources, through: :registration_ticket_callout_resources
 
   # Per-event ordering, drag-reordered after save via the shared `sortable`
   # Stimulus controller (a per-row PUT to #update). The gem reflows the other
@@ -33,11 +45,27 @@ class RegistrationTicketCallout < ApplicationRecord
   validates :callout_type, inclusion: { in: CALLOUT_TYPES }
   validates :color_class, inclusion: { in: DomainTheme::SWATCH_COLORS.map(&:to_s) }, allow_blank: true
   validates :position, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
+  validates :magic_key, inclusion: { in: MAGIC_KEYS }, allow_nil: true
+  validates :magic_key, uniqueness: { scope: :event_id }, allow_nil: true
 
   scope :ordered, -> { order(:position, :id) }
+  scope :visible, -> { where(hidden: false) }
+  scope :magic, -> { where.not(magic_key: nil) }
+  scope :custom, -> { where(magic_key: nil) }
 
   def action?
     callout_type == "action"
+  end
+
+  # A seeded built-in callout (Handouts, FAQ, …) rather than an admin-authored
+  # one. Magic callouts hide instead of delete and can be reset to default.
+  def magic?
+    magic_key.present?
+  end
+
+  # Whether the callout is drip-scheduled to appear only from a future date.
+  def dripping?(now = Time.current)
+    display_from.present? && display_from > now
   end
 
   # Font Awesome class for the leading icon, falling back to a sensible default
