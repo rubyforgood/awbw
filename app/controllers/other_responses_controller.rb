@@ -60,7 +60,7 @@ class OtherResponsesController < ApplicationController
   # tag — mapping to an existing sector or minting a new (published) one — and
   # mark those responses promoted so they stop showing as free-text chips.
   def promote
-    authorize! to: :promote?
+    authorize!
     sector = target_sector
     return redirect_to other_responses_path, alert: "Pick or name a sector to promote to." unless sector
 
