@@ -26,6 +26,12 @@ RSpec.describe "Notifications", type: :request do
     let!(:story_notification) { create(:notification, noticeable: create(:story_idea), email_subject: "New story idea") }
     let!(:user_notification) { create(:notification, noticeable: create(:user), email_subject: "Welcome") }
 
+    it "shows the email param in the Email contains box" do
+      get notifications_path, params: { email: "kim.davis@gmail.com" }
+      value = Nokogiri::HTML(response.body).at_css('input[name="email"]')&.[]("value")
+      expect(value).to eq("kim.davis@gmail.com")
+    end
+
     it "filters by email_topic" do
       matching = create(:notification, email_subject: "Confirm your new email address")
       get notifications_path, params: { email_topic: "User: confirm new email" }, headers: turbo_headers
