@@ -9,8 +9,9 @@
 <% notifications = email.present? ? Notification.email(email).order(created_at: :desc) : Notification.none %>
 <% admin = allowed_to?(:index?, with: NotificationPolicy) %>
 <% new_notifications = registration.notifications.select(&:new_record?) %>
-<%# Only admins can edit; system ("AWBW Portal", sender-less) communications are view-only. %>
-<% editable_notifications = admin ? notifications.select { |n| n.manual_log? && n.sender_id.present? && n.noticeable_type == EventRegistration.name && n.noticeable_id == registration.id } : [] %>
+<%# Admins can edit any hand-noted communication owned by this record; autoemails
+    (system messages, not manual_log) are always view-only. %>
+<% editable_notifications = admin ? notifications.select { |n| n.manual_log? && n.noticeable_type == EventRegistration.name && n.noticeable_id == registration.id } : [] %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="edit-toggle">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:users, intensity: 100) %> <%= DomainTheme.text_class_for(:users, intensity: 600) %>">
