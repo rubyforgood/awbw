@@ -31,6 +31,8 @@
     <%= form_tag(workshops_path, method: :get,
                  data: {turbo_stream: true, turbo_frame: "workshops_results",
                         controller: "collection share-url"}, autocomplete: "off", class: "space-y-6") do %>
+      <%# Preserve the person scope (from a person's authored-content card) across sorts/filters %>
+      <%= hidden_field_tag :author_id, params[:author_id] if params[:author_id].present? %>
       <%= render "filters" %>
 
       <div><hr class="border-gray-300 my-6"></div>
