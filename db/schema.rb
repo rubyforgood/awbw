@@ -836,6 +836,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_130312) do
 
   create_table "other_responses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "field_identifier", null: false
     t.string "kind", null: false
     t.string "normalized_text", null: false
     t.bigint "person_id", null: false
@@ -845,7 +846,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_130312) do
     t.string "status", default: "pending", null: false
     t.string "text", null: false
     t.datetime "updated_at", null: false
-    t.index ["person_id", "kind", "normalized_text"], name: "index_other_responses_on_person_kind_text", unique: true
+    t.index ["person_id", "field_identifier", "normalized_text"], name: "index_other_responses_on_person_field_text", unique: true
     t.index ["person_id"], name: "index_other_responses_on_person_id"
     t.index ["promotable_type", "promotable_id"], name: "index_other_responses_on_promotable"
     t.index ["source_form_answer_id"], name: "index_other_responses_on_source_form_answer_id"

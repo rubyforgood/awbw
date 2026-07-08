@@ -1,30 +1,26 @@
 class OtherResponsesController < ApplicationController
   before_action :set_other_response, only: :update
 
-  # Review page: the same free-text "Other" sector value typed across many
-  # people, grouped with a count so a curator can decide what to promote.
+  # Review page: the same free-text "Other" value typed across many people,
+  # grouped so a curator can decide what to do. Sector "Other"s are bucketed
+  # together (they all promote into the one Sector catalog); every other question
+  # is grouped on its own, since its "Other"s are unrelated auxiliary data.
   def index
     authorize!
     @status_filter = params[:status].presence_in(OtherResponse::VISIBLE_STATUSES)
     statuses = @status_filter ? [ @status_filter ] : OtherResponse::VISIBLE_STATUSES
-    responses = OtherResponse
-      .sectors.where(status: statuses)
-      .includes(:person)
+    responses = OtherResponse.where(status: statuses).includes(:person, :source_form_answer)
 
-    @groups = responses.group_by(&:normalized_text).map do |_normalized, rows|
-      {
-        display_text: rows.first.text,
-        normalized_text: rows.first.normalized_text,
-        count: rows.size,
-        status_counts: rows.each_with_object(Hash.new(0)) { |r, h| h[r.status] += 1 }
-      }
-    end.sort_by { |group| [ -group[:count], group[:display_text].downcase ] }
+    @groups = responses
+      .group_by { |response| [ group_bucket(response), response.normalized_text ] }
+      .map { |_key, rows| build_group(rows) }
+      .sort_by { |group| [ group[:promotable] ? 0 : 1, group[:question_label].downcase, -group[:count], group[:display_text].downcase ] }
 
     @sectors = Sector.excluding_other.order(:name)
   end
 
-  # Bulk keep/dismiss every visible person who typed this value, from the review
-  # queue. Keep leaves it as a free-text chip; dismiss hides it from profiles.
+  # Bulk keep/dismiss every visible person in a group, from the review queue.
+  # Keep leaves the value in place; dismiss hides it.
   def curate
     authorize!
     status = params[:status]
@@ -32,8 +28,7 @@ class OtherResponsesController < ApplicationController
       return redirect_to other_responses_path, alert: "Choose keep or dismiss."
     end
 
-    scope = OtherResponse.sectors.where(status: OtherResponse::VISIBLE_STATUSES)
-      .where(normalized_text: OtherResponse.normalize(params[:normalized_text]))
+    scope = group_scope.where(status: OtherResponse::VISIBLE_STATUSES)
     count = scope.count
     scope.find_each { |response| response.update!(status: status) }
 
@@ -56,17 +51,16 @@ class OtherResponsesController < ApplicationController
     end
   end
 
-  # Promote every non-dismissed person who typed this value into a real Sector
-  # tag — mapping to an existing sector or minting a new (published) one — and
-  # mark those responses promoted so they stop showing as free-text chips.
+  # Promote every non-dismissed person in a sector group into a real Sector tag —
+  # mapping to an existing sector or minting a new (published) one — and mark
+  # those responses promoted so they stop showing as free-text chips. Only sector
+  # groups are promotable, enforced by the .sectors scope.
   def promote
     authorize!
     sector = target_sector
     return redirect_to other_responses_path, alert: "Pick or name a sector to promote to." unless sector
 
-    responses = OtherResponse.sectors.promotable_now
-      .where(normalized_text: OtherResponse.normalize(params[:normalized_text]))
-
+    responses = group_scope.sectors.promotable_now
     responses.includes(:person).find_each do |response|
       response.person.tag_sectors(primary_ids: [], additional_ids: [ sector.id ])
       response.update!(status: "promoted", promotable: sector)
@@ -80,6 +74,42 @@ class OtherResponsesController < ApplicationController
 
   def set_other_response
     @other_response = OtherResponse.find(params[:id])
+  end
+
+  # Group key: sector "Other"s share one bucket (kind), every other question is
+  # keyed by its field so distinct questions never merge.
+  def group_bucket(response)
+    response.promotable? ? response.kind : "field:#{response.field_identifier}"
+  end
+
+  def build_group(rows)
+    first = rows.first
+    {
+      kind: first.kind,
+      field_identifier: first.field_identifier,
+      promotable: first.promotable?,
+      question_label: question_label_for(first),
+      display_text: first.text,
+      normalized_text: first.normalized_text,
+      count: rows.size,
+      status_counts: rows.each_with_object(Hash.new(0)) { |r, h| h[r.status] += 1 }
+    }
+  end
+
+  def question_label_for(response)
+    return "Sectors" if response.promotable?
+    response.source_form_answer&.question_name_when_answered.presence || response.field_identifier.humanize
+  end
+
+  # The set of responses a curate/promote action targets, matching how the group
+  # was bucketed: sectors by kind, everything else by field.
+  def group_scope
+    scope = OtherResponse.where(normalized_text: OtherResponse.normalize(params[:normalized_text]))
+    if params[:kind] == "sector"
+      scope.sectors
+    else
+      scope.where(field_identifier: params[:field_identifier])
+    end
   end
 
   # The promote target: an existing sector by id, or a newly minted published one

@@ -7,10 +7,10 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-semibold text-gray-900">Review “Other” sectors</h1>
+        <h1 class="text-2xl font-semibold text-gray-900">Review “Other” responses</h1>
         <p class="text-sm text-gray-600 mt-1">
-          Free-text sectors people typed on registration forms, grouped by value.
-          Promote a recurring one into a real sector tag for everyone who typed it.
+          Free-text “Other” answers people typed on forms, grouped by question and value.
+          Promote a recurring sector into a real tag, or keep/dismiss any value.
         </p>
       </div>
     </div>
@@ -29,14 +29,16 @@
         <table class="w-full border-collapse border border-gray-200">
           <thead class="bg-gray-100">
             <tr>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/5">Question</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Response</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-24">People</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/2">Promote to a sector</th>
+              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-20">People</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/2">Action</th>
             </tr>
           </thead>
           <tbody>
             <% @groups.each do |group| %>
               <tr class="border-t border-gray-200 align-top">
+                <td class="px-4 py-3 text-sm text-gray-600"><%= group[:question_label] %></td>
                 <td class="px-4 py-3 text-sm text-gray-800">
                   <span class="font-medium"><%= group[:display_text] %></span>
                   <% if group[:status_counts]["kept"].to_i.positive? %>
@@ -45,26 +47,32 @@
                 </td>
                 <td class="px-4 py-3 text-center text-sm text-gray-700"><%= group[:count] %></td>
                 <td class="px-4 py-3">
-                  <%= form_with url: promote_other_responses_path, method: :post,
-                               class: "flex flex-wrap items-center gap-2" do %>
-                    <%= hidden_field_tag :normalized_text, group[:normalized_text] %>
-                    <%= select_tag :sector_id,
-                                   options_from_collection_for_select(@sectors, :id, :name),
-                                   include_blank: "Existing sector…",
-                                   class: "rounded-md border-gray-300 text-sm" %>
-                    <span class="text-xs text-gray-400">or</span>
-                    <%= text_field_tag :new_sector_name, group[:display_text],
-                                       placeholder: "New sector name",
-                                       class: "rounded-md border-gray-300 text-sm" %>
-                    <%= submit_tag "Promote", class: "btn btn-primary-outline text-sm",
-                                   data: { turbo_confirm: "Promote “#{group[:display_text]}” for all #{group[:count]} people?" } %>
+                  <% if group[:promotable] %>
+                    <%= form_with url: promote_other_responses_path, method: :post,
+                                 class: "flex flex-wrap items-center gap-2" do %>
+                      <%= hidden_field_tag :kind, group[:kind] %>
+                      <%= hidden_field_tag :field_identifier, group[:field_identifier] %>
+                      <%= hidden_field_tag :normalized_text, group[:normalized_text] %>
+                      <%= select_tag :sector_id,
+                                     options_from_collection_for_select(@sectors, :id, :name),
+                                     include_blank: "Existing sector…",
+                                     class: "rounded-md border-gray-300 text-sm" %>
+                      <span class="text-xs text-gray-400">or</span>
+                      <%= text_field_tag :new_sector_name, group[:display_text],
+                                         placeholder: "New sector name",
+                                         class: "rounded-md border-gray-300 text-sm" %>
+                      <%= submit_tag "Promote", class: "btn btn-primary-outline text-sm",
+                                     data: { turbo_confirm: "Promote “#{group[:display_text]}” for all #{group[:count]} people?" } %>
+                    <% end %>
                   <% end %>
-                  <div class="flex items-center gap-3 mt-2 text-sm">
-                    <%= button_to "Keep all", curate_other_responses_path(normalized_text: group[:normalized_text], status: "kept", return_status: @status_filter),
+                  <div class="flex items-center gap-3 <%= "mt-2" if group[:promotable] %> text-sm">
+                    <%= button_to "Keep all",
+                                  curate_other_responses_path(kind: group[:kind], field_identifier: group[:field_identifier], normalized_text: group[:normalized_text], status: "kept", return_status: @status_filter),
                                   class: "text-gray-500 hover:text-gray-700" %>
-                    <%= button_to "Dismiss all", curate_other_responses_path(normalized_text: group[:normalized_text], status: "dismissed", return_status: @status_filter),
+                    <%= button_to "Dismiss all",
+                                  curate_other_responses_path(kind: group[:kind], field_identifier: group[:field_identifier], normalized_text: group[:normalized_text], status: "dismissed", return_status: @status_filter),
                                   class: "text-gray-500 hover:text-red-600",
-                                  form: { data: { turbo_confirm: "Hide “#{group[:display_text]}” from all #{group[:count]} profiles?" } } %>
+                                  form: { data: { turbo_confirm: "Dismiss “#{group[:display_text]}” for all #{group[:count]} people?" } } %>
                   </div>
                 </td>
               </tr>
@@ -72,7 +80,7 @@
           </tbody>
         </table>
       <% else %>
-        <p class="text-gray-500 italic">No “Other” sector responses to review.</p>
+        <p class="text-gray-500 italic">No “Other” responses to review.</p>
       <% end %>
     </div>
   </div>

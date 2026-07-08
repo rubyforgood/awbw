@@ -9,13 +9,13 @@ RSpec.describe "OtherResponses", type: :request do
       expect(response).not_to have_http_status(:ok)
     end
 
-    it "groups the same value across people with a count" do
+    it "groups the same sector value across people with a count" do
       sign_in admin
       alice = create(:person)
       bob = create(:person)
-      create(:other_response, person: alice, kind: "sector", text: "Equine therapy")
-      create(:other_response, person: bob, kind: "sector", text: "equine therapy")
-      create(:other_response, :dismissed, person: bob, kind: "sector", text: "Hidden one")
+      create(:other_response, person: alice, text: "Equine therapy")
+      create(:other_response, person: bob, text: "equine therapy")
+      create(:other_response, :dismissed, person: bob, text: "Hidden one")
 
       get other_responses_path
 
@@ -24,10 +24,20 @@ RSpec.describe "OtherResponses", type: :request do
       expect(response.body).not_to include("Hidden one")
     end
 
+    it "shows generic (non-sector) responses under their question" do
+      sign_in admin
+      create(:other_response, :generic, text: "A friend")
+
+      get other_responses_path
+
+      expect(response.body).to include("A friend")
+      expect(response.body).to include("How did you hear")
+    end
+
     it "filters to a single status" do
       sign_in admin
-      create(:other_response, kind: "sector", text: "Pending value")
-      create(:other_response, :kept, kind: "sector", text: "Kept value")
+      create(:other_response, text: "Pending value")
+      create(:other_response, :kept, text: "Kept value")
 
       get other_responses_path(status: "kept")
 
@@ -38,39 +48,42 @@ RSpec.describe "OtherResponses", type: :request do
 
   describe "POST /other_responses/curate (bulk)" do
     it "requires an admin" do
-      create(:other_response, kind: "sector", text: "Equine therapy")
-      post curate_other_responses_path, params: { normalized_text: "equine therapy", status: "dismissed" }
+      create(:other_response, text: "Equine therapy")
+      post curate_other_responses_path, params: { kind: "sector", normalized_text: "equine therapy", status: "dismissed" }
       expect(response).not_to have_http_status(:ok)
     end
 
-    it "keeps every visible person who typed the value" do
+    it "keeps every visible person in a sector group" do
       sign_in admin
-      one = create(:other_response, kind: "sector", text: "Equine therapy")
-      two = create(:other_response, kind: "sector", text: "equine therapy")
+      one = create(:other_response, text: "Equine therapy")
+      two = create(:other_response, text: "equine therapy")
 
       post curate_other_responses_path,
-           params: { normalized_text: "equine therapy", status: "kept" }
+           params: { kind: "sector", normalized_text: "equine therapy", status: "kept" }
 
       expect(one.reload.status).to eq("kept")
       expect(two.reload.status).to eq("kept")
     end
 
-    it "dismisses every visible person who typed the value" do
+    it "dismisses a generic group scoped to its question" do
       sign_in admin
-      response_record = create(:other_response, :kept, kind: "sector", text: "Equine therapy")
+      generic = create(:other_response, :generic, text: "A friend")
+      sector = create(:other_response, text: "A friend")
 
       post curate_other_responses_path,
-           params: { normalized_text: "equine therapy", status: "dismissed" }
+           params: { field_identifier: "how_did_you_hear", normalized_text: "a friend", status: "dismissed" }
 
-      expect(response_record.reload.status).to eq("dismissed")
+      expect(generic.reload.status).to eq("dismissed")
+      # The identically-typed sector value on a different question is untouched.
+      expect(sector.reload.status).to eq("pending")
     end
 
     it "rejects an unsupported status" do
       sign_in admin
-      response_record = create(:other_response, kind: "sector", text: "Equine therapy")
+      response_record = create(:other_response, text: "Equine therapy")
 
       post curate_other_responses_path,
-           params: { normalized_text: "equine therapy", status: "promoted" }
+           params: { kind: "sector", normalized_text: "equine therapy", status: "promoted" }
 
       expect(response).to redirect_to(other_responses_path)
       expect(response_record.reload.status).to eq("pending")
@@ -80,7 +93,7 @@ RSpec.describe "OtherResponses", type: :request do
   describe "PATCH /other_responses/:id (dismiss)" do
     it "dismisses the response and returns to the person edit page" do
       sign_in admin
-      response_record = create(:other_response, kind: "sector", text: "Equine therapy")
+      response_record = create(:other_response, text: "Equine therapy")
 
       patch other_response_path(response_record),
             params: { other_response: { status: "dismissed" }, return_to: "person_edit" }
@@ -93,19 +106,19 @@ RSpec.describe "OtherResponses", type: :request do
   describe "POST /other_responses/promote" do
     it "requires an admin" do
       sector = create(:sector, name: "Equine Therapy")
-      create(:other_response, kind: "sector", text: "Equine therapy")
-      post promote_other_responses_path, params: { normalized_text: "equine therapy", sector_id: sector.id }
+      create(:other_response, text: "Equine therapy")
+      post promote_other_responses_path, params: { kind: "sector", normalized_text: "equine therapy", sector_id: sector.id }
       expect(response).not_to have_http_status(:ok)
     end
 
     it "tags every non-dismissed person and marks the responses promoted" do
       sign_in admin
       sector = create(:sector, name: "Equine Therapy")
-      kept = create(:other_response, person: create(:person), kind: "sector", text: "Equine therapy")
-      dismissed = create(:other_response, :dismissed, person: create(:person), kind: "sector", text: "Equine therapy")
+      kept = create(:other_response, person: create(:person), text: "Equine therapy")
+      dismissed = create(:other_response, :dismissed, person: create(:person), text: "Equine therapy")
 
       post promote_other_responses_path,
-           params: { normalized_text: "equine therapy", sector_id: sector.id }
+           params: { kind: "sector", normalized_text: "equine therapy", sector_id: sector.id }
 
       expect(kept.reload.status).to eq("promoted")
       expect(kept.person.sectors).to include(sector)
@@ -116,16 +129,28 @@ RSpec.describe "OtherResponses", type: :request do
     it "mints a new published sector when given a name" do
       sign_in admin
       person = create(:person)
-      create(:other_response, person: person, kind: "sector", text: "Equine therapy")
+      create(:other_response, person: person, text: "Equine therapy")
 
       expect {
         post promote_other_responses_path,
-             params: { normalized_text: "equine therapy", new_sector_name: "Equine therapy" }
+             params: { kind: "sector", normalized_text: "equine therapy", new_sector_name: "Equine therapy" }
       }.to change(Sector, :count).by(1)
 
       sector = Sector.find_by(name: "Equine therapy")
       expect(sector.published).to be(true)
       expect(person.sectors).to include(sector)
+    end
+
+    it "does not promote a generic group" do
+      sign_in admin
+      generic = create(:other_response, :generic, text: "A friend")
+      sector = create(:sector, name: "A Friend")
+
+      post promote_other_responses_path,
+           params: { field_identifier: "how_did_you_hear", normalized_text: "a friend", sector_id: sector.id }
+
+      expect(generic.reload.status).to eq("pending")
+      expect(generic.person.sectors).not_to include(sector)
     end
   end
 end

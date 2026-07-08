@@ -1,9 +1,14 @@
 FactoryBot.define do
   factory :other_response do
     person
-    kind { "sector" }
+    field_identifier { "additional_sectors" }
     sequence(:text) { |n| "Equine therapy #{n}" }
     status { "pending" }
+    # kind is derived from field_identifier (sector fields → "sector").
+
+    trait :generic do
+      field_identifier { "how_did_you_hear" }
+    end
 
     trait :kept do
       status { "kept" }

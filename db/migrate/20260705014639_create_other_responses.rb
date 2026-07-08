@@ -9,6 +9,7 @@ class CreateOtherResponses < ActiveRecord::Migration[8.1]
 
     create_table :other_responses do |t|
       t.references :person, null: false, foreign_key: true
+      t.string :field_identifier, null: false
       t.string :kind, null: false
       t.string :text, null: false
       t.string :normalized_text, null: false
@@ -18,8 +19,8 @@ class CreateOtherResponses < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :other_responses, [ :person_id, :kind, :normalized_text ],
-              unique: true, name: "index_other_responses_on_person_kind_text"
+    add_index :other_responses, [ :person_id, :field_identifier, :normalized_text ],
+              unique: true, name: "index_other_responses_on_person_field_text"
   end
 
   def down

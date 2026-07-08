@@ -133,6 +133,7 @@ module EventRegistrationServices
     def create_form_submission(person)
       submission = FormSubmission.create!(person: person, form: @form, event: @event, role: "bulk_payment")
       save_form_answers(submission)
+      OtherResponses::CaptureFromSubmission.call(submission)
       submission
     end
 

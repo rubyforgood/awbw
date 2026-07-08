@@ -102,7 +102,7 @@ This codebase (Rails 8.1)
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
-| `OtherResponse` | A free-text "Other" a person typed on a tag-backed form question (`kind: "sector"` today), captured at registration so a curator can `promote` it into a real `Sector` tag, `keep` it as a chip, or `dismiss` it (hide from profile/edit). Reviewed at `/other_responses` |
+| `OtherResponse` | A free-text "Other" a person typed on any form question, captured at submission time (registration, scholarship, bulk payment). `field_identifier` records the question; `kind` is derived — `sector` (promotable into a `Sector`, shown on the profile) or `generic` (auxiliary data, admin-review only). Curated at `/other_responses`: `promote` (sectors only), `keep`, or `dismiss`. Org-type "Other" is excluded (owned by the org). |
 | `Organization` | Groups with affiliations, addresses, logos via ActiveStorage |
 | `Grant` | Donated funds (polymorphic `donor`: Organization or Person) with eligibility criteria, tasks, deadlines; parent of `Scholarship`. Scholarship totals cannot exceed the grant amount |
 | `Scholarship` | Award to a `Person`; optionally drawn from a `Grant`, syncs to event registration `Allocation` |
@@ -212,6 +212,10 @@ end
 ### Affiliations
 
 - `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation. Accepts an optional `organization_address:` and sets it on every affiliation it creates (the registrant's typed agency address, upserted onto the org); when an affiliation already exists and is skipped, it backfills that address onto the existing one only if it has none (an admin-set address is never overwritten)
+
+### Other responses
+
+- `OtherResponses::CaptureFromSubmission` — Materializes a form submission's free-text "Other" answers as `OtherResponse` records. Runs over every answered field (uses `OtherOption.texts`, which keys strictly on the `Other:` prefix, so named specify options and the CE `Yes: N` box are ignored); excludes org-owned `agency_type`; de-dupes per person + question. Shared by the registration, scholarship, and bulk-payment submission paths
 
 ### Organizations
 

@@ -10,25 +10,39 @@ RSpec.describe OtherResponse, type: :model do
       expect(build(:other_response, text: "")).not_to be_valid
     end
 
-    it "rejects an unknown kind" do
-      expect(build(:other_response, kind: "nonsense")).not_to be_valid
+    it "requires a field_identifier" do
+      expect(build(:other_response, field_identifier: "")).not_to be_valid
     end
 
-    it "rejects an unknown status" do
-      expect(build(:other_response, status: "nonsense")).not_to be_valid
-    end
-
-    it "is unique per person + kind + normalized text" do
+    it "is unique per person + field + normalized text" do
       person = create(:person)
-      create(:other_response, person: person, kind: "sector", text: "Equine therapy")
-      dup = build(:other_response, person: person, kind: "sector", text: "  equine therapy ")
+      create(:other_response, person: person, field_identifier: "additional_sectors", text: "Equine therapy")
+      dup = build(:other_response, person: person, field_identifier: "additional_sectors", text: "  equine therapy ")
 
       expect(dup).not_to be_valid
     end
 
+    it "allows the same text on a different question" do
+      person = create(:person)
+      create(:other_response, person: person, field_identifier: "additional_sectors", text: "Equine therapy")
+      other_question = build(:other_response, person: person, field_identifier: "how_did_you_hear", text: "Equine therapy")
+
+      expect(other_question).to be_valid
+    end
+
     it "allows the same text for a different person" do
-      create(:other_response, kind: "sector", text: "Equine therapy")
-      expect(build(:other_response, kind: "sector", text: "Equine therapy")).to be_valid
+      create(:other_response, field_identifier: "additional_sectors", text: "Equine therapy")
+      expect(build(:other_response, field_identifier: "additional_sectors", text: "Equine therapy")).to be_valid
+    end
+  end
+
+  describe "kind derivation" do
+    it "is sector for a sector field" do
+      expect(create(:other_response, field_identifier: "additional_sectors").kind).to eq("sector")
+    end
+
+    it "is generic for any other field" do
+      expect(create(:other_response, field_identifier: "how_did_you_hear").kind).to eq("generic")
     end
   end
 
@@ -39,7 +53,7 @@ RSpec.describe OtherResponse, type: :model do
     end
   end
 
-  describe "scopes" do
+  describe "scopes and #promotable?" do
     it ".visible returns only pending and kept" do
       pending = create(:other_response)
       kept = create(:other_response, :kept)
@@ -47,6 +61,11 @@ RSpec.describe OtherResponse, type: :model do
       create(:other_response, :promoted)
 
       expect(OtherResponse.visible).to contain_exactly(pending, kept)
+    end
+
+    it "only sector responses are promotable" do
+      expect(create(:other_response).promotable?).to be(true)
+      expect(create(:other_response, :generic).promotable?).to be(false)
     end
   end
 
