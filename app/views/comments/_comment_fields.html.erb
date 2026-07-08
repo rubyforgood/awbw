@@ -38,7 +38,7 @@
   </label>
   <div class="grow">
   <% if f.object.persisted? %>
-    <div class="comment-view flex items-center mb-3 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>">
+    <div class="flex items-center mb-3 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" data-edit-toggle-target="view">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
@@ -50,12 +50,12 @@
           <span class="<%= created_color[0] %> <%= created_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate w-full text-left" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
         <% end %>
       </span>
-      <span class="text-sm <%= is_age_range_data ? "text-amber-700" : "text-gray-900" %> comment-body truncate" title="<%= [ f.object.topic, f.object.body ].compact_blank.join(" — ") %>">
+      <span class="text-sm <%= is_age_range_data ? "text-amber-700" : "text-gray-900" %> truncate" data-edit-toggle-target="body" title="<%= [ f.object.topic, f.object.body ].compact_blank.join(" — ") %>">
         <% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i><% end %>
         <% if f.object.topic.present? %><span class="font-bold uppercase tracking-wide"><%= f.object.topic %></span> <% end %><%= truncate(f.object.body, length: 135) %>
       </span>
     </div>
-    <div class="comment-edit hidden flex items-start mb-1 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>">
+    <div class="flex items-start mb-1 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" style="display:none" data-edit-toggle-target="edit">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>

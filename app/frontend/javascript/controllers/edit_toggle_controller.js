@@ -3,27 +3,19 @@ import { Controller } from "@hotwired/stimulus";
 // Connects to data-controller="edit-toggle"
 //
 // Toggles a list of records between read-only view blocks and inline edit forms
-// (used by the comments and communications boxes on the Person / Registration /
-// Scholarship edit forms). Each persisted record renders a `.{view}` block and a
-// hidden `.{edit}` block; clicking the toggle flips which is shown and swaps the
-// button label.
+// (the comments and communications boxes on the Person / Registration /
+// Scholarship edit forms). Mark each persisted record's read-only block with
+// data-edit-toggle-target="view" and its edit form with
+// data-edit-toggle-target="edit"; clicking the toggle flips which is shown and
+// swaps the button label.
 //
-// Configure the block classes per caller:
-//   data-edit-toggle-view-class-value="comment-view"
-//   data-edit-toggle-edit-class-value="comment-edit"
-//   data-edit-toggle-body-class-value="comment-body"  (optional)
-//
-// When a body class is given, leaving edit mode syncs each edit textarea back
-// into the matching truncated `.{body}` span so the view reflects unsaved edits.
+// Optionally mark a truncated summary span with data-edit-toggle-target="body":
+// on leaving edit mode each edit textarea is synced back into the matching body
+// span (paired by order) so the view reflects unsaved edits. Comments use this;
+// communications omit it.
 //
 export default class extends Controller {
-  static targets = ["editLabel", "viewLabel"];
-  static values = {
-    viewClass: { type: String, default: "editable-view" },
-    editClass: { type: String, default: "editable-edit" },
-    bodyClass: { type: String, default: "" },
-    truncate: { type: Number, default: 135 }
-  };
+  static targets = ["view", "edit", "body", "editLabel", "viewLabel"];
 
   connect() {
     this.editing = false;
@@ -32,29 +24,26 @@ export default class extends Controller {
   toggle() {
     this.editing = !this.editing;
 
-    // When leaving edit mode, sync edit textareas into their truncated view.
-    if (!this.editing && this.bodyClassValue) {
-      this.element.querySelectorAll(".nested-fields").forEach((item) => {
-        const textarea = item.querySelector(`.${this.editClassValue} textarea`);
-        const viewBody = item.querySelector(
-          `.${this.viewClassValue} .${this.bodyClassValue}`
-        );
-        if (textarea && viewBody) {
+    // Leaving edit mode: sync each edit textarea into its truncated view span.
+    if (!this.editing && this.hasBodyTarget) {
+      this.editTargets.forEach((edit, i) => {
+        const textarea = edit.querySelector("textarea");
+        const body = this.bodyTargets[i];
+        if (textarea && body) {
           const text = textarea.value;
-          const max = this.truncateValue;
-          viewBody.textContent =
-            text.length > max ? text.substring(0, max - 3) + "..." : text;
-          viewBody.title = text;
+          body.textContent =
+            text.length > 135 ? text.substring(0, 132) + "..." : text;
+          body.title = text;
         }
       });
     }
 
-    this.element
-      .querySelectorAll(`.${this.viewClassValue}`)
-      .forEach((el) => (el.style.display = this.editing ? "none" : ""));
-    this.element
-      .querySelectorAll(`.${this.editClassValue}`)
-      .forEach((el) => (el.style.display = this.editing ? "" : "none"));
+    this.viewTargets.forEach(
+      (el) => (el.style.display = this.editing ? "none" : "")
+    );
+    this.editTargets.forEach(
+      (el) => (el.style.display = this.editing ? "" : "none")
+    );
 
     if (this.hasEditLabelTarget && this.hasViewLabelTarget) {
       this.editLabelTarget.style.display = this.editing ? "none" : "";

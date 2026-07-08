@@ -9,7 +9,7 @@
 <% notifications = email.present? ? Notification.email(email).order(created_at: :desc) : Notification.none %>
 <% new_notifications = person.notifications.select(&:new_record?) %>
 <% editable_notifications = notifications.select { |n| n.manual_log? && n.noticeable_type == Person.name && n.noticeable_id == person.id } %>
-<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="edit-toggle" data-edit-toggle-view-class-value="notification-view" data-edit-toggle-edit-class-value="notification-edit">
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-controller="edit-toggle">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:users, intensity: 100) %> <%= DomainTheme.text_class_for(:users, intensity: 600) %>">
       <i class="fa-solid fa-bell"></i>
@@ -64,7 +64,7 @@
       <% if editable_notifications.any? %>
         <button type="button"
                 class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
-                data-action="click->edit-toggle#toggle">
+                data-action="edit-toggle#toggle">
           <i class="fa-solid fa-pen text-[0.6rem]"></i>
           <span data-edit-toggle-target="editLabel"><%= t("communications.edit") %></span>
           <span data-edit-toggle-target="viewLabel" style="display:none"><%= t("communications.done_editing") %></span>
