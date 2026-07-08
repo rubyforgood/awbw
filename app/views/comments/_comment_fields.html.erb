@@ -52,7 +52,7 @@
       </span>
       <span class="text-sm <%= is_age_range_data ? "text-amber-700" : "text-gray-900" %> truncate" data-edit-toggle-target="body" title="<%= [ f.object.topic, f.object.body ].compact_blank.join(" — ") %>">
         <% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i><% end %>
-        <% if f.object.topic.present? %><span class="font-bold uppercase tracking-wide"><%= f.object.topic %></span> <% end %><%= truncate(f.object.body, length: 135) %>
+        <% if f.object.topic.present? %><span class="font-bold uppercase tracking-wide"><%= f.object.topic %></span> <% end %><%= f.object.body, length: 135 %>
       </span>
     </div>
     <div class="flex items-start mb-1 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" style="display:none" data-edit-toggle-target="edit">
