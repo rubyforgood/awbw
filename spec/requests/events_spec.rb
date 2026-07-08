@@ -1844,8 +1844,8 @@ RSpec.describe "Events", type: :request do
         page = Capybara.string(response.body)
         expect(page).to have_content("13-17")
         expect(page).to have_content("18+")
-        # The primary group leads with the starred amber chip from the shared partial.
-        expect(page).to have_css("span.text-amber-800 i.fa-star")
+        # The primary group leads with the starred lime chip from the shared partial.
+        expect(page).to have_css("span.text-lime-800 i.fa-star")
       end
 
       it "shows the org linked to its website on the left and the bold recipient name linked to their profile on the right" do
