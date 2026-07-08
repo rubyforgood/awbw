@@ -15,9 +15,9 @@ module AdminCardsHelper
       model_card(:workshops, icon: "🎨"),
       model_card(:workshop_variations, icon: "🔀"),
       model_card(:video_recordings, icon: "🎬", title: "Video Gallery"),
+      custom_card("Asset library", asset_library_path, icon: "🖼️"),
       model_card(:banners, icon: "📣"),
       model_card(:community_news, icon: "📰"),
-      custom_card("Asset library", asset_library_path, icon: "🖼️"),
       model_card(:faqs, icon: "❔", title: "FAQs")
     ]
   end
