@@ -1,37 +1,40 @@
 <%# ---- The editable fields for a manual-log communication (From / Channel /
     Subject / Body + Remove). Shared by a new entry and the edit mode of a
-    persisted one in _notification_fields. Subject is required once the row is in
-    use (server-side reject_if drops a blank-subject entry), so field-required
-    marks it required as soon as the subject or body is touched — a partially
-    filled entry can't be silently dropped, while an untouched added row stays
-    optional and won't block the parent form. ---- %>
+    persisted one in _notification_fields. From and Channel stack in a narrow
+    column; Subject and Body sit beside them as two-row textareas (comments-box
+    layout). Subject is required once the row is in use (server-side reject_if
+    drops a blank-subject entry), so field-required marks it required as soon as
+    the subject or body is touched — a partially filled entry can't be silently
+    dropped, while an untouched added row stays optional and won't block the
+    parent form. ---- %>
 <div data-controller="field-required" data-action="input->field-required#update">
-  <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-6">
-    <%# No blank "AWBW Portal" option — a hand-logged communication must have a
-        real sender; system ("AWBW Portal") communications are view-only. %>
-    <%= f.input :sender_id,
-                collection: sender_options,
-                include_blank: false,
-                selected: sender_selected,
-                label: "From",
-                wrapper_html: { class: "sm:col-span-2" } %>
-    <%= f.input :channel,
-                collection: Notification::MANUAL_CHANNELS.map { |c| [ c.titleize, c ] },
-                include_blank: false,
-                selected: channel_default,
-                label: "Channel",
-                wrapper_html: { class: "sm:col-span-1" } %>
-    <%# Marked required (shows the asterisk) — a blank subject is dropped on save.
-        field-required only enforces it once the row is in use, so an untouched
-        added row still won't block the parent form. %>
-    <%= f.input :email_subject, label: "Subject (visible to user)", placeholder: "Topic or subject line", required: true,
-                input_html: { rows: 1, data: { field_required_target: "field required" } },
-                wrapper_html: { class: "sm:col-span-3" } %>
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+    <%# From and Channel stacked. No blank "AWBW Portal" option — a hand-logged
+        communication must have a real sender; system messages are view-only. %>
+    <div class="space-y-2 sm:w-48 sm:shrink-0">
+      <%= f.input :sender_id,
+                  collection: sender_options,
+                  include_blank: false,
+                  selected: sender_selected,
+                  label: "From" %>
+      <%= f.input :channel,
+                  collection: Notification::MANUAL_CHANNELS.map { |c| [ c.titleize, c ] },
+                  include_blank: false,
+                  selected: channel_default,
+                  label: "Channel" %>
+    </div>
+    <%# Subject marked required (shows the asterisk) — a blank subject is dropped
+        on save. field-required only enforces it once the row is in use, so an
+        untouched added row still won't block the parent form. %>
+    <%= f.input :email_subject, as: :text, label: "Subject (visible to user)", required: true,
+                input_html: { rows: 2, placeholder: "Topic or subject line",
+                              data: { field_required_target: "field required" } },
+                wrapper_html: { class: "flex-1" } %>
+    <%= f.input :email_body_text, as: :text, label: "Body (hidden from user)",
+                input_html: { rows: 2, placeholder: "What happened? (e.g. left voicemail, sent reminder)",
+                              data: { field_required_target: "field" } },
+                wrapper_html: { class: "flex-1" } %>
   </div>
-
-  <%= f.input :email_body_text, as: :text, label: "Body (hidden from user)",
-              input_html: { rows: 3, placeholder: "What happened? (e.g. left voicemail, sent reminder)",
-                            data: { field_required_target: "field" } } %>
 
   <div class="text-right">
     <%= link_to_remove_association "Remove", f,
