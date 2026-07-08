@@ -1,6 +1,15 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<%= link_to sectors_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1 mb-2" do %>
-  <i class="fa-solid fa-arrow-left text-xs"></i> Sectors
+<%# Eyebrow returns to wherever the admin came from — a person's profile/edit
+    when they clicked a chip (return_to + person_id), otherwise the Sectors list. %>
+<% back_path, back_label = if params[:return_to] == "person_edit" && params[:person_id].present?
+     [ edit_person_path(params[:person_id]), "Back to person" ]
+   elsif params[:return_to] == "person_show" && params[:person_id].present?
+     [ person_path(params[:person_id]), "Back to person" ]
+   else
+     [ sectors_path, "Sectors" ]
+   end %>
+<%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1 mb-2" do %>
+  <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
 <% end %>
 <div class="<%= DomainTheme.bg_class_for(:sectors) %> border border-gray-200 rounded-xl shadow p-6">
   <div class="space-y-6">
@@ -19,7 +28,7 @@
     <div class="flex items-center gap-2 text-sm">
       <% [ [ "All", nil ], [ "Pending", "pending" ], [ "Kept", "kept" ] ].each do |label, value| %>
         <% active = @status_filter == value %>
-        <%= link_to label, other_responses_path(status: value),
+        <%= link_to label, other_responses_path(status: value, return_to: params[:return_to], person_id: params[:person_id]),
                     class: "px-3 py-1 rounded-full #{active ? "bg-gray-800 text-white" : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-100"}" %>
       <% end %>
     </div>
@@ -37,7 +46,7 @@
           </thead>
           <tbody>
             <% @groups.each do |group| %>
-              <tr class="border-t border-gray-200 align-top">
+              <tr id="<%= group[:anchor] %>" class="border-t border-gray-200 align-top scroll-mt-24 target:bg-yellow-50">
                 <td class="px-4 py-3 text-sm text-gray-600"><%= group[:question_label] %></td>
                 <td class="px-4 py-3 text-sm text-gray-800">
                   <span class="font-medium"><%= group[:display_text] %></span>

@@ -91,6 +91,7 @@ class OtherResponsesController < ApplicationController
       question_label: question_label_for(first),
       display_text: first.text,
       normalized_text: first.normalized_text,
+      anchor: first.review_anchor,
       count: rows.size,
       status_counts: rows.each_with_object(Hash.new(0)) { |r, h| h[r.status] += 1 }
     }

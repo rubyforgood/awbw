@@ -69,6 +69,12 @@ RSpec.describe OtherResponse, type: :model do
     end
   end
 
+  describe "#review_anchor" do
+    it "buckets sectors by kind, parameterized" do
+      expect(create(:other_response, text: "Equine Therapy").review_anchor).to eq("other-sector-equine-therapy")
+    end
+  end
+
   describe "#dismiss! / #keep!" do
     it "transitions status" do
       response = create(:other_response)

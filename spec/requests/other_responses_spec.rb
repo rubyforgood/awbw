@@ -44,6 +44,25 @@ RSpec.describe "OtherResponses", type: :request do
       expect(response.body).to include("Kept value")
       expect(response.body).not_to include("Pending value")
     end
+
+    it "anchors each group row for chip deep-links" do
+      sign_in admin
+      response_record = create(:other_response, text: "Equine therapy")
+
+      get other_responses_path
+
+      expect(response.body).to include(%(id="#{response_record.review_anchor}"))
+    end
+
+    it "points the eyebrow back to the person when arrived from their page" do
+      sign_in admin
+      person = create(:person)
+      create(:other_response, person: person, text: "Equine therapy")
+
+      get other_responses_path(return_to: "person_edit", person_id: person.id)
+
+      expect(response.body).to include(edit_person_path(person))
+    end
   end
 
   describe "POST /other_responses/curate (bulk)" do

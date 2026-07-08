@@ -55,6 +55,17 @@ class OtherResponse < ApplicationRecord
     value.to_s.strip.downcase
   end
 
+  # Stable DOM id for a review-page group, so a person's chip can deep-link to
+  # its row. Matches how the review page buckets: sectors by kind, otherwise by
+  # question. Shared by the controller (row id) and the chip link.
+  def self.review_anchor(bucket, normalized_text)
+    "other-#{bucket}-#{normalized_text}".parameterize
+  end
+
+  def review_anchor
+    self.class.review_anchor(promotable? ? kind : field_identifier, normalized_text)
+  end
+
   def promotable?
     kind.in?(PROMOTABLE_KINDS)
   end

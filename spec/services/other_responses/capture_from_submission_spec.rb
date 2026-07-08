@@ -10,22 +10,18 @@ RSpec.describe OtherResponses::CaptureFromSubmission do
     create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
   end
 
-  it "captures Other answers from any question, tagged with the field and kind" do
+  it "captures Other answers from promotable (sector) questions" do
     answer("additional_sectors", "5, Other: Equine therapy")
-    answer("how_did_you_hear", "Other: A friend")
 
     described_class.call(submission)
 
-    responses = person.other_responses.order(:field_identifier)
-    expect(responses.map { |r| [ r.field_identifier, r.text, r.kind ] }).to contain_exactly(
-      [ "additional_sectors", "Equine therapy", "sector" ],
-      [ "how_did_you_hear", "A friend", "generic" ]
-    )
+    response = person.other_responses.sole
+    expect([ response.field_identifier, response.text, response.kind ])
+      .to eq([ "additional_sectors", "Equine therapy", "sector" ])
   end
 
-  it "ignores answers with no Other free text and named specify options" do
-    answer("additional_sectors", "5, 12")
-    answer("how_did_you_hear", "Word of Mouth: Jane")
+  it "leaves non-promotable questions' Other in the form answers, not captured" do
+    answer("how_did_you_hear", "Other: A friend")
 
     described_class.call(submission)
 
@@ -34,6 +30,14 @@ RSpec.describe OtherResponses::CaptureFromSubmission do
 
   it "does not capture the organization-owned agency_type Other" do
     answer("agency_type", "Other: Nonprofit collective")
+
+    described_class.call(submission)
+
+    expect(person.other_responses).to be_empty
+  end
+
+  it "ignores sector answers with no Other free text" do
+    answer("additional_sectors", "5, 12")
 
     described_class.call(submission)
 

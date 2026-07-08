@@ -1,20 +1,31 @@
 <%# Chips for a person's free-text "Other" sector responses (OtherResponse
-    records). Read-only on the profile; on the edit form (dismissable: true)
-    each chip carries an × that dismisses it (hides it from the profile/edit).
+    records). For admins (curatable: true) the chip links into the review queue,
+    anchored to its row, where it can be approved (promoted/kept) or dismissed —
+    passing return_to so the queue's back link returns here. On the edit form
+    (dismissable: true) each chip also carries an × for a one-click dismiss.
     Renders bare chips — the caller supplies the surrounding flex container. %>
 <% responses ||= [] %>
 <% dismissable = local_assigns.fetch(:dismissable, false) %>
+<% curatable = local_assigns.fetch(:curatable, false) %>
+<% return_to = local_assigns.fetch(:return_to, nil) %>
 <% responses.each do |response| %>
   <span class="inline-flex items-center rounded-md border border-gray-300 bg-white text-gray-600 px-3 py-1 text-sm font-medium"
         title="Other response entered during registration">
-    <%= response.text %>
+    <% if curatable %>
+      <%= link_to response.text,
+                  other_responses_path(anchor: response.review_anchor, return_to: return_to, person_id: response.person_id),
+                  class: "hover:underline",
+                  title: "Review this response — approve or dismiss" %>
+    <% else %>
+      <%= response.text %>
+    <% end %>
     <span class="ml-1 text-xs text-gray-400">(other)</span>
     <% if dismissable %>
       <%= link_to "×",
                   other_response_path(response, other_response: { status: "dismissed" }, return_to: "person_edit"),
                   data: { turbo_method: :patch },
                   class: "ml-2 -mr-1 px-1 leading-none text-gray-400 hover:text-red-600",
-                  title: "Hide this response from the profile" %>
+                  title: "Dismiss this response" %>
     <% end %>
   </span>
 <% end %>

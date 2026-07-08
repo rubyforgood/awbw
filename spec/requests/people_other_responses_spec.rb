@@ -38,13 +38,18 @@ RSpec.describe "Person Other form responses", type: :request do
   end
 
   describe "edit page" do
-    it "shows the Other sector in the sectors section with a dismiss control" do
-      create(:other_response, person: person, kind: "sector", text: "Music therapy")
+    it "shows the Other sector with a dismiss control and a link into the review queue" do
+      response_record = create(:other_response, person: person, text: "Music therapy")
 
       get edit_person_path(person)
 
       expect(response.body).to include("Music therapy")
-      expect(response.body).to include("Hide this response from the profile")
+      expect(response.body).to include("Dismiss this response")
+      # The chip deep-links into the review queue, anchored to its row, so the
+      # admin can approve (promote/keep) or dismiss it there.
+      expect(response.body).to include("#{other_responses_path}?")
+      expect(response.body).to include("return_to=person_edit")
+      expect(response.body).to include(response_record.review_anchor)
     end
 
     it "shows the Other workshop setting near the category checkboxes" do
