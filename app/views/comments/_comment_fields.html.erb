@@ -55,7 +55,7 @@
         <% if f.object.topic.present? %><span class="font-bold uppercase tracking-wide"><%= f.object.topic %></span> <% end %><%= f.object.body, length: 135 %>
       </span>
     </div>
-    <div class="flex items-start mb-1 gap-x-1 <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>" style="display:none" data-edit-toggle-target="edit">
+    <div class="flex items-start mb-1 gap-x-1 hidden <%= "bg-amber-50 border border-amber-200 rounded-md py-1" if is_age_range_data %>"  data-edit-toggle-target="edit">
       <span class="text-xs text-gray-400 whitespace-nowrap shrink-0 mt-2">
         <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
       </span>
