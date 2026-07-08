@@ -21,6 +21,17 @@
       <p class="text-xs text-gray-400 italic mt-0.5">Appears from <%= f.object.display_from.to_fs(:long) %>.</p>
     <% end %>
 
+    <% if f.object.links_editable_resources? %>
+      <div class="mt-2">
+        <%= f.label :resource_ids, "Linked documents", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+        <p class="text-xs text-gray-500 mb-1">Shown on the forms page alongside the invoice and receipt. The W-9 is included by default — remove it for events where it doesn't apply. Hold ⌘/Ctrl to select more than one.</p>
+        <%= f.collection_select :resource_ids, Resource.order(:title), :id, :title,
+              {},
+              multiple: true, size: 3,
+              class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+      </div>
+    <% end %>
+
     <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
       <label class="flex items-center gap-2 text-sm text-gray-600">
         <%= f.check_box :hidden, class: "rounded border-gray-300 text-purple-600" %>

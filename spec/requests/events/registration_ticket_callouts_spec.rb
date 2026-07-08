@@ -233,5 +233,14 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response.body).not_to include("name=\"event[registration_ticket_callouts_attributes][0][description]\"")
       expect(response.body).to include(restore_event_registration_ticket_callout_path(event, callout))
     end
+
+    it "gives the Forms control row an editable linked-resource picker" do
+      create(:registration_ticket_callout, event:, magic_key: "forms", title: "Forms")
+
+      get edit_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][resource_ids][]\"")
+    end
   end
 end

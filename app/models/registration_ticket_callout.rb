@@ -26,6 +26,10 @@ class RegistrationTicketCallout < ApplicationRecord
   # so the editor shows no separate control row for them.
   PREVIEW_EDITED_MAGIC_KEYS = %w[ ce_hours event_details ].freeze
 
+  # Behavioral magic callouts that carry admin-editable linked resources on their
+  # page (e.g. the Forms card's W-9), edited from the control row.
+  RESOURCE_EDITABLE_MAGIC_KEYS = %w[ forms ].freeze
+
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
   # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
@@ -84,6 +88,11 @@ class RegistrationTicketCallout < ApplicationRecord
   # restore). Excludes the preview-edited ones, whose placement stays fixed.
   def control_row?
     behavioral_magic? && PREVIEW_EDITED_MAGIC_KEYS.exclude?(magic_key)
+  end
+
+  # Whether the control row also exposes an editable linked-resource picker.
+  def links_editable_resources?
+    RESOURCE_EDITABLE_MAGIC_KEYS.include?(magic_key)
   end
 
   # Whether the callout is drip-scheduled to appear only from a future date.

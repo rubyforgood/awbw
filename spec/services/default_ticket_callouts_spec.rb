@@ -61,6 +61,16 @@ RSpec.describe DefaultTicketCallouts do
       expect(training.registration_ticket_callouts.find_by(magic_key: "certificate").hidden).to be(false)
     end
 
+    it "links the W-9 to the Forms card as a removable resource" do
+      w9 = create(:resource, title: "W-9")
+      event = create(:event) # paid by factory, so Forms seeds
+
+      described_class.seed(event)
+
+      forms = event.registration_ticket_callouts.find_by(magic_key: "forms")
+      expect(forms.resources).to eq([ w9 ])
+    end
+
     it "seeds the FAQ card with the default training content" do
       event = create(:event)
 

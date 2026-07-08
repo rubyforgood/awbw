@@ -118,16 +118,16 @@ module Events
       @event = @event_registration.event
     end
 
-    # Builds the callout-card links shown on the forms page. The W-9 opens in its
-    # own resource page (preview + download) when seeded; the invoice and the
-    # paid-in-full receipt (once settled) show for paid events. Each returns to forms.
+    # Builds the callout-card links shown on the forms page. The document links
+    # come from the materialized Forms callout's resources (the W-9 by default,
+    # editable/removable per event) — or the hard-coded W-9 for events not yet
+    # materialized. The invoice and paid-in-full receipt (once settled) show for
+    # paid events. Each returns to forms.
     def build_form_cards
-      cards = []
-      w9 = Resource.find_by(title: "W-9")
-      if w9
-        cards << resource_card(icon: "fa-solid fa-file-pdf", title: "W-9",
-                               subtitle: "AWBW's W-9 tax form for your records",
-                               href: registration_resource_path(@event_registration.slug, w9, return_to: "forms"), target: nil)
+      cards = form_document_resources.map do |resource|
+        resource_card(icon: "fa-solid fa-file-pdf", title: resource.title,
+                      subtitle: form_resource_subtitle(resource),
+                      href: registration_resource_path(@event_registration.slug, resource, return_to: "forms"), target: nil)
       end
       if @event_registration.invoice_available?
         cards << resource_card(icon: "fa-solid fa-file-invoice-dollar", title: "View invoice",
@@ -140,6 +140,20 @@ module Events
                                href: registration_receipt_path(@event_registration.slug, return_to: "forms"))
       end
       cards
+    end
+
+    # The forms callout's linked documents. Uses the materialized Forms row's
+    # resources when present (so admins can add/remove them), else the W-9 for
+    # events not yet materialized.
+    def form_document_resources
+      forms_callout = @event.registration_ticket_callouts.find_by(magic_key: "forms")
+      return forms_callout.resources.to_a if forms_callout
+      Resource.where(title: "W-9").to_a
+    end
+
+    def form_resource_subtitle(resource)
+      return "AWBW's W-9 tax form for your records" if resource.title == "W-9"
+      "Open this document"
     end
 
     # A blue callout card linking to a document. External/static links open in a

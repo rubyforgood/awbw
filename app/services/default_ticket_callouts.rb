@@ -188,6 +188,9 @@ class DefaultTicketCallouts
         icon_class: "fa-solid fa-file-lines",
         color_class: "blue",
         hidden: ->(_event) { false },
+        # The W-9 is a removable linked resource; invoice/receipt stay dynamic on
+        # the forms page. Admins remove the W-9 for events where it doesn't apply.
+        resources: -> { [ Resource.find_by(title: "W-9") ].compact },
         seed_if: ->(event) { event.show_forms_callout? }
       },
       {
