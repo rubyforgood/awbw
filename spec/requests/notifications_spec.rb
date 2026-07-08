@@ -5,6 +5,20 @@ RSpec.describe "Notifications", type: :request do
   let(:regular_user) { create(:user) }
   let(:notification) { create(:notification, recipient_email: regular_user.email) }
 
+  describe "GET /communications (friendly alias)" do
+    before { sign_in admin }
+
+    it "redirects to /notifications" do
+      get "/communications"
+      expect(response).to redirect_to("/notifications")
+    end
+
+    it "preserves filter params on the redirect" do
+      get "/communications", params: { email: "kim" }
+      expect(response).to redirect_to("/notifications?email=kim")
+    end
+  end
+
   describe "GET /notifications" do
     before { sign_in admin }
 

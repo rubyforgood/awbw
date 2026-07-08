@@ -171,6 +171,9 @@ Rails.application.routes.draw do
       post :resend
     end
   end
+  # Friendly alias — the feature is called "Communications" in the UI, but the
+  # controller and routes stay :notifications. Redirect, preserving any filters.
+  get "communications", to: redirect { |_params, req| [ "/notifications", req.query_string.presence ].compact.join("?") }, as: :communications
   resources :organizations do
     collection do
       get :check_duplicates
