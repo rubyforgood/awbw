@@ -1,18 +1,19 @@
-<%# Age-group chips. Primary groups lead with a star in amber; additional groups
-    follow in gray. `primary` and `additional` are arrays of Category records.
-    `compact` shrinks the chips for dense table cells. %>
+<%# Age-group chips, themed in lime to match the sector chips. Primary groups lead
+    with an amber star on a darker lime chip; additional groups follow in a lighter
+    lime. `primary` and `additional` are arrays of Category records. `compact`
+    shrinks the chips for dense table cells. %>
 <% primary ||= [] %>
 <% additional ||= [] %>
 <% compact = local_assigns.fetch(:compact, false) %>
 <% padding = compact ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm" %>
 <div class="flex flex-wrap gap-1.5">
   <% primary.each do |category| %>
-    <span class="inline-flex items-center whitespace-nowrap rounded-md border border-amber-200 bg-amber-50 <%= padding %> font-medium text-amber-800">
+    <span class="inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 bg-lime-200 <%= padding %> font-medium text-lime-800">
       <i class="fa-solid fa-star mr-1 text-xs text-amber-400" aria-hidden="true" title="Primary age group"></i><%= category.name %>
     </span>
   <% end %>
   <% additional.each do |category| %>
-    <span class="inline-flex items-center whitespace-nowrap rounded-md border border-gray-200 bg-gray-50 <%= padding %> font-medium text-gray-600">
+    <span class="inline-flex items-center whitespace-nowrap rounded-md border border-lime-300 bg-lime-50 <%= padding %> font-medium text-gray-500">
       <%= category.name %>
     </span>
   <% end %>
