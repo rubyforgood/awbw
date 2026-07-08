@@ -1,5 +1,5 @@
 <div class="rounded-xl bg-white p-6">
-  <%= simple_form_for @workshop_variation, html: { multipart: true }, data: { turbo: false } do |f| %>
+  <%= simple_form_for @workshop_variation, html: { multipart: true }, data: { turbo: false, controller: "submit-once", "submit-once-submitting-text-value": "Saving…" } do |f| %>
     <%= hidden_field_tag(:from, params[:from]) %>
 
     <%= render "shared/errors", resource: @workshop_variation if @workshop_variation.errors.any? %>
@@ -157,7 +157,7 @@
                   </span>
                   <p class="text-amber-600 text-sm mt-1 font-medium">
                     <i class="fas fa-triangle-exclamation"></i>
-                    This will replace any existing attachments on this variation once you click submit.
+                    This will add the idea’s attachments to any existing attachments on this variation once you click submit.
                   </p>
                 </div>
               <% end %>

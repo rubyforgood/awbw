@@ -7,9 +7,7 @@ class WorkshopVariationFromIdeaService
   end
 
   def call
-    WorkshopVariation.new(attributes_from_idea).tap do |workshop_variation|
-      duplicate_assets(workshop_variation)
-    end
+    WorkshopVariation.new(attributes_from_idea)
   end
 
   private
@@ -26,11 +24,5 @@ class WorkshopVariationFromIdeaService
       inactive: true,
       rhino_body: workshop_variation_idea.rhino_body
     )
-  end
-
-  def duplicate_assets(workshop_variation)
-    workshop_variation_idea.assets.each do |asset|
-      workshop_variation.assets.build(file: asset.file.blob)
-    end
   end
 end
