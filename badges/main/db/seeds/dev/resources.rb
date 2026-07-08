@@ -22,7 +22,9 @@ puts "Creating Resources…"
   Resource.where(title: Faker::Book.title).first_or_create!(
     body: resource_body,
     rhino_body: resource_body,
-    author: [ Faker::Name.name, nil ].sample,
+    author: [ Person.all.sample, nil, nil ].sample,
+    author_credit_preference: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES.sample,
+    legacy_author_name: [ Faker::Name.name, nil, nil ].sample,
     agency: [ Faker::Company.name, nil ].sample,
     kind: kind,
     url: [ "https://example.com/resource/#{SecureRandom.hex(4)}", nil ].sample,
