@@ -1,0 +1,51 @@
+<div class="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+  <!-- Thumbnail -->
+  <div class="aspect-square w-full bg-gray-100 flex items-center justify-center overflow-hidden">
+    <% if image.image? %>
+      <%= image_tag image.thumbnail, loading: "lazy", class: "object-cover w-full h-full" %>
+    <% elsif image.file.attached? %>
+      <div class="flex flex-col items-center text-gray-400">
+        <i class="fa-solid fa-file text-4xl"></i>
+        <span class="mt-2 text-xs font-semibold"><%= image.content_type_label %></span>
+      </div>
+    <% else %>
+      <div class="flex flex-col items-center text-gray-300">
+        <i class="fa-regular fa-image text-4xl"></i>
+        <span class="mt-2 text-xs">No file</span>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Meta -->
+  <div class="flex flex-col gap-1 p-3 text-sm">
+    <div class="flex items-center justify-between gap-2">
+      <span class="inline-flex items-center rounded-full bg-gray-100 text-gray-700 text-xs px-2 py-0.5">
+        <%= image.type_label %>
+      </span>
+      <% if image.content_type_label && !image.image? %>
+        <span class="text-xs text-gray-400"><%= image.content_type_label %></span>
+      <% end %>
+    </div>
+
+    <!-- Attached-to record -->
+    <div class="text-xs text-gray-500 truncate">
+      Attached to:
+      <% if image.owner_path %>
+        <%= link_to image.owner_type_label, image.owner_path, class: "text-blue-600 hover:underline" %>
+      <% else %>
+        <span><%= image.owner_type_label %></span>
+      <% end %>
+      <% if image.owner_name %>
+        <span class="text-gray-400">&mdash; <%= image.owner_name %></span>
+      <% end %>
+    </div>
+
+    <!-- Filename -->
+    <% if image.filename %>
+      <div class="text-xs text-gray-400 truncate" title="<%= image.filename %>"><%= image.filename %></div>
+    <% end %>
+
+    <!-- Editable label -->
+    <%= render "title_field", image: image %>
+  </div>
+</div>

@@ -26,4 +26,36 @@ RSpec.describe Asset do
   #   # expect(build(:image)).to be_valid
   #   pending("Requires functional owner/report factories and associations uncommented")
   # end
+
+  describe ".search" do
+    let(:workshop) { create(:workshop) }
+    let!(:titled)   { create(:primary_asset, title: "Sunset painting") }
+    let!(:attached) { create(:gallery_asset, :with_file, title: "no match", owner: workshop) }
+    let!(:other)    { create(:primary_asset, title: "Unrelated") }
+
+    it "returns everything when the query is blank" do
+      expect(Asset.search(nil)).to include(titled, attached, other)
+    end
+
+    it "matches on title" do
+      expect(Asset.search("sunset")).to contain_exactly(titled)
+    end
+
+    it "matches on the attached filename" do
+      expect(Asset.search("missing.png")).to contain_exactly(attached)
+    end
+
+    it "matches on the owner type it's attached to" do
+      expect(Asset.search("Workshop")).to contain_exactly(attached)
+    end
+  end
+
+  describe ".present_owner_types" do
+    it "lists the distinct owner types present" do
+      create(:primary_asset, owner: create(:workshop))
+      create(:gallery_asset, owner: create(:story))
+
+      expect(Asset.present_owner_types).to contain_exactly("Story", "Workshop")
+    end
+  end
 end

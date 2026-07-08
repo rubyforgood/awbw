@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   resources :primary_assets
   resources :rich_text_assets
+  resources :images, only: [ :index, :update ]
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   authenticate :user, ->(user) { user.super_user? } do
