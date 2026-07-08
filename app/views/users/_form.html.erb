@@ -135,7 +135,7 @@
       <h4 class="text-sm font-semibold uppercase text-gray-700 mb-4">Comments</h4>
 
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm"
-           data-controller="paginated-fields comment-edit-toggle"
+           data-controller="paginated-fields edit-toggle"
            data-paginated-fields-per-page-value="5">
         <%= f.simple_fields_for :comments do |cf| %>
           <%= render "comments/comment_fields", f: cf %>
@@ -151,9 +151,9 @@
                                       class: "btn btn-secondary-outline" %>
           <button type="button"
                   class="text-sm text-gray-400 hover:text-blue-600 underline cursor-pointer whitespace-nowrap"
-                  data-action="click->comment-edit-toggle#toggle">
-            <span data-comment-edit-toggle-target="editLabel">Edit Comments</span>
-            <span data-comment-edit-toggle-target="viewLabel" style="display:none">Done Editing</span>
+                  data-action="edit-toggle#toggle">
+            <span data-edit-toggle-target="editLabel">Edit Comments</span>
+            <span data-edit-toggle-target="viewLabel" class="hidden">Done Editing</span>
           </button>
         </div>
       </div>

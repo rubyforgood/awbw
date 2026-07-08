@@ -99,7 +99,7 @@ class Person < ApplicationRecord
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
     reject_if: proc { |attrs| attrs["organization_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, reject_if: proc { |attrs| attrs["email_subject"].blank? }
+  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   # Search Cop
   include SearchCop
@@ -271,6 +271,12 @@ class Person < ApplicationRecord
 
   def preferred_email
     user&.email.presence || email.presence || email_2.presence
+  end
+
+  # Email the communications box matches notifications against. Uniform accessor
+  # so the shared notifications/_communications partial works across records.
+  def communications_email
+    preferred_email
   end
 
   remote_searchable_by :first_name, :last_name, :email, :legal_first_name, :email_2

@@ -1,41 +1,34 @@
-<%# New, unsaved manual notification log — sender, channel, and subject on the
-    first row, body beneath. Fields use SimpleForm styling. Amber until the
-    registration form is saved; a blank sender means the system ("AWBW Portal").
-    Persisted notifications render read-only in the registration's notifications
-    box, not through this partial. ---- %>
-<% sender_users = User.where(super_user: true).includes(:person).to_a %>
-<% sender_users |= [ current_user ] if current_user %>
-<% sender_options = sender_users.sort_by { |u| u.full_name.to_s.downcase }.map { |u| [ u.full_name, u.id ] } %>
+<%# ---- One manual-log communication, editable inline (mirrors the comment
+    edit-mode pattern). A persisted entry renders a read-only view target row
+    plus a hidden edit target form; the shared `edit-toggle` controller flips
+    between them. A new, unsaved entry renders the amber add
+    form directly. Only manually logged communications addressed to this record
+    render through this partial — automated notifications stay read-only in the
+    notifications box. The sender defaults to whoever logs it. ---- %>
 <% channel_default = Notification::MANUAL_CHANNELS.include?(f.object.channel) ? f.object.channel : "email" %>
 <% record = local_assigns[:record] %>
-<div class="nested-fields rounded-md border border-amber-200 bg-amber-50 p-3">
+<div class="nested-fields" data-paginated-fields-target="item">
   <%# Record this communication against its parent (the "Record" column in the
       notifications index) — e.g. an event registration or a person. %>
   <% if record %>
-    <%= f.hidden_field :noticeable_type, value: record.class.name %>
+    <%# `record` may be a Draper decorator, so read the model name via
+        `model_name` (delegated to the underlying class) rather than `class.name`,
+        which would return the decorator (e.g. "PersonDecorator"). %>
+    <%= f.hidden_field :noticeable_type, value: record.model_name.name %>
     <%= f.hidden_field :noticeable_id, value: record.id %>
   <% end %>
-  <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-6">
-    <%= f.input :sender_id,
-                collection: sender_options,
-                include_blank: "AWBW Portal",
-                selected: f.object.sender_id || current_user&.id,
-                label: "From",
-                wrapper_html: { class: "sm:col-span-2" } %>
-    <%= f.input :channel,
-                collection: Notification::MANUAL_CHANNELS.map { |c| [ c.titleize, c ] },
-                include_blank: false,
-                selected: channel_default,
-                label: "Channel",
-                wrapper_html: { class: "sm:col-span-1" } %>
-    <%= f.input :email_subject, label: "Subject", placeholder: "Topic or subject line",
-                input_html: { rows: 1 }, wrapper_html: { class: "sm:col-span-3" } %>
-  </div>
 
-  <%= f.input :email_body_text, as: :text, label: "Body", input_html: { rows: 3, placeholder: "What happened? (e.g. left voicemail, sent reminder)" } %>
-
-  <div class="text-right">
-    <%= link_to_remove_association "Remove", f,
-          class: "text-sm text-gray-400 underline hover:text-red-600" %>
-  </div>
+  <% if f.object.persisted? %>
+    <%= f.hidden_field :id %>
+    <div data-edit-toggle-target="view">
+      <%= render "notifications/notification_row", notification: f.object, admin: true %>
+    </div>
+    <div class="hidden rounded-md border border-amber-200 bg-amber-50 p-3" data-edit-toggle-target="edit">
+      <%= render "notifications/notification_form", f: f, channel_default: channel_default %>
+    </div>
+  <% else %>
+    <div class="rounded-md border border-amber-200 bg-amber-50 p-3">
+      <%= render "notifications/notification_form", f: f, channel_default: channel_default %>
+    </div>
+  <% end %>
 </div>
