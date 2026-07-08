@@ -64,8 +64,9 @@ module Events
 
     # Forms page: callout-card links to the W-9 (when seeded) and, for paid
     # events, the invoice and the paid-in-full receipt (once settled), each
-    # returning to forms.
+    # returning to forms. Only reachable when the event shows the Forms callout.
     def forms
+      return redirect_to registration_ticket_path(@event_registration.slug) unless @event.show_forms_callout?
       @form_cards = build_form_cards
     end
 
@@ -73,6 +74,7 @@ module Events
     # resources, in display order, each opening its own registrant resource page
     # (PDF preview + download, with a back-to-handouts eyebrow).
     def handouts
+      return redirect_to registration_ticket_path(@event_registration.slug) unless @event.show_handouts_callout?
       by_title = Resource.where(title: HANDOUT_RESOURCE_TITLES).index_by(&:title)
       @handout_cards = HANDOUT_RESOURCE_TITLES.filter_map do |title|
         resource = by_title[title]
@@ -96,8 +98,10 @@ module Events
       @event = @event_registration.event.decorate
     end
 
-    # FAQ for the training, with a folded-in contact link.
+    # FAQ for the training, with a folded-in contact link. Only reachable when
+    # the event shows the FAQ callout.
     def faq
+      redirect_to registration_ticket_path(@event_registration.slug) unless @event.show_faq_callout?
     end
 
     private

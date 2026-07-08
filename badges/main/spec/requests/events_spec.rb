@@ -148,8 +148,8 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Sample ticket preview")
         expect(response.body).to include("Sample Registrant")
-        # Magic callout cards render (always-present "Forms" card) without raising
-        # on the unsaved sample's sentinel slug.
+        # Magic callout cards render (the sample event is paid, so the "Forms"
+        # card shows) without raising on the unsaved sample's sentinel slug.
         expect(response.body).to include("Forms")
       end
 
