@@ -20,7 +20,7 @@
     <div data-edit-toggle-target="view">
       <%= render "notifications/notification_row", notification: f.object, admin: true %>
     </div>
-    <div class="rounded-md border border-amber-200 bg-amber-50 p-3" style="display:none" data-edit-toggle-target="edit">
+    <div class="hidden rounded-md border border-amber-200 bg-amber-50 p-3" data-edit-toggle-target="edit">
       <%= render "notifications/notification_form", f: f, channel_default: channel_default %>
     </div>
   <% else %>

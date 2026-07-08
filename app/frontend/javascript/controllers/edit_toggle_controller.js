@@ -31,22 +31,18 @@ export default class extends Controller {
         const body = this.bodyTargets[i];
         if (textarea && body) {
           const text = textarea.value;
-          body.textContent = text
+          body.textContent = text;
           body.title = text;
         }
       });
     }
 
-    this.viewTargets.forEach(
-      (el) => (el.style.display = this.editing ? "none" : "")
-    );
-    this.editTargets.forEach(
-      (el) => (el.style.display = this.editing ? "" : "none")
-    );
+    this.viewTargets.forEach((el) => el.classList.toggle("hidden", this.editing));
+    this.editTargets.forEach((el) => el.classList.toggle("hidden", !this.editing));
 
     if (this.hasEditLabelTarget && this.hasViewLabelTarget) {
-      this.editLabelTarget.style.display = this.editing ? "none" : "";
-      this.viewLabelTarget.style.display = this.editing ? "" : "none";
+      this.editLabelTarget.classList.toggle("hidden", this.editing);
+      this.viewLabelTarget.classList.toggle("hidden", !this.editing);
     }
   }
 }
