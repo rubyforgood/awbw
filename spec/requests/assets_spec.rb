@@ -15,14 +15,6 @@ RSpec.describe "/asset_library", type: :request do
       get asset_library_url
       expect(response).to redirect_to(new_user_session_path)
     end
-
-    it "does not let a non-admin create an asset" do
-      sign_in create(:user)
-      expect {
-        post asset_library_url, params: { asset: { type: "PrimaryAsset", title: "Nope" } }
-      }.not_to change(Asset, :count)
-      expect(response).to redirect_to(root_path)
-    end
   end
 
   context "as an admin" do
@@ -108,33 +100,6 @@ RSpec.describe "/asset_library", type: :request do
 
         get asset_library_url(query: "missing.png"), headers: frame_headers
         expect(response.body).to include("missing.png")
-      end
-    end
-
-    describe "GET /new" do
-      it "renders the new-asset form with hidden-from-search pre-checked" do
-        get new_asset_library_url
-        expect(response).to be_successful
-        expect(response.body).to include("checked")
-      end
-    end
-
-    describe "POST /create" do
-      let(:file) { fixture_file_upload("sample.png", "image/png") }
-
-      it "creates an asset, hidden from search by default" do
-        expect {
-          post asset_library_url, params: {
-            asset: { type: "PrimaryAsset", title: "Fresh upload", hidden_from_search: "1", file: file }
-          }
-        }.to change(Asset, :count).by(1)
-
-        asset = Asset.last
-        expect(asset).to be_a(PrimaryAsset)
-        expect(asset.title).to eq("Fresh upload")
-        expect(asset.hidden_from_search).to be(true)
-        expect(asset.file).to be_attached
-        expect(response).to redirect_to(asset_library_path)
       end
     end
 

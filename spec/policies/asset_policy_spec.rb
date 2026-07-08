@@ -9,7 +9,7 @@ RSpec.describe AssetPolicy, type: :policy do
     described_class.new(record, user: user)
   end
 
-  %i[index? new? create? update?].each do |rule|
+  %i[index? update?].each do |rule|
     describe "##{rule}" do
       context "with admin user" do
         subject { policy_for(user: admin_user) }

@@ -35,7 +35,10 @@ class ResourcesController < ApplicationController
 
   def new
     authorize!
-    @resource = Resource.new.decorate
+    # Allow origins (e.g. the asset library "New resource" button) to pre-check
+    # "Hidden from search" via ?hidden_from_search=true.
+    hidden = ActiveModel::Type::Boolean.new.cast(params[:hidden_from_search])
+    @resource = Resource.new(hidden_from_search: hidden).decorate
     set_form_variables
   end
 

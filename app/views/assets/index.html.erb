@@ -7,9 +7,11 @@
         <p class="text-gray-600">Every uploaded image and file across the site. Search by caption, filename, or the record it's attached to. Edit the filename and caption inline.</p>
       </div>
 
-      <%= link_to new_asset_library_path, class: "btn btn-primary-outline whitespace-nowrap",
-            title: "Add a new asset (hidden from search by default)" do %>
-        <i class="fa-solid fa-plus mr-1"></i> New asset
+      <% if allowed_to?(:new?, Resource) %>
+        <%= link_to new_resource_path(hidden_from_search: true), class: "btn btn-primary-outline whitespace-nowrap",
+              title: "Create a new resource (hidden from search by default)" do %>
+          <i class="fa-solid fa-plus mr-1"></i> New resource
+        <% end %>
       <% end %>
     </div>
 

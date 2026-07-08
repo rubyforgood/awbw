@@ -32,26 +32,6 @@ class AssetsController < ApplicationController
     end
   end
 
-  # New library asset. Defaults to hidden_from_search so a freshly uploaded asset
-  # isn't surfaced until an admin deliberately unhides it.
-  def new
-    authorize! Asset, to: :new?, with: AssetPolicy
-    @asset = Asset.new(type: Asset::TYPES.first, hidden_from_search: true)
-  end
-
-  def create
-    authorize! Asset, to: :create?, with: AssetPolicy
-
-    @asset = asset_class.new(create_params.except(:file, :type))
-    @asset.file.attach(create_params[:file]) if create_params[:file].present?
-
-    if @asset.save
-      redirect_to asset_library_path, notice: "Asset added to the library."
-    else
-      render :new, status: :unprocessable_content
-    end
-  end
-
   # Inline edit of an asset's caption (title) and/or download filename from the
   # library. The two fields submit as independent turbo frames; whichever field
   # changed is present in the params.
@@ -66,17 +46,6 @@ class AssetsController < ApplicationController
   end
 
   private
-
-  # STI subclass to instantiate, constrained to the known TYPES so a stray param
-  # can't constantize into an arbitrary class.
-  def asset_class
-    type = create_params[:type].presence_in(Asset::TYPES) || Asset::TYPES.first
-    type.constantize
-  end
-
-  def create_params
-    params.require(:asset).permit(:type, :title, :hidden_from_search, :file)
-  end
 
   def rename_file(filename)
     return if filename.blank? || !@asset.file.attached?
