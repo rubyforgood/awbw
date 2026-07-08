@@ -582,8 +582,10 @@
              data-controller="sortable"
              data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>">
           <%= f.fields_for :registration_ticket_callouts do |rts| %>
-            <% if rts.object.behavioral_magic? %>
+            <% if rts.object.control_row? %>
               <%= render "events/registration_ticket_control_callout_fields", f: rts %>
+            <% elsif rts.object.behavioral_magic? %>
+              <%# CE hours / event details: text is edited in the built-in card above %>
             <% elsif rts.object.magic? %>
               <%= render "events/registration_ticket_magic_callout_fields", f: rts %>
             <% else %>

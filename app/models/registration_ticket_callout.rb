@@ -21,6 +21,11 @@ class RegistrationTicketCallout < ApplicationRecord
   # drip date, and order.
   CONTENT_MAGIC_KEYS = %w[ handouts faq ].freeze
 
+  # Behavioral magic callouts whose text is edited via the event's built-in
+  # preview card (their content lives on event columns, e.g. ce_hours_details),
+  # so the editor shows no separate control row for them.
+  PREVIEW_EDITED_MAGIC_KEYS = %w[ ce_hours event_details ].freeze
+
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
   # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
@@ -73,6 +78,12 @@ class RegistrationTicketCallout < ApplicationRecord
   # (live status), as opposed to a content callout that renders from its own row.
   def behavioral_magic?
     magic? && CONTENT_MAGIC_KEYS.exclude?(magic_key)
+  end
+
+  # A behavioral magic callout that gets an editor control row (hide/reorder/
+  # restore). Excludes the preview-edited ones, whose placement stays fixed.
+  def control_row?
+    behavioral_magic? && PREVIEW_EDITED_MAGIC_KEYS.exclude?(magic_key)
   end
 
   # Whether the callout is drip-scheduled to appear only from a future date.

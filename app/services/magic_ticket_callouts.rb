@@ -52,7 +52,7 @@ class MagicTicketCallouts
       EditorCard.new(nil, "forms", "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and receipt", "On facilitator trainings and paid events", "Items link to their relevant resources."),
       EditorCard.new(nil, "handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
       EditorCard.new(nil, "faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
-    ].reject { |card| materialized.include?(card.magic_key) }
+    ].reject { |card| card.key.nil? && materialized.include?(card.magic_key) }
   end
 
   # magic_key → builder method, in the default order cards appear on a ticket.

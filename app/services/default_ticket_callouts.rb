@@ -113,6 +113,84 @@ class DefaultTicketCallouts
   def definitions
     [
       {
+        magic_key: "payment",
+        title: "Payment",
+        subtitle: "Your balance and payment history",
+        callout_type: "action",
+        icon_class: "fa-solid fa-credit-card",
+        color_class: "orange",
+        hidden: ->(_event) { false },
+        seed_if: ->(event) { event.cost_cents.to_i.positive? }
+      },
+      {
+        magic_key: "certificate",
+        title: "Certificate of completion",
+        subtitle: "View and download your certificate",
+        callout_type: "action",
+        icon_class: "fa-solid fa-certificate",
+        color_class: "green",
+        # Off by default except on facilitator trainings; admins opt other events
+        # in. When shown, it still only appears once the certificate unlocks.
+        hidden: ->(event) { !event.facilitator_training? }
+      },
+      {
+        magic_key: "scholarship",
+        title: "Scholarship",
+        subtitle: "Your scholarship request and award",
+        callout_type: "action",
+        icon_class: "fa-solid fa-award",
+        # Colour (fuchsia) comes from the live card via #card_for, not a swatch.
+        hidden: ->(_event) { false },
+        seed_if: ->(event) { event.scholarship_form.present? }
+      },
+      {
+        magic_key: "ce_hours",
+        title: "CE hours",
+        subtitle: "Continuing education — requirements & how to request",
+        callout_type: "action",
+        icon_class: "fa-solid fa-graduation-cap",
+        # Colour (teal) comes from the live card via #card_for, not a swatch.
+        # Content (label + details) stays on the event and is edited in the
+        # callouts section's built-in card; the row only governs order/drip.
+        hidden: ->(_event) { false },
+        seed_if: ->(event) { event.ce_hours_offered.present? }
+      },
+      {
+        magic_key: "event_details",
+        title: "Before you attend",
+        subtitle: "Important info for this event — please read",
+        callout_type: "reference",
+        icon_class: "fa-solid fa-palette",
+        color_class: "blue",
+        # Content (label + body) stays on the event and is edited in the built-in
+        # card; the row only governs order/drip.
+        hidden: ->(_event) { false },
+        seed_if: ->(event) { event.event_details.present? }
+      },
+      {
+        magic_key: "videoconference",
+        title: "Videoconference",
+        subtitle: "Join link and how to add it to your calendar",
+        callout_type: "action",
+        icon_class: "fa-solid fa-video",
+        color_class: "blue",
+        hidden: ->(_event) { false },
+        # Drips onto the ticket a week before the event starts, replacing the old
+        # hard-coded "one week prior" rule with a stored, editable date.
+        display_from: ->(event) { event.start_date - 7.days if event.start_date },
+        seed_if: ->(event) { event.videoconference_url.present? }
+      },
+      {
+        magic_key: "forms",
+        title: "Forms",
+        subtitle: "W-9, invoice, and receipt",
+        callout_type: "action",
+        icon_class: "fa-solid fa-file-lines",
+        color_class: "blue",
+        hidden: ->(_event) { false },
+        seed_if: ->(event) { event.show_forms_callout? }
+      },
+      {
         magic_key: "handouts",
         title: "Handouts",
         subtitle: "Worksheets and resources for the training",
@@ -131,30 +209,6 @@ class DefaultTicketCallouts
         color_class: "blue",
         description: faq_html,
         hidden: ->(event) { !event.show_faq_callout? }
-      },
-      {
-        magic_key: "certificate",
-        title: "Certificate of completion",
-        subtitle: "View and download your certificate",
-        callout_type: "action",
-        icon_class: "fa-solid fa-certificate",
-        color_class: "green",
-        # Off by default except on facilitator trainings; admins opt other events
-        # in. When shown, it still only appears once the certificate unlocks.
-        hidden: ->(event) { !event.facilitator_training? }
-      },
-      {
-        magic_key: "videoconference",
-        title: "Videoconference",
-        subtitle: "Join link and how to add it to your calendar",
-        callout_type: "action",
-        icon_class: "fa-solid fa-video",
-        color_class: "blue",
-        hidden: ->(_event) { false },
-        # Drips onto the ticket a week before the event starts, replacing the old
-        # hard-coded "one week prior" rule with a stored, editable date.
-        display_from: ->(event) { event.start_date - 7.days if event.start_date },
-        seed_if: ->(event) { event.videoconference_url.present? }
       }
     ]
   end

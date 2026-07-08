@@ -2,13 +2,39 @@ require "rails_helper"
 
 RSpec.describe DefaultTicketCallouts do
   describe "#seed" do
-    it "materializes the Handouts, FAQ, and Certificate magic callouts" do
+    it "materializes the built-in callouts the event's config warrants" do
+      # Factory event: has a cost (payment + forms), no scholarship/CE/details/VC.
       event = create(:event)
 
       described_class.seed(event)
 
       keys = event.registration_ticket_callouts.magic.pluck(:magic_key)
-      expect(keys).to contain_exactly("handouts", "faq", "certificate")
+      expect(keys).to contain_exactly("payment", "certificate", "forms", "handouts", "faq")
+    end
+
+    it "seeds Payment, Scholarship, CE, and Event details only when their config is present" do
+      form = create(:form)
+      event = create(:event, cost_cents: 0, ce_hours_offered: 6, event_details: "<p>Bring supplies.</p>")
+      event.event_forms.create!(form:, role: "scholarship")
+
+      described_class.seed(event)
+
+      keys = event.registration_ticket_callouts.magic.pluck(:magic_key)
+      expect(keys).to include("scholarship", "ce_hours", "event_details")
+      expect(keys).not_to include("payment") # free event
+    end
+
+    it "seeds callouts in canonical ticket order" do
+      form = create(:form)
+      event = create(:event, facilitator_training: true, ce_hours_offered: 6,
+        event_details: "<p>x</p>", videoconference_url: "https://example.com/z")
+      event.event_forms.create!(form:, role: "scholarship")
+
+      described_class.seed(event)
+
+      expect(event.registration_ticket_callouts.ordered.map(&:magic_key)).to eq(
+        %w[payment certificate scholarship ce_hours event_details videoconference forms handouts faq]
+      )
     end
 
     it "seeds the Videoconference card, dripping a week before start, only once the event has a link" do
@@ -90,7 +116,9 @@ RSpec.describe DefaultTicketCallouts do
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
-      expect(event.registration_ticket_callouts.ordered.map(&:magic_key).compact).to eq(%w[handouts faq certificate])
+      expect(event.registration_ticket_callouts.ordered.map(&:magic_key).compact).to eq(
+        %w[payment certificate forms handouts faq]
+      )
     end
   end
 
