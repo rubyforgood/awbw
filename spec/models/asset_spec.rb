@@ -75,6 +75,19 @@ RSpec.describe Asset do
     end
   end
 
+  describe "search-visibility scopes" do
+    let!(:visible) { create(:primary_asset, hidden_from_search: false) }
+    let!(:hidden)  { create(:primary_asset, hidden_from_search: true) }
+
+    it ".searchable returns only non-hidden assets" do
+      expect(Asset.searchable).to contain_exactly(visible)
+    end
+
+    it ".hidden returns only hidden assets" do
+      expect(Asset.hidden).to contain_exactly(hidden)
+    end
+  end
+
   describe ".present_content_types" do
     it "lists the distinct attached-file content types present" do
       create(:primary_asset, :with_file)

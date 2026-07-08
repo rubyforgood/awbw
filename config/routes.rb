@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   # Admin asset library. Served at /asset_library rather than /assets because the
   # sprockets pipeline owns the /assets prefix (and would shadow /assets/:id).
   get "asset_library", to: "assets#index", as: :asset_library
+  get "asset_library/new", to: "assets#new", as: :new_asset_library
+  post "asset_library", to: "assets#create"
   patch "asset_library/:id", to: "assets#update", as: :asset_library_asset
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
