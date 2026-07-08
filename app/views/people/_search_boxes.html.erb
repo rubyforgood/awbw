@@ -48,6 +48,15 @@
       </div>
     </div>
 
+    <!-- Sector leaders only -->
+    <div class="w-full md:w-auto flex items-center">
+      <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer py-2">
+        <%= check_box_tag :sector_leaders_only, "1", params[:sector_leaders_only].present?,
+                          class: "rounded border-gray-300 text-blue-600 focus:ring focus:ring-blue-200" %>
+        <span>Sector leaders only</span>
+      </label>
+    </div>
+
     <!-- Clear filters -->
     <div class="w-full md:w-auto flex justify-end">
       <%= link_to "Clear filters", people_path,

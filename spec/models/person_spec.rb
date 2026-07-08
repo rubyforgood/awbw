@@ -352,6 +352,32 @@ RSpec.describe Person, type: :model do
         Person.with_active_affiliations.search_by_params(organization_name: 'Alpha').to_a
       }.not_to raise_error
     end
+
+    context 'sector_leaders_only' do
+      let(:sector) { create(:sector) }
+
+      before do
+        person_alice.sectorable_items.create!(sector: sector, is_leader: true)
+        person_bob.sectorable_items.create!(sector: sector, is_leader: false)
+      end
+
+      it 'returns only people who lead a sector when truthy' do
+        results = Person.search_by_params(sector_leaders_only: '1')
+        expect(results).to include(person_alice)
+        expect(results).not_to include(person_bob)
+      end
+
+      it 'returns a person once even when they lead several sectors' do
+        person_alice.sectorable_items.create!(sector: create(:sector), is_leader: true)
+        results = Person.search_by_params(sector_leaders_only: '1')
+        expect(results.to_a.count(person_alice)).to eq(1)
+      end
+
+      it 'ignores the filter when unchecked' do
+        results = Person.search_by_params(sector_leaders_only: '0')
+        expect(results).to include(person_alice, person_bob)
+      end
+    end
   end
 
   describe ".published" do
