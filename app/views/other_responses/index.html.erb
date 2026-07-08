@@ -56,31 +56,31 @@
                 </td>
                 <td class="px-4 py-3 text-center text-sm text-gray-700"><%= group[:count] %></td>
                 <td class="px-4 py-3">
-                  <% if group[:promotable] %>
-                    <%= form_with url: promote_other_responses_path, method: :post,
-                                 class: "flex flex-wrap items-center gap-2" do %>
-                      <%= hidden_field_tag :kind, group[:kind] %>
-                      <%= hidden_field_tag :field_identifier, group[:field_identifier] %>
-                      <%= hidden_field_tag :normalized_text, group[:normalized_text] %>
-                      <%= select_tag :sector_id,
-                                     options_from_collection_for_select(@sectors, :id, :name),
-                                     include_blank: "Existing sector…",
-                                     class: "rounded-md border-gray-300 text-sm" %>
-                      <span class="text-xs text-gray-400">or</span>
-                      <%= text_field_tag :new_sector_name, group[:display_text],
-                                         placeholder: "New sector name",
-                                         class: "rounded-md border-gray-300 text-sm" %>
-                      <%= submit_tag "Promote", class: "btn btn-primary-outline text-sm",
-                                     data: { turbo_confirm: "Promote “#{group[:display_text]}” for all #{group[:count]} people?" } %>
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+                    <% if group[:promotable] %>
+                      <%= form_with url: promote_other_responses_path, method: :post,
+                                   class: "flex items-center gap-2" do %>
+                        <%= hidden_field_tag :kind, group[:kind] %>
+                        <%= hidden_field_tag :field_identifier, group[:field_identifier] %>
+                        <%= hidden_field_tag :normalized_text, group[:normalized_text] %>
+                        <%= select_tag :sector_id,
+                                       options_from_collection_for_select(@sectors, :id, :name),
+                                       include_blank: "Existing sector…",
+                                       class: "w-40 rounded-md border-gray-300 text-sm" %>
+                        <span class="text-xs text-gray-400">or</span>
+                        <%= text_field_tag :new_sector_name, group[:display_text],
+                                           placeholder: "New sector name",
+                                           class: "w-36 rounded-md border-gray-300 text-sm" %>
+                        <%= submit_tag "Promote", class: "btn btn-primary-outline text-sm whitespace-nowrap",
+                                       data: { turbo_confirm: "Promote “#{group[:display_text]}” for all #{group[:count]} people?" } %>
+                      <% end %>
                     <% end %>
-                  <% end %>
-                  <div class="flex items-center gap-3 <%= "mt-2" if group[:promotable] %> text-sm">
                     <%= button_to "Keep all",
                                   curate_other_responses_path(kind: group[:kind], field_identifier: group[:field_identifier], normalized_text: group[:normalized_text], status: "kept", return_status: @status_filter),
-                                  class: "text-gray-500 hover:text-gray-700" %>
+                                  class: "text-gray-500 hover:text-gray-700 whitespace-nowrap" %>
                     <%= button_to "Dismiss all",
                                   curate_other_responses_path(kind: group[:kind], field_identifier: group[:field_identifier], normalized_text: group[:normalized_text], status: "dismissed", return_status: @status_filter),
-                                  class: "text-gray-500 hover:text-red-600",
+                                  class: "text-gray-500 hover:text-red-600 whitespace-nowrap",
                                   form: { data: { turbo_confirm: "Dismiss “#{group[:display_text]}” for all #{group[:count]} people?" } } %>
                   </div>
                 </td>
