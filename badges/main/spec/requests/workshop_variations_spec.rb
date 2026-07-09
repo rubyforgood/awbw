@@ -177,6 +177,28 @@ RSpec.describe "/workshop_variations", type: :request do
         get workshop_variations_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "sorts by the credited author's name" do
+        aaron = create(:person, first_name: "Aaron", last_name: "Adams")
+        zoe = create(:person, first_name: "Zoe", last_name: "Zephyr")
+        var_a = create(:workshop_variation, valid_attributes.merge(name: "First variation", author: aaron))
+        var_z = create(:workshop_variation, valid_attributes.merge(name: "Second variation", author: zoe))
+
+        get workshop_variations_path, params: { sort: "author", direction: "asc" }
+
+        expect(response.body.index(var_a.name)).to be < response.body.index(var_z.name)
+      end
+
+      it "matches a search query against the credited author's name" do
+        person = create(:person, first_name: "Bartholomew", last_name: "Quill")
+        authored = create(:workshop_variation, valid_attributes.merge(name: "Authored variation", author: person))
+        other = create(:workshop_variation, valid_attributes.merge(name: "Other variation"))
+
+        get workshop_variations_path, params: { query: "Bartholomew" }
+
+        expect(response.body).to include(authored.name)
+        expect(response.body).not_to include(other.name)
+      end
     end
 
     describe "GET /new" do

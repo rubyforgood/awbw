@@ -1,4 +1,17 @@
 module ApplicationHelper
+  # Byline for an AuthorCreditable record. Links to the credited author's person
+  # profile when the credit resolves to a searchable person; otherwise renders
+  # plain text. The text always honors the credit preference (author_credit), so
+  # anonymous and legacy free-text credits never link to a profile.
+  def credited_author_link(record, **link_options)
+    person = record.author_credit_person
+    if person&.profile_is_searchable
+      link_to record.author_credit, person_path(person), **link_options
+    else
+      record.author_credit
+    end
+  end
+
   # Tags an admin may use in a form field name / group header that should
   # render (rather than escape) on the public form. Block + inline formatting,
   # links, line breaks, and font sizing/coloring (via <font> or inline style).

@@ -1,5 +1,7 @@
 class WorkshopVariationIdea < ApplicationRecord
   include AuthorCreditable
+  # Public submission: the submitter must choose how they're credited.
+  require_author_credit_preference
   include SearchCop
   search_scope :search do
     attributes :name, :body
@@ -36,7 +38,6 @@ class WorkshopVariationIdea < ApplicationRecord
   validates :organization_id, presence: true
   validates :workshop_id, presence: true
   validates :windows_type_id, presence: true
-  validates :author_credit_preference, presence: true
   validates :permission_given, acceptance: true
   validates :rhino_body, presence: true
 

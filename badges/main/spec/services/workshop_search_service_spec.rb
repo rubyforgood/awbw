@@ -112,6 +112,36 @@ RSpec.describe WorkshopSearchService, type: :service do
       end
     end
 
+    context "sorting by author" do
+      let!(:workshop_aaron) do
+        person = create(:person, first_name: "Aaron", last_name: "Adams")
+        create(:workshop, :published, title: "Zed Title", author: person)
+      end
+      let!(:workshop_zoe) do
+        person = create(:person, first_name: "Zoe", last_name: "Zephyr")
+        create(:workshop, :published, title: "Alpha Title", author: person)
+      end
+
+      it "orders by the credited author's name" do
+        service = WorkshopSearchService.new({ sort: "author" }, user: admin).call
+        ids = service.workshops.map(&:id)
+        expect(ids.index(workshop_aaron.id)).to be < ids.index(workshop_zoe.id)
+      end
+    end
+
+    context "filtering by author name" do
+      let!(:authored) do
+        person = create(:person, first_name: "Bartholomew", last_name: "Quill")
+        create(:workshop, :published, title: "Authored Workshop", author: person)
+      end
+
+      it "matches workshops by their credited author's name" do
+        service = WorkshopSearchService.new({ author_name: "Bartholomew" }, user: admin).call
+        expect(service.workshops).to include(authored)
+        expect(service.workshops).not_to include(workshop_1)
+      end
+    end
+
     # context "sorting by keywords" do # turned sorting by keywords off
     # 	it "returns workshops matching the query" do
     # 		# Stub filter_by_query to return a deterministic set

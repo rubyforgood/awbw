@@ -38,7 +38,8 @@ RSpec.describe WorkshopVariation do
     it { should validate_presence_of(:name) }
     it { should validate_presence_of(:rhino_body) }
     it { should validate_presence_of(:windows_type_id) }
-    it { should validate_presence_of(:author_credit_preference) }
+    # author_credit_preference default + inclusion are covered by the shared
+    # "author_creditable" examples.
     it { should validate_uniqueness_of(:name).scoped_to(:workshop_id).case_insensitive }
   end
 

@@ -6,8 +6,14 @@ class WorkshopVariationsController < ApplicationController
 
     base_scope = WorkshopVariation.includes(:workshop, :author, created_by: :person)
                                   .joins(:workshop).where(workshops: { published: true })
+    @sort = params[:sort]
+    @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
     filtered = base_scope.search_by_params(params)
-                         .order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
+    filtered = if @sort == "author"
+      filtered.order_by_author(@sort_direction)
+    else
+      filtered.order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
+    end
     @workshop_variations = filtered.paginate(page: params[:page], per_page: 25).decorate
     @workshop_variations_count = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
   end

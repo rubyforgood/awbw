@@ -54,28 +54,8 @@ class Story < ApplicationRecord
     options :action_text_body, type: :text, default: true, default_operator: :or
   end
 
-  # Matches the credited author by name: the creator's person (`people`) and the
-  # explicit author (a second join to the same table, aliased `author_person`).
-  # SearchCop can't join one table twice, so this is a plain scope OR-ed into the
-  # full-text results in `search_by_params`.
-  scope :by_credited_person_name, ->(query) {
-    sanitized = query.to_s.strip.gsub(/\s+/, "")
-    return none if sanitized.blank?
-
-    left_joins(created_by: :person)
-      .joins("LEFT OUTER JOIN people author_person ON author_person.id = stories.author_id")
-      .where(
-        "LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name
-         OR LOWER(REPLACE(CONCAT(people.last_name, people.first_name), ' ', '')) LIKE :name
-         OR LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name
-         OR LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name
-         OR LOWER(REPLACE(CONCAT(author_person.first_name, author_person.last_name), ' ', '')) LIKE :name
-         OR LOWER(REPLACE(CONCAT(author_person.last_name, author_person.first_name), ' ', '')) LIKE :name
-         OR LOWER(REPLACE(author_person.first_name, ' ', '')) LIKE :name
-         OR LOWER(REPLACE(author_person.last_name, ' ', '')) LIKE :name",
-        name: "%#{sanitized}%"
-      )
-  }
+  # Credited-author name search (explicit author + creator fallback) comes from
+  # AuthorCreditable#by_credited_person_name, OR-ed into full-text results below.
 
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
@@ -114,7 +94,7 @@ class Story < ApplicationRecord
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.where(organization_id: params[:organization_id]) if params[:organization_id].present?
-    stories = stories.where(author_id: params[:author_id]) if params[:author_id].present?
+    stories = stories.authored_by(params[:author_id])
     stories
   end
 
@@ -129,6 +109,11 @@ class Story < ApplicationRecord
 
   def name
     title
+  end
+
+  # Unattributed stories are credited to the facilitator who shared them.
+  def missing_author_label
+    "AWBW Facilitator"
   end
 
   def organization_name
