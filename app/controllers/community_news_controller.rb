@@ -9,7 +9,7 @@ class CommunityNewsController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
       base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset, :author,
-                                                             :organization, { legacy_author_user: :person }, { created_by: :person } ]))
+                                                             :organization, { created_by: :person } ]))
       filtered = base_scope.search_by_params(params)
       @sort = %w[created_at title author organization].include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"

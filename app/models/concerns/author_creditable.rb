@@ -39,8 +39,7 @@ module AuthorCreditable
   end
 
   # The credited author person that is *not* the creator fallback — the explicit
-  # author. Overridden by models with an additional legacy person tier (e.g.
-  # CommunityNews folds in its legacy_author_user's person).
+  # author.
   def primary_author_person
     author if respond_to?(:author)
   end
@@ -124,13 +123,6 @@ module AuthorCreditable
       []
     end
 
-    # Legacy "belongs_to a User" columns whose person should also be credited,
-    # as [ foreign_key_column, sql_alias ] pairs. Overridden per model (e.g.
-    # CommunityNews folds in its legacy_author_user). Alias must be SQL-safe.
-    def legacy_credited_user_columns
-      []
-    end
-
     # Records whose credited author's name resembles `query`: the explicit author
     # person, the creating user's person, plus any legacy sources the model folds
     # in. Uses explicit LEFT JOIN aliases so it composes safely — SearchCop can't
@@ -161,7 +153,6 @@ module AuthorCreditable
     def credited_person_aliases
       aliases = []
       aliases << "credited_author" if column_names.include?("author_id")
-      legacy_credited_user_columns.each { |_, sql_alias| aliases << sql_alias }
       aliases << "credited_creator"
       aliases
     end
@@ -173,10 +164,6 @@ module AuthorCreditable
       sql = []
       if column_names.include?("author_id")
         sql << "LEFT OUTER JOIN people credited_author ON credited_author.id = #{table_name}.author_id"
-      end
-      legacy_credited_user_columns.each do |fk_column, sql_alias|
-        sql << "LEFT OUTER JOIN users #{sql_alias}_user ON #{sql_alias}_user.id = #{table_name}.#{fk_column}"
-        sql << "LEFT OUTER JOIN people #{sql_alias} ON #{sql_alias}.id = #{sql_alias}_user.person_id"
       end
       sql << "LEFT OUTER JOIN users credited_creator_user ON credited_creator_user.id = #{table_name}.created_by_id"
       sql << "LEFT OUTER JOIN people credited_creator ON credited_creator.id = credited_creator_user.person_id"

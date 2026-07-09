@@ -6,9 +6,6 @@ class CommunityNews < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :windows_type, optional: true
   belongs_to :author, class_name: "Person", inverse_of: :community_news_as_author, optional: true
-  # Legacy "display author" pick, before author became a person. Kept so
-  # existing rows credit the chosen person without a backfill.
-  belongs_to :legacy_author_user, class_name: "User", foreign_key: :legacy_author_user_id, optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -33,22 +30,9 @@ class CommunityNews < ApplicationRecord
   validates :title, presence: true, length: { maximum: 150 }
   validates :rhino_body, presence: true
 
-  # Credit the explicit person author, then the legacy display-author user's
-  # person (the creating user's person is AuthorCreditable's final fallback) —
-  # so existing rows keep their attribution without a backfill.
-  def primary_author_person
-    author || legacy_author_user&.person
-  end
-
   # Unattributed community news is credited to the organization's staff.
   def missing_author_label
     "AWBW Staff"
-  end
-
-  # Fold the legacy display-author user's person into credited-name search and
-  # sort, matching author_person's precedence.
-  def self.legacy_credited_user_columns
-    [ [ "legacy_author_user_id", "credited_legacy_author" ] ]
   end
 
   # Nested attributes
