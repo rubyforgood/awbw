@@ -8,8 +8,3 @@ ignore:
   - CVE-2021-41183
   - CVE-2021-41184
   - CVE-2022-31160
-  # pay: non-constant-time HMAC comparison in the Paddle Billing webhook
-  # signature verifier. We only use the Stripe processor (see config/initializers/pay.rb),
-  # never Paddle, so the vulnerable code path is unreachable. No patched pay
-  # release exists (affects all versions <= 11.6.1). Remove this once upstream ships a fix.
-  - GHSA-mjgf-xj26-9qf9
