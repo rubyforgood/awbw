@@ -197,7 +197,7 @@ class Workshop < ApplicationRecord
 
   # With no credited person or legacy name, attribute to the generic facilitator.
   def missing_author_label
-    "Facilitator"
+    "AWBW Facilitator"
   end
 
   def author_name

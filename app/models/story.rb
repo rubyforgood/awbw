@@ -111,9 +111,9 @@ class Story < ApplicationRecord
     title
   end
 
-  # Unattributed stories are credited to the organization's staff.
+  # Unattributed stories are credited to the facilitator who shared them.
   def missing_author_label
-    "AWBW Staff"
+    "AWBW Facilitator"
   end
 
   def organization_name

@@ -58,7 +58,7 @@ class WorkshopVariation < ApplicationRecord
 
   # Unattributed workshop variations are credited to the generic facilitator.
   def missing_author_label
-    "Facilitator"
+    "AWBW Facilitator"
   end
 
   def title
