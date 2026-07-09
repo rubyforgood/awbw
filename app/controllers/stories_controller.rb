@@ -177,16 +177,7 @@ class StoriesController < ApplicationController
       scope.left_joins(:workshop)
            .reorder(Workshop.arel_table[:title].public_send(dir))
     when "author"
-      # Match Story#author_person, which the column renders: sort by the explicit
-      # author, falling back to the creating user's person. `created_by: :person`
-      # is the second join to `people`, so Rails aliases it `people_users`.
-      creator_person = Person.arel_table.alias("people_users")
-      author_first_name = Arel::Nodes::NamedFunction.new(
-        "COALESCE",
-        [ Person.arel_table[:first_name], creator_person[:first_name] ]
-      )
-      scope.left_joins(:author, created_by: :person)
-           .reorder(author_first_name.public_send(dir))
+      scope.order_by_author(direction)
     when "organization"
       scope.left_joins(:organization)
            .reorder(Organization.arel_table[:name].public_send(dir))

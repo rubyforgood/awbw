@@ -18,6 +18,7 @@ FactoryBot.define do
     instructions { "MyText" }
     optional_materials { "MyText" }
     notes { "MyText" }
+    author_credit_preference { "full_name" }
 
     association :created_by, factory: :user
     association :updated_by, factory: :user

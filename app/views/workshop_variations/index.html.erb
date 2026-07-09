@@ -25,7 +25,15 @@
             <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]"></th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Name</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Description</th>
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Author</th>
+            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              <%= link_to workshop_variations_path(request.query_parameters.merge(sort: "author", direction: (@sort == "author" && @sort_direction == "asc") ? "desc" : "asc", page: nil)),
+                          class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
+                Author
+                <% if @sort == "author" %>
+                  <i class="fa-solid <%= @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down" %> text-xs opacity-70"></i>
+                <% end %>
+              <% end %>
+            </th>
             <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">From idea</th>
             <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Updated</th>
             <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]">Edit</th>
@@ -73,14 +81,7 @@
                 <% end %>
               </td>
               <td class="px-4 py-2 text-sm text-gray-800 text-center">
-                <% credited_person = workshop_variation.author_person %>
-                <% if credited_person %>
-                  <%= link_to workshop_variation.author_credit,
-                              person_path(credited_person),
-                              class: "text-gray-500 hover:text-gray-700" %>
-                <% else %>
-                  <%= workshop_variation.author_credit %>
-                <% end %>
+                <%= credited_author_link(workshop_variation, class: "text-gray-500 hover:text-gray-700") %>
               </td>
               <td class="px-4 py-2 text-sm text-center whitespace-nowrap">
                 <% if workshop_variation.workshop_variation_idea %>

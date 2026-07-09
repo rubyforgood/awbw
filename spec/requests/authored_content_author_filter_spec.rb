@@ -70,4 +70,23 @@ RSpec.describe "Authored-content indexes filtered by author", type: :request do
     expect(response.body).to include("Ada Resource")
     expect(response.body).not_to include("Other Resource")
   end
+
+  # The author scope must survive re-sorting/filtering, or the person filter is
+  # silently dropped the first time you sort the list.
+  it "keeps the author scope in the stories sort links" do
+    create(:story, :published, title: "Ada Story", author: author)
+    get stories_path(author_id: author.id), headers: { "Turbo-Frame" => "stories_results" }
+    expect(response.body).to include("author_id=#{author.id}")
+  end
+
+  it "keeps the author scope in the community news sort links" do
+    create(:community_news, published: true, title: "Ada News", author: author)
+    get community_news_index_path(author_id: author.id), headers: { "Turbo-Frame" => "community_news_results" }
+    expect(response.body).to include("author_id=#{author.id}")
+  end
+
+  it "keeps the author scope in the workshops filter form" do
+    get workshops_path(author_id: author.id)
+    expect(response.body).to match(/name="author_id"[^>]*value="#{author.id}"/)
+  end
 end

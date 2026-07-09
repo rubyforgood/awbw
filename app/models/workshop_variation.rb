@@ -13,8 +13,12 @@ class WorkshopVariation < ApplicationRecord
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
-    results = results.search(params[:query]) if params[:query].present?
-    results = results.where(author_id: params[:author_id]) if params[:author_id].present?
+    if params[:query].present?
+      by_text = results.search(params[:query]).select("workshop_variations.id")
+      by_person = results.by_credited_person_name(params[:query]).select("workshop_variations.id")
+      results = results.where(id: by_text).or(results.where(id: by_person))
+    end
+    results = results.authored_by(params[:author_id])
     results
   end
 
@@ -40,7 +44,6 @@ class WorkshopVariation < ApplicationRecord
 
   validates :name, presence: true, uniqueness: { scope: :workshop_id, case_sensitive: false }
   validates :windows_type_id, presence: true
-  validates :author_credit_preference, presence: true
   validates :rhino_body, presence: true
 
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
@@ -51,6 +54,11 @@ class WorkshopVariation < ApplicationRecord
 
   def description
     rhino_body.to_plain_text
+  end
+
+  # Unattributed workshop variations are credited to the generic facilitator.
+  def missing_author_label
+    "AWBW Facilitator"
   end
 
   def title

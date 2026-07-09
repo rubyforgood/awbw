@@ -9,25 +9,13 @@ class CommunityNewsController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
       base_scope = authorized_scope(CommunityNews.includes([ :bookmarks, :primary_asset, :author,
-                                                             :organization, { user_author: :person }, { created_by: :person } ]))
+                                                             :organization, { created_by: :person } ]))
       filtered = base_scope.search_by_params(params)
       @sort = %w[created_at title author organization].include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
       filtered = case @sort
       when "author"
-        # Match author_credit, which renders author_person: author, then the
-        # legacy user_author's person, then created_by's person. The join order
-        # fixes the people aliases (people_users, people_users_2), so keep it.
-        author_person_column = ->(field) {
-          Arel::Nodes::NamedFunction.new("COALESCE", [
-            Person.arel_table[field],
-            Person.arel_table.alias("people_users")[field],
-            Person.arel_table.alias("people_users_2")[field]
-          ])
-        }
-        dir = @sort_direction.to_sym
-        filtered.left_joins(:author, { user_author: :person }, { created_by: :person })
-                .reorder(author_person_column.call(:last_name).public_send(dir), author_person_column.call(:first_name).public_send(dir))
+        filtered.order_by_author(@sort_direction)
       when "organization"
         filtered.left_joins(:organization).reorder("organizations.name #{@sort_direction}")
       else

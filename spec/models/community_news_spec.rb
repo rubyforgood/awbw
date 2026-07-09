@@ -5,7 +5,6 @@ RSpec.describe CommunityNews, type: :model do
 
   describe "#author_person" do
     let(:creator) { create(:user, :with_person) }
-    let(:legacy_user_author) { create(:user, :with_person) }
     let(:person) { create(:person) }
 
     it "returns the explicit person author when present" do
@@ -13,14 +12,18 @@ RSpec.describe CommunityNews, type: :model do
       expect(news.author_person).to eq(person)
     end
 
-    it "falls back to the legacy display-author user's person" do
-      news = create(:community_news, created_by: creator, author: nil, user_author: legacy_user_author)
-      expect(news.author_person).to eq(legacy_user_author.person)
-    end
-
-    it "falls back to the creating user's person when nothing else is set" do
-      news = create(:community_news, created_by: creator, author: nil, user_author: nil)
+    it "falls back to the creating user's person when no explicit author is set" do
+      news = create(:community_news, created_by: creator, author: nil)
       expect(news.author_person).to eq(creator.person)
+    end
+  end
+
+  describe "#missing_author_label" do
+    it "credits unattributed community news to AWBW Staff" do
+      news = create(:community_news, author: nil,
+                                     created_by: create(:user, person: nil))
+      expect(news.missing_author_label).to eq("AWBW Staff")
+      expect(news.author_credit).to eq("AWBW Staff")
     end
   end
 
