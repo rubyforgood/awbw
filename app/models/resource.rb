@@ -93,6 +93,11 @@ class Resource < ApplicationRecord
     legacy_author_name
   end
 
+  # Unattributed resources are credited to the organization's staff.
+  def missing_author_label
+    "AWBW Staff"
+  end
+
   # Scopes
   scope :by_created, -> { order(created_at: :desc) }
   scope :by_featured_first, -> { order(featured: :desc, created_at: :desc) }
@@ -129,7 +134,7 @@ class Resource < ApplicationRecord
     resources = resources.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     resources = resources.title(params[:title]) if params[:title].present?
     resources = resources.kinds(params[:kinds]) if params[:kinds].present?
-    resources = resources.where(author_id: params[:author_id]) if params[:author_id].present?
+    resources = resources.authored_by(params[:author_id])
     if visibility_params_present?(params)
       resources = apply_visibility_filters(resources, params)
     elsif params[:published].present?

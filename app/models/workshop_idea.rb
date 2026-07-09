@@ -1,5 +1,7 @@
 class WorkshopIdea < ApplicationRecord
   include AuthorCreditable
+  # Public submission: the submitter must choose how they're credited.
+  require_author_credit_preference
 
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"

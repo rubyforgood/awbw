@@ -81,8 +81,7 @@ class WorkshopSearchService
   end
 
   def filter_by_author_id
-    return unless params[:author_id].present?
-    @workshops = @workshops.where(author_id: params[:author_id])
+    @workshops = @workshops.authored_by(params[:author_id])
   end
 
   def filter_by_categories

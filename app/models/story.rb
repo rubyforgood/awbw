@@ -94,7 +94,7 @@ class Story < ApplicationRecord
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.where(organization_id: params[:organization_id]) if params[:organization_id].present?
-    stories = stories.where(author_id: params[:author_id]) if params[:author_id].present?
+    stories = stories.authored_by(params[:author_id])
     stories
   end
 
@@ -109,6 +109,11 @@ class Story < ApplicationRecord
 
   def name
     title
+  end
+
+  # Unattributed stories are credited to the organization's staff.
+  def missing_author_label
+    "AWBW Staff"
   end
 
   def organization_name

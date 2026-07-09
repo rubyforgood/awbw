@@ -1,5 +1,7 @@
 class WorkshopVariationIdea < ApplicationRecord
   include AuthorCreditable
+  # Public submission: the submitter must choose how they're credited.
+  require_author_credit_preference
   include SearchCop
   search_scope :search do
     attributes :name, :body

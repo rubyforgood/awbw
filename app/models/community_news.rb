@@ -40,6 +40,11 @@ class CommunityNews < ApplicationRecord
     author || legacy_author_user&.person
   end
 
+  # Unattributed community news is credited to the organization's staff.
+  def missing_author_label
+    "AWBW Staff"
+  end
+
   # Fold the legacy display-author user's person into credited-name search and
   # sort, matching author_person's precedence.
   def self.legacy_credited_user_columns
@@ -92,7 +97,7 @@ class CommunityNews < ApplicationRecord
     community_news = community_news.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     community_news = community_news.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     community_news = community_news.where(organization_id: params[:organization_id]) if params[:organization_id].present?
-    community_news = community_news.where(author_id: params[:author_id]) if params[:author_id].present?
+    community_news = community_news.authored_by(params[:author_id])
     community_news
   end
 end

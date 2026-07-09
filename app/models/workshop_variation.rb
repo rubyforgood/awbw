@@ -18,7 +18,7 @@ class WorkshopVariation < ApplicationRecord
       by_person = results.by_credited_person_name(params[:query]).select("workshop_variations.id")
       results = results.where(id: by_text).or(results.where(id: by_person))
     end
-    results = results.where(author_id: params[:author_id]) if params[:author_id].present?
+    results = results.authored_by(params[:author_id])
     results
   end
 
@@ -54,6 +54,11 @@ class WorkshopVariation < ApplicationRecord
 
   def description
     rhino_body.to_plain_text
+  end
+
+  # Unattributed workshop variations are credited to the generic facilitator.
+  def missing_author_label
+    "Facilitator"
   end
 
   def title

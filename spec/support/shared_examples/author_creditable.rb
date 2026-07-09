@@ -39,19 +39,33 @@ RSpec.shared_examples "author_creditable" do |factory:|
       end
     end
 
-    context "when the preference is unset" do
-      it "defaults new records to full_name" do
-        expect(described_class.new.author_credit_preference).to eq("full_name")
-      end
+    if described_class.require_author_credit_preference?
+      context "when the preference is unset (required)" do
+        it "is invalid without a credit preference" do
+          record.author_credit_preference = nil
+          expect(record).not_to be_valid
+          expect(record.errors[:author_credit_preference]).to be_present
+        end
 
-      it "treats a blank preference as full_name at read time" do
-        record.author_credit_preference = nil
-        expect(record.author_credit).to eq(person.full_name)
+        it "does not default new records" do
+          expect(described_class.new.author_credit_preference).to be_blank
+        end
       end
+    else
+      context "when the preference is unset (defaulted)" do
+        it "defaults new records to full_name" do
+          expect(described_class.new.author_credit_preference).to eq("full_name")
+        end
 
-      it "normalizes a blank preference to full_name on save (no backfill)" do
-        record.update!(author_credit_preference: nil)
-        expect(record.reload.author_credit_preference).to eq("full_name")
+        it "treats a blank preference as full_name at read time" do
+          record.author_credit_preference = nil
+          expect(record.author_credit).to eq(person.full_name)
+        end
+
+        it "normalizes a blank preference to full_name on save (no backfill)" do
+          record.update!(author_credit_preference: nil)
+          expect(record.reload.author_credit_preference).to eq("full_name")
+        end
       end
     end
 

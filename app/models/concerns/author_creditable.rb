@@ -20,13 +20,16 @@ module AuthorCreditable
   }.freeze
 
   included do
-    # Default to the full name in the UI (new records and unset form fields).
-    # Existing rows with no preference are treated as "full_name" — at read time
-    # by `author_credit` and, on their next save, normalized by the callback below.
-    # There is no data backfill.
+    # Admin-created records default a blank preference to full_name (in the UI and
+    # on save) — no data backfill. Public-submission models call
+    # `require_author_credit_preference` instead, to force a conscious choice.
     attribute :author_credit_preference, :string, default: "full_name"
-    before_validation :default_author_credit_preference
-    validates :author_credit_preference, inclusion: { in: AUTHOR_CREDIT_PREFERENCES }
+    before_validation :apply_default_author_credit_preference
+    validates :author_credit_preference, inclusion: { in: AUTHOR_CREDIT_PREFERENCES }, allow_blank: true
+
+    # Filter to content explicitly authored by a person (belongs_to :author);
+    # no-op when person_id is blank. Only models with an author_id column use it.
+    scope :authored_by, ->(person_id) { where(author_id: person_id) if person_id.present? }
   end
 
   # The linkable credited person, in precedence order: the explicit/legacy author
@@ -77,9 +80,10 @@ module AuthorCreditable
     "Anonymous"
   end
 
-  # Treat an unset preference as "full_name" so legacy rows normalize on save
-  # without a bulk backfill.
-  def default_author_credit_preference
+  # Default an unset preference to "full_name" (so legacy rows normalize on save,
+  # no backfill) — unless the model requires an explicit choice.
+  def apply_default_author_credit_preference
+    return if self.class.require_author_credit_preference?
     self.author_credit_preference = "full_name" if author_credit_preference.blank?
   end
 
@@ -100,6 +104,20 @@ module AuthorCreditable
   end
 
   class_methods do
+    # Require an explicit credit choice rather than defaulting to full_name — for
+    # public submissions where the preference is a privacy decision (the submitter
+    # must not be silently opted into publishing their full name). Used by the
+    # *_idea models.
+    def require_author_credit_preference
+      @require_author_credit_preference = true
+      attribute :author_credit_preference, :string, default: nil
+      validates :author_credit_preference, presence: true
+    end
+
+    def require_author_credit_preference?
+      @require_author_credit_preference == true
+    end
+
     # Legacy free-text columns (fully qualified, e.g. "resources.legacy_author_name")
     # that also hold an author's name. Overridden per model that has one.
     def legacy_author_name_columns
