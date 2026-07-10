@@ -61,9 +61,12 @@
       </div>
 
       <% if allowed_to?(:manage?, WorkshopVariation) %>
-        <div class="admin-only bg-blue-100 rounded grid grid-cols-1 items-center mt-6 md:mt-0 p-3">
-          <%= f.input :published, as: :boolean, input_html: { checked: f.object.id ? f.object.published? : false } %>
-          <%= f.input :publicly_visible, as: :boolean, input_html: { checked: f.object.id ? f.object.publicly_visible? : false } %>
+        <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
+          <%= render "shared/visibility_info", flags: %i[published publicly_visible] %>
+          <div class="grid grid-cols-1 items-center">
+            <%= visibility_flag_input f, :published, input_html: { checked: f.object.id ? f.object.published? : false } %>
+            <%= visibility_flag_input f, :publicly_visible, input_html: { checked: f.object.id ? f.object.publicly_visible? : false } %>
+          </div>
         </div>
       <% end %>
     </div>

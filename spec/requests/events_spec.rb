@@ -255,6 +255,14 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("Preview bulk payment page")
     end
 
+    it "renders the visibility flags, including publicly registerable, with definitions" do
+      get edit_event_path(event)
+
+      expect(response.body).to include('name="event[public_registration_enabled]"')
+      expect(response.body).to include('name="event[publicly_visible]"')
+      expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:public_registration_enabled][:description])
+    end
+
     it "renders the built-in 'Before you attend' card fields within the callouts section" do
       get edit_event_path(event)
       expect(response.body).to include("Registration ticket callouts")

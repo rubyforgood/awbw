@@ -206,6 +206,14 @@ RSpec.describe "/workshop_variations", type: :request do
         get new_workshop_variation_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "renders the published and publicly visible flags with definitions" do
+        get new_workshop_variation_path
+
+        expect(response.body).to include('name="workshop_variation[published]"')
+        expect(response.body).to include('name="workshop_variation[publicly_visible]"')
+        expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:published][:description])
+      end
     end
 
     describe "POST /create" do
