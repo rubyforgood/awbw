@@ -23,7 +23,7 @@ module VisibilityFlagsHelper
     },
     hidden_from_search: {
       label: "Hidden from search",
-      description: "Not findable by index search results, but reachable by direct link. (Not dependent on other flags.)"
+      description: "Hides this from search results while keeping the direct link working. (Requires Published for the direct link to be accessible.)"
     },
     is_instructional: {
       label: "Instructional",
