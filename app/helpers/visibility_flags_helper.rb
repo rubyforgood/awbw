@@ -35,7 +35,7 @@ module VisibilityFlagsHelper
     },
     public_registration_enabled: {
       label: "Publicly registerable",
-      description: "Lets the public register for this event without an AWBW account. (Requires Published and Publicly visible to take effect.)"
+      description: "Lets the public register for this event without a user account. (Requires Published and Publicly visible to take effect.)"
     }
   }.freeze
 
