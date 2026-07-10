@@ -1,7 +1,7 @@
 # Payment seeds (dev-only) - run on their own via `rake db:seed:payments`, or
 # as part of `rake db:seed:dev`.
 
-puts "Seeding Payments, Allocations, and Refunds..."
+puts "Creating Payments, Allocations, and Refunds..."
 
 payment_ids_start = Payment.maximum(:id) || 0
 allocation_ids_start = Allocation.maximum(:id) || 0
@@ -77,7 +77,6 @@ reg_frank = EventRegistration.find_or_create_by!(registrant: frank, event: event
 reg_gary = EventRegistration.find_or_create_by!(registrant: gary, event: event)
 reg_iris = EventRegistration.find_or_create_by!(registrant: iris, event: event)
 
-puts "  Payment made but allocation reverted)"
 payment1 = CashPayment.find_or_create_by!(
   person: bob,
   amount_cents: event_cost_cents
@@ -98,7 +97,6 @@ reversal_allocation1 = Allocation.create!(
 )
 original_allocation1.update!(reverted_id: reversal_allocation1.id)
 
-puts "  Overpayment with full allocation (Alice pays $6000, covers 4 people)"
 payment2 = CashPayment.find_or_create_by!(
   person: alice,
   amount_cents: 600000
@@ -110,7 +108,6 @@ Allocation.find_or_create_by!(source: payment2, allocatable: reg_charlie, amount
 Allocation.find_or_create_by!(source: payment2, allocatable: reg_diana, amount: event_cost_cents) { |a| a.created_at = 4.days.ago }
 Allocation.find_or_create_by!(source: payment2, allocatable: reg_eve, amount: event_cost_cents) { |a| a.created_at = 4.days.ago }
 
-puts "  Payment with remaining available ($2000 payment, $1500 allocated, $500 remaining)"
 payment3 = CashPayment.find_or_create_by!(
   person: frank,
   amount_cents: 200000
@@ -125,7 +122,6 @@ Allocation.find_or_create_by!(
   a.created_at = 3.days.ago
 end
 
-puts "  Full refund ($1500 payment, fully allocated, fully refunded)"
 payment4 = CashPayment.find_or_create_by!(
   person: gary,
   amount_cents: event_cost_cents
@@ -153,7 +149,6 @@ Refund.create!(
   created_at: 1.day.ago
 )
 
-puts "  Creating Scenario 8: Payment with no allocations ($10000, full amount remaining)"
 CashPayment.find_or_create_by!(
   person: holly,
   amount_cents: 1000000
@@ -161,7 +156,6 @@ CashPayment.find_or_create_by!(
   p.created_at = 7.days.ago
 end
 
-puts "  Partial payment"
 payment9 = CashPayment.find_or_create_by!(
   person: iris,
   amount_cents: 100000
@@ -336,11 +330,4 @@ register_with_payments.(facilitator_training,
 # across the full matrix of allocation states, using dedicated demo people so
 # those states stay clean and don't collide with the registrants funded above.
 
-[ facilitator_training, trauma_training, mindful_art ].compact.each do |event|
-  dashboard = EventDashboard.new(event)
-  puts "  #{event.title}: #{dashboard.registrant_count} registrants, " \
-       "received #{dashboard.received_cents / 100.0}, outstanding #{dashboard.outstanding_cents / 100.0}, " \
-       "scholarships #{dashboard.scholarship_total_cents / 100.0} (#{dashboard.scholarship_recipient_count})"
-end
-
-puts "  Payment seeds complete!"
+puts "  Created #{Payment.count} payments, #{Allocation.count} allocations, #{Refund.count} refunds"
