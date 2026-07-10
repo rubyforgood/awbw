@@ -46,30 +46,38 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <%= f.label :callout_type, "Type", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-              <%= f.select :callout_type,
-                    RegistrationTicketCallout::CALLOUT_TYPES.map { |t| [ t.humanize, t ] },
-                    {},
-                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
-                    data: { callout_preview_target: "typeSelect", action: "callout-preview#update" } %>
+          <%# Presentation (type / colour / icon) collapsed under a toggle, like the
+              linked-resources section. %>
+          <details class="group">
+            <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
+              <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 transition-transform group-open:rotate-90"></i>
+              Type, colour, and icon
+            </summary>
+            <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <%= f.label :callout_type, "Type", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+                <%= f.select :callout_type,
+                      RegistrationTicketCallout::CALLOUT_TYPES.map { |t| [ t.humanize, t ] },
+                      {},
+                      class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                      data: { callout_preview_target: "typeSelect", action: "callout-preview#update" } %>
+              </div>
+              <div>
+                <%= f.label :color_class, "Colour", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+                <%= f.select :color_class,
+                      DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
+                      { include_blank: "Default (by type)" },
+                      class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                      data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>
+              </div>
+              <div>
+                <%= f.label :icon_class, "Icon", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+                <%= f.text_field :icon_class,
+                      class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono",
+                      data: { callout_preview_target: "iconInput", action: "callout-preview#update" } %>
+              </div>
             </div>
-            <div>
-              <%= f.label :color_class, "Colour", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-              <%= f.select :color_class,
-                    DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
-                    { include_blank: "Default (by type)" },
-                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
-                    data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>
-            </div>
-            <div>
-              <%= f.label :icon_class, "Icon", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-              <%= f.text_field :icon_class,
-                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono",
-                    data: { callout_preview_target: "iconInput", action: "callout-preview#update" } %>
-            </div>
-          </div>
+          </details>
 
           <% if f.object.ce_config? && event_f.present? %>
             <div class="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
