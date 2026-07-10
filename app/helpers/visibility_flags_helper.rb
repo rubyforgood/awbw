@@ -13,7 +13,7 @@ module VisibilityFlagsHelper
     },
     featured: {
       label: "Featured",
-      hint: "On the member homepage",
+      hint: "On the user homepage",
       description: "Shows this on the homepage for signed-in users. (Requires Published to take effect.)"
     },
     publicly_visible: {
