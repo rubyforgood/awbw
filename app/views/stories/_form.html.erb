@@ -23,11 +23,17 @@
                                    value: f.object.title || @story_idea&.title } %></div>
 
     <%# if allowed_to?(:manage?, story) %>
-    <div class="admin-only bg-blue-100 rounded grid grid-cols-2 items-center mt-6 md:mt-0 p-3">
-      <%= f.input :published, as: :boolean %>
-      <%= f.input :featured, as: :boolean %>
-      <%= f.input :publicly_visible, as: :boolean %>
-      <%= f.input :publicly_featured, as: :boolean %>
+    <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-medium text-gray-700">Visibility</span>
+        <%= render "shared/visibility_info", flags: %i[published featured publicly_visible publicly_featured] %>
+      </div>
+      <div class="grid grid-cols-2 items-center">
+        <%= visibility_flag_input f, :published %>
+        <%= visibility_flag_input f, :featured %>
+        <%= visibility_flag_input f, :publicly_visible %>
+        <%= visibility_flag_input f, :publicly_featured %>
+      </div>
     </div>
 
     <%# end %>
