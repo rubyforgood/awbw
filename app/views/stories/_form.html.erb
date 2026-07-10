@@ -24,7 +24,7 @@
 
     <%# if allowed_to?(:manage?, story) %>
     <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
-      <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center gap-2 mb-2">
         <span class="text-sm font-medium text-gray-700">Visibility</span>
         <%= render "shared/visibility_info", flags: %i[published featured publicly_visible publicly_featured] %>
       </div>
