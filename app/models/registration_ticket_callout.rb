@@ -89,11 +89,18 @@ class RegistrationTicketCallout < ApplicationRecord
     magic? && CONTENT_MAGIC_KEYS.exclude?(magic_key)
   end
 
-  # Whether this callout is edited in the shared callout-fields editor row (all
-  # callouts except CE hours / Event details, whose text lives on the event and is
-  # edited via their built-in preview card above the list).
-  def editable_in_list?
-    PREVIEW_EDITED_MAGIC_KEYS.exclude?(magic_key.to_s)
+  # CE hours / Event details keep their text on the event (shared with their
+  # standalone CE / details pages), so the editor row edits those event columns
+  # instead of the callout row's title/description — but the row still owns their
+  # order, hidden flag, and linked resources.
+  def content_on_event?
+    PREVIEW_EDITED_MAGIC_KEYS.include?(magic_key.to_s)
+  end
+
+  # Whether the editor offers "Restore default" — a built-in whose content lives
+  # on the row (so it has a template to restore to).
+  def restorable?
+    magic? && !content_on_event?
   end
 
   # Every callout can link resources; they render on the callout's page (its own

@@ -46,8 +46,6 @@ class MagicTicketCallouts
       EditorCard.new(nil, "payment", "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
       EditorCard.new(nil, "certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
       EditorCard.new(nil, "scholarship", "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
-      EditorCard.new(:ce_hours, "ce_hours", "fa-solid fa-graduation-cap", "teal", event.ce_hours_details_label, "Continuing education — requirements & how to request", "When a registrant requests CE credit", nil),
-      EditorCard.new(:event_details, "event_details", "fa-solid fa-palette", "blue", event.event_details_label, "Important info for this event — please read", "When the content below is filled in", nil),
       EditorCard.new(nil, "videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
       EditorCard.new(nil, "forms", "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and receipt", "On facilitator trainings and paid events", "Items link to their relevant resources."),
       EditorCard.new(nil, "handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
@@ -91,6 +89,9 @@ class MagicTicketCallouts
     builder = CARD_BUILDERS[callout.magic_key]
     base = builder && send(builder)
     return unless base
+    # CE hours / event details keep their app-supplied, event-driven title and
+    # subtitle (their text lives on the event, not the row).
+    return base if callout.content_on_event?
 
     base.with(
       title: callout.title,

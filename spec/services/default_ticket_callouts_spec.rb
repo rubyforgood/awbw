@@ -3,25 +3,26 @@ require "rails_helper"
 RSpec.describe DefaultTicketCallouts do
   describe "#seed" do
     it "materializes the built-in callouts the event's config warrants" do
-      # Factory event: has a cost (payment + forms), no scholarship/CE/details/VC.
+      # Factory event: has a cost (payment + forms), no scholarship form / VC link.
+      # CE hours, Event details, Certificate, Handouts, FAQ always seed.
       event = create(:event)
 
       described_class.seed(event)
 
       keys = event.registration_ticket_callouts.magic.pluck(:magic_key)
-      expect(keys).to contain_exactly("payment", "certificate", "forms", "handouts", "faq")
+      expect(keys).to contain_exactly("payment", "certificate", "ce_hours", "event_details", "forms", "handouts", "faq")
     end
 
-    it "seeds Payment, Scholarship, CE, and Event details only when their config is present" do
+    it "gates Payment, Scholarship, and Videoconference on config, but always seeds CE and Event details" do
       form = create(:form)
-      event = create(:event, cost_cents: 0, ce_hours_offered: 6, event_details: "<p>Bring supplies.</p>")
+      event = create(:event, cost_cents: 0)
       event.event_forms.create!(form:, role: "scholarship")
 
       described_class.seed(event)
 
       keys = event.registration_ticket_callouts.magic.pluck(:magic_key)
-      expect(keys).to include("scholarship", "ce_hours", "event_details")
-      expect(keys).not_to include("payment") # free event
+      expect(keys).to include("scholarship", "ce_hours", "event_details") # CE/details always
+      expect(keys).not_to include("payment", "videoconference") # free, no VC link
     end
 
     it "seeds callouts in canonical ticket order" do
@@ -152,7 +153,7 @@ RSpec.describe DefaultTicketCallouts do
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
       expect(event.registration_ticket_callouts.ordered.map(&:magic_key).compact).to eq(
-        %w[payment certificate forms handouts faq]
+        %w[payment certificate ce_hours event_details forms handouts faq]
       )
     end
   end

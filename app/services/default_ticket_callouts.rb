@@ -170,10 +170,10 @@ class DefaultTicketCallouts
         callout_type: "action",
         icon_class: "fa-solid fa-graduation-cap",
         color_class: "teal",
-        # Content (label + details) stays on the event and is edited in the
-        # callouts section's built-in card; the row only governs order/drip.
-        hidden: ->(_event) { false },
-        seed_if: ->(event) { event.ce_hours_offered.present? }
+        # Content (label + details) stays on the event and is edited inline in the
+        # callout row; the row governs order, hidden, and linked resources. Always
+        # seeded so the row is available to edit even before hours are set.
+        hidden: ->(_event) { false }
       },
       {
         magic_key: "event_details",
@@ -182,10 +182,10 @@ class DefaultTicketCallouts
         callout_type: "reference",
         icon_class: "fa-solid fa-palette",
         color_class: "blue",
-        # Content (label + body) stays on the event and is edited in the built-in
-        # card; the row only governs order/drip.
-        hidden: ->(_event) { false },
-        seed_if: ->(event) { event.event_details.present? }
+        # Content (label + body) stays on the event and is edited inline in the
+        # callout row; the row governs order, hidden, and linked resources. Always
+        # seeded so the row is available to edit even before content is filled in.
+        hidden: ->(_event) { false }
       },
       {
         magic_key: "videoconference",

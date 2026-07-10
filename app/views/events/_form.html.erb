@@ -500,90 +500,36 @@
       <div id="registration_ticket_callouts_panel" class="hidden border border-gray-300 p-4 rounded-b-md">
         <p class="text-sm text-gray-500 mb-4">Call-outs shown on the registration ticket — each links to its own page. The built-in cards below are managed by the app, which decides when each appears; a few (shown in colour, with fields) let you edit their text here, while the rest (greyed out) are preview-only. Below them, add your own call-outs for actions (forms to download, balances to pay) or reference reading (parking, policies, what to bring). New custom callouts save in the order shown; drag the handle to reorder saved callouts.</p>
 
-        <%# Built-in cards, shown above custom callouts in the order they appear on
-            the ticket. The two editable ones (CE hours, art supplies) carry their
-            ticket colour and editable text; the rest are greyed-out previews of
-            cards the app controls, so the full ticket context is visible here. %>
+        <%# Built-in cards not yet materialized on this event show as greyed
+            previews for context; once the event is saved they become editable,
+            reorderable rows in the list below. %>
         <div class="space-y-3 mb-3">
           <% MagicTicketCallouts.editor_cards(@event).each do |card| %>
-            <% case card.key %>
-            <% when :ce_hours %>
-              <%= render "events/builtin_callout_card", f: f, card: card,
-                    label_field: :ce_hours_details_label, content_field: :ce_hours_details,
-                    content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket." %>
-              <div class="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-                <label class="flex items-center gap-2 text-sm text-gray-700">
-                  CE hours offered
-                  <%= f.number_field :ce_hours_offered, min: 0, step: 0.25,
-                        class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                </label>
-                <label class="flex items-center gap-2 text-sm text-gray-700">
-                  Total CE cost
-                  <span class="text-gray-400">$</span>
-                  <%= f.number_field :ce_hours_cost, min: 0, step: 1,
-                        class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                </label>
-              </div>
-            <% when :event_details %>
-              <%= render "events/builtin_callout_card", f: f, card: card,
-                    label_field: :event_details_label, content_field: :event_details,
-                    content_help: "Materials, supplies, what to bring, and policies — shown on its own page linked from the ticket. Leave blank to hide it entirely." %>
-            <% else %>
-              <div class="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 opacity-70">
-                <i class="<%= card.icon_class %> <%= card.theme[:icon] %> w-6 shrink-0 text-center text-xl pt-0.5" aria-hidden="true"></i>
-                <div class="flex-1 min-w-0">
-                  <div class="flex flex-wrap items-center gap-2 mb-0.5">
-                    <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-500">Built in</span>
-                    <span class="text-xs text-gray-400"><%= card.visibility %></span>
-                  </div>
-                  <p class="font-semibold text-gray-500"><%= card.title %></p>
-                  <p class="text-sm text-gray-400"><%= card.subtitle %></p>
-                  <% if card.note.present? %>
-                    <p class="text-xs text-gray-400 italic mt-0.5"><%= card.note %></p>
-                  <% end %>
-                  <% if card.title == "Handouts" %>
-                    <div class="mt-2 space-y-1">
-                      <% ["2-Day AWBW Facilitator Training Worksheets & Handouts",
-                          "AWBW Training Workshop Worksheets",
-                          "AHA Moments",
-                          "Inviting and Responding to Participants' Sharing",
-                          "Letter to Supervisors"].each do |t| %>
-                        <% resource = Resource.find_by(title: t) %>
-                        <% if resource %>
-                          <%= link_to edit_resource_path(resource),
-                                      class: "text-xs text-blue-600 hover:text-blue-800 underline block" do %>
-                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> <%= resource.title %>
-                          <% end %>
-                        <% end %>
-                      <% end %>
-                    </div>
-                  <% elsif card.title == "Forms" %>
-                    <% w9 = Resource.find_by(title: "W-9") %>
-                    <% if w9 %>
-                      <div class="mt-2">
-                        <%= link_to edit_resource_path(w9),
-                                    class: "text-xs text-blue-600 hover:text-blue-800 underline" do %>
-                          <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> W-9
-                        <% end %>
-                      </div>
-                    <% end %>
-                  <% end %>
+            <div class="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 opacity-70">
+              <i class="<%= card.icon_class %> <%= card.theme[:icon] %> w-6 shrink-0 text-center text-xl pt-0.5" aria-hidden="true"></i>
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2 mb-0.5">
+                  <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-500">Built in</span>
+                  <span class="text-xs text-gray-400"><%= card.visibility %></span>
                 </div>
+                <p class="font-semibold text-gray-500"><%= card.title %></p>
+                <p class="text-sm text-gray-400"><%= card.subtitle %></p>
+                <% if card.note.present? %>
+                  <p class="text-xs text-gray-400 italic mt-0.5"><%= card.note %></p>
+                <% end %>
               </div>
-            <% end %>
+            </div>
           <% end %>
         </div>
 
         <div id="registration_ticket_callouts_list" class="space-y-3"
              data-controller="sortable"
              data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>">
-          <%# Custom callouts and all materialized built-ins share one editable row.
-              CE hours / event details are the exception — their text lives on the
-              event and is edited in their built-in card above the list. %>
+          <%# Custom callouts and every materialized built-in share one editable,
+              reorderable row. CE hours / event details edit their event-column text
+              inline (passed via event_f). %>
           <%= f.fields_for :registration_ticket_callouts do |rts| %>
-            <% if rts.object.editable_in_list? %>
-              <%= render "events/registration_ticket_callout_fields", f: rts %>
-            <% end %>
+            <%= render "events/registration_ticket_callout_fields", f: rts, event_f: f %>
           <% end %>
         </div>
 

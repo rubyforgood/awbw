@@ -35,6 +35,9 @@ class EventsController < ApplicationController
 
   def edit
     authorize! @event
+    # Materialize any missing built-in callouts so the editor shows them all
+    # (idempotent; heals events created before a built-in existed).
+    DefaultTicketCallouts.seed(@event)
     set_form_variables
   end
 
