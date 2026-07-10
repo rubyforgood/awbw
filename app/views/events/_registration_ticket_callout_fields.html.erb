@@ -112,8 +112,7 @@
             <%= event_f.text_area content_field, rows: 4,
                   class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
           <% else %>
-            <%= f.label :description, "Callout page text", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-            <p class="text-xs text-gray-500 mb-1">The callout card only opens a page if this is filled out.</p>
+            <%= f.label :description, "Callout page text (only opens a page if this is filled out)", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
             <%= f.text_area :description, rows: 4,
                   class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
           <% end %>
