@@ -81,12 +81,16 @@
 
         <% if f.object.renders_resources? %>
           <div>
-            <%= f.label :resource_ids, "Linked resources", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-            <p class="text-xs text-gray-500 mb-1">Optional. Shows each resource below the content on the call-out's page (PDF first-page preview, etc.), with a download button when the resource has a downloadable file. Hold ⌘/Ctrl to select more than one.</p>
-            <%= f.collection_select :resource_ids, Resource.order(:title), :id, :title,
-                  {},
-                  multiple: true, size: 4,
-                  class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+            <span class="block text-xs font-medium text-gray-600 mb-0.5">Linked resources</span>
+            <p class="text-xs text-gray-500 mb-1">Optional. Shows each resource below the content on the call-out's page (PDF first-page preview, etc.), with a download button when the resource has a downloadable file.</p>
+            <div class="space-y-2">
+              <%= f.fields_for :registration_ticket_callout_resources do |rf| %>
+                <%= render "events/registration_ticket_callout_resource_fields", f: rf %>
+              <% end %>
+            </div>
+            <%= link_to_add_association "➕ Add resource", f, :registration_ticket_callout_resources,
+                  partial: "events/registration_ticket_callout_resource_fields",
+                  class: "mt-1 inline-block text-sm font-medium text-purple-600 hover:text-purple-800" %>
           </div>
         <% end %>
       </div>

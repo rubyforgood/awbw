@@ -50,6 +50,11 @@ class RegistrationTicketCallout < ApplicationRecord
            inverse_of: :registration_ticket_callout
   has_many :resources, through: :registration_ticket_callout_resources
 
+  # Linked resources are added one dropdown at a time in the editor (cocoon
+  # add/remove), like Sectors on a Person. Blank picks are dropped.
+  accepts_nested_attributes_for :registration_ticket_callout_resources, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["resource_id"].blank? }
+
   # Per-event ordering, drag-reordered after save via the shared `sortable`
   # Stimulus controller (a per-row PUT to #update). The gem reflows the other
   # callouts' positions on each move, exactly like Category. It assigns position

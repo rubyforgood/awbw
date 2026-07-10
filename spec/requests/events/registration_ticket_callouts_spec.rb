@@ -136,7 +136,8 @@ RSpec.describe "Registration ticket callouts", type: :request do
           start_date: event.start_date,
           end_date: event.end_date,
           registration_ticket_callouts_attributes: {
-            "0" => { title: "Workbook", callout_type: "reference", resource_ids: [ resource.id ] }
+            "0" => { title: "Workbook", callout_type: "reference",
+                     registration_ticket_callout_resources_attributes: { "0" => { resource_id: resource.id } } }
           }
         }
       }
@@ -248,13 +249,16 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response.body).to include(restore_event_registration_ticket_callout_path(event, faq))
     end
 
-    it "gives the Forms card an editable linked-resource picker" do
-      create(:registration_ticket_callout, event:, magic_key: "forms", title: "Forms")
+    it "gives the Forms card an add-another linked-resource picker" do
+      resource = create(:resource, title: "W-9")
+      create(:registration_ticket_callout, event:, magic_key: "forms", title: "Forms", resources: [ resource ])
 
       get edit_event_path(event)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][resource_ids][]\"")
+      # One dropdown per linked resource, plus an "Add resource" link (cocoon).
+      expect(response.body).to match(/registration_ticket_callout_resources_attributes\]\[\d+\]\[resource_id\]/)
+      expect(response.body).to include("Add resource")
     end
   end
 end
