@@ -36,15 +36,15 @@
     </div>
 
     <% if allowed_to?(:manage?, @event) %>
-      <div class="admin-only mt-6 md:mt-0">
-        <label id="display_settings" class="block font-medium mb-1 text-gray-700">Display settings</label>
-        <div class="bg-blue-50 border border-gray-200 rounded-lg grid grid-cols-2 content-start gap-y-0 p-3 [&_.form-group]:mb-1">
-          <%= f.input :published, as: :boolean %>
-          <%= f.input :featured, as: :boolean %>
-          <%= f.input :publicly_visible, as: :boolean %>
-          <%= f.input :publicly_featured, as: :boolean %>
+      <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3" id="display_settings">
+        <%= render "shared/visibility_info", flags: %i[published featured publicly_visible publicly_featured public_registration_enabled] %>
+        <div class="grid grid-cols-2 content-start gap-y-0 [&_.form-group]:mb-1">
+          <%= visibility_flag_input f, :published %>
+          <%= visibility_flag_input f, :featured %>
+          <%= visibility_flag_input f, :publicly_visible %>
+          <%= visibility_flag_input f, :publicly_featured %>
           <div id="public_registration_setting" class="px-1" style="scroll-margin-top: 10rem;">
-            <%= f.input :public_registration_enabled, as: :boolean, label: "Publicly registerable" %>
+            <%= visibility_flag_input f, :public_registration_enabled, label: "Publicly registerable" %>
           </div>
         </div>
       </div>

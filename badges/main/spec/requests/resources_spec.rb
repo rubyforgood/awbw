@@ -92,6 +92,15 @@ RSpec.describe "/resources", type: :request do
 
       expect(response).to have_http_status(:ok)
     end
+
+    it "renders the visibility flags, including hidden from search, with definitions" do
+      resource = Resource.create! valid_attributes
+      get edit_resource_url(resource)
+
+      expect(response.body).to include('name="resource[hidden_from_search]"')
+      expect(response.body).to include('name="resource[publicly_visible]"')
+      expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:hidden_from_search][:description])
+    end
   end
 
   describe "POST /create" do
