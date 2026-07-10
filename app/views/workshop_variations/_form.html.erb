@@ -4,26 +4,38 @@
 
     <%= render "shared/errors", resource: @workshop_variation if @workshop_variation.errors.any? %>
 
-    <!-- Workshop selection / reference -->
-    <div class="mb-6">
-      <% if params[:admin] == "true" || (f.object.new_record? && !@workshop) %>
-        <%= f.input :workshop_id,
-          collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
-          include_blank: true,
-          required: true,
-          input_html: {
-            class: "h-10 rounded-md",
-            data: {
-              controller: "remote-select",
-              remote_select_model_value: "workshop"
-            }
-          },
-          prompt: "Type to search workshops…",
-          label: "Workshop" %>
-      <% elsif @workshop %>
-        <%= f.hidden_field :workshop_id, value: @workshop.id %>
-      <% elsif f.object.workshop_id.present? %>
-        <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
+    <!-- Workshop selection / reference + Visibility -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 items-start">
+      <div class="md:col-span-3">
+        <% if params[:admin] == "true" || (f.object.new_record? && !@workshop) %>
+          <%= f.input :workshop_id,
+            collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
+            include_blank: true,
+            required: true,
+            input_html: {
+              class: "h-10 rounded-md",
+              data: {
+                controller: "remote-select",
+                remote_select_model_value: "workshop"
+              }
+            },
+            prompt: "Type to search workshops…",
+            label: "Workshop" %>
+        <% elsif @workshop %>
+          <%= f.hidden_field :workshop_id, value: @workshop.id %>
+        <% elsif f.object.workshop_id.present? %>
+          <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
+        <% end %>
+      </div>
+
+      <% if allowed_to?(:manage?, WorkshopVariation) %>
+        <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
+          <%= render "shared/visibility_info", flags: %i[published publicly_visible] %>
+          <div class="grid grid-cols-1 items-center">
+            <%= visibility_flag_input f, :published, input_html: { checked: f.object.id ? f.object.published? : false } %>
+            <%= visibility_flag_input f, :publicly_visible, input_html: { checked: f.object.id ? f.object.publicly_visible? : false } %>
+          </div>
+        </div>
       <% end %>
     </div>
 
@@ -40,7 +52,7 @@
       </div>
     <% end %>
 
-    <!-- Name + Windows type + Published/Visible -->
+    <!-- Name + Windows type -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-4">
       <div class="md:col-span-3 flex flex-col md:flex-row md:space-x-4">
         <div class="flex-1">
@@ -59,16 +71,6 @@
                     input_html: { class: "w-full h-10 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" } %>
         </div>
       </div>
-
-      <% if allowed_to?(:manage?, WorkshopVariation) %>
-        <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
-          <%= render "shared/visibility_info", flags: %i[published publicly_visible] %>
-          <div class="grid grid-cols-1 items-center">
-            <%= visibility_flag_input f, :published, input_html: { checked: f.object.id ? f.object.published? : false } %>
-            <%= visibility_flag_input f, :publicly_visible, input_html: { checked: f.object.id ? f.object.publicly_visible? : false } %>
-          </div>
-        </div>
-      <% end %>
     </div>
 
     <!-- Variation fields -->
