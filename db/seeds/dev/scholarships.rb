@@ -21,12 +21,12 @@
 # events and people, skips gracefully when absent, and skips any registration
 # that already has a scholarship so it is safe to re-run.
 
-puts "Seeding Scholarships for dev event registrations…"
+puts "Creating Scholarships for dev event registrations…"
 
 facilitator_training = Event.find_by(title: "AWBW Facilitator Training")
 
 # Every event that asks the scholarship questions (has a scholarship EventForm).
-# Reused below to surface non-flagship applicants and print the per-event summary.
+# Reused below to surface non-flagship applicants.
 scholarship_events = Event.joins(:event_forms).where(event_forms: { role: "scholarship" }).distinct.to_a
 
 # These are AWBW facilitator trainings (the "TAC" a recipient attends). Flag them
@@ -44,7 +44,7 @@ end
 #   * a mix of donor types — three organization funders and two individual
 #     (Person) funders, since donor is polymorphic;
 #   * distinct donation totals, eligibility criteria, and tasks per grant.
-puts "Seeding Grants…"
+puts "Creating Grants…"
 
 # Resolve a grant's donor by type: organizations by name, individuals by their
 # first/last name (so a Person can fund a grant, mirroring the polymorphic donor).
@@ -146,7 +146,7 @@ end
 # with a matching primary sector, age group, and a non-facilitator agency
 # affiliation (title + organization) so the recipient header renders like the real
 # export.
-puts "Seeding Scholarship application answers…"
+puts "Creating Scholarship application answers…"
 
 # Keyed by the scholarship form's field identifiers (see
 # FormBuilderService#build_scholarship_fields).
@@ -426,19 +426,13 @@ end
   end
 end
 
-scholarship_events.each do |event|
-  dashboard = EventDashboard.new(event)
-  puts "  #{event.title}: scholarships #{dashboard.scholarship_total_cents / 100.0} " \
-       "(#{dashboard.scholarship_recipient_count} recipients)"
-end
-
 # --- Standalone grant-funded scholarships ----------------------------------
 # Beyond the event-allocated awards above (which now draw from these grants too),
 # seed a few standalone grant awards — recipient + grant, no event allocation —
 # mirroring the grant CRUD flow, so the grant pages show draws and remaining
 # balances. Idempotent: only adds standalone awards to a grant that has none yet,
 # and skips any award that would exceed the grant's remaining funds.
-puts "Seeding standalone grant-funded scholarships…"
+puts "Creating standalone grant-funded scholarships…"
 
 # Reuse existing dev people as recipients, cycling so each award goes to a
 # distinct person where the pool allows.
@@ -467,8 +461,6 @@ grant_plans.each do |(name, _donor_type, _donor_name, _amount_cents, awards, _el
     Scholarship.create!(recipient: next_recipient.(), grant: grant,
                         amount_cents: award_cents, tasks_completed: j.even?)
   end
-
-  puts "  #{grant.name}: #{grant.scholarships.count} scholarships, remaining #{grant.remaining_dollars}"
 end
 
 # --- Index demo states: multi-grant funder + Reinstate ---------------------
@@ -478,7 +470,7 @@ end
 # existing funder, with two recipients whose program orgs carry addresses — the
 # second's facilitator affiliation is lapsed, so its org reads as "Reinstate".
 # Idempotent: keyed on the sibling grant's name and its having no awards yet.
-puts "Seeding scholarship index demo states (multi-grant funder, Reinstate)…"
+puts "Creating scholarship index demo states (multi-grant funder, Reinstate)…"
 
 anchor_grant = grants.first
 if anchor_grant && recipient_orgs.any?
@@ -511,7 +503,6 @@ if anchor_grant && recipient_orgs.any?
     end
   end
 
-  puts "  #{sibling.funder_name}: now funds #{Grant.where(donor: anchor_grant.donor).count} grants"
 end
 
-puts "  Scholarship seeds complete!"
+puts "  Created #{Scholarship.count} scholarships across #{Grant.count} grants"

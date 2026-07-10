@@ -44,5 +44,5 @@ if amy && aisha
   puts "  Created #{amy.bookmarks.count} bookmarks for Amy, #{aisha.bookmarks.count} for Aisha"
   shared = amy.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id) &
            aisha.bookmarks.pluck(:bookmarkable_type, :bookmarkable_id)
-  puts "  #{shared.size} bookmarks shared between both users"
+  puts "  #{shared.size} shared between both users"
 end
