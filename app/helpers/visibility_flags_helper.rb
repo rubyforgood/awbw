@@ -7,19 +7,19 @@ module VisibilityFlagsHelper
   FLAG_DEFINITIONS = {
     published: {
       label: "Published",
-      description: "Makes this live in the member portal for signed-in AWBW members. Leave it off to keep it a draft that only staff can see."
+      description: "Makes this visible to signed-in users. (Uncheck to keep it a staff-only draft.)"
     },
     featured: {
       label: "Featured",
-      description: "Highlights this inside the member portal (shown first or pinned). Only takes effect when Published is on."
+      description: "Shows this on the homepage for signed-in users. Requires Published to take effect."
     },
     publicly_visible: {
       label: "Publicly visible",
-      description: "Shows this on the public awbw.org website to anyone, no login needed. Requires Published to be on."
+      description: "Makes this visible to any visitor (not logged in). Requires Published to take effect."
     },
     publicly_featured: {
       label: "Publicly featured",
-      description: "Highlights this on the public website (e.g. featured on a landing page). Requires both Published and Publicly visible."
+      description: "Shows this on the homepage for visitors (not logged in). Requires both Published and Publicly visible to take effect."
     },
     hidden_from_search: {
       label: "Hidden from search",
