@@ -11,19 +11,19 @@ module VisibilityFlagsHelper
     },
     featured: {
       label: "Featured",
-      description: "Shows this on the homepage for signed-in users. Requires Published to take effect."
+      description: "Shows this on the homepage for signed-in users. (Requires Published to take effect.)"
     },
     publicly_visible: {
       label: "Publicly visible",
-      description: "Makes this visible to any visitor (not logged in). Requires Published to take effect."
+      description: "Makes this visible to any visitor who is not logged in. (Requires Published to take effect.)"
     },
     publicly_featured: {
       label: "Publicly featured",
-      description: "Shows this on the homepage for visitors (not logged in). Requires both Published and Publicly visible to take effect."
+      description: "Shows this on the homepage for visitors who are not logged in. (Requires both Published and Publicly visible to take effect.)"
     },
     hidden_from_search: {
       label: "Hidden from search",
-      description: "Keeps this reachable by direct link but leaves it out of on-site search results."
+      description: "Leaves this out of on-site search results. (Doesn't change the other flags; it stays reachable by direct link.)"
     },
     is_instructional: {
       label: "Instructional",
@@ -35,7 +35,7 @@ module VisibilityFlagsHelper
     },
     public_registration_enabled: {
       label: "Publicly registerable",
-      description: "Lets the public register for this event without an AWBW account."
+      description: "Lets the public register for this event without an AWBW account. (Requires Published and Publicly visible to take effect.)"
     }
   }.freeze
 
