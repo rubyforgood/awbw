@@ -81,4 +81,20 @@ RSpec.describe "Events::Callouts", type: :request do
       end
     end
   end
+
+  describe "GET /registration/:slug/videoconference" do
+    let(:event) { create(:event, videoconference_url: "https://example.com/zoom") }
+
+    it "renders resources linked to the built-in callout below the content" do
+      resource = create(:resource)
+      create(:downloadable_asset, owner: resource)
+      create(:registration_ticket_callout, event:, magic_key: "videoconference",
+        title: "Videoconference", resources: [ resource ])
+
+      get registration_videoconference_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
+    end
+  end
 end

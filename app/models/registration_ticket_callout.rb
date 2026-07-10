@@ -96,10 +96,11 @@ class RegistrationTicketCallout < ApplicationRecord
     PREVIEW_EDITED_MAGIC_KEYS.exclude?(magic_key.to_s)
   end
 
-  # Whether the editor shows a linked-resources picker. Only cards that render
-  # their linked resources on a page use it: custom callouts, Handouts, FAQ, Forms.
+  # Every callout can link resources; they render on the callout's page (its own
+  # page for custom/content cards, or below the built-in content for behavioral
+  # ones). Kept as a seam in case a card ever needs to opt out.
   def renders_resources?
-    !magic? || CONTENT_MAGIC_KEYS.include?(magic_key) || RESOURCE_EDITABLE_MAGIC_KEYS.include?(magic_key)
+    true
   end
 
   # Whether the callout is drip-scheduled to appear only from a future date.

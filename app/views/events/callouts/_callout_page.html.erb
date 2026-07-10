@@ -38,6 +38,14 @@
         </div>
       <% end %>
       <%= yield %>
+
+      <% if @builtin_resources.present? %>
+        <div class="mt-8 space-y-6">
+          <% @builtin_resources.each do |resource| %>
+            <%= render "events/callouts/resource_body", resource: resource.decorate %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>
