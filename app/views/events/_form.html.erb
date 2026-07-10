@@ -36,9 +36,9 @@
     </div>
 
     <% if allowed_to?(:manage?, @event) %>
-      <div class="admin-only mt-6 md:mt-0" id="display_settings">
+      <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3" id="display_settings">
         <%= render "shared/visibility_info", flags: %i[published featured publicly_visible publicly_featured public_registration_enabled] %>
-        <div class="bg-blue-50 border border-gray-200 rounded-lg grid grid-cols-2 content-start gap-y-0 p-3 [&_.form-group]:mb-1">
+        <div class="grid grid-cols-2 content-start gap-y-0 [&_.form-group]:mb-1">
           <%= visibility_flag_input f, :published %>
           <%= visibility_flag_input f, :featured %>
           <%= visibility_flag_input f, :publicly_visible %>
