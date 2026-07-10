@@ -3,8 +3,9 @@ class RichTextAssetMentionsController < ApplicationController
   def index
     # authorize!
     record = GlobalID::Locator.locate_signed(params[:sgid])
+    record = record.object if record.respond_to?(:decorated?) && record.decorated?
 
-    unless record
+    unless record.respond_to?(:rich_text_assets)
       render json: [] and return
     end
 
