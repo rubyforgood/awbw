@@ -162,20 +162,25 @@ RSpec.describe MagicTicketCallouts do
   end
 
   describe "#card_for" do
-    it "builds the live behavioral card for a materialized magic_key" do
+    it "uses the row's editable presentation but the app's live badge/link" do
       event.update!(cost_cents: 5_000)
-      create(:registration_ticket_callout, event:, magic_key: "payment", title: "Payment")
+      # Admin renamed and recoloured the payment card.
+      callout = create(:registration_ticket_callout, event:, magic_key: "payment",
+        title: "Pay your balance", subtitle: "See what you owe", color_class: "green")
 
-      card = described_class.new(registration).card_for("payment")
-      expect(card.title).to eq("Make your payment")
-      expect(card.badge).to end_with("due")
+      card = described_class.new(registration).card_for(callout)
+      expect(card.title).to eq("Pay your balance")       # from the row
+      expect(card.subtitle).to eq("See what you owe")    # from the row
+      expect(card.theme).to eq(DomainTheme.swatch("green")) # from the row
+      expect(card.badge).to end_with("due")              # app-supplied live status
     end
 
     it "returns nil when the card shouldn't show for this registration" do
-      create(:registration_ticket_callout, event:, magic_key: "certificate", title: "Certificate of completion")
+      callout = create(:registration_ticket_callout, event:, magic_key: "certificate",
+        title: "Certificate of completion")
 
       # Certificate isn't unlocked (event not ended, not attended).
-      expect(described_class.new(registration).card_for("certificate")).to be_nil
+      expect(described_class.new(registration).card_for(callout)).to be_nil
     end
   end
 end

@@ -69,6 +69,12 @@ class DefaultTicketCallouts
     new(callout.event).reset(callout)
   end
 
+  # Whether a materialized callout has been edited away from its built-in
+  # template, so the editor can offer "Restore default" only when it applies.
+  def self.customized?(callout)
+    new(callout.event).customized?(callout)
+  end
+
   def initialize(event)
     @event = event
   end
@@ -100,6 +106,20 @@ class DefaultTicketCallouts
     )
     callout.resources = definition[:resources]&.call || []
     callout
+  end
+
+  def customized?(callout)
+    definition = definitions.find { |candidate| candidate[:magic_key] == callout.magic_key }
+    return false unless definition
+
+    callout.title != definition[:title] ||
+      callout.subtitle != definition[:subtitle] ||
+      callout.description.to_s != definition[:description].to_s ||
+      callout.callout_type != definition[:callout_type] ||
+      callout.icon_class != definition[:icon_class] ||
+      callout.color_class != definition[:color_class] ||
+      callout.hidden != definition[:hidden].call(@event) ||
+      callout.resource_ids.sort != Array(definition[:resources]&.call).map(&:id).sort
   end
 
   private
@@ -139,7 +159,7 @@ class DefaultTicketCallouts
         subtitle: "Your scholarship request and award",
         callout_type: "action",
         icon_class: "fa-solid fa-award",
-        # Colour (fuchsia) comes from the live card via #card_for, not a swatch.
+        color_class: "fuchsia",
         hidden: ->(_event) { false },
         seed_if: ->(event) { event.scholarship_form.present? }
       },
@@ -149,7 +169,7 @@ class DefaultTicketCallouts
         subtitle: "Continuing education — requirements & how to request",
         callout_type: "action",
         icon_class: "fa-solid fa-graduation-cap",
-        # Colour (teal) comes from the live card via #card_for, not a swatch.
+        color_class: "teal",
         # Content (label + details) stays on the event and is edited in the
         # callouts section's built-in card; the row only governs order/drip.
         hidden: ->(_event) { false },

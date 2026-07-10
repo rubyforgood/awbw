@@ -8,6 +8,9 @@ module Events
     before_action :set_event_registration
     before_action :authorize_callout
     before_action :set_event
+    # These pages carry an editable intro from their materialized built-in row's
+    # "Callout page text", rendered above the app-controlled content.
+    before_action :set_builtin_intro, only: %i[ payment scholarship certificate videoconference forms ]
 
     # Hidden Resource (by title) backing the handout links, in display order.
     # Missing ones (e.g. not seeded in an environment) are silently skipped.
@@ -116,6 +119,14 @@ module Events
 
     def set_event
       @event = @event_registration.event
+    end
+
+    # The editable intro for a built-in page: the materialized callout row's
+    # "Callout page text" for this action's magic_key. Nil when the event hasn't
+    # materialized the card or the admin left the text blank.
+    def set_builtin_intro
+      callout = @event.registration_ticket_callouts.find_by(magic_key: action_name)
+      @builtin_intro = callout&.description.presence
     end
 
     # Builds the callout-card links shown on the forms page. The document links

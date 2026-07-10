@@ -1381,7 +1381,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_184214) do
     t.bigint "item_id", null: false
     t.string "item_type", null: false
     t.text "object", size: :long
-    t.text "object_changes", size: :long
+    t.text "object_changes"
     t.string "whodunnit"
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end

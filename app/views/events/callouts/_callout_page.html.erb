@@ -32,6 +32,11 @@
     </div>
 
     <div class="px-6 sm:px-8 py-7">
+      <% if @builtin_intro.present? %>
+        <div class="rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700 mb-6">
+          <%= form_label_html(@builtin_intro) %>
+        </div>
+      <% end %>
       <%= yield %>
     </div>
   </div>

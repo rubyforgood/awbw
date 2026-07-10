@@ -581,14 +581,11 @@
         <div id="registration_ticket_callouts_list" class="space-y-3"
              data-controller="sortable"
              data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>">
+          <%# Custom callouts and all materialized built-ins share one editable row.
+              CE hours / event details are the exception — their text lives on the
+              event and is edited in their built-in card above the list. %>
           <%= f.fields_for :registration_ticket_callouts do |rts| %>
-            <% if rts.object.control_row? %>
-              <%= render "events/registration_ticket_control_callout_fields", f: rts %>
-            <% elsif rts.object.behavioral_magic? %>
-              <%# CE hours / event details: text is edited in the built-in card above %>
-            <% elsif rts.object.magic? %>
-              <%= render "events/registration_ticket_magic_callout_fields", f: rts %>
-            <% else %>
+            <% if rts.object.editable_in_list? %>
               <%= render "events/registration_ticket_callout_fields", f: rts %>
             <% end %>
           <% end %>

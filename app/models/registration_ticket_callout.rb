@@ -84,15 +84,17 @@ class RegistrationTicketCallout < ApplicationRecord
     magic? && CONTENT_MAGIC_KEYS.exclude?(magic_key)
   end
 
-  # A behavioral magic callout that gets an editor control row (hide/reorder/
-  # restore). Excludes the preview-edited ones, whose placement stays fixed.
-  def control_row?
-    behavioral_magic? && PREVIEW_EDITED_MAGIC_KEYS.exclude?(magic_key)
+  # Whether this callout is edited in the shared callout-fields editor row (all
+  # callouts except CE hours / Event details, whose text lives on the event and is
+  # edited via their built-in preview card above the list).
+  def editable_in_list?
+    PREVIEW_EDITED_MAGIC_KEYS.exclude?(magic_key.to_s)
   end
 
-  # Whether the control row also exposes an editable linked-resource picker.
-  def links_editable_resources?
-    RESOURCE_EDITABLE_MAGIC_KEYS.include?(magic_key)
+  # Whether the editor shows a linked-resources picker. Only cards that render
+  # their linked resources on a page use it: custom callouts, Handouts, FAQ, Forms.
+  def renders_resources?
+    !magic? || CONTENT_MAGIC_KEYS.include?(magic_key) || RESOURCE_EDITABLE_MAGIC_KEYS.include?(magic_key)
   end
 
   # Whether the callout is drip-scheduled to appear only from a future date.

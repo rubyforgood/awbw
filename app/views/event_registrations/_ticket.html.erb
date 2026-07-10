@@ -119,7 +119,7 @@
         <% next if callout.dripping? %>
         <% next if callout.payment_access_gated && !payment_access %>
         <% if callout.behavioral_magic? %>
-          <% card = magic.card_for(callout.magic_key) %>
+          <% card = magic.card_for(callout) %>
           <% if card %>
             <%= render "event_registrations/callout_card", callout: card, linked: !preview %>
           <% end %>

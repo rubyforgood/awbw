@@ -222,19 +222,33 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response.body).to include(restore_event_registration_ticket_callout_path(event, callout))
     end
 
-    it "renders a behavioral magic callout as a control-only row (hide + restore, no content fields)" do
+    it "renders a behavioral magic callout with the same editable fields as a custom one" do
       callout = create(:registration_ticket_callout, event:, magic_key: "certificate",
         title: "Certificate of completion")
 
       get edit_event_path(event)
 
       expect(response).to have_http_status(:ok)
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][title]\"")
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][description]\"")
       expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][hidden]\"")
-      expect(response.body).not_to include("name=\"event[registration_ticket_callouts_attributes][0][description]\"")
       expect(response.body).to include(restore_event_registration_ticket_callout_path(event, callout))
     end
 
-    it "gives the Forms control row an editable linked-resource picker" do
+    it "hides Restore default until the built-in has been customized" do
+      # Seed unedited built-ins, then load the editor.
+      DefaultTicketCallouts.seed(event)
+      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+
+      get edit_event_path(event)
+      expect(response.body).not_to include(restore_event_registration_ticket_callout_path(event, faq))
+
+      faq.update!(title: "Our FAQ")
+      get edit_event_path(event)
+      expect(response.body).to include(restore_event_registration_ticket_callout_path(event, faq))
+    end
+
+    it "gives the Forms card an editable linked-resource picker" do
       create(:registration_ticket_callout, event:, magic_key: "forms", title: "Forms")
 
       get edit_event_path(event)

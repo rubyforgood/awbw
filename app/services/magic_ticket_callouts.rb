@@ -82,13 +82,22 @@ class MagicTicketCallouts
                  .filter_map { |_, builder| send(builder) }
   end
 
-  # The live Card for one behavioral magic_key (payment, certificate, …), or nil
-  # when it shouldn't show for this registration (e.g. certificate not yet
-  # unlocked). The ticket calls this for a materialized behavioral row so the row
-  # governs visibility/order while the app still supplies the dynamic status.
-  def card_for(magic_key)
-    builder = CARD_BUILDERS[magic_key]
-    builder && send(builder)
+  # The live Card for a materialized behavioral callout row, or nil when it
+  # shouldn't show for this registration (e.g. certificate not yet unlocked). The
+  # app supplies the dynamic parts (badge, per-registration visibility, and the
+  # destination link); the row supplies the editable presentation (title,
+  # subtitle, colour, icon), so admin edits to those take effect on the ticket.
+  def card_for(callout)
+    builder = CARD_BUILDERS[callout.magic_key]
+    base = builder && send(builder)
+    return unless base
+
+    base.with(
+      title: callout.title,
+      subtitle: callout.subtitle,
+      icon_class: callout.display_icon_class,
+      color: callout.color_class.presence || base.color
+    )
   end
 
   private
