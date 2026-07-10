@@ -4,31 +4,31 @@
     <!-- Errors -->
     <%= render "shared/errors", resource: @sector if @sector.errors.any? %>
 
-    <!-- One-line Flex Fields -->
-    <div class="flex flex-wrap gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+      <div class="md:col-span-3 space-y-6">
+        <!-- Name -->
+        <div>
+          <%= f.input :name,
+                      label: "Name",
+                      input_html: { class: "form-control" } %>
+        </div>
 
-      <!-- Name -->
-      <div class="flex-1 min-w-[220px]">
-        <%= f.input :name,
-                    label: "Name",
-                    input_html: { class: "form-control" } %>
+        <!-- Description -->
+        <div>
+          <%= f.input :description,
+                      as: :text,
+                      label: "Description",
+                      hint: "Optional. Shown under this sector on the public registration form to clarify its meaning when the name alone isn't enough.",
+                      input_html: { class: "form-control", rows: 2 } %>
+        </div>
       </div>
 
-      <div class="flex items-center min-w-[150px] pt-6">
-        <%= visibility_flag_input f, :published,
-                    wrapper_html: { class: "flex items-center gap-2" },
-                    input_html: { class: "form-checkbox" } %>
+      <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
+        <%= render "shared/visibility_info", flags: %i[published] %>
+        <div class="grid grid-cols-1 items-center">
+          <%= visibility_flag_input f, :published %>
+        </div>
       </div>
-
-    </div>
-
-    <!-- Description -->
-    <div>
-      <%= f.input :description,
-                  as: :text,
-                  label: "Description",
-                  hint: "Optional. Shown under this sector on the public registration form to clarify its meaning when the name alone isn't enough.",
-                  input_html: { class: "form-control", rows: 2 } %>
     </div>
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
