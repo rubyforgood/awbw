@@ -232,7 +232,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][title]\"")
       expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][description]\"")
-      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][hidden]\"")
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][published]\"")
       expect(response.body).to include("Add resource") # every built-in can link resources now
       expect(response.body).to include(restore_event_registration_ticket_callout_path(event, callout))
     end

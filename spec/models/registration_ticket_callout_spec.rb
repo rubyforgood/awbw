@@ -71,6 +71,20 @@ RSpec.describe RegistrationTicketCallout, type: :model do
     end
   end
 
+  describe "#published (inverse of hidden)" do
+    it "reads and writes the hidden flag inverted" do
+      callout = build(:registration_ticket_callout, hidden: false)
+      expect(callout.published).to be(true)
+
+      callout.published = "0"
+      expect(callout.hidden).to be(true)
+      expect(callout.published).to be(false)
+
+      callout.published = "1"
+      expect(callout.hidden).to be(false)
+    end
+  end
+
   describe "#dripping?" do
     it "is true only while display_from is in the future" do
       callout.display_from = 1.day.from_now

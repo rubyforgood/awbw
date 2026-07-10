@@ -150,21 +150,21 @@
             Only show once payment is made or committed
           </label>
         <% end %>
-        <label class="flex items-center gap-2 text-sm text-gray-600">
-          <%= f.check_box :hidden, class: "rounded border-gray-300 text-purple-600" %>
-          <%= f.object.magic? ? "Hidden (keep this built-in callout off the ticket)" : "Hidden (prep without showing it on the ticket yet)" %>
-        </label>
-      </div>
-      <% if f.object.magic? %>
-        <% if f.object.restorable? && f.object.persisted? && DefaultTicketCallouts.customized?(f.object) %>
-          <%= link_to "Restore default", restore_event_registration_ticket_callout_path(@event, f.object),
-                data: { turbo_method: :post, turbo_confirm: "Reset this built-in callout to its default? Save any other changes first — this reloads the form." },
-                class: "text-sm text-gray-400 hover:text-purple-700 underline" %>
+        <% if f.object.magic? %>
+          <% if f.object.restorable? && f.object.persisted? && DefaultTicketCallouts.customized?(f.object) %>
+            <%= link_to "Restore default", restore_event_registration_ticket_callout_path(@event, f.object),
+                  data: { turbo_method: :post, turbo_confirm: "Reset this built-in callout to its default? Save any other changes first — this reloads the form." },
+                  class: "text-sm text-gray-400 hover:text-purple-700 underline" %>
+          <% end %>
+        <% else %>
+          <%= link_to_remove_association "Remove", f,
+                class: "text-sm text-gray-400 hover:text-red-600 underline" %>
         <% end %>
-      <% else %>
-        <%= link_to_remove_association "Remove", f,
-              class: "text-sm text-gray-400 hover:text-red-600 underline" %>
-      <% end %>
+      </div>
+      <label class="flex items-center gap-2 text-sm text-gray-600">
+        <%= f.check_box :published, class: "rounded border-gray-300 text-purple-600" %>
+        Published
+      </label>
     </div>
   </div>
 </div>

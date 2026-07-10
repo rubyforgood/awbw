@@ -77,6 +77,17 @@ class RegistrationTicketCallout < ApplicationRecord
     callout_type == "action"
   end
 
+  # The editor exposes visibility as "Published" — the inverse of the stored
+  # `hidden` flag — so a checked box means the callout shows on the ticket.
+  def published
+    !hidden
+  end
+  alias_method :published?, :published
+
+  def published=(value)
+    self.hidden = !ActiveModel::Type::Boolean.new.cast(value)
+  end
+
   # A seeded built-in callout (Handouts, FAQ, …) rather than an admin-authored
   # one. Magic callouts hide instead of delete and can be reset to default.
   def magic?
