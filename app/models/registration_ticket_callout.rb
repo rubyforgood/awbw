@@ -68,6 +68,15 @@ class RegistrationTicketCallout < ApplicationRecord
   scope :magic, -> { where.not(magic_key: nil) }
   scope :custom, -> { where(magic_key: nil) }
 
+  # Reset flagged rows to their template after the save that set the flag. The
+  # flag is cleared first so the reset's own update doesn't recurse.
+  after_save :apply_reset_to_default, if: :reset_to_default?
+
+  def apply_reset_to_default
+    self.reset_to_default = nil
+    DefaultTicketCallouts.reset(self)
+  end
+
   def action?
     callout_type == "action"
   end
@@ -81,6 +90,15 @@ class RegistrationTicketCallout < ApplicationRecord
 
   def published=(value)
     self.hidden = !ActiveModel::Type::Boolean.new.cast(value)
+  end
+
+  # Set from the editor's "Restore default" checkbox. When checked, the row is
+  # reset to its built-in template as part of the normal event save — no separate
+  # request — overriding whatever else was submitted for it.
+  attr_accessor :reset_to_default
+
+  def reset_to_default?
+    magic? && ActiveModel::Type::Boolean.new.cast(reset_to_default)
   end
 
   # A seeded built-in callout (Handouts, FAQ, …) rather than an admin-authored

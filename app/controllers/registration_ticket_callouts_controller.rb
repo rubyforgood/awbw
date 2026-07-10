@@ -38,17 +38,6 @@ class RegistrationTicketCalloutsController < ApplicationController
     end
   end
 
-  # Reset a materialized built-in callout's content and default visibility back to
-  # its template, keeping its position. Only magic callouts have a default.
-  def restore
-    @callout = @event.registration_ticket_callouts.find(params[:id])
-    authorize! @callout, to: :update?
-
-    DefaultTicketCallouts.reset(@callout) if @callout.magic?
-    redirect_to edit_event_path(@event, expand: "callouts", anchor: "registration_ticket_callouts"),
-                notice: "Restored the #{@callout.title} callout to its default."
-  end
-
   private
 
   def set_event

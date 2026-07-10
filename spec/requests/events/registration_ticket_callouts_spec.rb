@@ -171,27 +171,24 @@ RSpec.describe "Registration ticket callouts", type: :request do
     end
   end
 
-  describe "POST /events/:event_id/registration_ticket_callouts/:id/restore" do
-    it "restores a magic callout to its default for a manager" do
-      sign_in admin
+  describe "restoring a built-in through the event form" do
+    before { sign_in admin }
+
+    it "resets a callout flagged reset_to_default on the main save" do
       training = create(:event, :publicly_visible, facilitator_training: true)
       callout = create(:registration_ticket_callout, event: training, magic_key: "faq", title: "Edited", hidden: true)
 
-      post restore_event_registration_ticket_callout_path(training, callout)
+      patch event_path(training), params: {
+        event: {
+          title: training.title, start_date: training.start_date, end_date: training.end_date,
+          registration_ticket_callouts_attributes: {
+            "0" => { id: callout.id, title: "Still edited", reset_to_default: "1" }
+          }
+        }
+      }
 
-      expect(response).to redirect_to(edit_event_path(training, expand: "callouts", anchor: "registration_ticket_callouts"))
       expect(callout.reload.title).to eq("Frequently asked questions")
       expect(callout.hidden).to be(false)
-    end
-
-    it "is not permitted for a non-manager" do
-      sign_in create(:user)
-      callout = create(:registration_ticket_callout, event:, magic_key: "faq", title: "Edited")
-
-      post restore_event_registration_ticket_callout_path(event, callout)
-
-      expect(response).to redirect_to(root_path)
-      expect(callout.reload.title).to eq("Edited")
     end
   end
 
@@ -212,19 +209,19 @@ RSpec.describe "Registration ticket callouts", type: :request do
   describe "the event editor" do
     before { sign_in admin }
 
-    it "renders a materialized content callout as an editable field with hide and restore controls" do
-      callout = create(:registration_ticket_callout, event:, magic_key: "faq",
+    it "renders a materialized content callout as an editable field with a restore checkbox" do
+      create(:registration_ticket_callout, event:, magic_key: "faq",
         title: "Frequently asked questions")
 
       get edit_event_path(event)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][title]\"")
-      expect(response.body).to include(restore_event_registration_ticket_callout_path(event, callout))
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][reset_to_default]\"")
     end
 
     it "renders a behavioral magic callout with the same editable fields as a custom one" do
-      callout = create(:registration_ticket_callout, event:, magic_key: "certificate",
+      create(:registration_ticket_callout, event:, magic_key: "certificate",
         title: "Certificate of completion")
 
       get edit_event_path(event)
@@ -234,20 +231,21 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][description]\"")
       expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][published]\"")
       expect(response.body).to include("Add resource") # every built-in can link resources now
-      expect(response.body).to include(restore_event_registration_ticket_callout_path(event, callout))
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][reset_to_default]\"")
     end
 
-    it "hides Restore default until the built-in has been customized" do
+    it "shows the restore checkbox only once the built-in has been customized" do
       # Seed unedited built-ins, then load the editor.
       DefaultTicketCallouts.seed(event)
       faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
 
       get edit_event_path(event)
-      expect(response.body).not_to include(restore_event_registration_ticket_callout_path(event, faq))
+      expect(response.body).to include("Matches default")
+      expect(response.body).not_to include("reset_to_default")
 
       faq.update!(title: "Our FAQ")
       get edit_event_path(event)
-      expect(response.body).to include(restore_event_registration_ticket_callout_path(event, faq))
+      expect(response.body).to include("reset_to_default")
     end
 
     it "gives the Forms card an add-another linked-resource picker" do
