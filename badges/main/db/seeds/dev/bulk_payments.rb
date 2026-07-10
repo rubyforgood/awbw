@@ -41,7 +41,7 @@ unless bulk_form
   return
 end
 
-puts "Seeding bulk payment demo on '#{event.title}' (webhook, cash/check, and pending)…"
+puts "Creating bulk payment demo on '#{event.title}' (webhook, cash/check, and pending)…"
 
 cost_cents = event.cost_cents.to_i
 payer_domain = "bulkpaydemo.seed.example.com" # marks this seed's payers for teardown
@@ -227,7 +227,5 @@ build_submission.(payer: sam, method: "Credit card (later)",
 
 submissions = FormSubmission.where(person: Person.where("email LIKE ?", "%@#{payer_domain}"),
                                    form: bulk_form, role: "bulk_payment")
-paid = Payment.where(form_submission: submissions).group(:type).count
-puts "  Added #{submissions.count} bulk payments to '#{event.title}' " \
-     "(payments: #{paid.map { |t, c| "#{c} #{t}" }.join(', ')}; the rest pending)"
-puts "  Bulk payment seeds complete!"
+puts "  Created #{submissions.count} bulk payment submissions"
+puts "  #{Payment.where(form_submission: submissions).count} paid, the rest pending"

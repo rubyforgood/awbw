@@ -365,8 +365,6 @@ workshops.each do |workshop|
     )
   end
 end
-puts "Done assigning categories and sectors."
-
 # A few unpublished (non-canonical) sectors that still carry taggings, so the
 # taggings admin has data exercising the "tagged but hidden" state. The base
 # db/seeds.rb only creates the canonical SECTOR_TYPES; these are dev-only and
@@ -385,8 +383,6 @@ workshop_pool = Workshop.all.to_a
     )
   end
 end
-puts "Done creating unpublished sectors with taggings."
-
 # A few unpublished (non-canonical) categories that still carry taggings, so the
 # taggings admin has data exercising the "tagged but hidden" state for categories
 # too. The base db/seeds.rb only creates canonical categories; these are dev-only,
@@ -407,8 +403,6 @@ art_type = CategoryType.where("LOWER(name) = LOWER(?)", "ArtType").first_or_crea
     )
   end
 end
-puts "Done creating unpublished categories with taggings."
-
 puts "Creating Workshop Variations…"
 # rubocop:disable Style/PercentLiteralDelimiters
 variations = [
