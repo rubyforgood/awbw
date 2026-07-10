@@ -61,8 +61,11 @@ module Events
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
     end
 
-    # CE hours status: requested hours, amount owed, and license number.
+    # CE hours status: requested hours, amount owed, and license number. Title and
+    # body come from the materialized CE callout row (falling back to the event's
+    # columns for events not yet seeded).
     def ce
+      @ce_callout = @event.registration_ticket_callouts.find_by(magic_key: "ce_hours")
     end
 
     # Forms page: callout-card links to the W-9 (when seeded) and, for paid

@@ -1,6 +1,8 @@
 <% content_for(:page_bg_class, "public") %>
-<% content_for(:page_title, "#{@event.ce_hours_details_label} — #{@event.title}") %>
-<%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_details_label } do %>
+<% ce_title = @ce_callout&.title.presence || @event.ce_hours_details_label %>
+<% ce_body = @ce_callout&.description.presence || @event.ce_hours_details %>
+<% content_for(:page_title, "#{ce_title} — #{@event.title}") %>
+<%= render layout: "events/callouts/callout_page", locals: { title: ce_title } do %>
   <% if @event_registration.ce_credit_requested? %>
     <div class="flex flex-wrap items-center justify-between gap-3">
       <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</p>
@@ -47,9 +49,9 @@
     <p class="text-sm text-gray-600">You haven't requested continuing education credit for this training. CE hours are available for an additional fee — reach out to request credit.</p>
   <% end %>
 
-  <% if @event.ce_hours_details.present? %>
+  <% if ce_body.present? %>
     <div class="mt-6 border-t border-gray-100 pt-5 rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700">
-      <%= form_label_html(@event.ce_hours_details) %>
+      <%= form_label_html(ce_body) %>
     </div>
   <% end %>
 <% end %>

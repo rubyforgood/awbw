@@ -263,20 +263,21 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:public_registration_enabled][:description])
     end
 
-    it "renders the built-in 'Before you attend' card fields within the callouts section" do
+    it "renders the built-in 'Before you attend' card as an editable row" do
       get edit_event_path(event)
       expect(response.body).to include("Registration ticket callouts")
       expect(response.body).to include("Before you attend")
-      expect(response.body).to include("event[event_details_label]")
-      expect(response.body).to include("event[event_details]")
+      # Its text now lives on the callout row, not the event columns.
+      expect(response.body).not_to include("event[event_details_label]")
     end
 
-    it "renders the built-in 'CE hours' card fields within the callouts section" do
+    it "renders the built-in 'CE hours' card as an editable row with the CE config" do
       get edit_event_path(event)
       expect(response.body).to include("Registration ticket callouts")
-      expect(response.body).to include("CE hours")
-      expect(response.body).to include("event[ce_hours_details_label]")
-      expect(response.body).to include("event[ce_hours_details]")
+      expect(response.body).to include("CE hours offered")
+      # CE hours/cost stay on the event; the label/text moved to the callout row.
+      expect(response.body).to include("event[ce_hours_offered]")
+      expect(response.body).not_to include("event[ce_hours_details_label]")
     end
 
     it "previews the app-controlled built-in callouts (greyed, non-editable)" do

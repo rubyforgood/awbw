@@ -95,9 +95,9 @@ class DefaultTicketCallouts
     return callout unless definition
 
     callout.update!(
-      title: definition[:title],
-      subtitle: definition[:subtitle],
-      description: definition[:description],
+      title: resolve(definition[:title]),
+      subtitle: resolve(definition[:subtitle]),
+      description: resolve(definition[:description]),
       callout_type: definition[:callout_type],
       icon_class: definition[:icon_class],
       color_class: definition[:color_class],
@@ -112,9 +112,9 @@ class DefaultTicketCallouts
     definition = definitions.find { |candidate| candidate[:magic_key] == callout.magic_key }
     return false unless definition
 
-    callout.title != definition[:title] ||
-      callout.subtitle != definition[:subtitle] ||
-      callout.description.to_s != definition[:description].to_s ||
+    callout.title != resolve(definition[:title]) ||
+      callout.subtitle != resolve(definition[:subtitle]) ||
+      callout.description.to_s != resolve(definition[:description]).to_s ||
       callout.callout_type != definition[:callout_type] ||
       callout.icon_class != definition[:icon_class] ||
       callout.color_class != definition[:color_class] ||
@@ -123,6 +123,12 @@ class DefaultTicketCallouts
   end
 
   private
+
+  # A definition value may be a static value or a proc taking the event (used by
+  # CE / event details to seed their default from the event's own columns).
+  def resolve(value)
+    value.respond_to?(:call) ? value.call(@event) : value
+  end
 
   # Ordered built-in callout definitions. `hidden` / `display_from` are procs so
   # each event derives its own defaults; `resources` resolves the linked records;
@@ -165,26 +171,27 @@ class DefaultTicketCallouts
       },
       {
         magic_key: "ce_hours",
-        title: "CE hours",
+        # Title/text seed from the event's CE columns (migrating existing content);
+        # thereafter they live on the row like every other built-in. The row also
+        # carries the CE hours-offered/cost config. Always seeded.
+        title: ->(event) { event.ce_hours_details_label },
+        description: ->(event) { event.ce_hours_details },
         subtitle: "Continuing education — requirements & how to request",
         callout_type: "action",
         icon_class: "fa-solid fa-graduation-cap",
         color_class: "teal",
-        # Content (label + details) stays on the event and is edited inline in the
-        # callout row; the row governs order, hidden, and linked resources. Always
-        # seeded so the row is available to edit even before hours are set.
         hidden: ->(_event) { false }
       },
       {
         magic_key: "event_details",
-        title: "Before you attend",
+        # Title/text seed from the event's details columns (migrating existing
+        # content); thereafter they live on the row. Always seeded.
+        title: ->(event) { event.event_details_label },
+        description: ->(event) { event.event_details },
         subtitle: "Important info for this event — please read",
         callout_type: "reference",
         icon_class: "fa-solid fa-palette",
         color_class: "blue",
-        # Content (label + body) stays on the event and is edited inline in the
-        # callout row; the row governs order, hidden, and linked resources. Always
-        # seeded so the row is available to edit even before content is filled in.
         hidden: ->(_event) { false }
       },
       {
@@ -240,9 +247,9 @@ class DefaultTicketCallouts
   def create(definition)
     callout = @event.registration_ticket_callouts.create!(
       magic_key: definition[:magic_key],
-      title: definition[:title],
-      subtitle: definition[:subtitle],
-      description: definition[:description],
+      title: resolve(definition[:title]),
+      subtitle: resolve(definition[:subtitle]),
+      description: resolve(definition[:description]),
       callout_type: definition[:callout_type],
       icon_class: definition[:icon_class],
       color_class: definition[:color_class],

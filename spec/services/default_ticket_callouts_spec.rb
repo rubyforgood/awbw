@@ -83,6 +83,23 @@ RSpec.describe DefaultTicketCallouts do
       expect(forms.resources).to be_empty
     end
 
+    it "migrates CE hours and event-details content from the event onto the row" do
+      event = create(:event, ce_hours_details_label: "Continuing education",
+        ce_hours_details: "<p>CAMFT approved.</p>", event_details_label: "Art supplies",
+        event_details: "<p>Bring paper.</p>")
+
+      described_class.seed(event)
+
+      ce = event.registration_ticket_callouts.find_by(magic_key: "ce_hours")
+      details = event.registration_ticket_callouts.find_by(magic_key: "event_details")
+      expect(ce.title).to eq("Continuing education")
+      expect(ce.description).to eq("<p>CAMFT approved.</p>")
+      expect(details.title).to eq("Art supplies")
+      expect(details.description).to eq("<p>Bring paper.</p>")
+      # A freshly-migrated card matches its default.
+      expect(described_class.customized?(ce)).to be(false)
+    end
+
     it "reports whether a materialized callout has been customized" do
       event = create(:event, facilitator_training: true)
       described_class.seed(event)

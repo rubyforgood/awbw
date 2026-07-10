@@ -193,7 +193,11 @@ class EventsController < ApplicationController
   def details
     authorize! @event, to: :details?
 
-    if @event.event_details.blank?
+    callout = @event.registration_ticket_callouts.find_by(magic_key: "event_details")
+    @event_details_title = callout&.title.presence || @event.event_details_label
+    @event_details_body = callout&.description.presence || @event.event_details
+
+    if @event_details_body.blank?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
     end

@@ -1,13 +1,12 @@
-<%# CE hours / event details keep their text on the event (shared with their
-    standalone pages), so those two edit the event columns via `event_f`; every
-    other callout edits its own row. The row always owns order, hidden, and
-    linked resources. %>
+<%# One editable callout row, shared by custom callouts and every materialized
+    built-in. CE hours additionally shows the event's hours-offered/cost config
+    inline (via event_f); its text, like every other built-in, lives on the row. %>
 <% event_f = local_assigns[:event_f] %>
-<% content_on_event = f.object.content_on_event? && event_f.present? %>
-<% label_field, content_field = f.object.magic_key == "ce_hours" ? %i[ce_hours_details_label ce_hours_details] : %i[event_details_label event_details] if content_on_event %>
 
 <div class="nested-fields registration-ticket-callout-fields flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors"
-     <% unless content_on_event %>data-controller="callout-preview" data-callout-preview-themes-value="<%= DomainTheme.swatches.to_json %>" data-callout-preview-defaults-value="<%= RegistrationTicketCallout::DEFAULT_COLORS.to_json %>"<% end %>
+     data-controller="callout-preview"
+     data-callout-preview-themes-value="<%= DomainTheme.swatches.to_json %>"
+     data-callout-preview-defaults-value="<%= RegistrationTicketCallout::DEFAULT_COLORS.to_json %>"
      <% if f.object.persisted? %>data-sortable-id="<%= f.object.id %>"<% end %>>
   <% if f.object.persisted? %>
     <div class="cursor-grab text-gray-400 hover:text-gray-600 pt-2 shrink-0" data-sortable-handle title="Drag to reorder">
@@ -23,7 +22,7 @@
     <% if f.object.magic? %>
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">Built in</span>
-        <span class="text-xs text-gray-400"><%= content_on_event ? "Its text is shared with this event's own page." : "Pre-filled defaults you can edit; the app supplies its live status and links." %></span>
+        <span class="text-xs text-gray-400">Pre-filled defaults you can edit; the app supplies its live status and links.</span>
       </div>
     <% end %>
 
@@ -31,74 +30,60 @@
         identity (title + presentation) on the left, its page content on the right. %>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="flex items-start gap-3 min-w-0">
-        <% if content_on_event %>
-          <i class="<%= f.object.display_icon_class %> <%= f.object.theme[:icon] %> w-6 shrink-0 text-center text-xl pt-6" aria-hidden="true"></i>
-        <% else %>
-          <i class="w-6 shrink-0 text-center text-xl pt-6" data-callout-preview-target="leadingIcon" aria-hidden="true"></i>
-        <% end %>
+        <i class="w-6 shrink-0 text-center text-xl pt-6" data-callout-preview-target="leadingIcon" aria-hidden="true"></i>
 
         <div class="flex-1 min-w-0 space-y-3">
           <div class="space-y-3">
             <div>
-              <% if content_on_event %>
-                <%= event_f.label label_field, "Title", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-                <%= event_f.text_field label_field,
-                      class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
-              <% else %>
-                <%= f.label :title, "Title", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-                <%= f.text_field :title, required: true,
-                      class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
-              <% end %>
+              <%= f.label :title, "Title", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.text_field :title, required: true,
+                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
             </div>
-            <% unless content_on_event %>
-              <div>
-                <%= f.label :subtitle, "Subtitle", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-                <%= f.text_field :subtitle,
-                      class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
-              </div>
-            <% end %>
+            <div>
+              <%= f.label :subtitle, "Subtitle", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.text_field :subtitle,
+                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+            </div>
           </div>
 
-          <% if content_on_event %>
-            <% if f.object.magic_key == "ce_hours" %>
-              <div class="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-                <label class="flex items-center gap-2 text-sm text-gray-700">
-                  CE hours offered
-                  <%= event_f.number_field :ce_hours_offered, min: 0, step: 0.25,
-                        class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                </label>
-                <label class="flex items-center gap-2 text-sm text-gray-700">
-                  Total CE cost
-                  <span class="text-gray-400">$</span>
-                  <%= event_f.number_field :ce_hours_cost, min: 0, step: 1,
-                        class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                </label>
-              </div>
-            <% end %>
-          <% else %>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <%= f.label :callout_type, "Type", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-                <%= f.select :callout_type,
-                      RegistrationTicketCallout::CALLOUT_TYPES.map { |t| [ t.humanize, t ] },
-                      {},
-                      class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
-                      data: { callout_preview_target: "typeSelect", action: "callout-preview#update" } %>
-              </div>
-              <div>
-                <%= f.label :color_class, "Colour", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-                <%= f.select :color_class,
-                      DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
-                      { include_blank: "Default (by type)" },
-                      class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
-                      data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>
-              </div>
-              <div>
-                <%= f.label :icon_class, "Icon", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-                <%= f.text_field :icon_class,
-                      class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono",
-                      data: { callout_preview_target: "iconInput", action: "callout-preview#update" } %>
-              </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <%= f.label :callout_type, "Type", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.select :callout_type,
+                    RegistrationTicketCallout::CALLOUT_TYPES.map { |t| [ t.humanize, t ] },
+                    {},
+                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                    data: { callout_preview_target: "typeSelect", action: "callout-preview#update" } %>
+            </div>
+            <div>
+              <%= f.label :color_class, "Colour", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.select :color_class,
+                    DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
+                    { include_blank: "Default (by type)" },
+                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                    data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>
+            </div>
+            <div>
+              <%= f.label :icon_class, "Icon", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+              <%= f.text_field :icon_class,
+                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono",
+                    data: { callout_preview_target: "iconInput", action: "callout-preview#update" } %>
+            </div>
+          </div>
+
+          <% if f.object.ce_config? && event_f.present? %>
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
+              <label class="flex items-center gap-2 text-sm text-gray-700">
+                CE hours offered
+                <%= event_f.number_field :ce_hours_offered, min: 0, step: 0.25,
+                      class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
+              </label>
+              <label class="flex items-center gap-2 text-sm text-gray-700">
+                Total CE cost
+                <span class="text-gray-400">$</span>
+                <%= event_f.number_field :ce_hours_cost, min: 0, step: 1,
+                      class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
+              </label>
             </div>
           <% end %>
         </div>
@@ -107,38 +92,29 @@
       <%# RIGHT: the call-out's own page — its text and any linked resources %>
       <div class="min-w-0 space-y-3">
         <div>
-          <% html_placeholder = "Accepts basic HTML" %>
-          <% if content_on_event %>
-            <%= event_f.label content_field, "Callout page text", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-            <%= event_f.text_area content_field, rows: 4, placeholder: html_placeholder,
-                  class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
-          <% else %>
-            <%= f.label :description, "Callout page text (only opens a page if this is filled out)", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-            <%= f.text_area :description, rows: 4, placeholder: html_placeholder,
-                  class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
-          <% end %>
+          <%= f.label :description, "Callout page text (only opens a page if this is filled out)", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+          <%= f.text_area :description, rows: 4, placeholder: "Accepts basic HTML",
+                class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
         </div>
 
-        <% if f.object.renders_resources? %>
-          <%# Collapsed by default; opened on load only when resources are saved. %>
-          <details class="group" <%= "open" if f.object.registration_ticket_callout_resources.any? %>>
-            <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
-              <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 transition-transform group-open:rotate-90"></i>
-              Linked resources
-            </summary>
-            <div class="mt-1">
-              <p class="text-xs text-gray-500 mb-1">Optional. Shows each resource below the content on the call-out's page (PDF first-page preview, etc.), with a download button when the resource has a downloadable file.</p>
-              <div class="space-y-2">
-                <%= f.fields_for :registration_ticket_callout_resources do |rf| %>
-                  <%= render "events/registration_ticket_callout_resource_fields", f: rf %>
-                <% end %>
-              </div>
-              <%= link_to_add_association "➕ Add resource", f, :registration_ticket_callout_resources,
-                    partial: "events/registration_ticket_callout_resource_fields",
-                    class: "mt-1 inline-block text-sm font-medium text-purple-600 hover:text-purple-800" %>
+        <%# Collapsed by default; opened on load only when resources are saved. %>
+        <details class="group" <%= "open" if f.object.registration_ticket_callout_resources.any? %>>
+          <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
+            <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 transition-transform group-open:rotate-90"></i>
+            Linked resources
+          </summary>
+          <div class="mt-1">
+            <p class="text-xs text-gray-500 mb-1">Optional. Shows each resource below the content on the call-out's page (PDF first-page preview, etc.), with a download button when the resource has a downloadable file.</p>
+            <div class="space-y-2">
+              <%= f.fields_for :registration_ticket_callout_resources do |rf| %>
+                <%= render "events/registration_ticket_callout_resource_fields", f: rf %>
+              <% end %>
             </div>
-          </details>
-        <% end %>
+            <%= link_to_add_association "➕ Add resource", f, :registration_ticket_callout_resources,
+                  partial: "events/registration_ticket_callout_resource_fields",
+                  class: "mt-1 inline-block text-sm font-medium text-purple-600 hover:text-purple-800" %>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -151,10 +127,12 @@
           </label>
         <% end %>
         <% if f.object.magic? %>
-          <% if f.object.restorable? && f.object.persisted? && DefaultTicketCallouts.customized?(f.object) %>
+          <% if f.object.persisted? && DefaultTicketCallouts.customized?(f.object) %>
             <%= link_to "Restore default", restore_event_registration_ticket_callout_path(@event, f.object),
                   data: { turbo_method: :post, turbo_confirm: "Reset this built-in callout to its default? Save any other changes first — this reloads the form." },
                   class: "text-sm text-gray-400 hover:text-purple-700 underline" %>
+          <% else %>
+            <span class="text-sm text-gray-300">Matches default</span>
           <% end %>
         <% else %>
           <%= link_to_remove_association "Remove", f,

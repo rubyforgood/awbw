@@ -76,7 +76,7 @@ class MagicTicketCallouts
   # those from the row (calling #card_for for behavioral ones), so this is both the
   # non-materialized set and the fallback for events not yet seeded.
   def cards
-    CARD_BUILDERS.reject { |magic_key, _| materialized?(magic_key) }
+    CARD_BUILDERS.reject { |magic_key, _| materialized?(magic_key) || skip_in_fallback?(magic_key) }
                  .filter_map { |_, builder| send(builder) }
   end
 
@@ -89,9 +89,8 @@ class MagicTicketCallouts
     builder = CARD_BUILDERS[callout.magic_key]
     base = builder && send(builder)
     return unless base
-    # CE hours / event details keep their app-supplied, event-driven title and
-    # subtitle (their text lives on the event, not the row).
-    return base if callout.content_on_event?
+    # Event details links to its page only when it has content to show.
+    return if callout.magic_key == "event_details" && callout.description.blank?
 
     base.with(
       title: callout.title,
@@ -110,6 +109,12 @@ class MagicTicketCallouts
   def materialized?(magic_key)
     @materialized_keys ||= event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
     @materialized_keys.include?(magic_key)
+  end
+
+  # In the unseeded fallback, event-details content lives on the event column, so
+  # hide the card when it's blank (the row path checks the row in #card_for).
+  def skip_in_fallback?(magic_key)
+    magic_key == "event_details" && event.event_details.blank?
   end
 
   # Top card: an action card while a balance is due, a reference card once paid
@@ -208,7 +213,6 @@ class MagicTicketCallouts
 
   # "Art supplies & what to bring" — the event's own details page.
   def event_details_card
-    return if event.event_details.blank?
     Card.new(icon_class: "fa-solid fa-palette", color: "blue",
              title: event.event_details_label,
              subtitle: "Important info for this event — please read",

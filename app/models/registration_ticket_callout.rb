@@ -17,18 +17,13 @@ class RegistrationTicketCallout < ApplicationRecord
 
   # "Content" magic callouts render their own editable copy/resources (like custom
   # callouts). "Behavioral" magic callouts (the rest) render live per-registration
-  # status through MagicTicketCallouts#card_for — the row only governs visibility,
-  # drip date, and order.
+  # status through MagicTicketCallouts#card_for — the row still owns the editable
+  # title/subtitle/text, order, visibility, and resources.
   CONTENT_MAGIC_KEYS = %w[ handouts faq ].freeze
 
-  # Behavioral magic callouts whose text is edited via the event's built-in
-  # preview card (their content lives on event columns, e.g. ce_hours_details),
-  # so the editor shows no separate control row for them.
-  PREVIEW_EDITED_MAGIC_KEYS = %w[ ce_hours event_details ].freeze
-
-  # Behavioral magic callouts that carry admin-editable linked resources on their
-  # page (e.g. the Forms card's W-9), edited from the control row.
-  RESOURCE_EDITABLE_MAGIC_KEYS = %w[ forms ].freeze
+  # Behavioral built-ins that also carry event-level config edited inline in their
+  # row (CE hours offered / cost); their text lives on the row like everything else.
+  CONFIG_MAGIC_KEYS = %w[ ce_hours ].freeze
 
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
@@ -100,25 +95,9 @@ class RegistrationTicketCallout < ApplicationRecord
     magic? && CONTENT_MAGIC_KEYS.exclude?(magic_key)
   end
 
-  # CE hours / Event details keep their text on the event (shared with their
-  # standalone CE / details pages), so the editor row edits those event columns
-  # instead of the callout row's title/description — but the row still owns their
-  # order, hidden flag, and linked resources.
-  def content_on_event?
-    PREVIEW_EDITED_MAGIC_KEYS.include?(magic_key.to_s)
-  end
-
-  # Whether the editor offers "Restore default" — a built-in whose content lives
-  # on the row (so it has a template to restore to).
-  def restorable?
-    magic? && !content_on_event?
-  end
-
-  # Every callout can link resources; they render on the callout's page (its own
-  # page for custom/content cards, or below the built-in content for behavioral
-  # ones). Kept as a seam in case a card ever needs to opt out.
-  def renders_resources?
-    true
+  # Whether the row carries the inline CE config fields (hours offered / cost).
+  def ce_config?
+    CONFIG_MAGIC_KEYS.include?(magic_key.to_s)
   end
 
   # Whether the callout is drip-scheduled to appear only from a future date.
