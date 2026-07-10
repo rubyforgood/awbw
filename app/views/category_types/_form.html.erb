@@ -14,20 +14,13 @@
                   input_html: { class: "form-control" } %>
       <div class="flex flex-col items-start gap-4 pt-6">
         <%= visibility_flag_input f, :published,
-                    label: "Published",
-                    hint: "Hides all child categories",
+                    definition_key: :category_type_published,
                     input_html: { class: "h-4 w-4" },
                     wrapper_html: { class: "mb-0" } %>
-        <%= f.input :story_specific,
-                    as: :boolean,
-                    label: "Story specific",
-                    hint: "Needed for story share subsite",
+        <%= visibility_flag_input f, :story_specific,
                     input_html: { class: "h-4 w-4" },
                     wrapper_html: { class: "mb-0" } %>
-        <%= f.input :profile_specific,
-                    as: :boolean,
-                    label: "Profile specific",
-                    hint: "Shown on person & organization forms",
+        <%= visibility_flag_input f, :profile_specific,
                     input_html: { class: "h-4 w-4" },
                     wrapper_html: { class: "mb-0" } %>
       </div>
