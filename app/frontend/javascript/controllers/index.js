@@ -225,6 +225,3 @@ application.register("bulk-payment-attendees", BulkPaymentAttendeesController)
 import ConditionalFieldsController from "./conditional_fields_controller"
 application.register("conditional-fields", ConditionalFieldsController)
 
-import InfoPopoverController from "./info_popover_controller"
-application.register("info-popover", InfoPopoverController)
-

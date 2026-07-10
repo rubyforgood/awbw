@@ -233,11 +233,11 @@ RSpec.describe "/stories", type: :request do
     end
 
     describe "GET /edit" do
-      it "renders the visibility info popover with definitions for each flag" do
+      it "renders the hover definitions panel with copy for each flag" do
         get edit_story_url(private_story)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include('data-controller="info-popover"')
+        expect(response.body).to include("group-hover:block")
         expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:publicly_visible][:description])
       end
     end
