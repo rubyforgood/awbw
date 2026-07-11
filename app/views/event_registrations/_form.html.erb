@@ -31,7 +31,15 @@
          } %>
       <% current_icon_color = status_icon_colors[f.object.status] || "text-gray-500" %>
       <% current_icon = status_icons[f.object.status] || "fa-question" %>
-      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <%# The attendance-status controller spans the whole card so the per-day
+          checkmarks in the meta strip below can drive the status select above. %>
+      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+           data-controller="attendance-status"
+           data-attendance-status-colors-value="<%= status_icon_colors.to_json %>"
+           data-attendance-status-icons-value="<%= status_icons.to_json %>"
+           data-attendance-status-initial-value="<%= f.object.status %>"
+           data-attendance-status-active-statuses-value="<%= EventRegistration::ACTIVE_STATUSES.to_json %>"
+           data-attendance-status-day-count-value="<%= f.object.event.day_count %>">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
           <div class="min-w-0 flex-1">
             <%= person_profile_button(f.object.registrant, subtitle: f.object.registrant.preferred_email) %>
@@ -76,11 +84,7 @@
             </div>
           <% end %>
 
-          <div class="sm:w-64"
-               data-controller="attendance-status"
-               data-attendance-status-colors-value="<%= status_icon_colors.to_json %>"
-               data-attendance-status-icons-value="<%= status_icons.to_json %>"
-               data-attendance-status-initial-value="<%= f.object.status %>">
+          <div class="sm:w-64">
             <div class="mb-1 flex items-center justify-between gap-2">
               <span class="text-xs font-medium text-gray-400">Registration status</span>
               <span data-attendance-status-target="dirty"
@@ -133,6 +137,25 @@
               <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem] text-gray-400"></i>
             <% end %>
           <% end %>
+
+          <%# ---- Per-day attendance — the same checkmarks as the Onboarding
+              matrix. Toggling a day rolls the status select above forward/back
+              (see the attendance-status controller), and the boxes save with the
+              form. ---- %>
+          <div class="ml-auto flex flex-col items-end gap-1">
+            <span class="text-gray-400">Days attended</span>
+            <div class="flex flex-wrap items-center justify-end gap-1.5">
+              <% (1..f.object.event.day_count).each do |day| %>
+                <label class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-medium cursor-pointer transition-colors border-gray-200 text-gray-500 has-[:checked]:border-green-300 has-[:checked]:bg-green-50 has-[:checked]:text-green-700">
+                  <%= f.check_box "completed_day_#{day}",
+                        "aria-label": "Day #{day}",
+                        data: { "attendance-status-target": "day", action: "attendance-status#deriveFromDays" },
+                        class: "h-3.5 w-3.5 rounded border-gray-300 text-green-600 focus:ring-green-200 cursor-pointer" %>
+                  Day <%= day %>
+                </label>
+              <% end %>
+            </div>
+          </div>
         </div>
       </div>
 
