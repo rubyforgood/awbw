@@ -57,9 +57,6 @@ application.register("edit-toggle", EditToggleController)
 import FieldRequiredController from "./field_required_controller"
 application.register("field-required", FieldRequiredController)
 
-import DatePlaceholderController from "./date_placeholder_controller"
-application.register("date-placeholder", DatePlaceholderController)
-
 import DirtyFormController from "./dirty_form_controller"
 application.register("dirty-form", DirtyFormController)
 
