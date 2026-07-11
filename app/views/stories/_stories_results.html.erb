@@ -1,21 +1,7 @@
 <%= turbo_stream.replace("stories_count", partial: "stories_count") %>
 <%
   sort_base = params.permit(:title, :query, :published, :year, :author_id, :number_of_items_per_page).to_h.symbolize_keys
-  sort_icon = ->(column) {
-    if @sort == column
-      @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
-    else
-      "fa-sort"
-    end
-  }
-  sort_link = ->(column, label) {
-    link_to stories_path(sort_base.merge(sort: column, direction: (@sort == column && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
-            data: { turbo_frame: "stories_results" },
-            class: "inline-flex items-center gap-1 text-gray-700 hover:text-gray-900" do
-      concat label
-      concat content_tag(:i, "", class: "fa-solid #{sort_icon.call(column)} text-xs opacity-70")
-    end
-  }
+  sort_link = sort_header_link(frame: "stories_results", path: ->(p) { stories_path(p) }, base: sort_base)
 %>
 <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @stories.any? %>">
   <table class="w-full divide-y divide-gray-200">

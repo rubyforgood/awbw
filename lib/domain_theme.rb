@@ -61,7 +61,7 @@ module DomainTheme
   # Ordered palette of colours offered as user-pickable swatches (e.g. the
   # callout colour dropdown). A curated subset of the full theme palette that
   # reads well as tinted boxes — add a colour here once and every picker updates.
-  SWATCH_COLORS = %i[ amber orange indigo blue green purple rose gray ].freeze
+  SWATCH_COLORS = %i[ amber orange indigo blue teal green purple fuchsia rose gray ].freeze
 
   # Semantic roles for a colour "swatch" — the full set of Tailwind utilities for
   # tinting a boxed UI element (callout cards today; the amount-due / scholarship
