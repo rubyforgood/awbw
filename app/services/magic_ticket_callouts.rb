@@ -152,7 +152,10 @@ class MagicTicketCallouts
     return unless registration.scholarship_requested?
     awarded = registration.scholarship?
     tasks_outstanding = awarded && !registration.scholarship_tasks_met?
-    Card.new(icon_class: "fa-solid fa-award", color: DomainTheme.color_for(:scholarships).to_s,
+    Card.new(icon_class: "fa-solid fa-award",
+             # Amber while award tasks are outstanding (action needed), otherwise
+             # the scholarship colour.
+             color: tasks_outstanding ? "amber" : DomainTheme.color_for(:scholarships).to_s,
              title: "Scholarship",
              subtitle: awarded ? "Your award — amount, funder, and tasks" : "Your scholarship request status",
              href: registration_scholarship_path(registration.slug),
@@ -173,7 +176,10 @@ class MagicTicketCallouts
   def ce_hours_card
     return unless registration.ce_credit_requested?
     complete = registration.ce_hours_requested.present? && registration.ce_license_provided?
-    Card.new(icon_class: "fa-solid fa-graduation-cap", color: "teal",
+    Card.new(icon_class: "fa-solid fa-graduation-cap",
+             # Amber while hours/license are still needed (action needed), teal
+             # once complete.
+             color: complete ? "teal" : "amber",
              title: event.ce_hours_details_label,
              subtitle: ce_hours_subtitle,
              href: registration_ce_path(registration.slug),

@@ -11,7 +11,7 @@
 <% href = local_assigns.fetch(:href) { callout.href } %>
 <% target = local_assigns.fetch(:target) { callout.try(:target) } %>
 <% trailing = local_assigns.fetch(:trailing_icon) { callout.try(:trailing_icon) }.presence ||
-              (callout.action? ? "fa-solid fa-arrow-right" : "fa-solid fa-circle-info") %>
+              "fa-solid fa-arrow-right" %>
 <% badge = callout.try(:badge) %>
 <% badge_classes = callout.try(:badge_classes).presence || "bg-amber-100 text-amber-800 border border-amber-300" %>
 <% card_class = "flex items-center gap-3 rounded-xl border-2 #{theme[:border]} #{theme[:bg]} px-4 py-3 #{theme[:hover]} transition-colors" %>

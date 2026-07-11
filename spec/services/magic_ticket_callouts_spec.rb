@@ -94,7 +94,7 @@ RSpec.describe MagicTicketCallouts do
     it "shows an amber 'what's needed' CE badge until complete, then a teal amount due" do
       registration.update!(ce_credit_requested: true, ce_hours_requested: nil, ce_license_number: nil)
       both = card(registration, event.ce_hours_details_label)
-      expect(both.theme).to eq(DomainTheme.swatch("teal"))
+      expect(both.theme).to eq(DomainTheme.swatch("amber")) # action needed
       expect(both.subtitle).to eq("Continuing education credit")
       expect(both.badge).to eq("Hours & license number needed")
       expect(both.badge_classes).to be_nil
@@ -110,6 +110,7 @@ RSpec.describe MagicTicketCallouts do
 
       registration.update!(ce_hours_requested: 6, ce_license_number: "LIC123")
       complete = card(registration, event.ce_hours_details_label)
+      expect(complete.theme).to eq(DomainTheme.swatch("teal")) # no longer action needed
       expect(complete.subtitle).to eq("6 hours")
       expect(complete.badge).to eq("$150 due")
       expect(complete.badge_classes).to include("teal")
@@ -121,6 +122,15 @@ RSpec.describe MagicTicketCallouts do
       scholarship_card = card(registration, "Scholarship")
       expect(scholarship_card.subtitle).to eq("Your scholarship request status")
       expect(scholarship_card.badge).to be_nil
+      expect(scholarship_card.theme).to eq(DomainTheme.swatch(DomainTheme.color_for(:scholarships)))
+    end
+
+    it "turns the scholarship card amber while award tasks are outstanding" do
+      registration.update!(scholarship_requested: true)
+      scholarship = create(:scholarship, recipient: registration.registrant, tasks_completed: false)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
+
+      expect(card(registration, "Scholarship").theme).to eq(DomainTheme.swatch("amber"))
     end
 
     it "flags an awarded scholarship with outstanding tasks in an amber chip" do

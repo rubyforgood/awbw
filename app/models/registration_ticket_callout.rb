@@ -25,20 +25,24 @@ class RegistrationTicketCallout < ApplicationRecord
   # row (CE hours offered / cost); their text lives on the row like everything else.
   CONFIG_MAGIC_KEYS = %w[ ce_hours ].freeze
 
-  # Built-ins whose card colour the app sets from live status — e.g. Payment turns
-  # orange while a balance is due and blue once it's paid. For these, the app
-  # colour overrides the selected one (see MagicTicketCallouts#card_for).
-  APP_COLORED_MAGIC_KEYS = %w[ payment ].freeze
+  # Built-ins whose card colour the app sets from live status — Payment turns
+  # orange while a balance is due, and Scholarship / CE hours turn amber while the
+  # registrant has something outstanding. For these, the app colour overrides the
+  # selected one (see MagicTicketCallouts#card_for).
+  APP_COLORED_MAGIC_KEYS = %w[ payment scholarship ce_hours ].freeze
 
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
   # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
-  DEFAULT_ICONS = { "action" => "fa-solid fa-arrow-right", "reference" => "fa-solid fa-circle-info" }.freeze
+  # The leading icon defaults to the info "i"; the trailing "go to page" arrow
+  # lives on the right (see _callout_card). Both types share the same leading
+  # fallback so a callout without a custom icon always reads as informational.
+  DEFAULT_ICONS = { "action" => "fa-solid fa-circle-info", "reference" => "fa-solid fa-circle-info" }.freeze
   DEFAULT_COLORS = { "action" => "orange", "reference" => "indigo" }.freeze
 
-  # New callouts start with the arrow icon pre-filled (the "action" default) so
-  # admins see a sensible value rather than an empty field. Loaded records keep
-  # their stored value; a blank one still falls back via #display_icon_class.
+  # New callouts start with the info icon pre-filled so admins see a sensible
+  # value rather than an empty field. Loaded records keep their stored value; a
+  # blank one still falls back via #display_icon_class.
   attribute :icon_class, :string, default: -> { DEFAULT_ICONS["action"] }
 
   belongs_to :event
