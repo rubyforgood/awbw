@@ -1,4 +1,5 @@
-<%= form_tag(workshop_variations_path, method: :get, class: "space-y-4", data: { controller: "collection" }) do %>
+<%= form_tag(workshop_variations_path, method: :get, class: "space-y-4",
+             data: { controller: "collection", turbo_frame: "workshop_variations_results" }) do %>
   <div class="flex flex-col md:flex-row md:items-end md:gap-4 mb-6">
     <!-- Search -->
     <div class="w-full md:flex-1 mb-3 md:mb-0">
@@ -9,8 +10,7 @@
                                  focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
 
         <button type="submit"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600"
-                onclick="this.closest('form').submit()">
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600">
           <i class="fa fa-search"></i>
         </button>
       </div>

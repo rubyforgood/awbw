@@ -3,19 +3,31 @@ class WorkshopVariationsController < ApplicationController
   def index
     authorize!
     @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
+    if turbo_frame_request?
+      per_page = params[:number_of_items_per_page].presence || 25
+      base_scope = WorkshopVariation.includes(:workshop, :author, :windows_type,
+                                              :workshop_variation_idea, created_by: :person)
+                                    .joins(:workshop).where(workshops: { published: true })
+      filtered = base_scope.search_by_params(params)
+      @sort = %w[name author updated_at created_at].include?(params[:sort]) ? params[:sort] : "created_at"
+      @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
+      filtered = case @sort
+      when "author"
+        filtered.order_by_author(@sort_direction)
+      when "name"
+        filtered.reorder(Arel.sql("workshop_variations.name #{@sort_direction}"))
+      when "updated_at"
+        filtered.reorder(updated_at: @sort_direction.to_sym)
+      else
+        filtered.reorder(Arel.sql("workshop_variations.created_at #{@sort_direction}, workshops.title, workshop_variations.name"))
+      end
+      @workshop_variations = filtered.paginate(page: params[:page], per_page: per_page).decorate
+      @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
 
-    base_scope = WorkshopVariation.includes(:workshop, :author, created_by: :person)
-                                  .joins(:workshop).where(workshops: { published: true })
-    @sort = params[:sort]
-    @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
-    filtered = base_scope.search_by_params(params)
-    filtered = if @sort == "author"
-      filtered.order_by_author(@sort_direction)
+      render :workshop_variations_results
     else
-      filtered.order("workshop_variations.created_at DESC, workshops.title, workshop_variations.name")
+      render :index
     end
-    @workshop_variations = filtered.paginate(page: params[:page], per_page: 25).decorate
-    @workshop_variations_count = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
   end
 
   def new

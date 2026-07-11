@@ -4,7 +4,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-semibold text-gray-900">
-        <%= WorkshopVariation.model_name.human.pluralize %> (<%= @workshop_variations_count %>)
+        <%= WorkshopVariation.model_name.human.pluralize %>
       </h1>
       <div class="flex gap-2">
         <%= link_to "New #{WorkshopVariation.model_name.human.downcase}",
@@ -17,109 +17,12 @@
 
     <%= render "shared/filtered_to", record: @author, clear_path: workshop_variations_path %>
 
-    <div class="rounded-xl bg-white p-6">
-      <div class="overflow-x-auto">
-        <table class="table table-responsive table-bordered table-curved">
-          <thead>
-          <tr id="table-thead-tr">
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]"></th>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Name</th>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Description</th>
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">
-              <%= link_to workshop_variations_path(request.query_parameters.merge(sort: "author", direction: (@sort == "author" && @sort_direction == "asc") ? "desc" : "asc", page: nil)),
-                          class: "inline-flex items-center justify-center gap-1 text-gray-700 hover:text-gray-900" do %>
-                Author
-                <% if @sort == "author" %>
-                  <i class="fa-solid <%= @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down" %> text-xs opacity-70"></i>
-                <% end %>
-              <% end %>
-            </th>
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">From idea</th>
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Updated</th>
-            <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]">Edit</th>
-          </tr>
-        </thead>
+    <%= render "workshop_variations_count" %>
 
-        <tbody class="divide-y divide-gray-100">
-          <% @workshop_variations.each do |workshop_variation| %>
-            <tr class="hover:bg-gray-50 transition-colors duration-150">
-              <td class="px-4 py-2">
-                <div class="w-12 h-9 rounded bg-gray-200 overflow-hidden">
-                  <%= render "assets/display_image",
-                             resource: workshop_variation,
-                             width: 12, height: 9,
-                             link: false,
-                             link_to_object: false,
-                             file: workshop_variation.display_image,
-                             variant: :gallery %>
-                </div>
-              </td>
-              <td class="px-4 py-2" title="<%= workshop_variation.name %>">
-                <div class="flex items-center gap-2 text-sm text-gray-800 font-semibold">
-                  <%= link_to "#{truncate(workshop_variation.name, length: 30)} (#{workshop_variation.windows_type&.short_name || 'Combined'})", workshop_variation_path(workshop_variation), class: "hover:text-blue-600 hover:underline" %>
-                  <% unless workshop_variation.published? %>
-                    <span class="inline-flex items-center pl-2 pr-3 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-gray-600 whitespace-nowrap">
-                      <span class="inline-flex justify-center w-4"><i class="fa-solid fa-eye-slash"></i></span>
-                      <span class="ml-1">Unpublished</span>
-                    </span>
-                  <% end %>
-                </div>
-                <% if workshop_variation.workshop %>
-                  <div class="text-xs text-gray-400">
-                    <%= link_to truncate(strip_tags(workshop_variation.workshop.name), length: 40),
-                                workshop_path(workshop_variation.workshop),
-                                class: "hover:text-gray-600" %>
-                  </div>
-                <% end %>
-              </td>
-              <td class="px-4 py-2 text-sm text-gray-600">
-                <% plain = workshop_variation.rhino_body.to_plain_text %>
-                <% if plain.present? %>
-                  <span title="<%= truncate(plain, length: 500) %>">
-                    <i class="fas fa-file-lines text-gray-400"></i>
-                  </span>
-                <% end %>
-              </td>
-              <td class="px-4 py-2 text-sm text-gray-800 text-center">
-                <%= credited_author_link(workshop_variation, class: "text-gray-500 hover:text-gray-700") %>
-              </td>
-              <td class="px-4 py-2 text-sm text-center whitespace-nowrap">
-                <% if workshop_variation.workshop_variation_idea %>
-                  <%= link_to "Idea ##{workshop_variation.workshop_variation_idea.id}",
-                              workshop_variation_idea_path(workshop_variation.workshop_variation_idea),
-                              class: "text-purple-600 hover:text-purple-800 hover:underline" %>
-                <% else %>
-                  <span class="text-gray-300">--</span>
-                <% end %>
-              </td>
-              <td class="px-4 py-2 text-sm text-gray-500 text-center whitespace-nowrap"><%= workshop_variation.updated_at&.strftime('%m/%d/%y') %></td>
-              <td class="px-4 py-2 text-center whitespace-nowrap">
-                <%= link_to "Edit",
-                            edit_workshop_variation_path(workshop_variation),
-                            class: "btn btn-secondary-outline" %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
-    </div>
+    <% result_src = workshop_variations_path + "?" + request.query_string %>
 
-    <!-- Empty state -->
-    <% unless @workshop_variations.any? %>
-      <p class="text-gray-500 text-center py-6">
-        No <%= WorkshopIdea.model_name.human.pluralize.downcase %> found.
-      </p>
-    <% end %>
-
-    <!-- Pagination -->
-    <% if @workshop_variations %>
-      <div class="mt-6 flex justify-center">
-        <div class="pagination">
-          <%= tailwind_paginate @workshop_variations %>
-        </div>
-      </div>
+    <%= turbo_frame_tag "workshop_variations_results", src: result_src do %>
+      <%= render "results_skeleton" %>
     <% end %>
   </div>
 </div>
-
