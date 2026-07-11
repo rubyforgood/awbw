@@ -1,8 +1,7 @@
 module RhinoEditorHelper
   # custom rhino editor with stimulus controller attached to edit raw source html
   def rhino_editor(form, base_attribute_name, label: nil, hint: nil)
-    object = form.object
-    object = object.object if object.respond_to?(:decorated?) && object.decorated?
+    object = Draper.undecorate(form.object)
     rhino_attr = :"rhino_#{base_attribute_name}"
     field_id = form.field_id(rhino_attr)
     value = object.public_send(rhino_attr)
