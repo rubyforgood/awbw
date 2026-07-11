@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (74) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -349,13 +349,13 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 | Directory | Count | Purpose |
 |---|---|---|
 | `spec/models/` | ~71 | Model unit tests |
-| `spec/views/` | ~76 | View template tests |
-| `spec/requests/` | ~79 | HTTP request/integration tests |
+| `spec/views/` | ~77 | View template tests |
+| `spec/requests/` | ~91 | HTTP request/integration tests |
 | `spec/system/` | ~20 | End-to-end browser tests (Capybara) |
 | `spec/routing/` | ~15 | Route definition tests |
-| `spec/policies/` | ~14 | Authorization policy tests |
-| `spec/decorators/` | ~14 | Decorator tests |
-| `spec/services/` | ~22 | Service object tests |
+| `spec/policies/` | ~15 | Authorization policy tests |
+| `spec/decorators/` | ~15 | Decorator tests |
+| `spec/services/` | ~25 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
 | `spec/helpers/` | ~5 | Helper tests |
 | `spec/factories/` | ~67 | FactoryBot factory definitions |
