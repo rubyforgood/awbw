@@ -58,8 +58,51 @@ module Events
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
     end
 
-    # CE hours status: requested hours, amount owed, and license number.
+    # CE hours status: hours, amount owed, and license number.
     def ce
+    end
+
+    # Public license entry from the CE callout (type, number, issuing state, and
+    # expiry). Edits the license on the registrant's (first) CE registration in
+    # place, mirrors the number onto the registration's form answer, then returns to
+    # the callout. Plain full-page POST — no Turbo. Shares
+    # ContinuingEducationRegistration#assign_license with the admin edit page.
+    def update_ce_license
+      ce_registration = @event_registration.continuing_education_registrations.first
+      return redirect_to(registration_ce_path(@event_registration.slug)) unless ce_registration
+
+      # Once the certificate is issued the license is the credential it was issued
+      # under — frozen here. Admins can still correct it on the admin CE edit page.
+      if ce_registration.certificate_sent_at.present?
+        return redirect_to registration_ce_path(@event_registration.slug),
+          alert: "Your CE certificate has been issued, so the license can no longer be changed here. Contact us if it needs correcting."
+      end
+
+      ce_registration.assign_license(number: params[:license_number], kind: params[:license_kind],
+                                     issuing_state: params[:license_issuing_state], expires_on: params[:license_expires_on])
+      ce_registration.save!
+      # assign_license already normalized the number; mirror the saved value rather
+      # than re-stripping the raw param.
+      record_ce_license_answer(ce_registration.professional_license.number)
+
+      redirect_to registration_ce_path(@event_registration.slug), notice: "License saved."
+    rescue ActiveRecord::RecordInvalid
+      redirect_to registration_ce_path(@event_registration.slug), alert: "We couldn't save that license."
+    end
+
+    # Public CE opt-in from the callout: a registrant who didn't ask for credit at
+    # registration can request it here. Sets the flag and creates the CE
+    # registration (against a placeholder license; the number is entered next).
+    def request_ce
+      return redirect_to(registration_ce_path(@event_registration.slug)) unless @event.ce_eligible?
+
+      @event_registration.update!(ce_requested: true)
+      unless @event_registration.continuing_education_registrations.exists?
+        license = ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
+        @event_registration.continuing_education_registrations.create!(professional_license: license)
+      end
+
+      redirect_to registration_ce_path(@event_registration.slug), notice: "Continuing education credit requested."
     end
 
     # Forms page: callout-card links to the W-9 (when seeded) and, for paid
@@ -116,6 +159,19 @@ module Events
 
     def set_event
       @event = @event_registration.event
+    end
+
+    # Keep the registrant's form submission in step with a license number entered
+    # on the callout, so the registration record shows the same value. A no-op
+    # when the form, field, or submission isn't present.
+    def record_ce_license_answer(number)
+      form = @event.registration_form
+      field = form&.form_fields&.find_by(field_identifier: "ce_license_number")
+      submission = form&.form_submissions&.find_by(person: @event_registration.registrant)
+      return unless field && submission
+
+      answer = submission.form_answers.find_or_initialize_by(form_field: field)
+      answer.update!(submitted_answer: number.to_s, question_name_when_answered: field.name)
     end
 
     # Builds the callout-card links shown on the forms page. The W-9 opens in its

@@ -73,8 +73,9 @@ RSpec.describe "Public form submissions", type: :system do
                                         email_2: "robin.alt@example.com")
 
       registration = event.event_registrations.find_by!(registrant: person)
-      expect(registration).to have_attributes(scholarship_requested: false, ce_credit_requested: true,
+      expect(registration).to have_attributes(scholarship_requested: false,
                                               w9_requested: true, invoice_requested: false)
+      expect(registration.continuing_education_registrations.count).to eq(1)
 
       answers = answers_by_identifier(registration_form.form_submissions.find_by!(person: person))
       expect(answers).to include(

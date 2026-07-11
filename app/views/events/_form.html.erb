@@ -224,6 +224,27 @@
                     class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                   } %>
 
+      <%# Continuing education — "CE hours offered" above 0 makes the event
+          CE-eligible (the gate for the CE card on registrations); the total cost
+          is what a registrant pays for credit (stored in cents). %>
+      <div class="mt-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Continuing education</label>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
+          <label class="flex items-center gap-2 text-sm text-gray-700">
+            CE hours offered
+            <%= f.number_field :ce_hours_offered, min: 0, step: 0.25,
+                  class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-700">
+            Total CE cost
+            <span class="text-gray-400">$</span>
+            <%= f.number_field :ce_hours_cost, min: 0, step: 1,
+                  class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
+          </label>
+        </div>
+        <p class="mt-1 text-xs text-gray-400">Edit the CE hours ticket card and its details below, under Registration ticket callouts.</p>
+      </div>
+
     </div>
 
     <%# RIGHT: Autoshow display options %>
@@ -513,19 +534,6 @@
                     title_placeholder: "CE hours",
                     content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
                     content_placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><h3>Before the training</h3><ul><li>Email your license number</li></ul>" %>
-              <div class="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-                <label class="flex items-center gap-2 text-sm text-gray-700">
-                  CE hours offered
-                  <%= f.number_field :ce_hours_offered, min: 0, step: 0.25,
-                        class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                </label>
-                <label class="flex items-center gap-2 text-sm text-gray-700">
-                  Total CE cost
-                  <span class="text-gray-400">$</span>
-                  <%= f.number_field :ce_hours_cost, min: 0, step: 1,
-                        class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                </label>
-              </div>
             <% when :event_details %>
               <%= render "events/builtin_callout_card", f: f, card: card,
                     label_field: :event_details_label, content_field: :event_details,

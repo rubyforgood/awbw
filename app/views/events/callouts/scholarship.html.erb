@@ -1,10 +1,21 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "Scholarship — #{@event.title}") %>
 
+<%# Reached from the admin scholarship edit page (return_to=scholarship): point the
+    eyebrow back there instead of the registrant's ticket. Gated on edit access so a
+    registrant who lands on this URL still gets the default ticket back. %>
+<% from_scholarship_edit = params[:return_to] == "scholarship" && @scholarship && allowed_to?(:edit?, @scholarship) %>
 <div class="max-w-3xl mx-auto px-4 pt-4">
-  <%= link_to registration_ticket_path(@event_registration.slug),
-              class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
-    <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
+  <% if from_scholarship_edit %>
+    <%= link_to edit_scholarship_path(@scholarship),
+                class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to scholarship
+    <% end %>
+  <% else %>
+    <%= link_to registration_ticket_path(@event_registration.slug),
+                class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
+    <% end %>
   <% end %>
 </div>
 
@@ -24,6 +35,19 @@
     </div>
 
     <div class="px-6 sm:px-8 py-7 space-y-6">
+      <% if @scholarship && allowed_to?(:edit?, @scholarship) %>
+        <%# Admin-only jump to the management surface for this scholarship. Hidden from
+            registrants; opens in a new tab so the registrant view is kept. %>
+        <div class="flex justify-end">
+          <%= link_to edit_scholarship_path(@scholarship), target: "_blank", rel: "noopener",
+                class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
+            <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
+            Edit scholarship
+            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+          <% end %>
+        </div>
+      <% end %>
+
       <% if @scholarship %>
         <% grant = @scholarship.grant %>
         <div class="flex flex-wrap items-end justify-between gap-3">

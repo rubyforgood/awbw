@@ -34,6 +34,17 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include(existing_registration.registrant.first_name)
       end
 
+      it "filters registrations by ce_status" do
+        needs_license = create(:event_registration)
+        placeholder = create(:professional_license, :placeholder, person: needs_license.registrant)
+        create(:continuing_education_registration, event_registration: needs_license, professional_license: placeholder)
+
+        get event_registrations_path(ce_status: "needs_license")
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(needs_license.registrant.first_name)
+        expect(response.body).not_to include(existing_registration.registrant.first_name)
+      end
+
       it "exports CSV with headers and data only (no captions)" do
         get event_registrations_path, params: { format: :csv }
 
@@ -305,20 +316,26 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
 
-      it "updates the CE credit requested flag" do
+      it "creates a CE registration stub when the ce_requested flag is set" do
+        event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
         patch event_registration_path(existing_registration),
-              params: { event_registration: { ce_credit_requested: "1" } }
+              params: { event_registration: { status: existing_registration.status, ce_requested: "1" } }
 
-        expect(existing_registration.reload.ce_credit_requested).to be(true)
+        ce_registration = existing_registration.reload.continuing_education_registrations.first
+        expect(ce_registration).to be_present
+        # Hours/cost default from the event; the license is a placeholder until set.
+        expect(ce_registration.hours).to eq(6)
+        expect(ce_registration.professional_license.number).to be_nil
       end
 
-      it "updates the CE hours and license number" do
-        patch event_registration_path(existing_registration),
-              params: { event_registration: { ce_credit_requested: "1", ce_hours_requested: "5", ce_license_number: "LIC-987" } }
+      it "creates the CE registration against the registrant's existing license" do
+        event.update!(ce_hours_offered: 6)
+        license = create(:professional_license, person: existing_registration.registrant, number: "LIC-987")
 
-        existing_registration.reload
-        expect(existing_registration.ce_hours_requested).to eq(5)
-        expect(existing_registration.ce_license_number).to eq("LIC-987")
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { status: existing_registration.status, ce_requested: "1" } }
+
+        expect(existing_registration.reload.continuing_education_registrations.first.professional_license).to eq(license)
       end
 
       it "sets the shout-out flag and stores the shout-out text on the registrant" do
@@ -451,6 +468,18 @@ RSpec.describe "EventRegistrations", type: :request do
         }.not_to change(EventRegistration, :count)
 
         expect(flash[:alert]).to include("can't be deleted")
+      end
+
+      it "refuses to delete a registration whose CE registration has payments" do
+        ce = create(:continuing_education_registration, event_registration: existing_registration, cost_cents: 12_000)
+        create(:allocation, source: create(:payment, amount_cents: 12_000, amount_cents_remaining: 12_000),
+                            allocatable: ce, amount: 12_000)
+
+        expect {
+          delete event_registration_path(existing_registration)
+        }.not_to change(EventRegistration, :count)
+
+        expect(flash[:alert]).to match(/has payments/)
       end
     end
 
