@@ -15,8 +15,7 @@ class EventRegistrationDecorator < ApplicationDecorator
   # `simulate_paid:` lets the CE callout's ?admin=true preview the post-payment state
   # without recording a payment.
   def ce_status_badge(simulate_paid: false)
-    return unless ce_requested? || ce_registered?
-    return ce_badge("Requested", "fa-solid fa-clock", :amber) unless ce_registered?
+    return unless ce_registered?
     return ce_badge("Issued", "fa-solid fa-circle-check", :green) if ce_certificate_issued?
     return ce_badge("License # needed", "fa-solid fa-id-card", :amber) unless ce_license_provided?
     return ce_badge("Pending", "fa-solid fa-hourglass-half", :blue) if ce_paid_in_full? || simulate_paid

@@ -96,15 +96,6 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       it { is_expected.to be_nil }
     end
 
-    context "when requested but no CE registration exists yet" do
-      before { registration.update!(ce_requested: true) }
-
-      it "is an amber Requested badge" do
-        expect(badge.label).to eq("Requested")
-        expect(badge.classes).to include("amber")
-      end
-    end
-
     context "when a CE registration sits on a placeholder license" do
       before do
         create(:continuing_education_registration, event_registration: registration,

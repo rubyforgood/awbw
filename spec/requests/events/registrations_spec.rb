@@ -439,14 +439,14 @@ RSpec.describe "Events::Registrations", type: :request do
 
   describe "POST /registration/:slug/ce/request" do
     let(:event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 12_000) }
-    let!(:registration) { create(:event_registration, event: event, registrant: user.person, ce_requested: false) }
+    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     it "opts the registrant into CE and creates the registration" do
       expect {
         post registration_ce_request_path(registration.slug)
       }.to change { registration.reload.continuing_education_registrations.count }.from(0).to(1)
 
-      expect(registration.ce_requested).to be(true)
+      expect(registration.reload.ce_registered?).to be(true)
       expect(response).to redirect_to(registration_ce_path(registration.slug))
     end
   end

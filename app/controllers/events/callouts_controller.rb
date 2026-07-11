@@ -96,7 +96,6 @@ module Events
     def request_ce
       return redirect_to(registration_ce_path(@event_registration.slug)) unless @event.ce_eligible?
 
-      @event_registration.update!(ce_requested: true)
       unless @event_registration.continuing_education_registrations.exists?
         license = ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
         @event_registration.continuing_education_registrations.create!(professional_license: license)

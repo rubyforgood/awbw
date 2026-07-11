@@ -670,7 +670,7 @@ class EventsController < ApplicationController
     row << onboarding_scholarship_tasks_csv(registration)
     if include_ce
       ce_hours = registration.ce_hours_total
-      row << (registration.ce_requested? ? "Yes" : "No")
+      row << (registration.ce_registered? ? "Yes" : "No")
       row << (ce_hours.positive? ? helpers.plain_number(ce_hours) : "")
       row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
       row << registration.ce_license_numbers.join("; ")

@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "ContinuingEducationRegistrations", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 12_000) }
-  let(:registration) { create(:event_registration, event: event, ce_requested: true) }
+  let(:registration) { create(:event_registration, event: event) }
   let(:ce_registration) do
     create(:continuing_education_registration, event_registration: registration,
       professional_license: create(:professional_license, :placeholder, person: registration.registrant))
@@ -88,7 +88,7 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(ce.cost_cents).to eq(9_000)
       expect(ce.professional_license).to have_attributes(kind: "LMFT", number: "555",
         issuing_state: "CA", expires_on: Date.new(2027, 1, 31))
-      expect(registration.reload.ce_requested).to be(true)
+      expect(registration.reload.ce_registered?).to be(true)
     end
 
     it "creates no license just from opening the new form" do
@@ -156,7 +156,7 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       ce_registration
       delete continuing_education_registration_path(ce_registration)
       expect(ContinuingEducationRegistration.exists?(ce_registration.id)).to be(false)
-      expect(registration.reload.ce_requested).to be(false)
+      expect(registration.reload.ce_registered?).to be(false)
     end
 
     it "refuses to remove a CE registration that has payments" do

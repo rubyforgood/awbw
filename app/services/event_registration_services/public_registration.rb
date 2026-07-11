@@ -66,7 +66,6 @@ module EventRegistrationServices
         existing = @event.event_registrations.find_by(registrant: person)
         if existing
           existing.update!(scholarship_requested: true) if @scholarship_requested
-          existing.update!(ce_requested: true) if ce_credit_requested?
           create_ce_registration(existing, person)
           existing.update!(w9_requested: true) if w9_requested?
           existing.update!(invoice_requested: true) if invoice_requested?
@@ -382,7 +381,6 @@ module EventRegistrationServices
       @event.event_registrations.create!(
         registrant: person,
         scholarship_requested: @scholarship_requested,
-        ce_requested: ce_credit_requested?,
         w9_requested: w9_requested?,
         invoice_requested: invoice_requested?,
         expected_payment_method: field_value("payment_method")&.strip.presence

@@ -1,11 +1,10 @@
-<%# ---- Continuing education — mirrors the scholarship card. "Requested" is a plain
-    flag saved with the form; saving it on (when none exists) creates a CE
-    registration stub, which is then filled in on its own edit page. Once a record
-    exists the toggle is gone and we show the record + an Edit link. Only rendered
-    for CE-eligible events. ---- %>
+<%# ---- Continuing education — mirrors the scholarship card. CE registration
+    records are created on the dedicated CE form (license/hours/cost). This card
+    links to that form when no record exists, or shows the record + Edit link
+    once one does. Only rendered for CE-eligible events. ---- %>
 <section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:continuing_education, ce_registration.present? || event_registration.ce_requested?) %>">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:continuing_education, ce_registration.present?) %>">
       <i class="fa-solid fa-certificate"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700">Continuing education</h2>
@@ -13,21 +12,7 @@
 
   <div class="flex flex-1 flex-col gap-3 p-4">
     <% unless ce_registration %>
-      <label class="flex items-center gap-2.5 cursor-pointer">
-        <input type="hidden" name="event_registration[ce_requested]" value="0" autocomplete="off">
-        <input type="checkbox"
-               name="event_registration[ce_requested]"
-               value="1"
-               <%= "checked" if event_registration.ce_requested? %>
-               class="sr-only peer">
-        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
-        <span class="text-sm font-medium text-gray-700">Requested</span>
-      </label>
-
-      <%# Two ways to create the record, mirroring the scholarship card: the
-          Requested toggle above auto-creates a stub on save, while "Add CE
-          registration" opens the full new form (license/hours/cost) in a new tab
-          and returns here. %>
+      <%# Open the full new form (license/hours/cost) in a new tab and return here. %>
       <div class="mt-auto border-t border-gray-100 pt-3">
         <%= link_to new_continuing_education_registration_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
                     class: "inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700",
