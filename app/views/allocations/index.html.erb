@@ -22,6 +22,10 @@
         <%= link_to edit_event_registration_path(@allocatable), class: "text-sm text-gray-500 hover:text-gray-700" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Registration
         <% end %>
+      <% elsif @allocatable.is_a?(ContinuingEducationRegistration) %>
+        <%= link_to edit_continuing_education_registration_path(@allocatable), class: "text-sm text-gray-500 hover:text-gray-700" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> CE registration
+        <% end %>
       <% elsif @allocatable.respond_to?(:event) %>
         <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm text-gray-500 hover:text-gray-700" do %>
           <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
@@ -56,6 +60,25 @@
           </span>
         </div>
       </div>
+    <% elsif @allocatable.is_a?(ContinuingEducationRegistration) %>
+      <div class="mb-8 text-center">
+        <h1 class="flex items-center justify-center gap-3 text-3xl sm:text-4xl font-extrabold text-black">
+          <i class="fa-solid fa-money-bill-transfer <%= DomainTheme.text_class_for(:payments, intensity: 600) %>"></i>
+          Allocations
+        </h1>
+
+        <div class="mx-auto mt-4 inline-flex max-w-xl flex-col items-center gap-0.5 rounded-lg border <%= DomainTheme.border_class_for(:payments, intensity: 200) %> <%= DomainTheme.bg_class_for(:payments, intensity: 100) %> px-5 py-3">
+          <span class="text-xs font-semibold uppercase tracking-wide <%= DomainTheme.text_class_for(:payments, intensity: 700) %>">
+            <i class="fa-solid fa-circle-info"></i> Only this CE registration&rsquo;s allocations
+          </span>
+          <%= link_to edit_continuing_education_registration_path(@allocatable), class: "text-sm font-semibold text-gray-800 hover:underline" do %>
+            <%= @allocatable.event_registration.registrant.full_name %>
+          <% end %>
+          <span class="text-xs text-gray-500">
+            <%= @allocatable.event_registration.event.title %> &middot; <%= @allocatable.event_registration.event.decorate.times(display_day: true, display_date: true) %>
+          </span>
+        </div>
+      </div>
     <% else %>
       <%= render "shared/event_page_header",
                  title: "Allocations",
@@ -65,7 +88,7 @@
                  person: (@allocatable.registrant if @allocatable.respond_to?(:registrant)) %>
     <% end %>
 
-    <% if @allocatable.is_a?(EventRegistration) %>
+    <% if @allocatable.is_a?(EventRegistration) || @allocatable.is_a?(ContinuingEducationRegistration) %>
       <div id="payment-form" class="flex flex-wrap justify-center gap-2 mb-4">
         <%= button_to allocation_form_payments_path(type: "CashPayment", allocatable_sgid: params[:allocatable_sgid]),
             class: "btn btn-primary-outline inline-flex items-center gap-1.5" do %>

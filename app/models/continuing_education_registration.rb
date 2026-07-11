@@ -16,6 +16,7 @@ class ContinuingEducationRegistration < ApplicationRecord
   validates :hours, numericality: { greater_than_or_equal_to: 0 }
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate :license_belongs_to_registrant
+  validate :cost_not_below_allocations, on: :update
 
   # Payment interface (allocations_sum / paid_in_full? / remaining_cost / …) comes from
   # Registerable, driven by this record's own cost_cents column.
@@ -94,5 +95,12 @@ class ContinuingEducationRegistration < ApplicationRecord
     return if professional_license.person_id == event_registration.registrant_id
 
     errors.add(:professional_license, "must belong to the registrant")
+  end
+
+  def cost_not_below_allocations
+    return if cost_cents.blank?
+    return if cost_cents.to_i >= allocations_sum
+
+    errors.add(:cost_cents, "can't be less than the amount already allocated (#{MoneyFormatter.dollars_from_cents(allocations_sum)})")
   end
 end

@@ -12,6 +12,41 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg).not_to be_valid
       expect(ce_reg.errors[:professional_license]).to include("must belong to the registrant")
     end
+
+    describe "cost_not_below_allocations" do
+      it "allows setting cost above allocations" do
+        ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
+        payment = create(:payment, amount_cents: 3_000, amount_cents_remaining: 3_000)
+        create(:allocation, source: payment, allocatable: ce_reg, amount: 3_000)
+
+        ce_reg.cost_cents = 5_000
+        expect(ce_reg).to be_valid
+      end
+
+      it "allows setting cost equal to allocations" do
+        ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
+        payment = create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000)
+        create(:allocation, source: payment, allocatable: ce_reg, amount: 5_000)
+
+        ce_reg.cost_cents = 5_000
+        expect(ce_reg).to be_valid
+      end
+
+      it "rejects setting cost below allocations" do
+        ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
+        payment = create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000)
+        create(:allocation, source: payment, allocatable: ce_reg, amount: 5_000)
+
+        ce_reg.cost_cents = 3_000
+        expect(ce_reg).not_to be_valid
+        expect(ce_reg.errors[:cost_cents]).to include("can't be less than the amount already allocated ($50)")
+      end
+
+      it "allows setting cost on create even without allocations" do
+        ce_reg = build(:continuing_education_registration, cost_cents: 10_000)
+        expect(ce_reg).to be_valid
+      end
+    end
   end
 
   describe "hours and cost defaults from the event" do
