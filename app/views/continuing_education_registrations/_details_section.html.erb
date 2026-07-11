@@ -69,34 +69,14 @@
     </div>
 
     <div>
-      <div class="flex flex-wrap gap-4">
-        <div>
-          <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_hours">CE hours</label>
-          <%= f.number_field :hours, value: plain_number(ce_registration.hours), min: 0, step: 0.25,
-                id: "continuing_education_registration_hours",
-                class: "w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm tabular-nums text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
-        </div>
-        <div>
-          <span class="mb-1 block text-sm font-medium text-gray-700">Cost ($)</span>
-          <% if params[:admin] == "true" %>
-            <%= f.number_field :cost_dollars, value: (ce_registration.cost_cents.to_d / 100), min: 0, step: 0.01,
-                  id: "continuing_education_registration_cost_dollars",
-                  class: "w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm tabular-nums text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
-          <% else %>
-            <span class="block text-sm tabular-nums text-gray-900"><%= dollars_from_cents(ce_registration.cost_cents) %></span>
-          <% end %>
-        </div>
-      </div>
+      <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_hours">CE hours</label>
+      <%= f.number_field :hours, value: plain_number(ce_registration.hours), min: 0, step: 0.25,
+            id: "continuing_education_registration_hours",
+            class: "w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm tabular-nums text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
 
-      <%# Event baseline both fields default to (snapshotted onto the registration
-          at creation). Sits tight under the row like a hint, but applies to both
-          fields so an admin can see the standard offering and tell when this
-          registrant's hours/cost have been customized. %>
-      <% if event.ce_hours_offered.present? || event.ce_hours_cost_cents.present? %>
+      <% if event.ce_hours_offered.present? %>
         <p class="mt-1 text-xs text-gray-400">
-          Event default:
-          <%= plain_number(event.ce_hours_offered) || "—" %> hrs
-          · <%= event.ce_hours_cost_cents.present? ? dollars_from_cents(event.ce_hours_cost_cents) : "—" %>
+          Event default: <%= plain_number(event.ce_hours_offered) || "—" %> hrs
         </p>
       <% end %>
     </div>
