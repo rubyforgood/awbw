@@ -7,17 +7,18 @@ class ContinuingEducationRegistrationsController < ApplicationController
   # save; this is the alternative where the admin fills in license/hours/cost up
   # front. Hours/cost prefill from the event's offering.
   def new
+    authorize!
     @ce_registration = @event_registration.continuing_education_registrations.build(
       professional_license: @event_registration.registrant.professional_licenses.first,
       hours: @event_registration.event.ce_hours_offered,
       cost_cents: @event_registration.event.ce_hours_cost_cents
     )
-    authorize! @ce_registration
   end
 
   def create
+    authorize!
+
     @ce_registration = @event_registration.continuing_education_registrations.build(professional_license: license_for_create)
-    authorize! @ce_registration
 
     # One transaction so the new license (a build until now) and the CE registration
     # persist together — a failed save leaves neither behind.

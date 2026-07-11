@@ -1,11 +1,6 @@
 class ContinuingEducationRegistrationPolicy < ApplicationPolicy
-  # The CE registration edit page (license/hours/cost, certificate issuance,
-  # removal) is an admin management surface, like scholarships. Registrants edit
-  # their own license number via the public CE callout, not here.
-  def new?                = admin?
-  def create?             = admin?
-  def edit?               = admin?
-  def update?             = admin?
-  def destroy?            = admin?
-  def toggle_certificate? = admin?
+  # Registrants manage their license via the public CE callout - not this policy.
+  alias_rule :new?, :create?, :edit?, :update?, :destroy?, :toggle_certificate?, to: :manage?
+
+  def manage? = admin?
 end
