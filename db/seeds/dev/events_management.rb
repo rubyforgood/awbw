@@ -868,6 +868,7 @@ registrations_data.each do |data|
   if data[:ce_credit_requested] && registration.continuing_education_registrations.none?
     license = ProfessionalLicense.find_or_create_for(person: data[:person], number: data[:ce_license_number])
     ce_registration = registration.continuing_education_registrations.create!(professional_license: license)
+    registration.update_column(:ce_requested, true)
     # "issued" in the seed data means the CE certificate was delivered.
     ce_registration.mark_certificate_sent! if data[:ce_status] == "issued"
   end
