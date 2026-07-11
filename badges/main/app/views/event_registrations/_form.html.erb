@@ -117,7 +117,7 @@
 
           <% if f.object.slug.present? %>
             <%= link_to registration_ticket_path(f.object.slug),
-                        class: "group inline-flex items-center gap-1.5 font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:underline",
+                        class: "group inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1 font-medium shadow-sm #{DomainTheme.text_class_for(:event_registrations, intensity: 600)} hover:bg-gray-50 transition-colors",
                         target: "_blank",
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-ticket"></i>
@@ -133,7 +133,7 @@
                         title: "#{form_name} — submitted #{ts.strftime('%b %-d, %Y')}",
                         data: { turbo_frame: "_top" } do %>
               <i class="fa-solid fa-file-lines"></i>
-              View submission<%= " ##{i + 1}" if submissions.size > 1 %>
+              View form submission<%= " ##{i + 1}" if submissions.size > 1 %>
               <i class="fa-solid fa-arrow-up-right-from-square text-[0.55rem] text-gray-400"></i>
             <% end %>
           <% end %>
@@ -164,16 +164,21 @@
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:organizations, intensity: 100) %> <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:organizations, f.object.organizations.any?) %>">
               <i class="fa-solid fa-building"></i>
             </span>
-            <h2 class="min-w-0 text-sm font-semibold text-gray-700">Registration organizations</h2>
+            <%# Keep "Registration-linked" intact on line one (no break at the hyphen) and
+                let "organizations" wrap to line two in the narrow card header. %>
+            <h2 class="min-w-0 text-sm font-semibold text-gray-700"><span class="whitespace-nowrap">Registration-linked</span> organizations</h2>
           </div>
 
-          <div class="p-4">
-            <div data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
+          <div class="flex flex-1 flex-col p-4">
+            <%# Nudge the chips up by the org card's extra header line (its title wraps
+                to two lines) so the first chip's top lines up with the scholarship
+                card's "$100". %>
+            <div class="-mt-2" data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
               <div class="flex flex-wrap gap-1.5" data-org-toggle-target="chips">
                 <% f.object.organizations.sort_by(&:name).each do |org| %>
                   <label class="inline-flex items-center gap-1 px-4 py-1 rounded-full text-xs border cursor-pointer transition-colors bg-red-50 border-red-200 text-red-400 line-through has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-200 has-[:checked]:text-emerald-800 has-[:checked]:no-underline">
@@ -196,14 +201,16 @@
               <p data-org-toggle-target="empty" class="text-sm text-gray-400">No organizations linked to this registration.</p>
             <% end %>
 
-            <button
-              type="button"
-              data-org-toggle-target="addButton"
-              data-action="org-toggle#showAddForm"
-              class="mt-3 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
-              <i class="fa-solid fa-plus text-[0.6rem]"></i>
-              Connect organization
-            </button>
+            <div class="mt-auto pt-3">
+              <button
+                type="button"
+                data-org-toggle-target="addButton"
+                data-action="org-toggle#showAddForm"
+                class="inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer">
+                <i class="fa-solid fa-plus text-[0.6rem]"></i>
+                Connect organization
+              </button>
+            </div>
 
             <%# Pending-chip template cloned by org_toggle_controller when adding. Kept in
                 the markup (not a JS string) so Tailwind always compiles the amber variants. %>
@@ -236,70 +243,9 @@
 
         <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
 
-        <%# ---- CE credits — toggled "Requested" flag, plus the registrant's CE
-            details (license number + requested hours) and what they owe at the
-            default hourly rate, recomputed live by the ce-credit-requested
-            controller. The details collapse when CE isn't requested. ---- %>
-        <section class="overflow-hidden rounded-xl border shadow-sm transition-colors <%= f.object.ce_credit_requested ? "border-teal-200 bg-teal-50" : "border-gray-200 bg-white" %>"
-                 data-controller="ce-credit-requested"
-                 data-ce-credit-requested-initial-value="<%= f.object.ce_credit_requested %>"
-                 data-ce-credit-requested-rate-value="<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>">
-          <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
-              <i class="fa-solid fa-certificate"></i>
-            </span>
-            <h2 class="text-sm font-semibold text-gray-700">CE credits</h2>
-          </div>
-
-          <div class="space-y-3 p-4">
-            <label class="flex items-center gap-2.5 cursor-pointer">
-              <input type="hidden" name="event_registration[ce_credit_requested]" value="0" autocomplete="off">
-              <input type="checkbox"
-                     name="event_registration[ce_credit_requested]"
-                     value="1"
-                     <%= "checked" if f.object.ce_credit_requested %>
-                     data-ce-credit-requested-target="checkbox"
-                     data-action="ce-credit-requested#refresh"
-                     class="sr-only peer">
-              <span data-ce-credit-requested-target="track" class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
-              <span class="text-sm font-medium text-gray-700">Requested</span>
-            </label>
-
-            <div data-ce-credit-requested-target="details" class="space-y-3 border-t border-gray-100 pt-3 <%= "hidden" unless f.object.ce_credit_requested %>">
-              <div>
-                <div class="mb-1 flex items-center justify-between gap-2">
-                  <label class="text-xs font-medium text-gray-500" for="event_registration_ce_license_number">License number</label>
-                  <span data-ce-credit-requested-target="licenseBadge"
-                        class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.65rem] font-medium <%= f.object.ce_license_provided? ? "bg-teal-50 text-teal-700" : "bg-gray-100 text-gray-500" %>">
-                    <i class="fa-solid <%= f.object.ce_license_provided? ? "fa-circle-check" : "fa-circle-minus" %> text-[0.55rem]"></i>
-                    <%= f.object.ce_license_provided? ? "Provided" : "Not provided" %>
-                  </span>
-                </div>
-                <%= f.text_field :ce_license_number,
-                      class: "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none",
-                      placeholder: "Not provided",
-                      data: { "ce-credit-requested-target": "license", action: "input->ce-credit-requested#refresh" } %>
-              </div>
-
-              <div>
-                <label class="mb-1 block text-xs font-medium text-gray-500" for="event_registration_ce_hours_requested">CE hours requested</label>
-                <%= f.number_field :ce_hours_requested,
-                      min: 0, step: 1,
-                      class: "w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm tabular-nums focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none",
-                      placeholder: "0",
-                      data: { "ce-credit-requested-target": "hours", action: "input->ce-credit-requested#refresh" } %>
-              </div>
-
-              <div class="flex items-center justify-between border-t border-gray-100 pt-3">
-                <span class="text-sm text-gray-500">
-                  Amount owed
-                  <span class="text-xs text-gray-400">($<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>/hr)</span>
-                </span>
-                <span data-ce-credit-requested-target="amount" class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(f.object.ce_amount_owed_cents) %></span>
-              </div>
-            </div>
-          </div>
-        </section>
+        <% if f.object.event&.ce_eligible? %>
+          <%= render "continuing_education", event_registration: f.object, ce_registration: f.object.continuing_education_registrations.first %>
+        <% end %>
       </div>
 
       <% if f.object.payment_unresolved? %>
@@ -327,7 +273,7 @@
       <%# ---- Comments ---- %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm scroll-mt-24" id="comments-section" data-controller="edit-toggle">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:comments, intensity: 100) %> <%= DomainTheme.text_class_for(:comments, intensity: 600) %>">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:comments, f.object.comments.any?) %>">
             <i class="fa-solid fa-message"></i>
           </span>
           <h2 class="text-sm font-semibold text-gray-700">Registration comments</h2>
@@ -376,7 +322,7 @@
           their profile via nested attributes. ---- %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:scholarships, f.object.shoutout? || f.object.registrant.shoutout_text.present?) %>">
             <i class="fa-solid fa-bullhorn"></i>
           </span>
           <h2 class="text-sm font-semibold text-gray-700">Shout out</h2>
@@ -390,7 +336,7 @@
                    value="1"
                    <%= "checked" if f.object.shoutout? %>
                    class="sr-only peer">
-            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-300"></span>
+            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
             <span class="text-sm font-medium text-gray-700">Feature on the recipients page</span>
           </label>
 

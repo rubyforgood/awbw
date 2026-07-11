@@ -158,15 +158,15 @@ class EventRegistrationReadiness
   end
 
   def ce_unpaid?
-    registration.ce_credit_requested? && !ce_paid?
+    registration.ce_requested? && !ce_paid?
   end
 
   def ce_license_missing?
-    registration.ce_credit_requested? && !registration.ce_license_provided?
+    registration.ce_requested? && !registration.ce_license_provided?
   end
 
   def ce_certificate_pending?
-    registration.ce_credit_requested? && !ce_certificate_sent?
+    registration.ce_requested? && !ce_certificate_sent?
   end
 
   # Post-event criteria are only met by a full "attended". "incomplete_attendance"

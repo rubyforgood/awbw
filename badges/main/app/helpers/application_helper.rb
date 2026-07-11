@@ -19,6 +19,17 @@ module ApplicationHelper
   FORM_LABEL_TAGS = %w[br a p span strong b em i u h1 h2 h3 h4 h5 h6 ul ol li font].freeze
   FORM_LABEL_ATTRIBUTES = %w[href target rel style size color face].freeze
 
+  # Tint a section-header icon (the rounded square in a card header) with its
+  # domain theme colour only when that section actually holds data, falling back
+  # to a muted grey otherwise. Lets the registration edit cards signal at a glance
+  # which sections are populated — purely server-rendered, no JS. Pass the domain
+  # key (see DomainTheme::COLORS) and a boolean for whether the section has data.
+  def section_icon_class(domain, active)
+    return "bg-gray-100 text-gray-400" unless active
+
+    "#{DomainTheme.bg_class_for(domain, intensity: 100)} #{DomainTheme.text_class_for(domain, intensity: 600)}"
+  end
+
   # Render a form field name / header with a safe subset of HTML allowed.
   # Uses Rails' SafeListSanitizer, which strips dangerous URL schemes
   # (e.g. javascript:) from href and CSS-scrubs the style attribute (dropping
@@ -473,6 +484,19 @@ module ApplicationHelper
   # Like dollars_from_cents but preserves a leading minus for negative amounts.
   def signed_dollars_from_cents(cents)
     MoneyFormatter.signed_dollars_from_cents(cents)
+  end
+
+  # A plain number without insignificant trailing zeros (e.g. CE hours): 6.0 → "6",
+  # 1.5 → "1.5". Nil for a blank input so callers can render their own placeholder.
+  def plain_number(number)
+    NumberFormatter.plain(number)
+  end
+
+  # Timezone hint phrased for whoever the form is about: second person when you're
+  # editing your own settings, third person ("User") when an admin edits someone else.
+  def timezone_visibility_hint(user)
+    subject = user == current_user ? "You" : "User"
+    "#{subject} will see times and dates in this timezone."
   end
 
   def navbar_bg_class

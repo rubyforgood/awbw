@@ -41,16 +41,11 @@ class EventRegistration < ApplicationRecord
   # only the first event.day_count of them are shown on the Onboarding tab.
   DAY_FIELDS = (1..5).map { |day| "completed_day_#{day}" }.freeze
 
-  # Default price the registrant owes per requested continuing-education hour.
-  # The CE summary on the registration form multiplies it by ce_hours_requested.
-  CE_HOURLY_RATE_DOLLARS = 25
-
   # Validations
   validates :registrant_id, uniqueness: { scope: :event_id }
   validates :event_id, presence: true
   validates :status, inclusion: { in: ATTENDANCE_STATUSES }, allow_nil: false
   validates :slug, uniqueness: true, allow_nil: true
-  validates :ce_hours_requested, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   # Scopes
   scope :registrant_name, ->(registrant_name) { joins(:registrant).where(
@@ -148,18 +143,34 @@ class EventRegistration < ApplicationRecord
     else all
     end
   }
-  # Mirrors ReminderRecipientFilter#matches_ce_status?. The "license"/"hours"
-  # sub-statuses only make sense for someone who requested CE credit, so they're
-  # gated on it. "paid" has no CE-specific payment record yet, so it falls back
-  # to the registrant being paid in full.
+  # Filter by CE state. All derived (no stored CE status): payment (requested/paid)
+  # is computed from allocations vs cost like the registration's own payment state;
+  # issued/not_issued read the certificate delivery; needs_license is a CE
+  # registration sitting on a placeholder license.
   scope :ce_status, ->(value) {
-    case value
-    when "requested" then where(ce_credit_requested: true)
-    when "license_not_provided" then where(ce_credit_requested: true).where(ce_license_number: [ nil, "" ])
-    when "hours_not_provided" then where(ce_credit_requested: true).where("COALESCE(ce_hours_requested, 0) <= 0")
-    when "paid" then where(ce_credit_requested: true).merge(paid_in_full)
-    else all
-    end
+    paid_sql = <<~SQL.squish
+      COALESCE((SELECT SUM(a.amount) FROM allocations a
+        WHERE a.allocatable_type = 'ContinuingEducationRegistration'
+          AND a.allocatable_id = cer.id), 0) >= cer.cost_cents
+    SQL
+    condition =
+      case value
+      when "needs_license" then "pl.number IS NULL"
+      when "paid" then paid_sql
+      when "requested" then "NOT (#{paid_sql})"
+      when "issued" then "cer.certificate_sent_at IS NOT NULL"
+      when "not_issued" then "cer.certificate_sent_at IS NULL"
+      end
+    next all if condition.blank?
+
+    where(<<~SQL.squish)
+      EXISTS (
+        SELECT 1 FROM continuing_education_registrations cer
+        JOIN professional_licenses pl ON pl.id = cer.professional_license_id
+        WHERE cer.event_registration_id = event_registrations.id
+          AND (#{condition})
+      )
+    SQL
   }
   scope :comment_status, ->(value) {
     commented = Comment.where(commentable_type: "EventRegistration").select(:commentable_id)
@@ -242,6 +253,9 @@ class EventRegistration < ApplicationRecord
       registrations = registrations.joins(:event_registration_organizations)
                                    .where(event_registration_organizations: { organization_id: params[:organization_id] })
                                    .distinct
+    end
+    if params[:ce_status].present?
+      registrations = registrations.ce_status(params[:ce_status])
     end
     registrations
   end
@@ -365,26 +379,86 @@ class EventRegistration < ApplicationRecord
     event.cost_cents
   end
 
-  # True when the registrant has supplied a CE license number.
-  def ce_license_provided?
-    ce_license_number.present?
+  # CE is now tracked as one or more ContinuingEducationRegistration records,
+  # each against a professional license. These aggregate across them so callers
+  # (callouts, onboarding, CSV) read a single registration-level figure.
+  #
+  # `ce_requested?` is the stored intent flag (column); `ce_registered?` is whether
+  # a CE registration record actually exists. They align in the normal flow (the
+  # toggle creates the record), but the readers below key off the record.
+  def ce_registered?
+    if ce_registrations_in_memory?
+      return continuing_education_registrations.any?
+    end
+    continuing_education_registrations.exists?
+  end
+
+  def ce_hours_total
+    if ce_registrations_in_memory?
+      return continuing_education_registrations.sum { |c| c.hours.to_d }
+    end
+    continuing_education_registrations.sum(:hours)
   end
 
   # A short label summarizing the registrant's CE credit standing, matching the
-  # ce_status filter buckets. Nil when CE credit was not requested, so callers
-  # can render a placeholder. "Incomplete" takes precedence over "Paid" because
-  # a missing license/hours is the actionable state regardless of payment.
+  # ce_status filter buckets. Nil when CE wasn't requested, so callers can render
+  # a placeholder. "Needs license" takes precedence (it's the actionable state),
+  # then certificate issuance, then payment.
   def ce_status_label
-    return unless ce_credit_requested?
-    return "Incomplete" if !ce_license_provided? || ce_hours_requested.to_i <= 0
-    return "Paid" if paid_in_full?
+    return unless ce_registered?
+    return "Needs license" unless ce_license_provided?
+    return "Issued" if continuing_education_registrations.all? { |c| c.certificate_sent_at.present? }
+    return "Paid" if ce_paid_in_full?
     "Requested"
   end
 
-  # What the registrant owes for their requested CE hours, in cents, at the
-  # default hourly rate. Zero when no hours were requested.
   def ce_amount_owed_cents
-    ce_hours_requested.to_i * CE_HOURLY_RATE_DOLLARS * 100
+    if ce_registrations_in_memory?
+      return continuing_education_registrations.sum { |c| c.cost_cents.to_i }
+    end
+    continuing_education_registrations.sum(:cost_cents)
+  end
+
+  # Outstanding CE balance across this registration's CE registrations — cost net
+  # of payments/discounts, floored at zero. The "$X due" the registrant still owes;
+  # drops to zero once paid. remaining_cost is computed (not a column), so this sums
+  # in Ruby.
+  def ce_amount_due_cents
+    continuing_education_registrations.sum { |c| c.remaining_cost }
+  end
+
+  # True only when every CE registration has a known license number on file.
+  def ce_license_provided?
+    return false unless ce_registered?
+
+    continuing_education_registrations.all? { |c| c.professional_license&.number_known? }
+  end
+
+  # True when CE is registered and every CE registration's certificate has been
+  # issued (sent) — the terminal state of the CE lifecycle.
+  def ce_certificate_issued?
+    return false unless ce_registered?
+
+    continuing_education_registrations.all? { |c| c.certificate_sent_at.present? }
+  end
+
+  # True when a CE registration exists and every one is fully paid.
+  def ce_paid_in_full?
+    return false unless ce_registered?
+
+    continuing_education_registrations.all?(&:paid_in_full?)
+  end
+
+  # License numbers on file across this registration's CE registrations.
+  def ce_license_numbers
+    continuing_education_registrations.filter_map { |c| c.professional_license&.number }
+  end
+
+  # Read CE registrations from the in-memory collection rather than the DB when
+  # it's already loaded or this registration isn't persisted (e.g. the unsaved
+  # sample-ticket preview builds CE registrations without saving).
+  def ce_registrations_in_memory?
+    continuing_education_registrations.loaded? || new_record?
   end
 
   def joinable?

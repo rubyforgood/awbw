@@ -60,6 +60,7 @@ class EventRegistrationsController < ApplicationController
     authorize! @event_registration
 
     if @event_registration.save
+      reconcile_ce_registration if @event_registration.event&.ce_eligible?
       respond_to do |format|
         format.html {
           redirect_to confirm_event_registration_path(@event_registration, return_to: params[:return_to])
@@ -87,22 +88,26 @@ class EventRegistrationsController < ApplicationController
     @event_registration.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
 
     if @event_registration.save
+      reconcile_ce_registration if @event_registration.event&.ce_eligible?
+      # Prefer the CE flash ("CE registration created/removed") when reconcile set
+      # one; a blocked toggle-off sets flash[:alert], which survives independently.
+      notice = flash[:notice].presence || "Registration was successfully updated."
       respond_to do |format|
         format.turbo_stream
         format.html {
           case params[:return_to]
-          when "registrants" then redirect_to registrants_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
-          when "index" then redirect_to event_registrations_path, notice: "Registration was successfully updated.", status: :see_other
-          when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
-          when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
-          when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: "Registration was successfully updated.", status: :see_other
+          when "registrants" then redirect_to registrants_event_path(@event_registration.event), notice: notice, status: :see_other
+          when "index" then redirect_to event_registrations_path, notice: notice, status: :see_other
+          when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
+          when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: notice, status: :see_other
+          when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
           else
             # No explicit origin: keep admins in the management context (the
             # roster) rather than dropping them on the public registration show.
             if allowed_to?(:manage?, with: EventRegistrationPolicy)
-              redirect_to registrants_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
+              redirect_to registrants_event_path(@event_registration.event), notice: notice, status: :see_other
             else
-              redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
+              redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
             end
           end
         }
@@ -268,6 +273,10 @@ class EventRegistrationsController < ApplicationController
     event = @event_registration.event
     if !@event_registration.deletable?
       flash[:alert] = "This registration can't be deleted because it has financial records (payments, scholarships, or the like) or attendance on record."
+    elsif @event_registration.continuing_education_registrations.any? { |ce| ce.allocations.exists? }
+      # Deleting the registration would cascade away a paid CE registration (and its
+      # allocations); make the admin revert the payment first.
+      flash[:alert] = "Can't delete this registration while its CE registration has payments — revert the payment first."
     elsif @event_registration.destroy
       flash[:notice] = "Registration deleted."
     else
@@ -318,17 +327,59 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
+  # Keep the registration's CE record in step with the `ce_requested` flag (set on
+  # the edit form / at intake), mirroring how a scholarship is awarded from its
+  # "Requested" toggle. Requested + none yet → create a stub against the chosen
+  # license (or the registrant's only license, else a placeholder); license/hours/
+  # cost/certificate are then edited on the CE edit page. Un-requested → remove it,
+  # admins only, and never one that carries payments (the flag is restored and the
+  # admin is told to revert the payment first). Sets a flash describing what changed.
+  def reconcile_ce_registration
+    if @event_registration.ce_requested?
+      create_ce_registration_stub
+    else
+      remove_ce_registration
+    end
+  end
+
+  def create_ce_registration_stub
+    return if @event_registration.continuing_education_registrations.exists?
+
+    @event_registration.continuing_education_registrations.create!(professional_license: ce_license_for_create)
+    flash[:notice] = "CE registration created."
+  end
+
+  def remove_ce_registration
+    registrations = @event_registration.continuing_education_registrations
+    return if registrations.none? || !allowed_to?(:manage?, with: EventRegistrationPolicy)
+
+    if registrations.any? { |registration| registration.allocations.exists? }
+      @event_registration.update_column(:ce_requested, true)
+      flash[:alert] = "Can't remove CE — it has payments. Revert the payment first."
+      return
+    end
+
+    registrations.destroy_all
+    flash[:notice] = "CE registration removed."
+  end
+
+  # License a brand-new CE registration attaches to: the registrant's existing
+  # license, else an empty placeholder (number pending). Which license is used
+  # (and its number) is then changeable on the CE registration's edit page.
+  def ce_license_for_create
+    @event_registration.registrant.professional_licenses.first ||
+      ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
+  end
+
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
       :event_id, :registrant_id, :status,
       :scholarship_requested,
+      :ce_requested,
       :shoutout,
       :intends_to_pay,
       :expected_payment_method,
-      :ce_credit_requested,
-      :ce_hours_requested,
-      :ce_license_number,
       :fee_note,
       *EventRegistration::DAY_FIELDS,
       organization_ids: [],

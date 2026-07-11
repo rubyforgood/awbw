@@ -75,31 +75,25 @@ RSpec.describe MagicTicketCallouts do
     end
 
     it "shows the CE card only when the registrant requested CE credit" do
-      event.update!(ce_hours_details: "6 hours")
       expect(card_titles(registration)).not_to include(event.ce_hours_details_label)
-      registration.update!(ce_credit_requested: true)
-      expect(card_titles(registration)).to include(event.ce_hours_details_label)
+      license = create(:professional_license, :placeholder, person: registration.registrant)
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      expect(card_titles(registration.reload)).to include(event.ce_hours_details_label)
     end
 
-    it "shows an amber 'what's needed' CE badge until complete, then a teal amount due" do
-      registration.update!(ce_credit_requested: true, ce_hours_requested: nil, ce_license_number: nil)
-      both = card(registration, event.ce_hours_details_label)
-      expect(both.theme).to eq(DomainTheme.swatch("teal"))
-      expect(both.subtitle).to eq("Continuing education credit")
-      expect(both.badge).to eq("Hours & license number needed")
-      expect(both.badge_classes).to be_nil
+    it "shows a 'license needed' CE badge until provided, then a teal amount due" do
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
+      license = create(:professional_license, :placeholder, person: registration.registrant)
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
 
-      registration.update!(ce_hours_requested: 6, ce_license_number: nil)
-      license = card(registration, event.ce_hours_details_label)
-      expect(license.subtitle).to eq("6 hours")
-      expect(license.badge).to eq("$150 · License number needed")
-      expect(license.badge_classes).to be_nil
+      needs = card(registration.reload, event.ce_hours_details_label)
+      expect(needs.theme).to eq(DomainTheme.swatch("teal"))
+      expect(needs.subtitle).to eq("6 hours")
+      expect(needs.badge).to eq("$150 · License number needed")
+      expect(needs.badge_classes).to be_nil
 
-      registration.update!(ce_hours_requested: nil, ce_license_number: "LIC123")
-      expect(card(registration, event.ce_hours_details_label).badge).to eq("Hours needed")
-
-      registration.update!(ce_hours_requested: 6, ce_license_number: "LIC123")
-      complete = card(registration, event.ce_hours_details_label)
+      license.update!(number: "LIC123")
+      complete = card(registration.reload, event.ce_hours_details_label)
       expect(complete.subtitle).to eq("6 hours")
       expect(complete.badge).to eq("$150 due")
       expect(complete.badge_classes).to include("teal")
@@ -133,10 +127,12 @@ RSpec.describe MagicTicketCallouts do
 
     it "places payment first and FAQ last in the full ordering" do
       event.update!(facilitator_training: true, event_details: "Bring supplies",
-                    ce_hours_details: "6 hours",
+                    ce_hours_details: "6 hours", ce_hours_offered: 6,
                     videoconference_url: "https://example.zoom.us/j/123",
                     start_date: 3.days.ago, end_date: 2.days.ago)
-      registration.update!(status: "attended", scholarship_requested: true, ce_credit_requested: true)
+      registration.update!(status: "attended", scholarship_requested: true)
+      license = create(:professional_license, :placeholder, person: registration.registrant)
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
       expect(card_titles(registration)).to eq([
         "Make your payment",
         "Certificate of completion",

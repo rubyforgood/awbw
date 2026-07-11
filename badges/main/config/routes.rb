@@ -84,6 +84,8 @@ Rails.application.routes.draw do
   get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment
   get "registration/:slug/certificate", to: "events/callouts#certificate", as: :registration_certificate
   get "registration/:slug/ce", to: "events/callouts#ce", as: :registration_ce
+  post "registration/:slug/ce/license", to: "events/callouts#update_ce_license", as: :registration_ce_license
+  post "registration/:slug/ce/request", to: "events/callouts#request_ce", as: :registration_ce_request
   get "registration/:slug/forms", to: "events/callouts#forms", as: :registration_forms
   get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
   get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
@@ -116,6 +118,9 @@ Rails.application.routes.draw do
   resources :grants
   resources :scholarships, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
     member { patch :toggle_tasks }
+  end
+  resources :continuing_education_registrations, only: [ :new, :create, :edit, :update, :destroy ] do
+    member { patch :toggle_certificate }
   end
   resources :discounts, only: [ :create, :show, :destroy ] do
     collection do

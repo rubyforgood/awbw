@@ -1,0 +1,72 @@
+<%# ---- Continuing education — mirrors the scholarship card. "Requested" is a plain
+    flag saved with the form; saving it on (when none exists) creates a CE
+    registration stub, which is then filled in on its own edit page. Once a record
+    exists the toggle is gone and we show the record + an Edit link. Only rendered
+    for CE-eligible events. ---- %>
+<section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:continuing_education, ce_registration.present? || event_registration.ce_requested?) %>">
+      <i class="fa-solid fa-certificate"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700">Continuing education</h2>
+  </div>
+
+  <div class="flex flex-1 flex-col gap-3 p-4">
+    <% unless ce_registration %>
+      <label class="flex items-center gap-2.5 cursor-pointer">
+        <input type="hidden" name="event_registration[ce_requested]" value="0" autocomplete="off">
+        <input type="checkbox"
+               name="event_registration[ce_requested]"
+               value="1"
+               <%= "checked" if event_registration.ce_requested? %>
+               class="sr-only peer">
+        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-teal-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300"></span>
+        <span class="text-sm font-medium text-gray-700">Requested</span>
+      </label>
+
+      <%# Two ways to create the record, mirroring the scholarship card: the
+          Requested toggle above auto-creates a stub on save, while "Add CE
+          registration" opens the full new form (license/hours/cost) in a new tab
+          and returns here. %>
+      <div class="mt-auto border-t border-gray-100 pt-3">
+        <%= link_to new_continuing_education_registration_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
+                    class: "inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700",
+                    target: "_blank", rel: "noopener" do %>
+          <i class="fa-solid fa-plus text-[0.6rem]"></i>
+          Add CE registration
+          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+        <% end %>
+      </div>
+    <% else %>
+      <% license = ce_registration.professional_license %>
+      <div class="flex flex-1 flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(ce_registration.cost_cents) %></span>
+          <span class="text-xs text-gray-400">·</span>
+          <span class="text-sm text-gray-600"><%= plain_number(ce_registration.hours) || "0" %> hrs</span>
+          <%= link_to edit_continuing_education_registration_path(ce_registration, return_to: "registration"),
+                      class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline",
+                      target: "_blank", rel: "noopener" do %>
+            Edit
+            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
+          <% end %>
+        </div>
+
+        <p class="text-xs text-gray-500">
+          License:
+          <% if license&.number_known? %>
+            <span class="font-medium text-gray-700"><%= license.name %></span>
+          <% else %>
+            <span class="font-medium text-amber-700">Needs license</span>
+          <% end %>
+        </p>
+
+        <%# Pinned to the card's bottom so it lines up with the scholarship card's
+            chip and the organizations card's "Connect organization" link. %>
+        <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
+          <%= render "event_registrations/ce_status_badge", registration: event_registration %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>

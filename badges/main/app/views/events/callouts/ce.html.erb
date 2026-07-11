@@ -1,55 +1,211 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "#{@event.ce_hours_details_label} — #{@event.title}") %>
-<%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_details_label } do %>
-  <% if @event_registration.ce_credit_requested? %>
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</p>
-      <% if @event_registration.paid_in_full? %>
-        <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
-          <i class="fa-solid fa-circle-check"></i> Paid
-        </span>
-      <% else %>
-        <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
-          <i class="fa-solid fa-clock"></i> Requested
-        </span>
-      <% end %>
-    </div>
+<% ce_registration = @event_registration.continuing_education_registrations.first %>
 
-    <dl class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <div>
-        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Hours requested</dt>
-        <% if @event_registration.ce_hours_requested.present? %>
-          <dd class="mt-1 text-lg font-semibold text-gray-900 tabular-nums"><%= @event_registration.ce_hours_requested %></dd>
-        <% else %>
-          <dd class="mt-1 text-sm text-amber-700">We don't have your requested hours yet.</dd>
-        <% end %>
-      </div>
-      <div>
-        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Cost<% if @event_registration.ce_hours_requested.present? %> (<%= @event_registration.ce_hours_requested %> &times; $<%= EventRegistration::CE_HOURLY_RATE_DOLLARS %>)<% end %></dt>
-        <dd class="mt-1 text-lg font-semibold text-gray-900 tabular-nums"><%= @event_registration.ce_hours_requested.present? ? dollars_from_cents(@event_registration.ce_amount_owed_cents) : "—" %></dd>
-      </div>
-      <div>
-        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">License number</dt>
-        <% if @event_registration.ce_license_provided? %>
-          <dd class="mt-1 text-lg font-semibold text-gray-900"><%= @event_registration.ce_license_number %></dd>
-        <% else %>
-          <dd class="mt-1 text-sm text-amber-700">We don't have your license number on file yet.</dd>
-        <% end %>
-      </div>
-    </dl>
+<%#
+  Reached from the admin CE registration edit page (return_to=ce_registration):
+  point the eyebrow back there instead of the registrant's ticket. Gated on edit
+  access so a registrant who lands on this URL still gets the default ticket back.
+%>
 
-    <% if @event_registration.ce_hours_requested.blank? || !@event_registration.ce_license_provided? %>
-      <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-        We don't have all of your CE details yet. Please <%= link_to "email us", contact_us_path, class: "underline font-medium" %> with your license number and the number of CE hours you'd like.
+<% callout_eyebrow = if params[:return_to] == "ce_registration" && ce_registration && allowed_to?(:edit?, ce_registration)
+     { back_path: edit_continuing_education_registration_path(ce_registration), back_label: "Back to CE registration" }
+   else
+     {}
+   end %>
+
+<%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_details_label, **callout_eyebrow } do %>
+  <% if @event_registration.ce_registered? %>
+    <% license = ce_registration&.professional_license %>
+    <% license_kind = license&.kind %>
+    <% license_number = license&.number %>
+    <% license_issuing_state = license&.issuing_state %>
+    <% license_expires_on = license&.expires_on %>
+    <% license_on_file = license&.number_known? %>
+    <%#
+      ?admin=true lets an admin preview the post-payment ("Pending") state of the
+      badge without recording a real payment. Gated on edit access so a registrant
+      can't fake it by editing the URL.
+    %>
+    <% simulate_ce_paid = params[:admin] == "true" && ce_registration && allowed_to?(:edit?, ce_registration) %>
+    <%#
+      Admin-only jump to the management surface for this CE registration. Hidden
+      from registrants; opens in a new tab so the registrant view is kept.
+    %>
+    <% if ce_registration && allowed_to?(:edit?, ce_registration) %>
+      <div class="mb-4 flex justify-end">
+        <%= link_to edit_continuing_education_registration_path(ce_registration), target: "_blank", rel: "noopener",
+              class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
+          <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
+          Edit CE registration
+          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+        <% end %>
       </div>
     <% end %>
+    <%= turbo_frame_tag "license_section" do %>
+      <section>
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Your CE credit</h2>
+
+        <dl class="mt-3 flex flex-wrap items-center gap-x-8 gap-y-3">
+          <div class="flex items-baseline gap-2">
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Hours</dt>
+            <dd class="text-lg font-semibold text-gray-900 tabular-nums"><%= plain_number(@event_registration.ce_hours_total) || "—" %></dd>
+          </div>
+
+          <div class="flex items-baseline gap-2">
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Cost</dt>
+            <dd class="text-lg font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@event_registration.ce_amount_owed_cents) %></dd>
+          </div>
+
+          <div class="flex items-center gap-3 sm:ml-auto">
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</dt>
+            <dd><%= render "event_registrations/ce_status_badge", registration: @event_registration, simulate_paid: simulate_ce_paid %></dd>
+          </div>
+        </dl>
+      </section>
+
+      <%#
+        Registrants supply (or correct) their license type + number here. With a
+        number on file we show it read-only with an Edit link; that link reloads the
+        page with ?editing=license to flip in the form (a plain full-page nav, no
+        JS). Saving POSTs and redirects back to the read-only view. With nothing on
+        file the form shows straight away.
+      %>
+      <% editing_license = params[:editing] == "license" %>
+
+      <%#
+        Once the certificate is issued the license is locked — it's the credential
+        the certificate was issued under. Read-only, no Edit link; admins correct it
+        on the admin CE edit page.
+      %>
+      <% license_locked = ce_registration.certificate_sent_at.present? %>
+
+      <section id="license" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Your professional license</h2>
+
+          <% if license_on_file && !editing_license && !license_locked %>
+            <%= link_to registration_ce_path(@event_registration.slug, editing: "license", return_to: params[:return_to].presence),
+                  class: "shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50" do %>
+              <i class="fa-solid fa-pen-to-square text-xs"></i>
+              Edit
+            <% end %>
+          <% end %>
+        </div>
+
+        <% if license_locked || (license_on_file && !editing_license) %>
+          <%# Each license field on its own row, labels in a fixed column so the values line up. %>
+          <dl class="mt-3 flex flex-col gap-2">
+            <div class="flex items-baseline gap-2">
+              <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">License type</dt>
+              <dd class="text-sm font-medium text-gray-900"><%= license_kind.presence || "—" %></dd>
+            </div>
+
+            <div class="flex items-baseline gap-2">
+              <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">License number</dt>
+              <dd class="text-sm font-medium text-gray-900 tabular-nums"><%= license_number %></dd>
+            </div>
+
+            <div class="flex items-baseline gap-2">
+              <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">Issuing state</dt>
+              <dd class="text-sm font-medium text-gray-900"><%= license_issuing_state.presence || "—" %></dd>
+            </div>
+
+            <div class="flex items-baseline gap-2">
+              <dt class="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-gray-400">Expires</dt>
+              <dd class="text-sm font-medium text-gray-900 tabular-nums"><%= license_expires_on&.to_fs(:long) || "—" %></dd>
+            </div>
+          </dl>
+          <% if license_locked %>
+            <p class="mt-3 inline-flex items-center gap-1.5 text-xs text-gray-500">
+              <i class="fa-solid fa-lock text-[0.65rem]"></i>
+              Your CE certificate has been issued, so your license is locked. Contact us if it needs correcting.
+            </p>
+          <% end %>
+        <% else %>
+          <%= form_with url: registration_ce_license_path(@event_registration.slug), method: :post,
+                class: "mt-3" do |form| %>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_kind">License type <span class="text-red-500">*</span></label>
+
+                <%= form.text_field :license_kind, value: license_kind, id: "license_kind",
+                      placeholder: "e.g. LCSW", required: true,
+                      class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_number">Your license number <span class="text-red-500">*</span></label>
+
+                <%= form.text_field :license_number, value: license_number, id: "license_number",
+                      placeholder: "e.g. 12345", required: true,
+                      class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_issuing_state">Issuing state <span class="font-normal normal-case text-gray-400">(optional)</span></label>
+
+                <%#
+                  US states dropdown, matching the public registration form's state field.
+                  Greyed while blank (placeholder) and darkened once a state is picked — by
+                  form logic on the stored value, no JS.
+                %>
+
+                <select
+                  name="license_issuing_state"
+                  id="license_issuing_state"
+                  class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm <%= license_issuing_state.present? ? "text-gray-900" : "text-gray-400" %> shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none"
+                >
+                  <option value="">Select a state</option>
+
+                  <% us_states.each do |name, abbr| %>
+                    <option value="<%= abbr %>" <%= "selected" if license_issuing_state == abbr %>><%= name %> (<%= abbr %>)</option>
+                  <% end %>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium uppercase tracking-wide text-gray-400" for="license_expires_on">Expires <span class="font-normal normal-case text-gray-400">(optional)</span></label>
+
+                <%#
+                  Date inputs render their mm/dd/yyyy hint in the input's own text colour
+                  (no ::placeholder), so grey it while empty and darken once a date is set.
+                %>
+
+                <%= form.date_field :license_expires_on, value: license_expires_on, id: "license_expires_on",
+                      class: "mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm #{license_expires_on.present? ? "text-gray-900" : "text-gray-400"} shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
+              </div>
+            </div>
+
+            <div class="mt-3 flex items-center gap-3">
+              <%= form.submit "Save changes", class: "shrink-0 rounded-lg border border-transparent bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
+
+              <% if license_on_file %>
+                <%= link_to "Cancel", registration_ce_path(@event_registration.slug, return_to: params[:return_to].presence),
+                      class: "shrink-0 px-2 py-2 text-sm font-medium text-gray-500 hover:text-gray-700" %>
+              <% end %>
+            </div>
+
+            <% unless license_on_file %>
+              <p class="mt-3 text-xs text-amber-600">We need your license type and number to issue your CE certificate.</p>
+            <% end %>
+
+            <p class="mt-2 text-xs text-gray-400">Acceptance of CE hours is determined by each state board; we can't guarantee yours will accept them.</p>
+          <% end %>
+        <% end %>
+      </section>
+    <% end %>
   <% else %>
-    <p class="text-sm text-gray-600">You haven't requested continuing education credit for this training. CE hours are available for an additional fee — reach out to request credit.</p>
+    <p class="text-sm text-gray-600">You haven't requested continuing education credit for this training. CE hours are available for an additional fee.</p>
+    <%= form_with url: registration_ce_request_path(@event_registration.slug), method: :post, data: { turbo: false }, class: "mt-4" do |form| %>
+      <%= form.submit "Request CE credit", class: "rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
+    <% end %>
   <% end %>
 
   <% if @event.ce_hours_details.present? %>
-    <div class="mt-6 border-t border-gray-100 pt-5 rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700">
-      <%= form_label_html(@event.ce_hours_details) %>
-    </div>
+    <section class="mt-7 border-t border-gray-100 pt-6">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Details</h2>
+      <div class="mt-3 rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700"><%= form_label_html(@event.ce_hours_details) %></div>
+    </section>
   <% end %>
 <% end %>

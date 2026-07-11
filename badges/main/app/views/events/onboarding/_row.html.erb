@@ -205,7 +205,7 @@
       </td>
 
     <% when :ce_requested %>
-      <% ce_requested = registration.ce_credit_requested? %>
+      <% ce_requested = registration.ce_requested? %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= ce_requested ? 1 : 0 %>">
         <%= link_to edit_event_registration_path(registration, return_to: "onboarding"), class: "hover:opacity-80", title: "Edit CE details", data: { turbo_frame: "_top" } do %>
           <% if ce_requested %>
@@ -217,20 +217,20 @@
       </td>
 
     <% when :ce_hours %>
-      <% ce_hours = registration.ce_hours_requested.to_i %>
+      <% ce_hours = registration.ce_hours_total.to_f %>
       <td class="<%= td_classes.join(" ") %> <%= ce_hours.positive? ? "text-gray-800" : "text-gray-400" %>" data-sort-value="<%= ce_hours %>">
-        <%= link_to (ce_hours.positive? ? ce_hours : "—"), edit_event_registration_path(registration, return_to: "onboarding"), class: "hover:underline #{ce_hours.positive? ? "text-gray-800" : "text-gray-400"}", data: { turbo_frame: "_top" } %>
+        <%= link_to (ce_hours.positive? ? plain_number(ce_hours) : "—"), edit_event_registration_path(registration, return_to: "onboarding"), class: "hover:underline #{ce_hours.positive? ? "text-gray-800" : "text-gray-400"}", data: { turbo_frame: "_top" } %>
       </td>
 
     <% when :ce_amount %>
       <% ce_cents = registration.ce_amount_owed_cents %>
       <td class="<%= td_classes.join(" ") %> <%= ce_cents.positive? ? "text-gray-800" : "text-gray-400" %>" data-sort-value="<%= ce_cents %>">
-        <%= link_to (ce_cents.positive? ? dollars_from_cents(ce_cents) : "—"), edit_event_registration_path(registration, return_to: "onboarding"), title: "CE owed (hours × $#{EventRegistration::CE_HOURLY_RATE_DOLLARS})", class: "hover:underline #{ce_cents.positive? ? "text-gray-800" : "text-gray-400"}", data: { turbo_frame: "_top" } %>
+        <%= link_to (ce_cents.positive? ? dollars_from_cents(ce_cents) : "—"), edit_event_registration_path(registration, return_to: "onboarding"), title: "CE cost", class: "hover:underline #{ce_cents.positive? ? "text-gray-800" : "text-gray-400"}", data: { turbo_frame: "_top" } %>
       </td>
 
     <% when :ce_license %>
-      <% ce_license = registration.ce_license_number %>
-      <td class="<%= td_classes.join(" ") %> text-sm" data-sort-value="<%= ce_license.to_s.downcase %>">
+      <% ce_license = registration.ce_license_numbers.join(", ") %>
+      <td class="<%= td_classes.join(" ") %> text-sm" data-sort-value="<%= ce_license.downcase %>">
         <%= link_to (ce_license.presence || "—"), edit_event_registration_path(registration, return_to: "onboarding"), class: "hover:underline #{ce_license.present? ? "text-gray-700" : "text-gray-400"}", data: { turbo_frame: "_top" } %>
       </td>
 

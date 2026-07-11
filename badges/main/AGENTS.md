@@ -48,19 +48,19 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~78 files |
+| `app/models/` | ActiveRecord models | ~80 files |
 | `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~30 files |
-| `app/jobs/` | SolidQueue background jobs | 3 files |
+| `app/jobs/` | SolidQueue background jobs | 4 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
 ### Presentation
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~70 files |
-| `app/views/` | ERB templates | ~504 files |
-| `app/decorators/` | Draper decorators for view logic | ~38 files |
-| `app/policies/` | ActionPolicy authorization rules | ~49 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~77 files |
+| `app/views/` | ERB templates | ~632 files |
+| `app/decorators/` | Draper decorators for view logic | ~40 files |
+| `app/policies/` | ActionPolicy authorization rules | ~55 files |
 | `app/presenters/` | Presentation objects | 3 files |
 | `app/helpers/` | View helpers | ~25 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
@@ -81,7 +81,7 @@ This codebase (Rails 8.1)
 |---|---|
 | `config/routes.rb` | All routes (single file) |
 | `config/database.yml` | MySQL via Trilogy adapter |
-| `config/initializers/` | ~28 initializer files |
+| `config/initializers/` | ~30 initializer files |
 | `.github/workflows/` | GitHub Actions CI |
 | `Procfile.dev` | Dev services: `vite` + `web` |
 | `ai/` | Shell script shortcuts for common dev tasks (see `ai/README.md`) |
@@ -147,7 +147,7 @@ This codebase (Rails 8.1)
 
 ### Namespaces
 
-- **Root level** (~52 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
+- **Root level** (~58 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
@@ -282,6 +282,7 @@ end
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state
 - `carousel` — Swiper-based carousels
+- `ce_license_picker` — Fill the CE license type/number/state/expiry fields from the picked license (or clear them for a new one)
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
@@ -347,17 +348,17 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 
 | Directory | Count | Purpose |
 |---|---|---|
-| `spec/models/` | ~58 | Model unit tests |
-| `spec/views/` | ~73 | View template tests |
-| `spec/requests/` | ~47 | HTTP request/integration tests |
-| `spec/system/` | ~25 | End-to-end browser tests (Capybara) |
-| `spec/routing/` | ~13 | Route definition tests |
-| `spec/policies/` | ~9 | Authorization policy tests |
-| `spec/decorators/` | ~10 | Decorator tests |
-| `spec/services/` | ~13 | Service object tests |
+| `spec/models/` | ~71 | Model unit tests |
+| `spec/views/` | ~77 | View template tests |
+| `spec/requests/` | ~91 | HTTP request/integration tests |
+| `spec/system/` | ~20 | End-to-end browser tests (Capybara) |
+| `spec/routing/` | ~15 | Route definition tests |
+| `spec/policies/` | ~15 | Authorization policy tests |
+| `spec/decorators/` | ~15 | Decorator tests |
+| `spec/services/` | ~25 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
-| `spec/helpers/` | ~1 | Helper tests |
-| `spec/factories/` | ~53 | FactoryBot factory definitions |
+| `spec/helpers/` | ~5 | Helper tests |
+| `spec/factories/` | ~67 | FactoryBot factory definitions |
 
 ### Configuration
 
@@ -430,8 +431,12 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (4 files):
+Located in `lib/tasks/` (8 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
 - `migrate_internal_id_to_filemaker_code.rake` — FileMaker code migration
+- `convert_age_ranges.rake` — Age range data conversion
+- `legacy_user_permissions_to_comments.rake` — Migrate legacy user permissions into comments
+- `migrate_sectors.rake` — Sector data migration
+- `migrate_workshop_logs.rake` — Workshop log migration

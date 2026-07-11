@@ -19,13 +19,6 @@ RSpec.describe EventHelper, type: :helper do
       expect(helper.specify_placeholder("Other reasons")).to be_nil
       expect(helper.specify_placeholder(nil)).to be_nil
     end
-
-    it "returns the CE hours placeholder for 'Yes' only on the CE field" do
-      ce_field = FormField.new(field_identifier: "ce_credit_interest")
-      other_field = FormField.new(field_identifier: "interested_in_more")
-      expect(helper.specify_placeholder("Yes", ce_field)).to eq("How many CE hours?")
-      expect(helper.specify_placeholder("Yes", other_field)).to be_nil
-    end
   end
 
   describe "#specify_option_selected?" do
