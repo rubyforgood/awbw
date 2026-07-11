@@ -574,6 +574,18 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       result = register_with_ce("Yes")
 
       expect(result.event_registration).to eq(existing)
+      expect(existing.reload.ce_requested).to be(true)
+      expect(existing.continuing_education_registrations.count).to eq(1)
+    end
+
+    it "does not duplicate a CE registration when the existing one already has one" do
+      person = create(:person, first_name: "Cy", last_name: "Reed", email: "cy@example.com")
+      existing = create(:event_registration, event: event, registrant: person, ce_requested: true)
+      license = create(:professional_license, :placeholder, person: person)
+      create(:continuing_education_registration, event_registration: existing, professional_license: license)
+
+      register_with_ce("Yes")
+
       expect(existing.reload.continuing_education_registrations.count).to eq(1)
     end
 
