@@ -3,8 +3,6 @@
 <% cost_cents = ce_registration.cost_cents.to_i %>
 <% paid_cents = ce_registration.allocations_sum %>
 <% due_cents = cost_cents - paid_cents %>
-<%# Free CE with nothing allocated — nothing to manage, so hide the section. %>
-<% return if cost_cents <= 0 && ce_registration.allocations.empty? %>
 <section id="allocations-card" class="relative mt-6 scroll-mt-20 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:border-gray-300 hover:shadow-md">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:continuing_education, ce_registration.allocations.any?) %>">
@@ -14,48 +12,41 @@
   </div>
 
   <div class="p-4">
-    <% if cost_cents > 0 %>
-      <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">CE cost</dt>
-          <% if params[:admin] == "true" %>
-            <dd class="mt-1">
-              <%= number_field_tag "continuing_education_registration[cost_dollars]",
-                    (ce_registration.cost_cents.to_d / 100),
-                    min: 0, step: 0.01,
-                    class: "w-28 rounded-lg border border-gray-300 px-2 py-1 text-sm tabular-nums text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
-            </dd>
-          <% else %>
-            <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(cost_cents) %></dd>
-          <% end %>
-        </div>
-        <%= link_to allocations_path(allocatable_sgid: ce_registration.to_sgid.to_s, return_to: "ce_registration"),
-              target: "_blank", rel: "noopener",
-              class: "rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 block transition hover:border-gray-400 hover:shadow-sm" do %>
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount allocated</dt>
-          <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(paid_cents) %></dd>
-        <% end %>
-        <% amount_due = due_cents > 0 %>
-        <%= link_to allocations_path(allocatable_sgid: ce_registration.to_sgid.to_s, return_to: "ce_registration"),
-              target: "_blank", rel: "noopener",
-              class: "rounded-lg border px-4 py-3 block transition hover:shadow-sm #{amount_due ? "border-amber-300 bg-amber-50 hover:border-amber-400" : "border-gray-300 bg-gray-50 hover:border-gray-400"}" do %>
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</dt>
-          <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= amount_due ? "text-amber-700" : "text-gray-500" %>">
-            <% if amount_due %>
-              <i class="fa-solid fa-circle-exclamation"></i>
-              <%= dollars_from_cents(due_cents) %>
-            <% else %>
-              <i class="fa-solid fa-thumbs-up"></i>
-              Nothing
-            <% end %>
+    <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div class="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
+        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">CE cost</dt>
+        <% if params[:admin] == "true" %>
+          <dd class="mt-1">
+            <%= number_field_tag "continuing_education_registration[cost_dollars]",
+                  (ce_registration.cost_cents.to_d / 100),
+                  min: 0, step: 0.01,
+                  class: "w-28 rounded-lg border border-gray-300 px-2 py-1 text-sm tabular-nums text-gray-900 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:outline-none" %>
           </dd>
+        <% else %>
+          <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(cost_cents) %></dd>
         <% end %>
-      </dl>
-    <% else %>
-      <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-0.5 text-xs font-medium text-gray-500">
-        <i class="fa-solid fa-gift"></i>
-        Free CE — no payment required
-      </span>
-    <% end %>
+      </div>
+      <%= link_to allocations_path(allocatable_sgid: ce_registration.to_sgid.to_s, return_to: "ce_registration"),
+            target: "_blank", rel: "noopener",
+            class: "rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 block transition hover:border-gray-400 hover:shadow-sm" do %>
+        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount allocated</dt>
+        <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(paid_cents) %></dd>
+      <% end %>
+      <% amount_due = due_cents > 0 %>
+      <%= link_to allocations_path(allocatable_sgid: ce_registration.to_sgid.to_s, return_to: "ce_registration"),
+            target: "_blank", rel: "noopener",
+            class: "rounded-lg border px-4 py-3 block transition hover:shadow-sm #{amount_due ? "border-amber-300 bg-amber-50 hover:border-amber-400" : "border-gray-300 bg-gray-50 hover:border-gray-400"}" do %>
+        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</dt>
+        <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= amount_due ? "text-amber-700" : "text-gray-500" %>">
+          <% if amount_due %>
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <%= dollars_from_cents(due_cents) %>
+          <% else %>
+            <i class="fa-solid fa-thumbs-up"></i>
+            Nothing
+          <% end %>
+        </dd>
+      <% end %>
+    </dl>
   </div>
 </section>
