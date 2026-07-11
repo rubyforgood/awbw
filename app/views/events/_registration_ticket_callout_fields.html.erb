@@ -136,7 +136,11 @@
             <%= f.check_box :payment_access_gated, class: "rounded border-gray-300 text-purple-600" %>
             Only show once payment is made or committed
           </label>
+          <%= link_to_remove_association "Remove", f,
+                class: "text-sm text-gray-400 hover:text-red-600 underline" %>
         <% end %>
+      </div>
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
         <% if f.object.magic? %>
           <% if f.object.persisted? && DefaultTicketCallouts.customized?(f.object) %>
             <%# Applied on the main Save, not a separate request. %>
@@ -147,15 +151,12 @@
           <% else %>
             <span class="text-sm text-gray-300">Matches default</span>
           <% end %>
-        <% else %>
-          <%= link_to_remove_association "Remove", f,
-                class: "text-sm text-gray-400 hover:text-red-600 underline" %>
         <% end %>
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <%= f.check_box :published, class: "rounded border-gray-300 text-purple-600" %>
+          Published
+        </label>
       </div>
-      <label class="flex items-center gap-2 text-sm text-gray-600">
-        <%= f.check_box :published, class: "rounded border-gray-300 text-purple-600" %>
-        Published
-      </label>
     </div>
   </div>
 </div>
