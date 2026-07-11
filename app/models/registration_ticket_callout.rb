@@ -25,6 +25,11 @@ class RegistrationTicketCallout < ApplicationRecord
   # row (CE hours offered / cost); their text lives on the row like everything else.
   CONFIG_MAGIC_KEYS = %w[ ce_hours ].freeze
 
+  # Built-ins whose card colour the app sets from live status — e.g. Payment turns
+  # orange while a balance is due and blue once it's paid. For these, the app
+  # colour overrides the selected one (see MagicTicketCallouts#card_for).
+  APP_COLORED_MAGIC_KEYS = %w[ payment ].freeze
+
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
   # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
@@ -116,6 +121,12 @@ class RegistrationTicketCallout < ApplicationRecord
   # Whether the row carries the inline CE config fields (hours offered / cost).
   def ce_config?
     CONFIG_MAGIC_KEYS.include?(magic_key.to_s)
+  end
+
+  # Whether the app sets this card's colour from live status, overriding the
+  # selected colour (so the editor notes it under the colour picker).
+  def app_colored?
+    APP_COLORED_MAGIC_KEYS.include?(magic_key.to_s)
   end
 
   # Whether the callout is drip-scheduled to appear only from a future date.

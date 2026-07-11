@@ -119,6 +119,7 @@ class DefaultTicketCallouts
       callout.icon_class != definition[:icon_class] ||
       callout.color_class != definition[:color_class] ||
       callout.hidden != definition[:hidden].call(@event) ||
+      callout.display_from != definition[:display_from]&.call(@event) ||
       callout.resource_ids.sort != Array(definition[:resources]&.call).map(&:id).sort
   end
 

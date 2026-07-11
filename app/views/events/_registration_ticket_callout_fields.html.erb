@@ -37,12 +37,12 @@
             <div>
               <%= f.label :title, "Title", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
               <%= f.text_field :title, required: true,
-                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+                    class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
             </div>
             <div>
               <%= f.label :subtitle, "Subtitle", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
               <%= f.text_field :subtitle,
-                    class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+                    class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
             </div>
           </div>
 
@@ -51,14 +51,14 @@
               <div>
                 <%= event_f.label :ce_hours_offered, "CE hours offered", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
                 <%= event_f.number_field :ce_hours_offered, min: 0, step: 0.25,
-                      class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm tabular-nums" %>
+                      class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm tabular-nums" %>
               </div>
               <div>
                 <%= event_f.label :ce_hours_cost, "Total CE cost", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
                 <div class="relative">
                   <span class="pointer-events-none absolute inset-y-0 left-2 flex items-center text-sm text-gray-400">$</span>
                   <%= event_f.number_field :ce_hours_cost, min: 0, step: 1,
-                        class: "w-full rounded border-gray-300 shadow-sm pl-5 pr-2 py-1 text-sm tabular-nums" %>
+                        class: "w-full rounded border-gray-300 bg-white shadow-sm pl-5 pr-2 py-1 text-sm tabular-nums" %>
                 </div>
               </div>
             </div>
@@ -71,7 +71,7 @@
         <div>
           <%= f.label :description, "Callout page text (only opens a page if this is filled out)", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
           <%= f.text_area :description, rows: 4, placeholder: "Accepts basic HTML",
-                class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono" %>
+                class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm font-mono" %>
         </div>
       </div>
     </div>
@@ -81,15 +81,17 @@
       <details class="group">
         <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
           <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 transition-transform group-open:rotate-90"></i>
-          Type, colour, and icon
+          Type, colour, icon, and display date
         </summary>
-        <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <%# Two rows of two: type + colour, then icon + the drip date that gates
+            when the callout first shows on the ticket. %>
+        <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <%= f.label :callout_type, "Type", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
             <%= f.select :callout_type,
                   RegistrationTicketCallout::CALLOUT_TYPES.map { |t| [ t.humanize, t ] },
                   {},
-                  class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                  class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm",
                   data: { callout_preview_target: "typeSelect", action: "callout-preview#update" } %>
           </div>
           <div>
@@ -97,14 +99,23 @@
             <%= f.select :color_class,
                   DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
                   { include_blank: "Default (by type)" },
-                  class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
+                  class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm",
                   data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>
+            <% if f.object.app_colored? %>
+              <p class="text-xs text-gray-400 mt-0.5">The app overrides this with a live-status colour when action is needed (e.g. orange while a balance is due).</p>
+            <% end %>
           </div>
           <div>
             <%= f.label :icon_class, "Icon", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
             <%= f.text_field :icon_class,
-                  class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm font-mono",
+                  class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm font-mono",
                   data: { callout_preview_target: "iconInput", action: "callout-preview#update" } %>
+          </div>
+          <div>
+            <%= f.label :display_from, "Display date", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
+            <%= f.date_field :display_from,
+                  class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
+            <p class="text-xs text-gray-500 mt-0.5">Drips onto the ticket on and after this date. Leave blank to show right away.</p>
           </div>
         </div>
       </details>

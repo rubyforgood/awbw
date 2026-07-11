@@ -96,7 +96,9 @@ class MagicTicketCallouts
       title: callout.title,
       subtitle: callout.subtitle,
       icon_class: callout.display_icon_class,
-      color: callout.color_class.presence || base.color
+      # Payment (and any app-coloured card) keeps its live status colour, which
+      # overrides the selected one; everything else honours the row's colour.
+      color: callout.app_colored? ? base.color : (callout.color_class.presence || base.color)
     )
   end
 

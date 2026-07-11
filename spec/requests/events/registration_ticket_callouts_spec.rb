@@ -145,6 +145,22 @@ RSpec.describe "Registration ticket callouts", type: :request do
       callout = event.registration_ticket_callouts.reload.find_by(title: "Workbook")
       expect(callout.resources).to eq([ resource ])
     end
+
+    it "saves a callout's drip display date through nested attributes" do
+      patch event_path(event), params: {
+        event: {
+          title: event.title,
+          start_date: event.start_date,
+          end_date: event.end_date,
+          registration_ticket_callouts_attributes: {
+            "0" => { title: "Handbook", callout_type: "reference", display_from: "2026-08-01" }
+          }
+        }
+      }
+
+      callout = event.registration_ticket_callouts.reload.find_by(title: "Handbook")
+      expect(callout.display_from.to_date).to eq(Date.new(2026, 8, 1))
+    end
   end
 
   describe "PATCH /events/:event_id/registration_ticket_callouts/:id (reorder)" do

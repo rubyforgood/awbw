@@ -162,17 +162,26 @@ RSpec.describe MagicTicketCallouts do
   end
 
   describe "#card_for" do
-    it "uses the row's editable presentation but the app's live badge/link" do
-      event.update!(cost_cents: 5_000)
-      # Admin renamed and recoloured the payment card.
-      callout = create(:registration_ticket_callout, event:, magic_key: "payment",
-        title: "Pay your balance", subtitle: "See what you owe", color_class: "green")
+    it "uses the row's editable presentation (title/subtitle/colour) but the app's live badge/link" do
+      # Forms isn't app-coloured, so the row's colour is honoured.
+      callout = create(:registration_ticket_callout, event:, magic_key: "forms",
+        title: "Your documents", subtitle: "Downloads", color_class: "green")
 
       card = described_class.new(registration).card_for(callout)
-      expect(card.title).to eq("Pay your balance")       # from the row
-      expect(card.subtitle).to eq("See what you owe")    # from the row
+      expect(card.title).to eq("Your documents")         # from the row
+      expect(card.subtitle).to eq("Downloads")           # from the row
       expect(card.theme).to eq(DomainTheme.swatch("green")) # from the row
-      expect(card.badge).to end_with("due")              # app-supplied live status
+    end
+
+    it "keeps Payment's live-status colour, overriding the selected colour" do
+      event.update!(cost_cents: 5_000)
+      callout = create(:registration_ticket_callout, event:, magic_key: "payment",
+        title: "Pay your balance", color_class: "green")
+
+      card = described_class.new(registration).card_for(callout)
+      expect(card.title).to eq("Pay your balance")          # row still owns text
+      expect(card.theme).to eq(DomainTheme.swatch("orange")) # app colour (balance due), not green
+      expect(card.badge).to end_with("due")
     end
 
     it "returns nil when the card shouldn't show for this registration" do

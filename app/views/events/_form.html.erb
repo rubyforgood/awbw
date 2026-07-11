@@ -498,7 +498,14 @@
       </button>
 
       <div id="registration_ticket_callouts_panel" class="hidden border border-gray-300 p-4 rounded-b-md">
-        <p class="text-sm text-gray-500 mb-4">Call-outs shown on the registration ticket — each links to its own page. The built-in cards below are managed by the app, which decides when each appears; a few (shown in colour, with fields) let you edit their text here, while the rest (greyed out) are preview-only. Below them, add your own call-outs for actions (forms to download, balances to pay) or reference reading (parking, policies, what to bring). New custom callouts save in the order shown; drag the handle to reorder saved callouts.</p>
+        <p class="text-sm text-gray-500 mb-4">Call-outs shown on the registration ticket — each can link to its own page. Built-in callouts (Payment, CE hours, Handouts, …) are pre-filled and editable here; the app supplies their live status and links. Add your own call-outs below for actions (forms to download, balances to pay) or reference reading (parking, policies, what to bring). Drag the handle to reorder.</p>
+
+        <% unless @event.persisted? %>
+          <div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <i class="fa-solid fa-circle-info mr-1"></i>
+            Save this new event first, then come back here — its built-in callouts are created when the event is saved, and you can edit them after.
+          </div>
+        <% end %>
 
         <%# Built-in cards not yet materialized on this event show as greyed
             previews for context; once the event is saved they become editable,

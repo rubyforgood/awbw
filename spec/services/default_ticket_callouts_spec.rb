@@ -114,6 +114,20 @@ RSpec.describe DefaultTicketCallouts do
       expect(described_class.customized?(faq.reload)).to be(false)
     end
 
+    it "treats a changed drip display date as customized" do
+      event = create(:event, facilitator_training: true)
+      described_class.seed(event)
+      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+
+      expect(described_class.customized?(faq)).to be(false)
+
+      faq.update!(display_from: Date.new(2026, 8, 1))
+      expect(described_class.customized?(faq)).to be(true)
+
+      described_class.reset(faq)
+      expect(described_class.customized?(faq.reload)).to be(false)
+    end
+
     it "seeds the FAQ card with the default training content" do
       event = create(:event)
 

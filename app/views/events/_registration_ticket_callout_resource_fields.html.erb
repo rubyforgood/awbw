@@ -3,7 +3,7 @@
 <div class="nested-fields flex items-center gap-2">
   <%= f.collection_select :resource_id, Resource.order(:title), :id, :title,
         { include_blank: "Select a document…" },
-        class: "flex-1 min-w-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+        class: "flex-1 min-w-0 rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
   <%= link_to_remove_association "✖", f,
         class: "shrink-0 text-gray-400 hover:text-red-600 font-bold text-xs" %>
 </div>
