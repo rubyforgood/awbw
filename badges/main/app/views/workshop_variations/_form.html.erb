@@ -112,6 +112,7 @@
                                   person_path(f.object.author),
                                   class: "hover:underline") : "Variation author").html_safe,
                         collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
+                        selected: f.object.author_person&.id || current_user.person_id,
                         include_blank: true,
                         input_html: {
                           data: {
