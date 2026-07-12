@@ -54,6 +54,23 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
+    it "redirects a hidden callout's page back to the event" do
+      callout = create(:registration_ticket_callout, :hidden, event:, description: "<p>Draft.</p>")
+
+      get event_registration_ticket_callout_path(event, callout)
+
+      expect(response).to redirect_to(event_path(event))
+    end
+
+    it "redirects a not-yet-dripped callout's page back to the event" do
+      callout = create(:registration_ticket_callout, event:, description: "<p>Later.</p>",
+        display_from: 1.day.from_now)
+
+      get event_registration_ticket_callout_path(event, callout)
+
+      expect(response).to redirect_to(event_path(event))
+    end
+
     context "when linked to a resource with a downloadable file" do
       let(:resource) { create(:resource) }
       let(:callout) do
@@ -105,12 +122,12 @@ RSpec.describe "Registration ticket callouts", type: :request do
         }
       }
 
-      ordered = event.registration_ticket_callouts.reload.ordered
+      ordered = event.registration_ticket_callouts.custom.reload.ordered
       expect(ordered.map(&:title)).to eq(%w[First Second Third])
       expect(ordered.map(&:position)).to eq([ 1, 2, 3 ])
     end
 
-    it "links a callout to a resource through nested attributes" do
+    it "links a callout to resources through nested attributes" do
       resource = create(:resource)
 
       patch event_path(event), params: {
@@ -119,13 +136,30 @@ RSpec.describe "Registration ticket callouts", type: :request do
           start_date: event.start_date,
           end_date: event.end_date,
           registration_ticket_callouts_attributes: {
-            "0" => { title: "Workbook", callout_type: "reference", resource_id: resource.id }
+            "0" => { title: "Workbook", callout_type: "reference",
+                     registration_ticket_callout_resources_attributes: { "0" => { resource_id: resource.id } } }
           }
         }
       }
 
       callout = event.registration_ticket_callouts.reload.find_by(title: "Workbook")
-      expect(callout.resource).to eq(resource)
+      expect(callout.resources).to eq([ resource ])
+    end
+
+    it "saves a callout's drip display date through nested attributes" do
+      patch event_path(event), params: {
+        event: {
+          title: event.title,
+          start_date: event.start_date,
+          end_date: event.end_date,
+          registration_ticket_callouts_attributes: {
+            "0" => { title: "Handbook", callout_type: "reference", display_from: "2026-08-01" }
+          }
+        }
+      }
+
+      callout = event.registration_ticket_callouts.reload.find_by(title: "Handbook")
+      expect(callout.display_from.to_date).to eq(Date.new(2026, 8, 1))
     end
   end
 
@@ -150,6 +184,97 @@ RSpec.describe "Registration ticket callouts", type: :request do
 
       expect(response).to redirect_to(root_path)
       expect(callout.reload.position).to eq(2)
+    end
+  end
+
+  describe "restoring a built-in through the event form" do
+    before { sign_in admin }
+
+    it "resets a callout flagged reset_to_default on the main save" do
+      training = create(:event, :publicly_visible, facilitator_training: true)
+      callout = create(:registration_ticket_callout, event: training, magic_key: "faq", title: "Edited", hidden: true)
+
+      patch event_path(training), params: {
+        event: {
+          title: training.title, start_date: training.start_date, end_date: training.end_date,
+          registration_ticket_callouts_attributes: {
+            "0" => { id: callout.id, title: "Still edited", reset_to_default: "1" }
+          }
+        }
+      }
+
+      expect(callout.reload.title).to eq("Frequently asked questions")
+      expect(callout.hidden).to be(false)
+    end
+  end
+
+  describe "seeding built-in callouts on save" do
+    before { sign_in admin }
+
+    it "materializes the built-in callouts when an event is updated" do
+      patch event_path(event), params: {
+        event: { title: event.title, start_date: event.start_date, end_date: event.end_date }
+      }
+
+      expect(event.registration_ticket_callouts.magic.pluck(:magic_key)).to contain_exactly(
+        "payment", "certificate", "scholarship", "ce_hours", "event_details",
+        "videoconference", "forms", "handouts", "faq"
+      )
+    end
+  end
+
+  describe "the event editor" do
+    before { sign_in admin }
+
+    it "renders a materialized content callout as an editable field with a restore checkbox" do
+      create(:registration_ticket_callout, event:, magic_key: "faq",
+        title: "Frequently asked questions")
+
+      get edit_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][title]\"")
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][reset_to_default]\"")
+    end
+
+    it "renders a behavioral magic callout with the same editable fields as a custom one" do
+      create(:registration_ticket_callout, event:, magic_key: "certificate",
+        title: "Certificate of completion")
+
+      get edit_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][title]\"")
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][description]\"")
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][published]\"")
+      expect(response.body).to include("Add resource") # every built-in can link resources now
+      expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][reset_to_default]\"")
+    end
+
+    it "shows the restore checkbox only once the built-in has been customized" do
+      # Seed unedited built-ins, then load the editor.
+      DefaultTicketCallouts.seed(event)
+      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+
+      get edit_event_path(event)
+      expect(response.body).to include("Matches default")
+      expect(response.body).not_to include("reset_to_default")
+
+      faq.update!(title: "Our FAQ")
+      get edit_event_path(event)
+      expect(response.body).to include("reset_to_default")
+    end
+
+    it "gives the Forms card an add-another linked-resource picker" do
+      resource = create(:resource, title: "W-9")
+      create(:registration_ticket_callout, event:, magic_key: "forms", title: "Forms", resources: [ resource ])
+
+      get edit_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      # One dropdown per linked resource, plus an "Add resource" link (cocoon).
+      expect(response.body).to match(/registration_ticket_callout_resources_attributes\]\[\d+\]\[resource_id\]/)
+      expect(response.body).to include("Add resource")
     end
   end
 end

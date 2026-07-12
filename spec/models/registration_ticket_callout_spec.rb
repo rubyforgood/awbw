@@ -27,6 +27,88 @@ RSpec.describe RegistrationTicketCallout, type: :model do
       callout.color_class = "chartreuse"
       expect(callout).not_to be_valid
     end
+
+    it "rejects an unknown magic_key" do
+      callout.magic_key = "bogus"
+      expect(callout).not_to be_valid
+      expect(callout.errors[:magic_key]).to be_present
+    end
+
+    it "allows only one callout per magic_key within an event" do
+      event = create(:event)
+      create(:registration_ticket_callout, event:, magic_key: "faq")
+      duplicate = build(:registration_ticket_callout, event:, magic_key: "faq")
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:magic_key]).to be_present
+    end
+
+    it "allows many custom callouts with a nil magic_key" do
+      event = create(:event)
+      create(:registration_ticket_callout, event:, magic_key: nil)
+      expect(build(:registration_ticket_callout, event:, magic_key: nil)).to be_valid
+    end
+  end
+
+  describe "scopes and predicates" do
+    it "partitions magic and custom callouts and reports #magic?" do
+      event = create(:event)
+      magic = create(:registration_ticket_callout, event:, magic_key: "faq")
+      custom = create(:registration_ticket_callout, event:, magic_key: nil)
+
+      expect(event.registration_ticket_callouts.magic).to eq([ magic ])
+      expect(event.registration_ticket_callouts.custom).to eq([ custom ])
+      expect(magic.magic?).to be(true)
+      expect(custom.magic?).to be(false)
+    end
+
+    it "#visible excludes hidden callouts" do
+      event = create(:event)
+      shown = create(:registration_ticket_callout, event:)
+      create(:registration_ticket_callout, :hidden, event:)
+
+      expect(event.registration_ticket_callouts.visible).to eq([ shown ])
+    end
+  end
+
+  describe "#published (inverse of hidden)" do
+    it "reads and writes the hidden flag inverted" do
+      callout = build(:registration_ticket_callout, hidden: false)
+      expect(callout.published).to be(true)
+
+      callout.published = "0"
+      expect(callout.hidden).to be(true)
+      expect(callout.published).to be(false)
+
+      callout.published = "1"
+      expect(callout.hidden).to be(false)
+    end
+  end
+
+  describe "#dripping?" do
+    it "is true only while display_from is in the future" do
+      callout.display_from = 1.day.from_now
+      expect(callout.dripping?).to be(true)
+
+      callout.display_from = 1.day.ago
+      expect(callout.dripping?).to be(false)
+
+      callout.display_from = nil
+      expect(callout.dripping?).to be(false)
+    end
+  end
+
+  describe "linked resources" do
+    it "links many resources in order and removes them with the callout" do
+      callout = create(:registration_ticket_callout)
+      a = create(:resource)
+      b = create(:resource)
+      callout.resources << a
+      callout.resources << b
+
+      expect(callout.reload.resources).to eq([ a, b ])
+      expect { callout.destroy }.to change(RegistrationTicketCalloutResource, :count).by(-2)
+    end
   end
 
   describe "positioning" do
