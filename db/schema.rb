@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_11_193528) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_12_183112) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1102,7 +1102,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_11_193528) do
     t.string "subtitle"
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["event_id", "magic_key"], name: "index_registration_ticket_callouts_on_event_id_and_magic_key"
+    t.index ["event_id", "magic_key"], name: "index_registration_ticket_callouts_on_event_id_and_magic_key", unique: true
     t.index ["event_id", "position"], name: "index_registration_ticket_callouts_on_event_id_and_position"
     t.index ["event_id"], name: "index_registration_ticket_callouts_on_event_id"
   end
@@ -1377,7 +1377,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_11_193528) do
     t.bigint "item_id", null: false
     t.string "item_type", null: false
     t.text "object", size: :long
-    t.text "object_changes"
+    t.text "object_changes", size: :long
     t.string "whodunnit"
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
   end
