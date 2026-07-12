@@ -62,6 +62,15 @@
             <dd><%= render "event_registrations/ce_status_badge", registration: @event_registration, simulate_paid: simulate_ce_paid %></dd>
           </div>
         </dl>
+
+        <% if ce_registration && ce_registration.remaining_cost.positive? %>
+          <div class="mt-6 flex justify-center">
+            <%= button_to "Pay with Credit Card",
+                          registration_ce_pay_path(@event_registration.slug),
+                          data: { turbo: false },
+                          class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
+          </div>
+        <% end %>
       </section>
 
       <%#
