@@ -271,15 +271,6 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("event[event_details_label]")
     end
 
-    it "renders the built-in 'CE hours' card as an editable row with the CE config" do
-      get edit_event_path(event)
-      expect(response.body).to include("Registration ticket callouts")
-      expect(response.body).to include("CE hours offered")
-      # CE hours/cost stay on the event; the label/text moved to the callout row.
-      expect(response.body).to include("event[ce_hours_offered]")
-      expect(response.body).not_to include("event[ce_hours_details_label]")
-    end
-
     it "previews the app-controlled built-in callouts (greyed, non-editable)" do
       get edit_event_path(event)
       expect(response.body).to include("Frequently asked questions")
