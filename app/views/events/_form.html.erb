@@ -210,27 +210,6 @@
                     placeholder: "Short description for calendar entries…",
                     class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                   } %>
-
-          <%#
-            Continuing education — "CE hours offered" above 0 makes the event
-            CE-eligible (the gate for the CE card on registrations); the total cost
-            is what a registrant pays for credit (stored in cents).
-          %>
-
-          <div class="mt-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Continuing education</label>
-
-            <div class="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-              <label class="flex items-center gap-2 text-sm text-gray-700">CE hours offered <%= f.number_field :ce_hours_offered, min: 0, step: 0.25, class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %></label>
-
-              <label class="flex items-center gap-2 text-sm text-gray-700">
-                Total CE cost <span class="text-gray-400">$</span> <%= f.number_field :ce_hours_cost, min: 0, step: 1,
-                  class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-              </label>
-            </div>
-
-            <p class="mt-1 text-xs text-gray-400">Edit the CE hours ticket card and its details below, under Registration ticket callouts.</p>
-          </div>
         </div>
 
         <%# RIGHT: Autoshow display options %>
@@ -473,22 +452,31 @@
                   <% end %>
                 </div>
               <% end %>
+
               <% if @continuing_education_forms&.any? %>
                 <div class="pb-4">
                   <% if @continuing_education_forms.size == 1 %>
                     <% single_form = @continuing_education_forms.first %>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                      <%= check_box_tag "event[continuing_education_form_id]", single_form.id,
+                    <%= check_box_tag "event[continuing_education_form_id]", single_form.id,
                             resubmitted ? params.dig(:event, :continuing_education_form_id).present? : @event.continuing_education_form.present?,
-                            class: "rounded border-gray-300" %>
-                      <span class="text-sm font-medium text-gray-700">Enable continuing education</span>
-                    </label>
+                            class: "peer rounded border-gray-300" %>
+                    <span class="text-sm font-medium text-gray-700">Enable continuing education</span>
                     <p class="text-xs text-gray-500 mt-1">Allow registrants to request CE hours.</p>
+                    <div class="hidden peer-checked:flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
+                      <label class="flex items-center gap-2 text-sm text-gray-700">CE hours offered <%= f.number_field :ce_hours_offered, min: 0, step: 0.25, class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %></label>
+
+                      <label class="flex items-center gap-2 text-sm text-gray-700">
+                        Total CE cost <span class="text-gray-400">$</span> <%= f.number_field :ce_hours_cost, min: 0, step: 1,
+                      class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
+                      </label>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-400">Edit the CE hours ticket card and its details below, under Registration ticket callouts.</p>
                     <% if @event.continuing_education_form.present? %>
                       <%= link_to new_event_public_registration_path(@event),
                                   class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
                                   target: "_blank" do %>
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview CE form
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        Preview CE form
                       <% end %>
                     <% end %>
                   <% else %>
@@ -500,6 +488,7 @@
                                          end %>
                     <select name="event[continuing_education_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
                       <option value="">Disabled</option>
+
                       <% @continuing_education_forms.each do |cf| %>
                         <option value="<%= cf.id %>" <%= "selected" if cf.id == default_ce_id %>><%= cf.name %></option>
                       <% end %>
