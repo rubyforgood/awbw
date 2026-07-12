@@ -293,13 +293,6 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
     end
   end
 
-  if event.ce_hours_offered.to_i > 0
-    EventForm.find_or_create_by!(event: event, role: "continuing_education") do |ef|
-      ef.form = continuing_education_form
-    end
-  end
-end
-
 # The flagship training runs on Zoom — drive the platform from event settings so
 # it shows as a badge in the public registration header (rather than living in the
 # shared form header). It also turns on the structured "at a glance" details panel
