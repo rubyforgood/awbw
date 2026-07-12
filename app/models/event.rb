@@ -365,8 +365,6 @@ class Event < ApplicationRecord
     saved_change_to_ce_hours_offered? || saved_change_to_ce_hours_cost_cents?
   end
 
-  # When several CE forms exist the admin's dropdown picks one; this callback only
-  # auto-attaches when there's exactly one (or removes when eligibility is lost).
   def manage_continuing_education_form
     ce_eligible = ce_hours_offered.to_i > 0 && ce_hours_cost_cents.to_i > 0
 
@@ -377,9 +375,9 @@ class Event < ApplicationRecord
 
     return if continuing_education_form.present?
 
-    ce_forms = Form.standalone.where(role: "continuing_education")
-    return unless ce_forms.size == 1
+    ce_form = Form.standalone.where(role: "continuing_education").first
+    return unless ce_form
 
-    event_forms.create!(form: ce_forms.first, role: "continuing_education")
+    event_forms.create!(form: ce_form, role: "continuing_education")
   end
 end
