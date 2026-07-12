@@ -28,15 +28,14 @@
       know which callout you are toggling even when it is hidden.
     %>
 
-    <div class="inline-flex items-center gap-x-3 gap-y-1 ml-2 text-sm align-middle">
-      <span class="text-gray-800 font-medium truncate max-w-xs" title="<%= f.object.title %>"><%= f.object.title %></span>
-    </div>
+    <div class="inline-flex items-center gap-x-3 gap-y-1 ml-2 text-sm align-middle"><span class="text-gray-800 font-medium truncate max-w-xs" title="<%= f.object.title %>"><%= f.object.title %></span></div>
 
     <%# Editable content — hidden when the Published checkbox is unchecked. %>
     <div class="hidden peer-checked:block space-y-3 mt-3">
       <% if f.object.magic? %>
         <div class="flex items-center gap-2">
           <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">Built in</span>
+
           <% if f.object.persisted? && DefaultTicketCallouts.customized?(f.object) %>
             <label class="flex items-center gap-2 text-xs text-gray-500"><%= f.check_box :reset_to_default, class: "rounded border-gray-300 text-purple-600" %> Restore to default</label>
           <% else %>
@@ -79,24 +78,6 @@
               <div><%= f.label :subtitle, "Subtitle", class: "block text-xs font-medium text-gray-600 mb-0.5" %><%= f.text_field :subtitle,
                       class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %></div>
             </div>
-
-            <% if f.object.ce_config? && event_f.present? %>
-              <div class="grid grid-cols-2 gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-                <div><%= event_f.label :ce_hours_offered, "CE hours offered", class: "block text-xs font-medium text-gray-600 mb-0.5" %><%= event_f.number_field :ce_hours_offered, min: 0, step: 0.25,
-                        class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm tabular-nums" %></div>
-
-                <div>
-                  <%= event_f.label :ce_hours_cost, "Total CE cost", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-
-                  <div class="relative">
-                    <span class="pointer-events-none absolute inset-y-0 left-2 flex items-center text-sm text-gray-400">$</span>
-
-                    <%= event_f.number_field :ce_hours_cost, min: 0, step: 1,
-                          class: "w-full rounded border-gray-300 bg-white shadow-sm pl-5 pr-2 py-1 text-sm tabular-nums" %>
-                  </div>
-                </div>
-              </div>
-            <% end %>
           </div>
         </div>
 
