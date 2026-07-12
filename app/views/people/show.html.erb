@@ -64,7 +64,7 @@
       </div>
       <div class="flex-1 text-center md:text-left">
         <h1 class="text-3xl font-bold text-gray-900">
-          <%= @person.name %><% if @person.profile_show_credentials? && @person.license_credentials.present? %><span class="font-normal">, <%= @person.license_credentials %></span><% end %>
+          <%= @person.name %><% if @person.credentials.present? && @person.profile_show_credentials? %><span class="font-normal">, <%= @person.credentials %></span><% end %>
           <% if @person.pronouns.present? && @person.profile_show_pronouns? %>
             <span class="text-gray-500 font-normal text-base italic">(<%= @person.pronouns %>)</span>
           <% end %>

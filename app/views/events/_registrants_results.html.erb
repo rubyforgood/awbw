@@ -293,19 +293,37 @@
 
                 <% if ce_col %>
                   <td class="px-4 py-2 text-sm text-center" data-column-toggle-col="ce">
-                    <%# Canonical CE badge (Requested → License # needed → $X due →
-                        Pending → Issued). "Create" when CE isn't in play yet. %>
-                    <% if registration.decorate.ce_status_badge.nil? %>
-                      <%= link_to edit_event_registration_path(registration, return_to: "registrants"),
-                                  title: "No CE credit requested",
-                                  class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-5 py-0.5 bg-gray-50 text-gray-400 border-gray-200 transition hover:opacity-80 hover:shadow-sm",
-                                  data: { turbo_frame: "_top" } do %>
-                        <span>Create</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-                      <% end %>
+                    <%# CE progression mirrors scholarship's colors. Until a CE registration
+                        record exists it's just "Requested"; once it does, walk through
+                        license → payment → paid. "Create" when CE wasn't requested. %>
+                    <% cer = registration.continuing_education_registrations.first %>
+                    <% if !registration.ce_credit_requested? %>
+                      <% ce_classes = "bg-gray-50 text-gray-400 border-gray-200" %>
+                      <% ce_text = "Create" %>
+                      <% ce_title = "No CE credit requested" %>
+                    <% elsif cer.nil? %>
+                      <% ce_classes = "bg-amber-50 text-amber-700 border-amber-200" %>
+                      <% ce_text = "Requested" %>
+                      <% ce_title = "CE requested — no registration record yet" %>
+                    <% elsif !cer.professional_license&.number_known? %>
+                      <% ce_classes = "bg-amber-50 text-amber-700 border-amber-200" %>
+                      <% ce_text = "No license #" %>
+                      <% ce_title = "CE license number not provided" %>
+                    <% elsif !cer.paid_in_full? %>
+                      <% ce_classes = "bg-blue-50 text-blue-700 border-blue-200" %>
+                      <% ce_text = "Filed" %>
+                      <% ce_title = "CE license filed — #{dollars_from_cents(cer.remaining_cost)} due" %>
                     <% else %>
-                      <%= render "event_registrations/ce_status_badge", registration: registration,
-                            href: edit_event_registration_path(registration, return_to: "registrants") %>
+                      <% ce_classes = "bg-green-50 text-green-700 border-green-200" %>
+                      <% ce_text = "Recipient" %>
+                      <% ce_title = "CE paid" %>
+                    <% end %>
+                    <%= link_to edit_event_registration_path(registration, return_to: "registrants"),
+                                title: ce_title,
+                                class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-5 py-0.5 #{ce_classes} transition hover:opacity-80 hover:shadow-sm",
+                                data: { turbo_frame: "_top" } do %>
+                      <span><%= ce_text %></span>
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
                     <% end %>
                   </td>
                 <% end %>

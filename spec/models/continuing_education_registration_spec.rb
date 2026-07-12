@@ -12,41 +12,6 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg).not_to be_valid
       expect(ce_reg.errors[:professional_license]).to include("must belong to the registrant")
     end
-
-    describe "cost_not_below_allocations" do
-      it "allows setting cost above allocations" do
-        ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
-        payment = create(:payment, amount_cents: 3_000, amount_cents_remaining: 3_000)
-        create(:allocation, source: payment, allocatable: ce_reg, amount: 3_000)
-
-        ce_reg.cost_cents = 5_000
-        expect(ce_reg).to be_valid
-      end
-
-      it "allows setting cost equal to allocations" do
-        ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
-        payment = create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000)
-        create(:allocation, source: payment, allocatable: ce_reg, amount: 5_000)
-
-        ce_reg.cost_cents = 5_000
-        expect(ce_reg).to be_valid
-      end
-
-      it "rejects setting cost below allocations" do
-        ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
-        payment = create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000)
-        create(:allocation, source: payment, allocatable: ce_reg, amount: 5_000)
-
-        ce_reg.cost_cents = 3_000
-        expect(ce_reg).not_to be_valid
-        expect(ce_reg.errors[:cost_cents]).to include("can't be less than the amount already allocated ($50)")
-      end
-
-      it "allows setting cost on create even without allocations" do
-        ce_reg = build(:continuing_education_registration, cost_cents: 10_000)
-        expect(ce_reg).to be_valid
-      end
-    end
   end
 
   describe "hours and cost defaults from the event" do
@@ -220,29 +185,6 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
 
       expect(queries).to be_empty
       expect(preloaded.paid_in_full?).to be(true)
-    end
-
-    it "reports discounted? and discount_sum like an event registration" do
-      ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
-      expect(ce_reg.discounted?).to be(false)
-      expect(ce_reg.discount_sum).to eq(0)
-
-      create(:allocation, source: create(:discount, amount_cents: 4_000), allocatable: ce_reg, amount: 4_000)
-
-      expect(ce_reg.discounted?).to be(true)
-      expect(ce_reg.discount_sum).to eq(4_000)
-    end
-
-    it "labels payment status Due → Partial → Paid" do
-      ce_reg = create(:continuing_education_registration, cost_cents: 10_000)
-      expect(ce_reg.payment_status_label).to eq("Due")
-
-      payment = create(:payment, amount_cents: 10_000, amount_cents_remaining: 10_000)
-      create(:allocation, source: payment, allocatable: ce_reg, amount: 4_000)
-      expect(ce_reg.payment_status_label).to eq("Partial")
-
-      create(:allocation, source: payment, allocatable: ce_reg, amount: 6_000)
-      expect(ce_reg.payment_status_label).to eq("Paid")
     end
   end
 end

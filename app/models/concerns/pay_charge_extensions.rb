@@ -12,9 +12,7 @@ module PayChargeExtensions
     return if ExternalProcessorPayment.exists?(pay_charge_id: id)
     return unless object["paid"] == true
 
-    if (ce_registration_id = metadata["ce_registration_id"])
-      create_ce_payment(ce_registration_id)
-    elsif (event_registration_id = metadata["event_registration_id"])
+    if (event_registration_id = metadata["event_registration_id"])
       create_event_registration_payment(event_registration_id)
     elsif (form_submission_id = metadata["form_submission_id"])
       create_bulk_payment(form_submission_id)
@@ -54,36 +52,6 @@ module PayChargeExtensions
     end
 
     registration.update!(payment_unresolved: false)
-  end
-
-  def create_ce_payment(ce_registration_id)
-    ce_registration = ContinuingEducationRegistration.find_by(id: ce_registration_id)
-    return unless ce_registration
-
-    person = ce_registration.event_registration&.registrant
-    return unless person
-
-    payment = ExternalProcessorPayment.create!(
-      stripe_charge_id: processor_id,
-      external_origin: false,
-      person: person,
-      amount_cents: amount,
-      amount_cents_remaining: amount,
-      currency: currency,
-      pay_charge_id: id,
-      metadata: metadata.merge(stripe_charge: object)
-    )
-
-    remaining_needed = ce_registration.remaining_cost
-    allocation_amount = [ amount, remaining_needed ].min
-
-    if allocation_amount > 0
-      Allocation.create!(
-        source: payment,
-        allocatable: ce_registration,
-        amount: allocation_amount
-      )
-    end
   end
 
   def create_bulk_payment(form_submission_id)

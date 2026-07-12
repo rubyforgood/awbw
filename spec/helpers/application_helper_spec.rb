@@ -53,21 +53,6 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
-  describe "#timezone_visibility_hint" do
-    let(:me) { create(:user) }
-    let(:other) { create(:user) }
-
-    before { allow(helper).to receive(:current_user).and_return(me) }
-
-    it "uses second person when the form is about the current user" do
-      expect(helper.timezone_visibility_hint(me)).to eq("You will see times and dates in this timezone.")
-    end
-
-    it "uses 'User' when an admin edits someone else" do
-      expect(helper.timezone_visibility_hint(other)).to eq("User will see times and dates in this timezone.")
-    end
-  end
-
   describe "#dollars_from_cents" do
     it "drops the cents for whole-dollar amounts and adds thousands separators" do
       expect(helper.dollars_from_cents(150_000)).to eq("$1,500")

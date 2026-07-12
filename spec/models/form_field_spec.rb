@@ -392,12 +392,12 @@ RSpec.describe FormField do
       expect(field.answer_inclusion_error("Foundation/Funder: ACME")).to eq("has an invalid selection")
     end
 
-    it "treats the CE question's 'Yes' as a plain choice (hours come from the event)" do
+    it "accepts the CE question's field-scoped 'Yes: <hours>' specify answer" do
       field = selectable_field(type: :single_select_radio, option_names: %w[Yes No])
       field.update!(field_identifier: "ce_credit_interest")
       expect(field.answer_inclusion_error("Yes")).to be_nil
+      expect(field.answer_inclusion_error("Yes: 6")).to be_nil
       expect(field.answer_inclusion_error("No")).to be_nil
-      expect(field.answer_inclusion_error("Yes: 6")).to eq("has an invalid selection")
     end
 
     it "treats a bare 'Yes' as a plain choice on other fields" do

@@ -2,16 +2,27 @@ require "rails_helper"
 
 RSpec.describe DefaultTicketCallouts do
   describe "#seed" do
-    it "materializes all nine built-in callouts for every event" do
-      event = create(:event, cost_cents: 0) # free, no scholarship form, no VC link
+    it "materializes the built-in callouts the event's config warrants" do
+      # Factory event: has a cost (payment + forms), no scholarship form / VC link.
+      # CE hours, Event details, Certificate, Handouts, FAQ always seed.
+      event = create(:event)
 
       described_class.seed(event)
 
       keys = event.registration_ticket_callouts.magic.pluck(:magic_key)
-      expect(keys).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours", "event_details",
-        "videoconference", "forms", "handouts", "faq"
-      )
+      expect(keys).to contain_exactly("payment", "certificate", "ce_hours", "event_details", "forms", "handouts", "faq")
+    end
+
+    it "gates Payment, Scholarship, and Videoconference on config, but always seeds CE and Event details" do
+      form = create(:form)
+      event = create(:event, cost_cents: 0)
+      event.event_forms.create!(form:, role: "scholarship")
+
+      described_class.seed(event)
+
+      keys = event.registration_ticket_callouts.magic.pluck(:magic_key)
+      expect(keys).to include("scholarship", "ce_hours", "event_details") # CE/details always
+      expect(keys).not_to include("payment", "videoconference") # free, no VC link
     end
 
     it "seeds callouts in canonical ticket order" do
@@ -27,33 +38,17 @@ RSpec.describe DefaultTicketCallouts do
       )
     end
 
-    it "seeds the Videoconference card with a drip date a week before start" do
+    it "seeds the Videoconference card, dripping a week before start, only once the event has a link" do
       event = create(:event, start_date: Date.new(2026, 9, 10))
+      described_class.seed(event)
+      expect(event.registration_ticket_callouts.find_by(magic_key: "videoconference")).to be_nil
+
+      event.update!(videoconference_url: "https://example.com/zoom")
       described_class.seed(event)
 
       vc = event.registration_ticket_callouts.find_by(magic_key: "videoconference")
-      expect(vc).to be_present
       expect(vc.display_from.to_date).to eq(Date.new(2026, 9, 3))
-      expect(vc.hidden).to be(true) # non-training: hidden by default
-    end
-
-    it "hides all callouts by default on a non-training event, shows all on a facilitator training" do
-      form = create(:form)
-      non_training = create(:event, cost_cents: 0)
-      non_training.event_forms.create!(form:, role: "scholarship")
-      training = create(:event, :publicly_visible, facilitator_training: true, cost_cents: 100,
-        videoconference_url: "https://example.com/vc")
-      training.event_forms.create!(form:, role: "scholarship")
-
-      described_class.seed(non_training)
-      described_class.seed(training)
-
-      non_training.registration_ticket_callouts.magic.each do |callout|
-        expect(callout.hidden).to be(true), "expected #{callout.magic_key} hidden on non-training"
-      end
-      training.registration_ticket_callouts.magic.each do |callout|
-        expect(callout.hidden).to be(false), "expected #{callout.magic_key} visible on training"
-      end
+      expect(vc.hidden).to be(false)
     end
 
     it "defaults Certificate off for a non-training event and on for a facilitator training" do
@@ -84,8 +79,8 @@ RSpec.describe DefaultTicketCallouts do
       described_class.seed(event)
 
       forms = event.registration_ticket_callouts.find_by(magic_key: "forms")
-      expect(forms).to be_present
-      expect(forms.resources).to be_empty # no W-9 on a free event
+      expect(forms).to be_present # seeded because it's a training
+      expect(forms.resources).to be_empty
     end
 
     it "migrates CE hours and event-details content from the event onto the row" do
@@ -189,7 +184,7 @@ RSpec.describe DefaultTicketCallouts do
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
       expect(event.registration_ticket_callouts.ordered.map(&:magic_key).compact).to eq(
-        %w[payment certificate scholarship ce_hours event_details videoconference forms handouts faq]
+        %w[payment certificate ce_hours event_details forms handouts faq]
       )
     end
   end

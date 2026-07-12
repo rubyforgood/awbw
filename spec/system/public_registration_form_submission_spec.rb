@@ -17,7 +17,6 @@ RSpec.describe "Public form submissions", type: :system do
   end
 
   let(:registration_form) { build_registration_form }
-  let(:continuing_education_form) { build_continuing_education_form }
   let(:scholarship_form) do
     FormBuilderService.new(name: "Scholarship Application", sections: %i[scholarship], role: "scholarship").call
   end
@@ -52,7 +51,6 @@ RSpec.describe "Public form submissions", type: :system do
   before do
     driven_by(:rack_test)
     EventForm.create!(event: event, form: registration_form, role: "registration")
-    EventForm.create!(event: event, form: continuing_education_form, role: "continuing_education")
     EventForm.create!(event: event, form: scholarship_form, role: "scholarship")
     EventForm.create!(event: event, form: bulk_payment_form, role: "bulk_payment")
   end
@@ -63,7 +61,7 @@ RSpec.describe "Public form submissions", type: :system do
 
       fill_full_registration
 
-      choose_pr_radio ce_field("ce_credit_interest"), "Yes"
+      choose_pr_radio reg_field("ce_credit_interest"), "Yes"
       choose_pr_radio reg_field("payment_method"), "Check"
       check_pr_box reg_field("additional_forms"), "W-9"
 
@@ -75,9 +73,8 @@ RSpec.describe "Public form submissions", type: :system do
                                         email_2: "robin.alt@example.com")
 
       registration = event.event_registrations.find_by!(registrant: person)
-      expect(registration).to have_attributes(scholarship_requested: false,
+      expect(registration).to have_attributes(scholarship_requested: false, ce_credit_requested: true,
                                               w9_requested: true, invoice_requested: false)
-      expect(registration.continuing_education_registrations.count).to eq(1)
 
       answers = answers_by_identifier(registration_form.form_submissions.find_by!(person: person))
       expect(answers).to include(
@@ -108,15 +105,11 @@ RSpec.describe "Public form submissions", type: :system do
         "racial_ethnic_identity" => "Multi-racial",
         "referral_source" => "Online Search",
         "training_motivation" => "Address staff burnout through art",
+        "ce_credit_interest" => "Yes",
         "payment_method" => "Check",
         "additional_forms" => "W-9",
         "communication_consent" => "Yes"
       )
-      expect(answers).not_to have_key("ce_credit_interest")
-
-      ce_submission = continuing_education_form.form_submissions.find_by!(person: person)
-      ce_answers = answers_by_identifier(ce_submission)
-      expect(ce_answers).to include("ce_credit_interest" => "Yes")
       # The service never stores the confirm_email answer (it only checks it matches).
       expect(answers).not_to have_key("confirm_email")
 
@@ -283,8 +276,8 @@ RSpec.describe "Public form submissions", type: :system do
 
   # Builds the registration form the way db/seeds/dev/events_management.rb does:
   # the full set of sections, minus the generic "interested in more?" question,
-  # plus the "Additional forms" question whose answers drive the resulting
-  # registration's flags.
+  # plus the magic CE-interest and "Additional forms" questions whose answers
+  # drive the resulting registration's flags.
   def build_registration_form
     form = FormBuilderService.new(
       name: "Training Registration Form",
@@ -294,6 +287,16 @@ RSpec.describe "Public form submissions", type: :system do
     form.form_fields.where(field_identifier: "interested_in_more").destroy_all
 
     position = form.form_fields.maximum(:position).to_i
+    ce = form.form_fields.create!(
+      name: "Do you plan to use Continuing Education (CE) hours for this course?",
+      answer_type: :single_select_radio, status: :active, position: position += 1, required: false,
+      field_identifier: EventRegistrationServices::PublicRegistration::CE_CREDIT_INTEREST_IDENTIFIER,
+      section: "continuing_education", visibility: :always_ask
+    )
+    %w[Yes No].each do |name|
+      ce.form_field_answer_options.create!(answer_option: AnswerOption.find_or_create_by!(name: name))
+    end
+
     additional_forms = form.form_fields.create!(
       name: "Do you need either of the following?",
       answer_type: :multi_select_checkbox, status: :active, position: position += 1, required: false,
@@ -309,22 +312,10 @@ RSpec.describe "Public form submissions", type: :system do
     form
   end
 
-  def build_continuing_education_form
-    FormBuilderService.new(
-      name: "Continuing Education Request",
-      sections: %i[continuing_education],
-      role: "continuing_education"
-    ).call
-  end
-
   # ---- Field lookup ----
 
   def reg_field(identifier)
     registration_form.form_fields.find_by!(field_identifier: identifier)
-  end
-
-  def ce_field(identifier)
-    continuing_education_form.form_fields.find_by!(field_identifier: identifier)
   end
 
   def schol_field(identifier)

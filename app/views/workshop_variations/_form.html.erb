@@ -105,21 +105,18 @@
               <% if params[:admin] == "true" %>
                 <%= f.input :position, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
               <% end %>
-              <%= f.input :author_id,
-                        as: :select,
-                        label: (f.object.author ? (
-                          link_to "Variation author",
-                                  person_path(f.object.author),
-                                  class: "hover:underline") : "Variation author").html_safe,
-                        collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
-                        selected: f.object.author_person&.id || current_user.person_id,
-                        include_blank: true,
-                        input_html: {
-                          data: {
-                            controller: "remote-select",
-                            remote_select_model_value: "person"
-                          }
-                        } %>
+              <div data-controller="searchable-select" data-searchable-select-mode-value="person">
+                <%= f.input :author_id,
+                          as: :select,
+                          label: (f.object.author ? (
+                            link_to "Variation author",
+                                    person_path(f.object.author),
+                                    class: "hover:underline") : "Variation author").html_safe,
+                          collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                          selected: (f.object.author_person&.id || current_user.person_id),
+                          input_html: { class: "w-full rounded-lg px-3 py-2",
+                                        data: { searchable_select_target: "select" } } %>
+              </div>
             </div>
           <% end %>
         </div>

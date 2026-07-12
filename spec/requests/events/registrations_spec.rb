@@ -232,29 +232,6 @@ RSpec.describe "Events::Registrations", type: :request do
 
       expect(response.body).not_to include("Review your form responses")
     end
-
-    it "shows an admin edit-scholarship link and a back-to-scholarship eyebrow when reached from there" do
-      scholarship = create(:scholarship, amount_cents: 75_000)
-      create(:allocation, source: scholarship, allocatable: registration, amount: 75_000)
-
-      sign_in create(:user, :with_person, super_user: true)
-      get registration_scholarship_path(registration.slug, return_to: "scholarship")
-
-      expect(response.body).to include("Edit scholarship")
-      expect(response.body).to include("Back to scholarship")
-      expect(response.body).to include(edit_scholarship_path(scholarship))
-    end
-
-    it "keeps the default ticket eyebrow for a registrant even with the scholarship origin" do
-      scholarship = create(:scholarship, amount_cents: 75_000)
-      create(:allocation, source: scholarship, allocatable: registration, amount: 75_000)
-
-      get registration_scholarship_path(registration.slug, return_to: "scholarship")
-
-      expect(response.body).to include("Back to ticket")
-      expect(response.body).not_to include("Back to scholarship")
-      expect(response.body).not_to include("Edit scholarship")
-    end
   end
 
   describe "GET /registration/:slug/faq" do
@@ -315,139 +292,20 @@ RSpec.describe "Events::Registrations", type: :request do
   describe "GET /registration/:slug/ce" do
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
-    it "shows status, cost, and the license number on file, read-only with an edit link" do
-      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
-      license = create(:professional_license, person: registration.registrant, number: "LIC123")
-      create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
+    it "shows status, cost, and the license number on file" do
+      registration.update!(ce_credit_requested: true, ce_hours_requested: 6, ce_license_number: "LIC123")
       get registration_ce_path(registration.slug)
       expect(response).to have_http_status(:success)
-      # License on file but unpaid → the badge shows the balance due.
-      expect(response.body).to include("$150 due")
-      expect(response.body).to include("Hours")
+      expect(response.body).to include("Requested")
+      expect(response.body).to include("Hours requested")
       expect(response.body).to include("$150")
       expect(response.body).to include("LIC123")
-      # Read-only by default: the form is not rendered, just an Edit link that flips to it.
-      expect(response.body).to include("editing=license")
-      expect(response.body).not_to include("Save changes")
     end
 
-    it "flips to the editable form when reached with ?editing=license" do
-      license = create(:professional_license, person: registration.registrant, number: "LIC123")
-      create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
-      get registration_ce_path(registration.slug, editing: "license")
-      expect(response.body).to include("Save changes")
-      expect(response.body).to include("Cancel")
-    end
-
-    it "shows blank license fields and a needs-license prompt when nothing is on file yet" do
-      license = create(:professional_license, :placeholder, person: registration.registrant)
-      create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
+    it "notes when the license number is not yet on file" do
+      registration.update!(ce_credit_requested: true, ce_hours_requested: 6, ce_license_number: nil)
       get registration_ce_path(registration.slug)
-      expect(response.body).to include("License type")
-      expect(response.body).to include("Your license number")
-      expect(response.body).to include("License # needed")
-      expect(response.body).to include("We need your license type and number")
-      expect(response.body).to include("Save changes")
-      # Nothing on file yet, so there's no read-only value to edit or cancel back to.
-      expect(response.body).not_to include("editing=license")
-      expect(response.body).not_to include(">Cancel<")
-    end
-
-    it "shows an admin jump link to the CE registration only to admins" do
-      ce = create(:continuing_education_registration, event_registration: registration,
-        professional_license: create(:professional_license, :placeholder, person: registration.registrant), hours: 6)
-
-      get registration_ce_path(registration.slug)
-      expect(response.body).not_to include(edit_continuing_education_registration_path(ce))
-
-      sign_in create(:user, :with_person, super_user: true)
-      get registration_ce_path(registration.slug)
-      expect(response.body).to include(edit_continuing_education_registration_path(ce))
-    end
-
-    it "lets an admin preview the paid (Pending) state with ?admin=true" do
-      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
-      license = create(:professional_license, person: registration.registrant, number: "LIC123")
-      create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
-
-      sign_in create(:user, :with_person, super_user: true)
-      get registration_ce_path(registration.slug, admin: "true")
-      expect(response.body).to include("Pending")
-      expect(response.body).not_to include("$150 due")
-    end
-
-    it "ignores ?admin=true for a registrant (no access)" do
-      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
-      license = create(:professional_license, person: registration.registrant, number: "LIC123")
-      create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
-
-      get registration_ce_path(registration.slug, admin: "true")
-      expect(response.body).to include("$150 due")
-      expect(response.body).not_to include("Pending")
-    end
-
-    it "points the eyebrow back to the CE registration when reached from there" do
-      ce = create(:continuing_education_registration, event_registration: registration,
-        professional_license: create(:professional_license, :placeholder, person: registration.registrant), hours: 6)
-
-      sign_in create(:user, :with_person, super_user: true)
-      get registration_ce_path(registration.slug, return_to: "ce_registration")
-      expect(response.body).to include("Back to CE registration")
-      expect(response.body).to include(edit_continuing_education_registration_path(ce))
-    end
-
-    it "keeps the default ticket eyebrow for a registrant even with the ce_registration origin" do
-      create(:continuing_education_registration, event_registration: registration,
-        professional_license: create(:professional_license, :placeholder, person: registration.registrant), hours: 6)
-
-      get registration_ce_path(registration.slug, return_to: "ce_registration")
-      expect(response.body).to include("Back to ticket")
-      expect(response.body).not_to include("Back to CE registration")
-    end
-  end
-
-  describe "POST /registration/:slug/ce/license" do
-    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
-
-    it "saves the license type, number, issuing state, and expiry entered on the callout" do
-      license = create(:professional_license, :placeholder, person: registration.registrant)
-      create(:continuing_education_registration, event_registration: registration, professional_license: license, hours: 6)
-
-      post registration_ce_license_path(registration.slug),
-        params: { license_kind: "LMFT", license_number: "7788",
-          license_issuing_state: "CA", license_expires_on: "2027-01-31" }
-
-      expect(response).to redirect_to(registration_ce_path(registration.slug))
-      saved = registration.continuing_education_registrations.first.professional_license
-      expect(saved.kind).to eq("LMFT")
-      expect(saved.number).to eq("7788")
-      expect(saved.issuing_state).to eq("CA")
-      expect(saved.expires_on).to eq(Date.new(2027, 1, 31))
-    end
-
-    it "refuses to change the license once the certificate is issued" do
-      license = create(:professional_license, person: registration.registrant, kind: "LMFT", number: "111")
-      create(:continuing_education_registration, event_registration: registration, professional_license: license,
-        hours: 6, certificate_sent_at: Time.current)
-
-      post registration_ce_license_path(registration.slug), params: { license_kind: "LCSW", license_number: "999" }
-
-      expect(license.reload).to have_attributes(kind: "LMFT", number: "111")
-      expect(flash[:alert]).to match(/certificate has been issued/)
-    end
-  end
-
-  describe "POST /registration/:slug/ce/request" do
-    let(:event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 12_000) }
-    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
-
-    it "opts the registrant into CE and creates the registration" do
-      expect {
-        post registration_ce_request_path(registration.slug)
-      }.to change { registration.reload.continuing_education_registrations.count }.from(0).to(1)
-
-      expect(registration.reload.ce_registered?).to be(true)
-      expect(response).to redirect_to(registration_ce_path(registration.slug))
+      expect(response.body).to include("We don't have your license number on file yet.")
     end
   end
 

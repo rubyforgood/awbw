@@ -21,7 +21,6 @@ module Events
       @form_fields = visible_form_fields
       @scholarship = scholarship_mode?
       @scholarship_form = @event.scholarship_form if @scholarship
-      @continuing_education_form = @event.continuing_education_form
       @event = @event.decorate
     end
 
@@ -36,23 +35,17 @@ module Events
       @registration_form = registration_form
       @scholarship = scholarship_mode?
       @scholarship_form = @event.scholarship_form if @scholarship
-      @continuing_education_form = @event.continuing_education_form
 
       all_params = params.dig(:public_registration, :form_fields)&.to_unsafe_h || {}
-      registration_params, scholarship_params, continuing_education_params = split_form_params(all_params)
+      registration_params, scholarship_params = split_form_params(all_params)
 
       @field_errors = validate_required_fields(registration_params)
       if @scholarship_form
         scholarship_fields = @scholarship_form.form_fields.where.not(answer_type: :group_header).to_a
         @field_errors = @field_errors.merge(FormAnswerValidator.call(scholarship_fields, scholarship_params))
       end
-      if @continuing_education_form
-        ce_fields = @continuing_education_form.form_fields.where.not(answer_type: :group_header).to_a
-        @field_errors = @field_errors.merge(FormAnswerValidator.call(ce_fields, continuing_education_params))
-      end
       if @field_errors.any?
         @form_fields = visible_form_fields
-        @continuing_education_form = @event.continuing_education_form
         @event = @event.decorate
         flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
         render :new, status: :unprocessable_content
@@ -68,9 +61,7 @@ module Events
         scholarship_requested: @scholarship,
         person: current_user&.person,
         scholarship_form: @scholarship_form,
-        scholarship_params: scholarship_params,
-        continuing_education_form: @continuing_education_form,
-        continuing_education_params: continuing_education_params
+        scholarship_params: scholarship_params
       )
 
       if result.success?
@@ -85,7 +76,6 @@ module Events
         end
       else
         @form_fields = visible_form_fields
-        @continuing_education_form = @event.continuing_education_form
         @event = @event.decorate
         flash.now[:error] = result.errors.join(", ")
         flash.now[:alert] = "Your registration is not complete yet. Scroll down to check for any errors or missing information."
@@ -130,7 +120,6 @@ module Events
       @responses = @form_submission.form_answers.index_by(&:form_field_id)
 
       load_scholarship_submission(person)
-      load_continuing_education_submission(person)
 
       @event = @event.decorate
     end
@@ -201,19 +190,6 @@ module Events
       @scholarship_responses = application.answers_by_field_id
     end
 
-    def load_continuing_education_submission(person)
-      ce_form = @event.continuing_education_form
-      return unless ce_form
-
-      submission = ce_form.form_submissions.find_by(person: person, event: @event, role: "continuing_education")
-      return unless submission
-
-      @continuing_education_submission = submission
-      @continuing_education_form = ce_form
-      @continuing_education_fields = ce_form.form_fields.reorder(position: :asc)
-      @continuing_education_responses = submission.form_answers.index_by(&:form_field_id)
-    end
-
     def scholarship_mode?
       params[:scholarship_requested] == "true"
     end
@@ -228,13 +204,7 @@ module Events
         scholarship = all_params.slice(*scholarship_field_ids)
       end
 
-      continuing_education = {}
-      if @continuing_education_form
-        ce_field_ids = @continuing_education_form.form_fields.pluck(:id).map(&:to_s)
-        continuing_education = all_params.slice(*ce_field_ids)
-      end
-
-      [ registration, scholarship, continuing_education ]
+      [ registration, scholarship ]
     end
 
     def visible_form_fields

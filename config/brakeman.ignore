@@ -15,7 +15,7 @@
           "type": "controller",
           "class": "EventsController",
           "method": "create",
-          "line": 458,
+          "line": 123,
           "file": "app/controllers/events_controller.rb",
           "rendered": {
             "name": "events/show",
@@ -37,63 +37,6 @@
     {
       "warning_type": "Cross-Site Scripting",
       "warning_code": 2,
-      "fingerprint": "343336d81aa87ab12862c5f9ca2b0f9ac4155488c053c1ce9c7ed27c456e3dba",
-      "check_name": "CrossSiteScripting",
-      "message": "Unescaped parameter value",
-      "file": "app/views/events/confirm_reminder.html.erb",
-      "line": 58,
-      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
-      "code": "EventMailer.event_registration_reminder(selected_reminder_registrations.first, :custom_message => params[:custom_message].to_s, :custom_subject => params[:custom_subject].to_s).html_part.body.decoded",
-      "render_path": [
-        {
-          "type": "controller",
-          "class": "EventsController",
-          "method": "confirm_reminder",
-          "line": 397,
-          "file": "app/controllers/events_controller.rb",
-          "rendered": {
-            "name": "events/confirm_reminder",
-            "file": "app/views/events/confirm_reminder.html.erb"
-          }
-        }
-      ],
-      "location": {
-        "type": "template",
-        "template": "events/confirm_reminder"
-      },
-      "user_input": "params[:custom_message].to_s",
-      "confidence": "Weak",
-      "cwe_id": [
-        79
-      ],
-      "note": "Admin-only reminder confirmation. Same as preview_reminder: the raw value is the server-rendered email HTML; the embedded custom message is sanitized via reminder_message_html (SafeListSanitizer) and the custom subject is shown escaped, separately, so no unsanitized user input reaches the page."
-    },
-    {
-      "warning_type": "Redirect",
-      "warning_code": 18,
-      "fingerprint": "6b0a218f30eb40af7b6cf4ec15de35003eb42e1cea35ecd6acb69139643a338b",
-      "check_name": "Redirect",
-      "message": "Possible unprotected redirect",
-      "file": "app/controllers/events/callouts_controller.rb",
-      "line": 257,
-      "link": "https://brakemanscanner.org/docs/warning_types/redirect/",
-      "code": "redirect_to(EventRegistration.find_by!(:slug => params[:slug]).registrant.payment_processor.checkout(:mode => \"payment\", :metadata => ({ :ce_registration_id => ce_registration.id, :event_registration_id => EventRegistration.find_by!(:slug => params[:slug]).id, :event_id => EventRegistration.find_by!(:slug => params[:slug]).event.id }), :payment_intent_data => ({ :metadata => ({ :ce_registration_id => ce_registration.id, :event_registration_id => EventRegistration.find_by!(:slug => params[:slug]).id, :event_id => EventRegistration.find_by!(:slug => params[:slug]).event.id }), :description => (\"CE Hours: #{EventRegistration.find_by!(:slug => params[:slug]).event.title}\") }), :line_items => ([{ :price_data => ({ :currency => \"usd\", :product_data => ({ :name => (\"CE Hours: #{EventRegistration.find_by!(:slug => params[:slug]).event.title}\") }), :unit_amount => ce_registration.remaining_cost }), :quantity => 1 }]), :success_url => registration_ce_url(EventRegistration.find_by!(:slug => params[:slug]).slug, :checkout => \"success\"), :cancel_url => registration_ce_url(EventRegistration.find_by!(:slug => params[:slug]).slug, :checkout => \"cancelled\")).url, :allow_other_host => true, :status => :see_other)",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "Events::CalloutsController",
-        "method": "redirect_to_ce_stripe_checkout"
-      },
-      "user_input": "EventRegistration.find_by!(:slug => params[:slug]).registrant.payment_processor.checkout(:mode => \"payment\", :metadata => ({ :ce_registration_id => ce_registration.id, :event_registration_id => EventRegistration.find_by!(:slug => params[:slug]).id, :event_id => EventRegistration.find_by!(:slug => params[:slug]).event.id }), :payment_intent_data => ({ :metadata => ({ :ce_registration_id => ce_registration.id, :event_registration_id => EventRegistration.find_by!(:slug => params[:slug]).id, :event_id => EventRegistration.find_by!(:slug => params[:slug]).event.id }), :description => (\"CE Hours: #{EventRegistration.find_by!(:slug => params[:slug]).event.title}\") }), :line_items => ([{ :price_data => ({ :currency => \"usd\", :product_data => ({ :name => (\"CE Hours: #{EventRegistration.find_by!(:slug => params[:slug]).event.title}\") }), :unit_amount => ce_registration.remaining_cost }), :quantity => 1 }]), :success_url => registration_ce_url(EventRegistration.find_by!(:slug => params[:slug]).slug, :checkout => \"success\"), :cancel_url => registration_ce_url(EventRegistration.find_by!(:slug => params[:slug]).slug, :checkout => \"cancelled\")).url",
-      "confidence": "Weak",
-      "cwe_id": [
-        601
-      ],
-      "note": "known redirect for stripe"
-    },
-    {
-      "warning_type": "Cross-Site Scripting",
-      "warning_code": 2,
       "fingerprint": "7f768863a3bf4dd99c83921d48337f26cb90e2715851dfe62543b3136281504d",
       "check_name": "CrossSiteScripting",
       "message": "Unescaped model attribute",
@@ -106,7 +49,7 @@
           "type": "controller",
           "class": "EventsController",
           "method": "create",
-          "line": 458,
+          "line": 123,
           "file": "app/controllers/events_controller.rb",
           "rendered": {
             "name": "events/show",
@@ -132,7 +75,7 @@
       "check_name": "Redirect",
       "message": "Possible unprotected redirect",
       "file": "app/controllers/people_controller.rb",
-      "line": 148,
+      "line": 119,
       "link": "https://brakemanscanner.org/docs/warning_types/redirect/",
       "code": "redirect_to(Person.find(params[:id]).payment_processor.checkout(:mode => \"payment\", :metadata => ({ :person_id => Person.find(params[:id]).id }), :payment_intent_data => ({ :metadata => ({ :person_id => Person.find(params[:id]).id }) }), :line_items => ([{ :price_data => ({ :currency => \"usd\", :product_data => ({ :name => \"Donation to A Window Between Worlds\" }), :unit_amount => (((params[:amount].to_i * 100).to_i or 1000)) }), :quantity => 1 }]), :success_url => person_url(Person.find(params[:id]), :checkout => \"success\"), :cancel_url => person_url(Person.find(params[:id]), :checkout => \"cancelled\")).url, :allow_other_host => true, :status => :see_other)",
       "render_path": null,
@@ -147,29 +90,6 @@
         601
       ],
       "note": "stripe API"
-    },
-    {
-      "warning_type": "Mass Assignment",
-      "warning_code": 105,
-      "fingerprint": "a750b09d4d42ef567df595f7a9035933dc1178c533bf8ae8f8986ae8e837c6b8",
-      "check_name": "PermitAttributes",
-      "message": "Potentially dangerous key allowed for mass assignment",
-      "file": "app/controllers/forms_controller.rb",
-      "line": 138,
-      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
-      "code": "params.require(:form).permit(:name, :role, :header, :hide_answered_person_questions, :hide_answered_form_questions, :form_fields_attributes => ([:id, :name, :answer_type, :required, :subtitle, :hint_text, :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy, { :form_field_answer_options_attributes => ([:id, :option_name, :_destroy]) }]))",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "FormsController",
-        "method": "form_params"
-      },
-      "user_input": ":role",
-      "confidence": "Medium",
-      "cwe_id": [
-        915
-      ],
-      "note": "admin only"
     },
     {
       "warning_type": "Mass Assignment",
@@ -195,6 +115,29 @@
       "note": ""
     },
     {
+      "warning_type": "Mass Assignment",
+      "warning_code": 105,
+      "fingerprint": "a750b09d4d42ef567df595f7a9035933dc1178c533bf8ae8f8986ae8e837c6b8",
+      "check_name": "PermitAttributes",
+      "message": "Potentially dangerous key allowed for mass assignment",
+      "file": "app/controllers/forms_controller.rb",
+      "line": 138,
+      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
+      "code": "params.require(:form).permit(:name, :role, :header, :hide_answered_person_questions, :hide_answered_form_questions, :form_fields_attributes => ([:id, :name, :answer_type, :required, :subtitle, :hint_text, :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy, { :form_field_answer_options_attributes => ([:id, :option_name, :_destroy]) }]))",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "FormsController",
+        "method": "form_params"
+      },
+      "user_input": ":role",
+      "confidence": "Medium",
+      "cwe_id": [
+        915
+      ],
+      "note": "admin only"
+    },
+    {
       "warning_type": "Cross-Site Scripting",
       "warning_code": 2,
       "fingerprint": "cb7f2b64b6a3f1ac5ad1ebdcf54b9e93efedf16267a1b26153b4aafbcaeec5c5",
@@ -209,7 +152,7 @@
           "type": "controller",
           "class": "EventsController",
           "method": "create",
-          "line": 458,
+          "line": 123,
           "file": "app/controllers/events_controller.rb",
           "rendered": {
             "name": "events/show",
@@ -235,7 +178,7 @@
       "check_name": "CrossSiteScripting",
       "message": "Unescaped model attribute",
       "file": "app/views/notifications/show.html.erb",
-      "line": 196,
+      "line": 190,
       "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
       "code": "Notification.find(params[:id]).email_body_html",
       "render_path": [
@@ -261,7 +204,42 @@
         79
       ],
       "note": "email_body_html is the server-rendered HTML of a notification email, generated from trusted mailer templates rather than user-supplied free text. It is rendered intentionally as a preview on notifications/show, which is gated to admin-or-owner (NotificationPolicy#show?), so no untrusted input reaches the page."
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "343336d81aa87ab12862c5f9ca2b0f9ac4155488c053c1ce9c7ed27c456e3dba",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped parameter value",
+      "file": "app/views/events/confirm_reminder.html.erb",
+      "line": 53,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "EventMailer.event_registration_reminder(selected_reminder_registrations.first, :custom_message => params[:custom_message].to_s, :custom_subject => params[:custom_subject].to_s).html_part.body.decoded",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "EventsController",
+          "method": "confirm_reminder",
+          "line": 316,
+          "file": "app/controllers/events_controller.rb",
+          "rendered": {
+            "name": "events/confirm_reminder",
+            "file": "app/views/events/confirm_reminder.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "events/confirm_reminder"
+      },
+      "user_input": "params[:custom_message].to_s",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "Admin-only reminder confirmation. Same as preview_reminder: the raw value is the server-rendered email HTML; the embedded custom message is sanitized via reminder_message_html (SafeListSanitizer) and the custom subject is shown escaped, separately, so no unsanitized user input reaches the page."
     }
   ],
-  "brakeman_version": "8.0.5"
+  "brakeman_version": "8.0.4",
+  "updated": "2026-06-19 10:05:46 -0400"
 }

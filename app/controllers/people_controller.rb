@@ -221,9 +221,7 @@ class PeopleController < ApplicationController
       @person.avatar.purge
     end
 
-    attrs = person_params
-    reject_locked_license_changes!(attrs)
-    @person.assign_attributes(attrs)
+    @person.assign_attributes(person_params)
     @person.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
     @person.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
@@ -452,30 +450,6 @@ class PeopleController < ApplicationController
   end
 
   # Only allow a list of trusted parameters through.
-  # Server-side backstop for the per-license edit gating (ProfessionalLicensePolicy):
-  # drop any submitted change to a license the current user isn't allowed to edit or
-  # destroy — i.e. a CE-tied license edited by a non-admin owner. The view already
-  # renders those read-only; this stops a crafted request from slipping past. Admins
-  # are allowed everything, so it's a no-op for them (and thus for the admin-only form
-  # today). New licenses (no id) have no CE registrations yet, so they pass through.
-  def reject_locked_license_changes!(attrs)
-    license_attrs = attrs[:professional_licenses_attributes]
-    return if license_attrs.blank?
-
-    license_attrs.keys.each do |key|
-      license = license_attrs[key]
-      id = license[:id]
-      next if id.blank?
-
-      record = @person.professional_licenses.find_by(id: id)
-      next unless record
-
-      destroying = license[:_destroy].to_s.in?(%w[ 1 true ])
-      rule = destroying ? :destroy? : :update?
-      license_attrs.delete(key) unless allowed_to?(rule, record)
-    end
-  end
-
   def person_params
     params.require(:person).permit(
       :avatar,
@@ -485,6 +459,7 @@ class PeopleController < ApplicationController
       :street_address, :city, :state, :zip, :country, :mailing_address_type,
       :best_time_to_call,
       :date_of_birth,
+      :credentials,
       :racial_ethnic_identity,
       :filemaker_code,
       :mailing_list_consented,
@@ -583,8 +558,7 @@ class PeopleController < ApplicationController
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id, :_destroy ],
-      professional_licenses_attributes: [ :id, :number, :kind, :issuing_state, :expires_on, :_destroy ]
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :noticeable_type, :noticeable_id, :_destroy ]
     )
   end
 end

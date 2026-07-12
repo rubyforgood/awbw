@@ -156,28 +156,6 @@
           </div>
         <% end %>
 
-        <% if @continuing_education_form && @continuing_education_form.form_fields.any? %>
-          <div class="mt-8 rounded-xl border border-teal-100 bg-teal-50/50 px-5 py-6">
-            <h3 class="flex items-center gap-2.5 text-lg font-bold text-teal-900 mb-5">
-              <i class="fa-solid fa-certificate text-teal-600"></i><%= @continuing_education_form.display_name %>
-            </h3>
-            <%= render "forms/header", form: @continuing_education_form, event: @event %>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
-              <% @continuing_education_form.form_fields.reorder(position: :asc).each do |field| %>
-                <% if field.group_header? %>
-                  <% next if field.name.to_s.strip.casecmp?(@continuing_education_form.display_name.to_s.strip) %>
-                  <%= render "events/public_registrations/group_header", field: field %>
-                <% else %>
-                  <% submitted_value = params.dig(:public_registration, :form_fields, field.id.to_s) %>
-                  <div class="<%= field.grid_span_class %>">
-                    <%= render "events/public_registrations/form_field", field: field, value: submitted_value %>
-                  </div>
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-
         <div class="pt-7">
           <%= button_tag type: "submit",
                 class: "w-full inline-flex items-center justify-center gap-2.5 rounded-xl bg-blue-900 px-6 py-3.5 text-white font-semibold text-lg shadow-lg shadow-blue-900/20 transition hover:bg-blue-800 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer" do %>

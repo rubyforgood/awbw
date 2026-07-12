@@ -167,42 +167,32 @@ RSpec.describe ReminderRecipientFilter do
     end
 
     context "CE status" do
-      # Requested CE, supplied a license, and paid the CE balance in full.
+      # Requested CE, supplied both license and hours, and paid in full.
       let!(:complete) do
         registration(first_name: "Complete").tap do |r|
-          license = create(:professional_license, person: r.registrant, number: "ABC123")
-          ce_reg = create(:continuing_education_registration, event_registration: r, professional_license: license, hours: 4)
-          payment = create(:payment, amount_cents: ce_reg.cost_cents, amount_cents_remaining: ce_reg.cost_cents)
-          create(:allocation, source: payment, allocatable: ce_reg, amount: ce_reg.cost_cents)
+          r.update!(ce_credit_requested: true, ce_license_number: "ABC123", ce_hours_requested: 3)
+          create(:allocation, allocatable: r, amount: 10_000)
         end
       end
-      # CE on a placeholder license, unpaid.
-      let!(:missing) do
-        registration(first_name: "Missing").tap do |r|
-          license = create(:professional_license, :placeholder, person: r.registrant)
-          create(:continuing_education_registration, event_registration: r, professional_license: license, hours: 4)
-        end
-      end
-      # CE with a license on file but the balance unpaid.
-      let!(:unpaid_known) do
-        registration(first_name: "Unpaid").tap do |r|
-          license = create(:professional_license, person: r.registrant, number: "XYZ789")
-          create(:continuing_education_registration, event_registration: r, professional_license: license, hours: 4)
-        end
-      end
-      # No CE registration at all.
-      let!(:no_ce) { registration(first_name: "None") }
-      let(:regs) { [ complete, missing, unpaid_known, no_ce ] }
+      # Requested CE but missing license and hours, unpaid.
+      let!(:missing) { registration(first_name: "Missing").tap { |r| r.update!(ce_credit_requested: true) } }
+      # Did not request CE at all.
+      let!(:no_ce) { registration(first_name: "None").tap { |r| r.update!(ce_license_number: nil, ce_hours_requested: nil) } }
+      let(:regs) { [ complete, missing, no_ce ] }
 
-      it "filters CE not yet paid" do
-        expect(matched({ ce_status: "requested" }, regs)).to eq([ missing.id, unpaid_known.id ].to_set)
+      it "filters CE requested" do
+        expect(matched({ ce_status: "requested" }, regs)).to eq([ complete.id, missing.id ].to_set)
       end
 
-      it "filters CE on a placeholder license" do
-        expect(matched({ ce_status: "needs_license" }, regs)).to eq([ missing.id ].to_set)
+      it "filters CE license not provided (only among CE requesters)" do
+        expect(matched({ ce_status: "license_not_provided" }, regs)).to eq([ missing.id ].to_set)
       end
 
-      it "filters CE paid (CE balance paid in full)" do
+      it "filters CE hours not provided (only among CE requesters)" do
+        expect(matched({ ce_status: "hours_not_provided" }, regs)).to eq([ missing.id ].to_set)
+      end
+
+      it "filters CE paid (requested CE and paid in full)" do
         expect(matched({ ce_status: "paid" }, regs)).to eq([ complete.id ].to_set)
       end
     end
