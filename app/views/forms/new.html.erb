@@ -43,6 +43,7 @@
                   <option value="registration" <%= "selected" if params[:role] == "registration" %>>Registration</option>
                   <option value="scholarship" <%= "selected" if params[:role] == "scholarship" %>>Scholarship</option>
                   <option value="bulk_payment" <%= "selected" if params[:role] == "bulk_payment" %>>Bulk Payment</option>
+                  <option value="continuing_education" <%= "selected" if params[:role] == "continuing_education" %>>Continuing Education</option>
                 </select>
               </div>
             </div>
@@ -57,7 +58,12 @@
           <div class="p-6">
             <div class="space-y-1.5">
               <% FormBuilderService::SECTIONS.each do |key, section| %>
-                <% section_role = key == :scholarship ? "scholarship" : key == :bulk_payment ? "bulk_payment" : "other" %>
+                <% section_role = case key
+                     when :scholarship then "scholarship"
+                     when :bulk_payment then "bulk_payment"
+                     when :continuing_education then "continuing_education"
+                     else "other"
+                   end %>
                 <% field_names = FormBuilderService.section_field_names(key) %>
                 <div class="rounded-lg border border-gray-200 px-3 py-2" data-section-role="<%= section_role %>"
                      data-controller="expandable-card" data-expandable-card-expanded-value="false">

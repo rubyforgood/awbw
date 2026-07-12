@@ -25,10 +25,9 @@ class PaymentsController < ApplicationController
 
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
-      if @allocatable.is_a?(EventRegistration)
-        @payment.person = @allocatable.registrant
-        @payment.organization = @allocatable.organizations.first
-      end
+      person, organization = registrant_and_organization_for(@allocatable)
+      @payment.person = person
+      @payment.organization = organization
     end
   end
 
@@ -170,10 +169,9 @@ class PaymentsController < ApplicationController
 
     if params[:allocatable_sgid].present?
       @allocatable = GlobalID::Locator.locate_signed(params[:allocatable_sgid])
-      if @allocatable.is_a?(EventRegistration)
-        @payment.person = @allocatable.registrant
-        @payment.organization = @allocatable.organizations.first
-      end
+      person, organization = registrant_and_organization_for(@allocatable)
+      @payment.person = person
+      @payment.organization = organization
     end
 
     respond_to do |format|
@@ -197,9 +195,21 @@ class PaymentsController < ApplicationController
     GlobalID::Locator.locate_signed(params[:payment][:allocatable_sgid])
   end
 
+  def registrant_and_organization_for(allocatable)
+    case allocatable
+    when EventRegistration
+      [ allocatable.registrant, allocatable.organizations.first ]
+    when ContinuingEducationRegistration
+      [ allocatable.event_registration.registrant, allocatable.event_registration.organizations.first ]
+    else
+      [ nil, nil ]
+    end
+  end
+
   def build_payment_attributes(payment_params, allocatable)
     attrs = payment_params.except(:allocatable_sgid, :type)
-    attrs[:person_id] ||= allocatable.try(:registrant_id) if allocatable.is_a?(EventRegistration)
+    person, = registrant_and_organization_for(allocatable)
+    attrs[:person_id] ||= person&.id
     attrs
   end
 
@@ -227,28 +237,21 @@ class PaymentsController < ApplicationController
   end
 
   def calculate_allocation_amount(payment, allocatable)
-    payment_amount = payment.amount_cents
+    cost_cents = allocatable.cost_cents
 
-    if allocatable.is_a?(EventRegistration)
-      event_cost = allocatable.event.cost_cents
-
-      if event_cost.blank?
-        payment.errors.add(:base, "Cannot allocate to a free event.")
-        raise ActiveRecord::RecordInvalid.new(payment)
-      end
-
-      already_allocated = allocatable.allocations_sum
-      remaining_needed = event_cost - already_allocated
-
-      if remaining_needed <= 0
-        payment.errors.add(:base, "Event registration is already fully paid.")
-        raise ActiveRecord::RecordInvalid.new(payment)
-      end
-
-      [ payment_amount, remaining_needed ].min
-    else
-      payment_amount
+    if cost_cents.blank? || cost_cents <= 0
+      payment.errors.add(:base, "Cannot allocate to a free registration.")
+      raise ActiveRecord::RecordInvalid.new(payment)
     end
+
+    remaining_needed = cost_cents - allocatable.allocations_sum
+
+    if remaining_needed <= 0
+      payment.errors.add(:base, "Registration is already fully paid.")
+      raise ActiveRecord::RecordInvalid.new(payment)
+    end
+
+    [ payment.amount_cents, remaining_needed ].min
   end
 
   def edit_payment_params
