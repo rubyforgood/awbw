@@ -52,16 +52,43 @@
             <dd class="text-lg font-semibold text-gray-900 tabular-nums"><%= plain_number(@event_registration.ce_hours_total) || "—" %></dd>
           </div>
 
-          <div class="flex items-baseline gap-2">
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Cost</dt>
-            <dd class="text-lg font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@event_registration.ce_amount_owed_cents) %></dd>
-          </div>
-
           <div class="flex items-center gap-3 sm:ml-auto">
             <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Status</dt>
             <dd><%= render "event_registrations/ce_status_badge", registration: @event_registration, simulate_paid: simulate_ce_paid %></dd>
           </div>
         </dl>
+
+        <p class="mt-3 flex items-baseline gap-2 text-sm">
+          <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Cost</span>
+          <span class="font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@event_registration.ce_amount_owed_cents) %></span>
+        </p>
+
+        <% if ce_registration&.discounted? %>
+          <p class="mt-3 flex items-baseline gap-2 text-sm">
+            <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Discount</span>
+            <span class="font-semibold text-gray-900 tabular-nums">−<%= dollars_from_cents(ce_registration.discount_sum) %></span>
+          </p>
+        <% end %>
+
+        <p class="mt-3 flex items-baseline gap-2 text-sm">
+          <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount paid</span>
+          <span class="font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(ce_registration&.payments_sum.to_i) %></span>
+          <% if ce_registration&.paid_in_full? || simulate_ce_paid %>
+            <span class="inline-flex items-center gap-1.5 rounded-full border bg-green-50 text-green-700 border-green-200 px-2.5 py-0.5 text-xs font-medium">
+              <i class="fa-solid fa-circle-check text-[0.6rem]"></i>
+              Paid in full
+            </span>
+          <% end %>
+        </p>
+
+        <% if ce_registration && ce_registration.remaining_cost.positive? %>
+          <div class="mt-6 flex justify-center">
+            <%= button_to "Pay with Credit Card",
+                          registration_ce_pay_path(@event_registration.slug),
+                          data: { turbo: false },
+                          class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
+          </div>
+        <% end %>
       </section>
 
       <%#

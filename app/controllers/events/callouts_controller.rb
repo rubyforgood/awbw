@@ -60,6 +60,23 @@ module Events
 
     # CE hours status: hours, amount owed, and license number.
     def ce
+      case params[:checkout]
+      when "success"
+        flash.now[:notice] = "Your CE payment was successful."
+      when "cancelled"
+        flash.now[:alert] = "CE payment was cancelled. You can try again whenever you're ready."
+      end
+    end
+
+    # Pay the CE balance via Stripe Checkout.
+    def pay_ce
+      ce_registration = @event_registration.continuing_education_registrations.first
+      unless ce_registration&.remaining_cost&.positive?
+        redirect_to registration_ce_path(@event_registration.slug), alert: "No CE payment is due."
+        return
+      end
+
+      redirect_to_ce_stripe_checkout(ce_registration)
     end
 
     # Public license entry from the CE callout (type, number, issuing state, and
@@ -96,7 +113,6 @@ module Events
     def request_ce
       return redirect_to(registration_ce_path(@event_registration.slug)) unless @event.ce_eligible?
 
-      @event_registration.update!(ce_requested: true)
       unless @event_registration.continuing_education_registrations.exists?
         license = ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
         @event_registration.continuing_education_registrations.create!(professional_license: license)
@@ -161,13 +177,11 @@ module Events
       @event = @event_registration.event
     end
 
-    # Keep the registrant's form submission in step with a license number entered
-    # on the callout, so the registration record shows the same value. A no-op
-    # when the form, field, or submission isn't present.
+    # Update form submission if ce record is updated via callout
     def record_ce_license_answer(number)
-      form = @event.registration_form
+      form = @event.continuing_education_form
       field = form&.form_fields&.find_by(field_identifier: "ce_license_number")
-      submission = form&.form_submissions&.find_by(person: @event_registration.registrant)
+      submission = form&.form_submissions&.find_by(person: @event_registration.registrant, role: "continuing_education")
       return unless field && submission
 
       answer = submission.form_answers.find_or_initialize_by(form_field: field)
@@ -204,6 +218,43 @@ module Events
     def resource_card(icon:, title:, subtitle:, href:, target: "_blank", trailing_icon: "fa-solid fa-arrow-right")
       MagicTicketCallouts::Card.new(icon_class: icon, color: "blue", title: title, subtitle: subtitle,
                                     href: href, target: target, trailing_icon: trailing_icon)
+    end
+
+    def redirect_to_ce_stripe_checkout(ce_registration)
+      person = @event_registration.registrant
+      amount = ce_registration.remaining_cost
+
+      person.set_payment_processor :stripe
+
+      checkout_session = person.payment_processor.checkout(
+        mode: "payment",
+        metadata: {
+          ce_registration_id: ce_registration.id,
+          event_registration_id: @event_registration.id,
+          event_id: @event.id
+        },
+        payment_intent_data: {
+          metadata: {
+            ce_registration_id: ce_registration.id,
+            event_registration_id: @event_registration.id,
+            event_id: @event.id
+          },
+          description: "CE Hours: #{@event.title}"
+        },
+        line_items: [ {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "CE Hours: #{@event.title}" },
+            unit_amount: amount
+          },
+          quantity: 1
+        } ],
+        success_url: registration_ce_url(@event_registration.slug, checkout: "success"),
+        cancel_url: registration_ce_url(@event_registration.slug, checkout: "cancelled")
+      )
+
+      @event_registration.update!(checkout_session_id: checkout_session.id)
+      redirect_to checkout_session.url, allow_other_host: true, status: :see_other
     end
   end
 end

@@ -1215,7 +1215,6 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Mailchimp")
       expect(response.body).to include("CMS")
       expect(response.body).to include("Portal invite")
-      expect(response.body).to include("CE requested")
       expect(response.body).to include("License #")
       expect(response.body).to include("Event attendance")
       expect(response.body).to include("Onboard")

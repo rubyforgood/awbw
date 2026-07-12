@@ -10,7 +10,7 @@ RSpec.describe EventRevenueReport do
 
     let!(:reg1) { create(:event_registration, event: event, registrant: person1, status: "registered") }
     let!(:reg2) do
-      create(:event_registration, event: event, registrant: person2, status: "registered", ce_requested: true)
+      create(:event_registration, event: event, registrant: person2, status: "registered")
     end
 
     before do
@@ -18,7 +18,7 @@ RSpec.describe EventRevenueReport do
       create(:continuing_education_registration, event_registration: reg2, cost_cents: 7_500)
 
       # A cancelled registration whose money/CE must be ignored everywhere.
-      cancelled = create(:event_registration, event: event, registrant: create(:person), status: "cancelled", ce_requested: true)
+      cancelled = create(:event_registration, event: event, registrant: create(:person), status: "cancelled")
       create(:continuing_education_registration, event_registration: cancelled, cost_cents: 12_000)
       create(:allocation, source: create(:payment, amount_cents: 5_000, amount_cents_remaining: 5_000),
                           allocatable: cancelled, amount: 5_000)

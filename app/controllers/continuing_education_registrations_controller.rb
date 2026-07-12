@@ -20,7 +20,6 @@ class ContinuingEducationRegistrationsController < ApplicationController
     ActiveRecord::Base.transaction do
       apply_ce_params(@ce_registration)
       @ce_registration.save!
-      @event_registration.update_column(:ce_requested, true)
     end
     redirect_to edit_event_registration_path(@ce_registration.event_registration), notice: "CE registration created.", status: :see_other
   rescue ActiveRecord::RecordInvalid
@@ -55,7 +54,6 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
     registration = @ce_registration.event_registration
     @ce_registration.destroy!
-    registration.update_column(:ce_requested, false)
     redirect_to edit_event_registration_path(registration), notice: "CE registration removed.", status: :see_other
   end
 
