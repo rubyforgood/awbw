@@ -11,9 +11,5 @@ FactoryBot.define do
     trait :scholarship do
       role { "scholarship" }
     end
-
-    trait :continuing_education do
-      role { "continuing_education" }
-    end
   end
 end

@@ -87,23 +87,22 @@ class EventRegistrationsController < ApplicationController
     @event_registration.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
 
     if @event_registration.save
-      notice = "Registration was successfully updated."
       respond_to do |format|
         format.turbo_stream
         format.html {
           case params[:return_to]
-          when "registrants" then redirect_to registrants_event_path(@event_registration.event), notice: notice, status: :see_other
-          when "index" then redirect_to event_registrations_path, notice: notice, status: :see_other
-          when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
-          when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: notice, status: :see_other
-          when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
+          when "registrants" then redirect_to registrants_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
+          when "index" then redirect_to event_registrations_path, notice: "Registration was successfully updated.", status: :see_other
+          when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
+          when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
+          when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: "Registration was successfully updated.", status: :see_other
           else
             # No explicit origin: keep admins in the management context (the
             # roster) rather than dropping them on the public registration show.
             if allowed_to?(:manage?, with: EventRegistrationPolicy)
-              redirect_to registrants_event_path(@event_registration.event), notice: notice, status: :see_other
+              redirect_to registrants_event_path(@event_registration.event), notice: "Registration was successfully updated.", status: :see_other
             else
-              redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
+              redirect_to registration_ticket_path(@event_registration.slug), notice: "Registration was successfully updated.", status: :see_other
             end
           end
         }
@@ -269,10 +268,6 @@ class EventRegistrationsController < ApplicationController
     event = @event_registration.event
     if !@event_registration.deletable?
       flash[:alert] = "This registration can't be deleted because it has financial records (payments, scholarships, or the like) or attendance on record."
-    elsif @event_registration.continuing_education_registrations.any? { |ce| ce.allocations.exists? }
-      # Deleting the registration would cascade away a paid CE registration (and its
-      # allocations); make the admin revert the payment first.
-      flash[:alert] = "Can't delete this registration while its CE registration has payments — revert the payment first."
     elsif @event_registration.destroy
       flash[:notice] = "Registration deleted."
     else
@@ -331,6 +326,9 @@ class EventRegistrationsController < ApplicationController
       :shoutout,
       :intends_to_pay,
       :expected_payment_method,
+      :ce_credit_requested,
+      :ce_hours_requested,
+      :ce_license_number,
       :fee_note,
       *EventRegistration::DAY_FIELDS,
       organization_ids: [],

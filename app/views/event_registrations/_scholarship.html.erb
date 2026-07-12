@@ -2,15 +2,18 @@
     not create or destroy an award on its own. Awarding is a deliberate action
     via "Add scholarship". On save, the controller cleans up an unrequested
     scholarship only when it is an empty stub (no amount, tasks incomplete). ---- %>
-<section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<% scholarship_active = scholarship.present? || event_registration.scholarship_requested %>
+<section class="overflow-hidden rounded-xl border shadow-sm transition-colors <%= scholarship_active ? "border-fuchsia-200 bg-fuchsia-50" : "border-gray-200 bg-white" %>"
+         data-controller="scholarship-requested"
+         data-scholarship-requested-initial-value="<%= event_registration.scholarship_requested %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:scholarships, scholarship.present? || event_registration.scholarship_requested) %>">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
       <i class="fa-solid fa-graduation-cap"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700">Scholarship</h2>
   </div>
 
-  <div class="flex flex-1 flex-col gap-3 p-4">
+  <div class="space-y-3 p-4">
     <% unless scholarship %>
       <label class="flex items-center gap-2.5 cursor-pointer">
         <input type="hidden" name="event_registration[scholarship_requested]" value="0" autocomplete="off">
@@ -18,14 +21,16 @@
                name="event_registration[scholarship_requested]"
                value="1"
                <%= "checked" if event_registration.scholarship_requested %>
+               data-scholarship-requested-target="checkbox"
+               data-action="scholarship-requested#refresh"
                class="sr-only peer">
-        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+        <span data-scholarship-requested-target="track" class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
         <span class="text-sm font-medium text-gray-700">Requested</span>
       </label>
     <% end %>
 
     <% if scholarship %>
-      <div class="flex flex-1 flex-col gap-2">
+      <div class="space-y-2">
         <div class="flex items-center gap-2">
           <span class="text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(scholarship.amount_cents) %></span>
           <%= link_to edit_scholarship_path(scholarship, return_to: "registration"),
@@ -38,7 +43,7 @@
 
         <% if scholarship.grant&.funder_name.present? %>
           <p class="text-xs text-gray-500">
-            Grantor:
+            Funded by
             <% if scholarship.grant.donor %>
               <%= link_to scholarship.grant.funder_name, polymorphic_path(scholarship.grant.donor),
                           class: "font-medium text-gray-700 hover:underline" %>
@@ -48,9 +53,7 @@
           </p>
         <% end %>
 
-        <%# Pinned to the card's bottom so it lines up with the CE card's chip and
-            the organizations card's "Connect organization" link. %>
-        <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
+        <div class="flex flex-wrap items-center gap-1.5">
           <% if scholarship.tasks_completed? %>
             <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-2.5 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
               <i class="fa-solid fa-circle-check"></i>
@@ -65,11 +68,11 @@
         </div>
       </div>
     <% else %>
-      <div class="mt-auto border-t border-gray-100 pt-3">
+      <div class="border-t border-gray-100 pt-3">
         <%= link_to new_scholarship_path(allocatable_sgid: event_registration.to_sgid.to_s, return_to: "registration"),
-                    class: "inline-flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700",
+                    class: "inline-flex items-center gap-1.5 text-sm font-medium #{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:underline",
                     target: "_blank", rel: "noopener" do %>
-          <i class="fa-solid fa-plus text-[0.6rem]"></i>
+          <i class="fa-solid fa-plus text-[0.7rem]"></i>
           Add scholarship
           <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem]"></i>
         <% end %>

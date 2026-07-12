@@ -15,10 +15,8 @@ export default class extends Controller {
         el.classList.toggle("hidden", sectionRole !== "scholarship")
       } else if (role === "bulk_payment") {
         el.classList.toggle("hidden", sectionRole !== "bulk_payment")
-      } else if (role === "continuing_education") {
-        el.classList.toggle("hidden", sectionRole !== "continuing_education")
       } else {
-        el.classList.toggle("hidden", sectionRole === "scholarship" || sectionRole === "bulk_payment" || sectionRole === "continuing_education")
+        el.classList.toggle("hidden", sectionRole === "scholarship" || sectionRole === "bulk_payment")
       }
     })
   }

@@ -1,9 +1,10 @@
 module EventHelper
   # The "please specify" placeholder for an option label, or nil when the option
-  # does not reveal a free-text box. Canonical config lives on FormField (shared
-  # with answer validation).
-  def specify_placeholder(label)
-    FormField.specify_placeholder_for(label)
+  # does not reveal a free-text box. Pass the field to honor placeholders scoped
+  # to one field (e.g. the CE question's "Yes"). Canonical config lives on
+  # FormField (shared with answer validation).
+  def specify_placeholder(label, field = nil)
+    FormField.specify_placeholder_for(label, field&.field_identifier)
   end
 
   # True when a stored answer selects the given specify option: the bare label,

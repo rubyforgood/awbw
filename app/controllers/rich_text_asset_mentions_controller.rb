@@ -2,9 +2,9 @@ class RichTextAssetMentionsController < ApplicationController
   skip_verify_authorized
   def index
     # authorize!
-    record = Draper.undecorate(GlobalID::Locator.locate_signed(params[:sgid]))
+    record = GlobalID::Locator.locate_signed(params[:sgid])
 
-    unless record.respond_to?(:rich_text_assets)
+    unless record
       render json: [] and return
     end
 

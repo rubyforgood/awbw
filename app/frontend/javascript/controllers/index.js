@@ -33,9 +33,6 @@ application.register("callout-preview", CalloutPreviewController)
 import CarouselController from "./carousel_controller"
 application.register("carousel", CarouselController)
 
-import CeLicensePickerController from "./ce_license_picker_controller"
-application.register("ce-license-picker", CeLicensePickerController)
-
 import ChipSelectController from "./chip_select_controller"
 application.register("chip-select", ChipSelectController)
 
@@ -141,8 +138,14 @@ application.register("rhino-source", RhinoSourceController)
 import ScholarshipPreviewController from "./scholarship_preview_controller"
 application.register("scholarship-preview", ScholarshipPreviewController)
 
+import ScholarshipRequestedController from "./scholarship_requested_controller"
+application.register("scholarship-requested", ScholarshipRequestedController)
+
 import ScholarshipStatusToggleController from "./scholarship_status_toggle_controller"
 application.register("scholarship-status-toggle", ScholarshipStatusToggleController)
+
+import CeCreditRequestedController from "./ce_credit_requested_controller"
+application.register("ce-credit-requested", CeCreditRequestedController)
 
 import SearchBoxController from "./search_box_controller"
 application.register("search-box", SearchBoxController)

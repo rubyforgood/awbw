@@ -8,7 +8,6 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
     <div>
       <label class="block font-medium mb-1 text-gray-700">Event title</label>
-
       <div class="border border-gray-200 rounded-lg p-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -23,10 +22,8 @@
                         "w-full rounded border-gray-300 shadow-sm px-3 py-2
                                                   focus:ring-blue-500 focus:border-blue-500",
                     } %>
-
             <%= f.input :facilitator_training, as: :boolean, label: "Facilitator training event", wrapper_html: { class: "mb-0!" } %>
           </div>
-
           <%= f.input :pre_title,
                   label: "Pre-title",
                   hint: "Displays above the title",
@@ -41,14 +38,14 @@
     <% if allowed_to?(:manage?, @event) %>
       <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3" id="display_settings">
         <%= render "shared/visibility_info", flags: %i[published featured publicly_visible publicly_featured public_registration_enabled] %>
-
         <div class="grid grid-cols-2 content-start gap-y-0 [&_.form-group]:mb-1">
           <%= visibility_flag_input f, :published %>
           <%= visibility_flag_input f, :featured %>
           <%= visibility_flag_input f, :publicly_visible %>
           <%= visibility_flag_input f, :publicly_featured %>
-
-          <div id="public_registration_setting" class="px-1" style="scroll-margin-top: 10rem;"><%= visibility_flag_input f, :public_registration_enabled, label: "Publicly registerable" %></div>
+          <div id="public_registration_setting" class="px-1" style="scroll-margin-top: 10rem;">
+            <%= visibility_flag_input f, :public_registration_enabled, label: "Publicly registerable" %>
+          </div>
         </div>
       </div>
     <% end %>
@@ -61,83 +58,97 @@
       id="event_details_button"
       class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md"
       data-action="dropdown#toggle"
-      data-dropdown-payload-param='[{"event_details":"hidden"}, {"event_details_arrow":"rotate-180"}, {"event_details_button":"rounded-t-md rounded-md"}]'
-    >
+      data-dropdown-payload-param='[{"event_details":"hidden"}, {"event_details_arrow":"rotate-180"}, {"event_details_button":"rounded-t-md rounded-md"}]'>
       Event details
       <i id="event_details_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300 rotate-180"></i>
     </button>
 
     <div id="event_details" class="bg-gray-50 border border-gray-300 rounded-b-md p-6">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <%# LEFT: Date/time, cost + pre-date text, videoconference + location %>
-        <div class="md:col-span-2 space-y-6">
-          <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
-            <div class="bg-white border border-gray-200 rounded-lg p-3">
-              <h3 class="font-medium mb-2">Start</h3>
-
-              <div class="mb-2"><label class="block text-xs text-gray-600 mb-0.5">Date</label><%= f.text_field :start_date_date,
+      <%# LEFT: Date/time, cost + pre-date text, videoconference + location %>
+      <div class="md:col-span-2 space-y-6">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+        <div class="bg-white border border-gray-200 rounded-lg p-3">
+          <h3 class="font-medium mb-2">Start</h3>
+          <div class="mb-2">
+            <label class="block text-xs text-gray-600 mb-0.5">Date</label>
+            <%= f.text_field :start_date_date,
                          type: "date",
                          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                         required: true %></div>
-              <div><label class="block text-xs text-gray-600 mb-0.5">Time</label><%= f.text_field :start_date_time,
+                         required: true %>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-0.5">Time</label>
+            <%= f.text_field :start_date_time,
                          type: "time",
                          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                         required: true %></div>
+                         required: true %>
+          </div>
+          <% if f.object.errors[:start_date].any? %>
+            <p class="text-red-500 text-sm mt-1">Start date
+              <%= f.object.errors[:start_date].join(", ") %></p>
+          <% end %>
+        </div>
 
-              <% if f.object.errors[:start_date].any? %>
-                <p class="text-red-500 text-sm mt-1">Start date <%= f.object.errors[:start_date].join(", ") %></p>
-              <% end %>
-            </div>
-
-            <div class="bg-white border border-gray-200 rounded-lg p-3">
-              <h3 class="font-medium mb-2">End</h3>
-
-              <div class="mb-2"><label class="block text-xs text-gray-600 mb-0.5">Date</label><%= f.text_field :end_date_date,
+        <div class="bg-white border border-gray-200 rounded-lg p-3">
+          <h3 class="font-medium mb-2">End</h3>
+          <div class="mb-2">
+            <label class="block text-xs text-gray-600 mb-0.5">Date</label>
+            <%= f.text_field :end_date_date,
                          type: "date",
                          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                         required: true %></div>
-              <div><label class="block text-xs text-gray-600 mb-0.5">Time</label><%= f.text_field :end_date_time,
+                         required: true %>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-0.5">Time</label>
+            <%= f.text_field :end_date_time,
                          type: "time",
                          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                         required: true %></div>
+                         required: true %>
+          </div>
+          <% if f.object.errors[:end_date].any? %>
+            <p class="text-red-500 text-sm mt-1">End date
+              <%= f.object.errors[:end_date].join(", ") %></p>
+          <% end %>
+        </div>
 
-              <% if f.object.errors[:end_date].any? %>
-                <p class="text-red-500 text-sm mt-1">End date <%= f.object.errors[:end_date].join(", ") %></p>
-              <% end %>
-            </div>
-
-            <div class="bg-white border border-gray-200 rounded-lg p-3">
-              <h3 class="font-medium mb-2">Registration closed</h3>
-              <% rc_default = @event.registration_close_date || event_registration_close_default(@event) %>
-
-              <div class="mb-2">
-                <label class="block text-xs text-gray-600 mb-0.5">Date</label>
-
-                <%= f.text_field :registration_close_date_date,
+        <div class="bg-white border border-gray-200 rounded-lg p-3">
+          <h3 class="font-medium mb-2">Registration closed</h3>
+          <% rc_default = @event.registration_close_date || event_registration_close_default(@event) %>
+          <div class="mb-2">
+            <label class="block text-xs text-gray-600 mb-0.5">Date</label>
+            <%= f.text_field :registration_close_date_date,
                          type: "date",
                          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                          value: rc_default.strftime("%Y-%m-%d") %>
-              </div>
-
-              <div><label class="block text-xs text-gray-600 mb-0.5">Time</label><%= f.text_field :registration_close_date_time,
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-0.5">Time</label>
+            <%= f.text_field :registration_close_date_time,
                          type: "time",
                          class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                         value: rc_default.strftime("%H:%M") %></div>
+                         value: rc_default.strftime("%H:%M") %>
+          </div>
+          <% if f.object.errors[:registration_close_date].any? %>
+            <p class="text-red-500 text-sm mt-1">
+              Registration close date
+              <%= f.object.errors[:registration_close_date].join(", ") %>
+            </p>
+          <% end %>
+        </div>
+      </div>
 
-              <% if f.object.errors[:registration_close_date].any? %>
-                <p class="text-red-500 text-sm mt-1">Registration close date <%= f.object.errors[:registration_close_date].join(", ") %></p>
-              <% end %>
-            </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <%= f.label :cost, "Event Cost", class: "block font-medium" %>
+            <span class="text-sm text-gray-600">Enter $0 if the event is free</span>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <div class="flex items-center justify-between gap-2 mb-1"><%= f.label :cost, "Event Cost", class: "block font-medium" %><span class="text-sm text-gray-600">Enter $0 if the event is free</span></div>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
 
-              <div class="relative">
-                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-
-                <%= f.text_field :cost,
+            <%= f.text_field :cost,
                          type: "number",
                          step: "0.01",
                          min: "0",
@@ -146,23 +157,26 @@
                            "if(this.value.includes('.')) { var parts = this.value.split('.'); if(parts[1] && parts[1].length > 2) { this.value = parts[0] + '.' + parts[1].substring(0, 2); } }",
                          class:
                            "w-full rounded border-gray-300 shadow-sm pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-              </div>
+          </div>
 
-              <% if f.object.errors[:cost].any? %>
-                <p class="text-red-500 text-sm mt-1">Cost <%= f.object.errors[:cost].join(", ") %></p>
-              <% end %>
-            </div>
+          <% if f.object.errors[:cost].any? %>
+            <p class="text-red-500 text-sm mt-1">Cost
+              <%= f.object.errors[:cost].join(", ") %></p>
+          <% end %>
+        </div>
 
-            <div><%= f.input :pre_date_text,
+        <div>
+          <%= f.input :pre_date_text,
                   label: "Pre-date text",
                   input_html: {
                     class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                     placeholder: "e.g. Upcoming Workshop"
-                  } %></div>
-          </div>
+                  } %>
+        </div>
+      </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <%= f.input :videoconference_url,
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <%= f.input :videoconference_url,
                     label: "Videoconference URL",
                     as: :url,
                     input_html: {
@@ -170,8 +184,8 @@
                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                     } %>
 
-            <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
-              <%= f.input :location_id,
+        <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
+          <%= f.input :location_id,
                       label: "Location",
                       collection: @locations,
                       label_method: :name,
@@ -181,27 +195,26 @@
                         class: "ts-flat w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                         data: { searchable_select_target: "select" },
                       } %>
-            </div>
-          </div>
+        </div>
+      </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <%= f.input :videoconference_label,
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <%= f.input :videoconference_label,
                     label: "Videoconference label",
                     input_html: {
                       placeholder: "Virtual event",
                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                     } %>
-
-            <%= f.input :videoconference_passcode,
+        <%= f.input :videoconference_passcode,
                     label: "Videoconference passcode",
                     hint: "Shown alongside the join link. The meeting ID/code is read from the URL automatically.",
                     input_html: {
                       placeholder: "e.g. 123456",
                       class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                     } %>
-          </div>
+      </div>
 
-          <%= f.input :short_description,
+      <%= f.input :short_description,
                   label: "Short description",
                   as: :text,
                   hint: "Plain-text blurb for the \"Add to calendar\" links. Calendars don't render HTML — leave blank to fall back to the page description.",
@@ -210,33 +223,30 @@
                     placeholder: "Short description for calendar entries…",
                     class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
                   } %>
-        </div>
 
-        <%# RIGHT: Autoshow display options %>
-        <div class="bg-white border border-gray-200 rounded-md p-4">
-          <h3 class="text-base font-semibold text-gray-800 mb-3">Display options</h3>
-          <p class="text-sm text-gray-500 mb-3">Toggle which details appear on the event page.<br>Fields with no value will be ignored.</p>
+    </div>
 
-          <div class="space-y-2">
-            <% tz = Time.zone %>
-            <% tz_abbr = @event.start_date.present? ? @event.start_date.in_time_zone(tz).strftime("%Z") : Time.current.strftime("%Z") %>
-
-            <%= f.input :autoshow_pre_date_text, as: :boolean, label: ("Pre-date text" + (@event.pre_date_text.present? ? " <span class='text-gray-400 font-normal'>#{h @event.pre_date_text}</span>" : "")).html_safe %>
-            <%= f.input :autoshow_date, as: :boolean, label: ("Date <span class='text-gray-400 font-normal'>" + (@event.start_date.present? ? @event.start_date.in_time_zone(tz).strftime("%A, %B %-d, %Y") : Time.current.strftime("%A, %B %-d, %Y")) + "</span>").html_safe %>
-            <%= f.input :autoshow_time, as: :boolean, label: ("Time <span class='text-gray-400 font-normal'>" + (@event.start_date.present? && @event.end_date.present? ? @event.start_date.in_time_zone(tz).strftime("%-l:%M %P") + " – " + @event.end_date.in_time_zone(tz).strftime("%-l:%M %P") : "3:00 pm – 5:00 pm") + " " + tz_abbr + "</span>").html_safe %>
-
-            <% cost_preview = @event.decorate.labelled_cost %>
-            <%= f.input :autoshow_cost, as: :boolean, label: ("Cost <span class='text-gray-400 font-normal'>" + (cost_preview.present? ? h(cost_preview) : "&quot;Cost: $X&quot; or &quot;Free event&quot;") + "</span>").html_safe %>
-            <%= f.input :autoshow_location, as: :boolean, label: ("Location" + (@event.location.present? ? " <span class='text-gray-400 font-normal'>#{h @event.location.name}</span>" : "")).html_safe %>
-
-            <% vc_domain = @event.videoconference_url.present? ? @event.decorate.videoconference_domain : nil %>
-            <%= f.input :autoshow_videoconference_link, as: :boolean, label: ("Videoconference link <span class='text-gray-400 font-normal'>" + (vc_domain.present? ? "Join on #{vc_domain}" : "Join on [Domain]") + "</span>").html_safe %>
-            <% vc_label = @event.videoconference_label.presence || "Virtual event" %>
-            <%= f.input :autoshow_videoconference_label, as: :boolean, label: ("Videoconference label <span class='text-gray-400 font-normal'>#{h vc_label}</span>").html_safe %>
-            <%= f.input :autoshow_registration_close, as: :boolean, label: ("Registration close <span class='text-gray-400 font-normal'>Registration closes " + (@event.registration_close_date.present? ? @event.registration_close_date.in_time_zone(tz).strftime("%B %-d, %Y %-l:%M %P") : 2.days.from_now.in_time_zone(tz).strftime("%B %-d, %Y %-l:%M %P")) + " " + tz_abbr + "</span>").html_safe %>
-            <%= f.input :autoshow_registration, as: :boolean, label: "Registration button <span class='text-gray-400 font-normal'>Register + calendar links</span>".html_safe %>
-          </div>
-        </div>
+    <%# RIGHT: Autoshow display options %>
+    <div class="bg-white border border-gray-200 rounded-md p-4">
+      <h3 class="text-base font-semibold text-gray-800 mb-3">Display options</h3>
+      <p class="text-sm text-gray-500 mb-3">Toggle which details appear on the event page.<br>Fields with no value will be ignored.</p>
+      <div class="space-y-2">
+        <% tz = Time.zone %>
+        <% tz_abbr = @event.start_date.present? ? @event.start_date.in_time_zone(tz).strftime("%Z") : Time.current.strftime("%Z") %>
+        <%= f.input :autoshow_pre_date_text, as: :boolean, label: ("Pre-date text" + (@event.pre_date_text.present? ? " <span class='text-gray-400 font-normal'>#{h @event.pre_date_text}</span>" : "")).html_safe %>
+        <%= f.input :autoshow_date, as: :boolean, label: ("Date <span class='text-gray-400 font-normal'>" + (@event.start_date.present? ? @event.start_date.in_time_zone(tz).strftime("%A, %B %-d, %Y") : Time.current.strftime("%A, %B %-d, %Y")) + "</span>").html_safe %>
+        <%= f.input :autoshow_time, as: :boolean, label: ("Time <span class='text-gray-400 font-normal'>" + (@event.start_date.present? && @event.end_date.present? ? @event.start_date.in_time_zone(tz).strftime("%-l:%M %P") + " – " + @event.end_date.in_time_zone(tz).strftime("%-l:%M %P") : "3:00 pm – 5:00 pm") + " " + tz_abbr + "</span>").html_safe %>
+        <% cost_preview = @event.decorate.labelled_cost %>
+        <%= f.input :autoshow_cost, as: :boolean, label: ("Cost <span class='text-gray-400 font-normal'>" + (cost_preview.present? ? h(cost_preview) : "&quot;Cost: $X&quot; or &quot;Free event&quot;") + "</span>").html_safe %>
+        <%= f.input :autoshow_location, as: :boolean, label: ("Location" + (@event.location.present? ? " <span class='text-gray-400 font-normal'>#{h @event.location.name}</span>" : "")).html_safe %>
+        <% vc_domain = @event.videoconference_url.present? ? @event.decorate.videoconference_domain : nil %>
+        <%= f.input :autoshow_videoconference_link, as: :boolean, label: ("Videoconference link <span class='text-gray-400 font-normal'>" + (vc_domain.present? ? "Join on #{vc_domain}" : "Join on [Domain]") + "</span>").html_safe %>
+        <% vc_label = @event.videoconference_label.presence || "Virtual event" %>
+        <%= f.input :autoshow_videoconference_label, as: :boolean, label: ("Videoconference label <span class='text-gray-400 font-normal'>#{h vc_label}</span>").html_safe %>
+        <%= f.input :autoshow_registration_close, as: :boolean, label: ("Registration close <span class='text-gray-400 font-normal'>Registration closes " + (@event.registration_close_date.present? ? @event.registration_close_date.in_time_zone(tz).strftime("%B %-d, %Y %-l:%M %P") : 2.days.from_now.in_time_zone(tz).strftime("%B %-d, %Y %-l:%M %P")) + " " + tz_abbr + "</span>").html_safe %>
+        <%= f.input :autoshow_registration, as: :boolean, label: "Registration button <span class='text-gray-400 font-normal'>Register + calendar links</span>".html_safe %>
+      </div>
+    </div>
       </div>
     </div>
   </div>
@@ -244,32 +254,29 @@
   <!-- Accordions -->
   <div class="space-y-4 mt-12">
     <% if allowed_to?(:manage?, @event) %>
-      <div class="admin-only registration-form-section" data-controller="dropdown reveal-section" data-reveal-section-anchor-value="registration_form_section">
+      <div class="admin-only registration-form-section"
+           data-controller="dropdown reveal-section"
+           data-reveal-section-anchor-value="registration_form_section">
         <button
           type="button"
           id="registration_form_button"
           class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md"
           data-action="dropdown#toggle"
           data-reveal-section-target="toggle"
-          data-dropdown-payload-param='[{"registration_form_section":"hidden"}, {"registration_form_arrow":"rotate-180"}, {"registration_form_button":"rounded-t-md rounded-md"}]'
-        >
+          data-dropdown-payload-param='[{"registration_form_section":"hidden"}, {"registration_form_arrow":"rotate-180"}, {"registration_form_button":"rounded-t-md rounded-md"}]'>
           Form settings
           <i id="registration_form_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300 rotate-180"></i>
         </button>
 
         <div id="registration_form_section" class="border border-gray-300 p-4 rounded-b-md" data-reveal-section-target="content">
-          <%#
-            On a failed save the event_forms aren't persisted, so re-read the
-            admin's registration choices from the submitted params instead of
-            the (now-empty) associations.
-          %>
+          <%# On a failed save the event_forms aren't persisted, so re-read the
+              admin's registration choices from the submitted params instead of
+              the (now-empty) associations. %>
           <% resubmitted = params[:event].present? %>
-
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Registration form</label>
               <% current_reg_form = @event.registration_form %>
-
               <% default_form_id = if resubmitted
                                      params.dig(:event, :registration_form_id).presence&.to_i
                                    elsif current_reg_form
@@ -279,57 +286,45 @@
                                    else
                                      @registration_forms.find { |rf| rf.name == "Short Event Registration" }&.id
                                    end %>
-
               <select name="event[registration_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
                 <option value="">No registration form</option>
-
                 <% @registration_forms.each do |reg_form| %>
                   <% label = case reg_form.name
                              when "Extended Event Registration", "Public Registration" then "Extended registration form"
                              when "Short Event Registration", "Short Registration" then "Short registration form"
                              else reg_form.name
                              end %>
-
                   <option value="<%= reg_form.id %>" <%= "selected" if reg_form.id == default_form_id %>><%= label %> (<%= reg_form.form_fields.size %> fields)</option>
                 <% end %>
               </select>
-
-              <p class="text-xs text-gray-500 mt-1"><%= link_to "View / Edit forms", forms_path, class: "text-blue-600 hover:text-blue-800 underline", target: "_blank" %></p>
+              <p class="text-xs text-gray-500 mt-1">
+                <%= link_to "View / Edit forms", forms_path, class: "text-blue-600 hover:text-blue-800 underline", target: "_blank" %>
+              </p>
             </div>
 
             <div>
               <span class="block text-sm font-medium text-gray-700 mb-1">Public registration</span>
-
               <div class="flex items-center gap-2 text-sm">
                 <% if @event.public_registration_enabled? %>
                   <span class="inline-flex items-center gap-1 font-medium text-green-700">
-                    <i class="fa-solid fa-circle-check"></i>
-                    Enabled
+                    <i class="fa-solid fa-circle-check"></i> Enabled
                   </span>
                 <% else %>
                   <span class="inline-flex items-center gap-1 font-medium text-gray-500">
-                    <i class="fa-solid fa-circle-xmark"></i>
-                    Disabled
+                    <i class="fa-solid fa-circle-xmark"></i> Disabled
                   </span>
                 <% end %>
-
-                <a
-                  href="#public_registration_setting"
-                  class="text-blue-600 hover:text-blue-800 underline"
-                  data-controller="anchor-highlight"
-                  data-action="click->anchor-highlight#flash"
-                  data-anchor-highlight-target-param="public_registration_setting"
-                >
-                  Change
-                </a>
+                <a href="#public_registration_setting"
+                   class="text-blue-600 hover:text-blue-800 underline"
+                   data-controller="anchor-highlight"
+                   data-action="click->anchor-highlight#flash"
+                   data-anchor-highlight-target-param="public_registration_setting">Change</a>
               </div>
-
               <% if @event.event_forms.registration.exists? %>
                 <%= link_to new_event_public_registration_path(@event),
                             class: "inline-flex items-center gap-1 text-sm text-blue-700 hover:text-blue-900 underline mt-2",
                             target: "_blank" do %>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                  View public registration page
+                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> View public registration page
                 <% end %>
               <% end %>
             </div>
@@ -337,174 +332,114 @@
 
           <div class="mt-5 pt-4 border-t border-gray-200">
             <span class="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Registration options</span>
-
             <div class="space-y-4">
               <div>
-                <label class="flex items-center gap-2 cursor-pointer"><%= f.check_box :signed_in_one_click_enabled %><span class="text-sm font-medium text-gray-700">Signed-in users register in one click</span></label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <%= f.check_box :signed_in_one_click_enabled %>
+                  <span class="text-sm font-medium text-gray-700">Signed-in users register in one click</span>
+                </label>
                 <p class="text-xs text-gray-500 mt-1">Skip the registration form for logged-in users. Logged-out visitors still use the form.</p>
               </div>
-
               <div>
-                <label class="flex items-center gap-2 cursor-pointer"><%= f.check_box :autoshow_registration_details %><span class="text-sm font-medium text-gray-700">Show event details on registration page</span></label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <%= f.check_box :autoshow_registration_details %>
+                  <span class="text-sm font-medium text-gray-700">Show event details on registration page</span>
+                </label>
                 <p class="text-xs text-gray-500 mt-1">Add an at-a-glance list of dates, time, platform/location, fee, and deadline above the registration form. Pulled from this event's details.</p>
-
                 <div class="mt-2 space-y-2 pl-6">
                   <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <%= f.label :hint_dates, "Dates note", class: "block text-xs font-medium text-gray-700" %>
-
                       <%= f.text_field :hint_dates,
                                    placeholder: "e.g. must attend both days",
                                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" %>
                     </div>
-
-                    <div><%= f.label :hint_times, "Time note", class: "block text-xs font-medium text-gray-700" %><%= f.text_field :hint_times,
+                    <div>
+                      <%= f.label :hint_times, "Time note", class: "block text-xs font-medium text-gray-700" %>
+                      <%= f.text_field :hint_times,
                                    placeholder: "e.g. both days",
-                                   class: "w-full rounded border-gray-300 shadow-sm px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" %></div>
-
+                                   class: "w-full rounded border-gray-300 shadow-sm px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" %>
+                    </div>
                     <div>
                       <%= f.label :hint_registration_cost, "Fee note", class: "block text-xs font-medium text-gray-700" %>
-
                       <%= f.text_field :hint_registration_cost,
                                    placeholder: "e.g. due within 3 weeks of registration",
                                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-                    </div>
                   </div>
-
-                  <p class="text-xs text-gray-400">Shown in grey beside the Dates, Time, and Fee rows on the details panel.</p>
                 </div>
+                <p class="text-xs text-gray-400">Shown in grey beside the Dates, Time, and Fee rows on the details panel.</p>
               </div>
-
-              <% if @scholarship_forms.any? %>
-                <div>
-                  <% if @scholarship_forms.size == 1 %>
-                    <% single_form = @scholarship_forms.first %>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                      <%= check_box_tag "event[scholarship_form_id]", single_form.id,
+            </div>
+            <% if @scholarship_forms.any? %>
+              <div>
+                <% if @scholarship_forms.size == 1 %>
+                  <% single_form = @scholarship_forms.first %>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <%= check_box_tag "event[scholarship_form_id]", single_form.id,
                           resubmitted ? params.dig(:event, :scholarship_form_id).present? : @event.scholarship_form.present?,
                           class: "rounded border-gray-300" %>
-
-                      <span class="text-sm font-medium text-gray-700">Enable scholarship application</span>
-                    </label>
-                    <p class="text-xs text-gray-500 mt-1">Add a scholarship form so registrants can request financial assistance.</p>
-                    <% if @event.scholarship_form.present? %>
-                      <%= link_to new_event_public_registration_path(@event, scholarship_requested: true),
+                    <span class="text-sm font-medium text-gray-700">Enable scholarship application</span>
+                  </label>
+                  <p class="text-xs text-gray-500 mt-1">Add a scholarship form so registrants can request financial assistance.</p>
+                  <% if @event.scholarship_form.present? %>
+                    <%= link_to new_event_public_registration_path(@event, scholarship_requested: true),
                                 class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
                                 target: "_blank" do %>
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        Preview scholarship form
-                      <% end %>
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview scholarship form
                     <% end %>
-                  <% else %>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Scholarship form</label>
-                    <% default_scholarship_id = if resubmitted
+                  <% end %>
+                <% else %>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Scholarship form</label>
+                  <% default_scholarship_id = if resubmitted
                                                 params.dig(:event, :scholarship_form_id).presence&.to_i
                                               elsif @event.scholarship_form
                                                 @event.scholarship_form.id
                                               end %>
-                    <select name="event[scholarship_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
-                      <option value="">Disabled</option>
-
-                      <% @scholarship_forms.each do |sf| %>
-                        <option value="<%= sf.id %>" <%= "selected" if sf.id == default_scholarship_id %>><%= sf.name %></option>
-                      <% end %>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">Select a scholarship form for registrants to request financial assistance.</p>
-                  <% end %>
-                </div>
-              <% end %>
-
-              <% if @bulk_payment_forms.any? %>
-                <div>
-                  <% if @bulk_payment_forms.size == 1 %>
-                    <% single_form = @bulk_payment_forms.first %>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                      <%= check_box_tag "event[bulk_payment_form_id]", single_form.id,
+                  <select name="event[scholarship_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
+                    <option value="">Disabled</option>
+                    <% @scholarship_forms.each do |sf| %>
+                      <option value="<%= sf.id %>" <%= "selected" if sf.id == default_scholarship_id %>><%= sf.name %></option>
+                    <% end %>
+                  </select>
+                  <p class="text-xs text-gray-500 mt-1">Select a scholarship form for registrants to request financial assistance.</p>
+                <% end %>
+              </div>
+            <% end %>
+            <% if @bulk_payment_forms.any? %>
+              <div class="pb-4">
+                <% if @bulk_payment_forms.size == 1 %>
+                  <% single_form = @bulk_payment_forms.first %>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <%= check_box_tag "event[bulk_payment_form_id]", single_form.id,
                           resubmitted ? params.dig(:event, :bulk_payment_form_id).present? : @event.bulk_payment_form.present?,
                           class: "rounded border-gray-300" %>
-
-                      <span class="text-sm font-medium text-gray-700">Enable bulk payment</span>
-                    </label>
-                    <p class="text-xs text-gray-500 mt-1">Let one person register and pay for a group of attendees at once.</p>
-                    <% if @event.bulk_payment_form.present? %>
-                      <%= link_to new_event_bulk_payment_path(@event),
+                    <span class="text-sm font-medium text-gray-700">Enable bulk payment</span>
+                  </label>
+                  <p class="text-xs text-gray-500 mt-1">Let one person register and pay for a group of attendees at once.</p>
+                  <% if @event.bulk_payment_form.present? %>
+                    <%= link_to new_event_bulk_payment_path(@event),
                                 class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
                                 target: "_blank" do %>
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        Preview bulk payment page
-                      <% end %>
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview bulk payment page
                     <% end %>
-                  <% else %>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Bulk payment form</label>
-                    <% default_bulk_id = if resubmitted
+                  <% end %>
+                <% else %>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Bulk payment form</label>
+                  <% default_bulk_id = if resubmitted
                                          params.dig(:event, :bulk_payment_form_id).presence&.to_i
                                        elsif @event.bulk_payment_form
                                          @event.bulk_payment_form.id
                                        end %>
-                    <select name="event[bulk_payment_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
-                      <option value="">Disabled</option>
-
-                      <% @bulk_payment_forms.each do |bf| %>
-                        <option value="<%= bf.id %>" <%= "selected" if bf.id == default_bulk_id %>><%= bf.name %></option>
-                      <% end %>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">Select a bulk payment form for group registrations.</p>
-                  <% end %>
-                </div>
-              <% end %>
-
-              <% if @continuing_education_forms&.any? %>
-                <div>
-                  <% if @continuing_education_forms.size == 1 %>
-                    <% single_form = @continuing_education_forms.first %>
-                    <%= check_box_tag "event[continuing_education_form_id]", single_form.id,
-                            resubmitted ? params.dig(:event, :continuing_education_form_id).present? : @event.continuing_education_form.present?,
-                            class: "peer rounded border-gray-300" %>
-                    <span class="text-sm font-medium text-gray-700">Enable continuing education</span>
-                    <p class="text-xs text-gray-500 mt-1">Allow registrants to request CE hours.</p>
-                    <div class="hidden peer-checked:flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-                      <label class="flex items-center gap-2 text-sm text-gray-700">CE hours offered <%= f.number_field :ce_hours_offered, min: 0, step: 0.25, class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %></label>
-
-                      <label class="flex items-center gap-2 text-sm text-gray-700">
-                        Total CE cost <span class="text-gray-400">$</span> <%= f.number_field :ce_hours_cost, min: 0, step: 1,
-                      class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                      </label>
-                    </div>
-                    <p class="mt-1 text-xs text-gray-400">Edit the CE hours ticket card and its details below, under Registration ticket callouts.</p>
-                    <% if @event.continuing_education_form.present? %>
-                      <%= link_to new_event_public_registration_path(@event),
-                                  class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
-                                  target: "_blank" do %>
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        Preview CE form
-                      <% end %>
+                  <select name="event[bulk_payment_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
+                    <option value="">Disabled</option>
+                    <% @bulk_payment_forms.each do |bf| %>
+                      <option value="<%= bf.id %>" <%= "selected" if bf.id == default_bulk_id %>><%= bf.name %></option>
                     <% end %>
-                  <% else %>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Continuing education form</label>
-                    <% default_ce_id = if resubmitted
-                                           params.dig(:event, :continuing_education_form_id).presence&.to_i
-                                         elsif @event.continuing_education_form
-                                           @event.continuing_education_form.id
-                                         end %>
-                    <select name="event[continuing_education_form_id]" class="w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm">
-                      <option value="">Disabled</option>
-
-                      <% @continuing_education_forms.each do |cf| %>
-                        <option value="<%= cf.id %>" <%= "selected" if cf.id == default_ce_id %>><%= cf.name %></option>
-                      <% end %>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">Select a continuing education form for registrants to request CE hours.</p>
-                    <div class="hidden peer-checked:flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-                      <label class="flex items-center gap-2 text-sm text-gray-700">CE hours offered <%= f.number_field :ce_hours_offered, min: 0, step: 0.25, class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %></label>
-
-                      <label class="flex items-center gap-2 text-sm text-gray-700">
-                        Total CE cost <span class="text-gray-400">$</span> <%= f.number_field :ce_hours_cost, min: 0, step: 1,
-                      class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                      </label>
-                    </div>
-                  <% end %>
-                </div>
-              <% end %>
+                  </select>
+                  <p class="text-xs text-gray-500 mt-1">Select a bulk payment form for group registrations.</p>
+                <% end %>
+              </div>
+            <% end %>
             </div>
           </div>
         </div>
@@ -518,11 +453,9 @@
         id="page_content_button"
         class="
           flex items-center justify-between cursor-pointer w-full
-          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
-        "
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
         data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"page_content":"hidden"}, {"page_content_arrow":"rotate-180"}, {"page_content_button":"rounded-md rounded-t-md"}]'
-      >
+        data-dropdown-payload-param='[{"page_content":"hidden"}, {"page_content_arrow":"rotate-180"}, {"page_content_button":"rounded-md rounded-t-md"}]'>
         Event show page
         <i id="page_content_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
       </button>
@@ -534,121 +467,74 @@
           <%= rhino_editor(f, :header, label: "Header content") %>
 
           <% if f.object.errors[:rhino_header].present? %>
-            <div class="text-danger mt-1 text-sm">Field <%= f.object.errors[:rhino_header].first %></div>
+            <div class="text-danger mt-1 text-sm">
+              Field <%= f.object.errors[:rhino_header].first %>
+            </div>
           <% end %>
         </div>
 
-        <div class="form-group mt-12"><%= rhino_editor(f, :description, label: "Description") %></div>
+        <div class="form-group mt-12">
+          <%= rhino_editor(f, :description, label: "Description") %>
+        </div>
       </div>
     </div>
 
     <%# ---- REGISTRATION TICKET CALLOUTS (built-in + custom ticket call-outs) ---- %>
-    <%#
-      ?expand=callouts (from the ticket's "Edit event" link) auto-opens this
-      section via a dropdown expand target; scroll-mt keeps the anchor clear of
-      any sticky chrome.
-    %>
-
+    <%# ?expand=callouts (from the ticket's "Edit event" link) auto-opens this
+        section via a dropdown expand target; scroll-mt keeps the anchor clear of
+        any sticky chrome. %>
     <div id="registration_ticket_callouts" class="registration-ticket-callouts-section scroll-mt-24" data-controller="dropdown">
       <button
         type="button"
         id="registration_ticket_callouts_button"
         class="
           flex items-center justify-between cursor-pointer w-full
-          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
-        "
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
         data-action="dropdown#toggle"
         <%== 'data-dropdown-target="expand"' if params[:expand] == "callouts" %>
-        data-dropdown-payload-param='[{"registration_ticket_callouts_panel":"hidden"}, {"registration_ticket_callouts_arrow":"rotate-180"}, {"registration_ticket_callouts_button":"rounded-md rounded-t-md"}]'
-      >
+        data-dropdown-payload-param='[{"registration_ticket_callouts_panel":"hidden"}, {"registration_ticket_callouts_arrow":"rotate-180"}, {"registration_ticket_callouts_button":"rounded-md rounded-t-md"}]'>
         Registration ticket callouts
         <i id="registration_ticket_callouts_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
       </button>
 
       <div id="registration_ticket_callouts_panel" class="hidden border border-gray-300 p-4 rounded-b-md">
-        <p class="text-sm text-gray-500 mb-4">
-          Call-outs shown on the registration ticket — each links to its own page. The built-in cards are seeded as editable rows (published by default on facilitator trainings, unchecked on everything else). Toggle a card's checkbox to show or hide it; the app still guards when each appears on the ticket (e.g. the payment card only shows when there's a balance). Below them, add your
-          own call-outs for actions (forms to download, balances to pay) or reference reading (parking, policies, what to bring). New custom callouts save in the order shown; drag the handle to reorder saved callouts.
-        </p>
+        <p class="text-sm text-gray-500 mb-4">Call-outs shown on the registration ticket — each can link to its own page. Built-in callouts (Payment, CE hours, Handouts, …) are pre-filled and editable here; the app supplies their live status and links. Add your own call-outs below for actions (forms to download, balances to pay) or reference reading (parking, policies, what to bring). Drag the handle to reorder.</p>
 
-        <%#
-          Built-in cards, shown above custom callouts in the order they appear on
-          the ticket. The two editable ones (CE hours, art supplies) carry their
-          ticket colour and editable text; the rest are greyed-out previews of
-          cards the app controls, so the full ticket context is visible here.
-        %>
+        <% unless @event.persisted? %>
+          <div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <i class="fa-solid fa-circle-info mr-1"></i>
+            Save this new event first, then come back here — its built-in callouts are created when the event is saved, and you can edit them after.
+          </div>
+        <% end %>
 
+        <%# Built-in cards not yet materialized on this event show as greyed
+            previews for context; once the event is saved they become editable,
+            reorderable rows in the list below. %>
         <div class="space-y-3 mb-3">
           <% MagicTicketCallouts.editor_cards(@event).each do |card| %>
-            <% case card.key %>
-            <% when :ce_hours %>
-              <%= render "events/builtin_callout_card", f: f, card: card,
-                    label_field: :ce_hours_details_label, content_field: :ce_hours_details,
-                    title_placeholder: "CE hours",
-                    content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
-                    content_placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><h3>Before the training</h3><ul><li>Email your license number</li></ul>" %>
-            <% when :event_details %>
-              <%= render "events/builtin_callout_card", f: f, card: card,
-                    label_field: :event_details_label, content_field: :event_details,
-                    title_placeholder: "Before you attend",
-                    content_help: "Materials, supplies, what to bring, and policies — shown on its own page linked from the ticket. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
-                    content_placeholder: "e.g. <h3>Workshop 1</h3><ul><li>Clear glass stones</li></ul>" %>
-            <% else %>
-              <div class="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 opacity-70">
-                <i class="<%= card.icon_class %> <%= card.theme[:icon] %> w-6 shrink-0 text-center text-xl pt-0.5" aria-hidden="true"></i>
-
-                <div class="flex-1 min-w-0">
-                  <div class="flex flex-wrap items-center gap-2 mb-0.5"><span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-500">Built in</span><span class="text-xs text-gray-400"><%= card.visibility %></span></div>
-
-                  <p class="font-semibold text-gray-500"><%= card.title %></p>
-                  <p class="text-sm text-gray-400"><%= card.subtitle %></p>
-
-                  <% if card.note.present? %>
-                    <p class="text-xs text-gray-400 italic mt-0.5"><%= card.note %></p>
-                  <% end %>
-
-                  <% if card.title == "Handouts" %>
-                    <div class="mt-2 space-y-1">
-                      <% ["2-Day AWBW Facilitator Training Worksheets & Handouts",
-                          "AWBW Training Workshop Worksheets",
-                          "AHA Moments",
-                          "Inviting and Responding to Participants' Sharing",
-                          "Letter to Supervisors"].each do |t| %>
-                        <% resource = Resource.find_by(title: t) %>
-
-                        <% if resource %>
-                          <%= link_to edit_resource_path(resource),
-                                      class: "text-xs text-blue-600 hover:text-blue-800 underline block" do %>
-                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                            <%= resource.title %>
-                          <% end %>
-                        <% end %>
-                      <% end %>
-                    </div>
-                  <% elsif card.title == "Forms" %>
-                    <% w9 = Resource.find_by(title: "W-9") %>
-                    <% if w9 %>
-                      <div class="mt-2">
-                        <%= link_to edit_resource_path(w9),
-                                    class: "text-xs text-blue-600 hover:text-blue-800 underline" do %>
-                          <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                          W-9
-                        <% end %>
-                      </div>
-                    <% end %>
-                  <% end %>
+            <div class="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 opacity-70">
+              <i class="<%= card.icon_class %> <%= card.theme[:icon] %> w-6 shrink-0 text-center text-xl pt-0.5" aria-hidden="true"></i>
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2 mb-0.5">
+                  <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-500">Built in</span>
+                  <span class="text-xs text-gray-400"><%= card.visibility %></span>
                 </div>
+                <p class="font-semibold text-gray-500"><%= card.title %></p>
+                <p class="text-sm text-gray-400"><%= card.subtitle %></p>
+                <% if card.note.present? %>
+                  <p class="text-xs text-gray-400 italic mt-0.5"><%= card.note %></p>
+                <% end %>
               </div>
-            <% end %>
+            </div>
           <% end %>
         </div>
 
-        <div
-          id="registration_ticket_callouts_list"
-          class="space-y-3"
-          data-controller="sortable"
-          data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>"
-        >
+        <div id="registration_ticket_callouts_list" class="space-y-3"
+             data-controller="sortable"
+             data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>">
+          <%# Custom callouts and every materialized built-in share one editable,
+              reorderable row. CE hours / event details edit their event-column text
+              inline (passed via event_f). %>
           <%= f.fields_for :registration_ticket_callouts do |rts| %>
             <%= render "events/registration_ticket_callout_fields", f: rts, event_f: f %>
           <% end %>
@@ -669,29 +555,26 @@
         id="images_button"
         class="
           flex items-center justify-between cursor-pointer w-full
-          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
-        "
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
         data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"images":"hidden"}, {"images_arrow":"rotate-180"}, {"images_button":"rounded-md rounded-t-md"}]'
-      >
+        data-dropdown-payload-param='[{"images":"hidden"}, {"images_arrow":"rotate-180"}, {"images_button":"rounded-md rounded-t-md"}]'>
         Images
         <i id="images_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
       </button>
 
-      <div id="images" class="hidden border border-gray-300 p-4 rounded-b-md"><%= render "shared/form_image_fields", f: f, include_primary_asset: true, primary_title: "Primary (thumbnail)" %></div>
+      <div id="images" class="hidden border border-gray-300 p-4 rounded-b-md">
+        <%= render "shared/form_image_fields", f: f, include_primary_asset: true, primary_title: "Primary (thumbnail)" %>
+      </div>
     </div>
-
     <div class="tags-section" data-controller="dropdown">
       <button
         type="button"
         id="tags_button"
         class="
           flex items-center justify-between cursor-pointer w-full
-          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
-        "
+          bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
         data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'
-      >
+        data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'>
         Tags
         <i id="tags_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
       </button>
@@ -712,9 +595,7 @@
                 for="<%= id %>"
                 class="
                   flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-blue-50 border border-gray-200
-                  rounded-lg shadow-sm hover:bg-gray-100 transition
-                "
-              >
+                  rounded-lg shadow-sm hover:bg-gray-100 transition">
                 <%= hidden_field_tag "event[sector_ids][]", "" %>
                 <!-- # To ensure unchecked boxes are submitted -->
                 <%= check_box_tag "event[sector_ids][]",
@@ -744,9 +625,7 @@
                     for="<%= id %>"
                     class="
                       flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-blue-50 border
-                      border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition
-                    "
-                  >
+                      border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
                     <%= hidden_field_tag "event[category_ids][]", "" %>
                     <!-- # To ensure unchecked boxes are submitted -->
                     <%= check_box_tag "event[category_ids][]",
@@ -792,6 +671,7 @@
         </div>
       </div>
     <% end %>
+
   </div>
 
   <div class="flex items-center justify-between gap-4">
@@ -802,23 +682,18 @@
         <%= link_to "Delete", @event, class: "btn btn-danger-outline",
                     data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
       <% end %>
-
       <%= link_to "Cancel",
                   (allowed_to?(:index?, Event) ? events_path : root_path),
                   class: "btn btn-secondary-outline" %>
-
       <% if @event.persisted? %>
-        <button
-          type="submit"
-          formaction="<%= preview_event_path(@event) %>"
-          formtarget="_blank"
-          data-turbo="false"
-          class="btn btn-secondary-outline"
-        >
+        <button type="submit"
+                formaction="<%= preview_event_path(@event) %>"
+                formtarget="_blank"
+                data-turbo="false"
+                class="btn btn-secondary-outline">
           Preview
         </button>
       <% end %>
-
       <%= f.button :submit, class: "btn btn-primary" %>
     </div>
   </div>

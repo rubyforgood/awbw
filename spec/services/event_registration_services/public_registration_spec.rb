@@ -513,97 +513,86 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
-  describe "CE credit interest (continuing_education form)" do
-    let!(:ce_form) do
-      f = FormBuilderService.new(
-        name: "Continuing Education Request",
-        sections: %i[continuing_education],
-        role: "continuing_education"
-      ).call
-      event.event_forms.create!(form: f, role: "continuing_education")
-      f
+  describe "CE credit interest (magic question)" do
+    let!(:ce_field) do
+      field = form.form_fields.create!(
+        name: "Might you be seeking continuing education (CE) hours for attending this training?",
+        answer_type: :single_select_radio,
+        status: :active,
+        position: (form.form_fields.maximum(:position) || 0) + 1,
+        required: false,
+        field_identifier: described_class::CE_CREDIT_INTEREST_IDENTIFIER,
+        section: "continuing_education",
+        visibility: :always_ask
+      )
+      %w[Yes No].each_with_index do |opt, idx|
+        ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
+        field.form_field_answer_options.create!(answer_option: ao)
+      end
+      field
     end
 
-    def ce_field_id(key)
-      ce_form.form_fields.find_by!(field_identifier: key).id.to_s
-    end
-
-    def register_with_ce(answer, license: nil)
+    def register_with_ce(answer)
       params = base_form_params(first_name: "Cy", last_name: "Reed", email: "cy@example.com")
-      ce_params = {}
-      ce_params[ce_field_id(described_class::CE_CREDIT_INTEREST_IDENTIFIER)] = answer unless answer.nil?
-      ce_params[ce_field_id(described_class::CE_LICENSE_NUMBER_IDENTIFIER)] = license if license
-      described_class.call(event: event, registration_form: form, form_params: params,
-                           continuing_education_form: ce_form, continuing_education_params: ce_params)
+      params = params.merge(ce_field.id.to_s => answer) unless answer.nil?
+      described_class.call(event: event, registration_form: form, form_params: params)
     end
 
-    it "creates a CE registration when answered Yes" do
+    it "toggles ce_credit_requested on when answered Yes" do
       result = register_with_ce("Yes")
-      expect(result.event_registration.continuing_education_registrations.count).to eq(1)
+      expect(result.event_registration.ce_credit_requested).to be true
     end
 
-    it "creates no CE registration when answered No" do
+    it "leaves ce_credit_requested off when answered No" do
       result = register_with_ce("No")
-      expect(result.event_registration.continuing_education_registrations).to be_empty
+      expect(result.event_registration.ce_credit_requested).to be false
     end
 
-    it "creates no CE registration when unanswered" do
+    it "leaves ce_credit_requested off when unanswered" do
       result = register_with_ce(nil)
-      expect(result.event_registration.continuing_education_registrations).to be_empty
+      expect(result.event_registration.ce_credit_requested).to be false
     end
 
-    it "creates a CE registration for an existing registration that answers Yes" do
+    it "toggles ce_credit_requested on for an existing registration that answers Yes" do
       person = create(:person, first_name: "Cy", last_name: "Reed", email: "cy@example.com")
-      existing = create(:event_registration, event: event, registrant: person)
+      existing = create(:event_registration, event: event, registrant: person, ce_credit_requested: false)
 
       result = register_with_ce("Yes")
 
       expect(result.event_registration).to eq(existing)
-      expect(existing.reload.ce_registered?).to be(true)
-      expect(existing.continuing_education_registrations.count).to eq(1)
+      expect(existing.reload.ce_credit_requested).to be true
     end
 
-    it "does not duplicate a CE registration when the existing one already has one" do
+    it "saves the hours folded into a 'Yes: <n>' specify answer" do
+      result = register_with_ce("Yes: 6")
+      expect(result.event_registration.ce_credit_requested).to be true
+      expect(result.event_registration.ce_hours_requested).to eq(6)
+    end
+
+    it "leaves ce_hours_requested nil when Yes carries no hours" do
+      result = register_with_ce("Yes")
+      expect(result.event_registration.ce_hours_requested).to be_nil
+    end
+
+    it "leaves ce_hours_requested nil when answered No" do
+      result = register_with_ce("No")
+      expect(result.event_registration.ce_hours_requested).to be_nil
+    end
+
+    it "ignores non-numeric hours in the specify answer" do
+      result = register_with_ce("Yes: lots")
+      expect(result.event_registration.ce_credit_requested).to be true
+      expect(result.event_registration.ce_hours_requested).to be_nil
+    end
+
+    it "saves the hours onto an existing registration that answers Yes" do
       person = create(:person, first_name: "Cy", last_name: "Reed", email: "cy@example.com")
-      existing = create(:event_registration, event: event, registrant: person)
-      license = create(:professional_license, :placeholder, person: person)
-      create(:continuing_education_registration, event_registration: existing, professional_license: license)
+      existing = create(:event_registration, event: event, registrant: person, ce_credit_requested: false)
 
-      register_with_ce("Yes")
+      register_with_ce("Yes: 4")
 
-      expect(existing.reload.continuing_education_registrations.count).to eq(1)
-    end
-
-    it "records the typed license number on the CE registration's license" do
-      result = register_with_ce("Yes", license: "LMFT 555")
-      license = result.event_registration.continuing_education_registrations.first.professional_license
-      expect(license.number).to eq("LMFT 555")
-      expect(license.person).to eq(result.event_registration.registrant)
-    end
-
-    it "uses a placeholder license when no number is given" do
-      result = register_with_ce("Yes")
-      expect(result.event_registration.continuing_education_registrations.first.professional_license.number).to be_nil
-    end
-
-    it "takes the CE hours from the event" do
-      event.update!(ce_hours_offered: 6)
-      result = register_with_ce("Yes")
-      expect(result.event_registration.continuing_education_registrations.first.hours).to eq(6)
-    end
-
-    it "persists the CE answers as a continuing_education submission when answered Yes" do
-      register_with_ce("Yes", license: "LMFT 555")
-      submission = FormSubmission.find_by(role: "continuing_education", event: event)
-      expect(submission).to be_present
-      answers = submission.answers_by_identifier
-      expect(answers[described_class::CE_CREDIT_INTEREST_IDENTIFIER]).to eq("Yes")
-      expect(answers[described_class::CE_LICENSE_NUMBER_IDENTIFIER]).to eq("LMFT 555")
-    end
-
-    it "does not persist a continuing_education submission when answered No" do
-      register_with_ce("No")
-      expect(FormSubmission.find_by(role: "continuing_education", event: event)).to be_nil
+      expect(existing.reload.ce_credit_requested).to be true
+      expect(existing.ce_hours_requested).to eq(4)
     end
   end
 

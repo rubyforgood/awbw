@@ -154,10 +154,6 @@ class Event < ApplicationRecord
     forms.find_by(event_forms: { role: "bulk_payment" })
   end
 
-  def continuing_education_form
-    forms.find_by(event_forms: { role: "continuing_education" })
-  end
-
   def active_registration_for(person)
     return nil unless person
     event_registrations.active.find_by(registrant_id: person.id)

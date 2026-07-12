@@ -97,8 +97,8 @@ class ScholarshipApplication
   end
 
   def scholarship_answer?(field)
-    question_field_ids.include?(field&.id) ||
-      (field&.field_identifier.present? && question_field_identifiers.include?(field.field_identifier))
+    question_field_ids.include?(field.id) ||
+      (field.field_identifier.present? && question_field_identifiers.include?(field.field_identifier))
   end
 
   def submissions
