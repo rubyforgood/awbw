@@ -415,7 +415,7 @@
               <% end %>
 
               <% if @bulk_payment_forms.any? %>
-                <div class="pb-4">
+                <div>
                   <% if @bulk_payment_forms.size == 1 %>
                     <% single_form = @bulk_payment_forms.first %>
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -454,7 +454,7 @@
               <% end %>
 
               <% if @continuing_education_forms&.any? %>
-                <div class="pb-4">
+                <div>
                   <% if @continuing_education_forms.size == 1 %>
                     <% single_form = @continuing_education_forms.first %>
                     <%= check_box_tag "event[continuing_education_form_id]", single_form.id,
@@ -494,6 +494,14 @@
                       <% end %>
                     </select>
                     <p class="text-xs text-gray-500 mt-1">Select a continuing education form for registrants to request CE hours.</p>
+                    <div class="hidden peer-checked:flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
+                      <label class="flex items-center gap-2 text-sm text-gray-700">CE hours offered <%= f.number_field :ce_hours_offered, min: 0, step: 0.25, class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %></label>
+
+                      <label class="flex items-center gap-2 text-sm text-gray-700">
+                        Total CE cost <span class="text-gray-400">$</span> <%= f.number_field :ce_hours_cost, min: 0, step: 1,
+                      class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
+                      </label>
+                    </div>
                   <% end %>
                 </div>
               <% end %>
