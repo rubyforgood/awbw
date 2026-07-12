@@ -51,6 +51,7 @@ class Event < ApplicationRecord
 
   # Callbacks
   after_commit :build_public_registration_form, if: :public_registration_just_enabled?
+  after_commit :manage_continuing_education_form, if: :ce_config_changed?
   before_validation :merge_date_time_fields
 
   # Validations
@@ -149,6 +150,10 @@ class Event < ApplicationRecord
 
   def bulk_payment_form
     forms.find_by(event_forms: { role: "bulk_payment" })
+  end
+
+  def continuing_education_form
+    forms.find_by(event_forms: { role: "continuing_education" })
   end
 
   def active_registration_for(person)
@@ -354,5 +359,27 @@ class Event < ApplicationRecord
     return unless form
 
     event_forms.create!(form: form, role: "registration")
+  end
+
+  def ce_config_changed?
+    saved_change_to_ce_hours_offered? || saved_change_to_ce_hours_cost_cents?
+  end
+
+  # When several CE forms exist the admin's dropdown picks one; this callback only
+  # auto-attaches when there's exactly one (or removes when eligibility is lost).
+  def manage_continuing_education_form
+    ce_eligible = ce_hours_offered.to_i > 0 && ce_hours_cost_cents.to_i > 0
+
+    unless ce_eligible
+      event_forms.continuing_education.destroy_all
+      return
+    end
+
+    return if continuing_education_form.present?
+
+    ce_forms = Form.standalone.where(role: "continuing_education")
+    return unless ce_forms.size == 1
+
+    event_forms.create!(form: ce_forms.first, role: "continuing_education")
   end
 end

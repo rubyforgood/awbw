@@ -37,11 +37,20 @@ unless Form.standalone.find_by(role: "bulk_payment")
   ).call
 end
 
+unless Form.standalone.find_by(role: "continuing_education")
+  FormBuilderService.new(
+    name: "Continuing Education Request",
+    sections: %i[continuing_education],
+    role: "continuing_education"
+  ).call
+end
+
 puts "Creating Events with shared forms…"
 admin_user = User.find_by(email: "umberto.user@example.com")
 registration_form = Form.standalone.find_by!(role: "registration")
 scholarship_form = Form.standalone.find_by!(role: "scholarship")
 bulk_payment_form = Form.standalone.find_by!(role: "bulk_payment")
+continuing_education_form = Form.standalone.find_by!(role: "continuing_education")
 
 # Seed an example header (admin-authored HTML intro shown under the form title on
 # the public registration page) onto the base registration form, mirroring the
@@ -155,71 +164,6 @@ registration_form.form_fields
   .update_all(subtitle: "Payments are due no more than three weeks after your registration date. " \
                         "Training details will be sent after payments are received.")
 
-# The CE-interest "magic question": a single Yes/No whose "Yes" creates the
-# registration's ContinuingEducationRegistration (see
-# EventRegistrationServices::PublicRegistration). Seeded straight onto the form
-# with its own section so the form builder's add/remove-section logic leaves it
-# alone, and carrying the well-known field_identifier the service keys off. A
-# follow-on license-number question mirrors the real form's CE block.
-ce_identifier = EventRegistrationServices::PublicRegistration::CE_CREDIT_INTEREST_IDENTIFIER
-if registration_form.form_fields.where(field_identifier: ce_identifier).none?
-  next_position = (registration_form.form_fields.maximum(:position) || 0) + 1
-  registration_form.form_fields.create!(
-    name: "Continuing education",
-    answer_type: :group_header,
-    status: :active,
-    position: next_position,
-    required: false,
-    section: "continuing_education",
-    visibility: :always_ask
-  )
-  ce_field = registration_form.form_fields.create!(
-    name: "Do you seek Continuing Education (CE) hours for this training?",
-    answer_type: :single_select_radio,
-    status: :active,
-    position: next_position + 1,
-    required: false,
-    field_identifier: ce_identifier,
-    section: "continuing_education",
-    visibility: :always_ask,
-    width: :full
-  )
-  %w[Yes No].each_with_index do |opt, idx|
-    ao = AnswerOption.find_or_create_by!(name: opt) { |a| a.position = idx }
-    ce_field.form_field_answer_options.create!(answer_option: ao)
-  end
-  registration_form.form_fields.create!(
-    name: "If seeking CE hours, what is your LMFT, LCSW, LPCC or LEP license number?",
-    answer_type: :free_form_input_one_line,
-    status: :active,
-    position: next_position + 2,
-    required: false,
-    field_identifier: "ce_license_number",
-    section: "continuing_education",
-    visibility: :always_ask,
-    width: :full,
-    subtitle: "Acceptance of continuing education hours is determined by each individual state board separately, " \
-              "and AWBW cannot guarantee your specific state board will accept them. Participants are responsible " \
-              "for confirming whether the hours meet the requirements for their specific license and state."
-  )
-end
-
-# Bring an already-seeded CE block up to the current wording (these only run when
-# the field exists from an earlier seed, since the create above skips them then).
-# Idempotent — each clause only matches the prior default copy.
-registration_form.form_fields
-  .where(field_identifier: ce_identifier, name: "Do you plan to use Continuing Education (CE) hours for this course?")
-  .update_all(name: "Do you seek Continuing Education (CE) hours for this training?")
-registration_form.form_fields
-  .where(field_identifier: ce_identifier,
-         subtitle: "CE hours are available for select trainings. Let us know and our team will follow up with details.")
-  .update_all(subtitle: nil)
-registration_form.form_fields
-  .where(field_identifier: "ce_license_number", subtitle: [ nil, "" ])
-  .update_all(subtitle: "Acceptance of continuing education hours is determined by each individual state board separately, " \
-                        "and AWBW cannot guarantee your specific state board will accept them. Participants are responsible " \
-                        "for confirming whether the hours meet the requirements for their specific license and state.")
-
 # The "Additional forms" question: a multi-select whose checked options drive the
 # resulting registration's invoice_requested / w9_requested flags (see
 # EventRegistrationServices::PublicRegistration). The digital ticket reads those
@@ -267,7 +211,7 @@ end
 # the order the real form uses. Idempotent: re-running lands on the same order.
 registration_section_order = %w[
   person_identifier person_contact_info professional background marketing
-  continuing_education payment additional_forms consent
+  payment additional_forms consent
 ]
 registration_section_rank = registration_section_order.each_with_index.to_h
 registration_form.form_fields.reorder(:position).to_a.each_with_index
@@ -346,6 +290,12 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
   if cost_cents.to_i > 0
     EventForm.find_or_create_by!(event: event, role: "bulk_payment") do |ef|
       ef.form = bulk_payment_form
+    end
+  end
+
+  if event.ce_hours_offered.to_i > 0
+    EventForm.find_or_create_by!(event: event, role: "continuing_education") do |ef|
+      ef.form = continuing_education_form
     end
   end
 end

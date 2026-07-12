@@ -11,6 +11,7 @@ class FormBuilderService
     person_background: { label: "Person background", method: :build_person_background_fields },
     professional_info: { label: "Professional info", method: :build_professional_info_fields },
     marketing: { label: "Marketing", method: :build_marketing_fields },
+    continuing_education: { label: "Continuing education", method: :build_continuing_education_fields },
     scholarship: { label: "Scholarship", method: :build_scholarship_fields },
     payment: { label: "Payment", method: :build_payment_fields },
     consent: { label: "Consent", method: :build_consent_fields },
@@ -51,6 +52,7 @@ class FormBuilderService
     person_background: %w[racial_ethnic_identity],
     professional_info: %w[primary_sector_single additional_sectors primary_age_group additional_age_group],
     marketing: %w[referral_source training_motivation interested_in_more],
+    continuing_education: %w[ce_credit_interest ce_license_number],
     scholarship: %w[scholarship_eligibility scholarship_contribution impact_description implementation_plan additional_comments],
     payment: %w[payment_method],
     consent: %w[communication_consent],
@@ -65,6 +67,7 @@ class FormBuilderService
     person_background: [ "Background Information" ],
     professional_info: [ "Professional Information" ],
     marketing: [ "Marketing" ],
+    continuing_education: [ "Continuing education" ],
     scholarship: [ "Scholarship Application", "Your goals", "Anything else?" ],
     payment: [ "Payment Information" ],
     consent: [ "Consent" ],
@@ -91,6 +94,10 @@ class FormBuilderService
       "How did you hear about this AWBW training?",
       "What motivated you to sign up for AWBW's Facilitator Training?",
       "Are you interested in learning more about upcoming trainings or resources?"
+    ],
+    continuing_education: [
+      "Do you seek Continuing Education (CE) hours for this training?",
+      "If seeking CE hours, what is your LMFT, LCSW, LPCC or LEP license number?"
     ],
     scholarship: [
       "I and/or my organization cannot afford the full training cost and need a scholarship to attend.",
@@ -123,6 +130,7 @@ class FormBuilderService
     person_background: %w[background],
     professional_info: %w[professional],
     marketing: %w[marketing],
+    continuing_education: %w[continuing_education],
     scholarship: %w[scholarship],
     payment: %w[payment],
     consent: %w[consent],
@@ -138,7 +146,8 @@ class FormBuilderService
       case role
       when "scholarship" then key == :scholarship
       when "bulk_payment" then key == :bulk_payment
-      else key != :scholarship && key != :bulk_payment
+      when "continuing_education" then key == :continuing_education
+      else key != :scholarship && key != :bulk_payment && key != :continuing_education
       end
     end
   end
@@ -291,6 +300,7 @@ class FormBuilderService
     "background" => :logged_out_only,
     "professional" => :answers_on_file,
     "marketing" => :answers_on_file,
+    "continuing_education" => :always_ask,
     "payment" => :always_ask,
     "scholarship" => :always_ask,
     "consent" => :answers_on_file,
@@ -493,6 +503,25 @@ class FormBuilderService
                          :single_select_radio,
                          key: "interested_in_more", group: "marketing", required: true,
                          options: %w[Yes No])
+    position
+  end
+
+  def build_continuing_education_fields(form, position)
+    position = add_header(form, position, "Continuing education", group: "continuing_education")
+
+    position = add_field(form, position,
+                         "Do you seek Continuing Education (CE) hours for this training?",
+                         :single_select_radio,
+                         key: "ce_credit_interest", group: "continuing_education", required: false,
+                         options: %w[Yes No])
+    position = add_field(form, position,
+                         "If seeking CE hours, what is your LMFT, LCSW, LPCC or LEP license number?",
+                         :free_form_input_one_line,
+                         key: "ce_license_number", group: "continuing_education", required: false,
+                         subtitle: "Acceptance of continuing education hours is determined by each individual state board separately, " \
+                                   "and AWBW cannot guarantee your specific state board will accept them. " \
+                                   "Participants are responsible for confirming whether the hours meet the requirements " \
+                                   "for their specific license and state.")
     position
   end
 

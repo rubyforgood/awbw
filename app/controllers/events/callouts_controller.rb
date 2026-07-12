@@ -160,13 +160,11 @@ module Events
       @event = @event_registration.event
     end
 
-    # Keep the registrant's form submission in step with a license number entered
-    # on the callout, so the registration record shows the same value. A no-op
-    # when the form, field, or submission isn't present.
+    # Update form submission if ce record is updated via callout
     def record_ce_license_answer(number)
-      form = @event.registration_form
+      form = @event.continuing_education_form
       field = form&.form_fields&.find_by(field_identifier: "ce_license_number")
-      submission = form&.form_submissions&.find_by(person: @event_registration.registrant)
+      submission = form&.form_submissions&.find_by(person: @event_registration.registrant, role: "continuing_education")
       return unless field && submission
 
       answer = submission.form_answers.find_or_initialize_by(form_field: field)
