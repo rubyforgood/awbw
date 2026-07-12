@@ -90,7 +90,6 @@ RSpec.describe EventRegistrationReadiness do
     context "continuing education" do
       it "flags CE as unpaid when CE credit is requested" do
         pay(registration, 1000)
-        registration.update!(ce_requested: true)
         license = create(:professional_license, person: registration.registrant, number: "LIC123")
         create(:continuing_education_registration, event_registration: registration, professional_license: license, cost_cents: 5_000)
 
@@ -99,7 +98,6 @@ RSpec.describe EventRegistrationReadiness do
 
       it "flags a missing CE license number when CE credit is requested" do
         pay(registration, 1000)
-        registration.update!(ce_requested: true)
         license = create(:professional_license, :placeholder, person: registration.registrant)
         create(:continuing_education_registration, event_registration: registration, professional_license: license, cost_cents: 5_000)
 
@@ -156,7 +154,9 @@ RSpec.describe EventRegistrationReadiness do
     end
 
     it "flags the CE certificate as unsent when CE credit was requested" do
-      registration.update!(status: "attended", ce_requested: true)
+      registration.update!(status: "attended")
+      create(:continuing_education_registration, event_registration: registration,
+        professional_license: create(:professional_license, person: registration.registrant, number: "LIC123"))
 
       expect(readiness.completion_issues).to include("CE certificate not sent")
     end
@@ -275,7 +275,8 @@ RSpec.describe EventRegistrationReadiness do
     end
 
     it "names both certificates when CE credit was requested" do
-      registration.update!(ce_requested: true)
+      create(:continuing_education_registration, event_registration: registration,
+        professional_license: create(:professional_license, person: registration.registrant, number: "LIC123"))
 
       expect(readiness.certificate_due_reason).to eq("Reg + CE")
     end

@@ -670,7 +670,7 @@ class EventsController < ApplicationController
     row << onboarding_scholarship_tasks_csv(registration)
     if include_ce
       ce_hours = registration.ce_hours_total
-      row << (registration.ce_requested? ? "Yes" : "No")
+      row << (registration.ce_registered? ? "Yes" : "No")
       row << (ce_hours.positive? ? helpers.plain_number(ce_hours) : "")
       row << (registration.ce_amount_owed_cents.positive? ? helpers.dollars_from_cents(registration.ce_amount_owed_cents) : "")
       row << registration.ce_license_numbers.join("; ")
@@ -700,6 +700,7 @@ class EventsController < ApplicationController
     assign_event_form(event, :registration, params.dig(:event, :registration_form_id))
     assign_event_form(event, :scholarship, params.dig(:event, :scholarship_form_id))
     assign_event_form(event, :bulk_payment, params.dig(:event, :bulk_payment_form_id))
+    assign_event_form(event, :continuing_education, params.dig(:event, :continuing_education_form_id))
   end
 
   def assign_event_form(event, role, form_id)
@@ -719,6 +720,7 @@ class EventsController < ApplicationController
     @registration_forms = Form.standalone.where(role: "registration").order(:name)
     @scholarship_forms = Form.standalone.where(role: "scholarship").order(:name)
     @bulk_payment_forms = Form.standalone.where(role: "bulk_payment").order(:name)
+    @continuing_education_forms = Form.standalone.where(role: "continuing_education").order(:name)
     @categories_grouped =
       Category
         .includes(:category_type)

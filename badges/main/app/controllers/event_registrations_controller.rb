@@ -60,7 +60,6 @@ class EventRegistrationsController < ApplicationController
     authorize! @event_registration
 
     if @event_registration.save
-      reconcile_ce_registration if @event_registration.event&.ce_eligible?
       respond_to do |format|
         format.html {
           redirect_to confirm_event_registration_path(@event_registration, return_to: params[:return_to])
@@ -88,10 +87,7 @@ class EventRegistrationsController < ApplicationController
     @event_registration.notifications.select(&:new_record?).each { |n| n.recipient_email = recipient_email }
 
     if @event_registration.save
-      reconcile_ce_registration if @event_registration.event&.ce_eligible?
-      # Prefer the CE flash ("CE registration created/removed") when reconcile set
-      # one; a blocked toggle-off sets flash[:alert], which survives independently.
-      notice = flash[:notice].presence || "Registration was successfully updated."
+      notice = "Registration was successfully updated."
       respond_to do |format|
         format.turbo_stream
         format.html {
@@ -327,56 +323,11 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
-  # Keep the registration's CE record in step with the `ce_requested` flag (set on
-  # the edit form / at intake), mirroring how a scholarship is awarded from its
-  # "Requested" toggle. Requested + none yet → create a stub against the chosen
-  # license (or the registrant's only license, else a placeholder); license/hours/
-  # cost/certificate are then edited on the CE edit page. Un-requested → remove it,
-  # admins only, and never one that carries payments (the flag is restored and the
-  # admin is told to revert the payment first). Sets a flash describing what changed.
-  def reconcile_ce_registration
-    if @event_registration.ce_requested?
-      create_ce_registration_stub
-    else
-      remove_ce_registration
-    end
-  end
-
-  def create_ce_registration_stub
-    return if @event_registration.continuing_education_registrations.exists?
-
-    @event_registration.continuing_education_registrations.create!(professional_license: ce_license_for_create)
-    flash[:notice] = "CE registration created."
-  end
-
-  def remove_ce_registration
-    registrations = @event_registration.continuing_education_registrations
-    return if registrations.none? || !allowed_to?(:manage?, with: EventRegistrationPolicy)
-
-    if registrations.any? { |registration| registration.allocations.exists? }
-      @event_registration.update_column(:ce_requested, true)
-      flash[:alert] = "Can't remove CE — it has payments. Revert the payment first."
-      return
-    end
-
-    registrations.destroy_all
-    flash[:notice] = "CE registration removed."
-  end
-
-  # License a brand-new CE registration attaches to: the registrant's existing
-  # license, else an empty placeholder (number pending). Which license is used
-  # (and its number) is then changeable on the CE registration's edit page.
-  def ce_license_for_create
-    @event_registration.registrant.professional_licenses.first ||
-      ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
-  end
-
   # Strong parameters
   def event_registration_params
     params.require(:event_registration).permit(
       :event_id, :registrant_id, :status,
       :scholarship_requested,
-      :ce_requested,
       :shoutout,
       :intends_to_pay,
       :expected_payment_method,

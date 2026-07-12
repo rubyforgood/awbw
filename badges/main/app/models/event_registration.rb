@@ -382,10 +382,8 @@ class EventRegistration < ApplicationRecord
   # CE is now tracked as one or more ContinuingEducationRegistration records,
   # each against a professional license. These aggregate across them so callers
   # (callouts, onboarding, CSV) read a single registration-level figure.
-  #
-  # `ce_requested?` is the stored intent flag (column); `ce_registered?` is whether
-  # a CE registration record actually exists. They align in the normal flow (the
-  # toggle creates the record), but the readers below key off the record.
+  # `ce_registered?` is whether a CE registration record actually exists —
+  # the readers below key off the record(s).
   def ce_registered?
     if ce_registrations_in_memory?
       return continuing_education_registrations.any?

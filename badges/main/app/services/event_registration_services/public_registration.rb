@@ -28,13 +28,16 @@ module EventRegistrationServices
     ORGANIZATION_POSITION_IDENTIFIER = "agency_position".freeze
 
     def self.call(event:, registration_form:, form_params:, scholarship_requested: false, person: nil,
-                  scholarship_form: nil, scholarship_params: {})
+                  scholarship_form: nil, scholarship_params: {},
+                  continuing_education_form: nil, continuing_education_params: {})
       new(event:, registration_form:, form_params:, scholarship_requested:, person:,
-          scholarship_form:, scholarship_params:).call
+          scholarship_form:, scholarship_params:,
+          continuing_education_form:, continuing_education_params:).call
     end
 
     def initialize(event:, registration_form:, form_params:, scholarship_requested: false, person: nil,
-                   scholarship_form: nil, scholarship_params: {})
+                   scholarship_form: nil, scholarship_params: {},
+                   continuing_education_form: nil, continuing_education_params: {})
       @event = event
       @registration_form = registration_form
       @form_params = form_params
@@ -42,6 +45,8 @@ module EventRegistrationServices
       @person = person
       @scholarship_form = scholarship_form
       @scholarship_params = scholarship_params || {}
+      @continuing_education_form = continuing_education_form
+      @continuing_education_params = continuing_education_params || {}
       @errors = []
     end
 
@@ -66,7 +71,6 @@ module EventRegistrationServices
         existing = @event.event_registrations.find_by(registrant: person)
         if existing
           existing.update!(scholarship_requested: true) if @scholarship_requested
-          existing.update!(ce_requested: true) if ce_credit_requested?
           create_ce_registration(existing, person)
           existing.update!(w9_requested: true) if w9_requested?
           existing.update!(invoice_requested: true) if invoice_requested?
@@ -79,6 +83,7 @@ module EventRegistrationServices
           connect_organization(existing, organization)
           submission = update_form_submission(person)
           save_scholarship_submission(person)
+          save_continuing_education_submission(person)
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
@@ -87,6 +92,7 @@ module EventRegistrationServices
         connect_organization(event_registration, organization)
         submission = create_form_submission(person)
         save_scholarship_submission(person)
+        save_continuing_education_submission(person)
 
         send_notifications(event_registration)
 
@@ -382,7 +388,6 @@ module EventRegistrationServices
       @event.event_registrations.create!(
         registrant: person,
         scholarship_requested: @scholarship_requested,
-        ce_requested: ce_credit_requested?,
         w9_requested: w9_requested?,
         invoice_requested: invoice_requested?,
         expected_payment_method: field_value("payment_method")&.strip.presence
@@ -401,13 +406,23 @@ module EventRegistrationServices
       event_registration.continuing_education_registrations.create!(professional_license: license)
     end
 
-    # True when the registrant answered "Yes" to the seeded CE-interest question.
     def ce_credit_requested?
-      field_value(CE_CREDIT_INTEREST_IDENTIFIER).to_s.strip.casecmp?("yes")
+      return false unless @continuing_education_form
+
+      ce_field_value(CE_CREDIT_INTEREST_IDENTIFIER).to_s.strip.casecmp?("yes")
     end
 
     def ce_license_number
-      field_value(CE_LICENSE_NUMBER_IDENTIFIER)&.strip.presence
+      return nil unless @continuing_education_form
+
+      ce_field_value(CE_LICENSE_NUMBER_IDENTIFIER)&.strip.presence
+    end
+
+    def ce_field_value(key)
+      field = @continuing_education_form.form_fields.find_by(field_identifier: key)
+      return nil unless field
+
+      @continuing_education_params[field.id.to_s]
     end
 
     # The "Additional forms" question is a multi-select, so its submitted value is
@@ -469,6 +484,32 @@ module EventRegistrationServices
 
       @scholarship_params.each do |field_id, raw_value|
         field = @scholarship_form.form_fields.find_by(id: field_id)
+        next unless field
+        next if field.group_header?
+
+        text = if raw_value.is_a?(Array)
+          raw_value.reject(&:blank?).join(", ")
+        else
+          raw_value.to_s
+        end
+
+        record = submission.form_answers.find_or_initialize_by(form_field: field)
+        record.update!(submitted_answer: text, question_name_when_answered: field.name)
+      end
+    end
+
+    def save_continuing_education_submission(person)
+      return unless @continuing_education_form && @continuing_education_params.present?
+      return unless ce_credit_requested?
+
+      submission = FormSubmission.find_or_create_by!(
+        person: person, form: @continuing_education_form, role: "continuing_education", event: @event
+      ) do |record|
+        record.event = @event
+      end
+
+      @continuing_education_params.each do |field_id, raw_value|
+        field = @continuing_education_form.form_fields.find_by(id: field_id)
         next unless field
         next if field.group_header?
 

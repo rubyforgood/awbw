@@ -316,28 +316,6 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
 
-      it "creates a CE registration stub when the ce_requested flag is set" do
-        event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
-        patch event_registration_path(existing_registration),
-              params: { event_registration: { status: existing_registration.status, ce_requested: "1" } }
-
-        ce_registration = existing_registration.reload.continuing_education_registrations.first
-        expect(ce_registration).to be_present
-        # Hours/cost default from the event; the license is a placeholder until set.
-        expect(ce_registration.hours).to eq(6)
-        expect(ce_registration.professional_license.number).to be_nil
-      end
-
-      it "creates the CE registration against the registrant's existing license" do
-        event.update!(ce_hours_offered: 6)
-        license = create(:professional_license, person: existing_registration.registrant, number: "LIC-987")
-
-        patch event_registration_path(existing_registration),
-              params: { event_registration: { status: existing_registration.status, ce_requested: "1" } }
-
-        expect(existing_registration.reload.continuing_education_registrations.first.professional_license).to eq(license)
-      end
-
       it "sets the shout-out flag and stores the shout-out text on the registrant" do
         patch event_registration_path(existing_registration),
               params: { event_registration: {
