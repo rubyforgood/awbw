@@ -10,7 +10,13 @@ class RegistrationTicketCalloutsController < ApplicationController
     @callout = @event.registration_ticket_callouts.find(params[:id])
     authorize! @callout, to: :show?
 
-    if @callout.description.blank? && @callout.resource.nil?
+    # A hidden (draft/opted-out) or not-yet-dripped callout has no public page.
+    if @callout.hidden? || @callout.dripping?
+      redirect_to event_path(@event, reg: params[:reg].presence)
+      return
+    end
+
+    if @callout.description.blank? && @callout.resources.empty?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
     end

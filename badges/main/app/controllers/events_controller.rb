@@ -35,6 +35,9 @@ class EventsController < ApplicationController
 
   def edit
     authorize! @event
+    # Materialize any missing built-in callouts so the editor shows them all
+    # (idempotent; heals events created before a built-in existed).
+    DefaultTicketCallouts.seed(@event)
     set_form_variables
   end
 
@@ -188,7 +191,11 @@ class EventsController < ApplicationController
   def details
     authorize! @event, to: :details?
 
-    if @event.event_details.blank?
+    callout = @event.registration_ticket_callouts.find_by(magic_key: "event_details")
+    @event_details_title = callout&.title.presence || @event.event_details_label
+    @event_details_body = callout&.description.presence || @event.event_details
+
+    if @event_details_body.blank?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
     end
@@ -445,6 +452,7 @@ class EventsController < ApplicationController
         if params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@event)
         end
+        DefaultTicketCallouts.seed(@event)
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -473,6 +481,9 @@ class EventsController < ApplicationController
       @event.event_forms.reset
       if @event.update(event_params)
         assign_associations(@event)
+        # Lazily materialize built-in callouts for events created before this
+        # existed — heals on first edit, no data backfill. Idempotent.
+        DefaultTicketCallouts.seed(@event)
         success = true
       else
         raise ActiveRecord::Rollback

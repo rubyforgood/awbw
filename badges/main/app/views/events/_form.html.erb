@@ -567,7 +567,7 @@
 
       <div id="registration_ticket_callouts_panel" class="hidden border border-gray-300 p-4 rounded-b-md">
         <p class="text-sm text-gray-500 mb-4">
-          Call-outs shown on the registration ticket — each links to its own page. The built-in cards below are managed by the app, which decides when each appears; a few (shown in colour, with fields) let you edit their text here, while the rest (greyed out) are preview-only. Below them, add your
+          Call-outs shown on the registration ticket — each links to its own page. The built-in cards are seeded as editable rows (published by default on facilitator trainings, unchecked on everything else). Toggle a card's checkbox to show or hide it; the app still guards when each appears on the ticket (e.g. the payment card only shows when there's a balance). Below them, add your
           own call-outs for actions (forms to download, balances to pay) or reference reading (parking, policies, what to bring). New custom callouts save in the order shown; drag the handle to reorder saved callouts.
         </p>
 
@@ -650,7 +650,7 @@
           data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>"
         >
           <%= f.fields_for :registration_ticket_callouts do |rts| %>
-            <%= render "events/registration_ticket_callout_fields", f: rts %>
+            <%= render "events/registration_ticket_callout_fields", f: rts, event_f: f %>
           <% end %>
         </div>
 

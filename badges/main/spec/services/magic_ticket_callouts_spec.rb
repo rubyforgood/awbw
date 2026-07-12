@@ -29,6 +29,16 @@ RSpec.describe MagicTicketCallouts do
       expect(card_titles(registration)).to include("Handouts", "Frequently asked questions")
     end
 
+    it "skips a built-in card the event has materialized (it renders from the row instead)" do
+      event.update!(facilitator_training: true)
+      create(:registration_ticket_callout, event:, magic_key: "faq", title: "Frequently asked questions")
+
+      # No duplicate FAQ from the code path; Handouts (not materialized) still renders here.
+      titles = card_titles(registration)
+      expect(titles.count("Frequently asked questions")).to eq(0)
+      expect(titles).to include("Handouts")
+    end
+
     it "shows the Forms card for facilitator trainings and paid events, but not free non-trainings" do
       expect(card_titles(registration)).to include("Forms")
 
@@ -105,6 +115,15 @@ RSpec.describe MagicTicketCallouts do
       scholarship_card = card(registration, "Scholarship")
       expect(scholarship_card.subtitle).to eq("Your scholarship request status")
       expect(scholarship_card.badge).to be_nil
+      expect(scholarship_card.theme).to eq(DomainTheme.swatch(DomainTheme.color_for(:scholarships)))
+    end
+
+    it "turns the scholarship card amber while award tasks are outstanding" do
+      registration.update!(scholarship_requested: true)
+      scholarship = create(:scholarship, recipient: registration.registrant, tasks_completed: false)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
+
+      expect(card(registration, "Scholarship").theme).to eq(DomainTheme.swatch("amber"))
     end
 
     it "flags an awarded scholarship with outstanding tasks in an amber chip" do
@@ -144,6 +163,38 @@ RSpec.describe MagicTicketCallouts do
         "Handouts",
         "Frequently asked questions"
       ])
+    end
+  end
+
+  describe "#card_for" do
+    it "uses the row's editable presentation (title/subtitle/colour) but the app's live badge/link" do
+      # Forms isn't app-coloured, so the row's colour is honoured.
+      callout = create(:registration_ticket_callout, event:, magic_key: "forms",
+        title: "Your documents", subtitle: "Downloads", color_class: "green")
+
+      card = described_class.new(registration).card_for(callout)
+      expect(card.title).to eq("Your documents")         # from the row
+      expect(card.subtitle).to eq("Downloads")           # from the row
+      expect(card.theme).to eq(DomainTheme.swatch("green")) # from the row
+    end
+
+    it "keeps Payment's live-status colour, overriding the selected colour" do
+      event.update!(cost_cents: 5_000)
+      callout = create(:registration_ticket_callout, event:, magic_key: "payment",
+        title: "Pay your balance", color_class: "green")
+
+      card = described_class.new(registration).card_for(callout)
+      expect(card.title).to eq("Pay your balance")          # row still owns text
+      expect(card.theme).to eq(DomainTheme.swatch("orange")) # app colour (balance due), not green
+      expect(card.badge).to end_with("due")
+    end
+
+    it "returns nil when the card shouldn't show for this registration" do
+      callout = create(:registration_ticket_callout, event:, magic_key: "certificate",
+        title: "Certificate of completion")
+
+      # Certificate isn't unlocked (event not ended, not attended).
+      expect(described_class.new(registration).card_for(callout)).to be_nil
     end
   end
 end
