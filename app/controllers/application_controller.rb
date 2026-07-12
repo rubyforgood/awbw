@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user! # ensures only logged-in users can access pages
   before_action :track_user_with_ahoy, unless: :devise_controller?
   before_action :set_current_user # for AhoyTrackable in models
+  before_action :set_honeybadger_context # so faults name the affected user
   before_action :set_paper_trail_whodunnit
   before_action :preload_current_user_associations
 
@@ -72,5 +73,11 @@ class ApplicationController < ActionController::Base
 
   def set_current_user
     Current.user = current_user if user_signed_in? # needed for Ahoy tracking in models
+  end
+
+  def set_honeybadger_context
+    return unless user_signed_in?
+
+    Honeybadger.context(user_id: current_user.id, user_email: current_user.email)
   end
 end

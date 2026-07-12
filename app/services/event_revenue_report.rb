@@ -7,12 +7,11 @@
 # Org subsidy = unfunded scholarships + discounts (cost the org absorbs).
 # Net         = money in - org subsidy.
 #
-# Continuing education has no payment tracking yet, so projected CE is an
-# estimate ($25 x hours requested), flagged in the UI. It's counted in money in
-# (and therefore net) per the report's definition.
+# Projected CE is the CE fees owed across active registrants (each CE
+# registration's own cost), flagged in the UI. It's counted in money in (and
+# therefore net) per the report's definition, and treated as outstanding — CE
+# payments collected aren't netted out here yet.
 class EventRevenueReport
-  CE_HOURLY_RATE_CENTS = EventRegistration::CE_HOURLY_RATE_DOLLARS * 100
-
   # Raw per-event component figures, with the bucket totals derived from them.
   Row = Struct.new(
     :event,
@@ -24,8 +23,8 @@ class EventRevenueReport
     :registration_outstanding_cents,
     keyword_init: true
   ) do
-    # Fees actually collected: registration payments plus CE paid. CE has no
-    # payment tracking, so the CE portion is $0 today.
+    # Fees actually collected: registration payments plus CE paid. CE payments
+    # aren't netted here yet, so the CE portion is $0 today.
     def fees_cents
       registration_payments_cents
     end
@@ -153,11 +152,14 @@ class EventRevenueReport
     )
   end
 
-  # Projected CE revenue across this event's active registrants: $25 per
-  # requested hour. Not collected yet — there's no CE payment tracking.
+  # Projected CE revenue: the CE fees owed across this event's active registrants
+  # — each ContinuingEducationRegistration's own cost. Treated as outstanding, not
+  # netted against any CE payments collected.
   def ce_projected_cents_for(event)
-    hours = event.event_registrations.active.where(ce_credit_requested: true).sum(:ce_hours_requested)
-    hours.to_i * CE_HOURLY_RATE_CENTS
+    ContinuingEducationRegistration
+      .joins(:event_registration)
+      .where(event_registrations: { event_id: event.id, status: EventRegistration::ACTIVE_STATUSES })
+      .sum(:cost_cents)
   end
 
   def to_dollars(cents)

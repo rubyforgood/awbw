@@ -100,6 +100,10 @@ class Person < ApplicationRecord
     reject_if: proc { |attrs| attrs["organization_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
+  # A blank row (number + kind + state + expiry all empty) is ignored rather than
+  # creating an empty license.
+  accepts_nested_attributes_for :professional_licenses, allow_destroy: true,
+    reject_if: proc { |attrs| attrs.slice("number", "kind", "issuing_state", "expires_on").values.all?(&:blank?) }
 
   # Search Cop
   include SearchCop
@@ -211,6 +215,13 @@ class Person < ApplicationRecord
 
   def full_name
     "#{first_name} #{last_name}"
+  end
+
+  # Distinct professional-license types (e.g. "LMFT, LCSW"), shown as a credential
+  # suffix after the person's name on their profile (replaces the old free-text
+  # credentials field). Nil when no licensed types are on file.
+  def license_credentials
+    professional_licenses.filter_map { |license| license.kind.presence&.strip }.uniq.join(", ").presence
   end
 
   def full_name_with_email

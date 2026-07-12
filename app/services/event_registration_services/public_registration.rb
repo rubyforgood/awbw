@@ -3,9 +3,13 @@ module EventRegistrationServices
     Result = Struct.new(:success?, :event_registration, :form_submission, :errors, keyword_init: true)
 
     # Well-known field_identifier of the "magic" CE question seeded onto the
-    # registration form. Answering it "Yes" toggles the registration's
-    # ce_credit_requested flag. Kept here so the seed, service, and specs agree.
+    # registration form. Answering it "Yes" creates a ContinuingEducationRegistration
+    # (hours come from the event). Kept here so the seed, service, and specs agree.
     CE_CREDIT_INTEREST_IDENTIFIER = "ce_credit_interest".freeze
+
+    # Well-known field_identifier of the CE license-number question. Its answer
+    # seeds the registrant's ProfessionalLicense.
+    CE_LICENSE_NUMBER_IDENTIFIER = "ce_license_number".freeze
 
     # Well-known field_identifier of the "Additional forms" multi-select question.
     # Checking "Invoice" / "W-9" toggles the registration's invoice_requested /
@@ -24,13 +28,16 @@ module EventRegistrationServices
     ORGANIZATION_POSITION_IDENTIFIER = "agency_position".freeze
 
     def self.call(event:, registration_form:, form_params:, scholarship_requested: false, person: nil,
-                  scholarship_form: nil, scholarship_params: {})
+                  scholarship_form: nil, scholarship_params: {},
+                  continuing_education_form: nil, continuing_education_params: {})
       new(event:, registration_form:, form_params:, scholarship_requested:, person:,
-          scholarship_form:, scholarship_params:).call
+          scholarship_form:, scholarship_params:,
+          continuing_education_form:, continuing_education_params:).call
     end
 
     def initialize(event:, registration_form:, form_params:, scholarship_requested: false, person: nil,
-                   scholarship_form: nil, scholarship_params: {})
+                   scholarship_form: nil, scholarship_params: {},
+                   continuing_education_form: nil, continuing_education_params: {})
       @event = event
       @registration_form = registration_form
       @form_params = form_params
@@ -38,6 +45,8 @@ module EventRegistrationServices
       @person = person
       @scholarship_form = scholarship_form
       @scholarship_params = scholarship_params || {}
+      @continuing_education_form = continuing_education_form
+      @continuing_education_params = continuing_education_params || {}
       @errors = []
     end
 
@@ -62,7 +71,7 @@ module EventRegistrationServices
         existing = @event.event_registrations.find_by(registrant: person)
         if existing
           existing.update!(scholarship_requested: true) if @scholarship_requested
-          existing.update!(ce_credit_requested: true, ce_hours_requested: ce_hours_requested) if ce_credit_requested?
+          create_ce_registration(existing, person)
           existing.update!(w9_requested: true) if w9_requested?
           existing.update!(invoice_requested: true) if invoice_requested?
           payment_method = field_value("payment_method")&.strip
@@ -74,13 +83,16 @@ module EventRegistrationServices
           connect_organization(existing, organization)
           submission = update_form_submission(person)
           save_scholarship_submission(person)
+          save_continuing_education_submission(person)
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
         event_registration = create_event_registration(person)
+        create_ce_registration(event_registration, person)
         connect_organization(event_registration, organization)
         submission = create_form_submission(person)
         save_scholarship_submission(person)
+        save_continuing_education_submission(person)
 
         send_notifications(event_registration)
 
@@ -376,33 +388,41 @@ module EventRegistrationServices
       @event.event_registrations.create!(
         registrant: person,
         scholarship_requested: @scholarship_requested,
-        ce_credit_requested: ce_credit_requested?,
-        ce_hours_requested: ce_hours_requested,
         w9_requested: w9_requested?,
         invoice_requested: invoice_requested?,
         expected_payment_method: field_value("payment_method")&.strip.presence
       )
     end
 
-    # The CE-interest answer, which "Yes" folds an hours specify box into as
-    # "Yes: <hours>". Split off the leading label so a Yes/No check ignores the
-    # folded hours (see FormField::FIELD_SPECIFY_OPTION_PLACEHOLDERS).
-    def ce_answer_label
-      field_value(CE_CREDIT_INTEREST_IDENTIFIER).to_s.split(":", 2).first.to_s.strip
-    end
-
-    # True when the registrant answered "Yes" to the seeded CE-interest question.
-    def ce_credit_requested?
-      ce_answer_label.casecmp?("yes")
-    end
-
-    # The CE hours typed into the "Yes" specify box, as a positive integer, or nil
-    # when CE was not requested or no valid hours were entered.
-    def ce_hours_requested
+    # Create the registrant's CE registration when they opt in, against a license
+    # found-or-created from the license-number answer (a placeholder license when
+    # none was given). Hours come from the event via the model. No-op when they
+    # didn't opt in or a CE registration already exists for this registration.
+    def create_ce_registration(event_registration, person)
       return unless ce_credit_requested?
+      return if event_registration.continuing_education_registrations.exists?
 
-      hours = field_value(CE_CREDIT_INTEREST_IDENTIFIER).to_s.split(":", 2).last.to_s.strip.to_i
-      hours.positive? ? hours : nil
+      license = ProfessionalLicense.find_or_create_for(person: person, number: ce_license_number)
+      event_registration.continuing_education_registrations.create!(professional_license: license)
+    end
+
+    def ce_credit_requested?
+      return false unless @continuing_education_form
+
+      ce_field_value(CE_CREDIT_INTEREST_IDENTIFIER).to_s.strip.casecmp?("yes")
+    end
+
+    def ce_license_number
+      return nil unless @continuing_education_form
+
+      ce_field_value(CE_LICENSE_NUMBER_IDENTIFIER)&.strip.presence
+    end
+
+    def ce_field_value(key)
+      field = @continuing_education_form.form_fields.find_by(field_identifier: key)
+      return nil unless field
+
+      @continuing_education_params[field.id.to_s]
     end
 
     # The "Additional forms" question is a multi-select, so its submitted value is
@@ -464,6 +484,32 @@ module EventRegistrationServices
 
       @scholarship_params.each do |field_id, raw_value|
         field = @scholarship_form.form_fields.find_by(id: field_id)
+        next unless field
+        next if field.group_header?
+
+        text = if raw_value.is_a?(Array)
+          raw_value.reject(&:blank?).join(", ")
+        else
+          raw_value.to_s
+        end
+
+        record = submission.form_answers.find_or_initialize_by(form_field: field)
+        record.update!(submitted_answer: text, question_name_when_answered: field.name)
+      end
+    end
+
+    def save_continuing_education_submission(person)
+      return unless @continuing_education_form && @continuing_education_params.present?
+      return unless ce_credit_requested?
+
+      submission = FormSubmission.find_or_create_by!(
+        person: person, form: @continuing_education_form, role: "continuing_education", event: @event
+      ) do |record|
+        record.event = @event
+      end
+
+      @continuing_education_params.each do |field_id, raw_value|
+        field = @continuing_education_form.form_fields.find_by(id: field_id)
         next unless field
         next if field.group_header?
 

@@ -77,7 +77,7 @@ RSpec.describe "Events::BulkReminders", type: :request do
 
     it "returns to the picker after save" do
       patch event_registration_path(jane),
-            params: { return_to: "preview_reminder", event_registration: { ce_credit_requested: "1" } }
+            params: { return_to: "preview_reminder", event_registration: { intends_to_pay: "1" } }
 
       expect(response).to redirect_to(preview_reminder_event_path(event))
     end

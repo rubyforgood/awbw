@@ -65,12 +65,12 @@ RSpec.describe "Person profile flag visibility", type: :request do
   end
 
   describe "#profile_show_credentials" do
-    before { person.update!(credentials: "LCSW") }
+    before { create(:professional_license, person: person, kind: "LCSW", number: "11223") }
 
     context "when false" do
       before { person.update!(profile_show_credentials: false) }
 
-      it "hides credentials on own profile" do
+      it "hides the license credentials on own profile" do
         sign_in owner_user
         get person_path(person)
         expect(response.body).not_to include("LCSW")
@@ -80,13 +80,13 @@ RSpec.describe "Person profile flag visibility", type: :request do
     context "when true" do
       before { person.update!(profile_show_credentials: true) }
 
-      it "shows credentials as a suffix on own profile" do
+      it "shows the license type as a suffix on own profile" do
         sign_in owner_user
         get person_path(person)
         expect(response.body).to include("LCSW")
       end
 
-      it "shows credentials when admin views profile" do
+      it "shows the license type when admin views profile" do
         sign_in admin
         get person_path(person)
         expect(response.body).to include("LCSW")

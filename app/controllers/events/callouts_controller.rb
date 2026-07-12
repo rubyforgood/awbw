@@ -61,11 +61,67 @@ module Events
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
     end
 
-    # CE hours status: requested hours, amount owed, and license number. Title and
-    # body come from the materialized CE callout row (falling back to the event's
-    # columns for events not yet seeded).
+    # CE hours status: hours, amount owed, and license number.
     def ce
-      @ce_callout = @event.registration_ticket_callouts.find_by(magic_key: "ce_hours")
+      case params[:checkout]
+      when "success"
+        flash.now[:notice] = "Your CE payment was successful."
+      when "cancelled"
+        flash.now[:alert] = "CE payment was cancelled. You can try again whenever you're ready."
+      end
+    end
+
+    # Pay the CE balance via Stripe Checkout.
+    def pay_ce
+      ce_registration = @event_registration.continuing_education_registrations.first
+      unless ce_registration&.remaining_cost&.positive?
+        redirect_to registration_ce_path(@event_registration.slug), alert: "No CE payment is due."
+        return
+      end
+
+      redirect_to_ce_stripe_checkout(ce_registration)
+    end
+
+    # Public license entry from the CE callout (type, number, issuing state, and
+    # expiry). Edits the license on the registrant's (first) CE registration in
+    # place, mirrors the number onto the registration's form answer, then returns to
+    # the callout. Plain full-page POST — no Turbo. Shares
+    # ContinuingEducationRegistration#assign_license with the admin edit page.
+    def update_ce_license
+      ce_registration = @event_registration.continuing_education_registrations.first
+      return redirect_to(registration_ce_path(@event_registration.slug)) unless ce_registration
+
+      # Once the certificate is issued the license is the credential it was issued
+      # under — frozen here. Admins can still correct it on the admin CE edit page.
+      if ce_registration.certificate_sent_at.present?
+        return redirect_to registration_ce_path(@event_registration.slug),
+          alert: "Your CE certificate has been issued, so the license can no longer be changed here. Contact us if it needs correcting."
+      end
+
+      ce_registration.assign_license(number: params[:license_number], kind: params[:license_kind],
+                                     issuing_state: params[:license_issuing_state], expires_on: params[:license_expires_on])
+      ce_registration.save!
+      # assign_license already normalized the number; mirror the saved value rather
+      # than re-stripping the raw param.
+      record_ce_license_answer(ce_registration.professional_license.number)
+
+      redirect_to registration_ce_path(@event_registration.slug), notice: "License saved."
+    rescue ActiveRecord::RecordInvalid
+      redirect_to registration_ce_path(@event_registration.slug), alert: "We couldn't save that license."
+    end
+
+    # Public CE opt-in from the callout: a registrant who didn't ask for credit at
+    # registration can request it here. Sets the flag and creates the CE
+    # registration (against a placeholder license; the number is entered next).
+    def request_ce
+      return redirect_to(registration_ce_path(@event_registration.slug)) unless @event.ce_eligible?
+
+      unless @event_registration.continuing_education_registrations.exists?
+        license = ProfessionalLicense.find_or_create_for(person: @event_registration.registrant)
+        @event_registration.continuing_education_registrations.create!(professional_license: license)
+      end
+
+      redirect_to registration_ce_path(@event_registration.slug), notice: "Continuing education credit requested."
     end
 
     # Forms page: callout-card links to the W-9 (when seeded) and, for paid
@@ -134,6 +190,17 @@ module Events
       @builtin_resources = callout && action_name != "forms" ? callout.resources.to_a : []
     end
 
+    # Update form submission if ce record is updated via callout
+    def record_ce_license_answer(number)
+      form = @event.continuing_education_form
+      field = form&.form_fields&.find_by(field_identifier: "ce_license_number")
+      submission = form&.form_submissions&.find_by(person: @event_registration.registrant, role: "continuing_education")
+      return unless field && submission
+
+      answer = submission.form_answers.find_or_initialize_by(form_field: field)
+      answer.update!(submitted_answer: number.to_s, question_name_when_answered: field.name)
+    end
+
     # Builds the callout-card links shown on the forms page. The document links
     # come from the materialized Forms callout's resources (the W-9 by default,
     # editable/removable per event) — or the hard-coded W-9 for events not yet
@@ -178,6 +245,43 @@ module Events
     def resource_card(icon:, title:, subtitle:, href:, target: "_blank", trailing_icon: "fa-solid fa-arrow-right")
       MagicTicketCallouts::Card.new(icon_class: icon, color: "blue", title: title, subtitle: subtitle,
                                     href: href, target: target, trailing_icon: trailing_icon)
+    end
+
+    def redirect_to_ce_stripe_checkout(ce_registration)
+      person = @event_registration.registrant
+      amount = ce_registration.remaining_cost
+
+      person.set_payment_processor :stripe
+
+      checkout_session = person.payment_processor.checkout(
+        mode: "payment",
+        metadata: {
+          ce_registration_id: ce_registration.id,
+          event_registration_id: @event_registration.id,
+          event_id: @event.id
+        },
+        payment_intent_data: {
+          metadata: {
+            ce_registration_id: ce_registration.id,
+            event_registration_id: @event_registration.id,
+            event_id: @event.id
+          },
+          description: "CE Hours: #{@event.title}"
+        },
+        line_items: [ {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "CE Hours: #{@event.title}" },
+            unit_amount: amount
+          },
+          quantity: 1
+        } ],
+        success_url: registration_ce_url(@event_registration.slug, checkout: "success"),
+        cancel_url: registration_ce_url(@event_registration.slug, checkout: "cancelled")
+      )
+
+      @event_registration.update!(checkout_session_id: checkout_session.id)
+      redirect_to checkout_session.url, allow_other_host: true, status: :see_other
     end
   end
 end

@@ -123,7 +123,6 @@ class WorkshopVariationsController < ApplicationController
   # end
 
   def set_form_variables
-    @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
     @workshop = @workshop_variation.workshop || (Workshop.find_by(id: params[:workshop_id]) if params[:workshop_id].present?)
     @workshop_variation_idea = WorkshopVariationIdea.find_by(id: params[:workshop_variation_idea_id]) if params[:workshop_variation_idea_id].present?
     @workshop_variation.build_primary_asset if @workshop_variation.primary_asset.blank?

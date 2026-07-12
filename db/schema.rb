@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_184214) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_11_193528) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -479,9 +479,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_184214) do
   end
 
   create_table "event_registrations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.boolean "ce_credit_requested", default: false, null: false
-    t.integer "ce_hours_requested"
-    t.string "ce_license_number"
     t.datetime "certificate_sent_at"
     t.string "checkout_session_id"
     t.boolean "completed_day_1", default: false, null: false
@@ -968,7 +965,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_184214) do
     t.boolean "blog_contributor", default: false, null: false
     t.datetime "created_at", null: false
     t.integer "created_by_id"
-    t.string "credentials"
     t.date "date_of_birth"
     t.string "display_name_preference"
     t.string "email"
@@ -1034,7 +1030,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_184214) do
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
     t.index ["created_by_id"], name: "index_professional_licenses_on_created_by_id"
-    t.index ["person_id", "number"], name: "index_professional_licenses_on_person_and_number", unique: true
+    t.index ["person_id", "kind", "number"], name: "index_professional_licenses_on_person_kind_number", unique: true
     t.index ["person_id"], name: "index_professional_licenses_on_person_id"
     t.index ["updated_by_id"], name: "index_professional_licenses_on_updated_by_id"
   end
