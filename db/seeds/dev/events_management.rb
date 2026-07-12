@@ -292,6 +292,7 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
       ef.form = bulk_payment_form
     end
   end
+end
 
 # The flagship training runs on Zoom — drive the platform from event settings so
 # it shows as a badge in the public registration header (rather than living in the
