@@ -359,5 +359,4 @@ class Event < ApplicationRecord
 
     event_forms.create!(form: form, role: "registration")
   end
-
 end
