@@ -2,17 +2,17 @@
 # event. Run on event create and, for events that predate this, lazily on edit —
 # so existing events heal the first time they're saved, with no data backfill.
 #
-# Each definition carries the callout's default content plus how its initial
-# visibility (`hidden`) is derived from the event's config, using the same rules
-# the code-defined cards used (see Event#show_*_callout?). Seeding is idempotent:
-# a magic_key already present on the event is left untouched, so a re-run never
-# clobbers admin edits.
+# All nine built-ins always seed. Their initial visibility (hidden/published) is
+# derived from the event's config via each definition's `hidden` proc: published
+# by default on facilitator trainings, hidden (unchecked) on everything else.
+# Admins toggle visibility per row from the editor. Seeding is idempotent so a
+# re-run never clobbers admin edits.
 #
-# Only the content-and-resource cards (Handouts, FAQ) are materialized today; the
-# stateful cards (payment, CE, scholarship, …) still render through
-# MagicTicketCallouts until their per-registration behavior is keyed off the row.
-# MagicTicketCallouts skips any card an event has already materialized, so the two
-# paths never double-render.
+# Behavioral built-ins (payment, CE, scholarship, …) render live per-registration
+# status through MagicTicketCallouts#card_for, which has its own guards (e.g. the
+# payment card returns nil on a free event) so publishing a row on an
+# non-applicable event is harmless. MagicTicketCallouts skips any card an event
+# has already materialized, so the two paths never double-render.
 class DefaultTicketCallouts
   # Default FAQ content for the 2-day training, mirrored from the code-defined FAQ
   # page so a newly materialized card starts with the current copy. Admins edit it
@@ -80,13 +80,13 @@ class DefaultTicketCallouts
   end
 
   # Create any not-yet-present magic callouts for the event, appended in
-  # definition order after whatever already exists. A definition's optional
-  # `seed_if` gates whether it applies to this event (e.g. skip the
-  # videoconference card until the event has a link). Returns the created rows.
+  # definition order after whatever already exists. All built-ins always seed;
+  # their initial visibility (hidden/published) is derived from the event's
+  # config via each definition's `hidden` proc. Seeding is idempotent so a re-run
+  # never clobbers admin edits. Returns the created rows.
   def seed
     existing_keys = @event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
     definitions.reject { |definition| existing_keys.include?(definition[:magic_key]) }
-               .select { |definition| definition[:seed_if].nil? || definition[:seed_if].call(@event) }
                .map { |definition| create(definition) }
   end
 
@@ -146,8 +146,7 @@ class DefaultTicketCallouts
         callout_type: "action",
         icon_class: "fa-solid fa-credit-card",
         color_class: "orange",
-        hidden: ->(_event) { false },
-        seed_if: ->(event) { event.cost_cents.to_i.positive? }
+        hidden: ->(event) { !event.facilitator_training? }
       },
       {
         magic_key: "certificate",
@@ -156,8 +155,8 @@ class DefaultTicketCallouts
         callout_type: "action",
         icon_class: "fa-solid fa-certificate",
         color_class: "green",
-        # Off by default except on facilitator trainings; admins opt other events
-        # in. When shown, it still only appears once the certificate unlocks.
+        # Off by default except on facilitator trainings. When shown, it still only
+        # appears once the certificate unlocks (MagicTicketCallouts guards this).
         hidden: ->(event) { !event.facilitator_training? }
       },
       {
@@ -167,33 +166,32 @@ class DefaultTicketCallouts
         callout_type: "action",
         icon_class: "fa-solid fa-award",
         color_class: "fuchsia",
-        hidden: ->(_event) { false },
-        seed_if: ->(event) { event.scholarship_form.present? }
+        hidden: ->(event) { !event.facilitator_training? }
       },
       {
         magic_key: "ce_hours",
         # Title/text seed from the event's CE columns (migrating existing content);
         # thereafter they live on the row like every other built-in. The row also
-        # carries the CE hours-offered/cost config. Always seeded.
+        # carries the CE hours-offered/cost config.
         title: ->(event) { event.ce_hours_details_label },
         description: ->(event) { event.ce_hours_details },
         subtitle: "Continuing education — requirements & how to request",
         callout_type: "action",
         icon_class: "fa-solid fa-graduation-cap",
         color_class: "teal",
-        hidden: ->(_event) { false }
+        hidden: ->(event) { !event.facilitator_training? }
       },
       {
         magic_key: "event_details",
         # Title/text seed from the event's details columns (migrating existing
-        # content); thereafter they live on the row. Always seeded.
+        # content); thereafter they live on the row.
         title: ->(event) { event.event_details_label },
         description: ->(event) { event.event_details },
         subtitle: "Important info for this event — please read",
         callout_type: "reference",
         icon_class: "fa-solid fa-palette",
         color_class: "blue",
-        hidden: ->(_event) { false }
+        hidden: ->(event) { !event.facilitator_training? }
       },
       {
         magic_key: "videoconference",
@@ -202,11 +200,10 @@ class DefaultTicketCallouts
         callout_type: "action",
         icon_class: "fa-solid fa-video",
         color_class: "blue",
-        hidden: ->(_event) { false },
+        hidden: ->(event) { !event.facilitator_training? },
         # Drips onto the ticket a week before the event starts, replacing the old
         # hard-coded "one week prior" rule with a stored, editable date.
-        display_from: ->(event) { event.start_date - 7.days if event.start_date },
-        seed_if: ->(event) { event.videoconference_url.present? }
+        display_from: ->(event) { event.start_date - 7.days if event.start_date }
       },
       {
         magic_key: "forms",
@@ -215,12 +212,11 @@ class DefaultTicketCallouts
         callout_type: "action",
         icon_class: "fa-solid fa-file-lines",
         color_class: "blue",
-        hidden: ->(_event) { false },
+        hidden: ->(event) { !event.facilitator_training? },
         # The W-9 is a removable linked resource, included by default only on paid
         # events (where a tax form applies); invoice/receipt stay dynamic on the
         # forms page. Admins add/remove it per event.
-        resources: -> { @event.cost_cents.to_i.positive? ? [ Resource.find_by(title: "W-9") ].compact : [] },
-        seed_if: ->(event) { event.show_forms_callout? }
+        resources: -> { @event.cost_cents.to_i.positive? ? [ Resource.find_by(title: "W-9") ].compact : [] }
       },
       {
         magic_key: "handouts",
@@ -229,7 +225,7 @@ class DefaultTicketCallouts
         callout_type: "reference",
         icon_class: "fa-solid fa-folder-open",
         color_class: "blue",
-        hidden: ->(event) { !event.show_handouts_callout? },
+        hidden: ->(event) { !event.facilitator_training? },
         resources: -> { handout_resources }
       },
       {
@@ -240,7 +236,7 @@ class DefaultTicketCallouts
         icon_class: "fa-solid fa-circle-question",
         color_class: "blue",
         description: faq_html,
-        hidden: ->(event) { !event.show_faq_callout? }
+        hidden: ->(event) { !event.facilitator_training? }
       }
     ]
   end
