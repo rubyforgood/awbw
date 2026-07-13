@@ -47,7 +47,10 @@ class Event < ApplicationRecord
   accepts_nested_attributes_for :event_staffs, allow_destroy: true,
     reject_if: proc { |attrs| attrs["person_id"].blank? }
   accepts_nested_attributes_for :registration_ticket_callouts, allow_destroy: true,
-    reject_if: proc { |attrs| attrs["title"].blank? }
+    # Reject only blank *new* callouts; existing rows (with an id) must always
+    # process so a control-only magic row's hidden/position toggle persists even
+    # though it submits no title.
+    reject_if: proc { |attrs| attrs["id"].blank? && attrs["title"].blank? }
 
   # Callbacks
   after_commit :build_public_registration_form, if: :public_registration_just_enabled?
@@ -149,6 +152,10 @@ class Event < ApplicationRecord
 
   def bulk_payment_form
     forms.find_by(event_forms: { role: "bulk_payment" })
+  end
+
+  def continuing_education_form
+    forms.find_by(event_forms: { role: "continuing_education" })
   end
 
   def active_registration_for(person)

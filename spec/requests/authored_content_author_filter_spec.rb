@@ -41,8 +41,9 @@ RSpec.describe "Authored-content indexes filtered by author", type: :request do
     create(:workshop_variation, name: "Other Variation", workshop: published_workshop, author: other)
 
     get workshop_variations_path(author_id: author.id)
-
     expect(response.body).to include("Filtered to")
+
+    get workshop_variations_path(author_id: author.id), headers: { "Turbo-Frame" => "workshop_variations_results" }
     expect(response.body).to include("Ada Variation")
     expect(response.body).not_to include("Other Variation")
   end

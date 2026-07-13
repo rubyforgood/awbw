@@ -5,23 +5,59 @@ class RegistrationTicketCallout < ApplicationRecord
   # group them on the ticket later.
   CALLOUT_TYPES = %w[ action reference ].freeze
 
+  # Hidden identifiers for the built-in ("magic") callouts. A row carrying one of
+  # these was seeded from a code-defined default (see DefaultTicketCallouts) and
+  # keeps its ticket behavior — badges, per-registration visibility — driven by
+  # that key. Admin-authored callouts have a nil magic_key. Magic callouts are
+  # hidden rather than destroyed so they can be restored to their default.
+  MAGIC_KEYS = %w[
+    payment certificate scholarship ce_hours event_details
+    videoconference forms handouts faq
+  ].freeze
+
+  # "Content" magic callouts render their own editable copy/resources (like custom
+  # callouts). "Behavioral" magic callouts (the rest) render live per-registration
+  # status through MagicTicketCallouts#card_for — the row still owns the editable
+  # title/subtitle/text, order, visibility, and resources.
+  CONTENT_MAGIC_KEYS = %w[ handouts faq ].freeze
+
+  # Behavioral built-ins that also carry event-level config edited inline in their
+  # row (CE hours offered / cost); their text lives on the row like everything else.
+  CONFIG_MAGIC_KEYS = %w[ ce_hours ].freeze
+
+  # Built-ins whose card colour the app sets from live status — Payment turns
+  # orange while a balance is due, and Scholarship / CE hours turn amber while the
+  # registrant has something outstanding. For these, the app colour overrides the
+  # selected one (see MagicTicketCallouts#card_for).
+  APP_COLORED_MAGIC_KEYS = %w[ payment scholarship ce_hours ].freeze
+
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
   # app can reuse them for tinted boxes — amount-due, scholarship box, etc.).
-  DEFAULT_ICONS = { "action" => "fa-solid fa-arrow-right", "reference" => "fa-solid fa-circle-info" }.freeze
+  # The leading icon defaults to the info "i"; the trailing "go to page" arrow
+  # lives on the right (see _callout_card). Both types share the same leading
+  # fallback so a callout without a custom icon always reads as informational.
+  DEFAULT_ICONS = { "action" => "fa-solid fa-circle-info", "reference" => "fa-solid fa-circle-info" }.freeze
   DEFAULT_COLORS = { "action" => "orange", "reference" => "indigo" }.freeze
 
-  # New callouts start with the arrow icon pre-filled (the "action" default) so
-  # admins see a sensible value rather than an empty field. Loaded records keep
-  # their stored value; a blank one still falls back via #display_icon_class.
+  # New callouts start with the info icon pre-filled so admins see a sensible
+  # value rather than an empty field. Loaded records keep their stored value; a
+  # blank one still falls back via #display_icon_class.
   attribute :icon_class, :string, default: -> { DEFAULT_ICONS["action"] }
 
   belongs_to :event
 
-  # Optionally links the callout to a Resource. When present, the callout's
-  # detail page renders the resource's display (PDF first-page preview, etc.)
-  # and a download button beneath the callout's own title/subtitle/content.
-  belongs_to :resource, optional: true
+  # A callout can link many resources, shown in order on its detail page (PDF
+  # previews + download buttons) beneath its own title/subtitle/content — e.g.
+  # the Handouts card's worksheets, or a custom callout's supporting documents.
+  has_many :registration_ticket_callout_resources, -> { ordered }, dependent: :destroy,
+           inverse_of: :registration_ticket_callout
+  has_many :resources, through: :registration_ticket_callout_resources
+
+  # Linked resources are added one dropdown at a time in the editor (cocoon
+  # add/remove), like Sectors on a Person. Blank picks are dropped.
+  accepts_nested_attributes_for :registration_ticket_callout_resources, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["resource_id"].blank? }
 
   # Per-event ordering, drag-reordered after save via the shared `sortable`
   # Stimulus controller (a per-row PUT to #update). The gem reflows the other
@@ -33,11 +69,73 @@ class RegistrationTicketCallout < ApplicationRecord
   validates :callout_type, inclusion: { in: CALLOUT_TYPES }
   validates :color_class, inclusion: { in: DomainTheme::SWATCH_COLORS.map(&:to_s) }, allow_blank: true
   validates :position, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
+  validates :magic_key, inclusion: { in: MAGIC_KEYS }, allow_nil: true
+  validates :magic_key, uniqueness: { scope: :event_id }, allow_nil: true
 
   scope :ordered, -> { order(:position, :id) }
+  scope :visible, -> { where(hidden: false) }
+  scope :magic, -> { where.not(magic_key: nil) }
+  scope :custom, -> { where(magic_key: nil) }
+
+  # Reset flagged rows to their template after the save that set the flag. The
+  # flag is cleared first so the reset's own update doesn't recurse.
+  after_save :apply_reset_to_default, if: :reset_to_default?
+
+  def apply_reset_to_default
+    self.reset_to_default = nil
+    DefaultTicketCallouts.reset(self)
+  end
 
   def action?
     callout_type == "action"
+  end
+
+  # The editor exposes visibility as "Published" — the inverse of the stored
+  # `hidden` flag — so a checked box means the callout shows on the ticket.
+  def published
+    !hidden
+  end
+  alias_method :published?, :published
+
+  def published=(value)
+    self.hidden = !ActiveModel::Type::Boolean.new.cast(value)
+  end
+
+  # Set from the editor's "Restore default" checkbox. When checked, the row is
+  # reset to its built-in template as part of the normal event save — no separate
+  # request — overriding whatever else was submitted for it.
+  attr_accessor :reset_to_default
+
+  def reset_to_default?
+    magic? && ActiveModel::Type::Boolean.new.cast(reset_to_default)
+  end
+
+  # A seeded built-in callout (Handouts, FAQ, …) rather than an admin-authored
+  # one. Magic callouts hide instead of delete and can be reset to default.
+  def magic?
+    magic_key.present?
+  end
+
+  # A behavioral built-in callout whose card is rendered by MagicTicketCallouts
+  # (live status), as opposed to a content callout that renders from its own row.
+  def behavioral_magic?
+    magic? && CONTENT_MAGIC_KEYS.exclude?(magic_key)
+  end
+
+  # Whether the row carries the inline CE config fields (hours offered / cost).
+  def ce_config?
+    CONFIG_MAGIC_KEYS.include?(magic_key.to_s)
+  end
+
+  # Whether the app sets this card's colour from live status, overriding the
+  # selected colour (so the editor notes it under the colour picker).
+  def app_colored?
+    APP_COLORED_MAGIC_KEYS.include?(magic_key.to_s)
+  end
+
+  # Whether the callout is drip-scheduled to appear only from a future date.
+  def dripping?(now = Time.current)
+    display_from.present? && display_from > now
   end
 
   # Font Awesome class for the leading icon, falling back to a sensible default

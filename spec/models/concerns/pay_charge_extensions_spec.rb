@@ -58,6 +58,64 @@ RSpec.describe PayChargeExtensions do
     end
   end
 
+  describe "CE payment via ce_registration_id metadata" do
+    let(:ce_registration) do
+      create(:continuing_education_registration, event_registration: registration, cost_cents: 15_00)
+    end
+
+    let(:charge_object) do
+      {
+        "id" => "ch_ce_456",
+        "object" => "charge",
+        "amount" => 10_00,
+        "currency" => "usd",
+        "paid" => true,
+        "metadata" => { "ce_registration_id" => ce_registration.id, "event_registration_id" => registration.id },
+        "refunds" => { "object" => "list", "data" => [], "has_more" => false }
+      }
+    end
+
+    let!(:pay_charge) do
+      Pay::Charge.create!(
+        customer: pay_customer,
+        processor_id: "ch_ce_456",
+        amount: 10_00,
+        amount_refunded: 0,
+        currency: "usd",
+        object: charge_object,
+        metadata: { "ce_registration_id" => ce_registration.id, "event_registration_id" => registration.id }
+      )
+    end
+
+    it "creates an ExternalProcessorPayment" do
+      payment = ExternalProcessorPayment.find_by(pay_charge_id: pay_charge.id)
+      expect(payment).to have_attributes(
+        amount_cents: 10_00,
+        person: person,
+        pay_charge: pay_charge
+      )
+    end
+
+    it "creates an Allocation against the CE registration" do
+      payment = ExternalProcessorPayment.find_by(pay_charge_id: pay_charge.id)
+      allocation = payment.allocations.first
+      expect(allocation.allocatable).to eq(ce_registration)
+      expect(allocation.amount).to eq(10_00)
+    end
+
+    it "allocates against the CE registration even when event_registration_id is also present" do
+      payment = ExternalProcessorPayment.find_by(pay_charge_id: pay_charge.id)
+      expect(payment.allocations.first.allocatable).to eq(ce_registration)
+      expect(Allocation.where(allocatable: registration, source: payment)).to be_empty
+    end
+
+    it "is idempotent" do
+      expect do
+        pay_charge.update!(object: charge_object)
+      end.not_to change(ExternalProcessorPayment, :count)
+    end
+  end
+
   describe "refund sync" do
     let(:refunded_object) do
       charge_object.deep_merge(

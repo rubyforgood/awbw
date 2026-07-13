@@ -3,7 +3,7 @@
 # must never run in production, so they live here rather than in `db/seeds.rb`
 # (which seeds only the required base users: Umberto, Amy, Aisha, Orphaned).
 
-puts "Seeding dev user variations (invite/lock/confirmation states)…"
+puts "Creating dev user variations (invite/lock/confirmation states)…"
 
 # created_by/updated_by point at the base admin, seeded by `db:seed` first.
 admin = User.find_by!(email: "umberto.user@example.com")

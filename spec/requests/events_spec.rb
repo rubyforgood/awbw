@@ -202,15 +202,15 @@ RSpec.describe "Events", type: :request do
   describe "GET /ce_hours" do
     let(:event) { create(:event, :published, :publicly_visible) }
 
-    it "renders the CE hours page when details are present" do
-      event.update!(ce_hours_details_label: "Continuing education", ce_hours_details: "<p>Email your license number</p>")
+    it "renders the CE hours page when the event is CE-eligible" do
+      event.update!(ce_hours_offered: 6, ce_hours_details_label: "Continuing education", ce_hours_details: "<p>Email your license number</p>")
       get ce_hours_event_path(event)
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Continuing education")
       expect(response.body).to include("Email your license number")
     end
 
-    it "redirects to the event when details are blank" do
+    it "redirects to the event when the event is not CE-eligible" do
       get ce_hours_event_path(event)
       expect(response).to redirect_to(event_path(event))
     end
@@ -255,20 +255,20 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("Preview bulk payment page")
     end
 
-    it "renders the built-in 'Before you attend' card fields within the callouts section" do
+    it "renders the visibility flags, including publicly registerable, with definitions" do
+      get edit_event_path(event)
+
+      expect(response.body).to include('name="event[public_registration_enabled]"')
+      expect(response.body).to include('name="event[publicly_visible]"')
+      expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:public_registration_enabled][:description])
+    end
+
+    it "renders the built-in 'Before you attend' card as an editable row" do
       get edit_event_path(event)
       expect(response.body).to include("Registration ticket callouts")
       expect(response.body).to include("Before you attend")
-      expect(response.body).to include("event[event_details_label]")
-      expect(response.body).to include("event[event_details]")
-    end
-
-    it "renders the built-in 'CE hours' card fields within the callouts section" do
-      get edit_event_path(event)
-      expect(response.body).to include("Registration ticket callouts")
-      expect(response.body).to include("CE hours")
-      expect(response.body).to include("event[ce_hours_details_label]")
-      expect(response.body).to include("event[ce_hours_details]")
+      # Its text now lives on the callout row, not the event columns.
+      expect(response.body).not_to include("event[event_details_label]")
     end
 
     it "previews the app-controlled built-in callouts (greyed, non-editable)" do
@@ -1010,25 +1010,30 @@ RSpec.describe "Events", type: :request do
   end
 
   describe "GET /events/:id/registrants with the CE status filter" do
-    let(:event) { create(:event, cost_cents: 1_000) }
-    let(:complete_person) { create(:person, first_name: "Complete", last_name: "Person") }
-    let(:missing_person) { create(:person, first_name: "Missing", last_name: "Person") }
+    let(:event) { offer_ce!(create(:event, cost_cents: 1_000)) }
+    let(:paid_person) { create(:person, first_name: "Paid", last_name: "Person") }
+    let(:needs_person) { create(:person, first_name: "Needs", last_name: "License") }
     let(:none_person) { create(:person, first_name: "Noce", last_name: "Person") }
 
-    let!(:complete_reg) do
-      reg = create(:event_registration, event: event, registrant: complete_person,
-                                         ce_credit_requested: true, ce_license_number: "ABC123", ce_hours_requested: 3)
-      create(:allocation, source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000),
-                          allocatable: reg, amount: 1_000)
+    # Known license, fully paid.
+    let!(:paid_reg) do
+      reg = create(:event_registration, event: event, registrant: paid_person)
+      cer = create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000)
+      create(:allocation, source: create(:payment, amount_cents: 15_000, amount_cents_remaining: 15_000),
+                          allocatable: cer, amount: 15_000)
       reg
     end
-    let!(:missing_reg) { create(:event_registration, event: event, registrant: missing_person, ce_credit_requested: true) }
-    let!(:none_reg) { create(:event_registration, event: event, registrant: none_person, ce_credit_requested: false) }
-
-    before do
-      offer_ce!(event)
-      sign_in admin
+    # CE registration sitting on a placeholder (numberless) license.
+    let!(:needs_reg) do
+      reg = create(:event_registration, event: event, registrant: needs_person)
+      create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
+        professional_license: create(:professional_license, :placeholder, person: needs_person))
+      reg
     end
+    # No CE registration.
+    let!(:none_reg) { create(:event_registration, event: event, registrant: none_person) }
+
+    before { sign_in admin }
 
     it "shows the CE status column and filter when the event offers CE" do
       get registrants_event_path(event)
@@ -1045,29 +1050,23 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include('data-column-toggle-group-value="ce"')
     end
 
-    it "filters to all CE requests" do
+    it "filters to CE registrations not yet paid" do
       get registrants_event_path(event, ce_status: "requested")
-      expect(response.body).to include("Complete Person")
-      expect(response.body).to include("Missing Person")
+      expect(response.body).to include("Needs License")
+      expect(response.body).not_to include("Paid Person")
       expect(response.body).not_to include("Noce Person")
     end
 
-    it "filters to CE requests missing a license number" do
-      get registrants_event_path(event, ce_status: "license_not_provided")
-      expect(response.body).to include("Missing Person")
-      expect(response.body).not_to include("Complete Person")
+    it "filters to CE registrations on a placeholder license" do
+      get registrants_event_path(event, ce_status: "needs_license")
+      expect(response.body).to include("Needs License")
+      expect(response.body).not_to include("Paid Person")
     end
 
-    it "filters to CE requests missing hours" do
-      get registrants_event_path(event, ce_status: "hours_not_provided")
-      expect(response.body).to include("Missing Person")
-      expect(response.body).not_to include("Complete Person")
-    end
-
-    it "filters to paid CE requests" do
+    it "filters to paid CE registrations" do
       get registrants_event_path(event, ce_status: "paid")
-      expect(response.body).to include("Complete Person")
-      expect(response.body).not_to include("Missing Person")
+      expect(response.body).to include("Paid Person")
+      expect(response.body).not_to include("Needs License")
     end
 
     it "does not crash on an invalid ce_status" do
@@ -1075,9 +1074,9 @@ RSpec.describe "Events", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "hides CE entirely when the event's registration form doesn't offer CE" do
+    it "hides CE entirely when the event does not offer CE" do
       plain_event = create(:event)
-      create(:event_registration, event: plain_event, ce_credit_requested: true)
+      create(:event_registration, event: plain_event)
       get registrants_event_path(plain_event)
       expect(response.body).not_to include("CE status")
     end
@@ -1085,7 +1084,7 @@ RSpec.describe "Events", type: :request do
     it "includes a CE status column in the CSV export" do
       get registrants_event_path(event, format: :csv)
       expect(response.body).to include("CE status")
-      expect(response.body).to include("Incomplete")
+      expect(response.body).to include("Needs license")
     end
   end
 
@@ -1101,42 +1100,47 @@ RSpec.describe "Events", type: :request do
       Nokogiri::HTML(response.body).at_css('td[data-column-toggle-col="ce"]')&.text&.squish
     end
 
-    it "shows Create when CE was not requested" do
-      create(:event_registration, event: event, registrant: person, ce_credit_requested: false)
+    it "shows Create when no CE registration exists" do
+      create(:event_registration, event: event, registrant: person)
       get registrants_event_path(event)
       expect(ce_chip_text).to eq("Create")
     end
 
-    it "shows Requested when requested but no CE registration record exists yet" do
-      create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
-      get registrants_event_path(event)
-      expect(ce_chip_text).to eq("Requested")
-    end
-
-    it "shows No license # once a CE record exists without a license number" do
-      reg = create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+    it "shows License # needed once a CE record exists without a license number" do
+      reg = create(:event_registration, event: event, registrant: person)
       create(:continuing_education_registration, event_registration: reg,
         professional_license: create(:professional_license, :placeholder, person: person))
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("No license #")
+      expect(ce_chip_text).to eq("License # needed")
     end
 
-    it "shows Filed once a license is on file but the CE balance is unpaid" do
-      reg = create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+    it "shows the balance due once a license is on file but the CE balance is unpaid" do
+      reg = create(:event_registration, event: event, registrant: person)
       create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
         professional_license: create(:professional_license, person: person))
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("Filed")
+      expect(ce_chip_text).to eq("$150 due")
     end
 
-    it "shows Recipient when the CE balance is paid" do
-      reg = create(:event_registration, event: event, registrant: person, ce_credit_requested: true)
+    it "shows Pending when the CE balance is paid but the certificate isn't issued" do
+      reg = create(:event_registration, event: event, registrant: person)
       cer = create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
         professional_license: create(:professional_license, person: person))
       create(:allocation, source: create(:payment, amount_cents: 15_000, amount_cents_remaining: 15_000),
         allocatable: cer, amount: 15_000)
       get registrants_event_path(event)
-      expect(ce_chip_text).to eq("Recipient")
+      expect(ce_chip_text).to eq("Pending")
+    end
+
+    it "shows Issued once the CE certificate has been delivered" do
+      reg = create(:event_registration, event: event, registrant: person)
+      cer = create(:continuing_education_registration, event_registration: reg, cost_cents: 15_000,
+        professional_license: create(:professional_license, person: person))
+      create(:allocation, source: create(:payment, amount_cents: 15_000, amount_cents_remaining: 15_000),
+        allocatable: cer, amount: 15_000)
+      cer.mark_certificate_sent!
+      get registrants_event_path(event)
+      expect(ce_chip_text).to eq("Issued")
     end
   end
 
@@ -1203,7 +1207,6 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Mailchimp")
       expect(response.body).to include("CMS")
       expect(response.body).to include("Portal invite")
-      expect(response.body).to include("CE requested")
       expect(response.body).to include("License #")
       expect(response.body).to include("Event attendance")
       expect(response.body).to include("Onboard")

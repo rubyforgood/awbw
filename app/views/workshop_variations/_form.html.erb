@@ -4,66 +4,73 @@
 
     <%= render "shared/errors", resource: @workshop_variation if @workshop_variation.errors.any? %>
 
-    <!-- Workshop selection / reference -->
-    <div class="mb-6">
-      <% if params[:admin] == "true" || (f.object.new_record? && !@workshop) %>
-        <%= f.input :workshop_id,
-          collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
-          include_blank: true,
-          required: true,
-          input_html: {
-            class: "h-10 rounded-md",
-            data: {
-              controller: "remote-select",
-              remote_select_model_value: "workshop"
-            }
-          },
-          prompt: "Type to search workshops…",
-          label: "Workshop" %>
-      <% elsif @workshop %>
-        <%= f.hidden_field :workshop_id, value: @workshop.id %>
-      <% elsif f.object.workshop_id.present? %>
-        <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
-      <% end %>
-    </div>
-
     <% linked_idea = @workshop_variation_idea || f.object.workshop_variation_idea %>
-    <% if linked_idea %>
-      <div class="admin-only bg-purple-100 rounded-lg border border-purple-200 p-4 mb-6">
-        <div class="flex items-center gap-2">
-          <i class="fas fa-arrow-up-from-bracket text-purple-600"></i>
-          <span class="text-sm font-medium text-purple-800"><%= f.object.persisted? ? "Promoted from:" : "Promoting from:" %></span>
-          <%= link_to linked_idea.name,
-                      workshop_variation_idea_path(linked_idea),
-                      class: "btn btn-secondary-outline text-sm" %>
-        </div>
-      </div>
-    <% end %>
 
-    <!-- Name + Windows type + Published/Visible -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-4">
-      <div class="md:col-span-3 flex flex-col md:flex-row md:space-x-4">
-        <div class="flex-1">
-          <%= f.input :name, label: "Variation name", input_html: { class: "w-full h-10" } %>
+    <!-- Workshop + Name + Windows (left) parallel with Visibility (right) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-4 items-start">
+      <div class="md:col-span-3 space-y-6">
+        <!-- Workshop selection / reference -->
+        <div>
+          <% if params[:admin] == "true" || (f.object.new_record? && !@workshop) %>
+            <%= f.input :workshop_id,
+              collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
+              include_blank: true,
+              required: true,
+              input_html: {
+                class: "h-10 rounded-md",
+                data: {
+                  controller: "remote-select",
+                  remote_select_model_value: "workshop"
+                }
+              },
+              prompt: "Type to search workshops…",
+              label: "Workshop" %>
+          <% elsif @workshop %>
+            <%= f.hidden_field :workshop_id, value: @workshop.id %>
+          <% elsif f.object.workshop_id.present? %>
+            <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
+          <% end %>
         </div>
-        <div class="w-full md:w-1/3">
-          <%= f.input :windows_type_id,
-                    as: :select,
-                    required: true,
-                    collection: WindowsType.all,
-                    label_method: :short_name,
-                    value_method: :id,
-                    selected: f.object.windows_type_id || WindowsType.find_by(name: "Combined")&.id,
-                    include_blank: "Select type",
-                    label: "Windows type",
-                    input_html: { class: "w-full h-10 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" } %>
+
+        <% if linked_idea %>
+          <div class="admin-only bg-purple-100 rounded-lg border border-purple-200 p-4">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-arrow-up-from-bracket text-purple-600"></i>
+              <span class="text-sm font-medium text-purple-800"><%= f.object.persisted? ? "Promoted from:" : "Promoting from:" %></span>
+              <%= link_to linked_idea.name,
+                          workshop_variation_idea_path(linked_idea),
+                          class: "btn btn-secondary-outline text-sm" %>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Name + Windows type -->
+        <div class="flex flex-col md:flex-row md:space-x-4">
+          <div class="flex-1">
+            <%= f.input :name, label: "Variation name", input_html: { class: "w-full h-10" } %>
+          </div>
+          <div class="w-full md:w-1/3">
+            <%= f.input :windows_type_id,
+                      as: :select,
+                      required: true,
+                      collection: WindowsType.all,
+                      label_method: :short_name,
+                      value_method: :id,
+                      selected: f.object.windows_type_id || WindowsType.find_by(name: "Combined")&.id,
+                      include_blank: "Select type",
+                      label: "Windows type",
+                      input_html: { class: "w-full h-10 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" } %>
+          </div>
         </div>
       </div>
 
       <% if allowed_to?(:manage?, WorkshopVariation) %>
-        <div class="admin-only bg-blue-100 rounded grid grid-cols-1 items-center mt-6 md:mt-0 p-3">
-          <%= f.input :published, as: :boolean, input_html: { checked: f.object.id ? f.object.published? : false } %>
-          <%= f.input :publicly_visible, as: :boolean, input_html: { checked: f.object.id ? f.object.publicly_visible? : false } %>
+        <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
+          <%= render "shared/visibility_info", flags: %i[published publicly_visible] %>
+          <div class="grid grid-cols-1 items-center">
+            <%= visibility_flag_input f, :published, input_html: { checked: f.object.id ? f.object.published? : false } %>
+            <%= visibility_flag_input f, :publicly_visible, input_html: { checked: f.object.id ? f.object.publicly_visible? : false } %>
+          </div>
         </div>
       <% end %>
     </div>
@@ -98,18 +105,21 @@
               <% if params[:admin] == "true" %>
                 <%= f.input :position, as: :integer, label: "Ordering", input_html: { class: "w-24" } %>
               <% end %>
-              <div data-controller="searchable-select" data-searchable-select-mode-value="person">
-                <%= f.input :author_id,
-                          as: :select,
-                          label: (f.object.author ? (
-                            link_to "Variation author",
-                                    person_path(f.object.author),
-                                    class: "hover:underline") : "Variation author").html_safe,
-                          collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
-                          selected: (f.object.author_person&.id || current_user.person_id),
-                          input_html: { class: "w-full rounded-lg px-3 py-2",
-                                        data: { searchable_select_target: "select" } } %>
-              </div>
+              <%= f.input :author_id,
+                        as: :select,
+                        label: (f.object.author ? (
+                          link_to "Variation author",
+                                  person_path(f.object.author),
+                                  class: "hover:underline") : "Variation author").html_safe,
+                        collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
+                        selected: f.object.author_person&.id || current_user.person_id,
+                        include_blank: true,
+                        input_html: {
+                          data: {
+                            controller: "remote-select",
+                            remote_select_model_value: "person"
+                          }
+                        } %>
             </div>
           <% end %>
         </div>

@@ -25,47 +25,99 @@ class MagicTicketCallouts
 
   # A registration-free description of one built-in card, for the event editor's
   # callouts section. `key` is :ce_hours / :event_details for the two whose text
-  # admins edit; nil for the cards the app fully controls (shown greyed out).
-  # `subtitle` mirrors the card's ticket subtitle; `visibility` describes when the
-  # app shows it (rendered next to the "Built in" chip in the editor); `note` is an
-  # optional extra hint on where the card's content comes from.
-  EditorCard = Data.define(:key, :icon_class, :color, :title, :subtitle, :visibility, :note) do
+  # admins edit via event columns; nil for the cards the app fully controls (shown
+  # greyed out). `magic_key` ties the card to its ticket behavior — once an event
+  # has materialized that key into an editable row, the preview is dropped here and
+  # the row is edited in the callout list instead. `subtitle` mirrors the card's
+  # ticket subtitle; `visibility` describes when the app shows it (rendered next to
+  # the "Built in" chip); `note` is an optional hint on where content comes from.
+  EditorCard = Data.define(:key, :magic_key, :icon_class, :color, :title, :subtitle, :visibility, :note) do
     def theme = DomainTheme.swatch(color)
     def editable? = key.present?
   end
 
   # Every built-in card in the order it appears on a ticket, for the editor to
-  # preview the full ticket context. Keep in sync with #cards: add a card method,
-  # add it here.
+  # preview the full ticket context. Cards whose content the event has already
+  # materialized are omitted — they're edited as real rows in the callout list.
+  # Keep in sync with #cards: add a card method, add it here.
   def self.editor_cards(event)
+    materialized = event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
     [
-      EditorCard.new(nil, "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
-      EditorCard.new(nil, "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
-      EditorCard.new(nil, "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
-      EditorCard.new(:ce_hours, "fa-solid fa-graduation-cap", "teal", event.ce_hours_details_label, "Continuing education — requirements & how to request", "When a registrant requests CE credit", nil),
-      EditorCard.new(:event_details, "fa-solid fa-palette", "blue", event.event_details_label, "Important info for this event — please read", "When the content below is filled in", nil),
-      EditorCard.new(nil, "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
-      EditorCard.new(nil, "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and receipt", "On facilitator trainings and paid events", "Items link to their relevant resources."),
-      EditorCard.new(nil, "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
-      EditorCard.new(nil, "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
-    ]
+      EditorCard.new(nil, "payment", "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
+      EditorCard.new(nil, "certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
+      EditorCard.new(nil, "scholarship", "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
+      EditorCard.new(nil, "videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
+      EditorCard.new(nil, "forms", "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and receipt", "On facilitator trainings and paid events", "Items link to their relevant resources."),
+      EditorCard.new(nil, "handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
+      EditorCard.new(nil, "faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
+    ].reject { |card| card.key.nil? && materialized.include?(card.magic_key) }
   end
+
+  # magic_key → builder method, in the default order cards appear on a ticket.
+  CARD_BUILDERS = {
+    "payment" => :payment_card,
+    "certificate" => :certificate_card,
+    "scholarship" => :scholarship_status_card,
+    "ce_hours" => :ce_hours_card,
+    "event_details" => :event_details_card,
+    "videoconference" => :videoconference_card,
+    "forms" => :forms_card,
+    "handouts" => :handouts_card,
+    "faq" => :faq_card
+  }.freeze
 
   def initialize(event_registration)
     @registration = event_registration
     @event = event_registration.event
   end
 
-  # The visible cards for this registration, in display order.
+  # The visible built-in cards for this registration, in default order. Cards the
+  # event has materialized into editable rows are omitted here — the ticket renders
+  # those from the row (calling #card_for for behavioral ones), so this is both the
+  # non-materialized set and the fallback for events not yet seeded.
   def cards
-    [ payment_card, certificate_card, scholarship_status_card, ce_hours_card,
-      event_details_card, videoconference_card, forms_card, handouts_card,
-      faq_card ].compact
+    CARD_BUILDERS.reject { |magic_key, _| materialized?(magic_key) || skip_in_fallback?(magic_key) }
+                 .filter_map { |_, builder| send(builder) }
+  end
+
+  # The live Card for a materialized behavioral callout row, or nil when it
+  # shouldn't show for this registration (e.g. certificate not yet unlocked). The
+  # app supplies the dynamic parts (badge, per-registration visibility, and the
+  # destination link); the row supplies the editable presentation (title,
+  # subtitle, colour, icon), so admin edits to those take effect on the ticket.
+  def card_for(callout)
+    builder = CARD_BUILDERS[callout.magic_key]
+    base = builder && send(builder)
+    return unless base
+    # Event details links to its page only when it has content to show.
+    return if callout.magic_key == "event_details" && callout.description.blank?
+
+    base.with(
+      title: callout.title,
+      subtitle: callout.subtitle,
+      icon_class: callout.display_icon_class,
+      # Payment (and any app-coloured card) keeps its live status colour, which
+      # overrides the selected one; everything else honours the row's colour.
+      color: callout.app_colored? ? base.color : (callout.color_class.presence || base.color)
+    )
   end
 
   private
 
   attr_reader :registration, :event
+
+  # A built-in card the event has materialized into an editable row renders from
+  # that row, not from #cards, so we skip it here to avoid double-rendering.
+  def materialized?(magic_key)
+    @materialized_keys ||= event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
+    @materialized_keys.include?(magic_key)
+  end
+
+  # In the unseeded fallback, event-details content lives on the event column, so
+  # hide the card when it's blank (the row path checks the row in #card_for).
+  def skip_in_fallback?(magic_key)
+    magic_key == "event_details" && event.event_details.blank?
+  end
 
   # Top card: an action card while a balance is due, a reference card once paid
   # in full. Its page lists every allocation with the running balance.
@@ -100,7 +152,10 @@ class MagicTicketCallouts
     return unless registration.scholarship_requested?
     awarded = registration.scholarship?
     tasks_outstanding = awarded && !registration.scholarship_tasks_met?
-    Card.new(icon_class: "fa-solid fa-award", color: DomainTheme.color_for(:scholarships).to_s,
+    Card.new(icon_class: "fa-solid fa-award",
+             # Amber while award tasks are outstanding (action needed), otherwise
+             # the scholarship colour.
+             color: tasks_outstanding ? "amber" : DomainTheme.color_for(:scholarships).to_s,
              title: "Scholarship",
              subtitle: awarded ? "Your award — amount, funder, and tasks" : "Your scholarship request status",
              href: registration_scholarship_path(registration.slug),
@@ -119,8 +174,8 @@ class MagicTicketCallouts
   # they have, becoming a reference card once requested with hours and a license
   # number on file. Shown when the event offers CE or the registrant asked for it.
   def ce_hours_card
-    return unless registration.ce_credit_requested?
-    complete = registration.ce_hours_requested.present? && registration.ce_license_provided?
+    return unless registration.ce_registered?
+    complete = registration.ce_license_provided?
     Card.new(icon_class: "fa-solid fa-graduation-cap", color: "teal",
              title: event.ce_hours_details_label,
              subtitle: ce_hours_subtitle,
@@ -133,15 +188,17 @@ class MagicTicketCallouts
   end
 
   def ce_hours_subtitle
-    return "#{registration.ce_hours_requested} hours" if registration.ce_hours_requested.present?
-    "Continuing education credit"
+    hours = registration.continuing_education_registrations.first&.hours.to_d
+    return "Continuing education credit" unless hours.positive?
+
+    "#{NumberFormatter.plain(hours)} hours"
   end
 
   # Teal "$X due" once hours + license are on file and money is owed; otherwise an
   # amber chip naming what's still needed, prefixed with the amount when the hours
   # (and so the fee) are already known — e.g. "$250 · License number needed".
   def ce_hours_badge(complete)
-    amount_cents = registration.ce_amount_owed_cents.to_i
+    amount_cents = registration.continuing_education_registrations.first&.cost_cents.to_i
     amount = MoneyFormatter.dollars_from_cents(amount_cents)
 
     if complete
@@ -153,17 +210,14 @@ class MagicTicketCallouts
     amount_cents.positive? ? "#{amount} · #{needed}" : needed
   end
 
+  # Hours are set by the event now, so the only thing a requesting registrant can
+  # still be missing is their license number.
   def ce_missing_text
-    missing_hours = registration.ce_hours_requested.blank?
-    missing_license = !registration.ce_license_provided?
-    return "Hours & license number needed" if missing_hours && missing_license
-    return "Hours needed" if missing_hours
     "License number needed"
   end
 
   # "Art supplies & what to bring" — the event's own details page.
   def event_details_card
-    return if event.event_details.blank?
     Card.new(icon_class: "fa-solid fa-palette", color: "blue",
              title: event.event_details_label,
              subtitle: "Important info for this event — please read",

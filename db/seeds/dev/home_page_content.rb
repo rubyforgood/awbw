@@ -34,9 +34,7 @@ puts "Creating CommunityNews…"
                .first_or_create!(
                   body: body_content,
                   rhino_body: "<p>#{body_content}</p>",
-                  author_id: Person.all.sample&.id,
-                  user_author_id: User.all.sample&.id,
-                  author_credit_preference: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES.sample,
+                  author_id: [ Person.all.sample, nil, nil ].sample&.id,
                   created_by_id: User.first&.id,
                   updated_by_id: User.first&.id,
                   organization_id: Organization.all.sample&.id,
@@ -75,6 +73,7 @@ puts "Creating WorkshopIdeas…"
   "Empowerment Through Mixed Media"
 ].each do |title|
   WorkshopIdea.where(title: title).first_or_create!(
+    author_credit_preference: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES.sample,
     windows_type_id: WindowsType.all.sample&.id,
     created_by_id: User.first&.id,
     updated_by_id: User.first&.id,

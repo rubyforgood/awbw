@@ -139,8 +139,7 @@ end
   notification.update!(email_body_html: body_html, email_body_text: body_text) if notification.email_body_html.blank?
 end
 
-puts "  Created #{Notification.where(kind: %w[contact_us contact_us_fyi]).count} contact_us notifications " \
-     "(#{Notification.where(kind: 'contact_us_fyi', responded: true).count} marked responded)"
+puts "  Created #{Notification.where(kind: %w[contact_us contact_us_fyi]).count} contact_us notifications"
 
 # Custom event reminders Amy received. These demonstrate the editable subject and
 # message on the bulk-reminder page: each is a delivered reminder with the

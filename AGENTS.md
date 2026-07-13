@@ -48,19 +48,19 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~78 files |
+| `app/models/` | ActiveRecord models | ~80 files |
 | `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~30 files |
-| `app/jobs/` | SolidQueue background jobs | 3 files |
+| `app/jobs/` | SolidQueue background jobs | 4 files |
 | `app/models/concerns/` | Shared model modules | 16 concerns |
 
 ### Presentation
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/controllers/` | Rails controllers (admin/, events/) | ~70 files |
-| `app/views/` | ERB templates | ~504 files |
-| `app/decorators/` | Draper decorators for view logic | ~38 files |
-| `app/policies/` | ActionPolicy authorization rules | ~49 files |
+| `app/controllers/` | Rails controllers (admin/, events/) | ~77 files |
+| `app/views/` | ERB templates | ~632 files |
+| `app/decorators/` | Draper decorators for view logic | ~40 files |
+| `app/policies/` | ActionPolicy authorization rules | ~55 files |
 | `app/presenters/` | Presentation objects | 3 files |
 | `app/helpers/` | View helpers | ~25 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
@@ -81,7 +81,7 @@ This codebase (Rails 8.1)
 |---|---|
 | `config/routes.rb` | All routes (single file) |
 | `config/database.yml` | MySQL via Trilogy adapter |
-| `config/initializers/` | ~28 initializer files |
+| `config/initializers/` | ~30 initializer files |
 | `.github/workflows/` | GitHub Actions CI |
 | `Procfile.dev` | Dev services: `vite` + `web` |
 | `ai/` | Shell script shortcuts for common dev tasks (see `ai/README.md`) |
@@ -97,7 +97,8 @@ This codebase (Rails 8.1)
 | `Event` | Events with registrations, featured/published states |
 | `EventStaff` | Join model connecting `Person` to `Event` as staff (title, `expected_to_attend`); drives the "Meet the staff" roster and "My events" |
 | `EventRegistrationChecklistCompletion` | Audited completion row for one manual onboarding step on an `EventRegistration` (`step` from `EventRegistration::CHECKLIST_STEPS`, `completed_by` User, `completed_at`); row-exists = done. Powers the event Onboarding tab's checkbox matrix |
-| `RegistrationTicketCallout` | Admin-configured call-outs shown on an event's registration ticket (title, subtitle, HTML description, `callout_type` action/reference, icon/colour, `payment_access_gated` — only shown once the registrant has `payment_access_granted?` (paid or intends to pay), draggable `position` via the positioning gem); each links to its own public detail page |
+| `RegistrationTicketCallout` | Call-outs shown on an event's registration ticket (title, subtitle, HTML description, `callout_type` action/reference, icon/colour, `payment_access_gated` — only shown once the registrant has `payment_access_granted?`, draggable `position`, `hidden` draft/opt-out, `display_from` drip date, and `has_many :resources` through `RegistrationTicketCalloutResource`); each links to its own public detail page. A nil `magic_key` is an admin-authored callout; a set `magic_key` is a built-in card materialized by `DefaultTicketCallouts` (hidden instead of deleted, restorable to default) |
+| `RegistrationTicketCalloutResource` | Ordered join linking a `RegistrationTicketCallout` to the `Resource`s shown on its detail page |
 | `Story` | Editorial content with facilitators, primary/gallery assets |
 | `Resource` | Handouts, toolkits, templates with downloadable assets |
 | `Person` | Organization affiliates with contacts, addresses, sectors |
@@ -147,7 +148,7 @@ This codebase (Rails 8.1)
 
 ### Namespaces
 
-- **Root level** (~52 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
+- **Root level** (~58 controllers): Workshops, stories, resources, events, people, organizations, registration ticket callouts, etc.
 - **`admin/`**: HomeController, AnalyticsController, AhoyActivitiesController
 - **`events/`**: Registrations sub-resource (create/destroy + slug-based show at `/registration/:slug`)
 - **Devise overrides**: Registrations, Confirmations, Passwords
@@ -204,7 +205,8 @@ end
 - `EventRegistrationServices::PublicRegistration` — Public registration handling
 - `EventRegistrationReadiness` — Computes a registration's lifecycle `status` (`:not_ready` → `:ready` → `:certificate_due` → `:completed`) from a pre-event "event ready" checklist, a post-event "completion work" checklist (attendance, scholarship tasks), and certificate delivery, returning the specific outstanding reasons. Reads payment/certificate state via `Registerable` (`paid_in_full?`, `certificate_sent?`) on both the registration and its `continuing_education_registrations`. Drives the registrants roster's single far-right Status badge column (with a short reason under "Not ready" and a cert-type note under "Certificate pending") and its matching filter
 - `ReminderRecipientFilter` — Decides which event registrations stay checked on the bulk reminder page given the admin's filters (matches in memory, returns matching ids)
-- `MagicTicketCallouts` — Code-defined ("magic") ticket callout cards (payment, certificate, scholarship, CE hours, art supplies, forms, handouts, portal, videoconference, FAQ), each with its own visibility rule; rendered through the same `_callout_card` partial as admin-configured `RegistrationTicketCallout`s. Their public show pages live under `app/views/events/callouts/` and are served by `Events::CalloutsController` (slug-authorized, no login)
+- `MagicTicketCallouts` — Code-defined ("magic") ticket callout cards (payment, certificate, scholarship, CE hours, art supplies, forms, handouts, portal, videoconference, FAQ), each with its own visibility rule; rendered through the same `_callout_card` partial as `RegistrationTicketCallout`s. Skips any card an event has materialized (see `DefaultTicketCallouts`) so the two paths never double-render, and serves as the fallback for events not yet seeded. Public show pages live under `app/views/events/callouts/` (`Events::CalloutsController`, slug-authorized)
+- `DefaultTicketCallouts` — Materializes all built-in callouts into `RegistrationTicketCallout` rows in canonical ticket order, seeded on event create and lazily on edit, each gated by the event's config via `seed_if` (idempotent, no backfill). Built-ins are edited in the **same** callout-fields row as custom callouts (pre-filled title/subtitle/colour/icon/callout-page-text/resources; hidden instead of deleted; "Restore default" shown only when `.customized?`). "Content" cards (Handouts, FAQ) render their own copy/resources; "behavioral" cards render live status through `MagicTicketCallouts#card_for`, which overlays the app's badge/visibility/destination on the row's editable presentation. Behavioral pages show the row's callout-page-text as an intro (`@builtin_intro`) and any linked resources below it. Certificate is opt-in (default off except trainings); Videoconference drips a week before start via `display_from`. CE hours and Event details are edited like every other built-in — their title/text seed from the event's columns once (migrating existing content) then live on the row; the CE hours-offered/cost config still edits the event inline via `event_f` (`ce_config?`). The registrant CE/details pages read the row (falling back to the event columns pre-seed). Built-ins always seed and also materialize lazily on `edit`, so the editor shows the full set; the editor shows "Restore default" (or a static "Matches default") per row via `.customized?`. The visibility control is a `published` toggle (inverse of `hidden`)
 
 ### Affiliations
 
@@ -282,6 +284,7 @@ end
 - `asset_picker` — Asset selection UI
 - `autosave` — Auto-save form state
 - `carousel` — Swiper-based carousels
+- `ce_license_picker` — Fill the CE license type/number/state/expiry fields from the picked license (or clear them for a new one)
 - `cocoon` — Nested form handling (cocoon gem)
 - `collection` — Filter form auto-submit with debounce
 - `column_toggle` — Toggle table column visibility
@@ -347,17 +350,17 @@ Custom colors defined in `app/frontend/stylesheets/application.tailwind.css`:
 
 | Directory | Count | Purpose |
 |---|---|---|
-| `spec/models/` | ~58 | Model unit tests |
-| `spec/views/` | ~73 | View template tests |
-| `spec/requests/` | ~47 | HTTP request/integration tests |
-| `spec/system/` | ~25 | End-to-end browser tests (Capybara) |
-| `spec/routing/` | ~13 | Route definition tests |
-| `spec/policies/` | ~9 | Authorization policy tests |
-| `spec/decorators/` | ~10 | Decorator tests |
-| `spec/services/` | ~13 | Service object tests |
+| `spec/models/` | ~71 | Model unit tests |
+| `spec/views/` | ~77 | View template tests |
+| `spec/requests/` | ~91 | HTTP request/integration tests |
+| `spec/system/` | ~20 | End-to-end browser tests (Capybara) |
+| `spec/routing/` | ~15 | Route definition tests |
+| `spec/policies/` | ~15 | Authorization policy tests |
+| `spec/decorators/` | ~15 | Decorator tests |
+| `spec/services/` | ~25 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
-| `spec/helpers/` | ~1 | Helper tests |
-| `spec/factories/` | ~53 | FactoryBot factory definitions |
+| `spec/helpers/` | ~5 | Helper tests |
+| `spec/factories/` | ~67 | FactoryBot factory definitions |
 
 ### Configuration
 
@@ -430,8 +433,12 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (4 files):
+Located in `lib/tasks/` (8 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
 - `migrate_internal_id_to_filemaker_code.rake` — FileMaker code migration
+- `convert_age_ranges.rake` — Age range data conversion
+- `legacy_user_permissions_to_comments.rake` — Migrate legacy user permissions into comments
+- `migrate_sectors.rake` — Sector data migration
+- `migrate_workshop_logs.rake` — Workshop log migration

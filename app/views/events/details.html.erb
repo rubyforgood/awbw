@@ -17,7 +17,7 @@
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
         </div>
         <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight"><%= @event.event_details_label %></h1>
+          <h1 class="text-xl font-semibold tracking-wide leading-tight"><%= @event_details_title %></h1>
           <p class="text-sm text-blue-200"><%= @event.title %></p>
         </div>
       </div>
@@ -26,7 +26,7 @@
 
     <div class="px-6 sm:px-8 py-7">
       <div class="rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700">
-        <%= form_label_html(@event.event_details) %>
+        <%= form_label_html(@event_details_body) %>
       </div>
     </div>
   </div>
