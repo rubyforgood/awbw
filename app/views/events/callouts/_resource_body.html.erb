@@ -1,13 +1,8 @@
-<%# Renders a resource inside a callout page: a top-right download button (when a
-    downloadable file is attached) plus the resource display. PDFs show in the
-    browser's inline viewer; everything else renders via the shared asset
-    pipeline (see assets/resource_display). `resource` is a decorated Resource.
-    Shared by the registrant resource viewer and admin callouts that link a
-    resource. %>
 <% if resource.downloadable_asset&.file&.attached? %>
   <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 mb-4">
     <%= link_to url_for(resource.downloadable_asset.file), download: true, class: "btn btn-utility" do %>
-      Download <i class="fa-solid fa-download"></i>
+      Download
+      <i class="fa-solid fa-download"></i>
     <% end %>
   </div>
 <% end %>
