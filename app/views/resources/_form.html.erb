@@ -59,19 +59,20 @@
 
   <!-- Author -->
   <div class="flex flex-col md:flex-row md:space-x-4 mb-6">
-    <div class="flex-1 mb-4 md:mb-0" data-controller="searchable-select" data-searchable-select-mode-value="person">
+    <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :author_id,
                   as: :select,
-                  collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                  collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
+                  selected: f.object.author_person&.id || current_user.person_id,
                   include_blank: "Select an author",
-                  selected: (f.object.author_person&.id || current_user.person_id),
                   label: (f.object.author ? (
                     link_to "Resource author",
                             person_path(f.object.author),
                             class: "hover:underline") : "Resource author").html_safe,
                   label_html: { class: "block font-medium mb-1 text-gray-700" },
                   input_html: { class: "w-full rounded border-gray-300",
-                                data: { searchable_select_target: "select" } } %>
+                                data: { controller: "remote-select",
+                                        remote_select_model_value: "person" } } %>
       <% if f.object.legacy_author_name.present? %>
         <p class="mt-1 text-xs text-gray-500 italic">Legacy author credit: <%= f.object.legacy_author_name %></p>
       <% end %>

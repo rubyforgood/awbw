@@ -153,7 +153,6 @@ class ResourcesController < ApplicationController
     @resource.build_downloadable_asset if @resource.downloadable_asset.blank?
     @resource.gallery_assets.build
     @windows_types = WindowsType.all
-    @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
     @categories_grouped =
       Category
         .includes(:category_type)
