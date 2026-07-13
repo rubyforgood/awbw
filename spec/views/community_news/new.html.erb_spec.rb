@@ -47,5 +47,4 @@ RSpec.describe "community_news/new", type: :view do
       assert_select "select[name=?]", "community_news[organization_id]"
     end
   end
-
 end
