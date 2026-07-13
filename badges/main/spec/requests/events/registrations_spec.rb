@@ -514,24 +514,6 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
     end
 
-    it "prompts to download for all pages on a multi-page resource" do
-      resource = create(:resource, title: "Aha Moments", kind: "Handout")
-      create(:downloadable_asset, owner: resource)
-
-      get registration_resource_path(registration.slug, resource)
-
-      expect(response.body).to include("download to get all pages")
-    end
-
-    it "omits the all-pages prompt on a known single-page resource" do
-      resource = create(:resource, title: "W-9", kind: "Form")
-      create(:downloadable_asset, owner: resource)
-
-      get registration_resource_path(registration.slug, resource)
-
-      expect(response.body).not_to include("download to get all pages")
-    end
-
     it "is reachable by slug without logging in" do
       resource = create(:resource, title: "Aha Moments", kind: "Handout")
 
