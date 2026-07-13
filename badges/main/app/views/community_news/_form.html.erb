@@ -54,10 +54,12 @@
                 as: :select,
                 label: "Author",
                 required: true,
-                collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
                 selected: f.object.author_id || current_user&.person_id,
                 input_html: { required: true,
-                              class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
+                              class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
+                              data: { controller: "remote-select",
+                                      remote_select_model_value: "person" } } %>
 
     <%= f.input :author_credit_preference,
                 as: :select,

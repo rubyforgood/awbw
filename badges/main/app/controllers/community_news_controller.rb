@@ -121,9 +121,6 @@ class CommunityNewsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @organizations = authorized_scope(Organization.all).order(:name).pluck(:name, :id).sort_by(&:first)
-    # Author is any person, not just active-login users, so facilitators
-    # without a confirmed account can still be credited.
-    @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
     @categories_grouped =
       Category
         .includes(:category_type)

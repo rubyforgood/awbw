@@ -132,7 +132,6 @@ class StoriesController < ApplicationController
     @story_ideas = authorized_scope(StoryIdea.includes(:created_by))
                             .references(:users)
                             .order(:created_at)
-    @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
     @windows_types = WindowsType.all
     @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
     @categories_grouped =

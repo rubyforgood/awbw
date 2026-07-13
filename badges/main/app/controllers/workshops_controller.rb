@@ -199,7 +199,6 @@ class WorkshopsController < ApplicationController
     potential_series = potential_series.where.not(id: @workshop.id) if @workshop.persisted?
     @potential_series_workshops = authorized_scope(potential_series).order(:title)
     @windows_types = WindowsType.all
-    @people = Person.order(Arel.sql("LOWER(first_name), LOWER(last_name)"))
     @workshop_ideas = authorized_scope(WorkshopIdea.order(created_at: :desc))
                                   .map { |wi|
                                     [ "#{wi.created_at.strftime("%Y-%m-%d")
