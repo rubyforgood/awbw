@@ -188,17 +188,17 @@ class MagicTicketCallouts
   end
 
   def ce_hours_subtitle
-    total = registration.ce_hours_total
-    return "Continuing education credit" unless total.positive?
+    hours = registration.continuing_education_registrations.first&.hours.to_d
+    return "Continuing education credit" unless hours.positive?
 
-    "#{NumberFormatter.plain(total)} hours"
+    "#{NumberFormatter.plain(hours)} hours"
   end
 
   # Teal "$X due" once hours + license are on file and money is owed; otherwise an
   # amber chip naming what's still needed, prefixed with the amount when the hours
   # (and so the fee) are already known — e.g. "$250 · License number needed".
   def ce_hours_badge(complete)
-    amount_cents = registration.ce_amount_owed_cents.to_i
+    amount_cents = registration.continuing_education_registrations.first&.cost_cents.to_i
     amount = MoneyFormatter.dollars_from_cents(amount_cents)
 
     if complete
