@@ -89,6 +89,35 @@ RSpec.describe "Registration ticket callouts", type: :request do
       end
     end
 
+    context "when linked to a PDF resource" do
+      let(:resource) { create(:resource) }
+      let(:callout) { create(:registration_ticket_callout, event:, resource:, description: "") }
+
+      before { create(:downloadable_asset, owner: resource) }
+
+      it "shows the PDF in the browser's inline viewer" do
+        get event_registration_ticket_callout_path(event, callout)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("type=\"application/pdf\"")
+        expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, disposition: :inline))
+      end
+    end
+
+    context "when linked to a non-PDF resource" do
+      let(:resource) { create(:resource) }
+      let(:callout) { create(:registration_ticket_callout, event:, resource:, description: "") }
+
+      before { create(:downloadable_asset, :with_image, owner: resource) }
+
+      it "renders the preview instead of an inline PDF viewer" do
+        get event_registration_ticket_callout_path(event, callout)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("type=\"application/pdf\"")
+      end
+    end
+
     context "when linked to a resource without a downloadable file" do
       let(:resource) { create(:resource) }
       let(:callout) do

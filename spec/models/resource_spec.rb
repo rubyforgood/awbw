@@ -80,15 +80,4 @@ RSpec.describe Resource do
       end
     end
   end
-
-  describe "#single_page_pdf?" do
-    it "is true for the known single-page titles" do
-      expect(build(:resource, title: "W-9").single_page_pdf?).to be(true)
-      expect(build(:resource, title: "Letter to Supervisors").single_page_pdf?).to be(true)
-    end
-
-    it "is false for any other title" do
-      expect(build(:resource, title: "AHA Moments").single_page_pdf?).to be(false)
-    end
-  end
 end
