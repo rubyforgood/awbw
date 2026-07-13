@@ -260,7 +260,7 @@
     <div class="flex-1 mb-4 md:mb-0">
       <% story_author_id = f.object.author_person&.id || current_user.person_id %>
       <%= f.input :author_id,
-                  collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                  collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
                   prompt: "Select an author",
                   selected: story_author_id,
                   hint: "Defaults to the creator; change to credit someone else.",
@@ -270,24 +270,22 @@
                             class: "hover:underline") : "Story author").html_safe,
                   label_html: { class: "block font-medium mb-1 text-gray-700" },
                   input_html: {
-                    class: select_caret_class(blank: story_author_id.blank?),
-                    style: custom_caret_style,
-                    onchange: select_caret_onchange
+                    data: { controller: "remote-select",
+                            remote_select_model_value: "person" }
                   } %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :spotlighted_facilitator_id,
-                  collection: @people.map { |p| [ p.full_name_with_email, p.id ] },
+                  collection: f.object.spotlighted_facilitator.present? ? [[ f.object.spotlighted_facilitator.remote_search_label[:label], f.object.spotlighted_facilitator_id ]] : [],
                   prompt: "Select a facilitator",
                   label: (f.object.spotlighted_facilitator_id ? (link_to "Story spotlighted facilitator",
                                                                          person_path(f.object.spotlighted_facilitator_id),
                                                                          class: "hover:underline") : "Story spotlighted facilitator").html_safe,
                   label_html: { class: "block font-medium mb-1 text-gray-700" },
                   input_html: {
-                    class: select_caret_class(blank: f.object.spotlighted_facilitator_id.blank?),
-                    style: custom_caret_style,
-                    onchange: select_caret_onchange
+                    data: { controller: "remote-select",
+                            remote_select_model_value: "person" }
                   } %>
     </div>
 
