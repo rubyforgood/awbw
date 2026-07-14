@@ -1,11 +1,13 @@
 <% if resource.downloadable_asset&.file&.attached? || allowed_to?(:edit?, resource) %>
-  <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 mb-4">
+  <div class="flex flex-col items-end gap-2 mb-4">
     <% if allowed_to?(:edit?, resource) %>
       <%# Admins can jump to the resource edit form to change the PDF. Opens in a
           new tab so the registrant-facing callout context isn't lost. %>
-      <%= link_to edit_resource_path(resource), target: "_blank", class: "admin-only bg-blue-100 btn btn-utility" do %>
-        Edit
-        <i class="fa-solid fa-pen"></i>
+      <%= link_to edit_resource_path(resource), target: "_blank", rel: "noopener",
+            class: "admin-only inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
+        <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
+        Edit resource
+        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
       <% end %>
     <% end %>
     <% if resource.downloadable_asset&.file&.attached? %>
