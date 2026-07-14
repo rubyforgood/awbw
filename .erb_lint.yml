@@ -22,21 +22,56 @@ linters:
     enabled: true
 
   # --- Ruby inside ERB tags: curated omakase subset, all autocorrectable ---
+  # Each cop mirrors a rule documented in CLAUDE.md. EnforcedStyle is pinned to
+  # omakase's value where it differs from RuboCop's default (arrays/hashes/blocks
+  # default to no_space in bare RuboCop but omakase wants a space). Indentation
+  # and end/when-alignment cops are intentionally omitted: RuboCop extracts the
+  # Ruby without its surrounding HTML indent context and can't see across split
+  # tags, so those misfire in ERB — erb_lint's SpaceIndentation covers "no tabs".
   Rubocop:
     enabled: true
     rubocop_config:
       AllCops:
         DisabledByDefault: true
+      # Strings: double quotes
       Style/StringLiterals:
         Enabled: true
         EnforcedStyle: double_quotes
+      # Modern hash syntax; omakase leaves shorthand optional
       Style/HashSyntax:
         Enabled: true
+        EnforcedShorthandSyntax: either
+      # Spacing inside/around braces and brackets
       Layout/SpaceInsideHashLiteralBraces:
         Enabled: true
+        EnforcedStyle: space
       Layout/SpaceInsideArrayLiteralBrackets:
         Enabled: true
+        EnforcedStyle: space
+      Layout/SpaceInsideBlockBraces:
+        Enabled: true
+        EnforcedStyle: space
+        EnforcedStyleForEmptyBraces: space
+      Layout/SpaceBeforeBlockBraces:
+        Enabled: true
+        EnforcedStyle: space
+      # SpaceInsideParens / SpaceInsideReferenceBrackets: omakase uses RuboCop's
+      # default (no_space), so no EnforcedStyle override is needed.
       Layout/SpaceInsideReferenceBrackets:
         Enabled: true
       Layout/SpaceInsideParens:
         Enabled: true
+      # No trailing commas (arrays, hashes, method arguments) — all default no_comma
+      Style/TrailingCommaInArrayLiteral:
+        Enabled: true
+      Style/TrailingCommaInHashLiteral:
+        Enabled: true
+      Style/TrailingCommaInArguments:
+        Enabled: true
+      # No redundant .to_s inside string interpolation
+      Lint/RedundantStringCoercion:
+        Enabled: true
+      # No semicolons (omakase still allows them as an expression separator)
+      Style/Semicolon:
+        Enabled: true
+        AllowAsExpressionSeparator: true
