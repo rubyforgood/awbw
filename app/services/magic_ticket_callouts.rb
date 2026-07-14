@@ -175,15 +175,19 @@ class MagicTicketCallouts
   def ce_hours_card
     return unless registration.ce_registered?
     complete = registration.ce_license_provided?
-    Card.new(icon_class: "fa-solid fa-graduation-cap", color: "teal",
+    # An outstanding CE balance turns the card orange (an action card), matching
+    # the payment card, rather than the resting teal.
+    due = registration.continuing_education_registrations.first&.remaining_cost.to_i.positive?
+    Card.new(icon_class: "fa-solid fa-graduation-cap", color: due ? "orange" : "teal",
              title: event.ce_hours_details_label,
              subtitle: ce_hours_subtitle,
              href: registration_ce_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
              badge: ce_hours_badge(complete),
-             # Amber while hours/license are still needed, teal once it's just the
-             # amount due (nil badge_classes falls back to amber in _callout_card).
-             badge_classes: complete ? "bg-teal-100 text-teal-800 border border-teal-300" : nil)
+             # Amber while money is due or hours/license are still needed (nil
+             # badge_classes falls back to amber in _callout_card); teal once it's
+             # complete and paid.
+             badge_classes: complete && !due ? "bg-teal-100 text-teal-800 border border-teal-300" : nil)
   end
 
   def ce_hours_subtitle
@@ -193,20 +197,22 @@ class MagicTicketCallouts
     "#{NumberFormatter.plain(hours)} hours"
   end
 
-  # Teal "$X due" once hours + license are on file and money is owed; otherwise an
-  # amber chip naming what's still needed, prefixed with the amount when the hours
-  # (and so the fee) are already known — e.g. "$250 · License number needed".
+  # "$X due" for the outstanding balance once hours + license are on file (no chip
+  # once paid in full); otherwise an amber chip naming what's still needed, prefixed
+  # with the fee when the hours (and so the cost) are already known — e.g.
+  # "$250 · License number needed".
   def ce_hours_badge(complete)
-    amount_cents = registration.continuing_education_registrations.first&.cost_cents.to_i
-    amount = MoneyFormatter.dollars_from_cents(amount_cents)
+    ce_registration = registration.continuing_education_registrations.first
+    remaining_cents = ce_registration&.remaining_cost.to_i
 
     if complete
-      return unless amount_cents.positive?
-      return "#{amount} due"
+      return unless remaining_cents.positive?
+      return "#{MoneyFormatter.dollars_from_cents(remaining_cents)} due"
     end
 
     needed = ce_missing_text
-    amount_cents.positive? ? "#{amount} · #{needed}" : needed
+    cost_cents = ce_registration&.cost_cents.to_i
+    cost_cents.positive? ? "#{MoneyFormatter.dollars_from_cents(cost_cents)} · #{needed}" : needed
   end
 
   # Hours are set by the event now, so the only thing a requesting registrant can
