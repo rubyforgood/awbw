@@ -4,19 +4,20 @@ class RegistrationTicketCalloutsController < ApplicationController
 
   # Public detail page for a single registration ticket callout, linked from the
   # call-out on the registration ticket (mirrors the events#details / #ce_hours
-  # pages). With no description and no linked resource there is nothing to show,
-  # so fall back to the event page.
+  # pages). With no content there is nothing to show, so fall back to the event
+  # page — unless the content is merely drip-scheduled, in which case the page
+  # shows a "coming soon" note until its display date.
   def show
     @callout = @event.registration_ticket_callouts.find(params[:id])
     authorize! @callout, to: :show?
 
-    # A hidden (draft/opted-out) or not-yet-dripped callout has no public page.
-    if @callout.hidden? || @callout.dripping?
+    # A hidden (draft/opted-out) callout has no public page.
+    if @callout.hidden?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
     end
 
-    if @callout.description.blank? && @callout.resources.empty?
+    if !@callout.page_content? && !@callout.dripping?
       redirect_to event_path(@event, reg: params[:reg].presence)
       return
     end

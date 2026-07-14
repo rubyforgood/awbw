@@ -110,13 +110,13 @@
       <% end %>
 
       <!-- Ticket callouts: admin-authored plus any built-in cards materialized into
-           editable rows, in the one admin-ordered list. Hidden (draft/opted-out) and
-           not-yet-dripped callouts are omitted. A behavioral magic row (payment,
+           editable rows, in the one admin-ordered list. Hidden (draft/opted-out)
+           callouts are omitted; a drip date only withholds the callout's page
+           content, not the card itself. A behavioral magic row (payment,
            certificate, …) renders the app's live card; content/custom rows render
            their own copy. -->
       <% payment_access = event_registration.payment_access_granted? || @checkout_payment_status == "paid" %>
       <% event_registration.event.registration_ticket_callouts.visible.each do |callout| %>
-        <% next if callout.dripping? %>
         <% next if callout.payment_access_gated && !payment_access %>
         <% if callout.behavioral_magic? %>
           <% card = magic.card_for(callout) %>
@@ -182,6 +182,10 @@
           </p>
 
           <div class="flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium"><%= event_registration.event.decorate.calendar_links(show_videoconference_details: event_registration.videoconference_details_visible?) %></div>
+
+          <% if event_registration.event.videoconference_url.present? && !event_registration.videoconference_details_visible? %>
+            <p class="mt-2 text-xs text-gray-400 text-center max-w-sm">The videoconference join link isn't in this calendar entry yet — add it again once the link is available to include it.</p>
+          <% end %>
         </div>
       <% end %>
     </div>
