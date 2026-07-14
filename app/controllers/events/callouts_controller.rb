@@ -174,6 +174,7 @@ module Events
     # ticket context.
     def resource
       @resource = Resource.find(params[:resource_id]).decorate
+      @resource_subtitle = HANDOUT_SUBTITLES[@resource.title]
     end
 
     # Videoconference page: the join link and add-to-calendar options.

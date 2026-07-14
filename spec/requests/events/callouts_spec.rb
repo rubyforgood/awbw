@@ -123,6 +123,27 @@ RSpec.describe "Events::Callouts", type: :request do
       end
     end
 
+    context "supplemental subtitle" do
+      it "shows the handout's supplemental description below the title" do
+        title = Events::CalloutsController::HANDOUT_RESOURCE_TITLES.first
+        resource = create(:resource, title: title)
+
+        get registration_resource_path(registration.slug, resource, return_to: "handouts")
+
+        expect(response.body).to include(Events::CalloutsController::HANDOUT_SUBTITLES[title])
+      end
+
+      it "omits the subtitle for a resource without one" do
+        resource = create(:resource, title: "Some other document")
+
+        get registration_resource_path(registration.slug, resource, return_to: "handouts")
+
+        expect(response).to have_http_status(:success)
+        subtitle_texts = Events::CalloutsController::HANDOUT_SUBTITLES.values
+        expect(subtitle_texts.any? { |text| response.body.include?(text) }).to be(false)
+      end
+    end
+
     context "eyebrow" do
       let(:resource) { create(:resource) }
 
