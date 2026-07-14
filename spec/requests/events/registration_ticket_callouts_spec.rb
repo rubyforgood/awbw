@@ -16,6 +16,15 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response.body).to include("Use the north lot.")
     end
 
+    it "points its back link at the sample ticket when opened from the preview" do
+      callout = create(:registration_ticket_callout, event:, title: "Parking",
+        description: "<p>Use the north lot.</p>")
+
+      get event_registration_ticket_callout_path(event, callout, return_to: "sample_ticket")
+
+      expect(response.body).to include(sample_ticket_event_path(event))
+    end
+
     it "redirects to the event when the callout has no description or resource" do
       callout = create(:registration_ticket_callout, event:, description: "")
 

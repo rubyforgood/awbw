@@ -151,26 +151,52 @@ RSpec.describe "Events", type: :request do
       before { sign_in admin }
 
       it "renders a preview ticket for an unsaved sample registration" do
-        create(:registration_ticket_callout, event: event)
         get sample_ticket_event_path(event)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Sample ticket preview")
         expect(response.body).to include("Sample Registrant")
-        # Built-in callout cards render (the sample event is paid, so the payment
-        # card shows) without raising on the unsaved sample's sentinel slug.
+      end
+
+      it "materializes the built-in callouts so the preview reads from real rows" do
+        expect { get sample_ticket_event_path(event) }
+          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(8)
+      end
+
+      it "renders a published custom callout as a link to its detail page" do
+        callout = create(:registration_ticket_callout, event: event,
+                         title: "Parking & directions", description: "<p>Lot B</p>")
+        get sample_ticket_event_path(event)
+        expect(response.body).to include("Parking &amp; directions")
+        expect(response.body).to include(
+          event_registration_ticket_callout_path(event, callout, return_to: "sample_ticket")
+        )
+      end
+
+      it "omits an unpublished callout by default" do
+        create(:registration_ticket_callout, :hidden, event: event, title: "Draft note")
+        get sample_ticket_event_path(event)
+        expect(response.body).not_to include("Draft note")
+      end
+
+      it "reveals unpublished built-in and custom callouts with ?options=all" do
+        create(:registration_ticket_callout, :hidden, event: event, title: "Draft note")
+        get sample_ticket_event_path(event, options: "all")
+        expect(response.body).to include("Draft note")
+        # The payment built-in seeds hidden, so it only appears here; it also
+        # exercises the card rendering against the unsaved sample's sentinel slug.
         expect(response.body).to include("Make your payment")
       end
 
       it "models a typical registrant by default, hiding scholarship and CE" do
         get sample_ticket_event_path(event)
-        expect(response.body).not_to include("Your scholarship request status")
+        expect(response.body).not_to include("Your scholarship request and award")
         expect(response.body).not_to include("CE hours")
         expect(response.body).to include("Show all options")
       end
 
       it "turns on every option with ?options=all" do
         get sample_ticket_event_path(event, options: "all")
-        expect(response.body).to include("Your scholarship request status")
+        expect(response.body).to include("Your scholarship request and award")
         expect(response.body).to include("CE hours")
         expect(response.body).to include("Show typical ticket")
       end
@@ -265,6 +291,12 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include('name="event[ce_hours_request_deadline]"')
       expect(response.body).to include('name="event[ce_payment_due_deadline]"')
       expect(response.body).to include("Request CE credit by")
+    end
+
+    it "links to the sample ticket preview from the callouts section" do
+      get edit_event_path(event)
+      expect(response.body).to include("Preview sample ticket")
+      expect(response.body).to include(sample_ticket_event_path(event, return_to: "edit_callouts"))
     end
   end
 

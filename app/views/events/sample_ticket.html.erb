@@ -6,6 +6,9 @@
    when "registrants" %>
   <% back_label = "← Registrants" %>
   <% back_path = registrants_event_path(@event) %>
+<% when "edit_callouts" %>
+  <% back_label = "← Edit callouts" %>
+  <% back_path = edit_event_path(@event, expand: "callouts", anchor: "registration_ticket_callouts") %>
 <% else %>
   <% back_label = "← Dashboard" %>
   <% back_path = dashboard_event_path(@event) %>
@@ -53,4 +56,4 @@
   </div>
 </div>
 
-<%= render "event_registrations/ticket", event_registration: @event_registration, preview: true %>
+<%= render "event_registrations/ticket", event_registration: @event_registration, preview: true, show_all: @show_all_options %>

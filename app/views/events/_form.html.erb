@@ -569,6 +569,21 @@
           own call-outs for actions (forms to download, balances to pay) or reference reading (parking, policies, what to bring). New custom callouts save in the order shown; drag the handle to reorder saved callouts.
         </p>
 
+        <% if @event.persisted? %>
+          <%# Opens the sample ticket in a new tab so the admin keeps their place in
+              the editor. It reflects saved callouts, not unsaved edits in this form. %>
+          <div class="mb-4">
+            <%= link_to sample_ticket_event_path(@event, return_to: "edit_callouts"),
+                  target: "_blank", rel: "noopener",
+                  class: "inline-flex items-center gap-2 rounded-md border border-purple-200 bg-purple-50 px-3 py-1.5 text-sm font-medium text-purple-700 hover:bg-purple-100" do %>
+              <i class="fa-solid fa-eye" aria-hidden="true"></i>
+              Preview sample ticket
+              <i class="fa-solid fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>
+            <% end %>
+            <p class="mt-1 text-xs text-gray-400">Opens in a new tab, showing published callouts (use “Show all options” there to preview unpublished ones). Reflects saved callouts — save your edits first.</p>
+          </div>
+        <% end %>
+
         <%#
           Built-in cards, shown above custom callouts in the order they appear on
           the ticket — greyed-out previews of cards the app controls, so the full

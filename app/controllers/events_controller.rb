@@ -67,6 +67,12 @@ class EventsController < ApplicationController
   def sample_ticket
     authorize! @event, to: :dashboard?
 
+    # Materialize any missing built-in callouts (idempotent, like #edit) so the
+    # preview renders purely from the event's materialized rows — the built-ins
+    # are real editable rows once seeded, so there's no code-defined fallback to
+    # fall back to here.
+    BuiltinCallouts.seed(@event)
+
     @show_all_options = params[:options] == "all"
     registrant = Person.new(first_name: "Sample", last_name: "Registrant")
     @event_registration = @event.event_registrations.new(
