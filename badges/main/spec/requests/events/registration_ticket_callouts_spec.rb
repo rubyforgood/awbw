@@ -247,7 +247,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
 
       expect(event.registration_ticket_callouts.magic.pluck(:magic_key)).to contain_exactly(
         "payment", "certificate", "scholarship", "ce_hours", "event_details",
-        "videoconference", "forms", "handouts", "faq"
+        "videoconference", "handouts", "faq"
       )
     end
   end
@@ -294,9 +294,9 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response.body).to include("reset_to_default")
     end
 
-    it "gives the Forms card an add-another linked-resource picker" do
+    it "gives the Payment card an add-another linked-resource picker" do
       resource = create(:resource, title: "W-9")
-      create(:registration_ticket_callout, event:, magic_key: "forms", title: "Forms", resources: [ resource ])
+      create(:registration_ticket_callout, event:, magic_key: "payment", title: "Payment", resources: [ resource ])
 
       get edit_event_path(event)
 

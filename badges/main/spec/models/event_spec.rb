@@ -316,13 +316,6 @@ RSpec.describe Event, type: :model do
       expect(other.show_handouts_callout?).to be false
       expect(other.show_faq_callout?).to be false
     end
-
-    it "shows Forms for facilitator trainings and any paid event, but not free non-trainings" do
-      expect(build(:event, facilitator_training: true, cost_cents: 0).show_forms_callout?).to be true
-      expect(build(:event, facilitator_training: false, cost_cents: 1099).show_forms_callout?).to be true
-      expect(build(:event, facilitator_training: false, cost_cents: 0).show_forms_callout?).to be false
-      expect(build(:event, facilitator_training: false, cost_cents: nil).show_forms_callout?).to be false
-    end
   end
 
   describe '.search_by_params' do

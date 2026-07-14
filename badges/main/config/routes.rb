@@ -87,7 +87,6 @@ Rails.application.routes.draw do
   post "registration/:slug/ce/license", to: "events/callouts#update_ce_license", as: :registration_ce_license
   post "registration/:slug/ce/request", to: "events/callouts#request_ce", as: :registration_ce_request
   post "registration/:slug/ce/pay", to: "events/callouts#pay_ce", as: :registration_ce_pay
-  get "registration/:slug/forms", to: "events/callouts#forms", as: :registration_forms
   get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
   get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
   get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference

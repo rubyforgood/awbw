@@ -55,7 +55,6 @@ RSpec.describe "Events::Registrations", type: :request do
       it "renders the consolidated magic callout cards" do
         get registration_ticket_path(registration.slug)
         expect(response.body).to include("view your balance")
-        expect(response.body).to include("W-9, invoice, and receipt")
         expect(response.body).to include("Worksheets and resources for the training")
         expect(response.body).to include("Frequently asked questions")
       end
@@ -94,12 +93,6 @@ RSpec.describe "Events::Registrations", type: :request do
       get registration_invoice_path(registration.slug)
       expect(response.body).to include(registration_ticket_path(registration.slug))
       expect(response.body).to include("Back to ticket")
-    end
-
-    it "returns to the forms callout when reached from forms" do
-      get registration_invoice_path(registration.slug, return_to: "forms")
-      expect(response.body).to include(registration_forms_path(registration.slug))
-      expect(response.body).to include("Back to forms")
     end
 
     it "returns to the payment callout when reached from payment" do
@@ -281,7 +274,7 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Payment history")
       expect(response.body).to include("Amount due")
       expect(response.body).to include("Pay with Credit Card")
-      expect(response.body).to include("View invoice")
+      expect(response.body).to include("Itemized invoice for this registration")
       expect(response.body).to include("Prefer to pay by check?")
       expect(response.body).to include("A Window Between Worlds")
     end
@@ -291,6 +284,38 @@ RSpec.describe "Events::Registrations", type: :request do
       get registration_payment_path(registration.slug)
       expect(response.body).not_to include("Pay with Credit Card")
       expect(response.body).not_to include("Prefer to pay by check?")
+    end
+
+    it "always links to the invoice, returning to payment" do
+      get registration_payment_path(registration.slug)
+      expect(response.body).to include(registration_invoice_path(registration.slug, return_to: "payment"))
+    end
+
+    it "links the W-9 to its resource page when present, returning to payment" do
+      w9 = create(:resource, title: "W-9", kind: "Form")
+      DefaultTicketCallouts.seed(event)
+      get registration_payment_path(registration.slug)
+      expect(response.body).to include(registration_resource_path(registration.slug, w9, return_to: "payment"))
+      expect(response.body).not_to include("/documents/awbw-w9.pdf")
+    end
+
+    it "drops the W-9 when the payment callout's resource is removed" do
+      w9 = create(:resource, title: "W-9", kind: "Form")
+      DefaultTicketCallouts.seed(event)
+      event.registration_ticket_callouts.find_by(magic_key: "payment").resources.destroy_all
+      get registration_payment_path(registration.slug)
+      expect(response.body).not_to include(registration_resource_path(registration.slug, w9, return_to: "payment"))
+    end
+
+    it "omits the receipt link until the balance is paid in full" do
+      get registration_payment_path(registration.slug)
+      expect(response.body).not_to include(registration_receipt_path(registration.slug))
+    end
+
+    it "links to the receipt once paid in full, returning to payment" do
+      create(:allocation, allocatable: registration, amount: event.cost_cents)
+      get registration_payment_path(registration.slug)
+      expect(response.body).to include(registration_receipt_path(registration.slug, return_to: "payment"))
     end
   end
 
@@ -451,37 +476,6 @@ RSpec.describe "Events::Registrations", type: :request do
     end
   end
 
-  describe "GET /registration/:slug/forms" do
-    let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
-
-    it "always links to the invoice, returning to forms" do
-      get registration_forms_path(registration.slug)
-      expect(response).to have_http_status(:success)
-      expect(response.body).to include(registration_invoice_path(registration.slug, return_to: "forms"))
-    end
-
-    it "links the W-9 to its resource page when present, returning to forms" do
-      w9 = create(:resource, title: "W-9", kind: "Form")
-      get registration_forms_path(registration.slug)
-      expect(response.body).to include(registration_resource_path(registration.slug, w9, return_to: "forms"))
-      expect(response.body).not_to include("/documents/awbw-w9.pdf")
-    end
-
-    it "omits the receipt link until the balance is paid in full" do
-      get registration_forms_path(registration.slug)
-      expect(response.body).not_to include(registration_receipt_path(registration.slug))
-    end
-
-    it "links to the receipt once paid in full, returning to forms" do
-      paid_event = create(:event, cost_cents: 150_000)
-      paid_registration = create(:event_registration, event: paid_event, registrant: user.person)
-      create(:allocation, allocatable: paid_registration, amount: 150_000)
-
-      get registration_forms_path(paid_registration.slug)
-      expect(response.body).to include(registration_receipt_path(paid_registration.slug, return_to: "forms"))
-    end
-  end
-
   describe "GET /registration/:slug/handouts" do
     let(:event) { create(:event, facilitator_training: true) }
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
@@ -534,15 +528,15 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Aha Moments")
     end
 
-    it "returns to the forms callout with a 'Forms detail' header when reached from forms" do
-      resource = create(:resource, title: "Letter to Supervisors", kind: "Form")
+    it "returns to the payment callout with a 'Payment detail' header when reached from payment" do
+      resource = create(:resource, title: "W-9", kind: "Form")
 
-      get registration_resource_path(registration.slug, resource, return_to: "forms")
+      get registration_resource_path(registration.slug, resource, return_to: "payment")
 
-      expect(response.body).to include(registration_forms_path(registration.slug))
-      expect(response.body).to include("Back to forms")
-      expect(response.body).to include("Forms detail")
-      expect(response.body).to include("Letter to Supervisors")
+      expect(response.body).to include(registration_payment_path(registration.slug))
+      expect(response.body).to include("Back to payment")
+      expect(response.body).to include("Payment detail")
+      expect(response.body).to include("W-9")
     end
   end
 

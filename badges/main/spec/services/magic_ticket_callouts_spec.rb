@@ -13,8 +13,8 @@ RSpec.describe MagicTicketCallouts do
   end
 
   describe "#cards" do
-    it "shows payment and forms for a bare paid, non-training registration" do
-      expect(card_titles(registration)).to eq([ "Make your payment", "Forms" ])
+    it "shows the payment card for a bare paid, non-training registration" do
+      expect(card_titles(registration)).to eq([ "Make your payment" ])
     end
 
     it "omits the payment card for a free event" do
@@ -37,16 +37,6 @@ RSpec.describe MagicTicketCallouts do
       titles = card_titles(registration)
       expect(titles.count("Frequently asked questions")).to eq(0)
       expect(titles).to include("Handouts")
-    end
-
-    it "shows the Forms card for facilitator trainings and paid events, but not free non-trainings" do
-      expect(card_titles(registration)).to include("Forms")
-
-      event.update!(cost_cents: 0)
-      expect(card_titles(registration)).not_to include("Forms")
-
-      event.update!(facilitator_training: true)
-      expect(card_titles(registration)).to include("Forms")
     end
 
     it "makes the payment card an action card while a balance is due, reference once paid" do
@@ -159,7 +149,6 @@ RSpec.describe MagicTicketCallouts do
         event.ce_hours_details_label,
         event.event_details_label,
         "Videoconference",
-        "Forms",
         "Handouts",
         "Frequently asked questions"
       ])
@@ -168,8 +157,9 @@ RSpec.describe MagicTicketCallouts do
 
   describe "#card_for" do
     it "uses the row's editable presentation (title/subtitle/colour) but the app's live badge/link" do
-      # Forms isn't app-coloured, so the row's colour is honoured.
-      callout = create(:registration_ticket_callout, event:, magic_key: "forms",
+      # Videoconference isn't app-coloured, so the row's colour is honoured.
+      event.update!(videoconference_url: "https://example.com/z")
+      callout = create(:registration_ticket_callout, event:, magic_key: "videoconference",
         title: "Your documents", subtitle: "Downloads", color_class: "green")
 
       card = described_class.new(registration).card_for(callout)

@@ -12,7 +12,7 @@ class RegistrationTicketCallout < ApplicationRecord
   # hidden rather than destroyed so they can be restored to their default.
   MAGIC_KEYS = %w[
     payment certificate scholarship ce_hours event_details
-    videoconference forms handouts faq
+    videoconference handouts faq
   ].freeze
 
   # "Content" magic callouts render their own editable copy/resources (like custom
