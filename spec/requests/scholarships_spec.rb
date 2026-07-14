@@ -23,9 +23,8 @@ RSpec.describe "Scholarships", type: :request do
       get edit_scholarship_path(scholarship)
 
       expect(response.body).to include("scholarship-preview")
-      expect(response.body).to include("scholarship-preview-target=\"amountBox\"")
-      # Tasks completed → the $50 amount is allocated to the registration.
-      expect(response.body).to include("$50 allocated to registration")
+      # A non-zero award tints the amount box fuchsia to signal the allocation.
+      expect(response.body).to match(/data-scholarship-preview-target="amountBox"[^>]*border-fuchsia-300 bg-fuchsia-50/)
       # Event cost $100 with $50 allocated leaves $50 owed.
       expect(response.body).to include("$50")
     end
@@ -156,6 +155,30 @@ RSpec.describe "Scholarships", type: :request do
             params: { scholarship: { amount_dollars: "40" } }
 
       expect(response).to redirect_to(recipients_event_path(event, anchor: "participant-#{registration.slug}"))
+    end
+  end
+
+  describe "scholarship agreement toggle" do
+    it "renders the agreement toggle on the edit form" do
+      get edit_scholarship_path(scholarship)
+
+      expect(response.body).to include("Scholarship agreement")
+      expect(response.body).to match(/name="scholarship\[agreement_signed\]"/)
+    end
+
+    it "persists the agreement_signed flag through update" do
+      expect(scholarship.agreement_signed?).to be(false)
+
+      patch scholarship_path(scholarship), params: { scholarship: { agreement_signed: "1" } }
+
+      expect(scholarship.reload.agreement_signed?).to be(true)
+    end
+
+    it "shows the agreement status on the show page" do
+      scholarship.update!(agreement_signed: true)
+      get scholarship_path(scholarship)
+
+      expect(response.body).to include("Agreement signed")
     end
   end
 

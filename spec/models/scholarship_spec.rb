@@ -82,4 +82,38 @@ RSpec.describe Scholarship, type: :model do
       expect { create(:scholarship, grant: create(:grant), recipient: person) }.not_to raise_error
     end
   end
+
+  describe "agreement_signed (virtual, backed by agreement_signed_at)" do
+    it "infers the flag from the timestamp" do
+      scholarship = create(:scholarship)
+      expect(scholarship.agreement_signed?).to be(false)
+
+      scholarship.update!(agreement_signed_at: Time.current)
+      expect(scholarship.agreement_signed?).to be(true)
+    end
+
+    it "stamps the time when the agreement is first signed" do
+      scholarship = create(:scholarship)
+      expect(scholarship.agreement_signed_at).to be_nil
+
+      scholarship.update!(agreement_signed: true)
+      expect(scholarship.agreement_signed_at).to be_present
+    end
+
+    it "clears the time when the agreement is unsigned" do
+      scholarship = create(:scholarship, agreement_signed: true)
+      expect(scholarship.agreement_signed_at).to be_present
+
+      scholarship.update!(agreement_signed: false)
+      expect(scholarship.agreement_signed_at).to be_nil
+    end
+
+    it "preserves the original time when re-saved while still signed" do
+      scholarship = create(:scholarship, agreement_signed: true)
+      original = scholarship.agreement_signed_at
+      scholarship.update!(amount_cents: 2_000)
+
+      expect(scholarship.reload.agreement_signed_at).to be_within(1.second).of(original)
+    end
+  end
 end

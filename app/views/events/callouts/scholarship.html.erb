@@ -52,10 +52,17 @@
         <% grant = @scholarship.grant %>
         <div class="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount awarded</p>
+            <%# Shown as an offer until the recipient signs the agreement, then as
+                the confirmed award. The amount/allocation is unchanged either way. %>
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-400"><%= @scholarship.agreement_signed? ? "Amount awarded" : "Amount offered" %></p>
             <p class="mt-1 text-3xl font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@scholarship.amount_cents) %></p>
           </div>
-          <% if @scholarship.tasks_completed? %>
+          <%# Status chip: pending until the agreement is signed, then the tasks state. %>
+          <% if !@scholarship.agreement_signed? %>
+            <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
+              <i class="fa-solid fa-file-signature"></i> Pending agreement
+            </span>
+          <% elsif @scholarship.tasks_completed? %>
             <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-3 py-1 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
               <i class="fa-solid fa-circle-check"></i> Tasks completed
             </span>
@@ -63,6 +70,24 @@
             <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
               <i class="fa-solid fa-clock"></i> Tasks outstanding
             </span>
+          <% end %>
+        </div>
+
+        <%# Scholarship agreement — shown above the details so accepting comes first.
+            A single Agree button signs it; afterwards we confirm with the date. %>
+        <div class="border-t border-gray-100 pt-5">
+          <% if @scholarship.agreement_signed? %>
+            <p class="flex items-center gap-2 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
+              <i class="fa-solid fa-circle-check"></i>
+              Agreement signed<% if @scholarship.agreement_signed_at %> · <%= @scholarship.agreement_signed_at.strftime("%B %-d, %Y") %><% end %>
+            </p>
+          <% else %>
+            <p class="text-sm text-gray-600">Agree to complete your scholarship tasks to accept this award.</p>
+            <%= form_with url: registration_scholarship_agreement_path(@event_registration.slug), method: :post, class: "mt-3" do %>
+              <button type="submit" name="agreement" value="yes" class="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
+                <i class="fa-solid fa-check"></i> Agree
+              </button>
+            <% end %>
           <% end %>
         </div>
 

@@ -353,6 +353,13 @@ class EventRegistration < ApplicationRecord
     scholarships.all?(&:tasks_completed?)
   end
 
+  # Display-only: a scholarship is only *shown* as awarded once the recipient has
+  # signed the agreement. The record and its allocation exist beforehand (the data
+  # is unchanged) — the award is just presented as pending acceptance until signed.
+  def scholarship_awarded?
+    scholarship? && scholarships.all?(&:agreement_signed?)
+  end
+
   def attended?
     status == "attended"
   end

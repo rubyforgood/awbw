@@ -508,6 +508,26 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#scholarship_awarded?" do
+    it "is false with no scholarship" do
+      expect(create(:event_registration).scholarship_awarded?).to be false
+    end
+
+    it "is false while the scholarship exists but the agreement is unsigned" do
+      reg = create(:event_registration)
+      scholarship = create(:scholarship, amount_cents: 1099)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1099)
+      expect(reg.scholarship_awarded?).to be false
+    end
+
+    it "is true once the agreement is signed" do
+      reg = create(:event_registration)
+      scholarship = create(:scholarship, amount_cents: 1099, agreement_signed: true)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 1099)
+      expect(reg.scholarship_awarded?).to be true
+    end
+  end
+
   describe "#joinable?" do
     let(:event) { create(:event, cost_cents: 1099, start_date: 1.hour.ago, end_date: 1.hour.from_now) }
     let(:user) { create(:user, :with_person) }

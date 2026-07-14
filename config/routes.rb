@@ -80,6 +80,7 @@ Rails.application.routes.draw do
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
   get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
   get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
+  post "registration/:slug/scholarship/agreement", to: "events/callouts#sign_agreement", as: :registration_scholarship_agreement
   get "registration/:slug/faq", to: "events/callouts#faq", as: :registration_faq
   get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment
   get "registration/:slug/certificate", to: "events/callouts#certificate", as: :registration_certificate
