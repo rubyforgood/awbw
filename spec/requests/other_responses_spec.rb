@@ -166,13 +166,19 @@ RSpec.describe "OtherResponses", type: :request do
       expect(dismissed.owner.sectors).not_to include(sector)
     end
 
-    it "also tags the person's organizations (additional), like registration" do
+    it "also tags the org the person registered with (derived via the response's submission)" do
       sign_in admin
       sector = create(:sector, name: "Equine Therapy")
       person = create(:person)
+      event = create(:event)
       organization = create(:organization)
-      create(:affiliation, person: person, organization: organization)
-      create(:other_response, owner: person, text: "Equine therapy")
+      registration = create(:event_registration, registrant: person, event: event)
+      create(:event_registration_organization, event_registration: registration, organization: organization)
+      submission = create(:form_submission, person: person, event: event)
+      answer = create(:form_answer, form_submission: submission,
+                      form_field: create(:form_field, field_identifier: "additional_sectors"),
+                      submitted_answer: "Other: Equine therapy")
+      create(:other_response, owner: person, text: "Equine therapy", source_form_answer: answer)
 
       post promote_other_responses_path,
            params: { kind: "sector", normalized_text: "equine therapy", sector_id: sector.id }

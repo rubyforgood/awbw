@@ -215,7 +215,7 @@ end
 
 ### Sectors
 
-- `SectorTagging` — `.apply(person:, organizations:, primary_ids:, additional_ids:)` tags a person's sectors (primary + additional) and mirrors them onto the given organizations as additional-only (orgs aggregate members' sectors and have no primary). Shared by registration (person's selections onto the org they registered with) and "Other" sector-response promotion (the promoted sector onto the person and their orgs, additional only)
+- `SectorTagging` — `.apply(person:, organizations:, primary_ids:, additional_ids:)` tags a person's sectors (primary + additional) and mirrors them onto the given organizations as additional-only (orgs aggregate members' sectors and have no primary). Shared by registration (person's selections onto the org they registered with) and "Other" sector-response promotion (additional only). Promotion passes `OtherResponse#registration_organizations`, which derives the org from the response's `source_form_answer` → submission → the person's registration for that event — so it tags exactly the org registration would have, without storing one on the response
 
 ### Other responses
 

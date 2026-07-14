@@ -79,6 +79,27 @@ RSpec.describe OtherResponse, type: :model do
     end
   end
 
+  describe "#registration_organizations" do
+    it "returns the org the person registered with, via the source answer's event" do
+      person = create(:person)
+      event = create(:event)
+      organization = create(:organization)
+      registration = create(:event_registration, registrant: person, event: event)
+      create(:event_registration_organization, event_registration: registration, organization: organization)
+      submission = create(:form_submission, person: person, event: event)
+      answer = create(:form_answer, form_submission: submission,
+                      form_field: create(:form_field, field_identifier: "additional_sectors"),
+                      submitted_answer: "Other: Equine therapy")
+      response = create(:other_response, owner: person, text: "Equine therapy", source_form_answer: answer)
+
+      expect(response.registration_organizations).to contain_exactly(organization)
+    end
+
+    it "is empty when there's no source form answer" do
+      expect(create(:other_response, source_form_answer: nil).registration_organizations).to be_empty
+    end
+  end
+
   describe "#review_anchor" do
     it "buckets sectors by kind, parameterized" do
       expect(create(:other_response, text: "Equine Therapy").review_anchor).to eq("other-sector-equine-therapy")

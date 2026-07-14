@@ -81,6 +81,18 @@ class OtherResponse < ApplicationRecord
     kind.in?(PROMOTABLE_KINDS)
   end
 
+  # The organization(s) the person registered with when they typed this response,
+  # derived from the source form answer's submission + the person's registration
+  # for that event. Lets promotion mirror a sector onto exactly the orgs a
+  # registration would have — no need to store the org here. Empty when there's no
+  # registration context (no source answer, or a non-person owner).
+  def registration_organizations
+    event = source_form_answer&.form_submission&.event
+    return Organization.none unless event && owner.is_a?(Person)
+
+    owner.event_registrations.find_by(event: event)&.organizations || Organization.none
+  end
+
   # How the review page buckets this response: captured kinds group by kind (all
   # sector "Other"s together, all org-type together); generic groups by question.
   def group_key
