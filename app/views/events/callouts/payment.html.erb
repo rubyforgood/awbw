@@ -49,26 +49,41 @@
   <% end %>
 
   <%# Documents for paid events, available regardless of balance: the invoice
-      always, and the paid-in-full receipt once there's no balance due. %>
-  <% if @event_registration.invoice_available? %>
+      always, the paid-in-full receipt once there's no balance due, and the W-9
+      (the payment callout's linked resources) last. %>
+  <% if @document_resources.any? || @event_registration.invoice_available? %>
     <div class="mt-10 space-y-3">
-      <%= link_to registration_invoice_path(@event_registration.slug, return_to: "payment"), target: "_blank", rel: "noopener",
-                    class: "flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
-        <i class="fa-solid fa-file-invoice-dollar text-gray-400 text-xl shrink-0"></i>
-        <div class="flex-1 min-w-0 text-left">
-          <p class="font-semibold text-gray-900">View invoice</p>
-          <p class="text-sm text-gray-500">Itemized invoice for this registration</p>
-        </div>
-        <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
+      <% if @event_registration.invoice_available? %>
+        <%= link_to registration_invoice_path(@event_registration.slug, return_to: "payment"), target: "_blank", rel: "noopener",
+                      class: "flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
+          <i class="fa-solid fa-file-invoice-dollar text-gray-400 text-xl shrink-0"></i>
+          <div class="flex-1 min-w-0 text-left">
+            <p class="font-semibold text-gray-900">Invoice</p>
+            <p class="text-sm text-gray-500">Itemized invoice for this registration</p>
+          </div>
+          <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
+        <% end %>
+
+        <% if @event_registration.receipt_available? %>
+          <%= link_to registration_receipt_path(@event_registration.slug, return_to: "payment"), target: "_blank", rel: "noopener",
+                        class: "flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
+            <i class="fa-solid fa-receipt text-gray-400 text-xl shrink-0"></i>
+            <div class="flex-1 min-w-0 text-left">
+              <p class="font-semibold text-gray-900">Receipt</p>
+              <p class="text-sm text-gray-500">Paid-in-full receipt for this registration</p>
+            </div>
+            <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
+          <% end %>
+        <% end %>
       <% end %>
 
-      <% if @event_registration.receipt_available? %>
-        <%= link_to registration_receipt_path(@event_registration.slug, return_to: "payment"), target: "_blank", rel: "noopener",
+      <% @document_resources.each do |resource| %>
+        <%= link_to registration_resource_path(@event_registration.slug, resource, return_to: "payment"),
                       class: "flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
-          <i class="fa-solid fa-receipt text-gray-400 text-xl shrink-0"></i>
+          <i class="fa-solid fa-file-pdf text-gray-400 text-xl shrink-0"></i>
           <div class="flex-1 min-w-0 text-left">
-            <p class="font-semibold text-gray-900">View receipt</p>
-            <p class="text-sm text-gray-500">Paid-in-full receipt for this registration</p>
+            <p class="font-semibold text-gray-900"><%= resource.title %></p>
+            <p class="text-sm text-gray-500"><%= resource.title == "W-9" ? "AWBW's W-9 tax form for your records" : "Open this document" %></p>
           </div>
           <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
         <% end %>

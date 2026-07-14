@@ -142,10 +142,6 @@ class Event < ApplicationRecord
     facilitator_training?
   end
 
-  def show_forms_callout?
-    facilitator_training? || cost_cents.to_i.positive?
-  end
-
   def scholarship_form
     forms.find_by(event_forms: { role: "scholarship" })
   end

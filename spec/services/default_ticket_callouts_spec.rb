@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe DefaultTicketCallouts do
   describe "#seed" do
-    it "materializes all nine built-in callouts for every event" do
+    it "materializes all eight built-in callouts for every event" do
       event = create(:event, cost_cents: 0) # free, no scholarship form, no VC link
 
       described_class.seed(event)
@@ -10,7 +10,7 @@ RSpec.describe DefaultTicketCallouts do
       keys = event.registration_ticket_callouts.magic.pluck(:magic_key)
       expect(keys).to contain_exactly(
         "payment", "certificate", "scholarship", "ce_hours", "event_details",
-        "videoconference", "forms", "handouts", "faq"
+        "videoconference", "handouts", "faq"
       )
     end
 
@@ -23,7 +23,7 @@ RSpec.describe DefaultTicketCallouts do
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.map(&:magic_key)).to eq(
-        %w[payment certificate scholarship ce_hours event_details videoconference forms handouts faq]
+        %w[payment certificate scholarship ce_hours event_details videoconference handouts faq]
       )
     end
 
@@ -67,25 +67,25 @@ RSpec.describe DefaultTicketCallouts do
       expect(training.registration_ticket_callouts.find_by(magic_key: "certificate").hidden).to be(false)
     end
 
-    it "links the W-9 to the Forms card as a removable resource on paid events" do
+    it "links the W-9 to the Payment card as a removable resource on paid events" do
       w9 = create(:resource, title: "W-9")
-      event = create(:event) # paid by factory, so Forms seeds
+      event = create(:event) # paid by factory, so the W-9 seeds
 
       described_class.seed(event)
 
-      forms = event.registration_ticket_callouts.find_by(magic_key: "forms")
-      expect(forms.resources).to eq([ w9 ])
+      payment = event.registration_ticket_callouts.find_by(magic_key: "payment")
+      expect(payment.resources).to eq([ w9 ])
     end
 
-    it "omits the W-9 from the Forms card on a free (training) event" do
+    it "omits the W-9 from the Payment card on a free (training) event" do
       create(:resource, title: "W-9")
       event = create(:event, facilitator_training: true, cost_cents: 0)
 
       described_class.seed(event)
 
-      forms = event.registration_ticket_callouts.find_by(magic_key: "forms")
-      expect(forms).to be_present
-      expect(forms.resources).to be_empty # no W-9 on a free event
+      payment = event.registration_ticket_callouts.find_by(magic_key: "payment")
+      expect(payment).to be_present
+      expect(payment.resources).to be_empty # no W-9 on a free event
     end
 
     it "migrates CE hours and event-details content from the event onto the row" do
@@ -189,7 +189,7 @@ RSpec.describe DefaultTicketCallouts do
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
       expect(event.registration_ticket_callouts.ordered.map(&:magic_key).compact).to eq(
-        %w[payment certificate scholarship ce_hours event_details videoconference forms handouts faq]
+        %w[payment certificate scholarship ce_hours event_details videoconference handouts faq]
       )
     end
   end

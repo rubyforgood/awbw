@@ -47,7 +47,6 @@ class MagicTicketCallouts
       EditorCard.new(nil, "certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
       EditorCard.new(nil, "scholarship", "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
       EditorCard.new(nil, "videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
-      EditorCard.new(nil, "forms", "fa-solid fa-file-lines", "blue", "Forms", "W-9, invoice, and receipt", "On facilitator trainings and paid events", "Items link to their relevant resources."),
       EditorCard.new(nil, "handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
       EditorCard.new(nil, "faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
     ].reject { |card| card.key.nil? && materialized.include?(card.magic_key) }
@@ -61,7 +60,6 @@ class MagicTicketCallouts
     "ce_hours" => :ce_hours_card,
     "event_details" => :event_details_card,
     "videoconference" => :videoconference_card,
-    "forms" => :forms_card,
     "handouts" => :handouts_card,
     "faq" => :faq_card
   }.freeze
@@ -120,7 +118,8 @@ class MagicTicketCallouts
   end
 
   # Top card: an action card while a balance is due, a reference card once paid
-  # in full. Its page lists every allocation with the running balance.
+  # in full. Its page lists every allocation with the running balance, plus the
+  # linked documents (the W-9, and the invoice/receipt) for paid events.
   def payment_card
     return if event.cost_cents.to_i <= 0
     due = registration.remaining_cost.to_i.positive?
@@ -232,18 +231,6 @@ class MagicTicketCallouts
              title: "Videoconference",
              subtitle: registration.videoconference_details_visible? ? "Join link and add to your calendar" : "Unlocks once payment is on file",
              href: registration_videoconference_path(registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-arrow-right")
-  end
-
-  # Its page links to the W-9, the invoice, and the paid-in-full receipt (once
-  # settled). Shown for facilitator trainings and any paid event (whose
-  # registrants need their invoice/receipt) — see Event#show_forms_callout?.
-  def forms_card
-    return unless event.show_forms_callout?
-    Card.new(icon_class: "fa-solid fa-file-lines", color: "blue",
-             title: "Forms",
-             subtitle: "W-9, invoice, and receipt",
-             href: registration_forms_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
