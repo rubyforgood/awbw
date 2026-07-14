@@ -18,8 +18,10 @@
       <div>
         <h1 class="text-2xl font-semibold text-gray-900">Review “Other” responses</h1>
         <p class="text-sm text-gray-600 mt-1">
-          Free-text “Other” answers people typed on forms, grouped by question and value.
-          Promote a recurring sector into a real tag, or keep/dismiss any value.
+          Free-text “Other” answers people typed on forms, grouped by value. Turn a sector into a
+          real tag — <span class="font-medium text-gray-700">create</span> a new one or
+          <span class="font-medium text-gray-700">merge</span> it into an existing sector — or
+          <span class="font-medium text-gray-700">keep</span> / <span class="font-medium text-gray-700">dismiss</span> the value.
         </p>
       </div>
     </div>
@@ -35,6 +37,7 @@
 
     <div class="rounded-xl bg-white p-6">
       <% if @groups.any? %>
+        <div class="overflow-x-auto">
         <table class="w-full border-collapse border border-gray-200">
           <thead class="bg-gray-100">
             <tr>
@@ -56,25 +59,40 @@
                 </td>
                 <td class="px-4 py-3 text-center text-sm text-gray-700"><%= group[:count] %></td>
                 <td class="px-4 py-3">
-                  <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-                    <% if group[:promotable] %>
+                  <% if group[:promotable] %>
+                    <%# Two distinct promote paths, each with its own verb: create a
+                        brand-new sector from the typed value, or merge the value into
+                        an existing sector (the dedupe path). %>
+                    <div class="space-y-2 mb-2 pb-2 border-b border-gray-100">
                       <%= form_with url: promote_other_responses_path, method: :post,
                                    class: "flex items-center gap-2" do %>
                         <%= hidden_field_tag :kind, group[:kind] %>
                         <%= hidden_field_tag :field_identifier, group[:field_identifier] %>
                         <%= hidden_field_tag :normalized_text, group[:normalized_text] %>
+                        <span class="w-20 shrink-0 whitespace-nowrap text-xs font-semibold uppercase tracking-wide text-gray-400">New</span>
+                        <%= text_field_tag :new_sector_name, group[:display_text],
+                                           "aria-label": "New sector name",
+                                           class: "flex-1 min-w-0 rounded-md border-gray-300 text-sm" %>
+                        <%= submit_tag "Create sector", class: "btn btn-primary-outline text-sm whitespace-nowrap",
+                                       data: { turbo_confirm: "Create the sector “#{group[:display_text]}” and tag all #{group[:count]} people?" } %>
+                      <% end %>
+                      <%= form_with url: promote_other_responses_path, method: :post,
+                                   class: "flex items-center gap-2" do %>
+                        <%= hidden_field_tag :kind, group[:kind] %>
+                        <%= hidden_field_tag :field_identifier, group[:field_identifier] %>
+                        <%= hidden_field_tag :normalized_text, group[:normalized_text] %>
+                        <span class="w-20 shrink-0 whitespace-nowrap text-xs font-semibold uppercase tracking-wide text-gray-400">Existing</span>
                         <%= select_tag :sector_id,
                                        options_from_collection_for_select(@sectors, :id, :name),
-                                       include_blank: "Existing sector…",
-                                       class: "w-40 rounded-md border-gray-300 text-sm" %>
-                        <span class="text-xs text-gray-400">or</span>
-                        <%= text_field_tag :new_sector_name, group[:display_text],
-                                           placeholder: "New sector name",
-                                           class: "w-36 rounded-md border-gray-300 text-sm" %>
-                        <%= submit_tag "Promote", class: "btn btn-primary-outline text-sm whitespace-nowrap",
-                                       data: { turbo_confirm: "Promote “#{group[:display_text]}” for all #{group[:count]} people?" } %>
+                                       include_blank: "Select a sector…",
+                                       "aria-label": "Existing sector to merge into",
+                                       class: "flex-1 min-w-0 rounded-md border-gray-300 text-sm" %>
+                        <%= submit_tag "Merge", class: "btn btn-secondary-outline text-sm whitespace-nowrap",
+                                       data: { turbo_confirm: "Map “#{group[:display_text]}” into the chosen sector for all #{group[:count]} people?" } %>
                       <% end %>
-                    <% end %>
+                    </div>
+                  <% end %>
+                  <div class="flex items-center gap-3 text-sm">
                     <%= button_to "Keep all",
                                   curate_other_responses_path(kind: group[:kind], field_identifier: group[:field_identifier], normalized_text: group[:normalized_text], status: "kept", return_status: @status_filter),
                                   class: "text-gray-500 hover:text-gray-700 whitespace-nowrap" %>
@@ -88,6 +106,7 @@
             <% end %>
           </tbody>
         </table>
+        </div>
       <% else %>
         <p class="text-gray-500 italic">No “Other” responses to review.</p>
       <% end %>
