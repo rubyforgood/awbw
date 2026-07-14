@@ -43,7 +43,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
       get event_registration_ticket_callout_path(event, callout)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
+      expect(response.body).to include(resource_path(resource))
     end
 
     it "does not find a callout belonging to a different event" do
@@ -71,7 +71,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response).to redirect_to(event_path(event))
     end
 
-    context "when linked to a resource with a downloadable file" do
+    context "when linked to a resource" do
       let(:resource) { create(:resource) }
       let(:callout) do
         create(:registration_ticket_callout, event:, title: "Workbook",
@@ -80,41 +80,27 @@ RSpec.describe "Registration ticket callouts", type: :request do
 
       before { create(:downloadable_asset, owner: resource) }
 
-      it "renders the callout content above the resource display and a download button" do
+      it "renders the callout content and links the resource to its own page, not inline" do
         get event_registration_ticket_callout_path(event, callout)
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Read this first.")
-        expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
-      end
-    end
-
-    context "when linked to a PDF resource" do
-      let(:resource) { create(:resource) }
-      let(:callout) { create(:registration_ticket_callout, event:, resource:, description: "") }
-
-      before { create(:downloadable_asset, owner: resource) }
-
-      it "shows the PDF in the browser's inline viewer" do
-        get event_registration_ticket_callout_path(event, callout)
-
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include("type=\"application/pdf\"")
-        expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, disposition: :inline))
-      end
-    end
-
-    context "when linked to a non-PDF resource" do
-      let(:resource) { create(:resource) }
-      let(:callout) { create(:registration_ticket_callout, event:, resource:, description: "") }
-
-      before { create(:downloadable_asset, :with_image, owner: resource) }
-
-      it "renders the preview instead of an inline PDF viewer" do
-        get event_registration_ticket_callout_path(event, callout)
-
-        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(resource_path(resource))
+        # The document itself is only shown on the resource's own page.
         expect(response.body).not_to include("type=\"application/pdf\"")
+        expect(response.body).not_to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
+      end
+
+      it "links to the in-ticket registrant page when a registration slug is present" do
+        registration = create(:event_registration, event:)
+
+        get event_registration_ticket_callout_path(event, callout, reg: registration.slug)
+
+        # Path + params asserted separately: the href's query string is
+        # HTML-escaped (&amp;), so the full URL won't match as one substring.
+        expect(response.body).to include(registration_resource_path(registration.slug, resource))
+        expect(response.body).to include("return_to=callout")
+        expect(response.body).to include("callout_id=#{callout.id}")
       end
     end
 
@@ -125,11 +111,11 @@ RSpec.describe "Registration ticket callouts", type: :request do
           description: "<p>Read this first.</p>", resource:)
       end
 
-      it "does not render a download button" do
+      it "still links the resource to its own page" do
         get event_registration_ticket_callout_path(event, callout)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).not_to include("fa-download")
+        expect(response.body).to include(resource_path(resource))
       end
     end
   end
