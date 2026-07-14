@@ -16,8 +16,8 @@ module ApplicationHelper
   # render (rather than escape) on the public form. Block + inline formatting,
   # links, line breaks, and font sizing/coloring (via <font> or inline style).
   # Anything outside this allowlist is stripped by `sanitize`.
-  FORM_LABEL_TAGS = %w[br a p span strong b em i u h1 h2 h3 h4 h5 h6 ul ol li font].freeze
-  FORM_LABEL_ATTRIBUTES = %w[href target rel style size color face].freeze
+  FORM_LABEL_TAGS = %w[br a p span strong b em i u h1 h2 h3 h4 h5 h6 ul ol li font details summary].freeze
+  FORM_LABEL_ATTRIBUTES = %w[href target rel style size color face open].freeze
 
   # Tint a section-header icon (the rounded square in a card header) with its
   # domain theme colour only when that section actually holds data, falling back

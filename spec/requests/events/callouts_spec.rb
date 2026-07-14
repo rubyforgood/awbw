@@ -20,7 +20,7 @@ RSpec.describe "Events::Callouts", type: :request do
       it "renders the editable FAQ callout copy when the card is materialized" do
         DefaultTicketCallouts.seed(event)
         faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
-        faq.update!(description: "<toggle title=\"Custom question\"><p>Custom answer</p></toggle>")
+        faq.update!(description: "<details><summary>Custom question</summary><p>Custom answer</p></details>")
 
         get registration_faq_path(registration.slug)
         expect(response.body).to include("Custom question")

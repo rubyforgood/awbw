@@ -320,16 +320,16 @@ class DefaultTicketCallouts
     Events::CalloutsController::HANDOUT_RESOURCE_TITLES.filter_map { |title| by_title[title] }
   end
 
-  # Renders FAQS to the shared callout <toggle> syntax so each question is a
+  # Renders FAQS to standard <details>/<summary> disclosures so each question is a
   # collapsible section, identical to how the FAQ page and every other callout
-  # render admin-authored toggles (see CalloutContent). Used both to seed the
-  # materialized card's editable copy and as the FAQ page's fallback default, so
-  # a fresh card starts as editable toggles.
+  # render admin-authored disclosures (see CalloutContent). Used both to seed the
+  # materialized card's editable copy and as the FAQ page's fallback default, so a
+  # fresh card starts as editable toggles.
   def self.faq_html
     FAQS.map do |faq|
       body = faq[:a].map { |paragraph| "<p>#{h(paragraph)}</p>" }
       body << "<ul>#{faq[:list].map { |item| "<li>#{h(item)}</li>" }.join}</ul>" if faq[:list]
-      %(<toggle title="#{h(faq[:q])}">#{body.join}</toggle>)
+      "<details><summary>#{h(faq[:q])}</summary>#{body.join}</details>"
     end.join
   end
 

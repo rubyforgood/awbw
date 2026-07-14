@@ -334,7 +334,8 @@ if flagship && flagship.event_details.blank?
       <li>You may want a journal or lined paper for writing.</li>
     </ul>
     <p>The sections below, grouped by workshop, are <strong>optional</strong> supplies you may want on hand. We'll demonstrate how to use them during the training — tap a workshop to expand it.</p>
-    <toggle title="Workshop 1">
+    <details>
+      <summary>Workshop 1</summary>
       <ul>
         <li>Clear glass stones</li>
         <li>Pendant settings (cabochon settings and swivel hooks to hold the glass stones)</li>
@@ -343,8 +344,9 @@ if flagship && flagship.event_details.blank?
         <li>Glue to adhere paper circles to the glass stones — we recommend Aleene's Clear Gel Tacky Glue</li>
         <li>Clear packing tape</li>
       </ul>
-    </toggle>
-    <toggle title="Workshop 2">
+    </details>
+    <details>
+      <summary>Workshop 2</summary>
       <ul>
         <li>Rough &amp; Ready Shrinky Dink paper</li>
         <li>Permanent markers</li>
@@ -353,15 +355,17 @@ if flagship && flagship.event_details.blank?
         <li>Thin ribbon or wire (1/8 in. or thinner)</li>
         <li>An oven to cook the shrink paper (a toaster oven — not a toaster — works well)</li>
       </ul>
-    </toggle>
-    <toggle title="Workshop 3">
+    </details>
+    <details>
+      <summary>Workshop 3</summary>
       <ul>
         <li>A glue stick (used in workshops 3 &amp; 5)</li>
         <li>Scotch tape</li>
         <li>Two copies of the dice handout (sent after fees are paid), printed on cardstock</li>
       </ul>
-    </toggle>
-    <toggle title="Workshop 4">
+    </details>
+    <details>
+      <summary>Workshop 4</summary>
       <ul>
         <li>Oil-based pastels (we recommend Cray-Pas)</li>
         <li>Card/heavy stock or watercolor paper</li>
@@ -370,13 +374,14 @@ if flagship && flagship.event_details.blank?
         <li>Paintbrush</li>
         <li>Painter's tape</li>
       </ul>
-    </toggle>
-    <toggle title="Workshop 5">
+    </details>
+    <details>
+      <summary>Workshop 5</summary>
       <ul>
         <li>Card/heavy stock paper</li>
         <li>Collage materials</li>
       </ul>
-    </toggle>
+    </details>
   HTML
 end
 
