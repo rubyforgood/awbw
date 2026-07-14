@@ -460,10 +460,11 @@
                     <% single_form = @continuing_education_forms.first %>
                     <%= check_box_tag "event[continuing_education_form_id]", single_form.id,
                             resubmitted ? params.dig(:event, :continuing_education_form_id).present? : @event.continuing_education_form.present?,
+                            id: "enable_continuing_education",
                             class: "peer rounded border-gray-300" %>
-                    <span class="text-sm font-medium text-gray-700">Enable continuing education</span>
+                    <label for="enable_continuing_education" class="text-sm font-medium text-gray-700 cursor-pointer">Enable continuing education</label>
                     <p class="text-xs text-gray-500 mt-1">Allow registrants to request CE hours.</p>
-                    <div class="hidden peer-checked:block rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
+                    <div class="hidden peer-checked:block rounded-md border border-teal-200 bg-teal-50 px-3 py-2.5">
                       <%= render "events/ce_config_fields", f: f %>
                     </div>
                     <p class="mt-1 text-xs text-gray-400">Edit the CE hours ticket card and its details below, under Registration ticket callouts.</p>
@@ -490,7 +491,7 @@
                       <% end %>
                     </select>
                     <p class="text-xs text-gray-500 mt-1">Select a continuing education form for registrants to request CE hours.</p>
-                    <div class="mt-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
+                    <div class="mt-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2.5">
                       <%= render "events/ce_config_fields", f: f %>
                     </div>
                   <% end %>
