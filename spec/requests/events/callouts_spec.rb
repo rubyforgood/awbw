@@ -49,7 +49,7 @@ RSpec.describe "Events::Callouts", type: :request do
   describe "GET /registration/:slug/videoconference" do
     let(:event) { create(:event, videoconference_url: "https://example.com/zoom") }
 
-    it "renders resources linked to the built-in callout below the content" do
+    it "links resources on the built-in callout to their own page, not inline" do
       resource = create(:resource)
       create(:downloadable_asset, owner: resource)
       create(:registration_ticket_callout, event:, magic_key: "videoconference",
@@ -58,7 +58,70 @@ RSpec.describe "Events::Callouts", type: :request do
       get registration_videoconference_path(registration.slug)
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
+      expect(response.body).to include(registration_resource_path(registration.slug, resource, return_to: "videoconference"))
+      # The file itself is only shown on the resource's own page, not embedded here.
+      expect(response.body).not_to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
+    end
+  end
+
+  # The single-resource page is where a document is actually shown: the inline
+  # preview and download button live here, not on the callout list pages that
+  # link to it.
+  describe "GET /registration/:slug/resource/:resource_id" do
+    let(:event) { create(:event) }
+
+    context "with a PDF resource" do
+      let(:resource) { create(:resource) }
+
+      before { create(:downloadable_asset, owner: resource) }
+
+      it "shows the PDF inline preview and a download button" do
+        get registration_resource_path(registration.slug, resource)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("type=\"application/pdf\"")
+        expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, disposition: :inline))
+        expect(response.body).to include("fa-download")
+      end
+    end
+
+    context "with a non-PDF resource" do
+      let(:resource) { create(:resource) }
+
+      before { create(:downloadable_asset, :with_image, owner: resource) }
+
+      it "renders the preview instead of an inline PDF viewer" do
+        get registration_resource_path(registration.slug, resource)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).not_to include("type=\"application/pdf\"")
+      end
+    end
+
+    context "eyebrow" do
+      let(:resource) { create(:resource) }
+
+      it "returns to the built-in callout it came from" do
+        get registration_resource_path(registration.slug, resource, return_to: "videoconference")
+
+        expect(response.body).to include(registration_videoconference_path(registration.slug))
+      end
+
+      it "returns to the custom callout it came from" do
+        callout = create(:registration_ticket_callout, event:, title: "Parking")
+
+        get registration_resource_path(registration.slug, resource, return_to: "callout", callout_id: callout.id)
+
+        expect(response.body).to include(event_registration_ticket_callout_path(event, callout, reg: registration.slug))
+        expect(response.body).to include("Back to Parking")
+      end
+
+      it "falls back to the ticket when reached directly" do
+        get registration_resource_path(registration.slug, resource)
+
+        expect(response.body).to include(registration_ticket_path(registration.slug))
+        expect(response.body).to include("Back to ticket")
+      end
     end
   end
 

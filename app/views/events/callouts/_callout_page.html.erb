@@ -39,10 +39,10 @@
       <% end %>
       <%= yield %>
 
-      <% if @builtin_resources.present? %>
-        <div class="mt-8 space-y-6">
-          <% @builtin_resources.each do |resource| %>
-            <%= render "events/callouts/resource_body", resource: resource.decorate %>
+      <% if @builtin_resource_cards.present? %>
+        <div class="mt-8 space-y-3">
+          <% @builtin_resource_cards.each do |card| %>
+            <%= render "event_registrations/callout_card", callout: card %>
           <% end %>
         </div>
       <% end %>

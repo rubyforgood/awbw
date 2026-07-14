@@ -179,11 +179,18 @@ module Events
     # materialized callout row for this action's magic_key. Nil/empty when the
     # event hasn't materialized the card. Payment renders its own document list
     # (W-9 + invoice/receipt) in its Documents section, so it skips the generic
-    # inline resource list here.
+    # resource list here. Resources render as callout cards linking to their own
+    # registrant page (PDF preview + download), each returning to this callout —
+    # never inline.
     def set_builtin_content
       callout = @event.registration_ticket_callouts.find_by(magic_key: action_name)
       @builtin_intro = callout&.description.presence
-      @builtin_resources = callout && action_name != "payment" ? callout.resources.to_a : []
+      resources = callout && action_name != "payment" ? callout.resources.to_a : []
+      @builtin_resource_cards = resources.map do |resource|
+        resource_card(icon: "fa-solid fa-file-lines", title: resource.title,
+                      subtitle: "Open this document",
+                      href: registration_resource_path(@event_registration.slug, resource, return_to: action_name), target: nil)
+      end
     end
 
     # Update form submission if ce record is updated via callout
