@@ -580,20 +580,6 @@
 
         <div class="space-y-3 mb-3">
           <% MagicTicketCallouts.editor_cards(@event).each do |card| %>
-            <% case card.key %>
-            <% when :ce_hours %>
-              <%= render "events/builtin_callout_card", f: f, card: card,
-                    label_field: :ce_hours_details_label, content_field: :ce_hours_details,
-                    title_placeholder: "CE hours",
-                    content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
-                    content_placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><h3>Before the training</h3><ul><li>Email your license number</li></ul>" %>
-            <% when :event_details %>
-              <%= render "events/builtin_callout_card", f: f, card: card,
-                    label_field: :event_details_label, content_field: :event_details,
-                    title_placeholder: "Before you attend",
-                    content_help: "Materials, supplies, what to bring, and policies — shown on its own page linked from the ticket. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
-                    content_placeholder: "e.g. <h3>Workshop 1</h3><ul><li>Clear glass stones</li></ul>" %>
-            <% else %>
               <div class="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 opacity-70">
                 <i class="<%= card.icon_class %> <%= card.theme[:icon] %> w-6 shrink-0 text-center text-xl pt-0.5" aria-hidden="true"></i>
 
@@ -639,7 +625,6 @@
                   <% end %>
                 </div>
               </div>
-            <% end %>
           <% end %>
         </div>
 

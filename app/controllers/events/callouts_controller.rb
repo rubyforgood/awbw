@@ -8,9 +8,10 @@ module Events
     before_action :set_event_registration
     before_action :authorize_callout
     before_action :set_event
-    # These pages carry an editable intro (the built-in row's "Callout page text")
-    # above the app-controlled content, plus any resources linked to the row.
-    before_action :set_builtin_content, only: %i[ payment scholarship certificate videoconference ]
+    # Every built-in page carries an editable intro + title (the built-in row's
+    # "Callout page text" / title) above the app-controlled content, plus any
+    # resources linked to the row.
+    before_action :set_builtin_content, only: %i[ payment scholarship certificate ce videoconference handouts faq ]
 
     # Hidden Resource (by title) backing the handout links, in display order.
     # Missing ones (e.g. not seeded in an environment) are silently skipped.
@@ -175,14 +176,16 @@ module Events
       @event = @event_registration.event
     end
 
-    # The editable intro and linked resources for a built-in page, from the
+    # The editable intro, title, and linked resources for a built-in page, from the
     # materialized callout row for this action's magic_key. Nil/empty when the
-    # event hasn't materialized the card. Payment renders its own document list
-    # (W-9 + invoice/receipt) in its Documents section, so it skips the generic
-    # inline resource list here.
+    # event hasn't materialized the card. The CE action is `ce` but its row's key is
+    # `ce_hours`. Payment renders its own document list (W-9 + invoice/receipt) in
+    # its Documents section, so it skips the generic inline resource list here.
     def set_builtin_content
-      callout = @event.registration_ticket_callouts.find_by(magic_key: action_name)
+      magic_key = action_name == "ce" ? "ce_hours" : action_name
+      callout = @event.registration_ticket_callouts.find_by(magic_key:)
       @builtin_intro = callout&.description.presence
+      @builtin_title = callout&.title.presence
       @builtin_resources = callout && action_name != "payment" ? callout.resources.to_a : []
     end
 

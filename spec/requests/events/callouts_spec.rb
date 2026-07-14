@@ -102,6 +102,45 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  # Every built-in page renders the intro text an admin types into its materialized
+  # callout row's "Callout page text" (description), above the app-controlled body —
+  # the same field custom callouts use. Previously CE/handouts/FAQ/scholarship
+  # silently dropped it.
+  describe "built-in page intro text (callout row description)" do
+    let(:event) { create(:event, facilitator_training: true) }
+
+    before { DefaultTicketCallouts.seed(event) }
+
+    def describe_callout(magic_key, html)
+      event.registration_ticket_callouts.find_by(magic_key:).update!(description: html)
+    end
+
+    it "renders the CE callout's description" do
+      describe_callout("ce_hours", "<p>Bring your license number.</p>")
+      get registration_ce_path(registration.slug)
+      expect(response.body).to include("Bring your license number.")
+    end
+
+    it "renders the handouts callout's description" do
+      describe_callout("handouts", "<p>Download these before class.</p>")
+      get registration_handouts_path(registration.slug)
+      expect(response.body).to include("Download these before class.")
+    end
+
+    it "renders the FAQ callout's description" do
+      describe_callout("faq", "<p>Read this intro first.</p>")
+      get registration_faq_path(registration.slug)
+      expect(response.body).to include("Read this intro first.")
+    end
+
+    it "renders the scholarship callout's description" do
+      registration.update!(scholarship_requested: true)
+      describe_callout("scholarship", "<p>About your scholarship.</p>")
+      get registration_scholarship_path(registration.slug)
+      expect(response.body).to include("About your scholarship.")
+    end
+  end
+
   describe "POST /registration/:slug/ce/pay" do
     let(:event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000) }
     let(:fake_session) { double(url: "https://checkout.stripe.com/test", id: "cs_test_123") }

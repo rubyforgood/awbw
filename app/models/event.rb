@@ -210,19 +210,6 @@ class Event < ApplicationRecord
     title
   end
 
-  # Heading shown on the ticket call-out and the details page. Falls back to the
-  # default even when an admin clears it, so the section never renders unlabelled.
-  def event_details_label
-    super.presence || "Before you attend"
-  end
-
-  # Heading shown on the CE hours ticket call-out and its details page. Falls
-  # back to the default even when an admin clears it, so the section never
-  # renders unlabelled.
-  def ce_hours_details_label
-    super.presence || "CE hours"
-  end
-
   # Virtual attributes for date/time inputs (Firefox datetime-local compat)
   attr_writer :start_date_date, :start_date_time,
               :end_date_date, :end_date_time,

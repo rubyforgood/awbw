@@ -60,20 +60,25 @@ RSpec.describe "Event registration show page", type: :system do
   end
 
   describe "before-you-attend call-out" do
-    it "links to the details page using the event's label when details are present" do
-      event.update!(event_details_label: "Art supplies", event_details: "<p>Bring scissors</p>")
-
-      sign_in(user)
-      visit registration_ticket_path(registration.slug)
-
-      expect(page).to have_link("Art supplies", href: details_event_path(event, reg: registration.slug))
+    let!(:details) do
+      create(:registration_ticket_callout, event:, magic_key: "art_supplies",
+        title: "Art supplies", callout_type: "reference", hidden: true)
     end
 
-    it "is hidden when no details are set" do
+    it "links to its own callout page when published with content" do
+      details.update!(description: "<p>Bring scissors</p>", hidden: false)
+
       sign_in(user)
       visit registration_ticket_path(registration.slug)
 
-      expect(page).to have_no_link(href: details_event_path(event, reg: registration.slug))
+      expect(page).to have_link("Art supplies", href: event_registration_ticket_callout_path(event, details, reg: registration.slug))
+    end
+
+    it "is hidden when the callout is not published" do
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_no_link(href: event_registration_ticket_callout_path(event, details, reg: registration.slug))
     end
   end
 

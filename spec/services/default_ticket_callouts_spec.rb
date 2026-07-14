@@ -9,7 +9,7 @@ RSpec.describe DefaultTicketCallouts do
 
       keys = event.registration_ticket_callouts.magic.pluck(:magic_key)
       expect(keys).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours", "event_details",
+        "payment", "certificate", "scholarship", "ce_hours", "art_supplies",
         "videoconference", "handouts", "faq"
       )
     end
@@ -17,13 +17,13 @@ RSpec.describe DefaultTicketCallouts do
     it "seeds callouts in canonical ticket order" do
       form = create(:form)
       event = create(:event, facilitator_training: true, ce_hours_offered: 6,
-        event_details: "<p>x</p>", videoconference_url: "https://example.com/z")
+        videoconference_url: "https://example.com/z")
       event.event_forms.create!(form:, role: "scholarship")
 
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.map(&:magic_key)).to eq(
-        %w[payment certificate scholarship ce_hours event_details videoconference handouts faq]
+        %w[payment certificate scholarship ce_hours art_supplies videoconference handouts faq]
       )
     end
 
@@ -88,21 +88,17 @@ RSpec.describe DefaultTicketCallouts do
       expect(payment.resources).to be_empty # no W-9 on a free event
     end
 
-    it "migrates CE hours and event-details content from the event onto the row" do
-      event = create(:event, ce_hours_details_label: "Continuing education",
-        ce_hours_details: "<p>CAMFT approved.</p>", event_details_label: "Art supplies",
-        event_details: "<p>Bring paper.</p>")
+    it "seeds the CE hours and art supplies cards with static titles and no page text" do
+      event = create(:event)
 
       described_class.seed(event)
 
       ce = event.registration_ticket_callouts.find_by(magic_key: "ce_hours")
-      details = event.registration_ticket_callouts.find_by(magic_key: "event_details")
-      expect(ce.title).to eq("Continuing education")
-      expect(ce.description).to eq("<p>CAMFT approved.</p>")
-      expect(details.title).to eq("Art supplies")
-      expect(details.description).to eq("<p>Bring paper.</p>")
-      # A freshly-migrated card matches its default.
-      expect(described_class.customized?(ce)).to be(false)
+      art_supplies = event.registration_ticket_callouts.find_by(magic_key: "art_supplies")
+      expect(ce.title).to eq("CE hours")
+      expect(ce.description).to be_blank
+      expect(art_supplies.title).to eq("Art supplies & what to bring")
+      expect(art_supplies.description).to be_blank
     end
 
     it "reports whether a materialized callout has been customized" do
@@ -189,7 +185,7 @@ RSpec.describe DefaultTicketCallouts do
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
       expect(event.registration_ticket_callouts.ordered.map(&:magic_key).compact).to eq(
-        %w[payment certificate scholarship ce_hours event_details videoconference handouts faq]
+        %w[payment certificate scholarship ce_hours art_supplies videoconference handouts faq]
       )
     end
   end

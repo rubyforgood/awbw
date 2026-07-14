@@ -174,11 +174,9 @@ class DefaultTicketCallouts
       },
       {
         magic_key: "ce_hours",
-        # Title/text seed from the event's CE columns (migrating existing content);
-        # thereafter they live on the row like every other built-in. The row also
-        # carries the CE hours-offered/cost config.
-        title: ->(event) { event.ce_hours_details_label },
-        description: ->(event) { event.ce_hours_details },
+        # Text lives on the row like every other built-in (edit it as the callout's
+        # "Callout page text"). The row also carries the CE hours-offered/cost config.
+        title: "CE hours",
         subtitle: "Continuing education — requirements & how to request",
         callout_type: "action",
         icon_class: "fa-solid fa-graduation-cap",
@@ -186,11 +184,10 @@ class DefaultTicketCallouts
         hidden: ->(event) { !event.facilitator_training? }
       },
       {
-        magic_key: "event_details",
-        # Title/text seed from the event's details columns (migrating existing
-        # content); thereafter they live on the row.
-        title: ->(event) { event.event_details_label },
-        description: ->(event) { event.event_details },
+        magic_key: "art_supplies",
+        # Text lives on the row like every other built-in (edit it as the callout's
+        # "Callout page text"); its page is just that title + copy.
+        title: "Art supplies & what to bring",
         subtitle: "Important info for this event — please read",
         callout_type: "reference",
         icon_class: "fa-solid fa-palette",

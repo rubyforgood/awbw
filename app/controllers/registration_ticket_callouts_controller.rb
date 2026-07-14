@@ -3,9 +3,9 @@ class RegistrationTicketCalloutsController < ApplicationController
   before_action :set_event
 
   # Public detail page for a single registration ticket callout, linked from the
-  # call-out on the registration ticket (mirrors the events#details / #ce_hours
-  # pages). With no description and no linked resource there is nothing to show,
-  # so fall back to the event page.
+  # call-out on the registration ticket. Also the page for content built-ins like
+  # event_details. With no description and no linked resource there is nothing to
+  # show, so fall back to the event page.
   def show
     @callout = @event.registration_ticket_callouts.find(params[:id])
     authorize! @callout, to: :show?

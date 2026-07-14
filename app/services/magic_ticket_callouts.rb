@@ -24,9 +24,8 @@ class MagicTicketCallouts
   end
 
   # A registration-free description of one built-in card, for the event editor's
-  # callouts section. `key` is :ce_hours / :event_details for the two whose text
-  # admins edit via event columns; nil for the cards the app fully controls (shown
-  # greyed out). `magic_key` ties the card to its ticket behavior — once an event
+  # callouts section. `key` is nil for the app-controlled preview cards shown greyed
+  # out (all of them today). `magic_key` ties the card to its ticket behavior — once an event
   # has materialized that key into an editable row, the preview is dropped here and
   # the row is edited in the callout list instead. `subtitle` mirrors the card's
   # ticket subtitle; `visibility` describes when the app shows it (rendered next to
@@ -58,7 +57,6 @@ class MagicTicketCallouts
     "certificate" => :certificate_card,
     "scholarship" => :scholarship_status_card,
     "ce_hours" => :ce_hours_card,
-    "event_details" => :event_details_card,
     "videoconference" => :videoconference_card,
     "handouts" => :handouts_card,
     "faq" => :faq_card
@@ -74,7 +72,7 @@ class MagicTicketCallouts
   # those from the row (calling #card_for for behavioral ones), so this is both the
   # non-materialized set and the fallback for events not yet seeded.
   def cards
-    CARD_BUILDERS.reject { |magic_key, _| materialized?(magic_key) || skip_in_fallback?(magic_key) }
+    CARD_BUILDERS.reject { |magic_key, _| materialized?(magic_key) }
                  .filter_map { |_, builder| send(builder) }
   end
 
@@ -87,8 +85,6 @@ class MagicTicketCallouts
     builder = CARD_BUILDERS[callout.magic_key]
     base = builder && send(builder)
     return unless base
-    # Event details links to its page only when it has content to show.
-    return if callout.magic_key == "event_details" && callout.description.blank?
 
     base.with(
       title: callout.title,
@@ -109,12 +105,6 @@ class MagicTicketCallouts
   def materialized?(magic_key)
     @materialized_keys ||= event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
     @materialized_keys.include?(magic_key)
-  end
-
-  # In the unseeded fallback, event-details content lives on the event column, so
-  # hide the card when it's blank (the row path checks the row in #card_for).
-  def skip_in_fallback?(magic_key)
-    magic_key == "event_details" && event.event_details.blank?
   end
 
   # Top card: an action card while a balance is due, a reference card once paid
@@ -179,7 +169,7 @@ class MagicTicketCallouts
     # the payment card, rather than the resting teal.
     due = registration.continuing_education_registrations.first&.remaining_cost.to_i.positive?
     Card.new(icon_class: "fa-solid fa-graduation-cap", color: due ? "orange" : "teal",
-             title: event.ce_hours_details_label,
+             title: "CE hours",
              subtitle: ce_hours_subtitle,
              href: registration_ce_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
@@ -219,15 +209,6 @@ class MagicTicketCallouts
   # still be missing is their license number.
   def ce_missing_text
     "License number needed"
-  end
-
-  # "Art supplies & what to bring" — the event's own details page.
-  def event_details_card
-    Card.new(icon_class: "fa-solid fa-palette", color: "blue",
-             title: event.event_details_label,
-             subtitle: "Important info for this event — please read",
-             href: details_event_path(event, reg: registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
   # Shown only when the event has a videoconference URL set.

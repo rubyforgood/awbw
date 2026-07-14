@@ -5,103 +5,76 @@
     eyebrow back there instead of the registrant's ticket. Gated on edit access so a
     registrant who lands on this URL still gets the default ticket back. %>
 <% from_scholarship_edit = params[:return_to] == "scholarship" && @scholarship && allowed_to?(:edit?, @scholarship) %>
-<div class="max-w-3xl mx-auto px-4 pt-4">
-  <% if from_scholarship_edit %>
-    <%= link_to edit_scholarship_path(@scholarship),
-                class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Back to scholarship
-    <% end %>
-  <% else %>
-    <%= link_to registration_ticket_path(@event_registration.slug),
-                class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
-    <% end %>
-  <% end %>
-</div>
+<% eyebrow = from_scholarship_edit ? { back_path: edit_scholarship_path(@scholarship), back_label: "Back to scholarship" } : {} %>
 
-<div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
-  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
-      <div class="flex items-center gap-5">
-        <div class="shrink-0">
-          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
+<%= render layout: "events/callouts/callout_page", locals: { title: @builtin_title.presence || "Scholarship", **eyebrow } do %>
+  <div class="space-y-6">
+    <% if @scholarship && allowed_to?(:edit?, @scholarship) %>
+      <%# Admin-only jump to the management surface for this scholarship. Hidden from
+          registrants; opens in a new tab so the registrant view is kept. %>
+      <div class="flex justify-end">
+        <%= link_to edit_scholarship_path(@scholarship), target: "_blank", rel: "noopener",
+              class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
+          <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
+          Edit scholarship
+          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if @scholarship %>
+      <% grant = @scholarship.grant %>
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount awarded</p>
+          <p class="mt-1 text-3xl font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@scholarship.amount_cents) %></p>
         </div>
-        <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight">Scholarship</h1>
-          <p class="text-sm text-blue-200"><%= @event.title %></p>
+        <% if @scholarship.tasks_completed? %>
+          <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-3 py-1 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
+            <i class="fa-solid fa-circle-check"></i> Tasks completed
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
+            <i class="fa-solid fa-clock"></i> Tasks outstanding
+          </span>
+        <% end %>
+      </div>
+
+      <% if grant %>
+        <div class="border-t border-gray-100 pt-5">
+          <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Funder</p>
+          <p class="mt-1 text-sm font-medium text-gray-900"><%= grant.funder_name %></p>
+          <p class="text-sm text-gray-500"><%= grant.name %></p>
+        </div>
+
+        <div class="border-t border-gray-100 pt-5">
+          <%= render "scholarships/grant_criteria_tasks", grant: %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="flex items-start gap-3">
+        <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
+          <i class="fa-solid fa-clock"></i>
+        </span>
+        <div>
+          <p class="text-sm font-semibold text-gray-900">Scholarship requested</p>
+          <p class="mt-1 text-sm text-gray-600">Your scholarship request is under review. We'll be in touch about next steps — check back here for your award details.</p>
         </div>
       </div>
-      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
-    </div>
+    <% end %>
 
-    <div class="px-6 sm:px-8 py-7 space-y-6">
-      <% if @scholarship && allowed_to?(:edit?, @scholarship) %>
-        <%# Admin-only jump to the management surface for this scholarship. Hidden from
-            registrants; opens in a new tab so the registrant view is kept. %>
-        <div class="flex justify-end">
-          <%= link_to edit_scholarship_path(@scholarship), target: "_blank", rel: "noopener",
-                class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
-            <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
-            Edit scholarship
-            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-          <% end %>
-        </div>
-      <% end %>
-
-      <% if @scholarship %>
-        <% grant = @scholarship.grant %>
-        <div class="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount awarded</p>
-            <p class="mt-1 text-3xl font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(@scholarship.amount_cents) %></p>
-          </div>
-          <% if @scholarship.tasks_completed? %>
-            <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-3 py-1 text-sm font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
-              <i class="fa-solid fa-circle-check"></i> Tasks completed
-            </span>
-          <% else %>
-            <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">
-              <i class="fa-solid fa-clock"></i> Tasks outstanding
-            </span>
-          <% end %>
-        </div>
-
-        <% if grant %>
-          <div class="border-t border-gray-100 pt-5">
-            <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Funder</p>
-            <p class="mt-1 text-sm font-medium text-gray-900"><%= grant.funder_name %></p>
-            <p class="text-sm text-gray-500"><%= grant.name %></p>
-          </div>
-
-          <div class="border-t border-gray-100 pt-5">
-            <%= render "scholarships/grant_criteria_tasks", grant: %>
-          </div>
+    <%# Jump to the registrant's full submission, where their scholarship
+        application answers are surfaced (inline for embedded-section forms, or
+        in a dedicated "Scholarship application" card for separate forms). %>
+    <% if @form_responses_available %>
+      <div class="border-t border-gray-100 pt-5">
+        <%= link_to event_public_registration_path(@event, reg: @event_registration.slug),
+                    class: "inline-flex items-center gap-1.5 text-sm font-medium #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:underline" do %>
+          <i class="fa-solid fa-file-lines"></i>
+          Review your form responses
+          <i class="fa-solid fa-arrow-right text-xs"></i>
         <% end %>
-      <% else %>
-        <div class="flex items-start gap-3">
-          <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>">
-            <i class="fa-solid fa-clock"></i>
-          </span>
-          <div>
-            <p class="text-sm font-semibold text-gray-900">Scholarship requested</p>
-            <p class="mt-1 text-sm text-gray-600">Your scholarship request is under review. We'll be in touch about next steps — check back here for your award details.</p>
-          </div>
-        </div>
-      <% end %>
-
-      <%# Jump to the registrant's full submission, where their scholarship
-          application answers are surfaced (inline for embedded-section forms, or
-          in a dedicated "Scholarship application" card for separate forms). %>
-      <% if @form_responses_available %>
-        <div class="border-t border-gray-100 pt-5">
-          <%= link_to event_public_registration_path(@event, reg: @event_registration.slug),
-                      class: "inline-flex items-center gap-1.5 text-sm font-medium #{DomainTheme.text_class_for(:scholarships, intensity: 700)} hover:underline" do %>
-            <i class="fa-solid fa-file-lines"></i>
-            Review your form responses
-            <i class="fa-solid fa-arrow-right text-xs"></i>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
+      </div>
+    <% end %>
   </div>
-</div>
+<% end %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_14_113355) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_14_145155) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -534,16 +534,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_113355) do
     t.boolean "autoshow_videoconference_label", default: true, null: false
     t.boolean "autoshow_videoconference_link", default: true, null: false
     t.integer "ce_hours_cost_cents"
-    t.text "ce_hours_details"
-    t.string "ce_hours_details_label", default: "CE hours", null: false
     t.decimal "ce_hours_offered", precision: 5, scale: 2
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.text "description"
     t.datetime "end_date", precision: nil
-    t.text "event_details"
-    t.string "event_details_label", default: "Before you attend", null: false
     t.boolean "facilitator_training", default: false, null: false
     t.boolean "featured", default: false, null: false
     t.text "ga4_snippet"

@@ -182,40 +182,6 @@ RSpec.describe "Events", type: :request do
     end
   end
 
-  describe "GET /details" do
-    let(:event) { create(:event, :published, :publicly_visible) }
-
-    it "renders the details page when details are present" do
-      event.update!(event_details_label: "Art supplies", event_details: "<p>Bring scissors</p>")
-      get details_event_path(event)
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Art supplies")
-      expect(response.body).to include("Bring scissors")
-    end
-
-    it "redirects to the event when details are blank" do
-      get details_event_path(event)
-      expect(response).to redirect_to(event_path(event))
-    end
-  end
-
-  describe "GET /ce_hours" do
-    let(:event) { create(:event, :published, :publicly_visible) }
-
-    it "renders the CE hours page when the event is CE-eligible" do
-      event.update!(ce_hours_offered: 6, ce_hours_details_label: "Continuing education", ce_hours_details: "<p>Email your license number</p>")
-      get ce_hours_event_path(event)
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Continuing education")
-      expect(response.body).to include("Email your license number")
-    end
-
-    it "redirects to the event when the event is not CE-eligible" do
-      get ce_hours_event_path(event)
-      expect(response).to redirect_to(event_path(event))
-    end
-  end
-
   describe "GET /new" do
     context "as admin" do
       it "renders successfully" do
@@ -263,10 +229,10 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:public_registration_enabled][:description])
     end
 
-    it "renders the built-in 'Before you attend' card as an editable row" do
+    it "renders the built-in 'Art supplies' card as an editable row" do
       get edit_event_path(event)
       expect(response.body).to include("Registration ticket callouts")
-      expect(response.body).to include("Before you attend")
+      expect(response.body).to include("Art supplies")
       # Its text now lives on the callout row, not the event columns.
       expect(response.body).not_to include("event[event_details_label]")
     end

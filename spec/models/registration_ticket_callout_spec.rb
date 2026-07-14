@@ -69,6 +69,15 @@ RSpec.describe RegistrationTicketCallout, type: :model do
 
       expect(event.registration_ticket_callouts.visible).to eq([ shown ])
     end
+
+    it "treats art_supplies as a content callout (renders its own page), not behavioral" do
+      event = create(:event)
+      art_supplies = create(:registration_ticket_callout, event:, magic_key: "art_supplies")
+      certificate = create(:registration_ticket_callout, event:, magic_key: "certificate")
+
+      expect(art_supplies.behavioral_magic?).to be(false)
+      expect(certificate.behavioral_magic?).to be(true)
+    end
   end
 
   describe "#published (inverse of hidden)" do

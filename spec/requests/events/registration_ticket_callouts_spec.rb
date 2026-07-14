@@ -246,7 +246,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
       }
 
       expect(event.registration_ticket_callouts.magic.pluck(:magic_key)).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours", "event_details",
+        "payment", "certificate", "scholarship", "ce_hours", "art_supplies",
         "videoconference", "handouts", "faq"
       )
     end

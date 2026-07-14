@@ -1,5 +1,6 @@
 <% content_for(:page_bg_class, "public") %>
-<% content_for(:page_title, "#{@event.ce_hours_details_label} — #{@event.title}") %>
+<% ce_title = @builtin_title.presence || "CE hours" %>
+<% content_for(:page_title, "#{ce_title} — #{@event.title}") %>
 <% ce_registration = @event_registration.continuing_education_registrations.first %>
 
 <%#
@@ -14,7 +15,7 @@
      {}
    end %>
 
-<%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_details_label, **callout_eyebrow } do %>
+<%= render layout: "events/callouts/callout_page", locals: { title: ce_title, **callout_eyebrow } do %>
   <% if @event_registration.ce_registered? %>
     <% license = ce_registration&.professional_license %>
     <% license_kind = license&.kind %>
@@ -227,12 +228,5 @@
     <%= form_with url: registration_ce_request_path(@event_registration.slug), method: :post, data: { turbo: false }, class: "mt-4" do |form| %>
       <%= form.submit "Request CE credit", class: "rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
     <% end %>
-  <% end %>
-
-  <% if @event.ce_hours_details.present? %>
-    <section class="mt-7 border-t border-gray-100 pt-6">
-      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Details</h2>
-      <div class="mt-3 rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700"><%= form_label_html(@event.ce_hours_details) %></div>
-    </section>
   <% end %>
 <% end %>

@@ -11,15 +11,16 @@ class RegistrationTicketCallout < ApplicationRecord
   # that key. Admin-authored callouts have a nil magic_key. Magic callouts are
   # hidden rather than destroyed so they can be restored to their default.
   MAGIC_KEYS = %w[
-    payment certificate scholarship ce_hours event_details
+    payment certificate scholarship ce_hours art_supplies
     videoconference handouts faq
   ].freeze
 
-  # "Content" magic callouts render their own editable copy/resources (like custom
-  # callouts). "Behavioral" magic callouts (the rest) render live per-registration
-  # status through MagicTicketCallouts#card_for — the row still owns the editable
-  # title/subtitle/text, order, visibility, and resources.
-  CONTENT_MAGIC_KEYS = %w[ handouts faq ].freeze
+  # "Content" magic callouts render their own editable copy/resources on the
+  # generic callout page (like custom callouts). "Behavioral" magic callouts (the
+  # rest) render live per-registration status through MagicTicketCallouts#card_for
+  # — the row still owns the editable title/subtitle/text, order, visibility, and
+  # resources. art_supplies is content: its page is just its title + copy.
+  CONTENT_MAGIC_KEYS = %w[ handouts faq art_supplies ].freeze
 
   # Behavioral built-ins that also carry event-level config edited inline in their
   # row (CE hours offered / cost); their text lives on the row like everything else.
