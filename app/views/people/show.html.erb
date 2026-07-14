@@ -143,7 +143,7 @@
             </div>
           <% end %>
           <!-- Sectors + Age ranges (two columns; age ranges is the thinner column) -->
-          <% sectorable_items = @person.sectorable_items.includes(:sector).sort_by { |si| [si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase] } %>
+          <% sectorable_items = @person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
           <% other_sectors = @person.other_sector_responses %>
           <% show_sectors = @person.profile_show_sectors? %>
           <% primary_age_groups = @person.primary_age_groups.to_a %>

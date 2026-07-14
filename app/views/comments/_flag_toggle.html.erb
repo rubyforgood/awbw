@@ -1,4 +1,4 @@
-<%= button_to polymorphic_path([commentable, comment]),
+<%= button_to polymorphic_path([ commentable, comment ]),
               method: :patch,
               params: { comment: { flagged: !comment.flagged } },
               form: { id: dom_id(comment, :flag) },

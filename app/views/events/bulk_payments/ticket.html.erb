@@ -145,7 +145,7 @@
               <tbody class="bg-white divide-y divide-gray-200">
                 <% attendees.each do |attendee| %>
                   <tr>
-                    <td class="px-4 py-2.5 text-sm text-gray-900"><%= [attendee["first_name"], attendee["last_name"]].compact_blank.join(" ").presence || "—" %></td>
+                    <td class="px-4 py-2.5 text-sm text-gray-900"><%= [ attendee["first_name"], attendee["last_name"] ].compact_blank.join(" ").presence || "—" %></td>
                     <td class="px-4 py-2.5 text-sm text-gray-900"><%= attendee["email"].presence || "—" %></td>
                   </tr>
                 <% end %>

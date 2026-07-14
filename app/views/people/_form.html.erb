@@ -55,7 +55,7 @@
               <%= f.input :email_type,
                           label: "Primary email type",
                           as: :select,
-                          collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                          collection: Person::CONTACT_TYPES.compact.map { |type| [ type.to_s.humanize, type ] },
                           selected: f.object.email_type || f.object.user&.email_type,
                           include_blank: true %>
 
@@ -64,7 +64,7 @@
               <%= f.input :email_2_type,
                           label: "Secondary email type",
                           as: :select,
-                          collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                          collection: Person::CONTACT_TYPES.compact.map { |type| [ type.to_s.humanize, type ] },
                           include_blank: true %>
             </div>
           </div>
@@ -236,7 +236,7 @@
                       start_year: 1991,
                       end_year: Time.current.year,
                       prompt: { month: "Select Month", year: "Select Year" },
-                      order: [:month, :year],
+                      order: [ :month, :year ],
                       label: "Member since (override)",
                       hint: "Pick January if you only know the year",
                       wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
@@ -395,7 +395,7 @@
                       label: "Birthday",
                       as: :date,
                       discard_year: true,
-                      order: [:month, :day],
+                      order: [ :month, :day ],
                       prompt: { month: "Month", day: "Day" },
                       hint: "Month and day only",
                       wrapper_html: { class: "flex flex-wrap gap-x-2 items-end" },
@@ -485,10 +485,10 @@
           <%= f.input :display_name_preference,
                     as: :select,
                     collection: [
-                      ["First and Last Name", "full_name"],
-                      ["First Name and Last Initial", "first_name_last_initial"],
-                      ["First Name Only", "first_name_only"],
-                      ["Last Name Only", "last_name_only"]
+                      [ "First and Last Name", "full_name" ],
+                      [ "First Name and Last Initial", "first_name_last_initial" ],
+                      [ "First Name Only", "first_name_only" ],
+                      [ "Last Name Only", "last_name_only" ]
                     ],
                     selected: f.object.display_name_preference || "full_name" %>
 

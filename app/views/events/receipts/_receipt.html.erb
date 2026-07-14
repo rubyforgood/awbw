@@ -46,9 +46,9 @@
   <%# Meta row: number / date / client id %>
   <div class="mt-6 rounded-lg border border-gray-300 grid grid-cols-3 divide-x divide-gray-200 text-center">
     <% [
-         ["Receipt Number", receipt.number],
-         ["Date Paid", receipt.date&.strftime("%-d %b, %Y")],
-         ["Client ID", receipt.client_id]
+         [ "Receipt Number", receipt.number ],
+         [ "Date Paid", receipt.date&.strftime("%-d %b, %Y") ],
+         [ "Client ID", receipt.client_id ]
        ].each do |label, value| %>
       <div class="px-3 py-3">
         <p class="text-xs font-bold text-gray-600"><%= label %></p>

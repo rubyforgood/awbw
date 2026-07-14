@@ -28,11 +28,11 @@
           <%= f.label :time_period, "Time period:", class: "text-sm font-medium text-gray-700" %>
           <%= f.select :time_period,
                        options_for_select([
-                         ["All time", "all_time"],
-                         ["Past day", "past_day"],
-                         ["Past week", "past_week"],
-                         ["Past month", "past_month"],
-                         ["Past year", "past_year"]
+                         [ "All time", "all_time" ],
+                         [ "Past day", "past_day" ],
+                         [ "Past week", "past_week" ],
+                         [ "Past month", "past_month" ],
+                         [ "Past year", "past_year" ]
                        ], params[:time_period] || "past_month"),
                        {},
                        class: "px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-gray-700",

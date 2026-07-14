@@ -8,7 +8,7 @@
       <%= render "comments/form", commentable: commentable %>
     <% end %>
 
-    <%= turbo_frame_tag "comments_list", src: polymorphic_path([commentable, :comments], page: 1), loading: :lazy do %>
+    <%= turbo_frame_tag "comments_list", src: polymorphic_path([ commentable, :comments ], page: 1), loading: :lazy do %>
       <div class="text-gray-500 text-center py-4">Loading comments...</div>
     <% end %>
   </div>

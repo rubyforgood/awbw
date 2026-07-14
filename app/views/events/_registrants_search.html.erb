@@ -25,24 +25,24 @@
     </div>
 
     <%= render "events/filter_select", param: :attendance_status, label: "Attendance status",
-          options: EventRegistration::ATTENDANCE_STATUSES.map { |s| [EventRegistration.new(status: s).attendance_status_label, s] },
+          options: EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
           selected: params[:attendance_status], blank: "All statuses", field_class: field_class %>
 
     <% if @event.cost_cents.to_i > 0 %>
       <%= render "events/filter_select", param: :payment_status, label: "Payment",
-            options: [["Due", "unpaid"], ["Paid", "paid"], ["Intends to pay", "intends_to_pay"]],
+            options: [ [ "Due", "unpaid" ], [ "Paid", "paid" ], [ "Intends to pay", "intends_to_pay" ] ],
             selected: params[:payment_status], blank: "Any payment status", field_class: field_class %>
     <% end %>
 
     <% if @ce_eligible %>
       <%= render "events/filter_select", param: :ce_status, label: "CE status",
-            options: [["Needs license", "needs_license"], ["Requested", "requested"], ["Paid", "paid"], ["Issued", "issued"], ["Not issued", "not_issued"]],
+            options: [ [ "Needs license", "needs_license" ], [ "Requested", "requested" ], [ "Paid", "paid" ], [ "Issued", "issued" ], [ "Not issued", "not_issued" ] ],
             selected: params[:ce_status], blank: "Any CE status", field_class: field_class %>
     <% end %>
 
     <% if @event.cost_cents.to_i > 0 %>
       <%= render "events/filter_select", param: :scholarship, label: "Scholarship",
-            options: [["All recipients", "yes"], ["Tasks complete", "complete"], ["Tasks not complete", "incomplete"]],
+            options: [ [ "All recipients", "yes" ], [ "Tasks complete", "complete" ], [ "Tasks not complete", "incomplete" ] ],
             selected: params[:scholarship], blank: "All registrants", field_class: field_class %>
     <% end %>
   </div>
@@ -51,19 +51,19 @@
   <div class="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4 mt-4">
     <%# Mirrors the far-right Status column: Not ready → Ready → Certificate pending → Completed. %>
     <%= render "events/filter_select", param: :readiness, label: "Status",
-          options: [["Not ready", "not_ready"], ["Ready", "ready"], ["Certificate pending", "certificate_due"], ["Completed", "completed"]],
+          options: [ [ "Not ready", "not_ready" ], [ "Ready", "ready" ], [ "Certificate pending", "certificate_due" ], [ "Completed", "completed" ] ],
           selected: params[:readiness], blank: "All statuses", field_class: field_class %>
 
     <%= render "events/filter_select", param: :org_status, label: "Organization",
-          options: [["Pending", "pending"], ["Linked", "linked"]],
+          options: [ [ "Pending", "pending" ], [ "Linked", "linked" ] ],
           selected: params[:org_status], blank: "All organizations", field_class: field_class %>
 
     <%= render "events/filter_select", param: :comment_status, label: "Comments",
-          options: [["None", "none"], ["Present", "present"], ["Flagged", "flagged"]],
+          options: [ [ "None", "none" ], [ "Present", "present" ], [ "Flagged", "flagged" ] ],
           selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
 
     <%= render "events/filter_select", param: :account_status, label: "User account",
-          options: [["No account", "none"], ["Invited", "invited"], ["Has access", "has_access"], ["No access", "no_access"]],
+          options: [ [ "No account", "none" ], [ "Invited", "invited" ], [ "Has access", "has_access" ], [ "No access", "no_access" ] ],
           selected: params[:account_status], blank: "Any account status", field_class: field_class %>
 
     <% if @dashboard.states.any? %>
@@ -73,7 +73,7 @@
 
     <% if @dashboard.counties.any? %>
       <%= render "events/filter_select", param: :county, label: "County",
-            options: @dashboard.counties.map { |state, county| ["#{state} - #{county}", "#{state}|#{county}"] },
+            options: @dashboard.counties.map { |state, county| [ "#{state} - #{county}", "#{state}|#{county}" ] },
             selected: params[:county], blank: "All counties", field_class: field_class %>
     <% end %>
 

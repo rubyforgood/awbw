@@ -21,7 +21,7 @@
                       value: f.object.title,
                       class:
                         "w-full rounded border-gray-300 shadow-sm px-3 py-2
-                                                  focus:ring-blue-500 focus:border-blue-500",
+                                                  focus:ring-blue-500 focus:border-blue-500"
                     } %>
 
             <%= f.input :facilitator_training, as: :boolean, label: "Facilitator training event", wrapper_html: { class: "mb-0!" } %>
@@ -167,7 +167,7 @@
                     as: :url,
                     input_html: {
                       placeholder: "https://…",
-                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                     } %>
 
             <div data-controller="searchable-select" data-searchable-select-placeholder-value="Search locations…">
@@ -179,7 +179,7 @@
                       include_blank: true,
                       input_html: {
                         class: "ts-flat w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                        data: { searchable_select_target: "select" },
+                        data: { searchable_select_target: "select" }
                       } %>
             </div>
           </div>
@@ -189,7 +189,7 @@
                     label: "Videoconference label",
                     input_html: {
                       placeholder: "Virtual event",
-                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                     } %>
 
             <%= f.input :videoconference_passcode,
@@ -197,7 +197,7 @@
                     hint: "Shown alongside the join link. The meeting ID/code is read from the URL automatically.",
                     input_html: {
                       placeholder: "e.g. 123456",
-                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                     } %>
           </div>
 
@@ -208,7 +208,7 @@
                   input_html: {
                     rows: 3,
                     placeholder: "Short description for calendar entries…",
-                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                   } %>
         </div>
 
@@ -609,11 +609,11 @@
 
                   <% if card.title == "Handouts" %>
                     <div class="mt-2 space-y-1">
-                      <% ["2-Day AWBW Facilitator Training Worksheets & Handouts",
+                      <% [ "2-Day AWBW Facilitator Training Worksheets & Handouts",
                           "AWBW Training Workshop Worksheets",
                           "AHA Moments",
                           "Inviting and Responding to Participants' Sharing",
-                          "Letter to Supervisors"].each do |t| %>
+                          "Letter to Supervisors" ].each do |t| %>
                         <% resource = Resource.find_by(title: t) %>
 
                         <% if resource %>

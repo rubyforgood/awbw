@@ -20,7 +20,7 @@
           </thead>
           <tbody class="divide-y divide-gray-200">
             <% @people.each do |person| %>
-              <% cache [person, current_user.super_user?, current_user.person_id == person.id] do %>
+              <% cache [ person, current_user.super_user?, current_user.person_id == person.id ] do %>
               <tr class="hover:bg-gray-50 transition-colors duration-150 <%= "admin-only bg-blue-100" unless person.published? %>">
                 <td class="px-4 py-2">
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>

@@ -10,10 +10,10 @@
 <%
   subtext = local_assigns[:subtext]
   style, icon, subtext_color = case status
-    when :completed then ["bg-green-50 text-green-700 border-green-200", "fa-flag-checkered", "text-green-600"]
-    when :certificate_due then ["bg-purple-50 text-purple-700 border-purple-200", "fa-certificate", "text-purple-600"]
-    when :ready then ["bg-blue-50 text-blue-700 border-blue-200", "fa-circle-check", "text-blue-600"]
-    else ["bg-amber-50 text-amber-700 border-amber-200", "fa-circle-exclamation", "text-amber-600"]
+    when :completed then [ "bg-green-50 text-green-700 border-green-200", "fa-flag-checkered", "text-green-600" ]
+    when :certificate_due then [ "bg-purple-50 text-purple-700 border-purple-200", "fa-certificate", "text-purple-600" ]
+    when :ready then [ "bg-blue-50 text-blue-700 border-blue-200", "fa-circle-check", "text-blue-600" ]
+    else [ "bg-amber-50 text-amber-700 border-amber-200", "fa-circle-exclamation", "text-amber-600" ]
   end
   tooltip = issues.any? ? issues.join(" · ") : label
 %>

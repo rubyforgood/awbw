@@ -25,7 +25,7 @@
     <div class="relative inline-flex items-center gap-1.5 rounded-full text-xs font-medium border px-5 py-0.5 <%= current_style %>">
       <i class="fas <%= current_icon %>"></i>
       <%= f.select :status,
-            EventRegistration::ATTENDANCE_STATUSES.map { |s| [EventRegistration.new(status: s).attendance_status_label, s] },
+            EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
             {},
             class: "absolute inset-0 w-full opacity-0 cursor-pointer",
             onchange: "this.form.requestSubmit()",

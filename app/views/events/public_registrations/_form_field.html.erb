@@ -77,7 +77,7 @@
     <%# Dynamic fields (e.g. additional_sectors) source options from Sector/Category
         data and store none of their own, so fall back to those when present. %>
     <% radio_options = dynamic_form_field_options(field) ||
-         field.form_field_answer_options.includes(:answer_option).map { |ffao| [ffao.answer_option.name, ffao.answer_option.name] } %>
+         field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
     <% has_specify = radio_options.any? { |option_label, _option_value| specify_placeholder(option_label).present? } %>
     <%= tag.div class: "flex flex-wrap gap-2.5 mt-1", data: (has_specify ? { controller: "specify-option", action: "change->specify-option#update" } : {}) do %>
       <% radio_options.each do |option_label, option_value, option_description| %>
@@ -115,7 +115,7 @@
     <%# Dropdowns have no free-text input, so the "Other" option is omitted here.
         Named specify options keep meaning as a bare choice, so they stay. %>
     <% dropdown_options = (dynamic_form_field_options(field) ||
-         field.form_field_answer_options.includes(:answer_option).map { |ffao| [ffao.answer_option.name, ffao.answer_option.name] })
+         field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] })
          .reject { |option_label, _| FormField.other_option?(option_label) } %>
     <select name="<%= field_name %>"
             id="<%= field_id %>"
@@ -137,7 +137,7 @@
         data; everything else uses the field's own stored answer options. Sector and
         Category options carry an optional description, shown as subtext under the label. %>
     <% checkbox_options = dynamic_form_field_options(field) ||
-         field.form_field_answer_options.includes(:answer_option).map { |ffao| [ffao.answer_option.name, ffao.answer_option.name] } %>
+         field.form_field_answer_options.includes(:answer_option).map { |ffao| [ ffao.answer_option.name, ffao.answer_option.name ] } %>
     <% has_specify = checkbox_options.any? { |option_label, _option_value| specify_placeholder(option_label).present? } %>
     <%# Multi-column (not grid) so a sorted option list reads straight down each
         column then onto the next, rather than zig-zagging across rows. %>

@@ -31,7 +31,7 @@
         <label for="payer_type" class="text-sm font-medium text-gray-500 mb-1 block">Payer Type</label>
 
         <%= select_tag "payer_type",
-          options_for_select(["Person", "Organization"], params[:payer_type]),
+          options_for_select([ "Person", "Organization" ], params[:payer_type]),
           include_blank: "All",
           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
       </div>
@@ -40,7 +40,7 @@
         <label for="person_id" class="text-sm font-medium text-gray-500 mb-1 block">Person</label>
 
         <%= select_tag "person_id",
-          options_for_select(Person.where(id: params[:person_id]).map { |p| [p.full_name, p.id] }),
+          options_for_select(Person.where(id: params[:person_id]).map { |p| [ p.full_name, p.id ] }),
           include_blank: true,
           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
           data: {
@@ -54,7 +54,7 @@
         <label for="organization_id" class="text-sm font-medium text-gray-500 mb-1 block">Organization</label>
 
         <%= select_tag "organization_id",
-          options_for_select(Organization.where(id: params[:organization_id]).map { |o| [o.name, o.id] }),
+          options_for_select(Organization.where(id: params[:organization_id]).map { |o| [ o.name, o.id ] }),
           include_blank: true,
           class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
           data: {

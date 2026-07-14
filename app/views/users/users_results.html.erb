@@ -24,7 +24,7 @@
             <!-- Person -->
             <td class="px-4 py-2 text-left">
               <% if user.person %>
-                <% cache [user.person, "profile_button"] do %>
+                <% cache [ user.person, "profile_button" ] do %>
                   <% show_email = user.person.profile_show_email? || allowed_to?(:manage?, Person) %>
                   <%= person_profile_button(user.person, subtitle: (user.person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
                 <% end %>

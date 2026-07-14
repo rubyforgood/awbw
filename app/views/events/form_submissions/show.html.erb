@@ -32,7 +32,7 @@
           <% response = responses[field.id] %>
           <% next if response.nil? %>
           <% current ||= { name: nil, fields: [] } %>
-          <% current[:fields] << [field, response] %>
+          <% current[:fields] << [ field, response ] %>
         <% end %>
       <% end %>
       <% sections << current if current && current[:fields].any? %>

@@ -15,7 +15,7 @@
         <p class="text-sm font-medium text-red-700">Error: No payment source found</p>
       </div>
     <% end %>
-    <%= f.input :allocatable_type, as: :select, collection: ["EventRegistration"],
+    <%= f.input :allocatable_type, as: :select, collection: [ "EventRegistration" ],
         include_blank: true,
         required: true,
         input_html: { data: { action: "search-type-select#toggle" } } %>

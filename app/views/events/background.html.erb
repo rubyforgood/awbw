@@ -1,14 +1,14 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<% primary_sector_data = @dashboard.primary_sectors.map { |s| [s.name, @dashboard.primary_sector_counts.fetch(s.id, 0)] }.sort_by { |_, count| -count } %>
-<% sector_data = @dashboard.sectors.map { |s| [s.name, @dashboard.sector_counts.fetch(s.id, 0)] }.sort_by { |_, count| -count } %>
-<% age_group_data = @dashboard.age_groups.map { |c| [c.name, @dashboard.age_group_counts.fetch(c.id, 0)] }.sort_by { |_, count| -count } %>
+<% primary_sector_data = @dashboard.primary_sectors.map { |s| [ s.name, @dashboard.primary_sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>
+<% sector_data = @dashboard.sectors.map { |s| [ s.name, @dashboard.sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>
+<% age_group_data = @dashboard.age_groups.map { |c| [ c.name, @dashboard.age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 <% state_data = @dashboard.state_counts.sort_by { |_, count| -count } %>
 <% country_data = @dashboard.country_counts.sort_by { |_, count| -count } %>
 <% school_district_data = @dashboard.school_district_counts.sort_by { |_, count| -count } %>
-<% org_data = @dashboard.organizations.map { |o| [o.name, @dashboard.organization_counts.fetch(o.id, 0)] }.sort_by { |_, count| -count } %>
-<% life_experience_data = @dashboard.life_experiences.map { |c| [c.name, @dashboard.life_experience_counts.fetch(c.id, 0)] }.sort_by { |_, count| -count } %>
-<% settings_data = @dashboard.settings.map { |c| [c.name, @dashboard.settings_counts.fetch(c.id, 0)] }.sort_by { |_, count| -count } %>
+<% org_data = @dashboard.organizations.map { |o| [ o.name, @dashboard.organization_counts.fetch(o.id, 0) ] }.sort_by { |_, count| -count } %>
+<% life_experience_data = @dashboard.life_experiences.map { |c| [ c.name, @dashboard.life_experience_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
+<% settings_data = @dashboard.settings.map { |c| [ c.name, @dashboard.settings_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 
 <%# Shared palette: pie slice i and its legend swatch i both use palette[i]. %>
 <% palette = %w[#3b82f6 #ef4444 #f59e0b #10b981 #6366f1 #ec4899 #14b8a6 #f97316 #8b5cf6 #84cc16 #06b6d4 #eab308 #a855f7 #22c55e #fb7185] %>
@@ -107,7 +107,7 @@
           <thead class="bg-gray-100">
             <tr>
               <% columns = [
-                   { index: 0, align: "text-left", parts: [{ label: "First", key: "first" }, { label: "Last", key: "last" }] },
+                   { index: 0, align: "text-left", parts: [ { label: "First", key: "first" }, { label: "Last", key: "last" } ] },
                    { label: "Organization", index: 1, align: "text-left" },
                    { label: "Status", index: 2, align: "text-left" },
                    { label: "Location", index: 3, align: "text-left" },
@@ -117,7 +117,7 @@
               <% columns.each do |col| %>
                 <th class="px-4 py-2 <%= col[:align] %> text-xs font-semibold text-gray-700" aria-sort="none">
                   <span class="inline-flex items-center gap-1.5">
-                    <% (col[:parts] || [{ label: col[:label] }]).each_with_index do |part, i| %>
+                    <% (col[:parts] || [ { label: col[:label] } ]).each_with_index do |part, i| %>
                       <% if i.positive? %><span class="text-gray-300" aria-hidden="true">/</span><% end %>
                       <%= render "shared/sortable_header", label: part[:label], index: col[:index], key: part[:key] %>
                     <% end %>
@@ -196,15 +196,15 @@
   <%# Per-row drill-ins: each breakdown row links to the registrant list filtered
       to the people behind it (sectors/states use their named filters, the rest use
       the matching registrant_ids set). %>
-  <% primary_sector_paths = @dashboard.primary_sectors.to_h { |s| [s.name, registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids_by_sector.fetch(s.id, []).join("-"))] } %>
-  <% sector_paths = @dashboard.sectors.to_h { |s| [s.name, registrants_event_path(@event, sector: s.id)] } %>
-  <% age_group_paths = @dashboard.age_groups.to_h { |c| [c.name, registrants_event_path(@event, registrant_ids: @dashboard.age_group_registrant_ids_by_category.fetch(c.id, []).join("-"))] } %>
+  <% primary_sector_paths = @dashboard.primary_sectors.to_h { |s| [ s.name, registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids_by_sector.fetch(s.id, []).join("-")) ] } %>
+  <% sector_paths = @dashboard.sectors.to_h { |s| [ s.name, registrants_event_path(@event, sector: s.id) ] } %>
+  <% age_group_paths = @dashboard.age_groups.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% state_paths = @dashboard.states.index_with { |state| registrants_event_path(@event, state: state) } %>
   <% country_paths = @dashboard.country_registrant_ids_by_country.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
   <% school_district_paths = @dashboard.school_district_registrant_ids_by_district.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
-  <% life_experience_paths = @dashboard.life_experiences.to_h { |c| [c.name, registrants_event_path(@event, registrant_ids: @dashboard.life_experience_registrant_ids_by_category.fetch(c.id, []).join("-"))] } %>
-  <% settings_paths = @dashboard.settings.to_h { |c| [c.name, registrants_event_path(@event, registrant_ids: @dashboard.settings_registrant_ids_by_category.fetch(c.id, []).join("-"))] } %>
-  <% org_paths = @dashboard.organizations.to_h { |o| [o.name, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-"))] } %>
+  <% life_experience_paths = @dashboard.life_experiences.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.life_experience_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
+  <% settings_paths = @dashboard.settings.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.settings_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
+  <% org_paths = @dashboard.organizations.to_h { |o| [ o.name, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-")) ] } %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
     <% if primary_sector_data.any? %>
       <%= render "breakdown_card", title: "Primary sector", data: primary_sector_data, chart: :pie, palette: palette, row_paths: primary_sector_paths %>

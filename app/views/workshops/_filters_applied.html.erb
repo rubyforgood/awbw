@@ -1,6 +1,6 @@
 <% windows_types_applied = params[:windows_types].present? ?
                              WindowsType.where(id: params[:windows_types].to_unsafe_h.values.reject(&:blank?))
-                               .map{|wt| wt.short_name} : [] %>
+                               .map { |wt| wt.short_name } : [] %>
 
 <% categories_applied = params[:categories].present? ?
                           Category.where(id: params[:categories].to_unsafe_h.values.reject(&:blank?))
@@ -22,7 +22,7 @@
   unpublished_applied,
   "#{ "Title: " + params[:title] if params[:title].present? }",
   "#{ "Author: " + params[:author_name] if params[:author_name].present? }",
-  "#{ "Full-text: " + params[:query] if params[:query].present? }",
+  "#{ "Full-text: " + params[:query] if params[:query].present? }"
 ].flatten.reject(&:blank?).sort %>
 
 <div id="filters_applied" class="flex justify-between items-center">

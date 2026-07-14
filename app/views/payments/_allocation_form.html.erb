@@ -22,7 +22,7 @@
 
     <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
       <%= f.input :payer_sgid,
-        collection: payer_label_data ? [[payer_label_data[:label], payer_label_data[:id]]] : [],
+        collection: payer_label_data ? [ [ payer_label_data[:label], payer_label_data[:id] ] ] : [],
         selected: payer_label_data&.dig(:id),
         required: true,
         input_html: {
@@ -37,7 +37,7 @@
         hint: "Whose account is the money coming from?" %>
 
       <%= f.input :additional_designation_sgid,
-        collection: designation_label_data ? [[designation_label_data[:label], designation_label_data[:id]]] : [],
+        collection: designation_label_data ? [ [ designation_label_data[:label], designation_label_data[:id] ] ] : [],
         selected: designation_label_data&.dig(:id),
         include_blank: true,
         input_html: {

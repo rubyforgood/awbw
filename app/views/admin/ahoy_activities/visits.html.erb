@@ -56,7 +56,7 @@
               </label>
               <%= select_tag :time_period,
                              options_for_select(
-                               [["All time", "all_time"], ["Past day", "past_day"], ["Past week", "past_week"], ["Past month", "past_month"], ["Past year", "past_year"]],
+                               [ [ "All time", "all_time" ], [ "Past day", "past_day" ], [ "Past week", "past_week" ], [ "Past month", "past_month" ], [ "Past year", "past_year" ] ],
                                params[:time_period] || "past_month"
                              ),
                              class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>

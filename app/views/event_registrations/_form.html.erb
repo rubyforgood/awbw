@@ -53,13 +53,13 @@
           <% box_base = "flex h-14 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border bg-gray-50 px-1 text-center transition hover:bg-gray-100" %>
           <% if account %>
             <% account_border, account_icon, account_icon_color, account_status = if account.locked_at.present?
-                 ["border-red-300", "fa-lock", "text-red-600", "Locked"]
+                 [ "border-red-300", "fa-lock", "text-red-600", "Locked" ]
                elsif account.inactive?
-                 ["border-red-300", "fa-lock", "text-red-600", "Inactive"]
+                 [ "border-red-300", "fa-lock", "text-red-600", "Inactive" ]
                elsif account.confirmed_at.blank?
-                 ["border-yellow-400", "fa-clock", "text-yellow-600", (account.welcome_instructions_sent_at.present? ? "Invited — not confirmed" : "Unconfirmed")]
+                 [ "border-yellow-400", "fa-clock", "text-yellow-600", (account.welcome_instructions_sent_at.present? ? "Invited — not confirmed" : "Unconfirmed") ]
                else
-                 ["border-green-300", "fa-user-shield", "text-green-600", "Active"]
+                 [ "border-green-300", "fa-user-shield", "text-green-600", "Active" ]
                end %>
             <% account_box = capture do %>
               <i class="fa-solid <%= account_icon %> <%= account_icon_color %> text-base"></i>
@@ -98,7 +98,7 @@
             <div class="relative">
               <i data-attendance-status-target="icon" class="fas <%= current_icon %> <%= current_icon_color %> pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm"></i>
               <%= f.select :status,
-                    EventRegistration::ATTENDANCE_STATUSES.map { |s| [EventRegistration.new(status: s).attendance_status_label, s] },
+                    EventRegistration::ATTENDANCE_STATUSES.map { |s| [ EventRegistration.new(status: s).attendance_status_label, s ] },
                     { selected: f.object.status },
                     class: "w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none cursor-pointer",
                     data: { "attendance-status-target": "select", action: "attendance-status#update" },
@@ -391,10 +391,10 @@
 
           <div>
             <%= f.input :registrant_id,
-                        collection: f.object.registrant.present? ? [[
+                        collection: f.object.registrant.present? ? [ [
                           f.object.registrant.preferred_email.present? ? "#{f.object.registrant.full_name} (#{f.object.registrant.preferred_email})" : f.object.registrant.full_name,
                           f.object.registrant.id
-                        ]] : [],
+                        ] ] : [],
                         include_blank: true,
                         required: true,
                         input_html: {

@@ -7,7 +7,7 @@
     <% designation_label_data = @payment.selected_additional_designation&.compound_search_label %>
 
     <%= f.input :payer_sgid,
-      collection: payer_label_data ? [[payer_label_data[:label], payer_label_data[:id]]] : [],
+      collection: payer_label_data ? [ [ payer_label_data[:label], payer_label_data[:id] ] ] : [],
       selected: payer_label_data&.dig(:id),
       required: true,
       input_html: {
@@ -22,7 +22,7 @@
       hint: "Whose account is the money coming from?" %>
 
     <%= f.input :additional_designation_sgid,
-      collection: designation_label_data ? [[designation_label_data[:label], designation_label_data[:id]]] : [],
+      collection: designation_label_data ? [ [ designation_label_data[:label], designation_label_data[:id] ] ] : [],
       selected: designation_label_data&.dig(:id),
       include_blank: true,
       input_html: {

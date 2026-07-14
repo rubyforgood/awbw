@@ -30,14 +30,14 @@
       <div>
         <label for="payer_type" class="<%= label_class %>">Payer type</label>
         <%= select_tag "payer_type",
-        options_for_select(["Person", "Organization"], params[:payer_type]),
+        options_for_select([ "Person", "Organization" ], params[:payer_type]),
         include_blank: "All",
         class: field_class %>
       </div>
       <div>
         <label for="person_id" class="<%= label_class %>">Person</label>
         <%= select_tag "person_id",
-        options_for_select(Person.where(id: params[:person_id]).map { |p| [p.full_name, p.id] }),
+        options_for_select(Person.where(id: params[:person_id]).map { |p| [ p.full_name, p.id ] }),
         include_blank: true,
         class: field_class,
         data: {
@@ -49,7 +49,7 @@
       <div>
         <label for="organization_id" class="<%= label_class %>">Organization</label>
         <%= select_tag "organization_id",
-        options_for_select(Organization.where(id: params[:organization_id]).map { |o| [o.name, o.id] }),
+        options_for_select(Organization.where(id: params[:organization_id]).map { |o| [ o.name, o.id ] }),
         include_blank: true,
         class: field_class,
         data: {
@@ -62,7 +62,7 @@
         <div>
           <label for="allocatable_type" class="<%= label_class %>">Allocated to type</label>
           <%= select_tag "allocatable_type",
-          options_for_select(["EventRegistration"], params[:allocatable_type]),
+          options_for_select([ "EventRegistration" ], params[:allocatable_type]),
           include_blank: true,
           class: field_class,
           data: { action: "search-type-select#toggle" } %>
@@ -71,7 +71,7 @@
           <div>
             <label for="allocatable_id" class="<%= label_class %>">Allocated to</label>
             <%= select_tag "allocatable_id",
-            options_for_select(EventRegistration.where(id: params[:allocatable_id]).map { |r| ["#{r.registrant.full_name} - #{r.event.title}", r.id] }),
+            options_for_select(EventRegistration.where(id: params[:allocatable_id]).map { |r| [ "#{r.registrant.full_name} - #{r.event.title}", r.id ] }),
             include_blank: true,
             class: field_class,
             data: {

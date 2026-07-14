@@ -19,8 +19,8 @@
         <label class="mb-1 block text-sm font-medium text-gray-700" for="continuing_education_registration_professional_license_id">License</label>
         <%= f.select :professional_license_id,
               options_for_select(
-                licenses.map { |l| [l.name, l.id, { "data-kind" => l.kind, "data-number" => l.number, "data-state" => l.issuing_state, "data-expires" => l.expires_on&.iso8601 }] } +
-                  [["Create new license", "new"]],
+                licenses.map { |l| [ l.name, l.id, { "data-kind" => l.kind, "data-number" => l.number, "data-state" => l.issuing_state, "data-expires" => l.expires_on&.iso8601 } ] } +
+                  [ [ "Create new license", "new" ] ],
                 license&.id
               ),
               {},

@@ -23,7 +23,7 @@
 
           <tbody class="divide-y divide-gray-100">
           <% @organizations.each do |organization| %>
-            <% cache [organization, @affiliated_since[organization.id], @active_people_counts[organization.id], @program_statuses&.dig(organization.id), current_user.super_user?] do %>
+            <% cache [ organization, @affiliated_since[organization.id], @active_people_counts[organization.id], @program_statuses&.dig(organization.id), current_user.super_user? ] do %>
             <tr class="hover:bg-gray-50 transition">
               <% if allowed_to?(:manage?, Organization) %>
                 <td class="admin-only bg-blue-100 px-4 py-2 text-center">

@@ -40,7 +40,7 @@
       <%= link_to "#{bookmarkable.title}#{ type_name }#{" [UNPUBLISHED]" unless bookmarkable.published?}",
                   polymorphic_path(bookmarkable),
                   class: "hover:underline",
-                  data: { turbo: false, } %>
+                  data: { turbo: false } %>
     </h3>
     <div class="text-sm text-gray-600">
       You bookmarked on
@@ -60,14 +60,14 @@
        <%= link_to bookmarkable.created_by.name,
                    bookmarkable.created_by.person ? person_path(bookmarkable.created_by.person) : user_path(bookmarkable.created_by),
                    class: "hover:underline",
-                   data: { turbo: false, } %>
+                   data: { turbo: false } %>
      <% elsif bookmark.bookmarkable_type == "Workshop" %>
        <%= bookmarkable.full_name.present? ? bookmarkable.full_name : "Person" %>
      <% elsif bookmarkable.respond_to?(:created_by) && bookmarkable.created_by %>
        <%= link_to bookmarkable.object.created_by.name,
                    bookmarkable.created_by.person ? person_path(bookmarkable.created_by.person) : user_path(bookmarkable.created_by),
                    class: "hover:underline",
-                   data: { turbo: false, } %>
+                   data: { turbo: false } %>
      <% else %>
        User
      <% end %>

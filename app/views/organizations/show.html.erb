@@ -44,7 +44,7 @@
                      end %>
         <% if address %>
           <p class="mt-1 text-gray-500 text-sm">
-            <%= [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %>
+            <%= [ address.locality, [ address.city, address.state ].compact_blank.join(", "), address.district ].compact_blank.join(" · ") %>
           </p>
         <% end %>
         <% org_earliest_affiliation = @organization.affiliations.minimum(:start_date) %>
@@ -116,14 +116,14 @@
           </h2>
           <% active_affiliations = @organization.affiliations
                .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) && a.person.present? }
-               .sort_by { |a| [a.person.first_name.to_s.downcase, a.person.last_name.to_s.downcase] } %>
+               .sort_by { |a| [ a.person.first_name.to_s.downcase, a.person.last_name.to_s.downcase ] } %>
           <% grouped = active_affiliations.group_by(&:person) %>
           <% if grouped.any? %>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               <% grouped.each do |person, person_affiliations| %>
                 <div data-paginated-fields-target="item">
                   <% titles = person_affiliations.filter_map { |a| a.title.presence }.uniq %>
-                  <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
+                  <% titles = titles.sort_by { |t| [ t.downcase.include?("facilitator") ? 0 : 1, t.downcase ] } %>
                   <%= person_profile_button(person, subtitle: titles.any? ? titles.join(", ") : nil) %>
                 </div>
               <% end %>

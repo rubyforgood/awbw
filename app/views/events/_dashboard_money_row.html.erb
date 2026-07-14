@@ -45,7 +45,7 @@
         <% registrants.each do |registrant| %>
           <li class="flex items-center justify-between gap-2">
             <%= link_to registrant.name, registrants_event_path(@event, registrant_ids: registrant.id),
-                  title: [registrant.name, *@dashboard.organization_names_by_registrant[registrant.id]].join(" · "),
+                  title: [ registrant.name, *@dashboard.organization_names_by_registrant[registrant.id] ].join(" · "),
                   class: "truncate min-w-0 hover:underline" %>
             <% person_cents = amounts_by_registrant_id&.[](registrant.id) %>
             <% if person_cents %>

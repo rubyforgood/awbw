@@ -2,7 +2,7 @@
   <%# === Collect manual messages from params === %>
   <% manual_messages = [] %>
   <% { notice: params[:notice], alert: params[:alert], info: params[:info], warning: params[:warning], error: params[:error] }.each do |type, msg| %>
-    <% manual_messages << [type, msg] if msg.present? %>
+    <% manual_messages << [ type, msg ] if msg.present? %>
   <% end %>
 
   <%# === Collect flash messages === %>
@@ -33,7 +33,7 @@
     <%# === Detect reset-password–style messages === %>
     <% persistent = msg.to_s.match?(/reset your password|password instructions|set your password|registration is not complete/i) %>
     <% timeout = persistent ? 30000 : 4000 %>
-    <% disable_outside_click = ["alert", "error"].include?(type.to_s) %>
+    <% disable_outside_click = [ "alert", "error" ].include?(type.to_s) %>
 
     <div
       class="max-w-3xl my-2"

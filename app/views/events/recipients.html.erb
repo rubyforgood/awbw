@@ -257,7 +257,7 @@
             <div class="sm:col-span-2 text-sm text-gray-700">
               <%= link_to shoutout.recipient.name, person_path(shoutout.recipient),
                           class: "font-semibold text-gray-900 hover:underline" %>
-              <% meta = [shoutout.sector, shoutout.age_group].compact_blank %>
+              <% meta = [ shoutout.sector, shoutout.age_group ].compact_blank %>
               <% if meta.any? %><span class="text-gray-500">(<%= meta.join(", ") %>)</span><% end %>
               — <%= shoutout.text %>
             </div>

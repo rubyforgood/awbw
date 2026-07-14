@@ -18,7 +18,7 @@
         <div data-paginated-fields-target="item">
           <% if show_subtitle %>
             <% titles = org_affiliations.filter_map { |a| a.title.presence }.uniq %>
-            <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
+            <% titles = titles.sort_by { |t| [ t.downcase.include?("facilitator") ? 0 : 1, t.downcase ] } %>
             <%= organization_profile_button(organization, subtitle: titles.any? ? titles.join(", ") : nil, data: button_data) %>
           <% else %>
             <%= organization_profile_button(organization, data: button_data) %>
@@ -29,7 +29,7 @@
         <div data-paginated-fields-target="item">
           <% if show_subtitle %>
             <% titles = org_affiliations.filter_map { |a| a.title.presence }.uniq %>
-            <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
+            <% titles = titles.sort_by { |t| [ t.downcase.include?("facilitator") ? 0 : 1, t.downcase ] } %>
             <%= organization_profile_button(organization, subtitle: titles.any? ? titles.join(", ") : nil, data: button_data, inactive: true) %>
           <% else %>
             <%= organization_profile_button(organization, data: button_data, inactive: true) %>

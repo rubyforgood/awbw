@@ -21,7 +21,7 @@
     <% end %>
 
     <% unless @payment.is_a?(ExternalProcessorPayment) %>
-      <%= f.input :recipient_type, as: :select, collection: ["Person", "Organization"], include_blank: true, input_html: { data: { action: "search-type-select#toggle" } } %>
+      <%= f.input :recipient_type, as: :select, collection: [ "Person", "Organization" ], include_blank: true, input_html: { data: { action: "search-type-select#toggle" } } %>
       <template data-search-type-select-target="template" data-type="Person">
         <%= f.input :recipient_id,
           collection: [],
@@ -57,7 +57,7 @@
       <div class="mb-4">
         <span class="text-sm font-medium text-gray-700">Method</span>
         <div class="mt-1 flex gap-4">
-          <%= f.collection_radio_buttons :method, [["Check", "check"], ["Cash", "cash"]], :last, :first, checked: "check" do |b| %>
+          <%= f.collection_radio_buttons :method, [ [ "Check", "check" ], [ "Cash", "cash" ] ], :last, :first, checked: "check" do |b| %>
             <label class="flex items-center gap-2">
               <%= b.radio_button %> <%= b.text %>
             </label>

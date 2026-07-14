@@ -51,7 +51,7 @@
           editable, so staff can record what they anticipate even when the
           registrant never filled out the form. %>
       <% payment_options = FormBuilderService::PAYMENT_METHOD_OPTIONS %>
-      <% payment_options |= [event_registration.expected_payment_method] if event_registration.expected_payment_method.present? %>
+      <% payment_options |= [ event_registration.expected_payment_method ] if event_registration.expected_payment_method.present? %>
       <%# relative z-10 lifts these controls above the card's stretched "View all"
           link (after:inset-0), so the select and toggle stay clickable. %>
       <div class="relative z-10 mt-4 grid grid-cols-1 gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2 sm:items-start">
@@ -59,7 +59,7 @@
           <label class="block text-sm font-medium text-gray-700" for="expected_payment_method">Expected payment method</label>
           <span class="mt-0.5 block text-xs text-gray-400">Anticipated payment type, prefilled from form</span>
           <%= select_tag "event_registration[expected_payment_method]",
-                options_for_select([["Not specified", ""]] + payment_options, event_registration.expected_payment_method),
+                options_for_select([ [ "Not specified", "" ] ] + payment_options, event_registration.expected_payment_method),
                 id: "expected_payment_method",
                 class: "mt-2 w-full rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-8 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none cursor-pointer" %>
         </div>

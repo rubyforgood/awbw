@@ -13,7 +13,7 @@
   <!-- Sort bar -->
   <div class="flex flex-wrap items-center gap-4 mb-6">
     <span class="font-semibold">Sort by:</span>
-    <% [["created_at", "Newest"], ["title", "Title"], ["popularity", "Most Bookmarked"]].each do |col, label| %>
+    <% [ [ "created_at", "Newest" ], [ "title", "Title" ], [ "popularity", "Most Bookmarked" ] ].each do |col, label| %>
       <%= link_to personal_bookmarks_path(sort_base.merge(sort: col, direction: (@sort == col && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
                   data: { turbo_frame: "personal_bookmarks_results" },
                   class: "inline-flex items-center gap-1 text-sm font-medium #{@sort == col ? 'text-blue-700' : 'text-gray-600'} hover:text-gray-900" do %>

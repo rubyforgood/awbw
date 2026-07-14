@@ -16,7 +16,7 @@
     <% end %>
 
     <% if defined?(cover) && cover.present? %>
-      <%= image_tag cover.variant(resize_to_fill: [1600, 900]),
+      <%= image_tag cover.variant(resize_to_fill: [ 1600, 900 ]),
                     class: "w-full aspect-[16/9] object-cover object-center transition group-hover:opacity-95" %>
     <% end %>
 

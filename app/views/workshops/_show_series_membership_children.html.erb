@@ -1,9 +1,9 @@
 <% spanish ||= false %>
 <% grouped_series_memberships = workshop.workshop_series_children
   .includes(:workshop_child)
-  .sort_by { |m| [m.theme_name.to_s.downcase,
+  .sort_by { |m| [ m.theme_name.to_s.downcase,
                   m.position,
-                  m.workshop_child.title.to_s.downcase] }
+                  m.workshop_child.title.to_s.downcase ] }
   .group_by(&:theme_name) %>
 
 <div class="workshop-series-children single-workshop-detail mb-4">

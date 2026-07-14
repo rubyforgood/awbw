@@ -60,7 +60,7 @@
         <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Revenue by year</h2>
         <div class="rounded-xl border border-gray-200 bg-white p-4">
           <%= column_chart @report.chart_series, stacked: true, prefix: "$", thousands: ",",
-                colors: ["#2563eb", "#c026d3", "#dc2626"], height: "260px", library: { borderRadius: 4 } %>
+                colors: [ "#2563eb", "#c026d3", "#dc2626" ], height: "260px", library: { borderRadius: 4 } %>
         </div>
       </section>
 
@@ -126,12 +126,12 @@
                     <% ce_class = DomainTheme.text_class_for(:continuing_education, intensity: 600) %>
                     <dl class="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm py-2">
                       <% columns = [
-                           [["Registration payments", row.registration_payments_cents, "text-gray-800"],
-                             ["Projected CE*", row.ce_projected_cents, ce_class]],
-                           [["Funded scholarships", row.funded_scholarship_cents, "text-gray-800"],
-                             ["Unfunded scholarships", row.unfunded_scholarship_cents, "text-gray-800"]],
-                           [["Discounts", row.discount_cents, "text-gray-800"],
-                             ["Registration owed", row.registration_outstanding_cents, "text-orange-600"]]
+                           [ [ "Registration payments", row.registration_payments_cents, "text-gray-800" ],
+                             [ "Projected CE*", row.ce_projected_cents, ce_class ] ],
+                           [ [ "Funded scholarships", row.funded_scholarship_cents, "text-gray-800" ],
+                             [ "Unfunded scholarships", row.unfunded_scholarship_cents, "text-gray-800" ] ],
+                           [ [ "Discounts", row.discount_cents, "text-gray-800" ],
+                             [ "Registration owed", row.registration_outstanding_cents, "text-orange-600" ] ]
                          ] %>
                       <% columns.each do |pair| %>
                         <div class="space-y-1.5">

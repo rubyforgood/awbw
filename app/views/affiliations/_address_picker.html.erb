@@ -6,7 +6,7 @@
     When the org has no addresses, renders an equal-width spacer so the following
     fields stay aligned across rows. %>
 <% org = f.object.organization %>
-<% options = org ? org.addresses.each_with_index.map { |address, i| [i + 1, address] } : [] %>
+<% options = org ? org.addresses.each_with_index.map { |address, i| [ i + 1, address ] } : [] %>
 <% selected_id = f.object.organization_address_id %>
 <% selected = options.find { |_number, address| address.id == selected_id } %>
 <% if options.any? %>
