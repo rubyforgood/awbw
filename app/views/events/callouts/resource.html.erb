@@ -26,7 +26,7 @@
    else
      [ registration_ticket_path(@event_registration.slug), "Back to ticket", nil ]
    end %>
-<%= render layout: "events/callouts/callout_page", locals: { title: detail_label || @resource.title, back_path: back_path, back_label: back_label } do %>
+<%= render layout: "events/callouts/callout_page", locals: { title: detail_label || @resource.title, back_path: back_path, back_label: back_label, container_width: "max-w-5xl" } do %>
   <% if detail_label %>
     <h2 class="text-lg font-semibold text-gray-800 mb-4"><%= @resource.title %></h2>
   <% end %>
