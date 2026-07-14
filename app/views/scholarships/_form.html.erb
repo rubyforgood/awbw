@@ -53,26 +53,11 @@
             </dd>
           </div>
         </dl>
-
-        <%# Tasks-completed toggle, styled to match the scholarship-agreement box
-            below. The amount box above already signals the allocation (fuchsia). %>
-        <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
-          <div>
-            <p class="text-xs font-medium text-gray-600">Tasks completed</p>
-            <p class="text-xs text-gray-400">Recipient has completed their scholarship tasks</p>
-          </div>
-          <label class="flex items-center gap-2.5 cursor-pointer">
-            <%= f.check_box :tasks_completed, class: "sr-only peer" %>
-            <span class="text-sm text-gray-400 peer-checked:hidden">Not yet</span>
-            <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Completed</span>
-            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
-          </label>
-        </div>
       </div>
     <% end %>
 
-    <%# With a registration, the amount + tasks-completed toggle live in the stat grid
-        above. Without one (grant-funded or standalone) they live here instead. %>
+    <%# With a registration, the amount lives in the stat grid above. Without one
+        (grant-funded or standalone) the recipient picker and amount live here. %>
     <% unless @allocatable.respond_to?(:event) %>
       <div class="flex flex-wrap items-start gap-x-10 gap-y-6">
         <% if grant_funded %>
@@ -94,22 +79,11 @@
             <%= f.number_field :amount_dollars, step: 0.01, min: 0, autocomplete: "off", class: "w-full rounded-lg border border-gray-300 pl-7 pr-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", data: { "scholarship-preview-target": "amount", action: "input->scholarship-preview#update", lpignore: "true", "1p-ignore": "true", bwignore: "true", "form-type": "other" } %>
           </div>
         </div>
-
-        <div>
-          <%= f.label :tasks_completed, "Tasks completed", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <label class="flex h-[2.625rem] items-center gap-2.5 cursor-pointer">
-            <%= f.check_box :tasks_completed, class: "sr-only peer" %>
-            <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
-            <span class="text-sm text-gray-400 peer-checked:hidden">Not yet</span>
-            <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Completed</span>
-          </label>
-        </div>
       </div>
     <% end %>
 
-    <%# Scholarship agreement: an informational toggle shown in either layout,
-        recording whether the recipient has signed their scholarship agreement.
-        It surfaces back to the recipient on their scholarship callout page. %>
+    <%# Scholarship agreement, then tasks — the recipient agrees first, then
+        completes the tasks. Both shown in either layout. %>
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
       <div>
         <p class="text-xs font-medium text-gray-600">Scholarship agreement</p>
@@ -119,6 +93,19 @@
         <%= f.check_box :agreement_signed, class: "sr-only peer" %>
         <span class="text-sm text-gray-400 peer-checked:hidden">Not signed</span>
         <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Signed</span>
+        <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
+      </label>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+      <div>
+        <p class="text-xs font-medium text-gray-600">Tasks completed</p>
+        <p class="text-xs text-gray-400">Recipient has completed their scholarship tasks</p>
+      </div>
+      <label class="flex items-center gap-2.5 cursor-pointer">
+        <%= f.check_box :tasks_completed, class: "sr-only peer" %>
+        <span class="text-sm text-gray-400 peer-checked:hidden">Not yet</span>
+        <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Completed</span>
         <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
       </label>
     </div>
