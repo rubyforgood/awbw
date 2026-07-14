@@ -2,6 +2,13 @@
 
 <% primary_sector_data = @dashboard.primary_sectors.map { |s| [ s.name, @dashboard.primary_sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>
 <% sector_data = @dashboard.sectors.map { |s| [ s.name, @dashboard.sector_counts.fetch(s.id, 0) ] }.sort_by { |_, count| -count } %>
+<%# Free-text "Other" sectors ride along as one aggregate slice, pinned last (the
+    actual typed values get their own detail card below). The primary chart has no
+    such slice — "Other" is an additional-sector answer only. %>
+<% sector_data += [ [ "Other", @dashboard.other_sector_response_count ] ] if @dashboard.other_sector_response_count.positive? %>
+<%# Detail list of the actual typed values, each drilling into the registrants who typed it. %>
+<% other_response_data = @dashboard.other_sector_response_rows.map { |text, count, _ids| [ text, count ] } %>
+<% other_response_paths = @dashboard.other_sector_response_rows.to_h { |text, _count, ids| [ text, registrants_event_path(@event, registrant_ids: ids.join("-")) ] } %>
 <% age_group_data = @dashboard.age_groups.map { |c| [ c.name, @dashboard.age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 <% state_data = @dashboard.state_counts.sort_by { |_, count| -count } %>
 <% country_data = @dashboard.country_counts.sort_by { |_, count| -count } %>
@@ -198,6 +205,7 @@
       the matching registrant_ids set). %>
   <% primary_sector_paths = @dashboard.primary_sectors.to_h { |s| [ s.name, registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids_by_sector.fetch(s.id, []).join("-")) ] } %>
   <% sector_paths = @dashboard.sectors.to_h { |s| [ s.name, registrants_event_path(@event, sector: s.id) ] } %>
+  <% sector_paths["Other"] = registrants_event_path(@event, registrant_ids: @dashboard.other_sector_response_registrant_ids.join("-")) if @dashboard.other_sector_response_count.positive? %>
   <% age_group_paths = @dashboard.age_groups.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% state_paths = @dashboard.states.index_with { |state| registrants_event_path(@event, state: state) } %>
   <% country_paths = @dashboard.country_registrant_ids_by_country.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
@@ -211,6 +219,11 @@
     <% end %>
     <% if sector_data.any? %>
       <%= render "breakdown_card", title: "All sectors", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
+    <% end %>
+    <%# The free-text values behind the "Other" sector slice — a list, since these
+        are un-curated answers a curator later promotes into real sectors. %>
+    <% if other_response_data.any? %>
+      <%= render "breakdown_card", title: "Other sector responses", data: other_response_data, chart: nil, palette: palette, row_paths: other_response_paths %>
     <% end %>
     <%# States and countries use the addresses theme color (slate) for their map ramps. %>
     <% addresses_color = "#475569" %>
