@@ -108,6 +108,16 @@ RSpec.describe Event, type: :model do
       event = build(:event, start_date: 1.hour.ago, end_date: 1.hour.from_now)
       expect(event.videoconference_details_visible?).to be true
     end
+
+    it "defers to the videoconference callout's drip date over the week-before default" do
+      event = create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      create(:registration_ticket_callout, event:, magic_key: "videoconference",
+        display_from: 2.days.from_now)
+
+      # Within the week-before default (which would be true), but before the
+      # callout's later drip date.
+      expect(event.videoconference_details_visible?).to be false
+    end
   end
 
   describe "#registerable?" do

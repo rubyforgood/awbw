@@ -173,11 +173,22 @@ class Event < ApplicationRecord
     now >= start_date - VIDEOCONFERENCE_JOIN_BUFFER && now <= end_date + VIDEOCONFERENCE_JOIN_BUFFER
   end
 
+  # When the videoconference connection details unlock. Driven by the drip date on
+  # the materialized videoconference callout (admin-editable), falling back to
+  # VIDEOCONFERENCE_DETAILS_LEAD before the start for events that haven't
+  # materialized the built-in callouts.
+  def videoconference_details_available_from
+    return @videoconference_details_available_from if defined?(@videoconference_details_available_from)
+    return unless start_date
+    override = registration_ticket_callouts.magic.find_by(magic_key: "videoconference")&.display_from
+    @videoconference_details_available_from = override || start_date - VIDEOCONFERENCE_DETAILS_LEAD
+  end
+
   # Whether the videoconference connection details may be revealed yet: only once
-  # the event is within VIDEOCONFERENCE_DETAILS_LEAD of starting.
-  def videoconference_details_visible?
-    return false unless start_date
-    Time.current >= start_date - VIDEOCONFERENCE_DETAILS_LEAD
+  # we've reached the drip date above.
+  def videoconference_details_visible?(now = Time.current)
+    from = videoconference_details_available_from
+    from.present? && now >= from
   end
 
   def registerable?

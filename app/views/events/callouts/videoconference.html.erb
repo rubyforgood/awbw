@@ -13,13 +13,27 @@
           <p class="mt-2 text-xs text-gray-500 break-all"><%= @event.videoconference_url %></p>
           <%= render "events/videoconference_connection", event: @event %>
         </div>
-      <% elsif !@event_registration.payment_access_granted? %>
-        <div class="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          The videoconference link unlocks once your payment is on file. Make your payment from your ticket to gain access.
-        </div>
       <% else %>
-        <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-600">
-          The videoconference link will be available here about a week before the event.
+        <%# Not yet available: show both unlock conditions and which are met. %>
+        <% paid = @event_registration.payment_access_granted? %>
+        <% reveal = @event.videoconference_details_available_from %>
+        <% date_met = reveal.blank? || Time.current >= reveal %>
+        <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-600 space-y-2">
+          <p class="font-medium text-gray-700">The videoconference link unlocks once both of these are met:</p>
+          <ul class="space-y-1">
+            <li class="flex items-center gap-2">
+              <i class="fa-solid <%= paid ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
+              Your payment is on file
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid <%= date_met ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
+              <% if reveal.present? %>
+                Available from <%= reveal.to_date.strftime("%B %-d, %Y") %>
+              <% else %>
+                Available closer to the event
+              <% end %>
+            </li>
+          </ul>
         </div>
       <% end %>
     <% end %>
@@ -27,6 +41,9 @@
     <div class="border-t border-gray-100 pt-5">
       <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Add to your calendar</p>
       <div class="flex flex-wrap gap-1 items-center text-sm text-blue-600 font-medium"><%= @event.calendar_links(show_videoconference_details: @event_registration.videoconference_details_visible?) %></div>
+      <% if @event.videoconference_url.present? && !@event_registration.videoconference_details_visible? %>
+        <p class="mt-2 text-xs text-gray-500">The join link isn't in this calendar entry yet — add the event to your calendar again once the link is available to include it.</p>
+      <% end %>
     </div>
   </div>
 <% end %>

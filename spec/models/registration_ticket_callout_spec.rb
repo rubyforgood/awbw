@@ -85,6 +85,24 @@ RSpec.describe RegistrationTicketCallout, type: :model do
     end
   end
 
+  describe "#page_content?" do
+    it "is true with description text" do
+      callout.description = "<p>Read this.</p>"
+      expect(callout.page_content?).to be(true)
+    end
+
+    it "is true with a linked resource" do
+      persisted = create(:registration_ticket_callout, description: "")
+      persisted.resources << create(:resource)
+      expect(persisted.page_content?).to be(true)
+    end
+
+    it "is false with no description and no resources" do
+      callout.description = ""
+      expect(callout.page_content?).to be(false)
+    end
+  end
+
   describe "#dripping?" do
     it "is true only while display_from is in the future" do
       callout.display_from = 1.day.from_now

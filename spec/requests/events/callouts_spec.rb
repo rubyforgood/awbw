@@ -62,6 +62,17 @@ RSpec.describe "Events::Callouts", type: :request do
       # The file itself is only shown on the resource's own page, not embedded here.
       expect(response.body).not_to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
     end
+
+    it "lists both unlock conditions while the details aren't visible yet" do
+      event.update!(start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours)
+
+      get registration_videoconference_path(registration.slug)
+
+      expect(response.body).to include("unlocks once both of these are met")
+      expect(response.body).to include("Your payment is on file")
+      expect(response.body).to include("The join link isn't in this calendar entry yet")
+      expect(response.body).not_to include("https://example.com/zoom")
+    end
   end
 
   # The single-resource page is where a document is actually shown: the inline
