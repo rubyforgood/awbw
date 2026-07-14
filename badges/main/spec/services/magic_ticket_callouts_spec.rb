@@ -81,22 +81,30 @@ RSpec.describe MagicTicketCallouts do
       expect(card_titles(registration.reload)).to include(event.ce_hours_details_label)
     end
 
-    it "shows a 'license needed' CE badge until provided, then a teal amount due" do
+    it "turns the CE card orange while a balance is due, teal once paid" do
       event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
       license = create(:professional_license, :placeholder, person: registration.registrant)
-      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      ce = create(:continuing_education_registration, event_registration: registration, professional_license: license)
 
+      # Balance due, license still needed: orange card, amber chip naming what's needed.
       needs = card(registration.reload, event.ce_hours_details_label)
-      expect(needs.theme).to eq(DomainTheme.swatch("teal"))
+      expect(needs.theme).to eq(DomainTheme.swatch("orange"))
       expect(needs.subtitle).to eq("6 hours")
       expect(needs.badge).to eq("$150 · License number needed")
       expect(needs.badge_classes).to be_nil
 
+      # License provided but still owing: orange card, amber "$X due" chip like the payment card.
       license.update!(number: "LIC123")
-      complete = card(registration.reload, event.ce_hours_details_label)
-      expect(complete.subtitle).to eq("6 hours")
-      expect(complete.badge).to eq("$150 due")
-      expect(complete.badge_classes).to include("teal")
+      due = card(registration.reload, event.ce_hours_details_label)
+      expect(due.theme).to eq(DomainTheme.swatch("orange"))
+      expect(due.badge).to eq("$150 due")
+      expect(due.badge_classes).to be_nil
+
+      # Paid in full: resting teal card, no "due" chip.
+      create(:allocation, allocatable: ce, amount: 15_000)
+      paid = card(registration.reload, event.ce_hours_details_label)
+      expect(paid.theme).to eq(DomainTheme.swatch("teal"))
+      expect(paid.badge).to be_nil
     end
 
     it "shows the scholarship card only when requested, without an amount chip until awarded" do
