@@ -9,6 +9,11 @@ RSpec.describe ScholarshipDecorator, type: :decorator do
     expect(scholarship.recipient_name).to eq("Carmen Gomez")
   end
 
+  it "reflects the agreement_signed flag" do
+    expect(create(:scholarship, recipient: recipient, agreement_signed: false).decorate.agreement_signed?).to be(false)
+    expect(create(:scholarship, recipient: recipient, agreement_signed: true).decorate.agreement_signed?).to be(true)
+  end
+
   describe "program columns derived from the recipient's facilitator affiliation" do
     let(:org) { create(:organization, name: "Prevail") }
 

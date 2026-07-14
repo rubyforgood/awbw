@@ -51,6 +51,18 @@
         <%# Pinned to the card's bottom so it lines up with the CE card's chip and
             the organizations card's "Connect organization" link. %>
         <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
+          <%# Agreement first, then tasks — the recipient agrees before completing tasks. %>
+          <% if scholarship.agreement_signed? %>
+            <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-2.5 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
+              <i class="fa-solid fa-file-signature"></i>
+              Agreement signed
+            </span>
+          <% else %>
+            <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+              <i class="fa-solid fa-file-signature"></i>
+              Agreement pending
+            </span>
+          <% end %>
           <% if scholarship.tasks_completed? %>
             <span class="inline-flex items-center gap-1 rounded-full border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> px-2.5 py-0.5 text-xs font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>">
               <i class="fa-solid fa-circle-check"></i>
