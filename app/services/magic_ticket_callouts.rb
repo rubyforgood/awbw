@@ -149,18 +149,29 @@ class MagicTicketCallouts
   # met shows a fuchsia amount badge.
   def scholarship_status_card
     return unless registration.scholarship_requested?
-    awarded = registration.scholarship?
+    # Awarded is display-only: the scholarship record exists earlier, but the award
+    # is only shown as awarded once the recipient signs the agreement. Until then
+    # the card prompts them to accept.
+    awarded = registration.scholarship_awarded?
+    needs_agreement = registration.scholarship? && !awarded
     tasks_outstanding = awarded && !registration.scholarship_tasks_met?
+    action_needed = needs_agreement || tasks_outstanding
     Card.new(icon_class: "fa-solid fa-award",
-             # Amber while award tasks are outstanding (action needed), otherwise
-             # the scholarship colour.
-             color: tasks_outstanding ? "amber" : DomainTheme.color_for(:scholarships).to_s,
+             # Amber while an action is needed (accept the agreement, or complete
+             # tasks), otherwise the scholarship colour.
+             color: action_needed ? "amber" : DomainTheme.color_for(:scholarships).to_s,
              title: "Scholarship",
-             subtitle: awarded ? "Your award — amount, funder, and tasks" : "Your scholarship request status",
+             subtitle: scholarship_subtitle(awarded, needs_agreement),
              href: registration_scholarship_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
              badge: scholarship_badge(awarded, tasks_outstanding),
              badge_classes: tasks_outstanding ? nil : "bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-300")
+  end
+
+  def scholarship_subtitle(awarded, needs_agreement)
+    return "Your award — amount, funder, and tasks" if awarded
+    return "Review and accept your scholarship agreement" if needs_agreement
+    "Your scholarship request status"
   end
 
   def scholarship_badge(awarded, tasks_outstanding)

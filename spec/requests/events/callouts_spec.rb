@@ -173,25 +173,27 @@ RSpec.describe "Events::Callouts", type: :request do
     let!(:allocation)  { create(:allocation, source: scholarship, allocatable: registration, amount: 5_000) }
 
     describe "GET /registration/:slug/scholarship" do
-      it "renders the agree form while the agreement is unsigned" do
+      it "shows the amount as offered with an Agree button while unsigned" do
         get registration_scholarship_path(registration.slug)
 
         expect(response).to have_http_status(:success)
-        expect(response.body).to include("Do you agree to complete the tasks?")
-        expect(response.body).to match(/name="agreement"/)
+        expect(response.body).to include("Amount offered")
+        expect(response.body).to include("Pending agreement")
+        expect(response.body).to match(/name="agreement" value="yes"/)
       end
 
-      it "shows the signed date once the agreement is signed" do
+      it "shows the award as signed with the date once the agreement is signed" do
         scholarship.update!(agreement_signed: true)
         get registration_scholarship_path(registration.slug)
 
-        expect(response.body).to include("You agreed to complete your scholarship tasks on")
-        expect(response.body).not_to include("Do you agree to complete the tasks?")
+        expect(response.body).to include("Amount awarded")
+        expect(response.body).to include("Agreement signed")
+        expect(response.body).not_to include("Pending agreement")
       end
     end
 
     describe "POST /registration/:slug/scholarship/agreement" do
-      it "signs the agreement and stamps the time when Yes is selected" do
+      it "signs the agreement and stamps the time when Agree is submitted" do
         expect(scholarship.agreement_signed?).to be(false)
 
         post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
@@ -201,7 +203,7 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(scholarship.agreement_signed_at).to be_present
       end
 
-      it "does not sign the agreement when Yes is not selected" do
+      it "does not sign the agreement without an affirmative submission" do
         post registration_scholarship_agreement_path(registration.slug), params: { agreement: "" }
 
         expect(response).to redirect_to(registration_scholarship_path(registration.slug))

@@ -108,9 +108,19 @@ RSpec.describe MagicTicketCallouts do
       expect(scholarship_card.theme).to eq(DomainTheme.swatch(DomainTheme.color_for(:scholarships)))
     end
 
+    it "prompts to accept the agreement, without an amount chip, until it is signed" do
+      registration.update!(scholarship_requested: true)
+      scholarship = create(:scholarship, amount_cents: 25_000, tasks_completed: true, agreement_signed: false)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
+      scholarship_card = card(registration, "Scholarship")
+      expect(scholarship_card.subtitle).to eq("Review and accept your scholarship agreement")
+      expect(scholarship_card.badge).to be_nil
+      expect(scholarship_card.theme).to eq(DomainTheme.swatch("amber"))
+    end
+
     it "turns the scholarship card amber while award tasks are outstanding" do
       registration.update!(scholarship_requested: true)
-      scholarship = create(:scholarship, recipient: registration.registrant, tasks_completed: false)
+      scholarship = create(:scholarship, recipient: registration.registrant, tasks_completed: false, agreement_signed: true)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
 
       expect(card(registration, "Scholarship").theme).to eq(DomainTheme.swatch("amber"))
@@ -118,16 +128,16 @@ RSpec.describe MagicTicketCallouts do
 
     it "flags an awarded scholarship with outstanding tasks in an amber chip" do
       registration.update!(scholarship_requested: true)
-      scholarship = create(:scholarship, amount_cents: 25_000, tasks_completed: false)
+      scholarship = create(:scholarship, amount_cents: 25_000, tasks_completed: false, agreement_signed: true)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
       scholarship_card = card(registration, "Scholarship")
       expect(scholarship_card.badge).to eq("$250 · Tasks outstanding")
       expect(scholarship_card.badge_classes).to be_nil
     end
 
-    it "shows a fuchsia amount chip once scholarship tasks are complete" do
+    it "shows a fuchsia amount chip once the agreement is signed and tasks are complete" do
       registration.update!(scholarship_requested: true)
-      scholarship = create(:scholarship, amount_cents: 25_000, tasks_completed: true)
+      scholarship = create(:scholarship, amount_cents: 25_000, tasks_completed: true, agreement_signed: true)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
       scholarship_card = card(registration, "Scholarship")
       expect(scholarship_card.badge).to eq("$250")

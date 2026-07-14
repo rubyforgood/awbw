@@ -65,7 +65,8 @@ module Events
     end
 
     # Records the recipient agreeing, from their scholarship page, to complete the
-    # scholarship's tasks. Only "Yes" signs it; the model stamps agreement_signed_at.
+    # scholarship's tasks. The Agree button submits agreement=yes, which stamps
+    # agreement_signed_at via the model.
     def sign_agreement
       scholarship = @event_registration.scholarships.first
       unless scholarship
@@ -77,7 +78,7 @@ module Events
         scholarship.update!(agreement_signed: true) unless scholarship.agreement_signed?
         redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks — your agreement has been recorded."
       else
-        redirect_to registration_scholarship_path(@event_registration.slug), alert: "Please select Yes to agree to complete the tasks."
+        redirect_to registration_scholarship_path(@event_registration.slug), alert: "Something went wrong recording your agreement. Please try again."
       end
     end
 
