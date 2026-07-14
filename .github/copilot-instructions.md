@@ -137,6 +137,9 @@ picker), use `MoneyFormatter.compact_from_cents(cents)` (`$12.5k`, `$1.2m`) — 
 
 ## HTML/ERB Formatting
 
+**These are enforced by ERB Lint** (`.erb_lint.yml`, run via `ai/lint` and in CI) —
+RuboCop only parses `.rb` and never sees templates. Run `ai/lint --fix` to autocorrect.
+
 ### Tag Attributes
 - **Closing `>` on same line as last attribute** — do not put `>` on its own line
 - When attributes span multiple lines, keep the closing `>` with the last attribute
@@ -339,8 +342,8 @@ See `ai/` directory for executable scripts:
 | `ai/recap` | Session recap: accomplishments + unresolved items (see above) |
 | `ai/review` | Code review: agent reviews the workspace diff, posts inline comments, and gives a Recap + Risks + Outstanding decisions summary (runs the `ai-review` skill) |
 | `ai/test [args]` | Run RSpec |
-| `ai/lint` | Rubocop on all files |
-| `ai/lint --fix` | Auto-fix lint issues |
+| `ai/lint` | RuboCop on Ruby + ERB Lint on templates |
+| `ai/lint --fix` | Auto-fix lint issues (both RuboCop and ERB Lint) |
 | `ai/server` | Start dev services (web + vite) |
 | `ai/console` | Rails console |
 | `ai/routes -g pattern` | Search Rails routes |
