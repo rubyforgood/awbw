@@ -569,7 +569,8 @@ RSpec.describe "Events::Registrations", type: :request do
       get registration_videoconference_path(registration.slug)
       expect(response.body).not_to include("88285411273")
       expect(response.body).not_to include("secret123")
-      expect(response.body).to include("about a week before the event")
+      expect(response.body).to include("unlocks once both of these are met")
+      expect(response.body).to include("Available from")
     end
 
     it "withholds the link and credentials until the registrant has payment access" do
