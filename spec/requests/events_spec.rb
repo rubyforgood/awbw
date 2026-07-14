@@ -193,12 +193,12 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Bring scissors")
     end
 
-    it "renders each <h3> section as a collapsible toggle" do
+    it "renders each <toggle> as a collapsible section" do
       event.update!(event_details_label: "Art supplies & what to bring",
-                    event_details: "<p>Bring what you like.</p><h3>Workshop 1</h3><ul><li>Clear glass stones</li></ul>")
+                    event_details: "<p>Bring what you like.</p><toggle title=\"Workshop 1\"><ul><li>Clear glass stones</li></ul></toggle>")
       get details_event_path(event)
       expect(response).to have_http_status(:ok)
-      # Lead paragraph stays open; the workshop heading becomes a <details> summary.
+      # Text outside a toggle stays open; the toggle becomes a <details> disclosure.
       expect(response.body).to include("Bring what you like.")
       expect(response.body).to include("<details")
       expect(response.body).to include("Workshop 1")

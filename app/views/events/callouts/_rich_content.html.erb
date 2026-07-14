@@ -1,0 +1,20 @@
+<%# Renders admin-authored callout HTML uniformly across every callout page: plain
+    rich text, with each <toggle> element shown as a styled collapsible section
+    (see _toggle and CalloutContent). The <toggle> syntax therefore works the same
+    way everywhere — event details, CE hours, custom callouts, behavioural-card
+    intros, and the FAQ. locals: content (raw HTML string). %>
+<div class="space-y-3">
+  <% CalloutContent.segments(content).each do |segment| %>
+    <% if segment.type == :toggle %>
+      <%= render layout: "events/callouts/toggle", locals: { summary: segment.summary } do %>
+        <div class="rich-label prose prose-sm max-w-none prose-a:text-blue-700 prose-li:my-0.5">
+          <%= form_label_html(segment.html) %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700">
+        <%= form_label_html(segment.html) %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

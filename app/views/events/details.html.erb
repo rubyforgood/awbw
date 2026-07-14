@@ -3,7 +3,6 @@
 <% reg_slug = params[:reg].presence %>
 <% back_path = reg_slug ? registration_ticket_path(reg_slug) : event_path(@event) %>
 <% back_label = reg_slug ? "Back to ticket" : "Back to event" %>
-<% lead_html, sections = EventDetailsSections.split(@event_details_body) %>
 <div class="max-w-3xl mx-auto px-4 pt-4">
   <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
     <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
@@ -26,23 +25,7 @@
     </div>
 
     <div class="px-6 sm:px-8 py-7">
-      <% if lead_html.present? %>
-        <div class="rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700 <%= "mb-6" if sections.any? %>">
-          <%= form_label_html(lead_html) %>
-        </div>
-      <% end %>
-
-      <% if sections.any? %>
-        <div class="space-y-2">
-          <% sections.each do |section| %>
-            <%= render layout: "events/callouts/toggle", locals: { summary: section.heading } do %>
-              <div class="rich-label prose prose-sm max-w-none prose-a:text-blue-700 prose-li:my-0.5">
-                <%= form_label_html(section.body_html) %>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
-      <% end %>
+      <%= render "events/callouts/rich_content", content: @event_details_body %>
     </div>
   </div>
 </div>

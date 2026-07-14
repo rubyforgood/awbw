@@ -333,45 +333,50 @@ if flagship && flagship.event_details.blank?
       <li>You're welcome to use any art supplies you like: oil/chalk pastels, paints, watercolors, collage materials, etc.</li>
       <li>You may want a journal or lined paper for writing.</li>
     </ul>
-    <p>The lists below, grouped by workshop, are <strong>optional</strong> supplies you may want on hand. We'll demonstrate how to use them during the training.</p>
-    <h3>Workshop 1</h3>
-    <ul>
-      <li>Clear glass stones</li>
-      <li>Pendant settings (cabochon settings and swivel hooks to hold the glass stones)</li>
-      <li>Hole punch to create paper circles — we recommend a 1.25" circle punch</li>
-      <li>Paper for circles — white and/or colored cardstock, or printmaking paper painted with acrylics</li>
-      <li>Glue to adhere paper circles to the glass stones — we recommend Aleene's Clear Gel Tacky Glue</li>
-      <li>Clear packing tape</li>
-    </ul>
-    <h3>Workshop 2</h3>
-    <ul>
-      <li>Rough &amp; Ready Shrinky Dink paper</li>
-      <li>Permanent markers</li>
-      <li>Colored pencils (we recommend Prismacolor)</li>
-      <li>A hole punch (single or three-hole is fine)</li>
-      <li>Thin ribbon or wire (1/8 in. or thinner)</li>
-      <li>An oven to cook the shrink paper (a toaster oven — not a toaster — works well)</li>
-    </ul>
-    <h3>Workshop 3</h3>
-    <ul>
-      <li>A glue stick (used in workshops 3 &amp; 5)</li>
-      <li>Scotch tape</li>
-      <li>Two copies of the dice handout (sent after fees are paid), printed on cardstock</li>
-    </ul>
-    <h3>Workshop 4</h3>
-    <ul>
-      <li>Oil-based pastels (we recommend Cray-Pas)</li>
-      <li>Card/heavy stock or watercolor paper</li>
-      <li>Watercolors (we recommend Prang)</li>
-      <li>Cups for water</li>
-      <li>Paintbrush</li>
-      <li>Painter's tape</li>
-    </ul>
-    <h3>Workshop 5</h3>
-    <ul>
-      <li>Card/heavy stock paper</li>
-      <li>Collage materials</li>
-    </ul>
+    <p>The sections below, grouped by workshop, are <strong>optional</strong> supplies you may want on hand. We'll demonstrate how to use them during the training — tap a workshop to expand it.</p>
+    <toggle title="Workshop 1">
+      <ul>
+        <li>Clear glass stones</li>
+        <li>Pendant settings (cabochon settings and swivel hooks to hold the glass stones)</li>
+        <li>Hole punch to create paper circles — we recommend a 1.25" circle punch</li>
+        <li>Paper for circles — white and/or colored cardstock, or printmaking paper painted with acrylics</li>
+        <li>Glue to adhere paper circles to the glass stones — we recommend Aleene's Clear Gel Tacky Glue</li>
+        <li>Clear packing tape</li>
+      </ul>
+    </toggle>
+    <toggle title="Workshop 2">
+      <ul>
+        <li>Rough &amp; Ready Shrinky Dink paper</li>
+        <li>Permanent markers</li>
+        <li>Colored pencils (we recommend Prismacolor)</li>
+        <li>A hole punch (single or three-hole is fine)</li>
+        <li>Thin ribbon or wire (1/8 in. or thinner)</li>
+        <li>An oven to cook the shrink paper (a toaster oven — not a toaster — works well)</li>
+      </ul>
+    </toggle>
+    <toggle title="Workshop 3">
+      <ul>
+        <li>A glue stick (used in workshops 3 &amp; 5)</li>
+        <li>Scotch tape</li>
+        <li>Two copies of the dice handout (sent after fees are paid), printed on cardstock</li>
+      </ul>
+    </toggle>
+    <toggle title="Workshop 4">
+      <ul>
+        <li>Oil-based pastels (we recommend Cray-Pas)</li>
+        <li>Card/heavy stock or watercolor paper</li>
+        <li>Watercolors (we recommend Prang)</li>
+        <li>Cups for water</li>
+        <li>Paintbrush</li>
+        <li>Painter's tape</li>
+      </ul>
+    </toggle>
+    <toggle title="Workshop 5">
+      <ul>
+        <li>Card/heavy stock paper</li>
+        <li>Collage materials</li>
+      </ul>
+    </toggle>
   HTML
 end
 

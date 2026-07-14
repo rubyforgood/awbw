@@ -586,14 +586,14 @@
               <%= render "events/builtin_callout_card", f: f, card: card,
                     label_field: :ce_hours_details_label, content_field: :ce_hours_details,
                     title_placeholder: "CE hours",
-                    content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
-                    content_placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><h3>Before the training</h3><ul><li>Email your license number</li></ul>" %>
+                    content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Wrap a part in <toggle title=\"…\">…</toggle> to make it a collapsible section.",
+                    content_placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><toggle title=\"Before the training\"><ul><li>Email your license number</li></ul></toggle>" %>
             <% when :event_details %>
               <%= render "events/builtin_callout_card", f: f, card: card,
                     label_field: :event_details_label, content_field: :event_details,
                     title_placeholder: "Before you attend",
-                    content_help: "Materials, supplies, what to bring, and policies — shown on its own page linked from the ticket. Each <h3> heading becomes its own collapsible section (e.g. one per workshop); text before the first heading stays open at the top. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
-                    content_placeholder: "e.g. <h3>Workshop 1</h3><ul><li>Clear glass stones</li></ul>" %>
+                    content_help: "Materials, supplies, what to bring, and policies — shown on its own page linked from the ticket. Wrap a part in <toggle title=\"…\">…</toggle> to make it a collapsible section (e.g. one per workshop); anything outside a toggle stays open. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
+                    content_placeholder: "e.g. <toggle title=\"Workshop 1\"><ul><li>Clear glass stones</li></ul></toggle>" %>
             <% else %>
               <div class="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 opacity-70">
                 <i class="<%= card.icon_class %> <%= card.theme[:icon] %> w-6 shrink-0 text-center text-xl pt-0.5" aria-hidden="true"></i>
