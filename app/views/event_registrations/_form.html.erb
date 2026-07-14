@@ -159,10 +159,7 @@
         </div>
       </div>
 
-      <%# ---- Organizations, scholarship, and continuing education — one row.
-          Scholarship shows only when the event offers scholarships, CE only when
-          it grants credit. Organizations fills whatever the hidden cards leave
-          behind: it absorbs one of the three columns for each card that's hidden. ---- %>
+      <%# The org card widens to absorb a column for each of the other two cards that's hidden. %>
       <% show_scholarship = f.object.event&.scholarship_eligible? || f.object.scholarships.any? %>
       <% show_ce = f.object.event&.ce_eligible? %>
       <% org_span = 1 + (show_scholarship ? 0 : 1) + (show_ce ? 0 : 1) %>
