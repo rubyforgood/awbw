@@ -79,7 +79,7 @@
     <tbody>
       <% @attendees.each do |attendee| %>
         <tr>
-          <td style="border-bottom: 1px solid #f3f4f6; padding: 6px; font-size: 14px;"><%= [ attendee["first_name"], attendee["last_name"] ].compact_blank.join(" ") %></td>
+          <td style="border-bottom: 1px solid #f3f4f6; padding: 6px; font-size: 14px;"><%= [attendee["first_name"], attendee["last_name"]].compact_blank.join(" ") %></td>
           <td style="border-bottom: 1px solid #f3f4f6; padding: 6px; font-size: 14px;"><%= attendee["email"] %></td>
         </tr>
       <% end %>

@@ -18,7 +18,7 @@
 
   <div class="space-y-6 p-4">
     <% if @allocatable.respond_to?(:event) %>
-      <% owed_cents = [ @allocatable.event.cost_cents.to_i - @allocatable.allocations_sum.to_i, 0 ].max %>
+      <% owed_cents = [@allocatable.event.cost_cents.to_i - @allocatable.allocations_sum.to_i, 0].max %>
       <% allocated_cents = f.object.amount_cents.to_i %>
       <% paid = owed_cents <= 0 %>
       <div class="space-y-4">
@@ -64,7 +64,7 @@
           <div>
             <%= f.label :recipient_id, "Recipient", class: "block text-sm font-medium text-gray-700 mb-1" %>
             <%= f.collection_select :recipient_id,
-                  (f.object.recipient.present? ? [ f.object.recipient ] : []),
+                  (f.object.recipient.present? ? [f.object.recipient] : []),
                   :id, :full_name,
                   { include_blank: "Search for a person…" },
                   { required: true, class: "w-64 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm",
@@ -148,7 +148,7 @@
       <% selectable_grants = @grants || Grant.selectable_for(f.object) %>
       <% grant_options = selectable_grants.map do |g|
            gd = g.decorate
-           [ g.name_with_funder, g.id, { "data-remaining" => gd.remaining_compact, "data-total" => gd.amount_compact, "data-summary" => gd.funds_remaining_summary } ]
+           [g.name_with_funder, g.id, { "data-remaining" => gd.remaining_compact, "data-total" => gd.amount_compact, "data-summary" => gd.funds_remaining_summary }]
          end %>
       <div>
         <%= f.label :grant_id, class: "block text-sm font-medium text-gray-700 mb-1" do %>

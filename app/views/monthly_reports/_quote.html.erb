@@ -17,7 +17,7 @@
   </div>
     <div class="form-group radio-inline custom-appearance-field">
       <input id="gender-m-<%= index %>" type="radio" name="quotes[<%= index %>][gender]" value="m"
-             <%= "checked" if q.gender == 'm' %> >
+             <%= "checked" if q.gender == "m" %> >
       <label for="gender-m-<%= index %>">
         <span class="custom-radio-icon"></span>
         <span>Male</span>
@@ -26,7 +26,7 @@
 
     <div class="radio-inline custom-appearance-field">
       <input id="gender-f-<%= index %>" type="radio" name="quotes[<%= index %>][gender]" value="f"
-             <%= "checked" if q.gender == 'f' %> >
+             <%= "checked" if q.gender == "f" %> >
       <label for="gender-f-<%= index %>">
         <span class="custom-radio-icon"></span>
         <span>Female</span>
@@ -35,13 +35,12 @@
 
     <div class="radio-inline custom-appearance-field">
       <input id="gender-o-<%= index %>" type="radio" name="quotes[<%= index %>][gender]" value="o"
-             <%= "checked" if q.gender == 'o' %>>
+             <%= "checked" if q.gender == "o" %>>
       <label for="gender-o-<%= index %>">
         <span class="custom-radio-icon"></span>
         <span>Other</span>
       </label>
     </div>
-
 
   <div>
     <a class="btn-underline" href="javascript:delQuote('#quote-<%= index %>');" >Remove Quote</a>

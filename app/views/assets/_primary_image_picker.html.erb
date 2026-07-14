@@ -1,7 +1,7 @@
 <%# add targets for upload-progress upload-progress-bar and hero-image to the view %>
 <% if allowed_to?(:manage?, owner) %>
-  <%= form_with(model: PrimaryAsset.new, url: primary_assets_path, 
-                                       data: {controller: "asset-picker"},
+  <%= form_with(model: PrimaryAsset.new, url: primary_assets_path,
+                                       data: { controller: "asset-picker" },
                                        html: { id: "primary-asset-form" }) do |f| %>
     <%= f.file_field :file, class: "hidden",
                           accept: "image/*",

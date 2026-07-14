@@ -161,7 +161,7 @@
                 <input type="hidden" name="contact_us[first_name]" value="<%= @user.person&.first_name %>">
                 <input type="hidden" name="contact_us[last_name]" value="<%= @user.person&.last_name %>">
                 <input type="hidden" name="contact_us[from]" value="<%= @user.email %>">
-                <input type="hidden" name="contact_us[agency]" value="<%= @user.person&.primary_organization&.name || '' %>">
+                <input type="hidden" name="contact_us[agency]" value="<%= @user.person&.primary_organization&.name || "" %>">
               <% end %>
               <!-- Honeypot -->
               <div class="absolute opacity-0 top-0 left-0 h-0 w-0 -z-10" aria-hidden="true">

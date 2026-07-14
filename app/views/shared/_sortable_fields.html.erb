@@ -4,4 +4,4 @@
     <%= f.check_box name, checked: @params ? checked?(@params[:sort_by][name]) : false, onclick: ("$('form').submit();") %>
     <span class="small"><%= sortable_field_display_name(name) %></span>
   </div>
-<% end %> 
+<% end %>

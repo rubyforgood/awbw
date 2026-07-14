@@ -11,7 +11,6 @@
       <% end %>
     </div>
 
-
     <!-- Resource Card -->
     <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
       <div class="workshop">
@@ -42,7 +41,7 @@
             <%= credited_author_link(@workshop_variation, class: "hover:underline") %>
           </span>
           <span class="<%= "border-l border-gray-400 pl-2" if @workshop_variation.created_by.present? %>">
-            <%= @workshop_variation.created_at.strftime('%B %e, %Y') %>
+            <%= @workshop_variation.created_at.strftime("%B %e, %Y") %>
           </span>
         </div>
       </div>
@@ -58,7 +57,6 @@
                       class: "text-blue-600 hover:underline break-words" %>
         </div>
       <% end %>
-
 
       <!-- Main Text -->
       <%= @workshop_variation.rhino_body %>

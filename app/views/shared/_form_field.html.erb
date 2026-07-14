@@ -28,9 +28,9 @@
             <input type="text"
              name="log_fields[<%= f.id %>]" class="form-control"
              id="<%= f.name.downcase.tr(" /", "_") %>"
-             <%= 'required' if f.required %>
+             <%= "required" if f.required %>
              oninvalid="scroll_here(this);"
-             value="<%= f.answer( report ) %>"
+             value="<%= f.answer(report) %>"
              onkeyup="setNumberParticipantsLeft(this);"
              onmouseover="showToolTip(this);"
              data-toggle="tooltip" data-placement="top"/>
@@ -50,8 +50,8 @@
 
     <input type="<%= field.html_input_type %>"
      name="log_fields[<%= field.id %>]" class="form-control"
-     <%= 'required' if field.required %>
-     oninvalid="scroll_here(this);" value="<%= field.answer( report ) %>"
+     <%= "required" if field.required %>
+     oninvalid="scroll_here(this);" value="<%= field.answer(report) %>"
      id="<%= field.name.tr(" ", "-").tr("#","") %>"/>
   </div>
 
@@ -63,15 +63,15 @@
       <div class="custom-smaller"> <%= field.subtitle %> </div>
     </div>
 
-    <textarea name="log_fields[<%= field.id %>]" class="form-control" <%= 'required=required' if field.required %>
-        oninvalid="scroll_here(this);"><%= field.answer( report ) if field.answer( report ) %></textarea>
+    <textarea name="log_fields[<%= field.id %>]" class="form-control" <%= "required=required" if field.required %>
+        oninvalid="scroll_here(this);"><%= field.answer(report) if field.answer(report) %></textarea>
   </div>
 
-<% when :checkbox, :radio  %>
-  <div class="form-group <%= field.html_input_type %>-form-group <%='checkbox-group-custom' if field.html_id == 'gender_identity__all_participants_'%> " id="<%= field.html_id %>">
+<% when :checkbox, :radio %>
+  <div class="form-group <%= field.html_input_type %>-form-group <%= "checkbox-group-custom" if field.html_id == "gender_identity__all_participants_" %> " id="<%= field.html_id %>">
     <div class="label-plus-comment">
       <label>
-        <% if field.html_input_type == :radio  %>
+        <% if field.html_input_type == :radio %>
           <%= @count %>.
           <% @count +=1 %>
         <% end %>
@@ -92,7 +92,7 @@
          id="field-<%= field.id %>-<%= answer_option.id %>"
          name="log_fields[<%= field.id %>]"
          value="<%= answer_option.name %>"
-         <%= "checked=true" if field.checked( report, answer_option.name ) %> />
+         <%= "checked=true" if field.checked(report, answer_option.name) %> />
 
         <label for="field-<%= field.id %>-<%= answer_option.id %>">
           <span class="custom-<%= field.html_input_type %>-icon"></span>
@@ -102,5 +102,5 @@
     <% end %>
     <p id="<%= field.html_id %>_error" class="hide">Please select at least one option</p>
   </div>
-  <%= "<br/>".html_safe if field.html_id == 'children_s_ages' && field.form.display_name.include?('Family Workshop Log') %>
+  <%= "<br/>".html_safe if field.html_id == "children_s_ages" && field.form.display_name.include?("Family Workshop Log") %>
 <% end %>

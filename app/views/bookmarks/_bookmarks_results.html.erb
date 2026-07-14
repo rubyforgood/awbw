@@ -3,7 +3,7 @@
   sort_base = params.permit(:keyword, :user_id, :bookmarkable_type, :windows_type, :number_of_items_per_page).to_h.symbolize_keys
   sort_link = sort_header_link(frame: "bookmarks_results", path: ->(p) { bookmarks_path(p) }, base: sort_base)
 %>
-<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @bookmarks.any? %>">
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= "animate-fade blur-on-submit" if @bookmarks.any? %>">
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>

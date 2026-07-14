@@ -40,10 +40,10 @@
   <%# Meta row: number / date / reference / client id %>
   <div class="mt-6 rounded-lg border border-gray-300 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 text-center">
     <% [
-         [ "Invoice Number", invoice.number ],
-         [ "Invoice Date", invoice.date&.strftime("%-d %b, %Y") ],
-         [ "Your Reference", invoice.reference ],
-         [ "Client ID", invoice.client_id ]
+         ["Invoice Number", invoice.number],
+         ["Invoice Date", invoice.date&.strftime("%-d %b, %Y")],
+         ["Your Reference", invoice.reference],
+         ["Client ID", invoice.client_id]
        ].each do |label, value| %>
       <div class="px-3 py-3">
         <p class="text-xs font-bold text-gray-600"><%= label %></p>

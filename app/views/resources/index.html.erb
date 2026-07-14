@@ -30,7 +30,7 @@
     <!-- Results Table -->
     <% result_src = resources_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag :resources_results, src: result_src, autoscroll: "start", data: {turbo: "temporary"} do %>
+    <%= turbo_frame_tag :resources_results, src: result_src, autoscroll: "start", data: { turbo: "temporary" } do %>
       <%= render "results_skeleton" %>
     <% end %>
   </div>

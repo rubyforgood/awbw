@@ -14,7 +14,7 @@
       <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
       <%= f.hidden_field :permission_given, value: f.object.permission_given %>
     <% end %>
-    <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
+    <%= render "shared/errors", resource: story_idea if story_idea.errors.any? %>
 
     <% if allowed_to?(:manage?, StoryIdea) || @user %>
       <% if promoted_to_story %>
@@ -58,7 +58,7 @@
       </div>
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :workshop_id,
-          collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
+          collection: f.object.workshop.present? ? [[f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
           include_blank: true,
           required: true,
           input_html: {
@@ -109,7 +109,7 @@
     <% if promoted_to_story %>
       <div class="mt-3 mb-6"><%= story_idea.rhino_body %></div>
     <% else %>
-      <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
+      <div class="form-group <%= "has-error" if f.object.errors[:rhino_body].present? %>">
         <%= rhino_editor(f, :body,
                       label: "Please share details about your participant(s) (while maintaining confidentiality)
                       and their workshop goals, including what happened during the workshop, and how creating made an impact.

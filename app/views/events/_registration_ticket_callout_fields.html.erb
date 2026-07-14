@@ -110,7 +110,7 @@
               <%= f.label :callout_type, "Type", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
 
               <%= f.select :callout_type,
-                    RegistrationTicketCallout::CALLOUT_TYPES.map { |t| [ t.humanize, t ] },
+                    RegistrationTicketCallout::CALLOUT_TYPES.map { |t| [t.humanize, t] },
                     {},
                     class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm",
                     data: { callout_preview_target: "typeSelect", action: "callout-preview#update" } %>
@@ -120,7 +120,7 @@
               <%= f.label :color_class, "Colour", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
 
               <%= f.select :color_class,
-                    DomainTheme::SWATCH_COLORS.map { |c| [ c.to_s.humanize, c ] },
+                    DomainTheme::SWATCH_COLORS.map { |c| [c.to_s.humanize, c] },
                     { include_blank: "Default (by type)" },
                     class: "w-full rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm",
                     data: { callout_preview_target: "colorSelect", action: "callout-preview#update" } %>

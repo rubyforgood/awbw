@@ -30,13 +30,13 @@
               <%= select_tag :time_period,
                              options_for_select(
                                [
-                                 ['All time', 'all_time'],
-                                 ['Past day', 'past_day'],
-                                 ['Past week', 'past_week'],
-                                 ['Past month', 'past_month'],
-                                 ['Past year', 'past_year']
+                                 ["All time", "all_time"],
+                                 ["Past day", "past_day"],
+                                 ["Past week", "past_week"],
+                                 ["Past month", "past_month"],
+                                 ["Past year", "past_year"]
                                ],
-                               params[:time_period] || 'past_month'
+                               params[:time_period] || "past_month"
                              ),
                              class: "px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
                              onchange: "this.form.submit()" %>
@@ -248,7 +248,7 @@
                           <td class="p-1 text-center rounded-sm"
                               style="background-color: rgba(59, 130, 246, <%= opacity %>);"
                               title="<%= days[dow - 1] %> <%= hour %>:00 — <%= val %> activities">
-                            <span class="<%= opacity > 0.5 ? 'text-white' : 'text-gray-700' %>">
+                            <span class="<%= opacity > 0.5 ? "text-white" : "text-gray-700" %>">
                               <%= val > 0 ? val : "" %>
                             </span>
                           </td>

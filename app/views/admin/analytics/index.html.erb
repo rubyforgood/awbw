@@ -28,12 +28,12 @@
           <%= f.label :time_period, "Time period:", class: "text-sm font-medium text-gray-700" %>
           <%= f.select :time_period,
                        options_for_select([
-                         ['All time', 'all_time'],
-                         ['Past day', 'past_day'],
-                         ['Past week', 'past_week'],
-                         ['Past month', 'past_month'],
-                         ['Past year', 'past_year']
-                       ], params[:time_period] || 'past_month'),
+                         ["All time", "all_time"],
+                         ["Past day", "past_day"],
+                         ["Past week", "past_week"],
+                         ["Past month", "past_month"],
+                         ["Past year", "past_year"]
+                       ], params[:time_period] || "past_month"),
                        {},
                        class: "px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm text-gray-700",
                        onchange: "this.form.submit()" %>
@@ -86,16 +86,14 @@
                        records: @most_viewed_workshops,
                        path_method: :workshop_path,
                        metric: :view_count,
-                       color: :workshops
-            %>
+                       color: :workshops %>
 
             <%= render "admin/analytics/popular_list",
                        title: "Most printed",
                        records: @most_printed_workshops,
                        path_method: :workshop_path,
                        metric: :print_count,
-                       color: :workshops
-            %>
+                       color: :workshops %>
           </div>
         </div>
       </section>
@@ -135,16 +133,14 @@
                        records: @most_viewed_community_news,
                        path_method: :community_news_path,
                        metric: :view_count,
-                       color: :community_news
-            %>
+                       color: :community_news %>
 
             <%= render "admin/analytics/popular_list",
                        title: "Most printed",
                        records: @most_printed_community_news,
                        path_method: :community_news_path,
                        metric: :print_count,
-                       color: :community_news
-            %>
+                       color: :community_news %>
           </div>
         </div>
       </section>
@@ -158,16 +154,14 @@
                        records: @most_viewed_stories,
                        path_method: :story_path,
                        metric: :view_count,
-                       color: :stories
-            %>
+                       color: :stories %>
 
             <%= render "admin/analytics/popular_list",
                        title: "Most printed",
                        records: @most_printed_stories,
                        path_method: :story_path,
                        metric: :print_count,
-                       color: :stories
-            %>
+                       color: :stories %>
           </div>
         </div>
       </section>
@@ -181,48 +175,42 @@
                        records: @most_viewed_events,
                        path_method: :event_path,
                        metric: :view_count,
-                       color: :events
-            %>
+                       color: :events %>
 
             <%= render "admin/analytics/popular_list",
                        title: "Workshop variations",
                        records: @most_viewed_workshop_variations,
                        path_method: :workshop_variation_path,
                        metric: :view_count,
-                       color: :workshop_variations
-            %>
+                       color: :workshop_variations %>
 
             <%= render "admin/analytics/popular_list",
                        title: "Quotes",
                        records: @most_viewed_quotes,
                        path_method: :quote_path,
                        metric: :view_count,
-                       color: :quotes
-            %>
+                       color: :quotes %>
 
             <%= render "admin/analytics/popular_list",
                        title: "People",
                        records: @most_viewed_people,
                        path_method: :person_path,
                        metric: :view_count,
-                       color: :people
-            %>
+                       color: :people %>
 
             <%= render "admin/analytics/popular_list",
                        title: "Organizations",
                        records: @most_viewed_organizations,
                        path_method: :organization_path,
                        metric: :view_count,
-                       color: :organizations
-            %>
+                       color: :organizations %>
 
             <%= render "admin/analytics/popular_list",
                        title: VideoRecording.model_name.human(count: 2),
                        records: @most_viewed_video_recordings,
                        path_method: :video_recording_path,
                        metric: :view_count,
-                       color: :videos
-            %>
+                       color: :videos %>
           </div>
         </div>
       </section>
@@ -239,15 +227,13 @@
                        title: "Workshops",
                        records: @zero_engagement_workshops,
                        path_method: :workshop_path,
-                       color: :workshops
-            %>
+                       color: :workshops %>
 
             <%= render "zero_list",
                        title: "Resources",
                        records: @zero_engagement_resources,
                        path_method: :resource_path,
-                       color: :resources
-            %>
+                       color: :resources %>
           </div>
         </div>
       </section>

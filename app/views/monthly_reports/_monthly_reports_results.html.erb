@@ -1,6 +1,6 @@
 <%= turbo_stream.replace("monthly_reports_count", partial: "monthly_reports_count") %>
 
-<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @monthly_reports.any? %>">
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= "animate-fade blur-on-submit" if @monthly_reports.any? %>">
   <table class="w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>

@@ -27,8 +27,7 @@
       file
     elsif asset.respond_to?(field_name)
       asset.public_send(field_name)
-    end
-%>
+    end %>
 <% blob        = file&.attached? ? file.blob : nil %>
 <% is_image    = blob&.image? %>
 <% is_pdf      = blob&.content_type == "application/pdf" %>
@@ -83,8 +82,7 @@
               link_to(blob.filename.to_s, url_for(file), class: "underline")
             else
               "No file selected"
-            end
-        %>
+            end %>
       </div>
 
     <% end %>

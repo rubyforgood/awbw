@@ -21,21 +21,21 @@
     <div class="w-full md:w-32">
       <%= label_tag :funds, "Funds remaining", class: label_class %>
       <%= select_tag :funds,
-                     options_for_select([ [ "Available", "available" ], [ "None left", "none" ] ], params[:funds]),
+                     options_for_select([["Available", "available"], ["None left", "none"]], params[:funds]),
                      include_blank: "All",
                      class: field_class %>
     </div>
     <div class="w-full md:w-32">
       <%= label_tag :donor_type, "Donor type", class: label_class %>
       <%= select_tag :donor_type,
-                     options_for_select([ [ "Organization", "Organization" ], [ "Individual", "Person" ] ], params[:donor_type]),
+                     options_for_select([["Organization", "Organization"], ["Individual", "Person"]], params[:donor_type]),
                      include_blank: "All",
                      class: field_class %>
     </div>
     <div class="w-full md:w-32">
       <%= label_tag :tasks, "Tasks completed", class: label_class %>
       <%= select_tag :tasks,
-                     options_for_select([ [ "Completed", "completed" ], [ "Outstanding", "outstanding" ] ], params[:tasks]),
+                     options_for_select([["Completed", "completed"], ["Outstanding", "outstanding"]], params[:tasks]),
                      include_blank: "All",
                      class: field_class %>
     </div>

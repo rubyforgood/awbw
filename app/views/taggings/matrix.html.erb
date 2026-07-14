@@ -41,7 +41,7 @@
             </tr>
 
             <% @sectors.each do |sector| %>
-              <tr class="<%= cycle('bg-white', 'bg-gray-50') %> border-t border-gray-200">
+              <tr class="<%= cycle("bg-white", "bg-gray-50") %> border-t border-gray-200">
                 <td class="px-4 py-2 font-medium text-gray-900">
                   <%= render "sectors/tagging_label", sector: sector %>
                 </td>
@@ -76,7 +76,7 @@
             </tr>
 
             <% @categories.each do |category| %>
-              <tr class="<%= cycle('bg-white', 'bg-gray-50') %> border-t border-gray-200">
+              <tr class="<%= cycle("bg-white", "bg-gray-50") %> border-t border-gray-200">
                 <td class="px-4 py-2 font-medium text-gray-900">
                   <%= render "categories/tagging_label", category: category %>
                 </td>

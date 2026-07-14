@@ -34,7 +34,7 @@
           absolute left-0 top-full w-full shadow-sm bg-white border border-t-0
           border-gray-300 rounded-b-md hidden z-40">
         <% options.each do |label, param_name, admin_only| %>
-          <div class="flex items-center gap-2 mb-1 px-4 <%= 'admin-only bg-blue-100' if admin_only %>">
+          <div class="flex items-center gap-2 mb-1 px-4 <%= "admin-only bg-blue-100" if admin_only %>">
             <%= check_box_tag param_name,
                 true,
                 params[param_name].present?,

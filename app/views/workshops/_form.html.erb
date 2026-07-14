@@ -2,7 +2,7 @@
   <%= simple_form_for @workshop, data: { turbo: false } do |f| %>
     <!-- Errors -->
     <% if @workshop.errors.any? %>
-      <%= render 'shared/errors', resource: @workshop %>
+      <%= render "shared/errors", resource: @workshop %>
     <% end %>
 
     <!-- Row 1 -->
@@ -62,7 +62,7 @@
                           link_to "Author",
                                   person_path(f.object.author),
                                   class: "hover:underline") : "Author").html_safe,
-                        collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
+                        collection: f.object.author_person.present? ? [[f.object.author_person.remote_search_label[:label], f.object.author_person.id]] : [],
                         selected: (f.object.author_person&.id || current_user.person_id),
                         hint: "Credited author — any person, not just active users. Defaults to the creator; change to credit someone else.",
                         input_html: {

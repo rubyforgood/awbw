@@ -2,7 +2,7 @@
 <% user_bookmark = current_user&.bookmark_for(resource) %>
 
 <% if allowed_to?(:update?, user_bookmark, with: BookmarkPolicy) %>
-  <%= tag.span id: dom_id(resource, :bookmark_button), data: {controller: "optimistic-bookmark"} do %>
+  <%= tag.span id: dom_id(resource, :bookmark_button), data: { controller: "optimistic-bookmark" } do %>
     <% if user_bookmark.present? %>
       <%= button_to bookmark_path(user_bookmark),
                   method: :delete,

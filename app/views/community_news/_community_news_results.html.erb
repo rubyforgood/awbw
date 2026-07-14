@@ -3,7 +3,7 @@
   sort_base = params.permit(:title, :query, :published, :year, :author_id, :number_of_items_per_page).to_h.symbolize_keys
   sort_link = sort_header_link(frame: "community_news_results", path: ->(p) { community_news_index_path(p) }, base: sort_base)
 %>
-<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @community_news.any? %>">
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= "animate-fade blur-on-submit" if @community_news.any? %>">
   <table class="w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
@@ -54,7 +54,7 @@
                 <% if allowed_to?(:edit?, news) %>
                   <%= link_to "Edit",
                               edit_community_news_path(news),
-                              data: {turbo_frame: "_top"},
+                              data: { turbo_frame: "_top" },
                               class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
                 <% end %>
 

@@ -11,12 +11,12 @@
          data-dropdown-target="content"
          class="hidden mt-2 space-y-2">
       <% record.versions.order(created_at: :desc).each do |version| %>
-        <div class="border border-gray-200 rounded-lg p-3 <%= version.event == 'create' ? 'bg-green-50' : version.event == 'destroy' ? 'bg-red-50' : 'bg-gray-50' %>">
+        <div class="border border-gray-200 rounded-lg p-3 <%= version.event == "create" ? "bg-green-50" : version.event == "destroy" ? "bg-red-50" : "bg-gray-50" %>">
           <div class="flex items-center gap-2 mb-1">
             <span class="px-2 py-0.5 text-xs font-medium rounded-full
-              <%= version.event == 'create' ? 'bg-green-100 text-green-700' :
-                 version.event == 'update' ? 'bg-blue-100 text-blue-700' :
-                 'bg-red-100 text-red-700' %>">
+              <%= version.event == "create" ? "bg-green-100 text-green-700" :
+                 version.event == "update" ? "bg-blue-100 text-blue-700" :
+                 "bg-red-100 text-red-700" %>">
               <%= version.event.titleize %>
             </span>
             <span class="text-xs text-gray-500"><%= version.created_at.strftime("%B %d, %Y at %I:%M %p") %></span>

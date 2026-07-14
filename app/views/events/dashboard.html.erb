@@ -301,7 +301,7 @@
             <% @dashboard.registrants.each do |registrant| %>
               <li>
                 <%= link_to registrant.name, registrants_event_path(@event, registrant_ids: registrant.id),
-                      title: [ registrant.name, *@dashboard.organization_names_by_registrant[registrant.id] ].join(" · "),
+                      title: [registrant.name, *@dashboard.organization_names_by_registrant[registrant.id]].join(" · "),
                       class: "block truncate rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" %>
               </li>
             <% end %>

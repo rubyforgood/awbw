@@ -9,7 +9,7 @@
 
     <%= simple_form_for(resource, url: session_path(resource_name)) do |f| %>
       <% if resource.errors.any? %>
-        <%= render 'shared/errors', resource: resource %>
+        <%= render "shared/errors", resource: resource %>
       <% end %>
 
       <%= f.input :email,

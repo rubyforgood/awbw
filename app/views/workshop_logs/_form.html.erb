@@ -12,7 +12,7 @@
     <div class="flex flex-col md:flex-row md:space-x-4 mb-6">
       <div class="flex-1 mb-4 md:mb-0">
         <%= f.input :workshop_id,
-          collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
+          collection: f.object.workshop.present? ? [[f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
           include_blank: true,
           required: true,
           input_html: {
@@ -61,7 +61,7 @@
                   label: "Workshop date",
                   as: :string,
                   required: true,
-                  input_html: { type: 'date', value: f.object.workshop_held_on&.strftime('%Y-%m-%d'),
+                  input_html: { type: "date", value: f.object.workshop_held_on&.strftime("%Y-%m-%d"),
                                 class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
                   label_html: { class: "block text-sm font-medium text-gray-700 mb-1" } %>
       </div>
@@ -116,7 +116,7 @@
 
     <div id="quotes" class="space-y-3">
       <%= f.simple_fields_for :all_quotable_item_quotes do |qiq_form| %>
-        <%= render 'quotable_item_quote_fields', f: qiq_form %>
+        <%= render "quotable_item_quote_fields", f: qiq_form %>
       <% end %>
 
       <%= link_to_add_association "Add Quote", f, :quotable_item_quotes, class: "text-blue-600 hover:underline text-sm" %>

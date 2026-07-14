@@ -17,7 +17,7 @@
 
     <% result_src = people_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag :people_results, src: result_src, data: {turbo: "temporary"} do %>
+    <%= turbo_frame_tag :people_results, src: result_src, data: { turbo: "temporary" } do %>
       <%= render "results_skeleton" %>
     <% end %>
   </div>

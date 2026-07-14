@@ -138,7 +138,7 @@
                   </label>
                   <div class="flex flex-wrap gap-2 mt-1">
                     <% field.form_field_answer_options.includes(:answer_option).each do |ffao| %>
-                      <label class="inline-flex items-center gap-2 rounded-lg border <%= error ? 'border-red-400' : 'border-gray-300' %> px-3 py-2.5 cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 transition">
+                      <label class="inline-flex items-center gap-2 rounded-lg border <%= error ? "border-red-400" : "border-gray-300" %> px-3 py-2.5 cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 transition">
                         <input type="radio"
                                name="bulk_payment[form_fields][<%= field.id %>]"
                                value="<%= ffao.answer_option.name %>"

@@ -4,9 +4,9 @@
     falling back to the ticket when reached directly. %>
 <% back_path, back_label = case params[:return_to]
    when "payment"
-     [ registration_payment_path(@event_registration.slug), "Back to payment" ]
+     [registration_payment_path(@event_registration.slug), "Back to payment"]
    else
-     [ registration_ticket_path(@event_registration.slug), "Back to ticket" ]
+     [registration_ticket_path(@event_registration.slug), "Back to ticket"]
    end %>
 <%= render "events/invoices/actions", back_path: back_path, back_label: back_label %>
 <div class="px-4 sm:px-8 py-6 print:p-0">

@@ -1,10 +1,10 @@
 <hr>
 <div>
-  <h4 class='normal light js-workshop-logs' <%= tag_options({'data-workshop-logs' => workshop_logs}, false) %>>
+  <h4 class='normal light js-workshop-logs' <%= tag_options({ "data-workshop-logs" => workshop_logs }, false) %>>
     Workshop Log Summary
     <table class='table table-striped'>
       <div class='right small js-workshop-logs-button-wrapper'>
-        <%= link_to 'Add Workshop Log', new_workshop_log_path(windows_type_id: @form_builder.windows_type, agency_id: @agency_id, month: @month, year: @year), class: "btn btn--small" %>
+        <%= link_to "Add Workshop Log", new_workshop_log_path(windows_type_id: @form_builder.windows_type, agency_id: @agency_id, month: @month, year: @year), class: "btn btn--small" %>
       </div>
       <th class='bold small'>Date</th>
       <th class='bold small'>Person/Workshop</th>
@@ -20,8 +20,8 @@
           <tr>
             <td class='small'><%= link_to log.date_label, edit_workshop_log_path(log.id) , target: :blank %></td>
             <td class='small'><%= log.name %></td>
-            <td class='small' <%= tag_options({class: "js-on-going-count"}, false) %>><%= log.num_ongoing %></td>
-            <td class='small' <%= tag_options({class: "js-first-time-count"}, false) %>><%= log.num_first_time %></td>
+            <td class='small' <%= tag_options({ class: "js-on-going-count" }, false) %>><%= log.num_ongoing %></td>
+            <td class='small' <%= tag_options({ class: "js-first-time-count" }, false) %>><%= log.num_first_time %></td>
           </tr>
         <% end %>
       <% end %>

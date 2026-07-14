@@ -4,7 +4,7 @@
       <div class="filter-wrapper">
         <% if params[:kind] != "Scholarship" %>
           <div class="small-gray-title">Filter By:</div>
-          <%= render 'shared/sortable_fields_btn', sortable_fields: @sortable_fields %>
+          <%= render "shared/sortable_fields_btn", sortable_fields: @sortable_fields %>
         <% end %>
       </div>
     </div>
@@ -29,7 +29,7 @@
         </thead>
         <tbody id="resources-list">
           <% @stories.each do |r| %>
-            <%= render 'resource', resource: r %>
+            <%= render "resource", resource: r %>
           <% end %>
         </tbody>
       </table>
@@ -56,4 +56,4 @@
 
 </div><!-- container-fluid -->
 <h1>LALALALA</h1>
-</div>  
+</div>

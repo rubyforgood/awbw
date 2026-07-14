@@ -5,14 +5,14 @@
     if @submission
       case params[:return_to]
       when "bulk_payment_ticket"
-        [ bulk_payment_ticket_path(@submission.slug), "Back to ticket" ]
+        [bulk_payment_ticket_path(@submission.slug), "Back to ticket"]
       when "form_submission"
-        [ form_submission_path(@submission), "Back to submission" ]
+        [form_submission_path(@submission), "Back to submission"]
       else
-        [ bulk_payments_event_path(@event, expand: @submission.id, anchor: "payment-card-#{@submission.id}"), "Back to bulk payments" ]
+        [bulk_payments_event_path(@event, expand: @submission.id, anchor: "payment-card-#{@submission.id}"), "Back to bulk payments"]
       end
     else
-      [ dashboard_event_path(@event), "Back to event" ]
+      [dashboard_event_path(@event), "Back to event"]
     end
 %>
 <%= render "events/invoices/actions", back_path: back_path, back_label: back_label %>

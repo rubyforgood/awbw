@@ -2,14 +2,14 @@
   <h2 class='normal'><%= "#{@form_builder.name}" %></h2>
   <hr/>
 
-  <%= form_for @report, as: :report, url: {action: :create_story,
-    form_builder_id: params[:form_builder_id]}, :html => { :multipart => true },
+  <%= form_for @report, as: :report, url: { action: :create_story,
+    form_builder_id: params[:form_builder_id] }, html: { multipart: true },
   method: :post do |f| %>
     <div class="row">
      <div class="col-md-8 col-lg-8">
        <div class="row">
          <div class="col-md-12 col-lg-12">
-           <%= render 'shared/errors', resource: @report if @report.errors.any? %>
+           <%= render "shared/errors", resource: @report if @report.errors.any? %>
 
            <!-- ##### FACILITATOR  #### -->
            <div class='form-group'>
@@ -26,14 +26,14 @@
            <!-- ##### AGENCIES  #### -->
            <div class='form-group'>
              <div class="label-plus-comment">
-               <%= f.label 'Agency' %>
+               <%= f.label "Agency" %>
                <div class="custom-smaller">
                  Please contact AWBW if your agency is not listed.
                </div>
              </div>
              <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
              <%= f.collection_select :organization_id, @agencies, :id, :name,
-{ selected: agency ? agency.id : nil,class: 'js-agency-select' },
+{ selected: agency ? agency.id : nil,class: "js-agency-select" },
 class:"selectpicker form-control form-control-custom" %>
            </div>
 
@@ -53,13 +53,12 @@ class:"selectpicker form-control form-control-custom" %>
                   :workshop_id,
                   @workshop_list,
                     :id,
-                    :type_name, { :selected => params[:workshop_id],
-                    :prompt => "Select a workshop" },
+                    :type_name, { selected: params[:workshop_id],
+                    prompt: "Select a workshop" },
 {
-:class  =>  "form-control form-control-custom",
-:id     => 'select-workshop'
-})
-%>
+class: "form-control form-control-custom",
+id: "select-workshop"
+}) %>
              </div>
            </div>
 
@@ -81,7 +80,7 @@ class:"selectpicker form-control form-control-custom" %>
          <div class="form-group col-md-12 col-lg-12">
            <% @count = 1 %>
            <% @report.log_fields.each do |field| %>
-             <%= render 'shared/form_field', :field => field, :report => @report %>
+             <%= render "shared/form_field", field: field, report: @report %>
            <% end %>
            <script>
              $("#Total--On-going-Participants").prop("readonly", true);
@@ -93,10 +92,10 @@ class:"selectpicker form-control form-control-custom" %>
        <!-- ######## upload image ###### -->
        <div class="form-group image-fields-wrapper">
          <%= f.fields_for :media_files do |files_form| %>
-         <%= render 'media_file', :f => files_form %>
+         <%= render "media_file", f: files_form %>
 
          <div class="links small">
-           <%= link_to_add_association 'Add Another Media File', f, :media_files, partial: 'media_file', class:'btn-underline' %>
+           <%= link_to_add_association "Add Another Media File", f, :media_files, partial: "media_file", class:"btn-underline" %>
          </div>
          <% end %>
        </div>
@@ -111,7 +110,6 @@ class:"selectpicker form-control form-control-custom" %>
     </div>
     <% end %>
 </div>
-
 
 <script type="text/javascript">
 
@@ -209,7 +207,6 @@ class:"selectpicker form-control form-control-custom" %>
     });
 </script>
 
-
 <script>
   var enable_submit_form = false;
   $('#btn_submit').on('click', function(event){
@@ -259,7 +256,6 @@ class:"selectpicker form-control form-control-custom" %>
     enable_submit_form = true;
   }
 
-
   });
 
    $('form').submit(function( event ) {
@@ -267,6 +263,5 @@ class:"selectpicker form-control form-control-custom" %>
       event.preventDefault();
      }
    });
-
 
 </script>

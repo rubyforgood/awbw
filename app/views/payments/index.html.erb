@@ -4,7 +4,7 @@
     <div class="flex gap-2"><%= link_to "Add Cash Payment", new_payment_path(type: "CashPayment"), class: "btn btn-secondary" %><%= link_to "Add Check Payment", new_payment_path(type: "CheckPayment"), class: "btn btn-secondary" %><%= link_to "Generate Stripe Link", new_checkout_link_payments_path, class: "btn btn-secondary" %></div>
   </div>
 
-  <%= render 'search_boxes' %>
+  <%= render "search_boxes" %>
   <% result_src = payments_path + "?" + request.query_string %>
 
   <%= turbo_frame_tag :payments_results, src: result_src, data: { turbo: "temporary" } do %>

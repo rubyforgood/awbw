@@ -3,7 +3,7 @@
   sort_base = params.permit(:title, :query, :published, :year, :author_id, :number_of_items_per_page).to_h.symbolize_keys
   sort_link = sort_header_link(frame: "stories_results", path: ->(p) { stories_path(p) }, base: sort_base)
 %>
-<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @stories.any? %>">
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= "animate-fade blur-on-submit" if @stories.any? %>">
   <table class="w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
@@ -73,7 +73,7 @@
               <% end %>
               <% if allowed_to?(:edit?, story) %>
                 <%= link_to "Edit", edit_story_path(story.id),
-                                  data: {turbo_frame: "_top"},
+                                  data: { turbo_frame: "_top" },
                                   class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
               <% end %>
             </td>
@@ -87,7 +87,7 @@
               <div class="admin-only bg-blue-100 p-3">
                 <%= link_to "Create a story",
                             new_story_path,
-                            data: {turbo_frame: "_top"},
+                            data: { turbo_frame: "_top" },
                             class: "btn btn-primary" %>
               </div>
             <% end %>

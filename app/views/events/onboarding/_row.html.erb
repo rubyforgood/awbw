@@ -10,7 +10,7 @@
 <% highlighted = params[:highlight].to_s == registration.id.to_s %>
 <tr id="<%= onboarding_row_id(registration) %>" class="scroll-mt-24 transition-colors duration-150 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "hover:bg-gray-50" %>">
   <% columns.each do |column| %>
-    <% td_classes = [ "px-4 py-2 text-sm", align_class[column[:align]] ]
+    <% td_classes = ["px-4 py-2 text-sm", align_class[column[:align]]]
        if column[:sticky]
          # The row's inset ring is painted over by this sticky cell, so re-draw the
          # highlight border on the cell itself (same ring utility as the row).
@@ -183,7 +183,7 @@
       </td>
 
     <% when :fees_due %>
-      <% due_cents = [ event.cost_cents.to_i - registration.allocations_sum, 0 ].max %>
+      <% due_cents = [event.cost_cents.to_i - registration.allocations_sum, 0].max %>
       <td class="<%= td_classes.join(" ") %> font-medium" data-sort-value="<%= due_cents %>">
         <%= link_to dollars_from_cents(due_cents),
               edit_event_registration_path(registration, return_to: "onboarding", anchor: "allocations-card"),

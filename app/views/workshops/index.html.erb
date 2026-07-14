@@ -29,8 +29,8 @@
   <!-- Search Form -->
   <div class="w-full">
     <%= form_tag(workshops_path, method: :get,
-                 data: {turbo_stream: true, turbo_frame: "workshops_results",
-                        controller: "collection share-url"}, autocomplete: "off", class: "space-y-6") do %>
+                 data: { turbo_stream: true, turbo_frame: "workshops_results",
+                        controller: "collection share-url" }, autocomplete: "off", class: "space-y-6") do %>
       <%# Preserve the person scope (from a person's authored-content card) across sorts/filters %>
       <%= hidden_field_tag :author_id, params[:author_id] if params[:author_id].present? %>
       <%= render "filters" %>
@@ -58,7 +58,7 @@
     <!-- Workshops List -->
     <% result_src = workshops_path + "?" + request.query_string %>
 
-    <%= turbo_frame_tag "workshops_results", src: result_src, autoscroll: "start", data: {turbo: "temporary"} do %>
+    <%= turbo_frame_tag "workshops_results", src: result_src, autoscroll: "start", data: { turbo: "temporary" } do %>
       <%= render "results_skeleton" %>
     <% end %>
   </div>

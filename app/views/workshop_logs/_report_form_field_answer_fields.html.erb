@@ -25,7 +25,7 @@
                   input_html: { class: "form-control mb-2", rows: 3 } %>
     <% end %>
     <% if f.object.errors[:answer].any? %>
-      <div class="text-danger"><%= f.object.errors[:answer].join(', ') %></div>
+      <div class="text-danger"><%= f.object.errors[:answer].join(", ") %></div>
     <% end %>
   </div>
 </div>

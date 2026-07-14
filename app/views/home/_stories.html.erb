@@ -6,7 +6,7 @@
                title: title,
                subtitle: "Voices from our community" %>
 
-    <%= turbo_frame_tag "home_stories", src: home_stories_path, loading: :lazy, data: {controller: "prefetch-lazy"} do %>
+    <%= turbo_frame_tag "home_stories", src: home_stories_path, loading: :lazy, data: { controller: "prefetch-lazy" } do %>
       <%= render "stories_cards_skeleton" %>
     <% end %>
   </div>

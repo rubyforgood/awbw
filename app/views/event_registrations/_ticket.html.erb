@@ -41,7 +41,7 @@
             else
               event_registration.event.location&.name
             end
-            summary = [ event_registration.event.decorate.labelled_cost.presence, ("Location: #{venue}" if venue.present?) ].compact
+            summary = [event_registration.event.decorate.labelled_cost.presence, ("Location: #{venue}" if venue.present?)].compact
           %>
           <% if summary.any? %>
             <p class="text-sm text-gray-600 mt-0.5"><%= summary.join(" · ") %></p>

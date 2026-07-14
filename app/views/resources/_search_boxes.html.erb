@@ -5,7 +5,7 @@
                    #{ DomainTheme.bg_class_for(:resources, intensity: 700, hover: true) } shadow-md ring-2 ring-indigo-300" %>
 
 <%= form_tag resources_path, method: :get,
-  data: {controller: "collection share-url",
+  data: { controller: "collection share-url",
          collection_unselected_class: default_btn,
          collection_selected_class: selected_btn,
          turbo_frame: "resources_results" },

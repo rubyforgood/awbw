@@ -30,7 +30,7 @@
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Show columns</p>
           <% onboarding_toggle_entries(@event).each do |key, label| %>
             <% is_hidden = @hidden_columns.include?(key) %>
-            <% new_hide = (is_hidden ? @hidden_columns - [ key ] : @hidden_columns + [ key ]).uniq.join(",") %>
+            <% new_hide = (is_hidden ? @hidden_columns - [key] : @hidden_columns + [key]).uniq.join(",") %>
             <%= link_to onboarding_event_path(@event, status_filter: params[:status_filter].presence, keyword: params[:keyword].presence, hide: new_hide.presence),
                   class: "flex items-center gap-2 py-1 text-sm text-gray-700 hover:bg-gray-50 rounded" do %>
               <span class="flex items-center justify-center w-4 h-4 rounded border <%= is_hidden ? "border-gray-300 bg-white" : "border-blue-600 bg-blue-600 text-white" %>">
@@ -49,7 +49,7 @@
           <thead class="bg-gray-100">
             <tr>
               <% columns.each_with_index do |column, index| %>
-                <% th_classes = [ "px-4 py-2 text-xs font-semibold text-gray-700", align_class[column[:align]] ]
+                <% th_classes = ["px-4 py-2 text-xs font-semibold text-gray-700", align_class[column[:align]]]
                    th_classes << "sticky left-0 bg-gray-100" if column[:sticky] %>
                 <th class="<%= th_classes.join(" ") %>" <%= 'aria-sort="none"'.html_safe if column[:sortable] %>>
                   <% if column[:sortable] %>

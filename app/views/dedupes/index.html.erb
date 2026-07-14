@@ -79,7 +79,7 @@
                           <span class="text-gray-500 text-sm">
                             (ID: <%= record.id %>,
                             <% if @dedupe[:record_extras] %><%= @dedupe[:record_extras].call(record) %>, <% end %>
-                            <%= record.published? ? 'Published' : 'Unpublished' %>,
+                            <%= record.published? ? "Published" : "Unpublished" %>,
                             <%= record.public_send(@dedupe[:join_association]).count %> taggings)
                           </span>
                         </li>

@@ -20,8 +20,7 @@
      idx: idx, item_type: item_type, extra_image_classes: extra_image_classes,
      view_context: self
    )
-   return if result.display_type == :none
-%>
+   return if result.display_type == :none %>
 
 <% inner = capture do %>
   <div class="<%= variant %>-item <%= resource&.class&.table_name %>-<%= idx %> <%= result.wrapper_classes %>">

@@ -30,14 +30,14 @@
         <% bio = event_staff.public_bio %>
         <%# Primary sector first (starred, darker chip), then the rest alphabetically —
             the same treatment as the recipients page. %>
-        <% sector_items = person.profile_show_sectors? ? person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } : [] %>
+        <% sector_items = person.profile_show_sectors? ? person.sectorable_items.includes(:sector).sort_by { |si| [si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase] } : [] %>
         <%# Facilitator tenure → one experience badge, computed from already-loaded
             affiliations (avoids the decorator's query-heavy badges call). Thresholds
             match PersonDecorator#compute_badges. %>
         <% facilitator_since = person.profile_show_member_since? ? person.affiliations.select(&:facilitator?).filter_map(&:start_date).min : nil %>
         <% experience = if facilitator_since
              years = Date.current.year - facilitator_since.year
-             years >= 10 ? [ :legacy_facilitator, "Legacy facilitator" ] : (years >= 3 ? [ :seasoned_facilitator, "Seasoned facilitator" ] : [ :new_facilitator, "New facilitator" ])
+             years >= 10 ? [:legacy_facilitator, "Legacy facilitator"] : (years >= 3 ? [:seasoned_facilitator, "Seasoned facilitator"] : [:new_facilitator, "New facilitator"])
            end %>
 
         <div class="group w-48 sm:w-56 h-96 [perspective:1000px] cursor-pointer transition-transform duration-200 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded-xl"

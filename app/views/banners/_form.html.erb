@@ -1,7 +1,7 @@
 <%= simple_form_for(@banner) do |f| %>
   <div class="space-y-6">
     <!-- Validation Errors -->
-    <%= render 'shared/errors', resource: @banner if @banner.errors.any? %>
+    <%= render "shared/errors", resource: @banner if @banner.errors.any? %>
 
     <!-- Hidden Tracking Fields -->
     <%= f.hidden_field :created_by_id, value: f.object.created_by_id || current_user&.id %>

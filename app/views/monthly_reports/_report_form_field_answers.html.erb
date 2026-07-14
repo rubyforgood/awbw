@@ -26,11 +26,11 @@
       <% log_field.answer_options.each do |answer_option| %>
         <% next if answers.include?("#{answer_option.id}-#{log_field.id}") %>
         <% answers.push("#{answer_option.id}-#{log_field.id}") %>
-        <%= form.send(log_field.form_helper_type, :_create, 1, onclick: 'deselectCheckboxesIfSelected($(this));', class: "js-answer-button-radio-#{log_field.id}", id: "js-answer-button-radio-#{answer_option.id}", data: { log_field_id: log_field.id }, checked: log_field.checked(@old_report, answer_option.name)) %>
+        <%= form.send(log_field.form_helper_type, :_create, 1, onclick: "deselectCheckboxesIfSelected($(this));", class: "js-answer-button-radio-#{log_field.id}", id: "js-answer-button-radio-#{answer_option.id}", data: { log_field_id: log_field.id }, checked: log_field.checked(@old_report, answer_option.name)) %>
         <%= hidden_field({}, :answer_option_id, value: answer_option.id) %>
         <% label_txt = answer_option.name.titleize %>
-        <% style = 'text-transform: uppercase;' if label_txt.downcase == 'lgbtqia' %>
-        <%= form.label label_txt, class: 'inline', style: style unless answer_option.name.empty? %>
+        <% style = "text-transform: uppercase;" if label_txt.downcase == "lgbtqia" %>
+        <%= form.label label_txt, class: "inline", style: style unless answer_option.name.empty? %>
 
       <% end %>
     <% else %>
@@ -60,11 +60,11 @@
       <div id="quotes">
         <% if !@report.quotes.empty? %>
           <% @report.quotes.each_with_index do |q, i| %>
-            <%= render 'quote', q: q, index: i %>
+            <%= render "quote", q: q, index: i %>
             <script>window.quotesIndex += 1;</script>
           <% end %>
         <% else %>
-          <%= render 'quote', index: 0, q: Quote.new %>
+          <%= render "quote", index: 0, q: Quote.new %>
         <% end %>
       </div>
 
@@ -102,7 +102,6 @@
       }
     }
 
-
     $(function() {
       if(window.location.pathname.includes('workshop_log') == false && window.location.search.includes('form_builder_id=5') == false) {
         $( "input[class*=on-going]" ).val(<%= @total_ongoing %>).prop('readonly', true)
@@ -113,11 +112,10 @@
   //]]>
 </script>
 
-
 <script>
   function addQuote() {
     window.quotesIndex += 1;
-    $("#quotes").append('<%= j render 'quote', :index => "last-quotes",:q => Quote.new %>');
+    $("#quotes").append('<%= j render "quote", index: "last-quotes",q: Quote.new %>');
 
     contentQuotes = document.getElementById("quote-last-quotes").innerHTML.replace(/last-quotes/g, window.quotesIndex);
     document.getElementById("quote-last-quotes").innerHTML = contentQuotes;

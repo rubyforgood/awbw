@@ -108,7 +108,7 @@
                   </div>
                   <div class="flex flex-col gap-1.5">
                     <% am[:matches].each do |reg| %>
-                      <% remaining_cents = [ event_cost_cents - allocated_by_registration.fetch(reg.id, 0), 0 ].max %>
+                      <% remaining_cents = [event_cost_cents - allocated_by_registration.fetch(reg.id, 0), 0].max %>
                       <div class="flex flex-col gap-1 items-start">
                         <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
                                     title: "View #{reg.registrant.name}'s registration for #{@event.title}",

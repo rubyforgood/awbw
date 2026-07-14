@@ -1,4 +1,4 @@
-<%= form_for @report, as: :report, url: {action: :create,
+<%= form_for @report, as: :report, url: { action: :create,
   form_builder_id: params[:form_builder_id],
   month: @month,
   year: @year },
@@ -18,14 +18,14 @@
       </div>
     </div>
     <div class='col-md-8'>
-      <%= f.label 'Reporting for the month of' %>
+      <%= f.label "Reporting for the month of" %>
       <%= f.date_select :date,
-         { discard_day: true, selected: Date.new( @year.to_i, @month.to_i ), use_hidden: true },
+         { discard_day: true, selected: Date.new(@year.to_i, @month.to_i), use_hidden: true },
            onchange: 'window.location = window.location.toString().split("&month=")[0 + "&month=" +  $("#report_date_2i").val() + "&year=" + $("#report_date_1i").val()' %>
 
-      <%= f.select(:date, {}, {:include_blank => false}, {:class => "form-control form-control-custom"}) %>
+      <%= f.select(:date, {}, { include_blank: false }, { class: "form-control form-control-custom" }) %>
 
-      <%= render 'workshop_log_summary', f: f, workshop_logs: @workshop_logs %>
+      <%= render "workshop_log_summary", f: f, workshop_logs: @workshop_logs %>
       <hr />
     </div>
   </div>
@@ -34,7 +34,7 @@
  <!-- ######### row 2 ########## -->
   <div class='row'>
     <div class='col-md-8'>
-      <%= render 'shared/errors', resource: @report if @report.errors.any? %>
+      <%= render "shared/errors", resource: @report if @report.errors.any? %>
       <!-- ######### form fields ####### -->
       <div class='form-group'>
         <%= f.label "Person" %>
@@ -48,13 +48,13 @@
 
       <div class='form-group'>
         <div class="label-plus-comment">
-          <%= f.label 'Agency' %>
+          <%= f.label "Agency" %>
           <div class="custom-smaller">Please contact AWBW if your agency is not listed.</div>
         </div>
         <% agency = agencies.find_by(windows_type_id: f.object.windows_type.id) %>
         <%= f.collection_select :organization_id, agencies, :id, :name,
-        { selected: agency ? agency.id : nil,class: 'js-agency-select' },
-        class:"selectpicker form-control form-control-custom", onchange: 'redirectToNewOrganization()' %>
+        { selected: agency ? agency.id : nil,class: "js-agency-select" },
+        class:"selectpicker form-control form-control-custom", onchange: "redirectToNewOrganization()" %>
       </div>
 
       <%= f.hidden_field :owner_id, value: @form_builder.id %>
@@ -73,22 +73,21 @@
                   :workshop_id,
                   @workshop_list,
                     :id,
-                    :type_name, { :selected => params[:workshop_id],
-                    :prompt => "Select a workshop" },
+                    :type_name, { selected: params[:workshop_id],
+                    prompt: "Select a workshop" },
 {
-:class  =>  "form-control form-control-custom",
-:id     => 'select-workshop'
-})
-%>
+class: "form-control form-control-custom",
+id: "select-workshop"
+}) %>
             </div>
           </div>
         </div>
 
       <% end %>
 
-      <%= render 'sectorable_items' %>
+      <%= render "sectorable_items" %>
 
-      <%= render 'shared/report_form_field_answers', f: f %>
+      <%= render "shared/report_form_field_answers", f: f %>
 
       <!-- ######## uploads sectors ####### -->
       <% if [4, 2].include? params[:form_builder_id].to_i %>
@@ -120,7 +119,7 @@
 
           <div class="form-group">
             <%= f.label :form_file, class: "btn btn-primary btn--small" do %>
-              <%= f.file_field :form_file, class: '', id: 'report_form_file'%>
+              <%= f.file_field :form_file, class: "", id: "report_form_file" %>
               Choose File
             <% end %>
           </div>
@@ -130,7 +129,6 @@
     </div>
   </div>
 <% end %>
-
 
   <!-- ######### row 3 ########## -->
   <div class="row">

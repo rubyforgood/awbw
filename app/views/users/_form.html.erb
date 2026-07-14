@@ -49,7 +49,7 @@
                               "1", "0" %>
               <span data-toggle-user-icon-target="lockLabel"><%= f.object.locked_at.present? ? "Locked" : "Lock" %></span>
               <i class="fa-solid fa-lock text-red-500" data-toggle-user-icon-target="lockIcon"
-                 style="<%= 'display:none' unless f.object.locked_at.present? %>"></i>
+                 style="<%= "display:none" unless f.object.locked_at.present? %>"></i>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <%= f.hidden_field :super_user, value: "0" %>
@@ -60,7 +60,7 @@
                               "1", "0" %>
               <span>Admin</span>
               <i class="fa-solid fa-user-shield text-blue-500" data-toggle-user-icon-target="adminIcon"
-                 style="<%= 'display:none' unless f.object.super_user? %>"></i>
+                 style="<%= "display:none" unless f.object.super_user? %>"></i>
             </label>
           </div>
         </div>
@@ -115,7 +115,7 @@
           <label class="block font-medium text-gray-700 mb-2">Favorite event</label>
           <%= f.input :favorite_event_id,
                       label: false,
-                      collection: f.object.favorite_event ? [ [ f.object.favorite_event.remote_search_label[:label], f.object.favorite_event.id ] ] : [],
+                      collection: f.object.favorite_event ? [[f.object.favorite_event.remote_search_label[:label], f.object.favorite_event.id]] : [],
                       selected: f.object.favorite_event_id,
                       include_blank: true,
                       input_html: {

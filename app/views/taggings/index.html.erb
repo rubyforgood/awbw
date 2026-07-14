@@ -6,8 +6,7 @@
 <% filtered_sectors = @sector_names_all.present? ? Sector.sector_names_all(@sector_names_all).order(:name).to_a : [] %>
 <% filtered_categories = @category_names_all.present? ? Category.category_names_all(@category_names_all).includes(:category_type).order(:name).to_a : [] %>
 <% category_full_names =
-     filtered_categories.map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }.join(", ").presence
-%>
+     filtered_categories.map { |c| "#{c.category_type&.name&.titleize}: #{c.name}" }.join(", ").presence %>
 
 <div class="taggings-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:tags) %> border border-gray-200 rounded-xl shadow p-6">
 
@@ -111,7 +110,7 @@
                       tagged_index_path(type,
                                         sector_names_all: @sector_names_all,
                                         category_names_all: @category_names_all),
-                      data: { turbo_frame: "_top"},
+                      data: { turbo_frame: "_top" },
                       class: "text-primary font-medium hover:underline" %>
         </div>
       </section>

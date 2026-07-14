@@ -7,24 +7,24 @@
     as the header. %>
 <% back_path, back_label, detail_label = case params[:return_to]
    when "handouts"
-     [ registration_handouts_path(@event_registration.slug), "Back to handouts", "Handouts detail" ]
+     [registration_handouts_path(@event_registration.slug), "Back to handouts", "Handouts detail"]
    when "payment"
-     [ registration_payment_path(@event_registration.slug), "Back to payment", "Payment detail" ]
+     [registration_payment_path(@event_registration.slug), "Back to payment", "Payment detail"]
    when "scholarship"
-     [ registration_scholarship_path(@event_registration.slug), "Back to scholarship", "Scholarship detail" ]
+     [registration_scholarship_path(@event_registration.slug), "Back to scholarship", "Scholarship detail"]
    when "certificate"
-     [ registration_certificate_path(@event_registration.slug), "Back to certificate", "Certificate detail" ]
+     [registration_certificate_path(@event_registration.slug), "Back to certificate", "Certificate detail"]
    when "videoconference"
-     [ registration_videoconference_path(@event_registration.slug), "Back to videoconference", "Videoconference detail" ]
+     [registration_videoconference_path(@event_registration.slug), "Back to videoconference", "Videoconference detail"]
    when "callout"
      callout = @event.registration_ticket_callouts.find_by(id: params[:callout_id])
      if callout
-       [ event_registration_ticket_callout_path(@event, callout, reg: @event_registration.slug), "Back to #{callout.title}", "#{callout.title} detail" ]
+       [event_registration_ticket_callout_path(@event, callout, reg: @event_registration.slug), "Back to #{callout.title}", "#{callout.title} detail"]
      else
-       [ registration_ticket_path(@event_registration.slug), "Back to ticket", nil ]
+       [registration_ticket_path(@event_registration.slug), "Back to ticket", nil]
      end
    else
-     [ registration_ticket_path(@event_registration.slug), "Back to ticket", nil ]
+     [registration_ticket_path(@event_registration.slug), "Back to ticket", nil]
    end %>
 <%= render layout: "events/callouts/callout_page", locals: { title: detail_label || @resource.title, back_path: back_path, back_label: back_label, container_width: "max-w-5xl" } do %>
   <% if detail_label %>

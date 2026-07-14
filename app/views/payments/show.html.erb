@@ -106,9 +106,9 @@
           <tbody class="divide-y divide-gray-200">
             <% @allocations.each do |allocation| %>
               <% row_class = if allocation.amount.to_i < 0
-                  'bg-red-50'
+                  "bg-red-50"
                 elsif allocation.reverted_id.present?
-                  'bg-gray-100 border border-gray-300 opacity-60'
+                  "bg-gray-100 border border-gray-300 opacity-60"
                 end %>
               <tr class="<%= row_class %>">
                 <td class="px-4 py-3 text-sm text-gray-900">

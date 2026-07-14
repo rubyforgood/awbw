@@ -1,4 +1,4 @@
-<%= form_for @report, as: :report, url: {action: :create,
+<%= form_for @report, as: :report, url: { action: :create,
   form_builder_id: params[:form_builder_id],
   month: @month,
   year: @year },
@@ -34,16 +34,16 @@
 
     <% if not @workshop_log_summary_page %>
       <div class='col-md-8'>
-        <%= f.label 'Reporting for the month of' %>
+        <%= f.label "Reporting for the month of" %>
         <%= f.date_select :date,
-          { discard_day: true, selected: Date.new( @year.to_i, @month.to_i ), use_hidden: true },
+          { discard_day: true, selected: Date.new(@year.to_i, @month.to_i), use_hidden: true },
             onchange: 'window.location = window.location.toString().split("&month=")[0 + "&month=" +  $("#report_date_2i").val() + "&year=" + $("#report_date_1i").val()' %>
 
-        <%= f.select(:date, {}, {:include_blank => false}, {:class => "form-control form-control-custom"}) %>
+        <%= f.select(:date, {}, { include_blank: false }, { class: "form-control form-control-custom" }) %>
 
-        <%= render 'workshop_log_summary', f: f, workshop_logs: @workshop_logs %>
+        <%= render "workshop_log_summary", f: f, workshop_logs: @workshop_logs %>
 
-        <%= render 'combined_workshop_log_summary', f: f, workshop_logs: @combined_workshop_logs %>
+        <%= render "combined_workshop_log_summary", f: f, workshop_logs: @combined_workshop_logs %>
         <hr />
       </div>
     <% end %>
@@ -67,12 +67,12 @@
 
       <div class='form-group'>
         <div class="label-plus-comment">
-          <%= f.label 'Agency' %>
+          <%= f.label "Agency" %>
           <div class="custom-smaller">Please contact AWBW if your agency is not listed.</div>
         </div>
         <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
         <%= f.collection_select :organization_id, @agencies, :id, :name,
-        { selected: agency ? agency.id : nil,class: 'js-agency-select' },
+        { selected: agency ? agency.id : nil,class: "js-agency-select" },
         class:"selectpicker form-control form-control-custom", onchange: "window.location = $.replaceUrlParam(window.location.toString(),'agency_id',$(this).val() )" %>
       </div>
 
@@ -92,13 +92,12 @@
                   :workshop_id,
                   @workshop_list,
                     :id,
-                    :type_name, { :selected => params[:workshop_id],
-                    :prompt => "Select a workshop" },
+                    :type_name, { selected: params[:workshop_id],
+                    prompt: "Select a workshop" },
 {
-:class  =>  "form-control form-control-custom",
-:id     => 'select-workshop'
-})
-%>
+class: "form-control form-control-custom",
+id: "select-workshop"
+}) %>
             </div>
           </div>
         </div>
@@ -106,7 +105,7 @@
       <% end %>
 
       <!-- ################### SECTORS ################## -->
-      <%= render 'sectorable_items' %>
+      <%= render "sectorable_items" %>
       <div class="row hide" id="other_sector_description_content">
         <div class="col-md-8 col-lg-8">
           <div class="form-group text-form-group">
@@ -120,7 +119,7 @@
       <div class="row">
        <div class="col-md-12 col-lg-12">
          <% @report.log_fields.each do |field| %>
-           <%= render 'shared/form_field', :field => field, :report => @report %>
+           <%= render "shared/form_field", field: field, report: @report %>
 
            <% if field.name == 'Share challenges for this month' ||
     (field.name == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2) %>
@@ -132,11 +131,11 @@
              <div id="quotes">
                <% if !@report.quotes.empty? %>
                  <% @report.quotes.each_with_index do |q, i| %>
-                   <%= render 'quote', q: q, index: i %>
+                   <%= render "quote", q: q, index: i %>
                    <script>window.quotesIndex += 1;</script>
                  <% end %>
                <% else %>
-                 <%= render 'quote', index: 0, q: Quote.new %>
+                 <%= render "quote", index: 0, q: Quote.new %>
                <% end %>
              </div>
 
@@ -164,10 +163,10 @@
       <div class="form-group image-fields-wrapper">
         <!-- ######## upload image ###### -->
         <%= f.fields_for :media_files do |files_form| %>
-        <%= render 'media_file', :f => files_form %>
+        <%= render "media_file", f: files_form %>
 
         <div class="links small">
-          <%= link_to_add_association 'Add Another Media File', f, :media_files, partial: 'media_file', class:'btn-underline' %>
+          <%= link_to_add_association "Add Another Media File", f, :media_files, partial: "media_file", class:"btn-underline" %>
         </div>
         <% end %>
       </div>
@@ -219,7 +218,7 @@
 
   function addQuote() {
     window.quotesIndex += 1;
-    $("#quotes").append('<%= j render 'quote', :index => "last-quotes",:q => Quote.new %>');
+    $("#quotes").append('<%= j render "quote", index: "last-quotes",q: Quote.new %>');
 
     contentQuotes = document.getElementById("quote-last-quotes").innerHTML.replace(/last-quotes/g, window.quotesIndex);
     document.getElementById("quote-last-quotes").innerHTML = contentQuotes;
@@ -256,9 +255,8 @@
      }
    });
 
-
   if ($.urlParam('agency_id') != null){
-    $("#report_organization_id").val("<%=params[:agency_id] %>");
+    $("#report_organization_id").val("<%= params[:agency_id] %>");
   }
 
   function validateOptions(event, div_id, input_type) {

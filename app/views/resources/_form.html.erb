@@ -62,7 +62,7 @@
     <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :author_id,
                   as: :select,
-                  collection: f.object.author_person.present? ? [[ f.object.author_person.remote_search_label[:label], f.object.author_person.id ]] : [],
+                  collection: f.object.author_person.present? ? [[f.object.author_person.remote_search_label[:label], f.object.author_person.id]] : [],
                   selected: f.object.author_person&.id || current_user.person_id,
                   include_blank: "Select an author",
                   label: (f.object.author ? (
@@ -92,7 +92,7 @@
   </div>
 
   <!-- Second Row -->
-  <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
+  <div class="form-group <%= "has-error" if f.object.errors[:rhino_body].present? %>">
     <%= rhino_editor(f, :body, label: "Description") %>
 
     <% if f.object.errors[:rhino_body].present? %>

@@ -2,7 +2,7 @@
   <%= simple_form_for @workshop_idea do |f| %>
     <!-- Errors -->
     <% if @workshop_idea.errors.any? %>
-      <%= render 'shared/errors', resource: @workshop_idea %>
+      <%= render "shared/errors", resource: @workshop_idea %>
     <% end %>
 
     <%= f.hidden_field :created_by_id, value: current_user&.id unless f.object.persisted? %>
@@ -394,7 +394,6 @@
         </div>
       </div>
     </div>
-
 
   <%= render "shared/form_image_fields", f: f, include_primary_asset: false %>
     <div class="action-buttons mt-8 flex justify-center gap-3">

@@ -21,13 +21,13 @@
         and should not be edited here.
       </div>
     <% end %>
-    <%= render 'shared/errors', resource: workshop_variation_idea if workshop_variation_idea.errors.any? %>
+    <%= render "shared/errors", resource: workshop_variation_idea if workshop_variation_idea.errors.any? %>
     <!-- Workshop + Organization -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       <div>
         <% if !promoted_to_variation && (params[:admin] == "true" || f.object.new_record?) %>
           <%= f.input :workshop_id,
-            collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
+            collection: f.object.workshop.present? ? [[f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
             include_blank: true,
             required: true,
             input_html: {
@@ -92,7 +92,7 @@
     <% if promoted_to_variation %>
       <div class="mt-3 mb-6"><%= workshop_variation_idea.rhino_body %></div>
     <% else %>
-      <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
+      <div class="form-group <%= "has-error" if f.object.errors[:rhino_body].present? %>">
         <%= rhino_editor(f, :body,
                       label: "Tell us about your workshop variation. Please share how you adapted the workshop to fit your population, setting, and/or facilitation style. We also invite you to share participant feedback, insights on how it was received, and any ideas for changes you might make in the future.") %>
 

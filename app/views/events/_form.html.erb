@@ -530,7 +530,7 @@
       <div id="page_content" class="hidden border border-gray-300 p-4 rounded-b-md">
         <%= f.input :autoshow_title, as: :boolean, label: "Show title on event show page" %>
 
-        <div class="form-group <%= 'has-error' if f.object.errors[:rhino_header].present? %>">
+        <div class="form-group <%= "has-error" if f.object.errors[:rhino_header].present? %>">
           <%= rhino_editor(f, :header, label: "Header content") %>
 
           <% if f.object.errors[:rhino_header].present? %>

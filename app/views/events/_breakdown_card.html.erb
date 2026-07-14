@@ -29,7 +29,7 @@
     <% if chart == :pie %>
       <%= pie_chart data, colors: palette, legend: false, height: "220px" %>
     <% elsif chart == :bar %>
-      <%= bar_chart data, colors: [ palette.first ], height: "#{[ data.size * 28, 200 ].max}px",
+      <%= bar_chart data, colors: [palette.first], height: "#{[data.size * 28, 200].max}px",
                     library: { indexAxis: "y", plugins: { legend: { display: false } } } %>
     <% elsif chart == :map %>
       <%# US choropleth: each state filled by its count (see us_map_chart_controller.js). %>

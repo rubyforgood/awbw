@@ -1,5 +1,5 @@
 <%= simple_form_for(@video_recording, html: { multipart: true }) do |f| %>
-  <%= render 'shared/errors', resource: @video_recording if @video_recording.errors.any? %>
+  <%= render "shared/errors", resource: @video_recording if @video_recording.errors.any? %>
 
   <div class="p-3">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -39,7 +39,7 @@
 
     <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
 
-    <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">
+    <div class="form-group <%= "has-error" if f.object.errors[:rhino_body].present? %>">
       <%= rhino_editor(f, :body, label: "Description") %>
 
       <% if f.object.errors[:rhino_body].present? %>

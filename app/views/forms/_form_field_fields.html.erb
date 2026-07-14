@@ -2,9 +2,9 @@
   field = f.object
 
   visibility_options = [
-    [ "Always ask", "always_ask" ],
-    [ "Logged out only", "logged_out_only" ],
-    [ "Answers on file", "answers_on_file" ]
+    ["Always ask", "always_ask"],
+    ["Logged out only", "logged_out_only"],
+    ["Answers on file", "answers_on_file"]
   ]
 
   visibility_styles = {
@@ -13,7 +13,7 @@
     answers_on_file: "bg-white text-amber-600 border-amber-300"
   }
 %>
-<div class="nested-fields flex items-center gap-3 <%= field.group_header? ? 'pl-3 pr-6' : 'px-6' %> py-3 border-b border-gray-100 hover:bg-gray-50"
+<div class="nested-fields flex items-center gap-3 <%= field.group_header? ? "pl-3 pr-6" : "px-6" %> py-3 border-b border-gray-100 hover:bg-gray-50"
      data-sortable-id="<%= field.id %>"
      <% if field.section.present? %>data-section="<%= field.section %>"<% end %>
      <% if field.group_header? %>data-group-header<% end %>>
@@ -68,7 +68,7 @@
         <%= f.text_area :name, required: true, rows: 1, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
         <%
           type_order = %w[free_form_input_one_line free_form_input_paragraph single_select_radio single_select_dropdown multi_select_checkbox no_user_input group_header]
-          type_options = type_order.map { |t| [ FormField::ANSWER_TYPE_LABELS[t] || t.titleize, t ] }
+          type_options = type_order.map { |t| [FormField::ANSWER_TYPE_LABELS[t] || t.titleize, t] }
         %>
         <%= f.select :answer_type, type_options,
               {},
@@ -124,10 +124,10 @@
           </div>
           <%
             width_options = [
-              [ "Full width", "full" ],
-              [ "Half width", "half" ],
-              [ "Third width", "third" ],
-              [ "Quarter width", "quarter" ]
+              ["Full width", "full"],
+              ["Half width", "half"],
+              ["Third width", "third"],
+              ["Quarter width", "quarter"]
             ]
           %>
           <%= f.text_area :subtitle, rows: 1, placeholder: "Subtitle",

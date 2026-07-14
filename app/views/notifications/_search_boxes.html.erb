@@ -2,7 +2,7 @@
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
   <%= form_with url: notifications_path,
                 method: :get,
-                data: {controller: "collection",
+                data: { controller: "collection",
                       turbo_frame: "notifications_results" },
                       autocomplete: "off",
                 class: "flex items-end gap-3" do |f| %>
@@ -23,7 +23,7 @@
 
       <%= f.select :record_type,
                    options_for_select(
-                     Notification::NOTICEABLE_TYPES.map { |t| [ t.underscore.humanize, t ] },
+                     Notification::NOTICEABLE_TYPES.map { |t| [t.underscore.humanize, t] },
                      params[:record_type]
                    ),
                    { include_blank: "All" },
@@ -60,7 +60,7 @@
                   class: "block text-sm font-medium text-gray-500 mb-1" %>
 
       <%= f.select :responded_status,
-                   options_for_select([ [ "Yes", "yes" ], [ "No", "no" ], [ "N/A", "na" ] ], params[:responded_status]),
+                   options_for_select([["Yes", "yes"], ["No", "no"], ["N/A", "na"]], params[:responded_status]),
                    { include_blank: "All" },
                    class: "w-full bg-white border border-gray-300 rounded-lg px-3 py-2
                              focus:ring-blue-500 focus:border-blue-500" %>

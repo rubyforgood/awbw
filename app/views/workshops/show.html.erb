@@ -7,8 +7,8 @@
       <%= render "show_header", workshop: @workshop %>
       <%= render "show_actions_row", workshop: @workshop %>
 
-      <%= turbo_frame_tag "show_lazy", src: workshop_path(@workshop), data: {turbo: false} do %>
-        <%= render 'show_skeleton' %>
+      <%= turbo_frame_tag "show_lazy", src: workshop_path(@workshop), data: { turbo: false } do %>
+        <%= render "show_skeleton" %>
       <% end %>
       <script>
         document.addEventListener("turbo:frame-load", function(event) {

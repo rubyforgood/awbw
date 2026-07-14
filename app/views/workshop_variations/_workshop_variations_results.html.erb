@@ -3,7 +3,7 @@
   sort_base = params.permit(:query, :author_id, :number_of_items_per_page).to_h.symbolize_keys
   sort_link = sort_header_link(frame: "workshop_variations_results", path: ->(p) { workshop_variations_path(p) }, base: sort_base)
 %>
-<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @workshop_variations.any? %>">
+<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= "animate-fade blur-on-submit" if @workshop_variations.any? %>">
   <table class="table table-responsive table-bordered table-curved">
     <thead>
       <tr id="table-thead-tr">
@@ -72,7 +72,7 @@
                 <span class="text-gray-300">--</span>
               <% end %>
             </td>
-            <td class="px-4 py-2 text-sm text-gray-500 text-center whitespace-nowrap"><%= workshop_variation.updated_at&.strftime('%m/%d/%y') %></td>
+            <td class="px-4 py-2 text-sm text-gray-500 text-center whitespace-nowrap"><%= workshop_variation.updated_at&.strftime("%m/%d/%y") %></td>
             <td class="px-4 py-2 text-center whitespace-nowrap">
               <%= link_to "Edit",
                           edit_workshop_variation_path(workshop_variation),
