@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
-# Lint Ruby files with Rubocop. Use --fix to auto-correct.
-set -euo pipefail
+# Lint Ruby with RuboCop and ERB templates with ERB Lint. Use --fix to
+# auto-correct both. File args are passed to RuboCop; ERB Lint always runs
+# across all ERB files.
+set -uo pipefail
 source "$(dirname "$0")/.ruby-env"
+
+status=0
 if [[ "${1:-}" == "--fix" ]]; then
   shift
-  bundle exec rubocop -a "$@"
+  bundle exec rubocop -a "$@" || status=$?
+  bundle exec erb_lint --lint-all --autocorrect || status=$?
 else
-  bundle exec rubocop "$@"
+  bundle exec rubocop "$@" || status=$?
+  bundle exec erb_lint --lint-all || status=$?
 fi
+exit $status

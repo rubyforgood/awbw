@@ -73,6 +73,7 @@ gem "paper_trail", "~> 17.0"
 
 group :development do
   gem "rubocop-rails-omakase", require: false
+  gem "erb_lint", require: false
 end
 
 group :development, :test do

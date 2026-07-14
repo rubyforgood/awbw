@@ -1,0 +1,42 @@
+---
+# ERB Lint — fills the gap RuboCop leaves: RuboCop only parses .rb, so nothing
+# checked the Ruby inside <% %> tags or our ERB/HTML conventions (CLAUDE.md).
+# Scoped conservatively: mechanical HTML/ERB formatting linters plus a small,
+# fully autocorrectable RuboCop subset mirroring our omakase style rules.
+EnableDefaultLinters: false
+linters:
+  # --- ERB/HTML formatting (all autocorrectable) ---
+  SpaceAroundErbTag:
+    enabled: true
+  ClosingErbTagIndent:
+    enabled: true
+  RightTrim:
+    enabled: true
+  TrailingWhitespace:
+    enabled: true
+  ExtraNewline:
+    enabled: true
+  FinalNewline:
+    enabled: true
+  SpaceIndentation:
+    enabled: true
+
+  # --- Ruby inside ERB tags: curated omakase subset, all autocorrectable ---
+  Rubocop:
+    enabled: true
+    rubocop_config:
+      AllCops:
+        DisabledByDefault: true
+      Style/StringLiterals:
+        Enabled: true
+        EnforcedStyle: double_quotes
+      Style/HashSyntax:
+        Enabled: true
+      Layout/SpaceInsideHashLiteralBraces:
+        Enabled: true
+      Layout/SpaceInsideArrayLiteralBrackets:
+        Enabled: true
+      Layout/SpaceInsideReferenceBrackets:
+        Enabled: true
+      Layout/SpaceInsideParens:
+        Enabled: true

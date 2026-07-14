@@ -37,3 +37,5 @@ jobs:
             rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-
       - name: Run RuboCop
         run: bundle exec rubocop --format github --format clang
+      - name: Run ERB Lint
+        run: bundle exec erb_lint --lint-all
