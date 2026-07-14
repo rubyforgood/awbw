@@ -62,7 +62,10 @@ class OtherResponsesController < ApplicationController
 
     responses = group_scope.sectors.promotable_now
     responses.includes(:owner).find_each do |response|
-      response.owner.tag_sectors(primary_ids: [], additional_ids: [ sector.id ])
+      # Reuse registration's tagging so the sector lands on the person AND their
+      # organizations, always as an additional tag (never primary).
+      SectorTagging.apply(person: response.owner, organizations: response.owner.organizations,
+                          additional_ids: [ sector.id ])
       response.update!(status: "promoted", promotable: sector)
     end
 

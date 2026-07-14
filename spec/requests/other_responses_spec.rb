@@ -166,6 +166,22 @@ RSpec.describe "OtherResponses", type: :request do
       expect(dismissed.owner.sectors).not_to include(sector)
     end
 
+    it "also tags the person's organizations (additional), like registration" do
+      sign_in admin
+      sector = create(:sector, name: "Equine Therapy")
+      person = create(:person)
+      organization = create(:organization)
+      create(:affiliation, person: person, organization: organization)
+      create(:other_response, owner: person, text: "Equine therapy")
+
+      post promote_other_responses_path,
+           params: { kind: "sector", normalized_text: "equine therapy", sector_id: sector.id }
+
+      expect(person.sectors).to include(sector)
+      expect(organization.sectors).to include(sector)
+      expect(organization.sectorable_items.find_by(sector: sector).is_primary).to be(false)
+    end
+
     it "mints a new published sector when given a name" do
       sign_in admin
       person = create(:person)

@@ -372,11 +372,8 @@ module EventRegistrationServices
       additional_age_ids = collect_ids_from_checkboxes("additional_age_group")
 
       if primary_sector_ids.any? || additional_sector_ids.any?
-        person.tag_sectors(primary_ids: primary_sector_ids, additional_ids: additional_sector_ids)
-        # Organizations aggregate sectors across many people and have no single
-        # "primary", so union everyone's selections in as additional tags rather
-        # than churning the org's primary on each registration.
-        organization&.tag_sectors(primary_ids: [], additional_ids: primary_sector_ids + additional_sector_ids)
+        SectorTagging.apply(person: person, organizations: [ organization ],
+                            primary_ids: primary_sector_ids, additional_ids: additional_sector_ids)
       end
 
       if primary_age_ids.any? || additional_age_ids.any?

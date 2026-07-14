@@ -213,6 +213,10 @@ end
 
 - `AffiliationServices::CreateFromRegistration` — On registration / org linking, creates a "job affiliation" with the typed title (when present) plus a standing "Facilitator" affiliation, in one transaction. Skips the facilitator one only when the person already has an active-or-pending affiliation titled exactly "Facilitator" with that org (a current one or one dated to a future training); an ended facilitator affiliation gets a fresh second one. Dedupe is by title + org + dates, so a job title like "Lead Facilitator" still gets its own Facilitator affiliation. Accepts an optional `organization_address:` and sets it on every affiliation it creates (the registrant's typed agency address, upserted onto the org); when an affiliation already exists and is skipped, it backfills that address onto the existing one only if it has none (an admin-set address is never overwritten)
 
+### Sectors
+
+- `SectorTagging` — `.apply(person:, organizations:, primary_ids:, additional_ids:)` tags a person's sectors (primary + additional) and mirrors them onto the given organizations as additional-only (orgs aggregate members' sectors and have no primary). Shared by registration (person's selections onto the org they registered with) and "Other" sector-response promotion (the promoted sector onto the person and their orgs, additional only)
+
 ### Other responses
 
 - `OtherResponses::CaptureFromSubmission` — Materializes a form submission's **person-owned** "Other" answers (sectors) as `OtherResponse` records; org-type "Other" is captured separately in `PublicRegistration#sync_agency_type` (owned by the org). Uses `OtherOption.texts`, which keys strictly on the `Other:` prefix, so named specify options and the CE `Yes: N` box are ignored; de-dupes per owner + question. Shared by the registration, scholarship, and bulk-payment submission paths
