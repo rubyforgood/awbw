@@ -17,11 +17,12 @@ class ProfessionalLicense < ApplicationRecord
   # different kinds is allowed; only a duplicate (kind, number) pair is rejected.
   validates :number, uniqueness: { scope: [ :person_id, :kind ] }, allow_nil: true
 
-  # Find the person's license for this number, or create it. A blank number
-  # resolves to the person's single placeholder license (number nil) so a CE
-  # opt-in without a number on file never spawns duplicate placeholders.
-  def self.find_or_create_for(person:, number: nil)
-    find_or_create_by(person: person, number: number.presence)
+  # Find the person's license for this type + number, or create it. Licenses are
+  # identified by (kind, number), so an opt-in without either on file resolves to
+  # the person's single placeholder license (both nil) rather than spawning
+  # duplicate placeholders.
+  def self.find_or_create_for(person:, number: nil, kind: nil)
+    find_or_create_by(person: person, number: number.presence, kind: kind.presence)
   end
 
   # Completeness: have we recorded the actual license number yet?

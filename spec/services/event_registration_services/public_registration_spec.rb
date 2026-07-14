@@ -542,11 +542,12 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       ce_form.form_fields.find_by!(field_identifier: key).id.to_s
     end
 
-    def register_with_ce(answer, license: nil)
+    def register_with_ce(answer, license: nil, kind: nil)
       params = base_form_params(first_name: "Cy", last_name: "Reed", email: "cy@example.com")
       ce_params = {}
       ce_params[ce_field_id(described_class::CE_CREDIT_INTEREST_IDENTIFIER)] = answer unless answer.nil?
       ce_params[ce_field_id(described_class::CE_LICENSE_NUMBER_IDENTIFIER)] = license if license
+      ce_params[ce_field_id(described_class::CE_LICENSE_KIND_IDENTIFIER)] = kind if kind
       described_class.call(event: event, registration_form: form, form_params: params,
                            continuing_education_form: ce_form, continuing_education_params: ce_params)
     end
@@ -593,6 +594,13 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       license = result.event_registration.continuing_education_registrations.first.professional_license
       expect(license.number).to eq("LMFT 555")
       expect(license.person).to eq(result.event_registration.registrant)
+    end
+
+    it "records the typed license type alongside the number" do
+      result = register_with_ce("Yes", license: "555", kind: "LCSW")
+      license = result.event_registration.continuing_education_registrations.first.professional_license
+      expect(license.kind).to eq("LCSW")
+      expect(license.number).to eq("555")
     end
 
     it "uses a placeholder license when no number is given" do

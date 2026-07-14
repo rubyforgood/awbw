@@ -11,6 +11,10 @@ module EventRegistrationServices
     # seeds the registrant's ProfessionalLicense.
     CE_LICENSE_NUMBER_IDENTIFIER = "ce_license_number".freeze
 
+    # Well-known field_identifier of the CE license-type question (e.g. "LCSW").
+    # Its answer seeds the ProfessionalLicense's kind.
+    CE_LICENSE_KIND_IDENTIFIER = "ce_license_kind".freeze
+
     # Well-known field_identifier of the "Additional forms" multi-select question.
     # Checking "Invoice" / "W-9" toggles the registration's invoice_requested /
     # w9_requested flags, which the digital ticket reads to surface those downloads.
@@ -412,7 +416,7 @@ module EventRegistrationServices
       return unless ce_credit_requested?
       return if event_registration.continuing_education_registrations.exists?
 
-      license = ProfessionalLicense.find_or_create_for(person: person, number: ce_license_number)
+      license = ProfessionalLicense.find_or_create_for(person: person, number: ce_license_number, kind: ce_license_kind)
       event_registration.continuing_education_registrations.create!(professional_license: license)
     end
 
@@ -426,6 +430,12 @@ module EventRegistrationServices
       return nil unless @continuing_education_form
 
       ce_field_value(CE_LICENSE_NUMBER_IDENTIFIER)&.strip.presence
+    end
+
+    def ce_license_kind
+      return nil unless @continuing_education_form
+
+      ce_field_value(CE_LICENSE_KIND_IDENTIFIER)&.strip.presence
     end
 
     def ce_field_value(key)

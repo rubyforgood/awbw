@@ -97,7 +97,8 @@ class FormBuilderService
     ],
     continuing_education: [
       "Do you seek Continuing Education (CE) hours for this training?",
-      "If seeking CE hours, what is your LMFT, LCSW, LPCC or LEP license number?"
+      "If seeking CE hours, what is your license type? (e.g. LMFT, LCSW, LPCC, LEP)",
+      "What is your license number?"
     ],
     scholarship: [
       "I and/or my organization cannot afford the full training cost and need a scholarship to attend.",
@@ -515,7 +516,11 @@ class FormBuilderService
                          key: "ce_credit_interest", group: "continuing_education", required: false,
                          options: %w[Yes No])
     position = add_field(form, position,
-                         "If seeking CE hours, what is your LMFT, LCSW, LPCC or LEP license number?",
+                         "If seeking CE hours, what is your license type? (e.g. LMFT, LCSW, LPCC, LEP)",
+                         :free_form_input_one_line,
+                         key: "ce_license_kind", group: "continuing_education", required: false)
+    position = add_field(form, position,
+                         "What is your license number?",
                          :free_form_input_one_line,
                          key: "ce_license_number", group: "continuing_education", required: false,
                          subtitle: "Acceptance of continuing education hours is determined by each individual state board separately, " \
