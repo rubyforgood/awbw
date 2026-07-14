@@ -140,6 +140,13 @@ class RegistrationTicketCallout < ApplicationRecord
     description.present? || resources.any?
   end
 
+  # The Payment built-in's visibility is driven entirely by live balance status,
+  # so the manual visibility controls (drip date, payment gate) don't apply — the
+  # editor hides its Visibility section.
+  def payment?
+    magic_key == "payment"
+  end
+
   # Whether the callout's page content is drip-scheduled to reveal only from a
   # future date. The card still shows on the ticket; the page withholds its
   # content until then (see the callout show page).
