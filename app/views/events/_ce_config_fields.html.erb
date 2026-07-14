@@ -19,15 +19,17 @@
     </div>
   </div>
   <div>
-    <%= f.label :ce_hours_request_deadline, "Request CE credit by", class: "block text-xs font-medium text-gray-600 mb-1" %>
+    <%= f.label :ce_hours_request_deadline, class: "block text-xs font-medium text-gray-600 mb-1" do %>
+      Request CE credit by <span class="font-normal text-gray-400">(optional)</span>
+    <% end %>
     <%= f.text_field :ce_hours_request_deadline, type: "date",
           class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
-    <p class="mt-1 text-xs text-gray-400">Optional</p>
   </div>
   <div>
-    <%= f.label :ce_payment_due_deadline, "Payment due by", class: "block text-xs font-medium text-gray-600 mb-1" %>
+    <%= f.label :ce_payment_due_deadline, class: "block text-xs font-medium text-gray-600 mb-1" do %>
+      Payment due by <span class="font-normal text-gray-400">(optional)</span>
+    <% end %>
     <%= f.text_field :ce_payment_due_deadline, type: "date",
           class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
-    <p class="mt-1 text-xs text-gray-400">Optional</p>
   </div>
 </div>
