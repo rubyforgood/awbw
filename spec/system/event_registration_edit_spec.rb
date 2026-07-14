@@ -291,6 +291,47 @@ RSpec.describe "Event registration edit page", type: :system do
     end
   end
 
+  describe "Organizations / scholarship / CE row visibility" do
+    it "shows scholarship (paid) and hides CE (no hours), widening organizations to two columns" do
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      expect(page).to have_css("h2", text: "Scholarship")
+      expect(page).to have_no_css("h2", text: "Continuing education")
+      expect(page).to have_css("section.sm\\:col-span-2", text: "organizations")
+    end
+
+    it "shows scholarship and CE for a paid, CE-eligible event with organizations at one column" do
+      event.update!(ce_hours_offered: 6)
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      expect(page).to have_css("h2", text: "Scholarship")
+      expect(page).to have_css("h2", text: "Continuing education")
+      expect(page).to have_css("section.sm\\:col-span-1", text: "organizations")
+    end
+
+    it "hides the scholarship box for a free event" do
+      event.update!(cost_cents: 0, ce_hours_offered: 6)
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      expect(page).to have_no_css("h2", text: "Scholarship")
+      expect(page).to have_css("h2", text: "Continuing education")
+      expect(page).to have_css("section.sm\\:col-span-2", text: "organizations")
+    end
+
+    it "fills the full row with organizations for a free event with no CE hours" do
+      event.update!(cost_cents: 0)
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      expect(page).to have_no_css("h2", text: "Scholarship")
+      expect(page).to have_no_css("h2", text: "Continuing education")
+      expect(page).to have_css("section.sm\\:col-span-3", text: "organizations")
+    end
+  end
+
   describe "delete button" do
     it "deletes the registration" do
       sign_in(admin)

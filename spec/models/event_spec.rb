@@ -383,4 +383,18 @@ RSpec.describe Event, type: :model do
       expect(build(:event, ce_hours_offered: 0)).not_to be_ce_eligible
     end
   end
+
+  describe "#scholarship_eligible?" do
+    it "is true when the event has a cost" do
+      expect(build(:event, cost_cents: 1_000)).to be_scholarship_eligible
+    end
+
+    it "is false for a free event" do
+      expect(build(:event, cost_cents: 0)).not_to be_scholarship_eligible
+    end
+
+    it "is false when the cost is unset" do
+      expect(build(:event, cost_cents: nil)).not_to be_scholarship_eligible
+    end
+  end
 end

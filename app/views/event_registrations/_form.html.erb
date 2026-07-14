@@ -159,12 +159,19 @@
         </div>
       </div>
 
-      <%# ---- Organizations, scholarship, and continuing education — one row ---- %>
+      <%# ---- Organizations, scholarship, and continuing education — one row.
+          Scholarship shows only when the event offers scholarships, CE only when
+          it grants credit. Organizations fills whatever the hidden cards leave
+          behind: it absorbs one of the three columns for each card that's hidden. ---- %>
+      <% show_scholarship = f.object.event&.scholarship_eligible? %>
+      <% show_ce = f.object.event&.ce_eligible? %>
+      <% org_span = 1 + (show_scholarship ? 0 : 1) + (show_ce ? 0 : 1) %>
+      <% org_span_class = { 1 => "sm:col-span-1", 2 => "sm:col-span-2", 3 => "sm:col-span-3" }.fetch(org_span) %>
       <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <section class="flex min-h-[12rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm <%= org_span_class %>">
           <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:organizations, f.object.organizations.any?) %>">
               <i class="fa-solid fa-building"></i>
@@ -241,9 +248,11 @@
           </div>
         </section>
 
-        <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
+        <% if show_scholarship %>
+          <%= render "scholarship", event_registration: f.object, scholarship: f.object.scholarships.first %>
+        <% end %>
 
-        <% if f.object.event&.ce_eligible? %>
+        <% if show_ce %>
           <%= render "continuing_education", event_registration: f.object, ce_registration: f.object.continuing_education_registrations.first %>
         <% end %>
       </div>
