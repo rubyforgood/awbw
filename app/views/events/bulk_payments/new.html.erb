@@ -36,13 +36,19 @@
         </div>
         <div>
           <h2 class="text-xl font-semibold tracking-wide leading-tight"><%= Form::BULK_PAYMENT_PUBLIC_NAME %> form</h2>
-          <p class="text-sm text-blue-200">Pay for one or more attendees.</p>
+          <p class="text-sm text-blue-200">Use this form to pay for one or more other attendees.</p>
         </div>
       </div>
       <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
 
     <div class="px-6 sm:px-8 py-7">
+      <div class="flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-900 rounded-lg px-4 py-3 mb-6">
+        <i class="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
+        <span class="text-sm">Paying for yourself? Please pay through your own ticket on the
+          <%= link_to "event page", event_path(@event), class: "font-semibold underline hover:no-underline" %>
+          instead. Use this form only to pay for other attendees.</span>
+      </div>
       <% if flash[:alert] %>
         <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 mb-6">
           <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
