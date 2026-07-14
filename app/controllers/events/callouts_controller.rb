@@ -12,6 +12,14 @@ module Events
     # above the app-controlled content, plus any resources linked to the row.
     before_action :set_builtin_content, only: %i[ payment scholarship certificate videoconference ]
 
+    # The single-resource page previews a PDF in an <object> (object-src). The
+    # global policy blocks <object>/<embed> with object_src :none; relax to :self
+    # only here, matching ResourcesController#show. The blob streams same-origin
+    # via proxy mode, so :self covers it.
+    content_security_policy(only: :resource) do |policy|
+      policy.object_src :self
+    end
+
     # Hidden Resource (by title) backing the handout links, in display order.
     # Missing ones (e.g. not seeded in an environment) are silently skipped.
     HANDOUT_RESOURCE_TITLES = [

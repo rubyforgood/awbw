@@ -74,6 +74,20 @@ RSpec.describe "/resources", type: :request do
 
         expect(response).to have_http_status(:ok)
       end
+
+      it "relaxes object-src to :self for the PDF <object> preview" do
+        get resource_url(resource)
+
+        expect(response.headers["Content-Security-Policy-Report-Only"]).to include("object-src 'self'")
+      end
+    end
+  end
+
+  describe "GET /index (non-preview action)" do
+    it "keeps the strict global object-src 'none'" do
+      get resources_url
+
+      expect(response.headers["Content-Security-Policy-Report-Only"]).to include("object-src 'none'")
     end
   end
 

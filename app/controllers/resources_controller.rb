@@ -3,6 +3,14 @@ class ResourcesController < ApplicationController
 
   skip_before_action :authenticate_user!, only: [ :index, :show, :download ]
 
+  # The show page previews a PDF in an <object>, which is governed by object-src.
+  # The global policy sets object_src :none to block legacy <object>/<embed>
+  # injection app-wide; relax it to :self only here, where the one legitimate PDF
+  # embed lives. The blob streams same-origin via proxy mode, so :self is enough.
+  content_security_policy(only: :show) do |policy|
+    policy.object_src :self
+  end
+
   def index
     authorize!
     @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?

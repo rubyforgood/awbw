@@ -80,8 +80,15 @@ RSpec.describe "Events::Callouts", type: :request do
 
         expect(response).to have_http_status(:success)
         expect(response.body).to include("type=\"application/pdf\"")
-        expect(response.body).to include(rails_blob_path(resource.downloadable_asset.file, disposition: :inline))
+        # Streamed same-origin via proxy mode so object-src :self covers it.
+        expect(response.body).to include(rails_storage_proxy_path(resource.downloadable_asset.file, disposition: :inline))
         expect(response.body).to include("fa-download")
+      end
+
+      it "relaxes object-src to :self for the PDF <object> preview" do
+        get registration_resource_path(registration.slug, resource)
+
+        expect(response.headers["Content-Security-Policy-Report-Only"]).to include("object-src 'self'")
       end
     end
 
