@@ -45,9 +45,8 @@
     <div class="px-6 sm:px-8 py-7">
       <div class="flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-900 rounded-lg px-4 py-3 mb-6">
         <i class="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
-        <span class="text-sm">Paying for yourself? Please pay through your own ticket on the
-          <%= link_to "event page", event_path(@event), class: "font-semibold underline hover:no-underline" %>
-          instead. Use this form only to pay for other attendees.</span>
+        <span class="text-sm">Paying for yourself? Check your email for the link to your personalized
+          registration ticket and pay from there. Use this form only to pay for other attendees.</span>
       </div>
       <% if flash[:alert] %>
         <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 mb-6">
