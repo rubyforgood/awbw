@@ -147,7 +147,10 @@
            data-primary-tag-primary-class="border-lime-500 bg-lime-200"
            data-primary-tag-default-class="border-gray-300 bg-white">
         <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
-        <%= f.simple_fields_for :sectorable_items, sectors_owner.sectorable_items_ordered do |sfi| %>
+        <%# "Other" is never a real sector tag (it's captured as an OtherResponse),
+            so drop any stray legacy tagging from the editable list. %>
+        <% editable_sector_items = sectors_owner.sectorable_items_ordered.reject { |item| item.sector&.name == Sector::OTHER_SECTOR_NAME } %>
+        <%= f.simple_fields_for :sectorable_items, editable_sector_items do |sfi| %>
           <%= render "shared/sectorable_item_fields", f: sfi, show_admin_flags: true %>
         <% end %>
 

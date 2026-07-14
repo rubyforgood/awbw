@@ -53,7 +53,10 @@ module SectorsTaggable
   end
 
   def upsert_sector_items(sector_ids, is_primary:)
-    Sector.where(id: sector_ids).find_each do |sector|
+    # "Other" is the free-text catch-all, never a real tag — a typed "Other" is
+    # captured as an OtherResponse, so it must not become a SectorableItem even
+    # if its id slips into the submitted set.
+    Sector.where(id: sector_ids).excluding_other.find_each do |sector|
       item = sectorable_items.find_or_initialize_by(sector: sector)
       item.is_primary = is_primary
       item.save!
