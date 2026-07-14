@@ -13,9 +13,11 @@
     </div>
   <% end %>
 
-  <% @callout.resources.each do |resource| %>
-    <div class="mt-6">
-      <%= render "events/callouts/resource_body", resource: resource.decorate %>
+  <% if @resource_cards.any? %>
+    <div class="mt-6 space-y-3">
+      <% @resource_cards.each do |card| %>
+        <%= render "event_registrations/callout_card", callout: card %>
+      <% end %>
     </div>
   <% end %>
 <% end %>

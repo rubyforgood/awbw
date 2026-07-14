@@ -1,9 +1,9 @@
 <% file = resource.downloadable_asset&.file&.attached? ? resource.downloadable_asset.file : resource.display_image %>
 
 <% if file.respond_to?(:content_type) && file.content_type == "application/pdf" %>
-  <div class="max-w-3xl mx-auto h-[95vh] rounded-lg border border-gray-200 overflow-hidden">
+  <div class="max-w-5xl mx-auto h-[95vh] rounded-lg border border-gray-200 overflow-hidden">
     <object
-      data="<%= rails_blob_path(file, disposition: :inline) %>"
+      data="<%= rails_storage_proxy_path(file, disposition: :inline) %>"
       type="application/pdf"
       class="w-full h-full"
       aria-label="<%= resource.title %> (PDF preview)"
