@@ -321,6 +321,17 @@ RSpec.describe "Event registration edit page", type: :system do
       expect(page).to have_css("section.sm\\:col-span-2", text: "organizations")
     end
 
+    it "still shows the scholarship box when a scholarship was awarded before the event became free" do
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 1_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
+      event.update!(cost_cents: 0)
+
+      sign_in(admin)
+      visit edit_event_registration_path(registration)
+
+      expect(page).to have_css("h2", text: "Scholarship")
+    end
+
     it "fills the full row with organizations for a free event with no CE hours" do
       event.update!(cost_cents: 0)
       sign_in(admin)

@@ -294,9 +294,6 @@ class Event < ApplicationRecord
     ce_hours_offered.to_f.positive?
   end
 
-  # A scholarship offsets a registration fee, so it only applies to paid events —
-  # a free event has nothing to subsidize. Mirrors #ce_eligible? as a named
-  # "does this apply" predicate, derived from the cost rather than a stored flag.
   def scholarship_eligible?
     cost_cents.to_i.positive?
   end
