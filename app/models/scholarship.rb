@@ -12,11 +12,23 @@ class Scholarship < ApplicationRecord
   validate :recipient_must_match_allocation_registrant
   validate :within_grant_budget, if: :grant
 
-  before_save :stamp_agreement_signed_at, if: :will_save_change_to_agreement_signed?
   after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? }
   after_create_commit :flag_event_registration_scholarship_requested
 
   scope :completed, -> { where(tasks_completed: true) }
+  scope :agreement_signed, -> { where.not(agreement_signed_at: nil) }
+
+  # The agreement is signed when a signed-at timestamp is present — a single
+  # source of truth. `agreement_signed` reads/writes as a virtual boolean so the
+  # admin form checkbox and strong params keep working, stamping or clearing the
+  # timestamp accordingly (and preserving an existing time across re-saves).
+  def agreement_signed? = agreement_signed_at.present?
+  alias_method :agreement_signed, :agreement_signed?
+
+  def agreement_signed=(value)
+    signed = ActiveModel::Type::Boolean.new.cast(value)
+    self.agreement_signed_at = signed ? (agreement_signed_at || Time.current) : nil
+  end
 
   def amount_dollars
     amount_cents.to_d / 100 if amount_cents
@@ -49,14 +61,6 @@ class Scholarship < ApplicationRecord
     if recipient != allocation.allocatable.registrant
       errors.add(:recipient, "must be the same person as the event registration's registrant")
     end
-  end
-
-  # Keep the signed-at timestamp in step with the flag however it's flipped — the
-  # admin toggle on the form or the recipient agreeing on their callout page.
-  # Stamp the moment it turns true (preserving an existing time), clear it when
-  # turned back off.
-  def stamp_agreement_signed_at
-    self.agreement_signed_at = agreement_signed? ? (agreement_signed_at || Time.current) : nil
   end
 
   def sync_allocation_amount

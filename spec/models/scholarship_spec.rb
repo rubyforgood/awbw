@@ -83,9 +83,17 @@ RSpec.describe Scholarship, type: :model do
     end
   end
 
-  describe "agreement_signed_at stamping" do
+  describe "agreement_signed (virtual, backed by agreement_signed_at)" do
+    it "infers the flag from the timestamp" do
+      scholarship = create(:scholarship)
+      expect(scholarship.agreement_signed?).to be(false)
+
+      scholarship.update!(agreement_signed_at: Time.current)
+      expect(scholarship.agreement_signed?).to be(true)
+    end
+
     it "stamps the time when the agreement is first signed" do
-      scholarship = create(:scholarship, agreement_signed: false)
+      scholarship = create(:scholarship)
       expect(scholarship.agreement_signed_at).to be_nil
 
       scholarship.update!(agreement_signed: true)
