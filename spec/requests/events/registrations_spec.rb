@@ -274,7 +274,7 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Payment history")
       expect(response.body).to include("Amount due")
       expect(response.body).to include("Pay with Credit Card")
-      expect(response.body).to include("View invoice")
+      expect(response.body).to include("Itemized invoice for this registration")
       expect(response.body).to include("Prefer to pay by check?")
       expect(response.body).to include("A Window Between Worlds")
     end

@@ -58,7 +58,7 @@
                       class: "flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
           <i class="fa-solid fa-file-invoice-dollar text-gray-400 text-xl shrink-0"></i>
           <div class="flex-1 min-w-0 text-left">
-            <p class="font-semibold text-gray-900">View invoice</p>
+            <p class="font-semibold text-gray-900">Invoice</p>
             <p class="text-sm text-gray-500">Itemized invoice for this registration</p>
           </div>
           <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
@@ -69,7 +69,7 @@
                         class: "flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
             <i class="fa-solid fa-receipt text-gray-400 text-xl shrink-0"></i>
             <div class="flex-1 min-w-0 text-left">
-              <p class="font-semibold text-gray-900">View receipt</p>
+              <p class="font-semibold text-gray-900">Receipt</p>
               <p class="text-sm text-gray-500">Paid-in-full receipt for this registration</p>
             </div>
             <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
@@ -82,7 +82,7 @@
                       class: "flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors" do %>
           <i class="fa-solid fa-file-pdf text-gray-400 text-xl shrink-0"></i>
           <div class="flex-1 min-w-0 text-left">
-            <p class="font-semibold text-gray-900">View <%= resource.title %></p>
+            <p class="font-semibold text-gray-900"><%= resource.title %></p>
             <p class="text-sm text-gray-500"><%= resource.title == "W-9" ? "AWBW's W-9 tax form for your records" : "Open this document" %></p>
           </div>
           <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
