@@ -298,6 +298,14 @@ RSpec.describe "Events", type: :request do
       get edit_event_path(event)
       expect(response.body).to include("Frequently asked questions")
     end
+
+    it "renders the CE deadline fields in the continuing education settings" do
+      create(:form, :standalone, role: "continuing_education", name: "CE")
+      get edit_event_path(event)
+      expect(response.body).to include('name="event[ce_hours_request_deadline]"')
+      expect(response.body).to include('name="event[ce_payment_due_deadline]"')
+      expect(response.body).to include("Request CE credit by")
+    end
   end
 
   describe "POST /create" do

@@ -463,13 +463,8 @@
                             class: "peer rounded border-gray-300" %>
                     <span class="text-sm font-medium text-gray-700">Enable continuing education</span>
                     <p class="text-xs text-gray-500 mt-1">Allow registrants to request CE hours.</p>
-                    <div class="hidden peer-checked:flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-                      <label class="flex items-center gap-2 text-sm text-gray-700">CE hours offered <%= f.number_field :ce_hours_offered, min: 0, step: 0.25, class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %></label>
-
-                      <label class="flex items-center gap-2 text-sm text-gray-700">
-                        Total CE cost <span class="text-gray-400">$</span> <%= f.number_field :ce_hours_cost, min: 0, step: 1,
-                      class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                      </label>
+                    <div class="hidden peer-checked:block rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
+                      <%= render "events/ce_config_fields", f: f %>
                     </div>
                     <p class="mt-1 text-xs text-gray-400">Edit the CE hours ticket card and its details below, under Registration ticket callouts.</p>
                     <% if @event.continuing_education_form.present? %>
@@ -495,13 +490,8 @@
                       <% end %>
                     </select>
                     <p class="text-xs text-gray-500 mt-1">Select a continuing education form for registrants to request CE hours.</p>
-                    <div class="hidden peer-checked:flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-                      <label class="flex items-center gap-2 text-sm text-gray-700">CE hours offered <%= f.number_field :ce_hours_offered, min: 0, step: 0.25, class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %></label>
-
-                      <label class="flex items-center gap-2 text-sm text-gray-700">
-                        Total CE cost <span class="text-gray-400">$</span> <%= f.number_field :ce_hours_cost, min: 0, step: 1,
-                      class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                      </label>
+                    <div class="mt-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
+                      <%= render "events/ce_config_fields", f: f %>
                     </div>
                   <% end %>
                 </div>
@@ -588,22 +578,6 @@
                     title_placeholder: "CE hours",
                     content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Wrap a part in <details><summary>Title</summary>…</details> to make it a collapsible section.",
                     content_placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><details><summary>Before the training</summary><ul><li>Email your license number</li></ul></details>" %>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 pl-9">
-                <div>
-                  <%= f.label :ce_hours_request_deadline, "Request CE credit by", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-                  <p class="text-xs text-gray-500 mb-1">Deadline for registrants to request CE credit and submit their license. Shown on the CE callout. Leave blank to hide.</p>
-                  <%= f.text_field :ce_hours_request_deadline,
-                        type: "date",
-                        class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
-                </div>
-                <div>
-                  <%= f.label :ce_payment_due_deadline, "Payment due by", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
-                  <p class="text-xs text-gray-500 mb-1">Deadline for CE payment. Shown on the CE callout. Leave blank to hide.</p>
-                  <%= f.text_field :ce_payment_due_deadline,
-                        type: "date",
-                        class: "w-full rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
-                </div>
-              </div>
             <% when :event_details %>
               <%= render "events/builtin_callout_card", f: f, card: card,
                     label_field: :event_details_label, content_field: :event_details,
