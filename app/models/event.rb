@@ -295,7 +295,7 @@ class Event < ApplicationRecord
   end
 
   def scholarship_eligible?
-    cost_cents.to_i.positive?
+    cost_cents.to_i.positive? || scholarship_form.present?
   end
 
   def attachable_content_type
