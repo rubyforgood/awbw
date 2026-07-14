@@ -293,6 +293,20 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).not_to include("reverted payments still count")
       end
 
+      it "shows the scholarship agreement status on the scholarship card" do
+        scholarship = Scholarship.new(recipient: existing_registration.registrant, amount_cents: 1_000)
+        scholarship.build_allocation(allocatable: existing_registration, amount: 1_000)
+        scholarship.save!
+
+        get edit_event_registration_path(existing_registration)
+        expect(response.body).to include("Agreement pending")
+
+        scholarship.update!(agreement_signed: true)
+        get edit_event_registration_path(existing_registration)
+        expect(response.body).to include("Agreement signed")
+        expect(response.body).not_to include("Agreement pending")
+      end
+
       it "hides Delete and explains why for a registration with payment records" do
         payment = create(:payment, person: regular_user.person, amount_cents: 1000, amount_cents_remaining: nil)
         create(:allocation, source: payment, allocatable: existing_registration, amount: 1000)
