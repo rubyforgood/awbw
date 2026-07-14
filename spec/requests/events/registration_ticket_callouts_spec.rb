@@ -62,13 +62,15 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response).to redirect_to(event_path(event))
     end
 
-    it "redirects a not-yet-dripped callout's page back to the event" do
+    it "shows a coming-soon note instead of the content on a not-yet-dripped callout's page" do
       callout = create(:registration_ticket_callout, event:, description: "<p>Later.</p>",
         display_from: 1.day.from_now)
 
       get event_registration_ticket_callout_path(event, callout)
 
-      expect(response).to redirect_to(event_path(event))
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("This content will be available on")
+      expect(response.body).not_to include("Later.")
     end
 
     context "when linked to a resource" do

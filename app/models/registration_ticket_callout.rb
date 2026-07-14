@@ -133,7 +133,16 @@ class RegistrationTicketCallout < ApplicationRecord
     APP_COLORED_MAGIC_KEYS.include?(magic_key.to_s)
   end
 
-  # Whether the callout is drip-scheduled to appear only from a future date.
+  # Whether the callout's own page has content to show — its editable text or any
+  # linked resources. Drives whether the ticket card links to a page and shows the
+  # trailing "go to page" arrow.
+  def page_content?
+    description.present? || resources.any?
+  end
+
+  # Whether the callout's page content is drip-scheduled to reveal only from a
+  # future date. The card still shows on the ticket; the page withholds its
+  # content until then (see the callout show page).
   def dripping?(now = Time.current)
     display_from.present? && display_from > now
   end

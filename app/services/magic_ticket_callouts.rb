@@ -246,7 +246,7 @@ class MagicTicketCallouts
     return if event.videoconference_url.blank?
     Card.new(icon_class: "fa-solid fa-video", color: "blue",
              title: "Videoconference",
-             subtitle: registration.videoconference_details_visible? ? "Join link and add to your calendar" : "Unlocks once payment is on file",
+             subtitle: "Join link and how to add it to your calendar",
              href: registration_videoconference_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
