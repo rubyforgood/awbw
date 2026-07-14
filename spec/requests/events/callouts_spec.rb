@@ -165,53 +165,56 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
-  describe "GET /registration/:slug/scholarship" do
+  # Shared setup for the scholarship callout page and its agree action.
+  context "scholarship agreement" do
     let(:event)        { create(:event, cost_cents: 10_000) }
     let(:registration) { create(:event_registration, event: event, scholarship_requested: true) }
     let(:scholarship)  { create(:scholarship, recipient: registration.registrant, amount_cents: 5_000) }
     let!(:allocation)  { create(:allocation, source: scholarship, allocatable: registration, amount: 5_000) }
 
-    it "renders the agree form while the agreement is unsigned" do
-      get registration_scholarship_path(registration.slug)
+    describe "GET /registration/:slug/scholarship" do
+      it "renders the agree form while the agreement is unsigned" do
+        get registration_scholarship_path(registration.slug)
 
-      expect(response).to have_http_status(:success)
-      expect(response.body).to include("Do you agree to complete the tasks?")
-      expect(response.body).to match(/name="agreement"/)
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Do you agree to complete the tasks?")
+        expect(response.body).to match(/name="agreement"/)
+      end
+
+      it "shows the signed date once the agreement is signed" do
+        scholarship.update!(agreement_signed: true)
+        get registration_scholarship_path(registration.slug)
+
+        expect(response.body).to include("You agreed to complete your scholarship tasks on")
+        expect(response.body).not_to include("Do you agree to complete the tasks?")
+      end
     end
 
-    it "shows the signed date once the agreement is signed" do
-      scholarship.update!(agreement_signed: true)
-      get registration_scholarship_path(registration.slug)
+    describe "POST /registration/:slug/scholarship/agreement" do
+      it "signs the agreement and stamps the time when Yes is selected" do
+        expect(scholarship.agreement_signed?).to be(false)
 
-      expect(response.body).to include("You agreed to complete your scholarship tasks on")
-      expect(response.body).not_to include("Do you agree to complete the tasks?")
-    end
-  end
+        post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
 
-  describe "POST /registration/:slug/scholarship/agreement" do
-    it "signs the agreement and stamps the time when Yes is selected" do
-      expect(scholarship.agreement_signed?).to be(false)
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+        expect(scholarship.reload.agreement_signed?).to be(true)
+        expect(scholarship.agreement_signed_at).to be_present
+      end
 
-      post registration_scholarship_agreement_path(registration.slug), params: { agreement: "yes" }
+      it "does not sign the agreement when Yes is not selected" do
+        post registration_scholarship_agreement_path(registration.slug), params: { agreement: "" }
 
-      expect(response).to redirect_to(registration_scholarship_path(registration.slug))
-      expect(scholarship.reload.agreement_signed?).to be(true)
-      expect(scholarship.agreement_signed_at).to be_present
-    end
+        expect(response).to redirect_to(registration_scholarship_path(registration.slug))
+        expect(scholarship.reload.agreement_signed?).to be(false)
+      end
 
-    it "does not sign the agreement when Yes is not selected" do
-      post registration_scholarship_agreement_path(registration.slug), params: { agreement: "" }
+      it "redirects to the scholarship page when there is no awarded scholarship" do
+        other = create(:event_registration, event: event, scholarship_requested: true)
 
-      expect(response).to redirect_to(registration_scholarship_path(registration.slug))
-      expect(scholarship.reload.agreement_signed?).to be(false)
-    end
+        post registration_scholarship_agreement_path(other.slug), params: { agreement: "yes" }
 
-    it "redirects to the scholarship page when there is no awarded scholarship" do
-      other = create(:event_registration, event: event, scholarship_requested: true)
-
-      post registration_scholarship_agreement_path(other.slug), params: { agreement: "yes" }
-
-      expect(response).to redirect_to(registration_scholarship_path(other.slug))
+        expect(response).to redirect_to(registration_scholarship_path(other.slug))
+      end
     end
   end
 end
