@@ -2,7 +2,7 @@
 # event. Run on event create and, for events that predate this, lazily on edit —
 # so existing events heal the first time they're saved, with no data backfill.
 #
-# All nine built-ins always seed. Their initial visibility (hidden/published) is
+# All eight built-ins always seed. Their initial visibility (hidden/published) is
 # derived from the event's config via each definition's `hidden` proc: published
 # by default on facilitator trainings, hidden (unchecked) on everything else.
 # Admins toggle visibility per row from the editor. Seeding is idempotent so a
@@ -146,7 +146,11 @@ class DefaultTicketCallouts
         callout_type: "action",
         icon_class: "fa-solid fa-credit-card",
         color_class: "orange",
-        hidden: ->(event) { !event.facilitator_training? }
+        hidden: ->(event) { !event.facilitator_training? },
+        # The W-9 is a removable linked resource, included by default only on paid
+        # events (where a tax form applies); the invoice/receipt stay dynamic on
+        # the payment page. Admins add/remove it per event.
+        resources: -> { @event.cost_cents.to_i.positive? ? [ Resource.find_by(title: "W-9") ].compact : [] }
       },
       {
         magic_key: "certificate",
@@ -204,19 +208,6 @@ class DefaultTicketCallouts
         # Drips onto the ticket a week before the event starts, replacing the old
         # hard-coded "one week prior" rule with a stored, editable date.
         display_from: ->(event) { event.start_date - 7.days if event.start_date }
-      },
-      {
-        magic_key: "forms",
-        title: "Forms",
-        subtitle: "W-9, invoice, and receipt",
-        callout_type: "action",
-        icon_class: "fa-solid fa-file-lines",
-        color_class: "blue",
-        hidden: ->(event) { !event.facilitator_training? },
-        # The W-9 is a removable linked resource, included by default only on paid
-        # events (where a tax form applies); invoice/receipt stay dynamic on the
-        # forms page. Admins add/remove it per event.
-        resources: -> { @event.cost_cents.to_i.positive? ? [ Resource.find_by(title: "W-9") ].compact : [] }
       },
       {
         magic_key: "handouts",

@@ -148,9 +148,9 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Sample ticket preview")
         expect(response.body).to include("Sample Registrant")
-        # Magic callout cards render (the sample event is paid, so the "Forms"
+        # Magic callout cards render (the sample event is paid, so the payment
         # card shows) without raising on the unsaved sample's sentinel slug.
-        expect(response.body).to include("Forms")
+        expect(response.body).to include("Make your payment")
       end
 
       it "models a typical registrant by default, hiding scholarship and CE" do
