@@ -105,6 +105,24 @@ RSpec.describe "Events::Callouts", type: :request do
       end
     end
 
+    context "admin edit button" do
+      let(:resource) { create(:resource) }
+
+      it "shows an admin-only Edit link to change the PDF when signed in as an admin" do
+        sign_in create(:user, super_user: true)
+
+        get registration_resource_path(registration.slug, resource)
+
+        expect(response.body).to include(edit_resource_path(resource))
+      end
+
+      it "hides the Edit link from registrants viewing the page" do
+        get registration_resource_path(registration.slug, resource)
+
+        expect(response.body).not_to include(edit_resource_path(resource))
+      end
+    end
+
     context "eyebrow" do
       let(:resource) { create(:resource) }
 
