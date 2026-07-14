@@ -1,0 +1,16 @@
+<%# A single collapsible disclosure card — the toggle pattern shared by the FAQ
+    and "Art supplies & what to bring" pages. Rendered with `render layout:` and a
+    block: `summary` (local) is the always-visible heading; the block is the body
+    shown when the card is expanded. Native <details> so it works without
+    JavaScript. %>
+<details class="group/card rounded-lg border border-gray-200 bg-white">
+  <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden px-4 py-3 hover:bg-gray-50 rounded-lg">
+    <div class="flex items-center justify-between gap-3">
+      <span class="font-medium text-gray-900"><%= summary %></span>
+      <i class="fa-solid fa-chevron-down text-gray-400 text-xs shrink-0 transition-transform group-open/card:rotate-180"></i>
+    </div>
+  </summary>
+  <div class="px-4 pb-4 pt-1 space-y-3 text-sm text-gray-600 leading-relaxed">
+    <%= yield %>
+  </div>
+</details>

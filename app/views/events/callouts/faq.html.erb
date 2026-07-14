@@ -99,26 +99,18 @@
           }
         ] %>
         <% faqs.each do |faq| %>
-          <details class="group/card rounded-lg border border-gray-200 bg-white">
-            <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden px-4 py-3 hover:bg-gray-50 rounded-lg">
-              <div class="flex items-center justify-between gap-3">
-                <span class="font-medium text-gray-900"><%= faq[:q] %></span>
-                <i class="fa-solid fa-chevron-down text-gray-400 text-xs shrink-0 transition-transform group-open/card:rotate-180"></i>
-              </div>
-            </summary>
-            <div class="px-4 pb-4 pt-1 space-y-3 text-sm text-gray-600 leading-relaxed">
-              <% faq[:a].each do |paragraph| %>
-                <p><%= paragraph %></p>
-              <% end %>
-              <% if faq[:list] %>
-                <ul class="list-disc space-y-1 pl-5">
-                  <% faq[:list].each do |item| %>
-                    <li><%= item %></li>
-                  <% end %>
-                </ul>
-              <% end %>
-            </div>
-          </details>
+          <%= render layout: "events/callouts/toggle", locals: { summary: faq[:q] } do %>
+            <% faq[:a].each do |paragraph| %>
+              <p><%= paragraph %></p>
+            <% end %>
+            <% if faq[:list] %>
+              <ul class="list-disc space-y-1 pl-5">
+                <% faq[:list].each do |item| %>
+                  <li><%= item %></li>
+                <% end %>
+              </ul>
+            <% end %>
+          <% end %>
         <% end %>
       </div>
 

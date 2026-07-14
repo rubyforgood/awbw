@@ -592,7 +592,7 @@
               <%= render "events/builtin_callout_card", f: f, card: card,
                     label_field: :event_details_label, content_field: :event_details,
                     title_placeholder: "Before you attend",
-                    content_help: "Materials, supplies, what to bring, and policies — shown on its own page linked from the ticket. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
+                    content_help: "Materials, supplies, what to bring, and policies — shown on its own page linked from the ticket. Each <h3> heading becomes its own collapsible section (e.g. one per workshop); text before the first heading stays open at the top. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
                     content_placeholder: "e.g. <h3>Workshop 1</h3><ul><li>Clear glass stones</li></ul>" %>
             <% else %>
               <div class="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 opacity-70">
