@@ -290,6 +290,10 @@ class Event < ApplicationRecord
     ce_hours_offered.to_f.positive?
   end
 
+  def scholarship_eligible?
+    cost_cents.to_i.positive? || scholarship_form.present?
+  end
+
   def attachable_content_type
     "application/vnd.active_record.event"
   end
