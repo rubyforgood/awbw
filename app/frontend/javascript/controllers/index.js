@@ -75,6 +75,9 @@ application.register("expandable-card", ExpandableCardController)
 import ExpandableCardsController from "./expandable_cards_controller"
 application.register("expandable-cards", ExpandableCardsController)
 
+import FabController from "./fab_controller"
+application.register("fab", FabController)
+
 import DropdownController from "./dropdown_controller"
 application.register("dropdown", DropdownController)
 

@@ -1,9 +1,9 @@
 <!-- Floating Help Button -->
-<div id="fab-container"
-     class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+<div class="fixed bottom-6 right-6 z-50 flex flex-col items-end"
+     data-controller="fab">
 
   <!-- Hidden menu items -->
-  <div id="fab-menu"
+  <div data-fab-target="menu"
      class="hidden flex flex-col items-start space-y-2 mb-2 p-4 bg-white border border-gray-300 rounded-lg shadow-md transition-all duration-300">
  
   <%= link_to faqs_path, class: "flex items-center space-x-2 text-gray-800 px-3 py-2 rounded hover:bg-gray-100 w-max" do %>
@@ -31,25 +31,11 @@
 
 
   <!-- Main round button -->
-  <button id="fab-button"
-          type="button"
+  <button type="button"
+          data-fab-target="button"
+          data-action="fab#toggle"
           class="bg-primary text-white w-10 h-10 rounded-full shadow-lg flex items-center
                  justify-center text-lg font-bold hover:bg-blue-700 transition">
     ?
   </button>
 </div>
-
-<script>
-    document.addEventListener("turbo:load", () => {
-        const fabButton = document.getElementById("fab-button");
-        const fabMenu = document.getElementById("fab-menu");
-
-        if (!fabButton || !fabMenu) return;
-
-        // Remove any previous event listener to prevent duplicates
-        fabButton.onclick = () => {
-            fabMenu.classList.toggle("hidden");
-            fabButton.classList.toggle("rotate-45");
-        };
-    });
-</script>
