@@ -23,9 +23,8 @@ RSpec.describe "Scholarships", type: :request do
       get edit_scholarship_path(scholarship)
 
       expect(response.body).to include("scholarship-preview")
-      expect(response.body).to include("scholarship-preview-target=\"amountBox\"")
-      # Tasks completed → the $50 amount is allocated to the registration.
-      expect(response.body).to include("$50 allocated to registration")
+      # A non-zero award tints the amount box fuchsia to signal the allocation.
+      expect(response.body).to match(/data-scholarship-preview-target="amountBox"[^>]*border-fuchsia-300 bg-fuchsia-50/)
       # Event cost $100 with $50 allocated leaves $50 owed.
       expect(response.body).to include("$50")
     end

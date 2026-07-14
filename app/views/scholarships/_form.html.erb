@@ -54,24 +54,19 @@
           </div>
         </dl>
 
-        <%# Allocation strip: shows the scholarship amount as allocated alongside
-            the informational "Tasks completed" toggle. %>
-        <div data-scholarship-preview-target="allocationStrip" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 <%= allocated_cents > 0 ? "border-fuchsia-300 bg-fuchsia-50" : "border-gray-100 bg-gray-50" %>">
+        <%# Tasks-completed toggle, styled to match the scholarship-agreement box
+            below. The amount box above already signals the allocation (fuchsia). %>
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+          <div>
+            <p class="text-xs font-medium text-gray-600">Tasks completed</p>
+            <p class="text-xs text-gray-400">Recipient has completed their scholarship tasks</p>
+          </div>
           <label class="flex items-center gap-2.5 cursor-pointer">
-            <span class="text-xs font-medium text-gray-600">Tasks completed</span>
             <%= f.check_box :tasks_completed, class: "sr-only peer" %>
+            <span class="text-sm text-gray-400 peer-checked:hidden">Not yet</span>
+            <span class="hidden text-sm font-medium text-fuchsia-700 peer-checked:inline">Completed</span>
             <span class="relative h-6 w-11 shrink-0 rounded-full bg-gray-200 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:bg-fuchsia-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-fuchsia-300"></span>
           </label>
-          <div data-scholarship-preview-target="allocatedHint">
-            <% if allocated_cents > 0 %>
-              <span class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-100 px-2 py-0.5 text-[0.65rem] font-medium text-fuchsia-700">
-                <i class="fa-solid fa-circle-check text-[0.55rem]"></i>
-                <%= dollars_from_cents(allocated_cents) %> allocated to registration
-              </span>
-            <% else %>
-              <span class="text-xs text-gray-500">$0 allocated to registration</span>
-            <% end %>
-          </div>
         </div>
       </div>
     <% end %>
