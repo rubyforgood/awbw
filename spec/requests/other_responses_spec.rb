@@ -74,6 +74,28 @@ RSpec.describe "OtherResponses", type: :request do
       expect(response.body).not_to include("Pending value")
     end
 
+    it "shows promoted responses (read-only, with the sector) under the Promoted filter" do
+      sign_in admin
+      sector = create(:sector, name: "Equine Therapy")
+      create(:other_response, :promoted, text: "Equine therapy", promotable: sector)
+
+      get other_responses_path(status: "promoted")
+
+      expect(response.body).to include("Equine therapy")   # the typed value
+      expect(response.body).to include("Equine Therapy")   # the sector it became
+      expect(response.body).to include("Promoted")
+      expect(response.body).not_to include("Create sector") # no actions on a promoted row
+    end
+
+    it "hides promoted responses from the default (reviewable) view" do
+      sign_in admin
+      create(:other_response, :promoted, text: "Equine therapy")
+
+      get other_responses_path
+
+      expect(response.body).not_to include("Equine therapy")
+    end
+
     it "anchors each group row for chip deep-links" do
       sign_in admin
       response_record = create(:other_response, text: "Equine therapy")

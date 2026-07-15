@@ -7,9 +7,11 @@ class OtherResponsesController < ApplicationController
   # is grouped on its own, since its "Other"s are unrelated auxiliary data.
   def index
     authorize!
-    @status_filter = params[:status].presence_in(OtherResponse::REVIEWABLE_STATUSES)
+    # Any status can be filtered to (including "promoted", to review what became a
+    # tag); with no filter the queue shows the reviewable set (promoted drops off).
+    @status_filter = params[:status].presence_in(OtherResponse::STATUSES)
     statuses = @status_filter ? [ @status_filter ] : OtherResponse::REVIEWABLE_STATUSES
-    responses = OtherResponse.where(status: statuses).includes(:owner, :source_form_answer)
+    responses = OtherResponse.where(status: statuses).includes(:owner, :source_form_answer, :promotable)
 
     @groups = responses
       .group_by { |response| [ response.group_key, response.normalized_text ] }
@@ -92,7 +94,9 @@ class OtherResponsesController < ApplicationController
       normalized_text: first.normalized_text,
       anchor: first.review_anchor,
       count: rows.size,
-      status_counts: rows.each_with_object(Hash.new(0)) { |r, h| h[r.status] += 1 }
+      status_counts: rows.each_with_object(Hash.new(0)) { |r, h| h[r.status] += 1 },
+      fully_promoted: rows.all? { |r| r.status == "promoted" },
+      promoted_to: rows.filter_map(&:promotable).first
     }
   end
 

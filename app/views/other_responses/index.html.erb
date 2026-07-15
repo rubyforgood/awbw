@@ -28,7 +28,7 @@
 
     <!-- Status filter -->
     <div class="flex items-center gap-2 text-sm">
-      <% [ [ "All", nil ], [ "Pending", "pending" ], [ "Kept", "kept" ], [ "Dismissed", "dismissed" ] ].each do |label, value| %>
+      <% [ [ "All", nil ], [ "Pending", "pending" ], [ "Kept", "kept" ], [ "Dismissed", "dismissed" ], [ "Promoted", "promoted" ] ].each do |label, value| %>
         <% active = @status_filter == value %>
         <%= link_to label, other_responses_path(status: value, return_to: params[:return_to], person_id: params[:person_id]),
                     class: "px-3 py-1 rounded-full #{active ? "bg-gray-800 text-white" : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-100"}" %>
@@ -62,7 +62,15 @@
                 </td>
                 <td class="px-4 py-3 text-center text-sm text-gray-700"><%= group[:count] %></td>
                 <td class="px-4 py-3">
-                  <% if group[:promotable] %>
+                  <% if group[:fully_promoted] %>
+                    <%# Already a real tag — read-only, showing the sector it became. %>
+                    <span class="inline-flex items-center gap-1 text-sm text-gray-500">
+                      <i class="fa-solid fa-circle-check text-green-500"></i>
+                      Promoted<% if group[:promoted_to] %> to
+                        <%= link_to group[:promoted_to].name, sector_path(group[:promoted_to]),
+                                    class: "font-medium text-gray-700 hover:underline" %><% end %>
+                    </span>
+                  <% elsif group[:promotable] %>
                     <%# Two distinct promote paths, each with its own verb: create a
                         brand-new sector from the typed value, or merge the value into
                         an existing sector (the dedupe path). %>
@@ -95,15 +103,17 @@
                       <% end %>
                     </div>
                   <% end %>
-                  <div class="flex items-center gap-3 text-sm">
-                    <%= button_to "Keep all",
-                                  curate_other_responses_path(kind: group[:kind], field_identifier: group[:field_identifier], normalized_text: group[:normalized_text], status: "kept", return_status: @status_filter),
-                                  class: "text-gray-500 hover:text-gray-700 whitespace-nowrap" %>
-                    <%= button_to "Dismiss all",
-                                  curate_other_responses_path(kind: group[:kind], field_identifier: group[:field_identifier], normalized_text: group[:normalized_text], status: "dismissed", return_status: @status_filter),
-                                  class: "text-gray-500 hover:text-red-600 whitespace-nowrap",
-                                  form: { data: { turbo_confirm: "Dismiss “#{group[:display_text]}” for all #{group[:count]} people?" } } %>
-                  </div>
+                  <% unless group[:fully_promoted] %>
+                    <div class="flex items-center gap-3 text-sm">
+                      <%= button_to "Keep all",
+                                    curate_other_responses_path(kind: group[:kind], field_identifier: group[:field_identifier], normalized_text: group[:normalized_text], status: "kept", return_status: @status_filter),
+                                    class: "text-gray-500 hover:text-gray-700 whitespace-nowrap" %>
+                      <%= button_to "Dismiss all",
+                                    curate_other_responses_path(kind: group[:kind], field_identifier: group[:field_identifier], normalized_text: group[:normalized_text], status: "dismissed", return_status: @status_filter),
+                                    class: "text-gray-500 hover:text-red-600 whitespace-nowrap",
+                                    form: { data: { turbo_confirm: "Dismiss “#{group[:display_text]}” for all #{group[:count]} people?" } } %>
+                    </div>
+                  <% end %>
                 </td>
               </tr>
             <% end %>
