@@ -8,6 +8,9 @@
             Sectors (<%= @count_display %>)
           </h1>
           <div class="flex gap-2">
+            <%= link_to "Review “Other”",
+                        other_responses_path,
+                        class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>
             <%= link_to "Dedupe",
                         dedupe_index_sectors_path,
                         class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-1" %>

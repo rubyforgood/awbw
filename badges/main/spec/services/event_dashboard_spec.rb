@@ -232,6 +232,38 @@ RSpec.describe EventDashboard do
       end
     end
 
+    describe "other sector responses" do
+      before do
+        # Free-text "Other" sectors registrants typed (kept as OtherResponse, never
+        # real tags). person1 and person2 both typed "Hospice" (different casing →
+        # one bucket); person2 also typed "Doula". A dismissed one and the cancelled
+        # registrant's response must be ignored.
+        create(:other_response, owner: person1, text: "Hospice")
+        create(:other_response, :kept, owner: person2, text: "hospice")
+        create(:other_response, owner: person2, text: "Doula")
+        create(:other_response, :dismissed, owner: person1, text: "Retired")
+        create(:other_response, owner: cancelled_person, text: "Hospice")
+      end
+
+      it "counts distinct registrants with a visible other-sector response" do
+        expect(dashboard.other_sector_response_count).to eq(2)
+      end
+
+      it "returns the registrant ids behind the other-sector responses" do
+        expect(dashboard.other_sector_response_registrant_ids).to contain_exactly(person1.id, person2.id)
+      end
+
+      it "groups the typed values by normalized text, with per-value registrant counts and ids" do
+        rows = dashboard.other_sector_response_rows
+        expect(rows.map { |text, count, _ids| [ text, count ] }).to eq([
+          [ "Hospice", 2 ],
+          [ "Doula", 1 ]
+        ])
+        expect(rows.first.last).to contain_exactly(person1.id, person2.id)
+        expect(rows.last.last).to eq([ person2.id ])
+      end
+    end
+
     describe "sector primary/additional split (overlapping)" do
       before do
         # person1 names sector1 as primary; person2 names sector2 as primary via the

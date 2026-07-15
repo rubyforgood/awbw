@@ -18,6 +18,15 @@ RSpec.describe SectorsTaggable do
       expect(person.sectorable_items.find_by(sector: housing).is_primary).to be false
     end
 
+    it "never tags the 'Other' catch-all sector, even if its id is submitted" do
+      other = create(:sector, name: Sector::OTHER_SECTOR_NAME)
+
+      person.tag_sectors(primary_ids: [ health.id ], additional_ids: [ education.id, other.id ])
+
+      expect(person.sectors).to include(health, education)
+      expect(person.sectors).not_to include(other)
+    end
+
     it "treats a sector named in both lists as primary" do
       person.tag_sectors(primary_ids: [ health.id ], additional_ids: [ health.id, education.id ])
 

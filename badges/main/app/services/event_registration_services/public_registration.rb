@@ -217,6 +217,19 @@ module EventRegistrationServices
       return if label.blank?
       other_text = FormField.other_option?(label) ? specified.strip.presence : nil
       organization.update!(agency_type: label, agency_type_other: other_text)
+      capture_organization_type_other(organization, other_text)
+    end
+
+    # Materialize the org-type "Other" as an OtherResponse owned by the org, so it
+    # joins the curation queue alongside sector "Other"s. Not promotable yet (no
+    # OrganizationType model), but stored now so nothing is lost; de-duped per org.
+    def capture_organization_type_other(organization, text)
+      return if text.blank?
+
+      organization.other_responses.find_or_create_by!(
+        field_identifier: OtherResponse::ORGANIZATION_TYPE_FIELD_IDENTIFIER,
+        normalized_text: OtherResponse.normalize(text)
+      ) { |response| response.text = text }
     end
 
     # Write value onto attribute when a non-blank value was submitted, overwriting
@@ -359,11 +372,8 @@ module EventRegistrationServices
       additional_age_ids = collect_ids_from_checkboxes("additional_age_group")
 
       if primary_sector_ids.any? || additional_sector_ids.any?
-        person.tag_sectors(primary_ids: primary_sector_ids, additional_ids: additional_sector_ids)
-        # Organizations aggregate sectors across many people and have no single
-        # "primary", so union everyone's selections in as additional tags rather
-        # than churning the org's primary on each registration.
-        organization&.tag_sectors(primary_ids: [], additional_ids: primary_sector_ids + additional_sector_ids)
+        SectorTagging.apply(person: person, organizations: [ organization ],
+                            primary_ids: primary_sector_ids, additional_ids: additional_sector_ids)
       end
 
       if primary_age_ids.any? || additional_age_ids.any?
@@ -442,6 +452,7 @@ module EventRegistrationServices
     def create_form_submission(person)
       submission = FormSubmission.create!(person: person, form: @registration_form, event: @event, role: "registration")
       save_form_answers(submission)
+      OtherResponses::CaptureFromSubmission.call(submission)
       submission
     end
 
@@ -450,6 +461,7 @@ module EventRegistrationServices
         record.event = @event
       end
       save_form_answers(submission)
+      OtherResponses::CaptureFromSubmission.call(submission)
       submission
     end
 
@@ -496,6 +508,8 @@ module EventRegistrationServices
         record = submission.form_answers.find_or_initialize_by(form_field: field)
         record.update!(submitted_answer: text, question_name_when_answered: field.name)
       end
+
+      OtherResponses::CaptureFromSubmission.call(submission)
     end
 
     def save_continuing_education_submission(person)

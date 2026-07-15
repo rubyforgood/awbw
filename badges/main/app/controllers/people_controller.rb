@@ -296,7 +296,10 @@ class PeopleController < ApplicationController
     end
     @person.affiliations.build if @person.affiliations.empty?
 
-    @all_sectors = Sector.published.order(:name)
+    # "Other" is the free-text catch-all, not a real tag (see Sector), so it's
+    # never offered in the sector picker — a typed "Other" is captured as an
+    # OtherResponse, not saved as the literal "Other" sector.
+    @all_sectors = Sector.published.excluding_other.order(:name)
     @sectors_collection = @all_sectors.pluck(:name, :id)
     @current_sector_ids = @person.sectorable_items.map(&:sector_id)
 

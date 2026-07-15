@@ -434,6 +434,37 @@ class EventDashboard
     additional_sector_ids.size
   end
 
+  # Free-text "Other" sectors registrants typed, kept as OtherResponse records
+  # (never real sector tags). These back two things on the background report: a
+  # single aggregate "Other" bucket in the "All sectors" chart (#..._count /
+  # #..._registrant_ids), and a separate "Other responses" detail list of the
+  # actual typed values (#..._rows). Only visible (pending/kept) responses count
+  # — dismissed/promoted ones drop off. "Other" is an additional-sector answer
+  # only (the primary dropdown omits it), so it never touches the primary chart.
+  def other_sector_response_count
+    other_sector_response_registrant_ids.size
+  end
+
+  # Distinct registrant ids with at least one visible other-sector response.
+  def other_sector_response_registrant_ids
+    @other_sector_response_registrant_ids ||= visible_other_sector_responses
+      .map(&:owner_id).uniq
+  end
+
+  # The distinct typed values, each as [ text, registrant_count, registrant_ids ],
+  # for the "Other responses" detail card. Grouped by normalized text so the same
+  # answer typed with different casing/whitespace collapses into one row (the
+  # display text is the first spelling on file). Ordered by count desc, then text.
+  def other_sector_response_rows
+    @other_sector_response_rows ||= visible_other_sector_responses
+      .group_by(&:normalized_text)
+      .map do |_normalized, responses|
+        ids = responses.map(&:owner_id).uniq
+        [ responses.first.text, ids.size, ids ]
+      end
+      .sort_by { |text, count, _ids| [ -count, text.downcase ] }
+  end
+
   # Primary age group(s) served, read from registrants' answers to the
   # registration form's "primary_age_group" question (each answer stores the
   # chosen AgeRange category ids, ", "-joined). Resolved to AgeRange categories,
@@ -893,6 +924,18 @@ class EventDashboard
       primary_pairs = primary_sector_rows.to_set
       registrant_sector_pairs.reject { |pair| primary_pairs.include?(pair) }.map(&:last).uniq
     end
+  end
+
+  # Visible (pending/kept) sector "Other" responses owned by the registrants,
+  # loaded once and reused by the aggregate + detail methods above. Ordered by id
+  # so the display spelling picked per group is stable (first one on file).
+  def visible_other_sector_responses
+    @visible_other_sector_responses ||= OtherResponse
+      .sectors
+      .visible
+      .where(owner_type: "Person", owner_id: registrant_ids)
+      .order(:id)
+      .to_a
   end
 
   # [ person_id, sector_id ] pairs for every sector tag on the registrants.

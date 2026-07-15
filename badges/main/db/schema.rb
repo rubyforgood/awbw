@@ -836,17 +836,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_130312) do
 
   create_table "other_responses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "field_identifier", null: false
     t.string "kind", null: false
     t.string "normalized_text", null: false
-    t.bigint "person_id", null: false
+    t.bigint "owner_id", null: false
+    t.string "owner_type", null: false
     t.bigint "promotable_id"
     t.string "promotable_type"
     t.bigint "source_form_answer_id"
     t.string "status", default: "pending", null: false
     t.string "text", null: false
     t.datetime "updated_at", null: false
-    t.index ["person_id", "kind", "normalized_text"], name: "index_other_responses_on_person_kind_text", unique: true
-    t.index ["person_id"], name: "index_other_responses_on_person_id"
+    t.index ["owner_type", "owner_id", "field_identifier", "normalized_text"], name: "index_other_responses_on_owner_field_text", unique: true
+    t.index ["owner_type", "owner_id"], name: "index_other_responses_on_owner"
     t.index ["promotable_type", "promotable_id"], name: "index_other_responses_on_promotable"
     t.index ["source_form_answer_id"], name: "index_other_responses_on_source_form_answer_id"
   end
@@ -1757,7 +1759,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_130312) do
   add_foreign_key "organizations", "organization_statuses"
   add_foreign_key "organizations", "windows_types"
   add_foreign_key "other_responses", "form_answers", column: "source_form_answer_id"
-  add_foreign_key "other_responses", "people"
   add_foreign_key "pay_charges", "pay_customers", column: "customer_id"
   add_foreign_key "pay_charges", "pay_subscriptions", column: "subscription_id"
   add_foreign_key "pay_payment_methods", "pay_customers", column: "customer_id"
