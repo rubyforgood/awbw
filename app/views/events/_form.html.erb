@@ -143,7 +143,7 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <%= f.label :cost, class: "block font-medium mb-1" do %>Event cost <span class="text-xs font-normal text-gray-500">Enter $0 if the event is free</span><% end %>
+              <div class="flex items-center justify-between gap-2 mb-1"><%= f.label :cost, "Event Cost", class: "block font-medium" %><span class="text-sm text-gray-600">Enter $0 if the event is free</span></div>
 
               <div class="relative">
                 <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
