@@ -74,10 +74,24 @@ class EventsController < ApplicationController
     BuiltinCallouts.seed(@event)
 
     @show_all_options = params[:options] == "all"
-    @event_registration = sample_registration
-    # The built sample has a sentinel slug that doesn't resolve, so only spin up
-    # the extra CE preview for it; a real registration carries its own CE.
-    build_sample_ce_registration if @show_all_options && @event_registration.new_record?
+    # Always an unsaved, data-free sample so the preview can never read from or
+    # write to a real registrant. Its content/custom callout pages preview from
+    # materialized rows; behavioral built-in cards (whose pages are
+    # per-registration) render non-navigating, since the sentinel slug wouldn't
+    # resolve to a real page.
+    registrant = Person.new(first_name: "Sample", last_name: "Person")
+    @event_registration = @event.event_registrations.new(
+      registrant: registrant,
+      slug: "sample",
+      status: "registered",
+      intends_to_pay: true,
+      w9_requested: @show_all_options,
+      invoice_requested: @show_all_options,
+      scholarship_requested: @show_all_options,
+      shoutout: @show_all_options,
+      created_at: Time.current
+    )
+    build_sample_ce_registration if @show_all_options
   end
 
   def background
@@ -507,34 +521,6 @@ class EventsController < ApplicationController
   # Build (unsaved) a CE registration on the sample ticket so the "Show all
   # options" preview renders a populated CE card. Mirrors a complete, paid-looking
   # CE record without touching the database.
-  # The registration the sample ticket previews. Prefer a real active
-  # registration so the per-registration callout links (payment, forms, CE, …)
-  # resolve to live pages the admin can click through — its registrant name is
-  # masked so the preview doesn't surface a specific person. When the event has
-  # no registrations yet, fall back to an unsaved sample with a sentinel slug;
-  # its content/custom callout pages still preview, but behavioral cards (which
-  # need a real slug) render non-navigating.
-  def sample_registration
-    existing = @event.event_registrations.active.includes(:registrant).first
-    if existing
-      existing.registrant.assign_attributes(first_name: "Sample", last_name: "Person")
-      existing
-    else
-      registrant = Person.new(first_name: "Sample", last_name: "Person")
-      @event.event_registrations.new(
-        registrant: registrant,
-        slug: "sample",
-        status: "registered",
-        intends_to_pay: true,
-        w9_requested: @show_all_options,
-        invoice_requested: @show_all_options,
-        scholarship_requested: @show_all_options,
-        shoutout: @show_all_options,
-        created_at: Time.current
-      )
-    end
-  end
-
   def build_sample_ce_registration
     license = ProfessionalLicense.new(person: @event_registration.registrant, number: "SAMPLE-12345")
     @event_registration.continuing_education_registrations.build(
