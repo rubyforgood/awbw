@@ -92,9 +92,14 @@ class BuiltinCalloutCards
     end
   end
 
-  def initialize(event_registration)
+  def initialize(event_registration, preview: false)
     @registration = event_registration
     @event = event_registration.event
+    # The admin sample-ticket preview illustrates a hypothetical registrant with
+    # options toggled on, so the scholarship / CE cards render from the sample
+    # registration's options even when the concrete event isn't configured for them
+    # (their config_gap is skipped). On a real ticket this stays false.
+    @preview = preview
   end
 
   # The visible built-in cards for this registration, in default order. Cards the
@@ -168,7 +173,7 @@ class BuiltinCalloutCards
   # pending shows an amber "$X · Tasks outstanding" badge (action needed); fully
   # met shows a fuchsia amount badge.
   def scholarship_status_card
-    return if self.class.config_gap(event, "scholarship")
+    return if !@preview && self.class.config_gap(event, "scholarship")
     return unless registration.scholarship_requested?
     # Awarded is display-only: the scholarship record exists earlier, but the award
     # is only shown as awarded once the recipient signs the agreement. Until then
@@ -205,7 +210,7 @@ class BuiltinCalloutCards
   # they have, becoming a reference card once requested with hours and a license
   # number on file. Shown when the event offers CE or the registrant asked for it.
   def ce_hours_card
-    return if self.class.config_gap(event, "ce_hours")
+    return if !@preview && self.class.config_gap(event, "ce_hours")
     return unless registration.ce_registered?
     complete = registration.ce_license_provided?
     # An outstanding CE balance turns the card orange (an action card), matching

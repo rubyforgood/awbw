@@ -97,6 +97,17 @@ RSpec.describe BuiltinCalloutCards do
       expect(card_titles(registration)).not_to include("Scholarship")
     end
 
+    it "renders scholarship + CE cards in preview even when the event isn't configured for them" do
+      # No scholarship form and no CE hours, so config_gap would hide both on a real
+      # ticket; the sample-ticket preview illustrates the registrant's options instead.
+      registration.update!(scholarship_requested: true)
+      license = create(:professional_license, :placeholder, person: registration.registrant)
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+      preview_titles = described_class.new(registration.reload, preview: true).cards.map(&:title)
+      expect(preview_titles).to include("Scholarship", event.ce_hours_label)
+    end
+
     it "turns the CE card orange while a balance is due, teal once paid" do
       event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
       license = create(:professional_license, :placeholder, person: registration.registrant)
