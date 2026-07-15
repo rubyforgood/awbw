@@ -1,9 +1,10 @@
 ---
 # ERB Lint — fills the gap RuboCop leaves: RuboCop only parses .rb, so nothing
-# checked the Ruby inside <% %> tags or our ERB/HTML conventions (CLAUDE.md).
-# Scoped conservatively: mechanical HTML/ERB formatting linters plus a small,
-# fully autocorrectable RuboCop subset mirroring our omakase style rules.
-EnableDefaultLinters: false
+# checked the Ruby inside <% %> tags or our ERB/HTML conventions. Follows the
+# gem's recommended setup (https://github.com/Shopify/erb_lint): default linters
+# stay on, and the Rubocop linter inherits our .rubocop.yml so the Ruby in tags
+# is held to the same omakase style as our .rb files — no rules duplicated here.
+EnableDefaultLinters: true
 # --lint-all globs every *.html.erb under the repo. In CI, `bundler-cache`
 # installs gems into vendor/bundle, so without this exclude erb_lint would lint
 # third-party gem templates. (RuboCop excludes vendor by default; erb_lint does
@@ -13,73 +14,55 @@ exclude:
   - node_modules/**/*
   - tmp/**/*
 linters:
-  # --- ERB/HTML formatting (all autocorrectable) ---
-  SpaceAroundErbTag:
-    enabled: true
-  ClosingErbTagIndent:
-    enabled: true
-  RightTrim:
-    enabled: true
-  TrailingWhitespace:
-    enabled: true
-  ExtraNewline:
-    enabled: true
-  FinalNewline:
-    enabled: true
-  SpaceIndentation:
-    enabled: true
-
-  # --- Ruby inside ERB tags: curated omakase subset, all autocorrectable ---
-  # Each cop mirrors a rule documented in CLAUDE.md. EnforcedStyle is pinned to
-  # omakase's value where it differs from RuboCop's default (arrays/hashes/blocks
-  # default to no_space in bare RuboCop but omakase wants a space). Indentation
-  # and end/when-alignment cops are intentionally omitted: RuboCop extracts the
-  # Ruby without its surrounding HTML indent context and can't see across split
-  # tags, so those misfire in ERB — erb_lint's SpaceIndentation covers "no tabs".
+  # Adding an autocomplete token to each input is a per-field autofill/UX
+  # decision, not a mechanical fix, so enforcing it across the existing forms is
+  # out of scope here. Left off deliberately; could be revisited on its own.
+  RequireInputAutocomplete:
+    enabled: false
+  # <script type="module"> is legitimate ESM (e.g. the mermaid import on the flow
+  # diagram); allow it alongside the default text/javascript.
+  AllowedScriptType:
+    allowed_types:
+      - text/javascript
+      - module
   Rubocop:
     enabled: true
     rubocop_config:
-      AllCops:
-        DisabledByDefault: true
-      # Strings: double quotes
-      Style/StringLiterals:
-        Enabled: true
-        EnforcedStyle: double_quotes
-      # Modern hash syntax; omakase leaves shorthand optional
-      Style/HashSyntax:
-        Enabled: true
-        EnforcedShorthandSyntax: either
-      # Spacing inside/around braces and brackets
-      Layout/SpaceInsideHashLiteralBraces:
-        Enabled: true
-        EnforcedStyle: space
-      Layout/SpaceInsideArrayLiteralBrackets:
-        Enabled: true
-        EnforcedStyle: space
-      Layout/SpaceInsideBlockBraces:
-        Enabled: true
-        EnforcedStyle: space
-        EnforcedStyleForEmptyBraces: space
-      Layout/SpaceBeforeBlockBraces:
-        Enabled: true
-        EnforcedStyle: space
-      # SpaceInsideParens / SpaceInsideReferenceBrackets: omakase uses RuboCop's
-      # default (no_space), so no EnforcedStyle override is needed.
-      Layout/SpaceInsideReferenceBrackets:
-        Enabled: true
-      Layout/SpaceInsideParens:
-        Enabled: true
-      # No trailing commas (arrays, hashes, method arguments) — all default no_comma
-      Style/TrailingCommaInArrayLiteral:
-        Enabled: true
-      Style/TrailingCommaInHashLiteral:
-        Enabled: true
-      Style/TrailingCommaInArguments:
-        Enabled: true
-      # No redundant .to_s inside string interpolation
-      Lint/RedundantStringCoercion:
-        Enabled: true
-      # No semicolons (omakase still allows them as an expression separator)
-      Style/Semicolon:
-        Enabled: true
-        AllowAsExpressionSeparator: true
+      inherit_from:
+        - .rubocop.yml
+      # Cops that don't make sense against the Ruby extracted from an ERB tag —
+      # erb_lint hands RuboCop each tag's Ruby without its surrounding HTML
+      # indent context, so file-level layout/naming cops misfire. This is the
+      # gem README's recommended disable list.
+      Layout/InitialIndentation:
+        Enabled: false
+      # Block/indentation alignment cops need the whole method body, but a
+      # multi-line if/case/block is split across separate <% %> tags with the
+      # HTML stripped out, so RuboCop sees misaligned fragments — all false
+      # positives in ERB.
+      Layout/IndentationWidth:
+        Enabled: false
+      Layout/IndentationConsistency:
+        Enabled: false
+      Layout/ElseAlignment:
+        Enabled: false
+      Layout/EndAlignment:
+        Enabled: false
+      Layout/CaseIndentation:
+        Enabled: false
+      Layout/BeginEndAlignment:
+        Enabled: false
+      Layout/LineLength:
+        Enabled: false
+      Layout/TrailingEmptyLines:
+        Enabled: false
+      Layout/TrailingWhitespace:
+        Enabled: false
+      Naming/FileName:
+        Enabled: false
+      Style/FrozenStringLiteralComment:
+        Enabled: false
+      Lint/UselessAssignment:
+        Enabled: false
+      Rails/OutputSafety:
+        Enabled: false
