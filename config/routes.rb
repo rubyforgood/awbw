@@ -135,6 +135,14 @@ Rails.application.routes.draw do
     member do
       get :dashboard
       get :sample_ticket
+      # Admin-only in-memory previews of the behavioral built-in callout pages,
+      # linked from the sample ticket. They reuse Events::CalloutsController's
+      # actions/views with an unsaved sample registration (see its sample mode).
+      get "sample_ticket/payment", to: "events/callouts#payment", defaults: { sample: "1" }, as: :sample_payment
+      get "sample_ticket/certificate", to: "events/callouts#certificate", defaults: { sample: "1" }, as: :sample_certificate
+      get "sample_ticket/scholarship", to: "events/callouts#scholarship", defaults: { sample: "1" }, as: :sample_scholarship
+      get "sample_ticket/ce", to: "events/callouts#ce", defaults: { sample: "1" }, as: :sample_ce
+      get "sample_ticket/videoconference", to: "events/callouts#videoconference", defaults: { sample: "1" }, as: :sample_videoconference
       get :background
       get :registrants
       get :onboarding

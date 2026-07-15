@@ -5,7 +5,7 @@
     callers without a registration can override it with a `back_path` local, or
     pass `back_path: nil` to drop the eyebrow. Its label defaults to "Back to
     ticket"; pass a `back_label` local to point it at a different origin. %>
-<% back_path = local_assigns.fetch(:back_path) { registration_ticket_path(@event_registration.slug) } %>
+<% back_path = local_assigns.fetch(:back_path) { sample_preview? ? sample_ticket_event_path(@event) : registration_ticket_path(@event_registration.slug) } %>
 <% back_label = local_assigns.fetch(:back_label, "Back to ticket") %>
 <%# Most callout pages are a narrow card; the single-resource page passes a wider
     value so a multi-page PDF preview has room for the browser's page sidebar. %>

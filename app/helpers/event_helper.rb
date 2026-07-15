@@ -1,4 +1,17 @@
 module EventHelper
+  # The admin-only sample-ticket preview path for a behavioral built-in callout's
+  # per-registration page, keyed off its builtin_key. Returns nil for a callout
+  # with no previewable page, so the sample ticket leaves that card non-navigating.
+  def sample_callout_path(event, callout)
+    case callout.builtin_key
+    when "payment" then sample_payment_event_path(event)
+    when "certificate" then sample_certificate_event_path(event)
+    when "scholarship" then sample_scholarship_event_path(event)
+    when "ce_hours" then sample_ce_event_path(event)
+    when "videoconference" then sample_videoconference_event_path(event)
+    end
+  end
+
   # The "please specify" placeholder for an option label, or nil when the option
   # does not reveal a free-text box. Canonical config lives on FormField (shared
   # with answer validation).
