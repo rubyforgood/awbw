@@ -1,36 +1,12 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "Frequently asked questions — #{@event.title}") %>
 
-<div class="max-w-3xl mx-auto px-4 pt-4">
-  <%= link_to registration_ticket_path(@event_registration.slug),
-              class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
-    <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
-  <% end %>
-</div>
+<%= render layout: "events/callouts/callout_page", locals: { title: "Frequently asked questions" } do %>
+  <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">2-day training — general questions</h2>
+  <%= render "events/callouts/rich_content", content: @faq_content %>
 
-<div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
-  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
-      <div class="flex items-center gap-5">
-        <div class="shrink-0">
-          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
-        </div>
-        <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight">Frequently asked questions</h1>
-          <p class="text-sm text-blue-200"><%= @event.title %></p>
-        </div>
-      </div>
-      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
-    </div>
-
-    <div class="px-6 sm:px-8 py-7">
-      <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">2-day training — general questions</h2>
-      <%= render "events/callouts/rich_content", content: @faq_content %>
-
-      <div class="mt-6 border-t border-gray-100 pt-5 text-sm text-gray-600 leading-relaxed">
-        <p class="font-semibold text-gray-900">Still have questions?</p>
-        <p class="mt-1">You'll receive more details as we get closer to the training dates. In the meantime, please <%= link_to "reach out", contact_us_path, class: "text-blue-700 underline hover:text-blue-900" %> — we're always happy to help. We look forward to creating and connecting with you!</p>
-      </div>
-    </div>
+  <div class="mt-6 border-t border-gray-100 pt-5 text-sm text-gray-600 leading-relaxed">
+    <p class="font-semibold text-gray-900">Still have questions?</p>
+    <p class="mt-1">You'll receive more details as we get closer to the training dates. In the meantime, please <%= link_to "reach out", contact_us_path, class: "text-blue-700 underline hover:text-blue-900" %> — we're always happy to help. We look forward to creating and connecting with you!</p>
   </div>
-</div>
+<% end %>
