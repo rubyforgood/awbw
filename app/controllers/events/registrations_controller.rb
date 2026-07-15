@@ -178,7 +178,9 @@ module Events
     end
 
     def set_event_registration
-      @event_registration = EventRegistration.find_by!(slug: params[:slug])
+      @event_registration = EventRegistration
+        .includes(event: { registration_ticket_callouts: :resources })
+        .find_by!(slug: params[:slug])
     end
 
     def requires_payment?(registration)

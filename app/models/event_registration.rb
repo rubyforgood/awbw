@@ -307,10 +307,6 @@ class EventRegistration < ApplicationRecord
     !allocations.exists? && !attendance_recorded? && !transferred_out?
   end
 
-  def checked_in?
-    # checked_in_at.present?
-  end
-
   # True when the registrant should be granted access to ticket materials
   # (training links, etc.) even though they haven't paid in full yet. Admins
   # flip the `intends_to_pay` flag when someone commits to paying after the

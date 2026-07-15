@@ -200,15 +200,28 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(sample_payment_event_path(event))
       end
 
-      it "previews a published behavioral card even when the event config is incomplete" do
+      it "previews a published scholarship/CE card even when the event config is incomplete" do
+        no_form = create(:event)
+        BuiltinCallouts.seed(no_form)
+        # An event with no scholarship form has a scholarship "config gap"
+        # (BuiltinCalloutCards.config_gap) that hides the card on a real ticket;
+        # the preview shows it anyway (via ?options=all, which also flags the
+        # sample registrant as having requested it) so the admin can see and
+        # click it while finishing setup. Only scholarship/CE bypass this way —
+        # payment and videoconference describe the event itself (its real cost,
+        # its real join link), so there's nothing truthful to preview when the
+        # event isn't actually configured for them.
+        no_form.registration_ticket_callouts.find_by(builtin_key: "scholarship").update!(hidden: false)
+        get sample_ticket_event_path(no_form, options: "all")
+        expect(response.body).to include(sample_scholarship_event_path(no_form))
+      end
+
+      it "still hides the payment card for a free event even with ?options=all" do
         free = create(:event, cost_cents: 0)
         BuiltinCallouts.seed(free)
-        # A free event has a payment "config gap" (BuiltinCalloutCards.config_gap)
-        # that hides the card on a real ticket; the preview shows it anyway so the
-        # admin can see and click it while finishing setup.
         free.registration_ticket_callouts.find_by(builtin_key: "payment").update!(hidden: false)
-        get sample_ticket_event_path(free)
-        expect(response.body).to include(sample_payment_event_path(free))
+        get sample_ticket_event_path(free, options: "all")
+        expect(response.body).not_to include(sample_payment_event_path(free))
       end
 
       it "models a typical registrant by default, hiding scholarship and CE" do
