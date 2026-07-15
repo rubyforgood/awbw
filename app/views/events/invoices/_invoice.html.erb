@@ -83,16 +83,63 @@
         </tr>
       <% end %>
     </tbody>
-    <tfoot>
-      <tr>
-        <td colspan="3"></td>
-        <td class="pt-4 text-right text-sm font-bold">Total</td>
-        <td class="pt-4 text-right">
-          <span class="inline-block rounded-md border border-gray-400 px-3 py-1 text-sm font-bold tabular-nums whitespace-nowrap"><%= dollars_from_cents(invoice.total_cents) %></span>
-        </td>
-      </tr>
-    </tfoot>
+    <%# With nothing applied (the blank template and bulk-payment invoices) the
+        invoice just shows its charge total; the balance-due summary below takes
+        over once payments/credits have been applied. %>
+    <% unless invoice.amount_applied_cents.positive? %>
+      <tfoot>
+        <tr>
+          <td colspan="3"></td>
+          <td class="pt-4 text-right text-sm font-bold">Total</td>
+          <td class="pt-4 text-right">
+            <span class="inline-block rounded-md border border-gray-400 px-3 py-1 text-sm font-bold tabular-nums whitespace-nowrap"><%= dollars_from_cents(invoice.total_cents) %></span>
+          </td>
+        </tr>
+      </tfoot>
+    <% end %>
   </table>
+
+  <%# Payments and credits already applied, and the balance the payer still owes. %>
+  <% if invoice.amount_applied_cents.positive? %>
+    <div class="mt-8">
+      <p class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Payments &amp; credits applied</p>
+      <table class="w-full text-sm">
+        <tbody>
+          <% invoice.entries.each do |entry| %>
+            <tr class="border-b border-gray-100">
+              <td class="py-2 pr-3 whitespace-nowrap align-top"><%= entry.date&.strftime("%m/%d/%y") %></td>
+              <td class="py-2 pr-3 align-top">
+                <%= entry.method %>
+                <% if entry.reference.present? %>
+                  <span class="text-xs text-gray-500">· <%= entry.reference %></span>
+                <% end %>
+              </td>
+              <td class="py-2 pl-3 text-right tabular-nums align-top whitespace-nowrap">-<%= dollars_from_cents(entry.amount_cents) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-8 flex justify-end">
+      <dl class="w-full max-w-xs text-sm">
+        <div class="flex items-center justify-between py-1">
+          <dt class="text-gray-600">Total charged</dt>
+          <dd class="tabular-nums"><%= dollars_from_cents(invoice.total_cents) %></dd>
+        </div>
+        <div class="flex items-center justify-between py-1">
+          <dt class="text-gray-600">Payments &amp; credits</dt>
+          <dd class="tabular-nums">-<%= dollars_from_cents(invoice.amount_applied_cents) %></dd>
+        </div>
+        <div class="mt-1 flex items-center justify-between border-t border-gray-300 pt-2 font-bold">
+          <dt>Balance due</dt>
+          <dd>
+            <span class="inline-block rounded-md border px-3 py-1 tabular-nums whitespace-nowrap <%= invoice.balance_due_cents.positive? ? "border-amber-500 bg-amber-50 text-amber-800" : "border-green-500 bg-green-50 text-green-700" %>"><%= dollars_from_cents(invoice.balance_due_cents) %></span>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  <% end %>
 
   <footer class="mt-12 text-sm">
     <p><%= invoice.payable_to_note %></p>

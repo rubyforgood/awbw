@@ -18,17 +18,25 @@ class EventInvoice
     end
   end
 
+  # One applied payment or credit (scholarship/discount) that reduces the balance
+  # due. Payments are itemized by method (Cash/Check/Credit card), with the check
+  # number as a reference; scholarships/discounts show their kind.
+  Entry = Struct.new(:date, :method, :reference, :amount_cents, keyword_init: true)
+
   attr_reader :event, :number, :date, :reference, :client_id,
               :bill_to_name, :bill_to_address_lines, :bill_to_email,
-              :attention, :line_items
+              :attention, :line_items, :entries, :amount_applied_cents
 
-  # One registration → one attendee billed at the event cost. The registrant's
-  # snapshotted organization (if any) is the bill-to; otherwise bill the person.
+  # One registration → one attendee billed at the event cost, less anything
+  # already applied (payments, scholarships, discounts) so the invoice reflects
+  # the balance actually due. The registrant's snapshotted organization (if any)
+  # is the bill-to; otherwise bill the person.
   def self.from_registration(registration)
     event = registration.event
     registrant = registration.registrant
     organization = registration.organizations.first
     addressable = organization || registrant
+    allocations = registration.allocations.includes(:source).order(:created_at)
 
     new(
       event: event,
@@ -46,9 +54,21 @@ class EventInvoice
           quantity: 1,
           unit_price_cents: event.cost_cents.to_i
         )
-      ]
+      ],
+      entries: allocations.map { |allocation| entry_for(allocation) },
+      amount_applied_cents: allocations.sum(&:amount)
     )
   end
+
+  def self.entry_for(allocation)
+    Entry.new(
+      date: allocation.created_at.to_date,
+      method: AllocationLedgerLabel.method_label(allocation),
+      reference: AllocationLedgerLabel.reference_for(allocation),
+      amount_cents: allocation.amount
+    )
+  end
+  private_class_method :entry_for
 
   # A blank invoice template carrying only the event's content (one attendee at
   # the event cost). The bill-to and attention are left empty to be filled in.
@@ -120,7 +140,7 @@ class EventInvoice
 
   def initialize(event:, number:, date:, client_id:, bill_to_name:,
                  bill_to_address_lines:, bill_to_email:, attention:, line_items:,
-                 reference: nil)
+                 reference: nil, entries: [], amount_applied_cents: 0)
     @event = event
     @number = number
     @date = date
@@ -131,10 +151,19 @@ class EventInvoice
     @attention = attention
     @line_items = line_items
     @reference = reference
+    @entries = entries
+    @amount_applied_cents = amount_applied_cents
   end
 
   def total_cents
     line_items.sum(&:amount_cents)
+  end
+
+  # The full charge net of everything already applied, floored at zero — what the
+  # invoice actually asks the payer for. Equals the total when nothing's applied
+  # (the blank template and bulk-payment invoices, which carry no allocations).
+  def balance_due_cents
+    [ total_cents - amount_applied_cents, 0 ].max
   end
 
   def issuer_name = ISSUER_NAME
