@@ -29,16 +29,18 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
   it "updates Affiliated since when a start date changes" do
     visit_and_wait edit_organization_path(organization, admin: true)
 
+    # Two overlapping ongoing affiliations merge into one ongoing period; a period
+    # that began in an earlier year shows just the start year.
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
-    expect(affiliated).to have_text("May 2019")
+    expect(affiliated).to have_text("2019")
 
     start_inputs = all("input[name*='affiliations_attributes'][name*='start_date']")
     set_date_input(start_inputs.first, "2017-02-01")
 
-    expect(affiliated).to have_text("Feb 2017", wait: 5)
+    expect(affiliated).to have_text("2017", wait: 5)
   end
 
-  it "shows end date and icon when all affiliations are inactive" do
+  it "shows a closed year range when all affiliations have ended" do
     visit_and_wait edit_organization_path(organization, admin: true)
 
     affiliated = find("[data-affiliation-dates-target='affiliatedSince']")
@@ -47,10 +49,8 @@ RSpec.describe "Organization affiliation dates auto-update", type: :system do
     set_date_input(end_inputs[0], "2023-03-01")
     set_date_input(end_inputs[1], "2024-08-01")
 
-    expect(affiliated).to have_text("Aug 2024", wait: 5)
-    within(affiliated) do
-      expect(page).to have_css("i.fa-circle-xmark")
-    end
+    # Overlapping intervals merge into one closed period, shown as a year range.
+    expect(affiliated).to have_text("2019-2024", wait: 5)
   end
 
   it "removes an affiliation via the editor and recalculates" do

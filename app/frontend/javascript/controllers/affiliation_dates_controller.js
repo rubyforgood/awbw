@@ -2,6 +2,9 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer"]
+  // Organizations show "Affiliated since" as merged year-based periods; the person
+  // form leaves it off and keeps the single Mon YYYY – Mon YYYY range.
+  static values = { periods: Boolean }
 
   initialize() {
     this.boundRecalculate = () => this.recalculate()
@@ -41,9 +44,22 @@ export default class extends Controller {
     const now = new Date()
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
 
-    // Affiliated since = merged year-based periods (mirrors AffiliationPeriods).
+    // Affiliated since — merged periods (orgs) or a single range (person form).
     if (this.hasAffiliatedSinceTarget) {
-      this.affiliatedSinceTarget.textContent = this.affiliatedSinceLabel(affiliations, today) || "—"
+      if (this.periodsValue) {
+        this.affiliatedSinceTarget.textContent = this.affiliatedSinceLabel(affiliations, today) || "—"
+      } else {
+        const startDates = affiliations.map(a => a.startDate).filter(Boolean)
+        const affiliatedSince = startDates.length
+          ? new Date(Math.min(...startDates.map(d => new Date(d))))
+          : null
+        const allInactive = affiliations.length > 0 &&
+          affiliations.every(a => a.endDate && new Date(a.endDate) < today)
+        const affiliatedEnd = allInactive
+          ? new Date(Math.max(...affiliations.map(a => new Date(a.endDate))))
+          : null
+        this.updateDisplay(this.affiliatedSinceTarget, affiliatedSince, affiliatedEnd)
+      }
     }
 
     // Facilitations/program since — unchanged single-range display, filtered by
