@@ -62,6 +62,13 @@ class EventDecorator < ApplicationDecorator
     length ? description&.truncate(length) : description
   end
 
+  # Compact event label for tight/tabular or multi-event contexts: the admin-set
+  # abbreviation (e.g. "TOS205") when present, otherwise the full title. Pair it
+  # with the full title as a tooltip so the abbreviation is never ambiguous.
+  def compact_label
+    object.abbreviation.presence || object.title
+  end
+
   # `show_videoconference_details` controls whether the join link/ID/passcode are
   # carried into the calendar entry. Callers with a registration pass that
   # registrant's gate (date + paid/intends); the default falls back to the

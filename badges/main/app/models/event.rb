@@ -210,17 +210,11 @@ class Event < ApplicationRecord
     title
   end
 
-  # Heading shown on the ticket call-out and the details page. Falls back to the
-  # default even when an admin clears it, so the section never renders unlabelled.
-  def event_details_label
-    super.presence || "Before you attend"
-  end
-
-  # Heading shown on the CE hours ticket call-out and its details page. Falls
-  # back to the default even when an admin clears it, so the section never
-  # renders unlabelled.
-  def ce_hours_details_label
-    super.presence || "CE hours"
+  # The CE hours callout's admin-edited heading, read from its materialized row's
+  # title (that's where the label lives now the ce_hours_details_label column is
+  # gone). Falls back to the default so the CE card/mailer never render unlabelled.
+  def ce_hours_label
+    registration_ticket_callouts.find_by(builtin_key: "ce_hours")&.title.presence || "CE hours"
   end
 
   # Virtual attributes for date/time inputs (Firefox datetime-local compat)

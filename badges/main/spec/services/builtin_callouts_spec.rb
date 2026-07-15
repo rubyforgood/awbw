@@ -8,7 +8,7 @@ RSpec.describe BuiltinCallouts do
       built = described_class.build(event)
 
       expect(built.map(&:builtin_key)).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours", "event_details",
+        "payment", "certificate", "scholarship", "ce_hours", "art_supplies",
         "videoconference", "handouts", "faq"
       )
       expect(built).to all(be_new_record)
@@ -46,7 +46,7 @@ RSpec.describe BuiltinCallouts do
 
       keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
       expect(keys).to contain_exactly(
-        "payment", "certificate", "scholarship", "ce_hours", "event_details",
+        "payment", "certificate", "scholarship", "ce_hours", "art_supplies",
         "videoconference", "handouts", "faq"
       )
     end
@@ -54,13 +54,13 @@ RSpec.describe BuiltinCallouts do
     it "seeds callouts in canonical ticket order" do
       form = create(:form)
       event = create(:event, facilitator_training: true, ce_hours_offered: 6,
-        event_details: "<p>x</p>", videoconference_url: "https://example.com/z")
+        videoconference_url: "https://example.com/z")
       event.event_forms.create!(form:, role: "scholarship")
 
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key)).to eq(
-        %w[payment certificate scholarship ce_hours event_details videoconference handouts faq]
+        %w[payment certificate scholarship ce_hours art_supplies videoconference handouts faq]
       )
     end
 
@@ -110,21 +110,28 @@ RSpec.describe BuiltinCallouts do
       expect(payment.resources).to be_empty # no W-9 on a free event
     end
 
-    it "migrates CE hours and event-details content from the event onto the row" do
-      event = create(:event, ce_hours_details_label: "Continuing education",
-        ce_hours_details: "<p>CAMFT approved.</p>", event_details_label: "Art supplies",
-        event_details: "<p>Bring paper.</p>")
+    it "seeds CE hours and art supplies with their default titles and no content" do
+      event = create(:event)
 
       described_class.seed(event)
 
       ce = event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
-      details = event.registration_ticket_callouts.find_by(builtin_key: "event_details")
-      expect(ce.title).to eq("Continuing education")
-      expect(ce.description).to eq("<p>CAMFT approved.</p>")
-      expect(details.title).to eq("Art supplies")
-      expect(details.description).to eq("<p>Bring paper.</p>")
-      # A freshly-migrated card matches its default.
+      art_supplies = event.registration_ticket_callouts.find_by(builtin_key: "art_supplies")
+      expect(ce.title).to eq("CE hours")
+      expect(ce.description).to be_blank
+      expect(art_supplies.title).to eq("Art supplies & what to bring")
+      expect(art_supplies.description).to be_blank
+      # A freshly-seeded card matches its default.
       expect(described_class.customized?(ce)).to be(false)
+    end
+
+    it "seeds art supplies as a content callout" do
+      event = create(:event)
+
+      described_class.seed(event)
+
+      art_supplies = event.registration_ticket_callouts.find_by(builtin_key: "art_supplies")
+      expect(art_supplies.behavioral_builtin?).to be(false)
     end
 
     it "reports whether a materialized callout has been customized" do
@@ -231,7 +238,7 @@ RSpec.describe BuiltinCallouts do
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key).compact).to eq(
-        %w[payment certificate scholarship ce_hours event_details videoconference handouts faq]
+        %w[payment certificate scholarship ce_hours art_supplies videoconference handouts faq]
       )
     end
   end

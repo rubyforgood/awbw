@@ -23,7 +23,13 @@
                         "w-full rounded border-gray-300 shadow-sm px-3 py-2
                                                   focus:ring-blue-500 focus:border-blue-500",
                     } %>
-
+            <%= f.input :abbreviation,
+                    label: "Abbreviation",
+                    hint: "Short code shown on organization profiles (e.g. TOS205)",
+                    input_html: {
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                      placeholder: "e.g. TOS205"
+                    } %>
             <%= f.input :facilitator_training, as: :boolean, label: "Facilitator training event", wrapper_html: { class: "mb-0!" } %>
           </div>
 
@@ -565,27 +571,14 @@
 
         <%#
           Built-in cards, shown above custom callouts in the order they appear on
-          the ticket. The two editable ones (CE hours, art supplies) carry their
-          ticket colour and editable text; the rest are greyed-out previews of
-          cards the app controls, so the full ticket context is visible here.
+          the ticket — greyed-out previews of cards the app controls, so the full
+          ticket context is visible here. The editable built-ins (CE hours, art
+          supplies, …) are materialized as real rows and edited in the callout list
+          below, so they're dropped from this preview.
         %>
 
         <div class="space-y-3 mb-3">
           <% BuiltinCalloutCards.editor_cards(@event).each do |card| %>
-            <% case card.key %>
-            <% when :ce_hours %>
-              <%= render "events/builtin_callout_card", f: f, card: card,
-                    label_field: :ce_hours_details_label, content_field: :ce_hours_details,
-                    title_placeholder: "CE hours",
-                    content_help: "CE requirements, payment, sign-in rules, and the post-training evaluation — shown on its own page linked from the ticket. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks. Wrap a part in <details><summary>Title</summary>…</details> to make it a collapsible section.",
-                    content_placeholder: "e.g. <p>AWBW is approved by CAMFT…</p><details><summary>Before the training</summary><ul><li>Email your license number</li></ul></details>" %>
-            <% when :event_details %>
-              <%= render "events/builtin_callout_card", f: f, card: card,
-                    label_field: :event_details_label, content_field: :event_details,
-                    title_placeholder: "Before you attend",
-                    content_help: "Materials, supplies, what to bring, and policies — shown on its own page linked from the ticket. Wrap a part in <details><summary>Title</summary>…</details> to make it a collapsible section (e.g. one per workshop); anything outside a disclosure stays open. Leave blank to hide it entirely. Accepts basic HTML — bold, italics, links, lists, headings, and line breaks.",
-                    content_placeholder: "e.g. <details><summary>Workshop 1</summary><ul><li>Clear glass stones</li></ul></details>" %>
-            <% else %>
               <div class="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 opacity-70">
                 <i class="<%= card.icon_class %> <%= card.theme[:icon] %> w-6 shrink-0 text-center text-xl pt-0.5" aria-hidden="true"></i>
 
@@ -631,7 +624,6 @@
                   <% end %>
                 </div>
               </div>
-            <% end %>
           <% end %>
         </div>
 

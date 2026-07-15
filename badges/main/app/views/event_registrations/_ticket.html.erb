@@ -100,7 +100,7 @@
         </div>
       <% end %>
 
-      <% builtin_cards = BuiltinCalloutCards.new(event_registration) %>
+      <% builtin_cards = BuiltinCalloutCards.new(event_registration, preview: preview) %>
 
       <!-- Built-in callouts: code-defined cards the app controls, for any built-in
            the event hasn't materialized (also the fallback for unseeded events).

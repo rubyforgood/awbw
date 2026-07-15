@@ -31,16 +31,15 @@ class BuiltinCalloutCards
   end
 
   # A registration-free description of one built-in card, for the event editor's
-  # callouts section. `key` is :ce_hours / :event_details for the two whose text
-  # admins edit via event columns; nil for the cards the app fully controls (shown
-  # greyed out). `builtin_key` ties the card to its ticket behavior — once an event
-  # has materialized that key into an editable row, the preview is dropped here and
-  # the row is edited in the callout list instead. `subtitle` mirrors the card's
-  # ticket subtitle; `visibility` describes when the app shows it (rendered next to
-  # the "Built in" chip); `note` is an optional hint on where content comes from.
-  EditorCard = Data.define(:key, :builtin_key, :icon_class, :color, :title, :subtitle, :visibility, :note) do
+  # callouts section — a greyed-out preview of a card the app controls, so the full
+  # ticket context is visible. `builtin_key` ties the card to its ticket behavior —
+  # once an event has materialized that key into an editable row, the preview is
+  # dropped here and the row is edited in the callout list instead. `subtitle`
+  # mirrors the card's ticket subtitle; `visibility` describes when the app shows it
+  # (rendered next to the "Built in" chip); `note` is an optional hint on where
+  # content comes from.
+  EditorCard = Data.define(:builtin_key, :icon_class, :color, :title, :subtitle, :visibility, :note) do
     def theme = DomainTheme.swatch(color)
-    def editable? = key.present?
   end
 
   # Every built-in card in the order it appears on a ticket, for the editor to
@@ -52,31 +51,55 @@ class BuiltinCalloutCards
     # not-yet-saved built-in rows count as materialized and aren't also previewed.
     materialized = event.registration_ticket_callouts.reject(&:marked_for_destruction?).filter_map(&:builtin_key).to_set
     [
-      EditorCard.new(nil, "payment", "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
-      EditorCard.new(nil, "certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
-      EditorCard.new(nil, "scholarship", "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
-      EditorCard.new(nil, "videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
-      EditorCard.new(nil, "handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
-      EditorCard.new(nil, "faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
-    ].reject { |card| card.key.nil? && materialized.include?(card.builtin_key) }
+      EditorCard.new("payment", "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
+      EditorCard.new("certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
+      EditorCard.new("scholarship", "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
+      EditorCard.new("videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
+      EditorCard.new("handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
+      EditorCard.new("faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
+    ].reject { |card| materialized.include?(card.builtin_key) }
   end
 
   # builtin_key → builder method, in the default order cards appear on a ticket.
-  # Handouts and FAQ are pure content cards: they only ever render from their
-  # materialized row (the ticket's content branch), never from code, so they
-  # have no builder here.
+  # Content callouts (art supplies, handouts, FAQ) only ever render from their
+  # materialized row (the ticket's content branch), never from code, so they have
+  # no builder here.
   CARD_BUILDERS = {
     "payment" => :payment_card,
     "certificate" => :certificate_card,
     "scholarship" => :scholarship_status_card,
     "ce_hours" => :ce_hours_card,
-    "event_details" => :event_details_card,
     "videoconference" => :videoconference_card
   }.freeze
 
-  def initialize(event_registration)
+  # Why a built-in card with this builtin_key can never appear on the given event's
+  # ticket because the event lacks the config the card depends on (a free event
+  # has no payment card, an event with no scholarship form has no scholarship
+  # card, an event that offers no CE hours has no CE card) — or nil when the event
+  # is configured for it. The card builders below enforce these same gaps at
+  # render time; the editor surfaces the phrase as an amber "won't show" badge so
+  # admins know a published callout still won't reach the ticket.
+  def self.config_gap(event, builtin_key)
+    case builtin_key
+    when "payment"
+      "this event is free" if event.cost_cents.to_i <= 0
+    when "scholarship"
+      "this event has no scholarship form" if event.scholarship_form.blank?
+    when "ce_hours"
+      "this event offers no CE hours" unless event.ce_eligible?
+    when "videoconference"
+      "this event has no videoconference link" if event.videoconference_url.blank?
+    end
+  end
+
+  def initialize(event_registration, preview: false)
     @registration = event_registration
     @event = event_registration.event
+    # The admin sample-ticket preview illustrates a hypothetical registrant with
+    # options toggled on, so the scholarship / CE cards render from the sample
+    # registration's options even when the concrete event isn't configured for them
+    # (their config_gap is skipped). On a real ticket this stays false.
+    @preview = preview
   end
 
   # The visible built-in cards for this registration, in default order. Cards the
@@ -84,7 +107,7 @@ class BuiltinCalloutCards
   # those from the row (calling #card_for for behavioral ones), so this is both the
   # non-materialized set and the fallback for events not yet seeded.
   def cards
-    CARD_BUILDERS.reject { |builtin_key, _| materialized?(builtin_key) || skip_in_fallback?(builtin_key) }
+    CARD_BUILDERS.reject { |builtin_key, _| materialized?(builtin_key) }
                  .filter_map { |_, builder| send(builder) }
   end
 
@@ -97,8 +120,6 @@ class BuiltinCalloutCards
     builder = CARD_BUILDERS[callout.builtin_key]
     base = builder && send(builder)
     return unless base
-    # Event details links to its page only when it has content to show.
-    return if callout.builtin_key == "event_details" && callout.description.blank?
 
     base.with(
       title: callout.title,
@@ -121,17 +142,11 @@ class BuiltinCalloutCards
     @materialized_keys.include?(builtin_key)
   end
 
-  # In the unseeded fallback, event-details content lives on the event column, so
-  # hide the card when it's blank (the row path checks the row in #card_for).
-  def skip_in_fallback?(builtin_key)
-    builtin_key == "event_details" && event.event_details.blank?
-  end
-
   # Top card: an action card while a balance is due, a reference card once paid
   # in full. Its page lists every allocation with the running balance, plus the
   # linked documents (the W-9, and the invoice/receipt) for paid events.
   def payment_card
-    return if event.cost_cents.to_i <= 0
+    return if self.class.config_gap(event, "payment")
     due = registration.remaining_cost.to_i.positive?
     Card.new(icon_class: "fa-solid fa-credit-card", color: due ? "orange" : "blue",
              title: due ? "Make your payment" : "Payment",
@@ -158,6 +173,7 @@ class BuiltinCalloutCards
   # pending shows an amber "$X · Tasks outstanding" badge (action needed); fully
   # met shows a fuchsia amount badge.
   def scholarship_status_card
+    return if !@preview && self.class.config_gap(event, "scholarship")
     return unless registration.scholarship_requested?
     # Awarded is display-only: the scholarship record exists earlier, but the award
     # is only shown as awarded once the recipient signs the agreement. Until then
@@ -194,13 +210,14 @@ class BuiltinCalloutCards
   # they have, becoming a reference card once requested with hours and a license
   # number on file. Shown when the event offers CE or the registrant asked for it.
   def ce_hours_card
+    return if !@preview && self.class.config_gap(event, "ce_hours")
     return unless registration.ce_registered?
     complete = registration.ce_license_provided?
     # An outstanding CE balance turns the card orange (an action card), matching
     # the payment card, rather than the resting teal.
     due = registration.continuing_education_registrations.first&.remaining_cost.to_i.positive?
     Card.new(icon_class: "fa-solid fa-graduation-cap", color: due ? "orange" : "teal",
-             title: event.ce_hours_details_label,
+             title: event.ce_hours_label,
              subtitle: ce_hours_subtitle,
              href: registration_ce_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right",
@@ -253,18 +270,9 @@ class BuiltinCalloutCards
     deadline.strftime("%b %-d")
   end
 
-  # "Art supplies & what to bring" — the event's own details page.
-  def event_details_card
-    Card.new(icon_class: "fa-solid fa-palette", color: "blue",
-             title: event.event_details_label,
-             subtitle: "Important info for this event — please read",
-             href: details_event_path(event, reg: registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-arrow-right")
-  end
-
   # Shown only when the event has a videoconference URL set.
   def videoconference_card
-    return if event.videoconference_url.blank?
+    return if self.class.config_gap(event, "videoconference")
     Card.new(icon_class: "fa-solid fa-video", color: "blue",
              title: "Videoconference",
              subtitle: "Join link and how to add it to your calendar",

@@ -292,6 +292,12 @@ dev_events.each_with_index do |(title, form_type, cost_cents, scholarship, visib
       ef.form = bulk_payment_form
     end
   end
+
+  # Materialize the built-in callouts (payment, CE hours, art supplies, …) as
+  # editable rows, exactly as creating an event through the admin form does. They
+  # seed hidden by default; the blocks below fill in and publish the demo copy on
+  # the trainings. Idempotent, so re-seeding never clobbers.
+  BuiltinCallouts.seed(event)
 end
 
 # The flagship training runs on Zoom — drive the platform from event settings so
@@ -321,8 +327,14 @@ flagship = Event.find_by(title: "AWBW Facilitator Training")
 # has a sensible default highlighted event after seeding.
 admin_user.update!(favorite_event: flagship) if admin_user && flagship
 
-if flagship && flagship.event_details.blank?
-  flagship.update!(event_details_label: "Art supplies & what to bring", event_details: <<~HTML.strip)
+# Fill in and publish the "Art supplies & what to bring" content callout on the
+# flagship training so the demo ticket links to a populated page. The row is
+# materialized when the event is created; here we just add the copy (its title
+# already defaults to "Art supplies & what to bring"). Only when blank so admin
+# edits survive a re-seed.
+flagship_art_supplies = flagship&.registration_ticket_callouts&.find_by(builtin_key: "art_supplies")
+if flagship_art_supplies && flagship_art_supplies.description.blank?
+  flagship_art_supplies.update!(hidden: false, description: <<~HTML.strip)
     <p>Thank you for registering to join us for AWBW's Art Facilitator Training!</p>
     <p>Below you'll find information about the art supplies used in each of the five hands-on workshops included in the training, along with optional printable workshop worksheets. We're sharing these materials in advance in case you'd like to gather supplies or print resources ahead of time.</p>
     <p>You will receive additional training information as we get closer to the training dates.</p>
@@ -385,13 +397,14 @@ if flagship && flagship.event_details.blank?
   HTML
 end
 
-# Seed the "CE hours" details — the continuing-education requirements, payment,
-# and sign-in rules that used to live in a long CE confirmation email. Shown on its
-# own ticket-linked page (and via the prominent indigo call-out on the ticket) for
-# registrants who requested CE credit. A custom label demonstrates that the heading
-# is admin-editable. Only set when blank so admin edits survive a re-seed.
-if flagship && flagship.ce_hours_details.blank?
-  flagship.update!(ce_hours_details_label: "Continuing education", ce_hours_details: <<~HTML.strip)
+# Fill in the "CE hours" details on the flagship training's materialized ce_hours
+# callout — the continuing-education requirements, payment, and sign-in rules that
+# used to live in a long CE confirmation email. Shown on its own ticket-linked page
+# for registrants who requested CE credit. A custom title demonstrates that the
+# heading is admin-editable. Only set when blank so admin edits survive a re-seed.
+flagship_ce = flagship&.registration_ticket_callouts&.find_by(builtin_key: "ce_hours")
+if flagship_ce && flagship_ce.description.blank?
+  flagship_ce.update!(hidden: false, title: "Continuing education", description: <<~HTML.strip)
     <p>This training is approved by the California Association of Marriage and Family Therapists (CAMFT, provider #000000) for <strong>12 CE hours</strong>. AWBW is approved to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs.</p>
     <h3>Before the training</h3>
     <ul>
@@ -412,10 +425,11 @@ if flagship && flagship.ce_hours_details.blank?
   HTML
 end
 
-# The trauma-informed training also offers CE hours, with the default label.
+# The trauma-informed training also offers CE hours, with the default title.
 trauma = Event.find_by(title: "Facilitator Training: Trauma-Informed Art Practices")
-if trauma && trauma.ce_hours_details.blank?
-  trauma.update!(ce_hours_details: <<~HTML.strip)
+trauma_ce = trauma&.registration_ticket_callouts&.find_by(builtin_key: "ce_hours")
+if trauma_ce && trauma_ce.description.blank?
+  trauma_ce.update!(hidden: false, description: <<~HTML.strip)
     <p>This training is approved by CAMFT (provider #000000) for <strong>18 CE hours</strong> across its three days.</p>
     <ul>
       <li>Provide your license type and number at registration; a $25 CE processing fee applies.</li>
@@ -431,7 +445,7 @@ end
 # subtitle, and a paid-only callout that stays hidden until the registration is paid.
 # Idempotent: only seeded when the workshop has no callouts yet, so admin edits survive.
 art_workshop = Event.find_by(title: "Mindful Art for Survivors Workshop")
-if art_workshop && art_workshop.registration_ticket_callouts.none?
+if art_workshop && art_workshop.registration_ticket_callouts.custom.none?
   art_workshop.registration_ticket_callouts.create!(
     [
       {
@@ -644,7 +658,7 @@ callouts_by_event = {
 
 callouts_by_event.each do |event_title, component_keys|
   event = Event.find_by(title: event_title)
-  next unless event && event.registration_ticket_callouts.none?
+  next unless event && event.registration_ticket_callouts.custom.none?
 
   component_keys.each_with_index do |key, i|
     event.registration_ticket_callouts.create!(component_callouts.fetch(key).merge(position: i + 1))

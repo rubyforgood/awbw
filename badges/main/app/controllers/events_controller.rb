@@ -1,8 +1,8 @@
 class EventsController < ApplicationController
   include AhoyTracking, TagAssignable
-  skip_before_action :authenticate_user!, only: [ :index, :show, :staff, :details, :ce_hours ]
+  skip_before_action :authenticate_user!, only: [ :index, :show, :staff ]
   skip_before_action :verify_authenticity_token, only: [ :preview ]
-  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants onboarding details ce_hours staff edit_staff update_staff recipients bulk_payments preview_reminder confirm_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
+  before_action :set_event, only: %i[ show edit update destroy preview dashboard sample_ticket background registrants onboarding staff edit_staff update_staff recipients bulk_payments preview_reminder confirm_reminder send_reminder copy_registration_form allocate_bulk_payment create_bulk_payment ]
 
   def index
     authorize!
@@ -185,37 +185,6 @@ class EventsController < ApplicationController
     end
   end
 
-  # Public "Before you attend" page (materials, supplies, policies). Linked from
-  # the registration ticket. When no details are set there is nothing to show, so
-  # fall back to the event page.
-  def details
-    authorize! @event, to: :details?
-
-    callout = @event.registration_ticket_callouts.find_by(builtin_key: "event_details")
-    @event_details_title = callout&.title.presence || @event.event_details_label
-    @event_details_body = callout&.description.presence || @event.event_details
-
-    if @event_details_body.blank?
-      redirect_to event_path(@event, reg: params[:reg].presence)
-      return
-    end
-
-    @event = @event.decorate
-  end
-
-  # Public CE hours page (continuing education requirements, payment, sign-in
-  # rules). Linked from the registration ticket. When no details are set there
-  # is nothing to show, so fall back to the event page.
-  def ce_hours
-    authorize! @event, to: :ce_hours?
-
-    unless @event.ce_eligible?
-      redirect_to event_path(@event, reg: params[:reg].presence)
-      return
-    end
-
-    @event = @event.decorate
-  end
 
   def staff
     authorize! @event, to: :staff?
