@@ -89,9 +89,9 @@ RSpec.describe Event, type: :model do
   end
 
   describe "#videoconference_details_visible?" do
-    it "returns false when there is no start_date" do
+    it "returns true when there is no drip date to wait on (no start_date)" do
       event = build(:event, start_date: nil)
-      expect(event.videoconference_details_visible?).to be false
+      expect(event.videoconference_details_visible?).to be true
     end
 
     it "returns false more than a week before the start" do
@@ -117,6 +117,13 @@ RSpec.describe Event, type: :model do
       # Within the week-before default (which would be true), but before the
       # callout's later drip date.
       expect(event.videoconference_details_visible?).to be false
+    end
+
+    it "is visible immediately when the callout's drip date has been cleared" do
+      event = create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      create(:registration_ticket_callout, event:, magic_key: "videoconference", display_from: nil)
+
+      expect(event.videoconference_details_visible?).to be true
     end
   end
 

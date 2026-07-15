@@ -60,9 +60,12 @@
     <!-- CALENDAR LINKS -->
     <% calendar_registration = registered ? event.active_registration_for(current_user&.person) : slug_registration %>
     <div class="flex flex-col items-center mt-4">
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
-        Add to Your Calendar
-      </p>
+      <div class="flex items-center gap-1 mb-2">
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">
+          Add to Your Calendar
+        </p>
+        <%= render "events/videoconference_calendar_notice", event: event, registration: calendar_registration %>
+      </div>
       <div class="flex gap-2 items-center text-sm text-gray-700"><%= event.calendar_links(show_videoconference_details: calendar_registration&.videoconference_details_visible?) %></div>
     </div>
   <% end %>
