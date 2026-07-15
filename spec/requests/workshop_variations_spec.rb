@@ -200,6 +200,16 @@ RSpec.describe "/workshop_variations", type: :request do
         expect(response.body.index(var_a.name)).to be < response.body.index(var_b.name)
       end
 
+      it "renders an apostrophe in the name without double-escaping it" do
+        create(:workshop_variation, valid_attributes.merge(name: "New Year's Resolution"))
+
+        get workshop_variations_path,
+            headers: { "Turbo-Frame" => "workshop_variations_results" }
+
+        expect(response.body).to include("New Year&#39;s Resolution")
+        expect(response.body).not_to include("New Year&amp;#39;s Resolution")
+      end
+
       it "matches a search query against the credited author's name on the lazy turbo-frame request" do
         person = create(:person, first_name: "Bartholomew", last_name: "Quill")
         authored = create(:workshop_variation, valid_attributes.merge(name: "Authored variation", author: person))
