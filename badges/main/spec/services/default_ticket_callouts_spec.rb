@@ -154,6 +154,34 @@ RSpec.describe DefaultTicketCallouts do
       expect(handouts.resources).to eq([ first, second ])
     end
 
+    it "materializes each handout link's default subtitle and page content" do
+      title = "Aha Moments"
+      create(:resource, title: title)
+      event = create(:event)
+
+      described_class.seed(event)
+
+      handouts = event.registration_ticket_callouts.find_by(magic_key: "handouts")
+      link = handouts.registration_ticket_callout_resources.joins(:resource).find_by(resources: { title: })
+      defaults = DefaultTicketCallouts::HANDOUT_LINK_DEFAULTS[title]
+      expect(link.subtitle).to eq(defaults[:subtitle])
+      expect(link.page_content).to eq(defaults[:page_content])
+    end
+
+    it "flags edited link copy as customized and restores it on reset" do
+      create(:resource, title: "Aha Moments")
+      event = create(:event)
+      described_class.seed(event)
+      handouts = event.registration_ticket_callouts.find_by(magic_key: "handouts")
+      expect(described_class.customized?(handouts)).to be(false)
+
+      handouts.registration_ticket_callout_resources.first.update!(subtitle: "Edited")
+      expect(described_class.customized?(handouts.reload)).to be(true)
+
+      described_class.reset(handouts)
+      expect(described_class.customized?(handouts.reload)).to be(false)
+    end
+
     it "shows Handouts and FAQ by default on a facilitator training" do
       event = create(:event, facilitator_training: true)
 

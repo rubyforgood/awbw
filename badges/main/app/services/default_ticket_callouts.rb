@@ -54,6 +54,34 @@ class DefaultTicketCallouts
            "The membership fee covers all facilitators connected to the same program or organization for the calendar year, regardless of the number of facilitators participating. Only one membership fee payment is required per program annually." ] }
   ].freeze
 
+  # Default per-resource copy for the built-in handout links, keyed by resource
+  # title. `subtitle` is the short line on the handouts card; `page_content` is
+  # the longer copy shown under the title on the resource's own page. Materialized
+  # onto each join row so admins edit it per event (previously hard-coded in
+  # Events::CalloutsController::HANDOUT_SUBTITLES and rendered from there).
+  HANDOUT_LINK_DEFAULTS = {
+    "2-Day AWBW Facilitator Training Worksheets & Handouts" => {
+      subtitle: "Worksheets we'll reference throughout the training",
+      page_content: "List of resources and worksheets we will reference and utilize during the training. You do not need to print them out, it may be helpful for you to access the links during the training."
+    },
+    "AWBW Training Workshop Worksheets" => {
+      subtitle: "Create-along worksheets for the five art workshops",
+      page_content: "Worksheets you can create on during all 5 of the art workshops at the training. Any art materials are welcomed during creation."
+    },
+    "Aha Moments" => {
+      subtitle: "Reflect on the workshop and its impact",
+      page_content: "Worksheet you can use to reflect on the workshop, its impact, and how you'd like to apply it."
+    },
+    "Inviting and Responding to Participants' Sharing" => {
+      subtitle: "Support sharing and connection in breakout rooms",
+      page_content: "A resource to invite and support sharing, active listening, and connection during breakout rooms."
+    },
+    "Letter to Supervisors" => {
+      subtitle: "Secure the time and space to fully engage",
+      page_content: "Letter you can share to help relieve you from competing responsibilities during the two training days. So you can secure the time and space needed to fully engage in the training."
+    }
+  }.freeze
+
   # magic_keys this service knows how to materialize.
   def self.seedable_keys
     new(nil).send(:definitions).map { |definition| definition[:magic_key] }
@@ -104,7 +132,8 @@ class DefaultTicketCallouts
       hidden: definition[:hidden].call(@event),
       display_from: definition[:display_from]&.call(@event)
     )
-    callout.resources = definition[:resources]&.call || []
+    callout.registration_ticket_callout_resources.destroy_all
+    build_resource_links(callout, definition)
     callout
   end
 
@@ -120,7 +149,8 @@ class DefaultTicketCallouts
       callout.color_class != definition[:color_class] ||
       callout.hidden != definition[:hidden].call(@event) ||
       callout.display_from != definition[:display_from]&.call(@event) ||
-      callout.resource_ids.sort != Array(definition[:resources]&.call).map(&:id).sort
+      callout.resource_ids.sort != Array(definition[:resources]&.call).map(&:id).sort ||
+      resource_content_customized?(callout, definition)
   end
 
   private
@@ -150,7 +180,11 @@ class DefaultTicketCallouts
         # The W-9 is a removable linked resource, included by default only on paid
         # events (where a tax form applies); the invoice/receipt stay dynamic on
         # the payment page. Admins add/remove it per event.
-        resources: -> { @event.cost_cents.to_i.positive? ? [ Resource.find_by(title: "W-9") ].compact : [] }
+        resources: -> { @event.cost_cents.to_i.positive? ? [ Resource.find_by(title: "W-9") ].compact : [] },
+        # Its card subtitle is materialized here (admin-editable), not hard-coded in the view.
+        resource_content: {
+          "W-9" => { subtitle: "AWBW's W-9 tax form for your records" }
+        }
       },
       {
         magic_key: "certificate",
@@ -217,7 +251,9 @@ class DefaultTicketCallouts
         icon_class: "fa-solid fa-folder-open",
         color_class: "blue",
         hidden: ->(event) { !event.facilitator_training? },
-        resources: -> { handout_resources }
+        resources: -> { handout_resources },
+        # Per-link subtitle/page_content defaults, keyed by resource title.
+        resource_content: HANDOUT_LINK_DEFAULTS
       },
       {
         magic_key: "faq",
@@ -244,8 +280,37 @@ class DefaultTicketCallouts
       hidden: definition[:hidden].call(@event),
       display_from: definition[:display_from]&.call(@event)
     )
-    definition[:resources]&.call&.each { |resource| callout.resources << resource }
+    build_resource_links(callout, definition)
     callout
+  end
+
+  # Link the definition's resources in order, materializing each join row's
+  # subtitle/page_content from `resource_content` (keyed by resource title) when
+  # the definition supplies it. The positioning gem assigns each row's position.
+  def build_resource_links(callout, definition)
+    content = definition[:resource_content] || {}
+    Array(definition[:resources]&.call).each do |resource|
+      attrs = content[resource.title] || {}
+      callout.registration_ticket_callout_resources.create!(
+        resource: resource,
+        subtitle: attrs[:subtitle],
+        page_content: attrs[:page_content]
+      )
+    end
+  end
+
+  # Whether any link's subtitle/page_content has been edited away from its
+  # default, so "Restore default" is offered when only the copy was changed.
+  def resource_content_customized?(callout, definition)
+    content = definition[:resource_content]
+    return false if content.blank?
+
+    callout.registration_ticket_callout_resources.any? do |link|
+      defaults = content[link.resource.title]
+      next false if defaults.blank?
+      link.subtitle.to_s != defaults[:subtitle].to_s ||
+        link.page_content.to_s != defaults[:page_content].to_s
+    end
   end
 
   # The training worksheet resources, by title, in the display order the code
