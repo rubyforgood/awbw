@@ -122,7 +122,9 @@
            default; "Show all options" additionally reveals unpublished rows so admins
            can preview every card. -->
       <% payment_access = event_registration.payment_access_granted? || @checkout_payment_status == "paid" %>
-      <% callouts = preview && show_all ? event_registration.event.registration_ticket_callouts : event_registration.event.registration_ticket_callouts.visible %>
+      <%# Reads the loaded association (not the `.visible` scope) so a preloaded
+          real-ticket render doesn't issue a second query for the same rows. %>
+      <% callouts = preview && show_all ? event_registration.event.registration_ticket_callouts : event_registration.event.registration_ticket_callouts.select(&:published?) %>
       <% callouts.each do |callout| %>
         <% next if callout.payment_access_gated && !payment_access && !(preview && show_all) %>
         <% if callout.behavioral_builtin? %>
@@ -158,9 +160,7 @@
 
       <!-- Status -->
       <div class="text-center space-y-2">
-        <% if event_registration.checked_in? %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"> Checked in </span>
-        <% elsif event_registration.status == "cancelled" %>
+        <% if event_registration.status == "cancelled" %>
           <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"> Registration cancelled </span>
           <% if event_registration.event.registerable? %>
             <div><%= button_to "Register again", registration_reactivate_path(event_registration.slug),

@@ -24,16 +24,6 @@ module Events
       policy.object_src :self
     end
 
-    # Hidden Resource (by title) backing the handout links, in display order.
-    # Missing ones (e.g. not seeded in an environment) are silently skipped.
-    HANDOUT_RESOURCE_TITLES = [
-      "2-Day AWBW Facilitator Training Worksheets & Handouts",
-      "AWBW Training Workshop Worksheets",
-      "Aha Moments",
-      "Inviting and Responding to Participants' Sharing",
-      "Letter to Supervisors"
-    ].freeze
-
     # Payment page: the full allocation ledger with the running balance due, plus
     # the linked documents (the W-9 from the payment callout's resources, and the
     # dynamic invoice/receipt) for paid events.

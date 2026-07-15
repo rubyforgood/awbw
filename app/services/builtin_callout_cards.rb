@@ -143,16 +143,21 @@ class BuiltinCalloutCards
 
   # A built-in card the event has materialized into an editable row renders from
   # that row, not from #cards, so we skip it here to avoid double-rendering.
+  # Reads the (possibly preloaded) association in Ruby rather than a `.pluck`,
+  # so a preloaded ticket render doesn't issue a second query for the same rows.
   def materialized?(builtin_key)
-    @materialized_keys ||= event.registration_ticket_callouts.builtin.pluck(:builtin_key).to_set
+    @materialized_keys ||= event.registration_ticket_callouts.filter_map(&:builtin_key).to_set
     @materialized_keys.include?(builtin_key)
   end
 
   # Top card: an action card while a balance is due, a reference card once paid
   # in full. Its page lists every allocation with the running balance, plus the
   # linked documents (the W-9, and the invoice/receipt) for paid events.
+  # Unlike scholarship/CE/videoconference, payment never bypasses its gap in
+  # preview — a free event truly has no balance to preview, on a real ticket or
+  # a sample one, so there's nothing to click through.
   def payment_card
-    return if config_gap?("payment")
+    return if self.class.config_gap(event, "payment")
     due = registration.remaining_cost.to_i.positive?
     Card.new(icon_class: "fa-solid fa-credit-card", color: due ? "orange" : "blue",
              title: due ? "Make your payment" : "Payment",

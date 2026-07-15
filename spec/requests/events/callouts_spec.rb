@@ -412,4 +412,94 @@ RSpec.describe "Events::Callouts", type: :request do
       end
     end
   end
+
+  describe "GET /registration/:slug/certificate" do
+    let(:event) { create(:event, end_date: 2.days.ago) }
+    let(:registration) { create(:event_registration, event: event, status: "attended") }
+
+    it "renders once the certificate is unlocked" do
+      get registration_certificate_path(registration.slug)
+      expect(response).to have_http_status(:success)
+    end
+
+    it "redirects to the ticket when the certificate isn't unlocked yet" do
+      registration.update!(status: "registered")
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+  end
+
+  describe "POST /registration/:slug/ce/license" do
+    let(:event) { create(:event) }
+
+    context "with a CE registration on file" do
+      before do
+        license = create(:professional_license, person: registration.registrant, number: nil)
+        create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      end
+
+      it "saves the license and mirrors it onto the CE form answer" do
+        post registration_ce_license_path(registration.slug),
+          params: { license_number: "LIC-999", license_kind: "LCSW", license_issuing_state: "TN" }
+
+        expect(response).to redirect_to(registration_ce_path(registration.slug))
+        expect(flash[:notice]).to eq("License saved.")
+        expect(registration.reload.continuing_education_registrations.first.professional_license.number).to eq("LIC-999")
+      end
+
+      it "refuses to change the license once the certificate has been issued" do
+        registration.continuing_education_registrations.first.update!(certificate_sent_at: Time.current)
+
+        post registration_ce_license_path(registration.slug), params: { license_number: "LIC-999" }
+
+        expect(response).to redirect_to(registration_ce_path(registration.slug))
+        expect(flash[:alert]).to include("can no longer be changed here")
+      end
+    end
+
+    context "when no CE registration exists" do
+      it "redirects to the CE page" do
+        post registration_ce_license_path(registration.slug), params: { license_number: "LIC-999" }
+
+        expect(response).to redirect_to(registration_ce_path(registration.slug))
+      end
+    end
+  end
+
+  describe "POST /registration/:slug/ce/request" do
+    context "when the event offers CE hours" do
+      let(:event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000) }
+
+      it "creates a CE registration against a placeholder license and redirects" do
+        expect(registration.continuing_education_registrations).to be_empty
+
+        post registration_ce_request_path(registration.slug)
+
+        expect(response).to redirect_to(registration_ce_path(registration.slug))
+        expect(flash[:notice]).to eq("Continuing education credit requested.")
+        expect(registration.reload.continuing_education_registrations.count).to eq(1)
+      end
+
+      it "doesn't create a second CE registration if one already exists" do
+        license = create(:professional_license, person: registration.registrant)
+        create(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+        expect { post registration_ce_request_path(registration.slug) }
+          .not_to change { registration.reload.continuing_education_registrations.count }
+      end
+    end
+
+    context "when the event offers no CE hours" do
+      let(:event) { create(:event) }
+
+      it "redirects without creating a CE registration" do
+        post registration_ce_request_path(registration.slug)
+
+        expect(response).to redirect_to(registration_ce_path(registration.slug))
+        expect(registration.reload.continuing_education_registrations).to be_empty
+      end
+    end
+  end
 end
