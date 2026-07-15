@@ -69,6 +69,17 @@ RSpec.describe RegistrationTicketCallout, type: :model do
 
       expect(event.registration_ticket_callouts.visible).to eq([ shown ])
     end
+
+    it "#payment? is true only for the payment built-in" do
+      event = create(:event)
+      payment = create(:registration_ticket_callout, event:, magic_key: "payment")
+      other = create(:registration_ticket_callout, event:, magic_key: "faq")
+      custom = create(:registration_ticket_callout, event:, magic_key: nil)
+
+      expect(payment.payment?).to be(true)
+      expect(other.payment?).to be(false)
+      expect(custom.payment?).to be(false)
+    end
   end
 
   describe "#published (inverse of hidden)" do
