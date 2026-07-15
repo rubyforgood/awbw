@@ -227,11 +227,10 @@ class BuiltinCallouts
       },
       {
         builtin_key: "ce_hours",
-        # Title/text seed from the event's CE columns (migrating existing content);
-        # thereafter they live on the row like every other built-in. The row also
-        # carries the CE hours-offered/cost config.
-        title: ->(event) { event.ce_hours_details_label },
-        description: ->(event) { event.ce_hours_details },
+        # Title/text live on the row like every other built-in; admins fill in the
+        # CE requirements copy per event. The row also carries the CE
+        # hours-offered/cost config.
+        title: "CE hours",
         subtitle: "Continuing education — requirements & how to request",
         callout_type: "action",
         icon_class: "fa-solid fa-graduation-cap",
@@ -239,11 +238,10 @@ class BuiltinCallouts
         hidden: ->(_event) { true }
       },
       {
-        builtin_key: "event_details",
-        # Title/text seed from the event's details columns (migrating existing
-        # content); thereafter they live on the row.
-        title: ->(event) { event.event_details_label },
-        description: ->(event) { event.event_details },
+        builtin_key: "art_supplies",
+        # A content callout: renders its own editable copy on the generic callout
+        # page. Admins add the "what to bring" details per event.
+        title: "Art supplies & what to bring",
         subtitle: "Important info for this event — please read",
         callout_type: "reference",
         icon_class: "fa-solid fa-palette",
