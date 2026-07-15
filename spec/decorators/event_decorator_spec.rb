@@ -23,6 +23,18 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#compact_label" do
+    it "returns the abbreviation when present" do
+      event = build(:event, title: "Trauma-Informed Onsite", abbreviation: "TOS205").decorate
+      expect(event.compact_label).to eq("TOS205")
+    end
+
+    it "falls back to the full title when abbreviation is blank" do
+      event = build(:event, title: "Trauma-Informed Onsite", abbreviation: "").decorate
+      expect(event.compact_label).to eq("Trauma-Informed Onsite")
+    end
+  end
+
   describe "#videoconference_room" do
     it "pulls the Zoom meeting ID from the join URL and groups the digits" do
       event = build(:event, videoconference_url: "https://awbw-org.zoom.us/j/88285411273").decorate

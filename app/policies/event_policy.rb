@@ -116,6 +116,7 @@ class EventPolicy < ApplicationPolicy
                   :created_by_id,
                   :location_id,
                   :title,
+                  :abbreviation,
                   :pre_title,
                   :videoconference_url,
                   :videoconference_label,

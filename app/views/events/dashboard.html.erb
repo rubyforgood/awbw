@@ -8,7 +8,7 @@
 
   <%# Centered title block %>
   <div class="text-center mb-8">
-    <%= link_to @event.title, edit_event_path(@event), class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
+    <%= link_to @event.decorate.compact_label, edit_event_path(@event), title: @event.title, class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
     <% if @event.start_date.present? %>
       <p class="text-sm text-gray-500 mt-1">
         <%= @event.date_range %>

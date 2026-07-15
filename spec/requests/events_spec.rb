@@ -121,6 +121,14 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Free open house")
       end
 
+      it "labels an event by its abbreviation when set, keeping the full title as a tooltip" do
+        paid_training.update!(abbreviation: "TAC261")
+        sign_in admin
+        get revenue_events_path
+        expect(response.body).to include("TAC261")
+        expect(response.body).to include('title="TAC 261"')
+      end
+
       it "returns to the originating event's dashboard when arrived from it" do
         sign_in admin
         get revenue_events_path(return_to: "dashboard", event_id: paid_training.id)
