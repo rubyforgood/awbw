@@ -4,6 +4,14 @@
 # Scoped conservatively: mechanical HTML/ERB formatting linters plus a small,
 # fully autocorrectable RuboCop subset mirroring our omakase style rules.
 EnableDefaultLinters: false
+# --lint-all globs every *.html.erb under the repo. In CI, `bundler-cache`
+# installs gems into vendor/bundle, so without this exclude erb_lint would lint
+# third-party gem templates. (RuboCop excludes vendor by default; erb_lint does
+# not.) Paths are matched from the repo root.
+exclude:
+  - vendor/**/*
+  - node_modules/**/*
+  - tmp/**/*
 linters:
   # --- ERB/HTML formatting (all autocorrectable) ---
   SpaceAroundErbTag:
