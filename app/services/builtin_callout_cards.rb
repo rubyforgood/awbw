@@ -89,6 +89,8 @@ class BuiltinCalloutCards
       "this event has no scholarship form" if event.scholarship_form.blank?
     when "ce_hours"
       "this event offers no CE hours" unless event.ce_eligible?
+    when "videoconference"
+      "this event has no videoconference link" if event.videoconference_url.blank?
     end
   end
 
@@ -284,7 +286,7 @@ class BuiltinCalloutCards
 
   # Shown only when the event has a videoconference URL set.
   def videoconference_card
-    return if event.videoconference_url.blank?
+    return if self.class.config_gap(event, "videoconference")
     Card.new(icon_class: "fa-solid fa-video", color: "blue",
              title: "Videoconference",
              subtitle: "Join link and how to add it to your calendar",

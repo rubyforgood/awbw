@@ -47,6 +47,11 @@ RSpec.describe RegistrationTicketCalloutDecorator, type: :decorator do
       expect(callout.decorate.ticket_suppression_reason).to include("offers no CE hours")
     end
 
+    it "warns when a published videoconference callout's event has no join link" do
+      callout = builtin_callout("videoconference", event: create(:event, videoconference_url: nil))
+      expect(callout.decorate.ticket_suppression_reason).to include("no videoconference link")
+    end
+
     it "is nil when the event is configured for the callout" do
       callout = builtin_callout("payment", event: create(:event, cost_cents: 5_000))
       expect(callout.decorate.ticket_suppression_reason).to be_nil

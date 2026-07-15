@@ -2,8 +2,9 @@ class RegistrationTicketCalloutDecorator < ApplicationDecorator
   # For the editor's amber warning badge: when this published built-in callout can
   # never reach the ticket because the event isn't configured for it (free event →
   # no payment card, no scholarship form → no scholarship card, no CE hours → no CE
-  # card), the reason to show; nil when it will show (or it's hidden/custom). Shares
-  # BuiltinCalloutCards.config_gap so the badge and the ticket guard can't drift.
+  # card, no videoconference link → no videoconference card), the reason to show;
+  # nil when it will show (or it's hidden/custom). Shares BuiltinCalloutCards.config_gap
+  # so the badge and the ticket guard can't drift.
   def ticket_suppression_reason
     return unless published? && builtin?
     gap = BuiltinCalloutCards.config_gap(event, builtin_key)
