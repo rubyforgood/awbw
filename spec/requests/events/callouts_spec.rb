@@ -3,72 +3,62 @@ require "rails_helper"
 RSpec.describe "Events::Callouts", type: :request do
   let(:registration) { create(:event_registration, event: event) }
 
-  # These pages are reachable by slug (no login), so the built-in callout
-  # visibility rules are the only gate. Hidden callouts redirect back to the
-  # ticket so a stray link can't surface training content on a non-training event.
+  # These pages are reachable by slug (no login), so the built-in callout's
+  # published state is the only gate. A hidden (or not-yet-materialized) callout
+  # redirects back to the ticket so a stray link can't surface it.
+  let(:event) { create(:event) }
+
   describe "GET /registration/:slug/faq" do
-    context "on a facilitator training" do
-      let(:event) { create(:event, facilitator_training: true) }
-
-      it "renders the FAQ as collapsible toggles from the default content" do
-        get registration_faq_path(registration.slug)
-        expect(response).to have_http_status(:success)
-        expect(response.body).to include("<details")
-        expect(response.body).to include("Who is this training designed for?")
-      end
-
-      it "renders the editable FAQ callout copy when the card is materialized" do
-        DefaultTicketCallouts.seed(event)
-        faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
-        faq.update!(description: "<details><summary>Custom question</summary><p>Custom answer</p></details>")
-
-        get registration_faq_path(registration.slug)
-        expect(response.body).to include("Custom question")
-        expect(response.body).to include("Custom answer")
-        expect(response.body).not_to include("Who is this training designed for?")
-      end
+    it "renders the FAQ as collapsible toggles from the default content when published" do
+      BuiltinCallouts.seed(event)
+      event.registration_ticket_callouts.find_by(builtin_key: "faq").update!(hidden: false)
+      get registration_faq_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("<details")
+      expect(response.body).to include("Who is this training designed for?")
     end
 
-    context "on a non-training event" do
-      let(:event) { create(:event, facilitator_training: false) }
+    it "renders the editable FAQ callout copy when the card is materialized" do
+      BuiltinCallouts.seed(event)
+      faq = event.registration_ticket_callouts.find_by(builtin_key: "faq")
+      faq.update!(description: "<details><summary>Custom question</summary><p>Custom answer</p></details>", hidden: false)
 
-      it "redirects to the ticket" do
-        get registration_faq_path(registration.slug)
-        expect(response).to redirect_to(registration_ticket_path(registration.slug))
-      end
+      get registration_faq_path(registration.slug)
+      expect(response.body).to include("Custom question")
+      expect(response.body).to include("Custom answer")
+      expect(response.body).not_to include("Who is this training designed for?")
+    end
+
+    it "redirects to the ticket when the callout is hidden or absent" do
+      get registration_faq_path(registration.slug)
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
     end
   end
 
   describe "GET /registration/:slug/handouts" do
-    context "on a facilitator training" do
-      let(:event) { create(:event, facilitator_training: true) }
-
-      it "renders the handouts page" do
-        get registration_handouts_path(registration.slug)
-        expect(response).to have_http_status(:success)
-      end
-
-      it "shows each linked resource card with its join-row subtitle" do
-        callout = create(:registration_ticket_callout, event:, magic_key: "handouts")
-        resource = create(:resource, title: "Aha Moments")
-        create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
-               resource:, subtitle: "Reflect on the workshop", page_content: "Long detail copy.")
-
-        get registration_handouts_path(registration.slug)
-
-        expect(response.body).to include("Reflect on the workshop")
-        # Page content is detail-page only, never on the card.
-        expect(response.body).not_to include("Long detail copy.")
-      end
+    it "renders the handouts page when its callout is published" do
+      create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false)
+      get registration_handouts_path(registration.slug)
+      expect(response).to have_http_status(:success)
     end
 
-    context "on a non-training event" do
-      let(:event) { create(:event, facilitator_training: false) }
+    it "shows each linked resource card with its join-row subtitle" do
+      callout = create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false)
+      resource = create(:resource, title: "Aha Moments")
+      create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
+             resource:, subtitle: "Reflect on the workshop", page_content: "Long detail copy.")
 
-      it "redirects to the ticket" do
-        get registration_handouts_path(registration.slug)
-        expect(response).to redirect_to(registration_ticket_path(registration.slug))
-      end
+      get registration_handouts_path(registration.slug)
+
+      expect(response.body).to include("Reflect on the workshop")
+      # Page content is detail-page only, never on the card.
+      expect(response.body).not_to include("Long detail copy.")
+    end
+
+    it "redirects to the ticket when the callout is hidden" do
+      create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: true)
+      get registration_handouts_path(registration.slug)
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
     end
   end
 
@@ -76,7 +66,7 @@ RSpec.describe "Events::Callouts", type: :request do
     let(:event) { create(:event, cost_cents: 10_000) }
 
     it "shows the W-9 document's materialized join-row subtitle, not hard-coded copy" do
-      callout = create(:registration_ticket_callout, event:, magic_key: "payment")
+      callout = create(:registration_ticket_callout, event:, builtin_key: "payment")
       w9 = create(:resource, title: "W-9")
       create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
              resource: w9, subtitle: "Custom W-9 line")
@@ -97,7 +87,7 @@ RSpec.describe "Events::Callouts", type: :request do
     it "links resources on the built-in callout to their own page, not inline" do
       resource = create(:resource)
       create(:downloadable_asset, owner: resource)
-      create(:registration_ticket_callout, event:, magic_key: "videoconference",
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference",
         title: "Videoconference", resources: [ resource ])
 
       get registration_videoconference_path(registration.slug)
@@ -189,7 +179,7 @@ RSpec.describe "Events::Callouts", type: :request do
       let(:resource) { create(:resource) }
 
       it "shows the join row's page content below the title" do
-        callout = create(:registration_ticket_callout, event:, magic_key: "handouts")
+        callout = create(:registration_ticket_callout, event:, builtin_key: "handouts")
         create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
                resource:, subtitle: "Short card line", page_content: "The longer page content copy.")
 
@@ -201,7 +191,7 @@ RSpec.describe "Events::Callouts", type: :request do
       end
 
       it "shows no page content when the resource isn't linked to the origin callout" do
-        create(:registration_ticket_callout, :magic, event:, magic_key: "handouts")
+        create(:registration_ticket_callout, :builtin, event:, builtin_key: "handouts")
 
         get registration_resource_path(registration.slug, resource, return_to: "handouts")
 

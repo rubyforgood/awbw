@@ -1,13 +1,20 @@
-# "Magic" ticket callouts are code-defined cards on a registration ticket whose
-# presence and content the app controls — unlike admin-configured
-# RegistrationTicketCallouts, which admins create and reorder. Each magic card
-# knows its own visibility rule (e.g. the payment card switches between an action
-# and a reference card depending on whether a balance is due) and where it links.
+# Renders the live, per-registration cards for a registrant's ticket. Given an
+# EventRegistration, it turns each built-in callout into a display Card whose
+# dynamic parts depend on that registration — the Payment card's balance and
+# colour, the Certificate card only once it's unlocked, the Scholarship badge, and
+# so on. Each card exposes the _callout_card partial's interface
+# (#display_icon_class, #theme, #title, #subtitle) plus #href / #target /
+# #trailing_icon.
 #
-# They render through the same _callout_card partial as admin callouts, so each
-# card exposes that partial's presentation interface (#display_icon_class,
-# #theme, #title, #subtitle) plus its own #href / #target / #trailing_icon.
-class MagicTicketCallouts
+# `#card_for(row)` overlays this live status onto a materialized built-in row: the
+# row supplies the admin-edited title/subtitle/colour, this service supplies the
+# badge, status colour, visibility guard, and destination. `#cards` is the code
+# fallback for events whose built-ins aren't materialized yet. `.editor_cards`
+# builds the greyed preview cards shown in the event editor.
+#
+# The callouts' definitions and materialization live in BuiltinCallouts; this
+# service is only about how they render on a ticket.
+class BuiltinCalloutCards
   include Rails.application.routes.url_helpers
 
   # `badge` / `badge_classes` are an optional status chip shown inline in the
@@ -26,12 +33,12 @@ class MagicTicketCallouts
   # A registration-free description of one built-in card, for the event editor's
   # callouts section. `key` is :ce_hours / :event_details for the two whose text
   # admins edit via event columns; nil for the cards the app fully controls (shown
-  # greyed out). `magic_key` ties the card to its ticket behavior — once an event
+  # greyed out). `builtin_key` ties the card to its ticket behavior — once an event
   # has materialized that key into an editable row, the preview is dropped here and
   # the row is edited in the callout list instead. `subtitle` mirrors the card's
   # ticket subtitle; `visibility` describes when the app shows it (rendered next to
   # the "Built in" chip); `note` is an optional hint on where content comes from.
-  EditorCard = Data.define(:key, :magic_key, :icon_class, :color, :title, :subtitle, :visibility, :note) do
+  EditorCard = Data.define(:key, :builtin_key, :icon_class, :color, :title, :subtitle, :visibility, :note) do
     def theme = DomainTheme.swatch(color)
     def editable? = key.present?
   end
@@ -41,7 +48,9 @@ class MagicTicketCallouts
   # materialized are omitted — they're edited as real rows in the callout list.
   # Keep in sync with #cards: add a card method, add it here.
   def self.editor_cards(event)
-    materialized = event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
+    # Read the loaded/in-memory rows (not a DB pluck) so a new event's just-built,
+    # not-yet-saved built-in rows count as materialized and aren't also previewed.
+    materialized = event.registration_ticket_callouts.reject(&:marked_for_destruction?).filter_map(&:builtin_key).to_set
     [
       EditorCard.new(nil, "payment", "fa-solid fa-credit-card", "orange", "Payment", "Your balance and payment history", "When the event has a cost", nil),
       EditorCard.new(nil, "certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
@@ -49,19 +58,20 @@ class MagicTicketCallouts
       EditorCard.new(nil, "videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
       EditorCard.new(nil, "handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
       EditorCard.new(nil, "faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
-    ].reject { |card| card.key.nil? && materialized.include?(card.magic_key) }
+    ].reject { |card| card.key.nil? && materialized.include?(card.builtin_key) }
   end
 
-  # magic_key → builder method, in the default order cards appear on a ticket.
+  # builtin_key → builder method, in the default order cards appear on a ticket.
+  # Handouts and FAQ are pure content cards: they only ever render from their
+  # materialized row (the ticket's content branch), never from code, so they
+  # have no builder here.
   CARD_BUILDERS = {
     "payment" => :payment_card,
     "certificate" => :certificate_card,
     "scholarship" => :scholarship_status_card,
     "ce_hours" => :ce_hours_card,
     "event_details" => :event_details_card,
-    "videoconference" => :videoconference_card,
-    "handouts" => :handouts_card,
-    "faq" => :faq_card
+    "videoconference" => :videoconference_card
   }.freeze
 
   def initialize(event_registration)
@@ -74,7 +84,7 @@ class MagicTicketCallouts
   # those from the row (calling #card_for for behavioral ones), so this is both the
   # non-materialized set and the fallback for events not yet seeded.
   def cards
-    CARD_BUILDERS.reject { |magic_key, _| materialized?(magic_key) || skip_in_fallback?(magic_key) }
+    CARD_BUILDERS.reject { |builtin_key, _| materialized?(builtin_key) || skip_in_fallback?(builtin_key) }
                  .filter_map { |_, builder| send(builder) }
   end
 
@@ -84,11 +94,11 @@ class MagicTicketCallouts
   # destination link); the row supplies the editable presentation (title,
   # subtitle, colour, icon), so admin edits to those take effect on the ticket.
   def card_for(callout)
-    builder = CARD_BUILDERS[callout.magic_key]
+    builder = CARD_BUILDERS[callout.builtin_key]
     base = builder && send(builder)
     return unless base
     # Event details links to its page only when it has content to show.
-    return if callout.magic_key == "event_details" && callout.description.blank?
+    return if callout.builtin_key == "event_details" && callout.description.blank?
 
     base.with(
       title: callout.title,
@@ -106,15 +116,15 @@ class MagicTicketCallouts
 
   # A built-in card the event has materialized into an editable row renders from
   # that row, not from #cards, so we skip it here to avoid double-rendering.
-  def materialized?(magic_key)
-    @materialized_keys ||= event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
-    @materialized_keys.include?(magic_key)
+  def materialized?(builtin_key)
+    @materialized_keys ||= event.registration_ticket_callouts.builtin.pluck(:builtin_key).to_set
+    @materialized_keys.include?(builtin_key)
   end
 
   # In the unseeded fallback, event-details content lives on the event column, so
   # hide the card when it's blank (the row path checks the row in #card_for).
-  def skip_in_fallback?(magic_key)
-    magic_key == "event_details" && event.event_details.blank?
+  def skip_in_fallback?(builtin_key)
+    builtin_key == "event_details" && event.event_details.blank?
   end
 
   # Top card: an action card while a balance is due, a reference card once paid
@@ -259,28 +269,6 @@ class MagicTicketCallouts
              title: "Videoconference",
              subtitle: "Join link and how to add it to your calendar",
              href: registration_videoconference_path(registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-arrow-right")
-  end
-
-  # Links to the 2-day training worksheets and handouts, so shown only on
-  # facilitator trainings — see Event#show_handouts_callout?.
-  def handouts_card
-    return unless event.show_handouts_callout?
-    Card.new(icon_class: "fa-solid fa-folder-open", color: "blue",
-             title: "Handouts",
-             subtitle: "Worksheets and resources for the training",
-             href: registration_handouts_path(registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-arrow-right")
-  end
-
-  # Reference card linking to the 2-day training FAQ page, so shown only on
-  # facilitator trainings — see Event#show_faq_callout?.
-  def faq_card
-    return unless event.show_faq_callout?
-    Card.new(icon_class: "fa-solid fa-circle-question", color: "blue",
-             title: "Frequently asked questions",
-             subtitle: "Common questions about the 2-day training",
-             href: registration_faq_path(registration.slug),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 end

@@ -218,7 +218,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
 
     it "resets a callout flagged reset_to_default on the main save" do
       training = create(:event, :publicly_visible, facilitator_training: true)
-      callout = create(:registration_ticket_callout, event: training, magic_key: "faq", title: "Edited", hidden: true)
+      callout = create(:registration_ticket_callout, event: training, builtin_key: "faq", title: "Edited", hidden: false)
 
       patch event_path(training), params: {
         event: {
@@ -230,7 +230,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
       }
 
       expect(callout.reload.title).to eq("Frequently asked questions")
-      expect(callout.hidden).to be(false)
+      expect(callout.hidden).to be(true) # restored to the built-in default (hidden)
     end
   end
 
@@ -242,7 +242,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
         event: { title: event.title, start_date: event.start_date, end_date: event.end_date }
       }
 
-      expect(event.registration_ticket_callouts.magic.pluck(:magic_key)).to contain_exactly(
+      expect(event.registration_ticket_callouts.builtin.pluck(:builtin_key)).to contain_exactly(
         "payment", "certificate", "scholarship", "ce_hours", "event_details",
         "videoconference", "handouts", "faq"
       )
@@ -253,7 +253,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
     before { sign_in admin }
 
     it "renders a materialized content callout as an editable field with a restore checkbox" do
-      create(:registration_ticket_callout, event:, magic_key: "faq",
+      create(:registration_ticket_callout, event:, builtin_key: "faq",
         title: "Frequently asked questions")
 
       get edit_event_path(event)
@@ -263,8 +263,8 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response.body).to include("name=\"event[registration_ticket_callouts_attributes][0][reset_to_default]\"")
     end
 
-    it "renders a behavioral magic callout with the same editable fields as a custom one" do
-      create(:registration_ticket_callout, event:, magic_key: "certificate",
+    it "renders a behavioral built-in callout with the same editable fields as a custom one" do
+      create(:registration_ticket_callout, event:, builtin_key: "certificate",
         title: "Certificate of completion")
 
       get edit_event_path(event)
@@ -279,8 +279,8 @@ RSpec.describe "Registration ticket callouts", type: :request do
 
     it "shows the restore checkbox only once the built-in has been customized" do
       # Seed unedited built-ins, then load the editor.
-      DefaultTicketCallouts.seed(event)
-      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+      BuiltinCallouts.seed(event)
+      faq = event.registration_ticket_callouts.find_by(builtin_key: "faq")
 
       get edit_event_path(event)
       expect(response.body).to include("Matches default")
@@ -293,7 +293,7 @@ RSpec.describe "Registration ticket callouts", type: :request do
 
     it "gives the Payment card an add-another linked-resource picker" do
       resource = create(:resource, title: "W-9")
-      create(:registration_ticket_callout, event:, magic_key: "payment", title: "Payment", resources: [ resource ])
+      create(:registration_ticket_callout, event:, builtin_key: "payment", title: "Payment", resources: [ resource ])
 
       get edit_event_path(event)
 

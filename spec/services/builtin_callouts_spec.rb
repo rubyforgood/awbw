@@ -1,13 +1,50 @@
 require "rails_helper"
 
-RSpec.describe DefaultTicketCallouts do
+RSpec.describe BuiltinCallouts do
+  describe "#build" do
+    it "builds all eight built-ins as unsaved in-memory rows on a new event" do
+      event = Event.new
+
+      built = described_class.build(event)
+
+      expect(built.map(&:builtin_key)).to contain_exactly(
+        "payment", "certificate", "scholarship", "ce_hours", "event_details",
+        "videoconference", "handouts", "faq"
+      )
+      expect(built).to all(be_new_record)
+      expect(event.registration_ticket_callouts).to match_array(built)
+    end
+
+    it "is idempotent — skips keys already present on the association" do
+      event = create(:event)
+      described_class.seed(event)
+
+      built = described_class.build(event)
+
+      expect(built).to be_empty
+      expect(event.registration_ticket_callouts.builtin.count).to eq(8)
+    end
+
+    it "builds a paid event's Payment card with the W-9 link (subtitle) in memory" do
+      w9 = create(:resource, title: "W-9")
+      event = Event.new(cost_cents: 5_000)
+
+      described_class.build(event)
+
+      payment = event.registration_ticket_callouts.find { |c| c.builtin_key == "payment" }
+      link = payment.registration_ticket_callout_resources.find { |r| r.resource == w9 }
+      expect(link).to be_present
+      expect(link.subtitle).to eq("AWBW's W-9 tax form for your records")
+    end
+  end
+
   describe "#seed" do
     it "materializes all eight built-in callouts for every event" do
       event = create(:event, cost_cents: 0) # free, no scholarship form, no VC link
 
       described_class.seed(event)
 
-      keys = event.registration_ticket_callouts.magic.pluck(:magic_key)
+      keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
       expect(keys).to contain_exactly(
         "payment", "certificate", "scholarship", "ce_hours", "event_details",
         "videoconference", "handouts", "faq"
@@ -22,7 +59,7 @@ RSpec.describe DefaultTicketCallouts do
 
       described_class.seed(event)
 
-      expect(event.registration_ticket_callouts.ordered.map(&:magic_key)).to eq(
+      expect(event.registration_ticket_callouts.ordered.map(&:builtin_key)).to eq(
         %w[payment certificate scholarship ce_hours event_details videoconference handouts faq]
       )
     end
@@ -31,40 +68,25 @@ RSpec.describe DefaultTicketCallouts do
       event = create(:event, start_date: Date.new(2026, 9, 10))
       described_class.seed(event)
 
-      vc = event.registration_ticket_callouts.find_by(magic_key: "videoconference")
+      vc = event.registration_ticket_callouts.find_by(builtin_key: "videoconference")
       expect(vc).to be_present
       expect(vc.display_from.to_date).to eq(Date.new(2026, 9, 3))
       expect(vc.hidden).to be(true) # non-training: hidden by default
     end
 
-    it "hides all callouts by default on a non-training event, shows all on a facilitator training" do
-      form = create(:form)
+    it "hides every callout by default, regardless of facilitator training" do
       non_training = create(:event, cost_cents: 0)
-      non_training.event_forms.create!(form:, role: "scholarship")
       training = create(:event, :publicly_visible, facilitator_training: true, cost_cents: 100,
         videoconference_url: "https://example.com/vc")
-      training.event_forms.create!(form:, role: "scholarship")
 
       described_class.seed(non_training)
       described_class.seed(training)
 
-      non_training.registration_ticket_callouts.magic.each do |callout|
-        expect(callout.hidden).to be(true), "expected #{callout.magic_key} hidden on non-training"
+      [ non_training, training ].each do |event|
+        event.registration_ticket_callouts.builtin.each do |callout|
+          expect(callout.hidden).to be(true), "expected #{callout.builtin_key} hidden by default"
+        end
       end
-      training.registration_ticket_callouts.magic.each do |callout|
-        expect(callout.hidden).to be(false), "expected #{callout.magic_key} visible on training"
-      end
-    end
-
-    it "defaults Certificate off for a non-training event and on for a facilitator training" do
-      non_training = create(:event, facilitator_training: false)
-      training = create(:event, facilitator_training: true)
-
-      described_class.seed(non_training)
-      described_class.seed(training)
-
-      expect(non_training.registration_ticket_callouts.find_by(magic_key: "certificate").hidden).to be(true)
-      expect(training.registration_ticket_callouts.find_by(magic_key: "certificate").hidden).to be(false)
     end
 
     it "links the W-9 to the Payment card as a removable resource on paid events" do
@@ -73,7 +95,7 @@ RSpec.describe DefaultTicketCallouts do
 
       described_class.seed(event)
 
-      payment = event.registration_ticket_callouts.find_by(magic_key: "payment")
+      payment = event.registration_ticket_callouts.find_by(builtin_key: "payment")
       expect(payment.resources).to eq([ w9 ])
     end
 
@@ -83,7 +105,7 @@ RSpec.describe DefaultTicketCallouts do
 
       described_class.seed(event)
 
-      payment = event.registration_ticket_callouts.find_by(magic_key: "payment")
+      payment = event.registration_ticket_callouts.find_by(builtin_key: "payment")
       expect(payment).to be_present
       expect(payment.resources).to be_empty # no W-9 on a free event
     end
@@ -95,8 +117,8 @@ RSpec.describe DefaultTicketCallouts do
 
       described_class.seed(event)
 
-      ce = event.registration_ticket_callouts.find_by(magic_key: "ce_hours")
-      details = event.registration_ticket_callouts.find_by(magic_key: "event_details")
+      ce = event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
+      details = event.registration_ticket_callouts.find_by(builtin_key: "event_details")
       expect(ce.title).to eq("Continuing education")
       expect(ce.description).to eq("<p>CAMFT approved.</p>")
       expect(details.title).to eq("Art supplies")
@@ -108,7 +130,7 @@ RSpec.describe DefaultTicketCallouts do
     it "reports whether a materialized callout has been customized" do
       event = create(:event, facilitator_training: true)
       described_class.seed(event)
-      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+      faq = event.registration_ticket_callouts.find_by(builtin_key: "faq")
 
       expect(described_class.customized?(faq)).to be(false)
 
@@ -122,7 +144,7 @@ RSpec.describe DefaultTicketCallouts do
     it "treats a changed drip display date as customized" do
       event = create(:event, facilitator_training: true)
       described_class.seed(event)
-      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+      faq = event.registration_ticket_callouts.find_by(builtin_key: "faq")
 
       expect(described_class.customized?(faq)).to be(false)
 
@@ -138,7 +160,7 @@ RSpec.describe DefaultTicketCallouts do
 
       described_class.seed(event)
 
-      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+      faq = event.registration_ticket_callouts.find_by(builtin_key: "faq")
       expect(faq.description).to include("Who is this training designed for?")
       expect(faq.callout_type).to eq("reference")
     end
@@ -150,7 +172,7 @@ RSpec.describe DefaultTicketCallouts do
 
       described_class.seed(event)
 
-      handouts = event.registration_ticket_callouts.find_by(magic_key: "handouts")
+      handouts = event.registration_ticket_callouts.find_by(builtin_key: "handouts")
       expect(handouts.resources).to eq([ first, second ])
     end
 
@@ -161,9 +183,9 @@ RSpec.describe DefaultTicketCallouts do
 
       described_class.seed(event)
 
-      handouts = event.registration_ticket_callouts.find_by(magic_key: "handouts")
+      handouts = event.registration_ticket_callouts.find_by(builtin_key: "handouts")
       link = handouts.registration_ticket_callout_resources.joins(:resource).find_by(resources: { title: })
-      defaults = DefaultTicketCallouts::HANDOUT_LINK_DEFAULTS[title]
+      defaults = BuiltinCallouts::HANDOUT_LINK_DEFAULTS[title]
       expect(link.subtitle).to eq(defaults[:subtitle])
       expect(link.page_content).to eq(defaults[:page_content])
     end
@@ -172,7 +194,7 @@ RSpec.describe DefaultTicketCallouts do
       create(:resource, title: "Aha Moments")
       event = create(:event)
       described_class.seed(event)
-      handouts = event.registration_ticket_callouts.find_by(magic_key: "handouts")
+      handouts = event.registration_ticket_callouts.find_by(builtin_key: "handouts")
       expect(described_class.customized?(handouts)).to be(false)
 
       handouts.registration_ticket_callout_resources.first.update!(subtitle: "Edited")
@@ -182,26 +204,18 @@ RSpec.describe DefaultTicketCallouts do
       expect(described_class.customized?(handouts.reload)).to be(false)
     end
 
-    it "shows Handouts and FAQ by default on a facilitator training" do
+    it "hides Handouts and FAQ by default (no config signal auto-publishes them)" do
       event = create(:event, facilitator_training: true)
 
       described_class.seed(event)
 
-      expect(event.registration_ticket_callouts.where(magic_key: %w[handouts faq]).pluck(:hidden)).to all(be(false))
+      expect(event.registration_ticket_callouts.where(builtin_key: %w[handouts faq]).pluck(:hidden)).to all(be(true))
     end
 
-    it "hides Handouts and FAQ by default on a non-training event" do
-      event = create(:event, facilitator_training: false)
-
-      described_class.seed(event)
-
-      expect(event.registration_ticket_callouts.where(magic_key: %w[handouts faq]).pluck(:hidden)).to all(be(true))
-    end
-
-    it "is idempotent and never clobbers an existing magic callout" do
+    it "is idempotent and never clobbers an existing built-in callout" do
       event = create(:event, facilitator_training: true)
       described_class.seed(event)
-      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+      faq = event.registration_ticket_callouts.find_by(builtin_key: "faq")
       faq.update!(description: "<p>Custom answer.</p>", hidden: true)
 
       expect { described_class.seed(event) }.not_to change { event.registration_ticket_callouts.count }
@@ -209,40 +223,40 @@ RSpec.describe DefaultTicketCallouts do
       expect(faq.hidden).to be(true)
     end
 
-    it "appends the magic callouts after existing custom ones" do
+    it "appends the built-in callouts after existing custom ones" do
       event = create(:event)
       custom = create(:registration_ticket_callout, event:, title: "Parking")
 
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
-      expect(event.registration_ticket_callouts.ordered.map(&:magic_key).compact).to eq(
+      expect(event.registration_ticket_callouts.ordered.map(&:builtin_key).compact).to eq(
         %w[payment certificate scholarship ce_hours event_details videoconference handouts faq]
       )
     end
   end
 
   describe ".reset" do
-    it "restores an edited magic callout's content, resources, and visibility to default" do
+    it "restores an edited built-in callout's content, resources, and visibility to default" do
       resource = create(:resource, title: "AWBW Training Workshop Worksheets")
       event = create(:event, facilitator_training: true)
       described_class.seed(event)
-      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
-      faq.update!(title: "Custom", description: "<p>Edited</p>", hidden: true)
+      faq = event.registration_ticket_callouts.find_by(builtin_key: "faq")
+      faq.update!(title: "Custom", description: "<p>Edited</p>", hidden: false)
       faq.resources << resource
 
       described_class.reset(faq)
 
       expect(faq.reload.title).to eq("Frequently asked questions")
       expect(faq.description).to include("Who is this training designed for?")
-      expect(faq.hidden).to be(false)
+      expect(faq.hidden).to be(true)
       expect(faq.resources).to be_empty
     end
 
     it "keeps the callout's position when restoring" do
       event = create(:event, facilitator_training: true)
       described_class.seed(event)
-      faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+      faq = event.registration_ticket_callouts.find_by(builtin_key: "faq")
       original_position = faq.position
 
       described_class.reset(faq)
@@ -251,7 +265,7 @@ RSpec.describe DefaultTicketCallouts do
     end
 
     it "leaves a custom callout untouched" do
-      callout = create(:registration_ticket_callout, title: "Parking", magic_key: nil)
+      callout = create(:registration_ticket_callout, title: "Parking", builtin_key: nil)
 
       expect { described_class.reset(callout) }.not_to change { callout.reload.title }
     end

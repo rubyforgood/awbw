@@ -33,8 +33,8 @@ FactoryBot.define do
       hidden { true }
     end
 
-    trait :magic do
-      magic_key { "faq" }
+    trait :builtin do
+      builtin_key { "faq" }
       title { "Frequently asked questions" }
     end
   end
