@@ -166,9 +166,14 @@ module Events
     end
 
     # FAQ for the training, with a folded-in contact link. Only reachable when
-    # the event shows the FAQ callout.
+    # the event shows the FAQ callout. Renders the editable FAQ callout copy (the
+    # admin edits it like every other callout, using the <toggle> syntax for each
+    # question), falling back to the code-defined default for events that haven't
+    # materialized the card yet.
     def faq
-      redirect_to registration_ticket_path(@event_registration.slug) unless @event.show_faq_callout?
+      return redirect_to(registration_ticket_path(@event_registration.slug)) unless @event.show_faq_callout?
+      callout = @event.registration_ticket_callouts.find_by(magic_key: "faq")
+      @faq_content = callout&.description.presence || DefaultTicketCallouts.faq_html
     end
 
     private
