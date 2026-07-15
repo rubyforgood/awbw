@@ -13,6 +13,10 @@ class ResourcePolicy < ApplicationPolicy
     admin?
   end
 
+  def search?
+    authenticated?
+  end
+
   def update?
     admin?
   end
