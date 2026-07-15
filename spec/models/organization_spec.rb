@@ -338,33 +338,6 @@ RSpec.describe Organization, "scholarship index helpers" do
     end
   end
 
-  describe ".program_statuses_by_id" do
-    it "buckets each org by facilitator history, keyed by id" do
-      new_org = create(:organization)
-
-      ongoing_org = create(:organization)
-      create(:affiliation, organization: ongoing_org, person: create(:person), title: "Facilitator")
-
-      reinstate_org = create(:organization)
-      create(:affiliation, organization: reinstate_org, person: create(:person), title: "Facilitator", end_date: 1.year.ago.to_date)
-
-      ids = [ new_org.id, ongoing_org.id, reinstate_org.id ]
-
-      expect(Organization.program_statuses_by_id(ids)).to eq(
-        new_org.id => :new,
-        ongoing_org.id => :ongoing,
-        reinstate_org.id => :reinstated
-      )
-    end
-
-    it "treats a non-facilitator affiliation as New" do
-      org = create(:organization)
-      create(:affiliation, organization: org, person: create(:person), title: "Member")
-
-      expect(Organization.program_statuses_by_id([ org.id ])).to eq(org.id => :new)
-    end
-  end
-
   describe ".awbw" do
     it "finds the org named by ORGANIZATION_NAME" do
       awbw = create(:organization, name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))

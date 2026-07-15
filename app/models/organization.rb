@@ -221,21 +221,6 @@ class Organization < ApplicationRecord
     prior.any? ? "Ongoing" : "New"
   end
 
-  # Bulk program status (:new / :ongoing / :reinstated) for the given org ids,
-  # keyed by id — the recipient-less form of #program_status, computed with
-  # aggregate queries so list pages avoid loading each org's affiliations. An org
-  # with no facilitator affiliations is :new; with facilitators but none
-  # currently active it is :reinstated; otherwise :ongoing.
-  def self.program_statuses_by_id(org_ids)
-    facilitator_scope = Affiliation.facilitators.where(organization_id: org_ids)
-    with_facilitators = facilitator_scope.distinct.pluck(:organization_id).to_set
-    with_active = facilitator_scope.active.distinct.pluck(:organization_id).to_set
-    org_ids.index_with do |id|
-      next :new if with_facilitators.exclude?(id)
-      with_active.include?(id) ? :ongoing : :reinstated
-    end
-  end
-
   def type_name
     "#{name} #{ " (#{windows_type.short_name})" if windows_type}"
   end
