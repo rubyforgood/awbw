@@ -85,6 +85,7 @@ class OtherResponsesController < ApplicationController
 
   def build_group(rows)
     first = rows.first
+    promoted_sector = rows.filter_map(&:promotable).first
     {
       kind: first.kind,
       field_identifier: first.field_identifier,
@@ -96,7 +97,12 @@ class OtherResponsesController < ApplicationController
       count: rows.size,
       status_counts: rows.each_with_object(Hash.new(0)) { |r, h| h[r.status] += 1 },
       fully_promoted: rows.all? { |r| r.status == "promoted" },
-      promoted_to: rows.filter_map(&:promotable).first
+      promoted_to: promoted_sector,
+      # A merge is a promotion into a differently-named existing sector (the
+      # dedupe path); when the sector matches the typed value it became its own
+      # tag (the create path).
+      promoted_by_merge: promoted_sector.present? &&
+        OtherResponse.normalize(promoted_sector.name) != first.normalized_text
     }
   end
 

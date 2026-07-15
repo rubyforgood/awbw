@@ -83,8 +83,20 @@ RSpec.describe "OtherResponses", type: :request do
 
       expect(response.body).to include("Equine therapy")   # the typed value
       expect(response.body).to include("Equine Therapy")   # the sector it became
-      expect(response.body).to include("Promoted")
+      # Value matches the sector → it became its own tag → "Promoted to".
+      expect(response.body).to include("Promoted to")
       expect(response.body).not_to include("Create sector") # no actions on a promoted row
+    end
+
+    it "labels a promote into a differently-named sector as Merged" do
+      sign_in admin
+      sector = create(:sector, name: "Animal-Assisted Therapy")
+      create(:other_response, :promoted, text: "my new tester", promotable: sector)
+
+      get other_responses_path(status: "promoted")
+
+      expect(response.body).to include("Merged to")
+      expect(response.body).to include("Animal-Assisted Therapy")
     end
 
     it "hides promoted responses from the default (reviewable) view" do
