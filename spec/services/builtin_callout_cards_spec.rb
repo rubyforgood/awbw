@@ -12,6 +12,10 @@ RSpec.describe BuiltinCalloutCards do
     described_class.new(reg).cards.find { |c| c.title == title }
   end
 
+  def add_scholarship_form(event)
+    create(:event_form, :scholarship, event:)
+  end
+
   describe "#cards" do
     it "shows the payment card for a bare paid, non-training registration" do
       expect(card_titles(registration)).to eq([ "Make your payment" ])
@@ -73,10 +77,22 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "shows the CE card only when the registrant requested CE credit" do
+      event.update!(ce_hours_offered: 6)
       expect(card_titles(registration)).not_to include(event.ce_hours_details_label)
       license = create(:professional_license, :placeholder, person: registration.registrant)
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
       expect(card_titles(registration.reload)).to include(event.ce_hours_details_label)
+    end
+
+    it "omits the CE card when the event offers no CE hours, even with a CE registration" do
+      license = create(:professional_license, :placeholder, person: registration.registrant)
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      expect(card_titles(registration.reload)).not_to include(event.ce_hours_details_label)
+    end
+
+    it "omits the scholarship card when the event has no scholarship form, even when requested" do
+      registration.update!(scholarship_requested: true)
+      expect(card_titles(registration)).not_to include("Scholarship")
     end
 
     it "turns the CE card orange while a balance is due, teal once paid" do
@@ -106,14 +122,14 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "names the CE request deadline on the license-needed badge" do
-      event.update!(ce_hours_cost_cents: 15_000, ce_hours_request_deadline: Date.new(2026, 7, 1))
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000, ce_hours_request_deadline: Date.new(2026, 7, 1))
       license = create(:professional_license, :placeholder, person: registration.registrant)
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
       expect(card(registration.reload, event.ce_hours_details_label).badge).to eq("$150 · License number needed by Jul 1")
     end
 
     it "appends the CE payment deadline to the amount-due badge, dropping it once paid" do
-      event.update!(ce_hours_cost_cents: 15_000, ce_payment_due_deadline: Date.new(2026, 8, 15))
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000, ce_payment_due_deadline: Date.new(2026, 8, 15))
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
       ce_reg = create(:continuing_education_registration, event_registration: registration, professional_license: license)
       expect(card(registration.reload, event.ce_hours_details_label).badge).to eq("$150 due by Aug 15")
@@ -123,6 +139,7 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "shows the scholarship card only when requested, without an amount chip until awarded" do
+      add_scholarship_form(event)
       expect(card_titles(registration)).not_to include("Scholarship")
       registration.update!(scholarship_requested: true)
       scholarship_card = card(registration, "Scholarship")
@@ -132,6 +149,7 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "prompts to accept the agreement, without an amount chip, until it is signed" do
+      add_scholarship_form(event)
       registration.update!(scholarship_requested: true)
       scholarship = create(:scholarship, amount_cents: 25_000, tasks_completed: true, agreement_signed: false)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
@@ -142,6 +160,7 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "turns the scholarship card amber while award tasks are outstanding" do
+      add_scholarship_form(event)
       registration.update!(scholarship_requested: true)
       scholarship = create(:scholarship, recipient: registration.registrant, tasks_completed: false, agreement_signed: true)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
@@ -150,6 +169,7 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "flags an awarded scholarship with outstanding tasks in an amber chip" do
+      add_scholarship_form(event)
       registration.update!(scholarship_requested: true)
       scholarship = create(:scholarship, amount_cents: 25_000, tasks_completed: false, agreement_signed: true)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
@@ -159,6 +179,7 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "shows a fuchsia amount chip once the agreement is signed and tasks are complete" do
+      add_scholarship_form(event)
       registration.update!(scholarship_requested: true)
       scholarship = create(:scholarship, amount_cents: 25_000, tasks_completed: true, agreement_signed: true)
       create(:allocation, source: scholarship, allocatable: registration, amount: 1000)
@@ -173,6 +194,7 @@ RSpec.describe BuiltinCalloutCards do
                     ce_hours_details: "6 hours", ce_hours_offered: 6,
                     videoconference_url: "https://example.zoom.us/j/123",
                     start_date: 3.days.ago, end_date: 2.days.ago)
+      add_scholarship_form(event)
       registration.update!(status: "attended", scholarship_requested: true)
       license = create(:professional_license, :placeholder, person: registration.registrant)
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
@@ -220,7 +242,7 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "keeps the live CE deadline badge on a materialized CE row" do
-      event.update!(ce_hours_cost_cents: 15_000, ce_payment_due_deadline: Date.new(2026, 8, 15))
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000, ce_payment_due_deadline: Date.new(2026, 8, 15))
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
       callout = create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE credit")

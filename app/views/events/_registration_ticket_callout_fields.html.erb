@@ -51,6 +51,16 @@
       <% end %>
 
       <span class="text-gray-800 font-medium truncate max-w-xs" title="<%= f.object.title %>"><%= f.object.title %></span>
+
+      <%# Warns when this published built-in is set up but the event isn't
+          configured for it, so it still won't reach the ticket (free event → no
+          payment card, no scholarship form / CE hours → no scholarship / CE card). %>
+      <% if (suppression_reason = f.object.decorate.ticket_suppression_reason) %>
+        <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 shrink-0">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <%= suppression_reason %>
+        </span>
+      <% end %>
     </div>
 
     <%# Editable content — hidden when the Published checkbox is unchecked.

@@ -74,6 +74,26 @@ class BuiltinCalloutCards
     "videoconference" => :videoconference_card
   }.freeze
 
+  # Why a built-in card with this builtin_key can never appear on the given event's
+  # ticket because the event lacks the config the card depends on (a free event
+  # has no payment card, an event with no scholarship form has no scholarship
+  # card, an event that offers no CE hours has no CE card) — or nil when the event
+  # is configured for it. The card builders below enforce these same gaps at
+  # render time; the editor surfaces the phrase as an amber "won't show" badge so
+  # admins know a published callout still won't reach the ticket.
+  def self.config_gap(event, builtin_key)
+    case builtin_key
+    when "payment"
+      "this event is free" if event.cost_cents.to_i <= 0
+    when "scholarship"
+      "this event has no scholarship form" if event.scholarship_form.blank?
+    when "ce_hours"
+      "this event offers no CE hours" unless event.ce_eligible?
+    when "videoconference"
+      "this event has no videoconference link" if event.videoconference_url.blank?
+    end
+  end
+
   def initialize(event_registration)
     @registration = event_registration
     @event = event_registration.event
@@ -131,7 +151,7 @@ class BuiltinCalloutCards
   # in full. Its page lists every allocation with the running balance, plus the
   # linked documents (the W-9, and the invoice/receipt) for paid events.
   def payment_card
-    return if event.cost_cents.to_i <= 0
+    return if self.class.config_gap(event, "payment")
     due = registration.remaining_cost.to_i.positive?
     Card.new(icon_class: "fa-solid fa-credit-card", color: due ? "orange" : "blue",
              title: due ? "Make your payment" : "Payment",
@@ -158,6 +178,7 @@ class BuiltinCalloutCards
   # pending shows an amber "$X · Tasks outstanding" badge (action needed); fully
   # met shows a fuchsia amount badge.
   def scholarship_status_card
+    return if self.class.config_gap(event, "scholarship")
     return unless registration.scholarship_requested?
     # Awarded is display-only: the scholarship record exists earlier, but the award
     # is only shown as awarded once the recipient signs the agreement. Until then
@@ -194,6 +215,7 @@ class BuiltinCalloutCards
   # they have, becoming a reference card once requested with hours and a license
   # number on file. Shown when the event offers CE or the registrant asked for it.
   def ce_hours_card
+    return if self.class.config_gap(event, "ce_hours")
     return unless registration.ce_registered?
     complete = registration.ce_license_provided?
     # An outstanding CE balance turns the card orange (an action card), matching
@@ -264,7 +286,7 @@ class BuiltinCalloutCards
 
   # Shown only when the event has a videoconference URL set.
   def videoconference_card
-    return if event.videoconference_url.blank?
+    return if self.class.config_gap(event, "videoconference")
     Card.new(icon_class: "fa-solid fa-video", color: "blue",
              title: "Videoconference",
              subtitle: "Join link and how to add it to your calendar",
