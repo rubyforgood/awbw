@@ -7,9 +7,9 @@
     <%= f.collection_select :resource_id, Resource.order(:title), :id, :title,
           { include_blank: "Select a resource…" },
           class: "rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
-    <%= f.text_field :subtitle, placeholder: "Card subtitle (short one-line)",
+    <%= f.text_field :subtitle, placeholder: "Short one-line",
           class: "rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
-    <%= f.text_area :page_content, rows: 2, placeholder: "Page content (shown under the title)",
+    <%= f.text_area :page_content, rows: 2, placeholder: "Shown under the title",
           class: "rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
   </div>
   <%= link_to_remove_association "✖", f,
