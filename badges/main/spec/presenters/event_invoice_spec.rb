@@ -22,6 +22,45 @@ RSpec.describe EventInvoice do
       expect(invoice.total_cents).to eq(150_000)
     end
 
+    it "carries no applied credits and a full balance due when nothing is paid" do
+      invoice = described_class.from_registration(registration)
+
+      expect(invoice.entries).to be_empty
+      expect(invoice.amount_applied_cents).to eq(0)
+      expect(invoice.balance_due_cents).to eq(150_000)
+    end
+
+    it "reduces the balance due by the payments, scholarships, and discounts applied" do
+      payment = create(:payment, type: "CashPayment", amount_cents: 40_000)
+      scholarship = create(:scholarship, recipient: registrant, amount_cents: 50_000)
+      discount = create(:discount, amount_cents: 10_000)
+      create(:allocation, source: payment, allocatable: registration, amount: 40_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 50_000)
+      create(:allocation, source: discount, allocatable: registration, amount: 10_000)
+
+      invoice = described_class.from_registration(registration)
+
+      expect(invoice.amount_applied_cents).to eq(100_000)
+      expect(invoice.balance_due_cents).to eq(50_000)  # 150,000 charged − 100,000 applied
+      expect(invoice.total_cents).to eq(150_000)       # the charge itself is unchanged
+    end
+
+    it "itemizes each payment by method, in order, with the check number as a reference" do
+      cash = create(:payment, type: "CashPayment", amount_cents: 30_000)
+      check = create(:payment, type: "CheckPayment", amount_cents: 20_000, check_number: "4821")
+      scholarship = create(:scholarship, recipient: registrant, amount_cents: 10_000)
+      create(:allocation, source: cash, allocatable: registration, amount: 30_000)
+      create(:allocation, source: check, allocatable: registration, amount: 20_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 10_000)
+
+      invoice = described_class.from_registration(registration)
+
+      expect(invoice.entries.map(&:method)).to eq([ "Cash", "Check", "Scholarship" ])
+      expect(invoice.entries.map(&:amount_cents)).to eq([ 30_000, 20_000, 10_000 ])
+      check_entry = invoice.entries.find { |entry| entry.method == "Check" }
+      expect(check_entry.reference).to eq("Check #4821")
+    end
+
     context "with a snapshotted organization" do
       let(:organization) { create(:organization, name: "A Greater Hope") }
 

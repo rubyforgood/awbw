@@ -251,15 +251,30 @@ module Events
       if @event_registration.invoice_available?
         cards << document_card(title: "Invoice", subtitle: "Itemized invoice for this registration",
           icon: "fa-solid fa-file-invoice-dollar", href: registration_invoice_path(slug, return_to: "payment"))
+        # The receipt is proof money changed hands, so it links once an actual
+        # payment settles the balance in full; until then (balance owing, or a
+        # balance cleared only by scholarship/discount) it's a locked card.
         if @event_registration.receipt_available?
           cards << document_card(title: "Receipt", subtitle: "Paid-in-full receipt for this registration",
             icon: "fa-solid fa-receipt", href: registration_receipt_path(slug, return_to: "payment"))
+        else
+          cards << locked_document_card(title: "Receipt", icon: "fa-solid fa-receipt",
+            subtitle: "Available once your payment is received in full")
         end
       end
-      cards + payment_document_resources.map do |link|
-        link.decorate.to_card(registrant_slug: slug, return_to: "payment",
-                              icon: "fa-solid fa-file-pdf", color: "gray")
+      cards + payment_document_resources.map { |link| payment_resource_card(link, slug) }
+    end
+
+    # A payment-callout linked resource as a card. The W-9 only applies once an
+    # actual payment is on file, so it renders locked (naming what unlocks it)
+    # until then; every other document links straight through.
+    def payment_resource_card(link, slug)
+      if link.resource&.title == "W-9" && !@event_registration.w9_available?
+        return locked_document_card(title: link.resource.title, icon: "fa-solid fa-file-pdf",
+          subtitle: "Available once your payment is received")
       end
+      link.decorate.to_card(registrant_slug: slug, return_to: "payment",
+                            icon: "fa-solid fa-file-pdf", color: "gray")
     end
 
     # The payment callout's linked resource join rows (the W-9 by default on paid
@@ -278,6 +293,14 @@ module Events
     def document_card(title:, subtitle:, icon:, href:)
       MagicTicketCallouts::Card.new(icon_class: icon, color: "gray", title:, subtitle:,
                                     href:, target: "_blank", trailing_icon: "fa-solid fa-arrow-right")
+    end
+
+    # A greyed-out, non-navigating card (no href) for a document that isn't
+    # available yet; the payment view renders it as a plain div with a lock icon,
+    # and the subtitle names what unlocks it.
+    def locked_document_card(title:, subtitle:, icon:)
+      MagicTicketCallouts::Card.new(icon_class: icon, color: "gray", title:, subtitle:,
+                                    href: nil, target: nil, trailing_icon: "fa-solid fa-lock")
     end
 
     def redirect_to_ce_stripe_checkout(ce_registration)

@@ -61,7 +61,7 @@ This codebase (Rails 8.1)
 | `app/views/` | ERB templates | ~632 files |
 | `app/decorators/` | Draper decorators for view logic | ~40 files |
 | `app/policies/` | ActionPolicy authorization rules | ~55 files |
-| `app/presenters/` | Presentation objects | 3 files |
+| `app/presenters/` | Presentation objects | 5 files |
 | `app/helpers/` | View helpers | ~25 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
@@ -199,6 +199,7 @@ end
 - `RichTextMigrator` — Rich text migration utility
 - `DisplayImagePresenter` — Image display logic
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
+- `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
 
 ### Event Registrations
 
