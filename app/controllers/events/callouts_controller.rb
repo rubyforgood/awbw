@@ -147,7 +147,7 @@ module Events
     def handouts
       return redirect_to registration_ticket_path(@event_registration.slug) unless @event.show_handouts_callout?
       callout = @event.registration_ticket_callouts.find_by(magic_key: "handouts")
-      @handout_cards = callout_resource_cards(callout, icon: "fa-solid fa-file-pdf", return_to: "handouts")
+      @handout_cards = resource_cards_for(callout, icon: "fa-solid fa-file-pdf", return_to: "handouts")
     end
 
     # Registrant-facing page for a single Resource, shown in the shared callout
@@ -196,21 +196,16 @@ module Events
       callout = @event.registration_ticket_callouts.find_by(magic_key: action_name)
       @builtin_intro = callout&.description.presence
       callout = nil if action_name == "payment"
-      @builtin_resource_cards = callout_resource_cards(callout, icon: "fa-solid fa-file-lines", return_to: action_name)
+      @builtin_resource_cards = resource_cards_for(callout, icon: "fa-solid fa-file-lines", return_to: action_name)
     end
 
-    # Callout cards for a callout's linked resources, in display order, each
-    # linking to the resource's own registrant page. The card subtitle comes from
-    # the join row (materialized default, admin-editable).
-    def callout_resource_cards(callout, icon:, return_to:)
+    # This registrant's cards for a callout's linked resources (nil callout → none).
+    # Delegates to the shared decorator so every callout surface builds them the
+    # same way — subtitle from the materialized join row, linking to the resource
+    # page returning to this origin.
+    def resource_cards_for(callout, icon:, return_to:)
       return [] unless callout
-      callout.registration_ticket_callout_resources.ordered.includes(:resource).filter_map do |link|
-        resource = link.resource
-        next unless resource
-        resource_card(icon: icon, title: resource.title,
-                      subtitle: link.subtitle.presence || "Open this document",
-                      href: registration_resource_path(@event_registration.slug, resource, return_to: return_to), target: nil)
-      end
+      callout.decorate.resource_cards(registrant_slug: @event_registration.slug, return_to:, icon:)
     end
 
     # The join row for @resource on the callout the registrant arrived from
@@ -250,14 +245,6 @@ module Events
       return payment_callout.registration_ticket_callout_resources.ordered.includes(:resource).to_a if payment_callout
       return [] unless @event.cost_cents.to_i.positive?
       Resource.where(title: "W-9").map { |resource| RegistrationTicketCalloutResource.new(resource:) }
-    end
-
-    # A blue callout card linking to a document. External/static links open in a
-    # new tab (target: "_blank"); registrant resource pages stay in-tab so the
-    # back-to-ticket eyebrow works (pass target: nil).
-    def resource_card(icon:, title:, subtitle:, href:, target: "_blank", trailing_icon: "fa-solid fa-arrow-right")
-      MagicTicketCallouts::Card.new(icon_class: icon, color: "blue", title: title, subtitle: subtitle,
-                                    href: href, target: target, trailing_icon: trailing_icon)
     end
 
     def redirect_to_ce_stripe_checkout(ce_registration)

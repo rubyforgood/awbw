@@ -84,7 +84,7 @@
           <i class="fa-solid fa-file-pdf text-gray-400 text-xl shrink-0"></i>
           <div class="flex-1 min-w-0 text-left">
             <p class="font-semibold text-gray-900"><%= resource.title %></p>
-            <p class="text-sm text-gray-500"><%= link.subtitle.presence || "Open this document" %></p>
+            <p class="text-sm text-gray-500"><%= link.decorate.card_subtitle %></p>
           </div>
           <i class="fa-solid fa-arrow-right text-gray-400 shrink-0"></i>
         <% end %>
