@@ -23,7 +23,13 @@
                         "w-full rounded border-gray-300 shadow-sm px-3 py-2
                                                   focus:ring-blue-500 focus:border-blue-500",
                     } %>
-
+            <%= f.input :abbreviation,
+                    label: "Abbreviation",
+                    hint: "Short code shown on organization profiles (e.g. TOS205)",
+                    input_html: {
+                      class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                      placeholder: "e.g. TOS205"
+                    } %>
             <%= f.input :facilitator_training, as: :boolean, label: "Facilitator training event", wrapper_html: { class: "mb-0!" } %>
           </div>
 

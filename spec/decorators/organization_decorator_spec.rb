@@ -42,6 +42,36 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
+  describe "#facilitator_status_as_of" do
+    let(:organization) { create(:organization) }
+    let(:person) { create(:person) }
+    let(:reference) { Date.new(2026, 6, 1) }
+
+    it "is :new when there are no facilitator affiliations starting before the date" do
+      expect(organization.decorate.facilitator_status_as_of(reference)).to eq(:new)
+    end
+
+    it "ignores facilitator affiliations that start on or after the date" do
+      create(:affiliation, organization: organization, person: person, title: "Facilitator", start_date: reference)
+      expect(organization.reload.decorate.facilitator_status_as_of(reference)).to eq(:new)
+    end
+
+    it "is :ongoing when an earlier facilitator affiliation is still active on the date" do
+      create(:affiliation, organization: organization, person: person, title: "Facilitator", start_date: reference - 1.year, end_date: nil)
+      expect(organization.reload.decorate.facilitator_status_as_of(reference)).to eq(:ongoing)
+    end
+
+    it "is :reinstated when earlier facilitator affiliations all ended before the date" do
+      create(:affiliation, organization: organization, person: person, title: "Facilitator", start_date: reference - 2.years, end_date: reference - 1.year)
+      expect(organization.reload.decorate.facilitator_status_as_of(reference)).to eq(:reinstated)
+    end
+
+    it "ignores non-facilitator affiliations" do
+      create(:affiliation, organization: organization, person: person, title: "Volunteer", start_date: reference - 1.year, end_date: nil)
+      expect(organization.reload.decorate.facilitator_status_as_of(reference)).to eq(:new)
+    end
+  end
+
   describe "#agency_type_option" do
     it "returns a recognized type unchanged" do
       organization = create(:organization, agency_type: "For-profit")
