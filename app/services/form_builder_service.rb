@@ -98,7 +98,9 @@ class FormBuilderService
     continuing_education: [
       "Do you seek Continuing Education (CE) hours for this training?",
       "If seeking CE hours, what is your license type? (e.g. LMFT, LCSW, LPCC, LEP)",
-      "What is your license number?"
+      "What is your license number?",
+      "In which state was your license issued?",
+      "When does your license expire?"
     ],
     scholarship: [
       "I and/or my organization cannot afford the full training cost and need a scholarship to attend.",
@@ -513,12 +515,14 @@ class FormBuilderService
     position = add_field(form, position,
                          "Do you seek Continuing Education (CE) hours for this training?",
                          :single_select_radio,
-                         key: "ce_credit_interest", group: "continuing_education", required: false,
+                         key: "ce_credit_interest", group: "continuing_education", required: true,
                          options: %w[Yes No])
     position = add_field(form, position,
                          "If seeking CE hours, what is your license type? (e.g. LMFT, LCSW, LPCC, LEP)",
                          :free_form_input_one_line,
-                         key: "ce_license_kind", group: "continuing_education", required: false)
+                         key: "ce_license_kind", group: "continuing_education", required: false,
+                         subtitle: "These license details are optional here — you can add or update them later " \
+                                   "from your registration ticket.")
     position = add_field(form, position,
                          "What is your license number?",
                          :free_form_input_one_line,
@@ -527,6 +531,15 @@ class FormBuilderService
                                    "and AWBW cannot guarantee your specific state board will accept them. " \
                                    "Participants are responsible for confirming whether the hours meet the requirements " \
                                    "for their specific license and state.")
+    position = add_field(form, position,
+                         "In which state was your license issued?",
+                         :free_form_input_one_line,
+                         key: "ce_license_issuing_state", group: "continuing_education", required: false)
+    position = add_field(form, position,
+                         "When does your license expire?",
+                         :free_form_input_one_line,
+                         key: "ce_license_expires_on", group: "continuing_education", required: false,
+                         datatype: :date)
     position
   end
 

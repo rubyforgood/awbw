@@ -542,14 +542,21 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       ce_form.form_fields.find_by!(field_identifier: key).id.to_s
     end
 
-    def register_with_ce(answer, license: nil, kind: nil)
+    def register_with_ce(answer, license: nil, kind: nil, issuing_state: nil, expires_on: nil)
       params = base_form_params(first_name: "Cy", last_name: "Reed", email: "cy@example.com")
       ce_params = {}
       ce_params[ce_field_id(described_class::CE_CREDIT_INTEREST_IDENTIFIER)] = answer unless answer.nil?
       ce_params[ce_field_id(described_class::CE_LICENSE_NUMBER_IDENTIFIER)] = license if license
       ce_params[ce_field_id(described_class::CE_LICENSE_KIND_IDENTIFIER)] = kind if kind
+      ce_params[ce_field_id(described_class::CE_LICENSE_ISSUING_STATE_IDENTIFIER)] = issuing_state if issuing_state
+      ce_params[ce_field_id(described_class::CE_LICENSE_EXPIRES_ON_IDENTIFIER)] = expires_on if expires_on
       described_class.call(event: event, registration_form: form, form_params: params,
                            continuing_education_form: ce_form, continuing_education_params: ce_params)
+    end
+
+    it "marks the CE interest question as required" do
+      field = ce_form.form_fields.find_by!(field_identifier: described_class::CE_CREDIT_INTEREST_IDENTIFIER)
+      expect(field.required).to be(true)
     end
 
     it "creates a CE registration when answered Yes" do
@@ -603,6 +610,13 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(license.number).to eq("555")
     end
 
+    it "records the license issuing state and expiry when given" do
+      result = register_with_ce("Yes", license: "555", issuing_state: "CA", expires_on: "2027-05-31")
+      license = result.event_registration.continuing_education_registrations.first.professional_license
+      expect(license.issuing_state).to eq("CA")
+      expect(license.expires_on).to eq(Date.new(2027, 5, 31))
+    end
+
     it "uses a placeholder license when no number is given" do
       result = register_with_ce("Yes")
       expect(result.event_registration.continuing_education_registrations.first.professional_license.number).to be_nil
@@ -623,9 +637,11 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(answers[described_class::CE_LICENSE_NUMBER_IDENTIFIER]).to eq("LMFT 555")
     end
 
-    it "does not persist a continuing_education submission when answered No" do
+    it "persists the CE interest answer even when answered No" do
       register_with_ce("No")
-      expect(FormSubmission.find_by(role: "continuing_education", event: event)).to be_nil
+      submission = FormSubmission.find_by(role: "continuing_education", event: event)
+      expect(submission).to be_present
+      expect(submission.answers_by_identifier[described_class::CE_CREDIT_INTEREST_IDENTIFIER]).to eq("No")
     end
   end
 

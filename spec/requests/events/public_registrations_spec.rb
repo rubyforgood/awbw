@@ -263,6 +263,19 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("August 15, 2026")
     end
 
+    it "renders the CE license type, issuing-state dropdown, expiry date, and provide-later note" do
+      ce = FormBuilderService.new(name: "CE", sections: %i[continuing_education], role: "continuing_education").call
+      event.event_forms.create!(form: ce, role: "continuing_education")
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("what is your license type?")
+      expect(response.body).to include("In which state was your license issued?")
+      expect(response.body).to include("Select a state") # issuing state renders as the US-states dropdown
+      expect(response.body).to include('type="date"')     # expiry renders as a date input
+      expect(response.body).to include("add or update them later")
+    end
+
     it "renders a structured details panel from known event data when enabled" do
       pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
       event.update!(

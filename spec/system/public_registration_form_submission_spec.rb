@@ -144,6 +144,7 @@ RSpec.describe "Public form submissions", type: :system do
       choose_pr_radio reg_field("racial_ethnic_identity"), "Asian"
       choose_pr_radio reg_field("referral_source"), "Social Media"
       choose_pr_radio reg_field("payment_method"), "Check"
+      choose_pr_radio ce_field("ce_credit_interest"), "No"
       check_pr_box reg_field("communication_consent"), "Yes"
 
       expect { click_button "Register" }.not_to change(Person, :count)
@@ -174,6 +175,7 @@ RSpec.describe "Public form submissions", type: :system do
 
       fill_full_registration
       choose_pr_radio reg_field("payment_method"), "Check"
+      choose_pr_radio ce_field("ce_credit_interest"), "No"
 
       choose_pr_radio schol_field("scholarship_eligibility"), "Yes"
       fill_pr_text schol_field("scholarship_contribution"), with: "Our agency can pay $200."
@@ -205,6 +207,7 @@ RSpec.describe "Public form submissions", type: :system do
       visit new_event_public_registration_path(event, scholarship_requested: true)
 
       choose_pr_radio reg_field("payment_method"), "Check"
+      choose_pr_radio ce_field("ce_credit_interest"), "No"
       check_pr_box reg_field("communication_consent"), "Yes"
 
       choose_pr_radio schol_field("scholarship_eligibility"), "Yes"

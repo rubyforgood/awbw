@@ -45,11 +45,15 @@
       </select>
     <% else %>
       <%
-        html_type = case field.field_identifier
-                     when /email(?!_type)/ then "email"
-                     when "phone" then "tel"
+        html_type = if field.date?
+                       "date"
                      else
-                       field.number_integer? ? "number" : "text"
+                       case field.field_identifier
+                       when /email(?!_type)/ then "email"
+                       when "phone" then "tel"
+                       else
+                         field.number_integer? ? "number" : "text"
+                       end
                      end
         extra_attrs = []
         extra_attrs << 'min="1" step="1" pattern="[0-9]*" inputmode="numeric"' if field.number_integer?
