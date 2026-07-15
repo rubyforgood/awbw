@@ -226,6 +226,17 @@ RSpec.describe "Events", type: :request do
       get ce_hours_event_path(event)
       expect(response).to redirect_to(event_path(event))
     end
+
+    it "surfaces the CE deadlines when set" do
+      event.update!(ce_hours_offered: 6, ce_hours_details: "<p>CE info</p>",
+                    ce_hours_request_deadline: Date.new(2026, 7, 1),
+                    ce_payment_due_deadline: Date.new(2026, 8, 15))
+      get ce_hours_event_path(event)
+      expect(response.body).to include("Request CE credit by")
+      expect(response.body).to include("July 1, 2026")
+      expect(response.body).to include("Payment due by")
+      expect(response.body).to include("August 15, 2026")
+    end
   end
 
   describe "GET /new" do
@@ -286,6 +297,14 @@ RSpec.describe "Events", type: :request do
     it "previews the app-controlled built-in callouts (greyed, non-editable)" do
       get edit_event_path(event)
       expect(response.body).to include("Frequently asked questions")
+    end
+
+    it "renders the CE deadline fields in the continuing education settings" do
+      create(:form, :standalone, role: "continuing_education", name: "CE")
+      get edit_event_path(event)
+      expect(response.body).to include('name="event[ce_hours_request_deadline]"')
+      expect(response.body).to include('name="event[ce_payment_due_deadline]"')
+      expect(response.body).to include("Request CE credit by")
     end
   end
 
@@ -445,6 +464,15 @@ RSpec.describe "Events", type: :request do
         } }
         expect(event.reload.hint_dates).to eq("must attend both days")
         expect(event.hint_registration_cost).to eq("due within 3 weeks of registration")
+      end
+
+      it "persists the CE deadlines" do
+        patch event_path(event), params: { event: {
+          ce_hours_request_deadline: "2026-07-01",
+          ce_payment_due_deadline: "2026-08-15"
+        } }
+        expect(event.reload.ce_hours_request_deadline).to eq(Date.new(2026, 7, 1))
+        expect(event.ce_payment_due_deadline).to eq(Date.new(2026, 8, 15))
       end
     end
 

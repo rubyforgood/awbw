@@ -1,0 +1,22 @@
+<%# CE deadlines for a CE-eligible event, shown in the confirmation and reminder
+    emails so registrants are nudged before the request/payment cutoffs — gated on
+    the event offering CE, not on this registrant having requested it yet (the
+    confirmation fires before anyone opts in). Locals: event (decorated). The
+    deadlines are plain dates, so no time zone is applied. %>
+<% if event.ce_eligible? && (event.ce_hours_request_deadline || event.ce_payment_due_deadline) %>
+  <div style="text-align: left; background-color: #f0fdfa; border: 1px solid #99f6e4; border-radius: 6px; padding: 16px; margin: 16px 0;">
+    <p style="font-size: 14px; font-weight: 600; color: #115e59; margin: 0 0 8px;">
+      <%= event.ce_hours_details_label %>
+    </p>
+    <% if event.ce_hours_request_deadline %>
+      <p style="font-size: 14px; color: #374151; margin: 0 0 4px;">
+        Request CE credit by <strong><%= event.ce_hours_request_deadline.strftime("%B %-d, %Y") %></strong>
+      </p>
+    <% end %>
+    <% if event.ce_payment_due_deadline %>
+      <p style="font-size: 14px; color: #374151; margin: 0;">
+        CE payment due by <strong><%= event.ce_payment_due_deadline.strftime("%B %-d, %Y") %></strong>
+      </p>
+    <% end %>
+  </div>
+<% end %>

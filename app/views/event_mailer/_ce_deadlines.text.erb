@@ -1,0 +1,5 @@
+<% if event.ce_eligible? && (event.ce_hours_request_deadline || event.ce_payment_due_deadline) %>
+<%= event.ce_hours_details_label %>
+<% if event.ce_hours_request_deadline %>Request CE credit by <%= event.ce_hours_request_deadline.strftime("%B %-d, %Y") %>
+<% end %><% if event.ce_payment_due_deadline %>CE payment due by <%= event.ce_payment_due_deadline.strftime("%B %-d, %Y") %>
+<% end %><% end %>

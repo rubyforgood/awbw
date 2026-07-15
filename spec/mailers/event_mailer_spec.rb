@@ -90,6 +90,31 @@ RSpec.describe EventMailer, type: :mailer do
         expect(body).not_to include("Meeting ID")
       end
     end
+
+    context "when the event is CE-eligible and has deadlines" do
+      let(:event) do
+        create(:event, ce_hours_offered: 6,
+                       ce_hours_request_deadline: Date.new(2026, 7, 1),
+                       ce_payment_due_deadline: Date.new(2026, 8, 15))
+      end
+      let(:event_registration) { create(:event_registration, event: event) }
+
+      it "surfaces both CE deadlines in the body" do
+        expect(mail.body.encoded).to include("Request CE credit by")
+        expect(mail.body.encoded).to include("July 1, 2026")
+        expect(mail.body.encoded).to include("CE payment due by")
+        expect(mail.body.encoded).to include("August 15, 2026")
+      end
+    end
+
+    context "when the event is not CE-eligible" do
+      let(:event) { create(:event, ce_hours_offered: nil, ce_hours_request_deadline: Date.new(2026, 7, 1)) }
+      let(:event_registration) { create(:event_registration, event: event) }
+
+      it "omits the CE deadlines" do
+        expect(mail.body.encoded).not_to include("Request CE credit by")
+      end
+    end
   end
 
   describe "#bulk_payment_confirmation" do
@@ -154,6 +179,22 @@ RSpec.describe EventMailer, type: :mailer do
 
     it "includes the registrant name in the body" do
       expect(mail.body.encoded).to include(event_registration.registrant.full_name)
+    end
+
+    context "when the event is CE-eligible and has deadlines" do
+      let(:event) do
+        create(:event, ce_hours_offered: 6,
+                       ce_hours_request_deadline: Date.new(2026, 7, 1),
+                       ce_payment_due_deadline: Date.new(2026, 8, 15))
+      end
+      let(:event_registration) { create(:event_registration, event: event) }
+
+      it "surfaces both CE deadlines in the body" do
+        expect(mail.body.encoded).to include("Request CE credit by")
+        expect(mail.body.encoded).to include("July 1, 2026")
+        expect(mail.body.encoded).to include("CE payment due by")
+        expect(mail.body.encoded).to include("August 15, 2026")
+      end
     end
 
     context "with a custom subject" do

@@ -47,7 +47,14 @@ class EventMailerPreview < ActionMailer::Preview
     event = Event.first || create_event
     person = Person.first || create_person
 
-    EventRegistration.find_or_create_by!(event: event, registrant: person)
+    registration = EventRegistration.find_or_create_by!(event: event, registrant: person)
+    # Showcase the CE deadlines block (set in memory only, not persisted). The email
+    # gates on the event being CE-eligible, so give it offered hours + deadlines. Set
+    # on registration.event — the object the mailer decorates and reads.
+    registration.event.ce_hours_offered ||= 6
+    registration.event.ce_hours_request_deadline ||= 2.weeks.from_now.to_date
+    registration.event.ce_payment_due_deadline ||= 3.weeks.from_now.to_date
+    registration
   end
 
   def create_event

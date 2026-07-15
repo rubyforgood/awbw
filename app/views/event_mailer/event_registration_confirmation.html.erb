@@ -53,6 +53,8 @@
     <% end %>
   </div>
 
+  <%= render "ce_deadlines", event: @event %>
+
   <% if @event.rhino_description.present? %>
     <span style="padding-bottom: 12px"><strong>Details</strong></span><br>
     <p>

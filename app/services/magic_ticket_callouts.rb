@@ -211,14 +211,18 @@ class MagicTicketCallouts
   # "$X due" for the outstanding balance once hours + license are on file (no chip
   # once paid in full); otherwise an amber chip naming what's still needed, prefixed
   # with the fee when the hours (and so the cost) are already known — e.g.
-  # "$250 · License number needed".
+  # "$250 · License number needed". Each deadline the event sets is appended to the
+  # relevant chip while still pending: the payment deadline on the amount-due chip
+  # (until paid), the request deadline on the license-needed chip.
   def ce_hours_badge(complete)
     ce_registration = registration.continuing_education_registrations.first
     remaining_cents = ce_registration&.remaining_cost.to_i
 
     if complete
       return unless remaining_cents.positive?
-      return "#{MoneyFormatter.dollars_from_cents(remaining_cents)} due"
+      amount = MoneyFormatter.dollars_from_cents(remaining_cents)
+      return "#{amount} due" if event.ce_payment_due_deadline.blank?
+      return "#{amount} due by #{ce_deadline_text(event.ce_payment_due_deadline)}"
     end
 
     needed = ce_missing_text
@@ -227,9 +231,16 @@ class MagicTicketCallouts
   end
 
   # Hours are set by the event now, so the only thing a requesting registrant can
-  # still be missing is their license number.
+  # still be missing is their license number. When the event sets a request
+  # deadline, name it so the registrant knows when their license is due.
   def ce_missing_text
-    "License number needed"
+    return "License number needed" if event.ce_hours_request_deadline.blank?
+    "License number needed by #{ce_deadline_text(event.ce_hours_request_deadline)}"
+  end
+
+  # Short month/day for a deadline shown inline on the CE card, e.g. "Jul 1".
+  def ce_deadline_text(deadline)
+    deadline.strftime("%b %-d")
   end
 
   # "Art supplies & what to bring" — the event's own details page.

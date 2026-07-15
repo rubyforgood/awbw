@@ -460,16 +460,12 @@
                     <% single_form = @continuing_education_forms.first %>
                     <%= check_box_tag "event[continuing_education_form_id]", single_form.id,
                             resubmitted ? params.dig(:event, :continuing_education_form_id).present? : @event.continuing_education_form.present?,
+                            id: "enable_continuing_education",
                             class: "peer rounded border-gray-300" %>
-                    <span class="text-sm font-medium text-gray-700">Enable continuing education</span>
+                    <label for="enable_continuing_education" class="text-sm font-medium text-gray-700 cursor-pointer">Enable continuing education</label>
                     <p class="text-xs text-gray-500 mt-1">Allow registrants to request CE hours.</p>
-                    <div class="hidden peer-checked:flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-                      <label class="flex items-center gap-2 text-sm text-gray-700">CE hours offered <%= f.number_field :ce_hours_offered, min: 0, step: 0.25, class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %></label>
-
-                      <label class="flex items-center gap-2 text-sm text-gray-700">
-                        Total CE cost <span class="text-gray-400">$</span> <%= f.number_field :ce_hours_cost, min: 0, step: 1,
-                      class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                      </label>
+                    <div class="hidden peer-checked:block rounded-md border border-teal-200 bg-teal-50 px-3 py-2.5">
+                      <%= render "events/ce_config_fields", f: f %>
                     </div>
                     <p class="mt-1 text-xs text-gray-400">Edit the CE hours ticket card and its details below, under Registration ticket callouts.</p>
                     <% if @event.continuing_education_form.present? %>
@@ -495,13 +491,8 @@
                       <% end %>
                     </select>
                     <p class="text-xs text-gray-500 mt-1">Select a continuing education form for registrants to request CE hours.</p>
-                    <div class="hidden peer-checked:flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5">
-                      <label class="flex items-center gap-2 text-sm text-gray-700">CE hours offered <%= f.number_field :ce_hours_offered, min: 0, step: 0.25, class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %></label>
-
-                      <label class="flex items-center gap-2 text-sm text-gray-700">
-                        Total CE cost <span class="text-gray-400">$</span> <%= f.number_field :ce_hours_cost, min: 0, step: 1,
-                      class: "w-24 rounded-md border-gray-300 text-sm tabular-nums focus:border-teal-500 focus:ring-teal-200" %>
-                      </label>
+                    <div class="mt-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2.5">
+                      <%= render "events/ce_config_fields", f: f %>
                     </div>
                   <% end %>
                 </div>

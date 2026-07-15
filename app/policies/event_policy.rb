@@ -129,6 +129,8 @@ class EventPolicy < ApplicationPolicy
                   :ce_hours_details_label,
                   :ce_hours_offered,
                   :ce_hours_cost,
+                  :ce_hours_request_deadline,
+                  :ce_payment_due_deadline,
                   :autoshow_cost,
                   :autoshow_date,
                   :autoshow_location,

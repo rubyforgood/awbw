@@ -162,6 +162,22 @@
               <i class="fa-solid fa-certificate text-teal-600"></i><%= @continuing_education_form.display_name %>
             </h3>
             <%= render "forms/header", form: @continuing_education_form, event: @event %>
+            <% if @event.ce_hours_request_deadline || @event.ce_payment_due_deadline %>
+              <dl class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <% if @event.ce_hours_request_deadline %>
+                  <div class="rounded-lg border border-teal-200 bg-white px-3 py-2">
+                    <dt class="text-xs font-medium uppercase tracking-wide text-teal-700">Request CE credit by</dt>
+                    <dd class="mt-0.5 text-sm font-semibold text-gray-900"><%= @event.ce_hours_request_deadline.strftime("%B %-d, %Y") %></dd>
+                  </div>
+                <% end %>
+                <% if @event.ce_payment_due_deadline %>
+                  <div class="rounded-lg border border-teal-200 bg-white px-3 py-2">
+                    <dt class="text-xs font-medium uppercase tracking-wide text-teal-700">Payment due by</dt>
+                    <dd class="mt-0.5 text-sm font-semibold text-gray-900"><%= @event.ce_payment_due_deadline.strftime("%B %-d, %Y") %></dd>
+                  </div>
+                <% end %>
+              </dl>
+            <% end %>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
               <% @continuing_education_form.form_fields.reorder(position: :asc).each do |field| %>
                 <% if field.group_header? %>
