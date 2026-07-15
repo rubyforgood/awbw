@@ -5,31 +5,31 @@ class RegistrationTicketCallout < ApplicationRecord
   # group them on the ticket later.
   CALLOUT_TYPES = %w[ action reference ].freeze
 
-  # Hidden identifiers for the built-in ("magic") callouts. A row carrying one of
-  # these was seeded from a code-defined default (see DefaultTicketCallouts) and
+  # Hidden identifiers for the built-in callouts. A row carrying one of
+  # these was seeded from a code-defined default (see BuiltinCallouts) and
   # keeps its ticket behavior — badges, per-registration visibility — driven by
-  # that key. Admin-authored callouts have a nil magic_key. Magic callouts are
+  # that key. Admin-authored callouts have a nil builtin_key. Built-in callouts are
   # hidden rather than destroyed so they can be restored to their default.
-  MAGIC_KEYS = %w[
+  BUILTIN_KEYS = %w[
     payment certificate scholarship ce_hours event_details
     videoconference handouts faq
   ].freeze
 
-  # "Content" magic callouts render their own editable copy/resources (like custom
-  # callouts). "Behavioral" magic callouts (the rest) render live per-registration
-  # status through MagicTicketCallouts#card_for — the row still owns the editable
+  # "Content" built-in callouts render their own editable copy/resources (like custom
+  # callouts). "Behavioral" built-in callouts (the rest) render live per-registration
+  # status through BuiltinCalloutCards#card_for — the row still owns the editable
   # title/subtitle/text, order, visibility, and resources.
-  CONTENT_MAGIC_KEYS = %w[ handouts faq ].freeze
+  CONTENT_BUILTIN_KEYS = %w[ handouts faq ].freeze
 
   # Behavioral built-ins that also carry event-level config edited inline in their
   # row (CE hours offered / cost); their text lives on the row like everything else.
-  CONFIG_MAGIC_KEYS = %w[ ce_hours ].freeze
+  CONFIG_BUILTIN_KEYS = %w[ ce_hours ].freeze
 
   # Built-ins whose card colour the app sets from live status — Payment turns
   # orange while a balance is due, and Scholarship / CE hours turn amber while the
   # registrant has something outstanding. For these, the app colour overrides the
-  # selected one (see MagicTicketCallouts#card_for).
-  APP_COLORED_MAGIC_KEYS = %w[ payment scholarship ce_hours ].freeze
+  # selected one (see BuiltinCalloutCards#card_for).
+  APP_COLORED_BUILTIN_KEYS = %w[ payment scholarship ce_hours ].freeze
 
   # Per-type fallbacks for the icon and colour. These are callout-specific (unlike
   # the generic colour swatches and palette, which live in DomainTheme so the whole
@@ -69,13 +69,13 @@ class RegistrationTicketCallout < ApplicationRecord
   validates :callout_type, inclusion: { in: CALLOUT_TYPES }
   validates :color_class, inclusion: { in: DomainTheme::SWATCH_COLORS.map(&:to_s) }, allow_blank: true
   validates :position, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
-  validates :magic_key, inclusion: { in: MAGIC_KEYS }, allow_nil: true
-  validates :magic_key, uniqueness: { scope: :event_id }, allow_nil: true
+  validates :builtin_key, inclusion: { in: BUILTIN_KEYS }, allow_nil: true
+  validates :builtin_key, uniqueness: { scope: :event_id }, allow_nil: true
 
   scope :ordered, -> { order(:position, :id) }
   scope :visible, -> { where(hidden: false) }
-  scope :magic, -> { where.not(magic_key: nil) }
-  scope :custom, -> { where(magic_key: nil) }
+  scope :builtin, -> { where.not(builtin_key: nil) }
+  scope :custom, -> { where(builtin_key: nil) }
 
   # Reset flagged rows to their template after the save that set the flag. The
   # flag is cleared first so the reset's own update doesn't recurse.
@@ -83,7 +83,7 @@ class RegistrationTicketCallout < ApplicationRecord
 
   def apply_reset_to_default
     self.reset_to_default = nil
-    DefaultTicketCallouts.reset(self)
+    BuiltinCallouts.reset(self)
   end
 
   def action?
@@ -107,30 +107,30 @@ class RegistrationTicketCallout < ApplicationRecord
   attr_accessor :reset_to_default
 
   def reset_to_default?
-    magic? && ActiveModel::Type::Boolean.new.cast(reset_to_default)
+    builtin? && ActiveModel::Type::Boolean.new.cast(reset_to_default)
   end
 
   # A seeded built-in callout (Handouts, FAQ, …) rather than an admin-authored
-  # one. Magic callouts hide instead of delete and can be reset to default.
-  def magic?
-    magic_key.present?
+  # one. Built-in callouts hide instead of delete and can be reset to default.
+  def builtin?
+    builtin_key.present?
   end
 
-  # A behavioral built-in callout whose card is rendered by MagicTicketCallouts
+  # A behavioral built-in callout whose card is rendered by BuiltinCalloutCards
   # (live status), as opposed to a content callout that renders from its own row.
-  def behavioral_magic?
-    magic? && CONTENT_MAGIC_KEYS.exclude?(magic_key)
+  def behavioral_builtin?
+    builtin? && CONTENT_BUILTIN_KEYS.exclude?(builtin_key)
   end
 
   # Whether the row carries the inline CE config fields (hours offered / cost).
   def ce_config?
-    CONFIG_MAGIC_KEYS.include?(magic_key.to_s)
+    CONFIG_BUILTIN_KEYS.include?(builtin_key.to_s)
   end
 
   # Whether the app sets this card's colour from live status, overriding the
   # selected colour (so the editor notes it under the colour picker).
   def app_colored?
-    APP_COLORED_MAGIC_KEYS.include?(magic_key.to_s)
+    APP_COLORED_BUILTIN_KEYS.include?(builtin_key.to_s)
   end
 
   # Whether the callout's own page has content to show — its editable text or any
@@ -144,7 +144,7 @@ class RegistrationTicketCallout < ApplicationRecord
   # so the manual visibility controls (drip date, payment gate) don't apply — the
   # editor hides its Visibility section.
   def payment?
-    magic_key == "payment"
+    builtin_key == "payment"
   end
 
   # Whether the callout's page content is drip-scheduled to reveal only from a

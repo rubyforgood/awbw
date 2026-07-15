@@ -111,7 +111,7 @@ RSpec.describe Event, type: :model do
 
     it "defers to the videoconference callout's drip date over the week-before default" do
       event = create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
-      create(:registration_ticket_callout, event:, magic_key: "videoconference",
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference",
         display_from: 2.days.from_now)
 
       # Within the week-before default (which would be true), but before the
@@ -121,7 +121,7 @@ RSpec.describe Event, type: :model do
 
     it "is visible immediately when the callout's drip date has been cleared" do
       event = create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
-      create(:registration_ticket_callout, event:, magic_key: "videoconference", display_from: nil)
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference", display_from: nil)
 
       expect(event.videoconference_details_visible?).to be true
     end
@@ -320,18 +320,6 @@ RSpec.describe Event, type: :model do
       event = create(:event, signed_in_one_click_enabled: true)
       create(:event_form, event: event, form: form, role: "registration")
       expect(event.one_click_for_signed_in?).to be true
-    end
-  end
-
-  describe "built-in ticket callout visibility" do
-    it "shows Handouts and FAQ only for facilitator trainings" do
-      training = build(:event, facilitator_training: true)
-      other = build(:event, facilitator_training: false)
-
-      expect(training.show_handouts_callout?).to be true
-      expect(training.show_faq_callout?).to be true
-      expect(other.show_handouts_callout?).to be false
-      expect(other.show_faq_callout?).to be false
     end
   end
 

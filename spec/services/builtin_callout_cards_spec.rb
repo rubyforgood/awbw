@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe MagicTicketCallouts do
+RSpec.describe BuiltinCalloutCards do
   let(:event) { create(:event) }
   let(:registration) { create(:event_registration, event:) }
 
@@ -22,21 +22,19 @@ RSpec.describe MagicTicketCallouts do
       expect(card_titles(registration)).not_to include("Payment")
     end
 
-    it "shows Handouts and FAQ only for facilitator trainings" do
-      expect(card_titles(registration)).not_to include("Handouts", "Frequently asked questions")
-
+    it "never surfaces the row-driven Handouts or FAQ cards in the code fallback" do
+      # These are admin-published now — there's no code fallback for them, even on
+      # a facilitator training.
       event.update!(facilitator_training: true)
-      expect(card_titles(registration)).to include("Handouts", "Frequently asked questions")
+      expect(card_titles(registration)).not_to include("Handouts", "Frequently asked questions")
     end
 
     it "skips a built-in card the event has materialized (it renders from the row instead)" do
-      event.update!(facilitator_training: true)
-      create(:registration_ticket_callout, event:, magic_key: "faq", title: "Frequently asked questions")
+      event.update!(event_details: "Bring supplies")
+      create(:registration_ticket_callout, event:, builtin_key: "event_details", title: "Before you attend")
 
-      # No duplicate FAQ from the code path; Handouts (not materialized) still renders here.
-      titles = card_titles(registration)
-      expect(titles.count("Frequently asked questions")).to eq(0)
-      expect(titles).to include("Handouts")
+      # Materialized, so the code fallback omits it — the row renders it instead.
+      expect(card_titles(registration)).not_to include(event.event_details_label)
     end
 
     it "makes the payment card an action card while a balance is due, reference once paid" do
@@ -169,7 +167,8 @@ RSpec.describe MagicTicketCallouts do
       expect(scholarship_card.badge_classes).to include("fuchsia")
     end
 
-    it "places payment first and FAQ last in the full ordering" do
+    it "orders the code-fallback cards from payment downward" do
+      # Handouts/FAQ are row-driven, so they never appear in this fallback.
       event.update!(facilitator_training: true, event_details: "Bring supplies",
                     ce_hours_details: "6 hours", ce_hours_offered: 6,
                     videoconference_url: "https://example.zoom.us/j/123",
@@ -183,9 +182,7 @@ RSpec.describe MagicTicketCallouts do
         "Scholarship",
         event.ce_hours_details_label,
         event.event_details_label,
-        "Videoconference",
-        "Handouts",
-        "Frequently asked questions"
+        "Videoconference"
       ])
     end
   end
@@ -194,7 +191,7 @@ RSpec.describe MagicTicketCallouts do
     it "uses the row's editable presentation (title/subtitle/colour) but the app's live badge/link" do
       # Videoconference isn't app-coloured, so the row's colour is honoured.
       event.update!(videoconference_url: "https://example.com/z")
-      callout = create(:registration_ticket_callout, event:, magic_key: "videoconference",
+      callout = create(:registration_ticket_callout, event:, builtin_key: "videoconference",
         title: "Your documents", subtitle: "Downloads", color_class: "green")
 
       card = described_class.new(registration).card_for(callout)
@@ -205,7 +202,7 @@ RSpec.describe MagicTicketCallouts do
 
     it "keeps Payment's live-status colour, overriding the selected colour" do
       event.update!(cost_cents: 5_000)
-      callout = create(:registration_ticket_callout, event:, magic_key: "payment",
+      callout = create(:registration_ticket_callout, event:, builtin_key: "payment",
         title: "Pay your balance", color_class: "green")
 
       card = described_class.new(registration).card_for(callout)
@@ -215,7 +212,7 @@ RSpec.describe MagicTicketCallouts do
     end
 
     it "returns nil when the card shouldn't show for this registration" do
-      callout = create(:registration_ticket_callout, event:, magic_key: "certificate",
+      callout = create(:registration_ticket_callout, event:, builtin_key: "certificate",
         title: "Certificate of completion")
 
       # Certificate isn't unlocked (event not ended, not attended).
@@ -226,7 +223,7 @@ RSpec.describe MagicTicketCallouts do
       event.update!(ce_hours_cost_cents: 15_000, ce_payment_due_deadline: Date.new(2026, 8, 15))
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
-      callout = create(:registration_ticket_callout, event:, magic_key: "ce_hours", title: "CE credit")
+      callout = create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE credit")
 
       card = described_class.new(registration.reload).card_for(callout)
       expect(card.title).to eq("CE credit")            # row owns the text

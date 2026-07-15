@@ -1,9 +1,9 @@
 <%# Renders one registration ticket callout card. Used for both admin-configured
-    RegistrationTicketCallouts and code-defined MagicTicketCallouts::Card objects.
+    RegistrationTicketCallouts and code-defined BuiltinCalloutCards::Card objects.
     locals: callout (responds to #theme, #display_icon_class, #title, #subtitle).
             href / target / trailing_icon may be passed explicitly (admin callouts
             compute href from a route) or read off the callout when it carries them
-            (MagicTicketCallouts::Card).
+            (BuiltinCalloutCards::Card).
             linked (default true): when false the card renders as a non-navigating
             div — the sample-ticket preview has no real per-registration pages. %>
 <% theme = callout.theme %>
@@ -14,7 +14,7 @@
 <% badge = callout.try(:badge) %>
 <% badge_classes = callout.try(:badge_classes).presence || "bg-amber-100 text-amber-800 border border-amber-300" %>
 <%# A card leads to a page — so it links and shows the trailing "go to page"
-    arrow — always for magic cards (they carry their own page), and for admin
+    arrow — always for built-in cards (they carry their own page), and for admin
     callouts only when they have page content of their own. Content-less callouts
     render as a plain, non-navigating card. %>
 <% links_to_page = callout.respond_to?(:page_content?) ? callout.page_content? : true %>

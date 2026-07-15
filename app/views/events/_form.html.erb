@@ -571,7 +571,7 @@
         %>
 
         <div class="space-y-3 mb-3">
-          <% MagicTicketCallouts.editor_cards(@event).each do |card| %>
+          <% BuiltinCalloutCards.editor_cards(@event).each do |card| %>
             <% case card.key %>
             <% when :ce_hours %>
               <%= render "events/builtin_callout_card", f: f, card: card,

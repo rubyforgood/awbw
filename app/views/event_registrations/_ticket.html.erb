@@ -100,26 +100,26 @@
         </div>
       <% end %>
 
-      <% magic = MagicTicketCallouts.new(event_registration) %>
+      <% builtin_cards = BuiltinCalloutCards.new(event_registration) %>
 
-      <!-- Magic callouts: code-defined cards the app controls, for any built-in
+      <!-- Built-in callouts: code-defined cards the app controls, for any built-in
            the event hasn't materialized (also the fallback for unseeded events).
            Each knows its own visibility rule. In preview they render non-navigating. -->
-      <% magic.cards.each do |card| %>
+      <% builtin_cards.cards.each do |card| %>
         <%= render "event_registrations/callout_card", callout: card, linked: !preview %>
       <% end %>
 
       <!-- Ticket callouts: admin-authored plus any built-in cards materialized into
            editable rows, in the one admin-ordered list. Hidden (draft/opted-out)
            callouts are omitted; a drip date only withholds the callout's page
-           content, not the card itself. A behavioral magic row (payment,
+           content, not the card itself. A behavioral built-in row (payment,
            certificate, …) renders the app's live card; content/custom rows render
            their own copy. -->
       <% payment_access = event_registration.payment_access_granted? || @checkout_payment_status == "paid" %>
       <% event_registration.event.registration_ticket_callouts.visible.each do |callout| %>
         <% next if callout.payment_access_gated && !payment_access %>
-        <% if callout.behavioral_magic? %>
-          <% card = magic.card_for(callout) %>
+        <% if callout.behavioral_builtin? %>
+          <% card = builtin_cards.card_for(callout) %>
           <% if card %>
             <%= render "event_registrations/callout_card", callout: card, linked: !preview %>
           <% end %>

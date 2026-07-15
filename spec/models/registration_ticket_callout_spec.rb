@@ -28,38 +28,38 @@ RSpec.describe RegistrationTicketCallout, type: :model do
       expect(callout).not_to be_valid
     end
 
-    it "rejects an unknown magic_key" do
-      callout.magic_key = "bogus"
+    it "rejects an unknown builtin_key" do
+      callout.builtin_key = "bogus"
       expect(callout).not_to be_valid
-      expect(callout.errors[:magic_key]).to be_present
+      expect(callout.errors[:builtin_key]).to be_present
     end
 
-    it "allows only one callout per magic_key within an event" do
+    it "allows only one callout per builtin_key within an event" do
       event = create(:event)
-      create(:registration_ticket_callout, event:, magic_key: "faq")
-      duplicate = build(:registration_ticket_callout, event:, magic_key: "faq")
+      create(:registration_ticket_callout, event:, builtin_key: "faq")
+      duplicate = build(:registration_ticket_callout, event:, builtin_key: "faq")
 
       expect(duplicate).not_to be_valid
-      expect(duplicate.errors[:magic_key]).to be_present
+      expect(duplicate.errors[:builtin_key]).to be_present
     end
 
-    it "allows many custom callouts with a nil magic_key" do
+    it "allows many custom callouts with a nil builtin_key" do
       event = create(:event)
-      create(:registration_ticket_callout, event:, magic_key: nil)
-      expect(build(:registration_ticket_callout, event:, magic_key: nil)).to be_valid
+      create(:registration_ticket_callout, event:, builtin_key: nil)
+      expect(build(:registration_ticket_callout, event:, builtin_key: nil)).to be_valid
     end
   end
 
   describe "scopes and predicates" do
-    it "partitions magic and custom callouts and reports #magic?" do
+    it "partitions built-in and custom callouts and reports #builtin?" do
       event = create(:event)
-      magic = create(:registration_ticket_callout, event:, magic_key: "faq")
-      custom = create(:registration_ticket_callout, event:, magic_key: nil)
+      builtin = create(:registration_ticket_callout, event:, builtin_key: "faq")
+      custom = create(:registration_ticket_callout, event:, builtin_key: nil)
 
-      expect(event.registration_ticket_callouts.magic).to eq([ magic ])
+      expect(event.registration_ticket_callouts.builtin).to eq([ builtin ])
       expect(event.registration_ticket_callouts.custom).to eq([ custom ])
-      expect(magic.magic?).to be(true)
-      expect(custom.magic?).to be(false)
+      expect(builtin.builtin?).to be(true)
+      expect(custom.builtin?).to be(false)
     end
 
     it "#visible excludes hidden callouts" do
@@ -72,9 +72,9 @@ RSpec.describe RegistrationTicketCallout, type: :model do
 
     it "#payment? is true only for the payment built-in" do
       event = create(:event)
-      payment = create(:registration_ticket_callout, event:, magic_key: "payment")
-      other = create(:registration_ticket_callout, event:, magic_key: "faq")
-      custom = create(:registration_ticket_callout, event:, magic_key: nil)
+      payment = create(:registration_ticket_callout, event:, builtin_key: "payment")
+      other = create(:registration_ticket_callout, event:, builtin_key: "faq")
+      custom = create(:registration_ticket_callout, event:, builtin_key: nil)
 
       expect(payment.payment?).to be(true)
       expect(other.payment?).to be(false)

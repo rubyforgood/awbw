@@ -47,22 +47,24 @@ RSpec.describe "Events::Registrations", type: :request do
       end
     end
 
-    context "magic callouts" do
-      # A facilitator training shows the full built-in set, including the
-      # training-only Handouts and FAQ cards.
-      let(:event) { create(:event, facilitator_training: true) }
+    context "built-in callouts" do
+      # The ticket renders whatever built-in rows are published — no
+      # facilitator-training gate. Seed them all, then publish them.
+      before do
+        BuiltinCallouts.seed(event)
+        event.registration_ticket_callouts.builtin.each { |callout| callout.update!(hidden: false) }
+      end
 
-      it "renders the consolidated magic callout cards" do
+      it "renders the consolidated built-in callout cards for the published built-ins" do
         get registration_ticket_path(registration.slug)
-        expect(response.body).to include("view your balance")
+        expect(response.body).to include("Your balance and payment history")
         expect(response.body).to include("Worksheets and resources for the training")
         expect(response.body).to include("Frequently asked questions")
       end
 
-      it "omits the training-only Handouts and FAQ cards on a non-training event" do
-        non_training = create(:event, facilitator_training: false)
-        reg = create(:event_registration, event: non_training, registrant: user.person)
-        get registration_ticket_path(reg.slug)
+      it "omits a built-in card once its row is hidden" do
+        event.registration_ticket_callouts.where(builtin_key: %w[handouts faq]).each { |callout| callout.update!(hidden: true) }
+        get registration_ticket_path(registration.slug)
         expect(response.body).not_to include("Worksheets and resources for the training")
         expect(response.body).not_to include("Frequently asked questions")
       end
@@ -261,8 +263,11 @@ RSpec.describe "Events::Registrations", type: :request do
   end
 
   describe "GET /registration/:slug/faq" do
-    let(:event) { create(:event, facilitator_training: true) }
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
+    before do
+      BuiltinCallouts.seed(event)
+      event.registration_ticket_callouts.find_by(builtin_key: "faq").update!(hidden: false)
+    end
 
     it "renders the training FAQ with the folded-in contact link" do
       get registration_faq_path(registration.slug)
@@ -303,7 +308,7 @@ RSpec.describe "Events::Registrations", type: :request do
 
     it "links the W-9 to its resource page once a payment is on file, returning to payment" do
       w9 = create(:resource, title: "W-9", kind: "Form")
-      DefaultTicketCallouts.seed(event)
+      BuiltinCallouts.seed(event)
       payment = create(:payment, type: "CashPayment", amount_cents: event.cost_cents, amount_cents_remaining: nil)
       create(:allocation, source: payment, allocatable: registration, amount: event.cost_cents)
 
@@ -314,7 +319,7 @@ RSpec.describe "Events::Registrations", type: :request do
 
     it "locks the W-9 (no link) until a payment is on file" do
       w9 = create(:resource, title: "W-9", kind: "Form")
-      DefaultTicketCallouts.seed(event)
+      BuiltinCallouts.seed(event)
 
       get registration_payment_path(registration.slug)
       expect(response.body).not_to include(registration_resource_path(registration.slug, w9, return_to: "payment"))
@@ -328,8 +333,8 @@ RSpec.describe "Events::Registrations", type: :request do
 
     it "drops the W-9 when the payment callout's resource is removed" do
       w9 = create(:resource, title: "W-9", kind: "Form")
-      DefaultTicketCallouts.seed(event)
-      event.registration_ticket_callouts.find_by(magic_key: "payment").resources.destroy_all
+      BuiltinCallouts.seed(event)
+      event.registration_ticket_callouts.find_by(builtin_key: "payment").resources.destroy_all
       get registration_payment_path(registration.slug)
       expect(response.body).not_to include(registration_resource_path(registration.slug, w9, return_to: "payment"))
     end
@@ -504,18 +509,19 @@ RSpec.describe "Events::Registrations", type: :request do
   end
 
   describe "GET /registration/:slug/handouts" do
-    let(:event) { create(:event, facilitator_training: true) }
     let!(:registration) { create(:event_registration, event: event, registrant: user.person) }
 
     it "links each handout to its registrant resource page, returning to handouts" do
       handout = create(:resource, title: "Aha Moments", kind: "Handout")
-      DefaultTicketCallouts.seed(event) # materialize the handouts callout, linking the resource
+      BuiltinCallouts.seed(event) # materialize the handouts callout, linking the resource
+      event.registration_ticket_callouts.find_by(builtin_key: "handouts").update!(hidden: false)
       get registration_handouts_path(registration.slug)
       expect(response).to have_http_status(:success)
       expect(response.body).to include(registration_resource_path(registration.slug, handout, return_to: "handouts"))
     end
 
     it "shows a placeholder when no handouts are present" do
+      create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false)
       get registration_handouts_path(registration.slug)
       expect(response.body).to include("Training handouts will be available here soon.")
     end

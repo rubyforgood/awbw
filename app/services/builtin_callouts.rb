@@ -1,19 +1,19 @@
-# Materializes the built-in ("magic") ticket callouts into editable rows for an
-# event. Run on event create and, for events that predate this, lazily on edit —
-# so existing events heal the first time they're saved, with no data backfill.
+# The catalog of built-in ticket callouts (Payment, Certificate, Scholarship, CE
+# hours, Event details, Videoconference, Handouts, FAQ) and the code that
+# materializes them onto an event as editable RegistrationTicketCallout rows:
+# `seed` persists them (on create, and lazily on edit so older events heal with no
+# backfill); `build` makes the same rows in memory for the new-event form; `reset`
+# restores a row to its default; `customized?` reports whether a row was edited.
 #
-# All eight built-ins always seed. Their initial visibility (hidden/published) is
-# derived from the event's config via each definition's `hidden` proc: published
-# by default on facilitator trainings, hidden (unchecked) on everything else.
-# Admins toggle visibility per row from the editor. Seeding is idempotent so a
-# re-run never clobbers admin edits.
+# All eight seed hidden (unchecked) by default — admins publish the ones they want
+# per event, edit them per row, and can restore a row to default. Custom callouts
+# live in the same list and can be reordered among the built-ins. Seeding is
+# idempotent so a re-run never clobbers admin edits.
 #
-# Behavioral built-ins (payment, CE, scholarship, …) render live per-registration
-# status through MagicTicketCallouts#card_for, which has its own guards (e.g. the
-# payment card returns nil on a free event) so publishing a row on an
-# non-applicable event is harmless. MagicTicketCallouts skips any card an event
-# has already materialized, so the two paths never double-render.
-class DefaultTicketCallouts
+# This service owns the callouts' *definitions and materialization*. How a callout
+# then renders as a live card on a registrant's ticket (status badges, per-
+# registration guards) is the job of BuiltinCalloutCards.
+class BuiltinCallouts
   # Default FAQ content for the 2-day training, mirrored from the code-defined FAQ
   # page so a newly materialized card starts with the current copy. Admins edit it
   # per event afterward.
@@ -82,13 +82,24 @@ class DefaultTicketCallouts
     }
   }.freeze
 
-  # magic_keys this service knows how to materialize.
+  # builtin_keys this service knows how to materialize.
   def self.seedable_keys
-    new(nil).send(:definitions).map { |definition| definition[:magic_key] }
+    new(nil).send(:definitions).map { |definition| definition[:builtin_key] }
   end
 
   def self.seed(event)
     new(event).seed
+  end
+
+  # Build (not persist) any not-yet-present built-in callouts as in-memory rows on
+  # the event, so a brand-new event's form shows the built-ins as editable rows
+  # that save together with the event on first submit. Idempotent against rows
+  # already loaded/built (e.g. re-rendering a failed create), so it never
+  # duplicates. Persisting still routes each row's `builtin_key` back through nested
+  # attributes; the post-save `seed` is the idempotent safety net for non-form
+  # creation paths. Returns the built rows.
+  def self.build(event)
+    new(event).build
   end
 
   # Reset a materialized callout's content and default visibility back to its
@@ -107,19 +118,27 @@ class DefaultTicketCallouts
     @event = event
   end
 
-  # Create any not-yet-present magic callouts for the event, appended in
+  # Create any not-yet-present built-in callouts for the event, appended in
   # definition order after whatever already exists. All built-ins always seed;
   # their initial visibility (hidden/published) is derived from the event's
   # config via each definition's `hidden` proc. Seeding is idempotent so a re-run
   # never clobbers admin edits. Returns the created rows.
   def seed
-    existing_keys = @event.registration_ticket_callouts.magic.pluck(:magic_key).to_set
-    definitions.reject { |definition| existing_keys.include?(definition[:magic_key]) }
+    existing_keys = @event.registration_ticket_callouts.builtin.pluck(:builtin_key).to_set
+    definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) }
                .map { |definition| create(definition) }
   end
 
+  # In-memory counterpart to #seed. Skips keys already present on the loaded
+  # association (built or persisted) so it's safe to call on every form render.
+  def build
+    existing_keys = @event.registration_ticket_callouts.reject(&:marked_for_destruction?).filter_map(&:builtin_key).to_set
+    definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) }
+               .map { |definition| build_row(definition) }
+  end
+
   def reset(callout)
-    definition = definitions.find { |candidate| candidate[:magic_key] == callout.magic_key }
+    definition = definitions.find { |candidate| candidate[:builtin_key] == callout.builtin_key }
     return callout unless definition
 
     callout.update!(
@@ -138,7 +157,7 @@ class DefaultTicketCallouts
   end
 
   def customized?(callout)
-    definition = definitions.find { |candidate| candidate[:magic_key] == callout.magic_key }
+    definition = definitions.find { |candidate| candidate[:builtin_key] == callout.builtin_key }
     return false unless definition
 
     callout.title != resolve(definition[:title]) ||
@@ -165,18 +184,18 @@ class DefaultTicketCallouts
   # each event derives its own defaults; `resources` resolves the linked records;
   # `seed_if` gates whether the card applies. Content cards (Handouts, FAQ) render
   # their own copy; "behavioral" cards (Certificate, Videoconference) render live
-  # per-registration status through MagicTicketCallouts#card_for — the row only
+  # per-registration status through BuiltinCalloutCards#card_for — the row only
   # governs visibility, drip date, and order.
   def definitions
     [
       {
-        magic_key: "payment",
+        builtin_key: "payment",
         title: "Payment",
         subtitle: "Your balance and payment history",
         callout_type: "action",
         icon_class: "fa-solid fa-credit-card",
         color_class: "orange",
-        hidden: ->(event) { !event.facilitator_training? },
+        hidden: ->(_event) { true },
         # The W-9 is a removable linked resource, included by default only on paid
         # events (where a tax form applies); the invoice/receipt stay dynamic on
         # the payment page. Admins add/remove it per event.
@@ -187,27 +206,27 @@ class DefaultTicketCallouts
         }
       },
       {
-        magic_key: "certificate",
+        builtin_key: "certificate",
         title: "Certificate of completion",
         subtitle: "View and download your certificate",
         callout_type: "action",
         icon_class: "fa-solid fa-certificate",
         color_class: "green",
         # Off by default except on facilitator trainings. When shown, it still only
-        # appears once the certificate unlocks (MagicTicketCallouts guards this).
-        hidden: ->(event) { !event.facilitator_training? }
+        # appears once the certificate unlocks (BuiltinCalloutCards guards this).
+        hidden: ->(_event) { true }
       },
       {
-        magic_key: "scholarship",
+        builtin_key: "scholarship",
         title: "Scholarship",
         subtitle: "Your scholarship request and award",
         callout_type: "action",
         icon_class: "fa-solid fa-award",
         color_class: "fuchsia",
-        hidden: ->(event) { !event.facilitator_training? }
+        hidden: ->(_event) { true }
       },
       {
-        magic_key: "ce_hours",
+        builtin_key: "ce_hours",
         # Title/text seed from the event's CE columns (migrating existing content);
         # thereafter they live on the row like every other built-in. The row also
         # carries the CE hours-offered/cost config.
@@ -217,10 +236,10 @@ class DefaultTicketCallouts
         callout_type: "action",
         icon_class: "fa-solid fa-graduation-cap",
         color_class: "teal",
-        hidden: ->(event) { !event.facilitator_training? }
+        hidden: ->(_event) { true }
       },
       {
-        magic_key: "event_details",
+        builtin_key: "event_details",
         # Title/text seed from the event's details columns (migrating existing
         # content); thereafter they live on the row.
         title: ->(event) { event.event_details_label },
@@ -229,48 +248,62 @@ class DefaultTicketCallouts
         callout_type: "reference",
         icon_class: "fa-solid fa-palette",
         color_class: "blue",
-        hidden: ->(event) { !event.facilitator_training? }
+        hidden: ->(_event) { true }
       },
       {
-        magic_key: "videoconference",
+        builtin_key: "videoconference",
         title: "Videoconference",
         subtitle: "Join link and how to add it to your calendar",
         callout_type: "action",
         icon_class: "fa-solid fa-video",
         color_class: "blue",
-        hidden: ->(event) { !event.facilitator_training? },
+        hidden: ->(_event) { true },
         # Drips onto the ticket a week before the event starts, replacing the old
         # hard-coded "one week prior" rule with a stored, editable date.
         display_from: ->(event) { event.start_date - 7.days if event.start_date }
       },
       {
-        magic_key: "handouts",
+        builtin_key: "handouts",
         title: "Handouts",
         subtitle: "Worksheets and resources for the training",
         callout_type: "reference",
         icon_class: "fa-solid fa-folder-open",
         color_class: "blue",
-        hidden: ->(event) { !event.facilitator_training? },
+        hidden: ->(_event) { true },
         resources: -> { handout_resources },
         # Per-link subtitle/page_content defaults, keyed by resource title.
         resource_content: HANDOUT_LINK_DEFAULTS
       },
       {
-        magic_key: "faq",
+        builtin_key: "faq",
         title: "Frequently asked questions",
         subtitle: "Common questions about the 2-day training",
         callout_type: "reference",
         icon_class: "fa-solid fa-circle-question",
         color_class: "blue",
         description: self.class.faq_html,
-        hidden: ->(event) { !event.facilitator_training? }
+        hidden: ->(_event) { true }
       }
     ]
   end
 
   def create(definition)
-    callout = @event.registration_ticket_callouts.create!(
-      magic_key: definition[:magic_key],
+    callout = @event.registration_ticket_callouts.create!(attributes_for(definition))
+    build_resource_links(callout, definition)
+    callout
+  end
+
+  # In-memory sibling of #create: builds the row (and its resource links) without
+  # persisting, so they save as nested attributes when the event is saved.
+  def build_row(definition)
+    callout = @event.registration_ticket_callouts.build(attributes_for(definition))
+    build_resource_links(callout, definition)
+    callout
+  end
+
+  def attributes_for(definition)
+    {
+      builtin_key: definition[:builtin_key],
       title: resolve(definition[:title]),
       subtitle: resolve(definition[:subtitle]),
       description: resolve(definition[:description]),
@@ -279,23 +312,24 @@ class DefaultTicketCallouts
       color_class: definition[:color_class],
       hidden: definition[:hidden].call(@event),
       display_from: definition[:display_from]&.call(@event)
-    )
-    build_resource_links(callout, definition)
-    callout
+    }
   end
 
   # Link the definition's resources in order, materializing each join row's
   # subtitle/page_content from `resource_content` (keyed by resource title) when
-  # the definition supplies it. The positioning gem assigns each row's position.
+  # the definition supplies it. Links persist immediately for a saved callout, or
+  # stay in memory (saved with the event) when the callout is still unsaved. The
+  # positioning gem assigns each row's position.
   def build_resource_links(callout, definition)
     content = definition[:resource_content] || {}
     Array(definition[:resources]&.call).each do |resource|
       attrs = content[resource.title] || {}
-      callout.registration_ticket_callout_resources.create!(
+      link = callout.registration_ticket_callout_resources.build(
         resource: resource,
         subtitle: attrs[:subtitle],
         page_content: attrs[:page_content]
       )
+      link.save! if callout.persisted?
     end
   end
 

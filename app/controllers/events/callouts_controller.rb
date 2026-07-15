@@ -1,5 +1,5 @@
 module Events
-  # Public show pages for a registration ticket's magic callouts (payment, CE,
+  # Public show pages for a registration ticket's built-in callouts (payment, CE,
   # scholarship, handouts, videoconference, FAQ, certificate).
   # Each is reachable by the registration slug — the slug is the authorization,
   # so no login is required (mirrors the public ticket/invoice pages).
@@ -145,8 +145,8 @@ module Events
     # (PDF preview + download, with a back-to-handouts eyebrow). Cards read their
     # subtitle from the materialized handouts callout's join rows.
     def handouts
-      return redirect_to registration_ticket_path(@event_registration.slug) unless @event.show_handouts_callout?
-      callout = @event.registration_ticket_callouts.find_by(magic_key: "handouts")
+      return redirect_to registration_ticket_path(@event_registration.slug) unless builtin_published?("handouts")
+      callout = @event.registration_ticket_callouts.find_by(builtin_key: "handouts")
       @handout_cards = resource_cards_for(callout, icon: "fa-solid fa-file-pdf", return_to: "handouts")
     end
 
@@ -171,12 +171,20 @@ module Events
     # question), falling back to the code-defined default for events that haven't
     # materialized the card yet.
     def faq
-      return redirect_to(registration_ticket_path(@event_registration.slug)) unless @event.show_faq_callout?
-      callout = @event.registration_ticket_callouts.find_by(magic_key: "faq")
-      @faq_content = callout&.description.presence || DefaultTicketCallouts.faq_html
+      return redirect_to(registration_ticket_path(@event_registration.slug)) unless builtin_published?("faq")
+      callout = @event.registration_ticket_callouts.find_by(builtin_key: "faq")
+      @faq_content = callout&.description.presence || BuiltinCallouts.faq_html
     end
 
     private
+
+    # Whether the event's built-in callout for this key is materialized and
+    # published (visible). These public pages gate on that alone now — the admin's
+    # published/hidden choice on the row decides whether the page is reachable, so
+    # a hidden or not-yet-materialized card can't surface via a stray link.
+    def builtin_published?(builtin_key)
+      @event.registration_ticket_callouts.exists?(builtin_key: builtin_key, hidden: false)
+    end
 
     def set_event_registration
       @event_registration = EventRegistration.find_by!(slug: params[:slug])
@@ -191,14 +199,14 @@ module Events
     end
 
     # The editable intro and linked resources for a built-in page, from the
-    # materialized callout row for this action's magic_key. Nil/empty when the
+    # materialized callout row for this action's builtin_key. Nil/empty when the
     # event hasn't materialized the card. Payment renders its own document list
     # (W-9 + invoice/receipt) in its Documents section, so it skips the generic
     # resource list here. Resources render as callout cards linking to their own
     # registrant page (PDF preview + download), each returning to this callout —
     # never inline.
     def set_builtin_content
-      callout = @event.registration_ticket_callouts.find_by(magic_key: action_name)
+      callout = @event.registration_ticket_callouts.find_by(builtin_key: action_name)
       @builtin_intro = callout&.description.presence
       callout = nil if action_name == "payment"
       @builtin_resource_cards = resource_cards_for(callout, icon: "fa-solid fa-file-lines", return_to: action_name)
@@ -224,8 +232,8 @@ module Events
       case params[:return_to]
       when "callout"
         @event.registration_ticket_callouts.find_by(id: params[:callout_id])
-      when *RegistrationTicketCallout::MAGIC_KEYS
-        @event.registration_ticket_callouts.find_by(magic_key: params[:return_to])
+      when *RegistrationTicketCallout::BUILTIN_KEYS
+        @event.registration_ticket_callouts.find_by(builtin_key: params[:return_to])
       end
     end
 
@@ -282,7 +290,7 @@ module Events
     # can add/remove them), else transient links for the W-9 on paid events not
     # yet materialized.
     def payment_document_resources
-      payment_callout = @event.registration_ticket_callouts.find_by(magic_key: "payment")
+      payment_callout = @event.registration_ticket_callouts.find_by(builtin_key: "payment")
       return payment_callout.registration_ticket_callout_resources.ordered.includes(:resource).to_a if payment_callout
       return [] unless @event.cost_cents.to_i.positive?
       Resource.where(title: "W-9").map { |resource| RegistrationTicketCalloutResource.new(resource:) }
@@ -291,7 +299,7 @@ module Events
     # A grey document card for a non-resource payment document (the dynamic
     # invoice/receipt). Opens in a new tab, matching the callout-card contract.
     def document_card(title:, subtitle:, icon:, href:)
-      MagicTicketCallouts::Card.new(icon_class: icon, color: "gray", title:, subtitle:,
+      BuiltinCalloutCards::Card.new(icon_class: icon, color: "gray", title:, subtitle:,
                                     href:, target: "_blank", trailing_icon: "fa-solid fa-arrow-right")
     end
 
@@ -299,7 +307,7 @@ module Events
     # available yet; the payment view renders it as a plain div with a lock icon,
     # and the subtitle names what unlocks it.
     def locked_document_card(title:, subtitle:, icon:)
-      MagicTicketCallouts::Card.new(icon_class: icon, color: "gray", title:, subtitle:,
+      BuiltinCalloutCards::Card.new(icon_class: icon, color: "gray", title:, subtitle:,
                                     href: nil, target: nil, trailing_icon: "fa-solid fa-lock")
     end
 

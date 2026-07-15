@@ -148,7 +148,7 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Sample ticket preview")
         expect(response.body).to include("Sample Registrant")
-        # Magic callout cards render (the sample event is paid, so the payment
+        # Built-in callout cards render (the sample event is paid, so the payment
         # card shows) without raising on the unsaved sample's sentinel slug.
         expect(response.body).to include("Make your payment")
       end
@@ -246,6 +246,15 @@ RSpec.describe "Events", type: :request do
         get new_event_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "renders the built-in callouts as editable rows before the first save" do
+        sign_in admin
+        get new_event_path
+        # Built-in rows are built in memory, so their title is editable and the
+        # builtin_key round-trips as a hidden field.
+        expect(response.body).to include("Frequently asked questions")
+        expect(response.body).to include('name="event[registration_ticket_callouts_attributes][0][builtin_key]"')
+      end
     end
 
     context "as non-admin" do
@@ -321,6 +330,24 @@ RSpec.describe "Events", type: :request do
       it "redirects to the created event" do
         post events_path, params: valid_params
         expect(response).to redirect_to(event_url(Event.last))
+      end
+
+      it "persists edited built-in callouts from the new form without duplicating them" do
+        params = valid_params.deep_dup
+        params[:event][:registration_ticket_callouts_attributes] = {
+          "0" => { builtin_key: "payment", title: "Pay your balance", subtitle: "view balance", callout_type: "action", color_class: "orange", published: "1" },
+          "1" => { builtin_key: "faq", title: "Frequently asked questions", callout_type: "reference", color_class: "blue", published: "0" }
+        }
+
+        expect { post events_path, params: params }.to change(Event, :count).by(1)
+
+        created = Event.order(created_at: :desc).first
+        # The two submitted built-ins persist their edits, and the post-save seed
+        # fills the remaining six — every built-in key present exactly once.
+        expect(created.registration_ticket_callouts.builtin.pluck(:builtin_key).sort).to eq(RegistrationTicketCallout::BUILTIN_KEYS.sort)
+        payment = created.registration_ticket_callouts.find_by(builtin_key: "payment")
+        expect(payment.title).to eq("Pay your balance")
+        expect(payment.published?).to be true
       end
 
       it "stores start_date/end_date in UTC when created by user in Pacific time zone" do

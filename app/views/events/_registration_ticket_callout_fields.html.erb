@@ -21,6 +21,12 @@
   <% end %>
 
   <div class="flex-1 min-w-0 relative">
+    <%# Round-trips the built-in identity so an unsaved (new-event) built-in row saves
+        as its built-in, not a custom callout; kept outside the collapsed content
+        so it submits even when the row is unpublished. %>
+    <% if f.object.builtin? %>
+      <%= f.hidden_field :builtin_key %>
+    <% end %>
     <%#
       Published toggle, pinned to the card's top-right corner. The checkbox is
       kept as a bare sibling *before* the content div below so the
@@ -40,7 +46,7 @@
     %>
 
     <div class="flex items-center gap-x-3 pr-24 text-sm">
-      <% if f.object.magic? %>
+      <% if f.object.builtin? %>
         <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 shrink-0">Built in</span>
       <% end %>
 
@@ -223,8 +229,8 @@
         the same spot instead.
       %>
       <div class="flex items-center justify-end gap-x-6 text-sm">
-        <% if f.object.magic? %>
-          <% if f.object.persisted? && DefaultTicketCallouts.customized?(f.object) %>
+        <% if f.object.builtin? %>
+          <% if f.object.persisted? && BuiltinCallouts.customized?(f.object) %>
             <label class="flex items-center gap-2 text-xs text-gray-500"><%= f.check_box :reset_to_default, class: "rounded border-gray-300 text-purple-600" %> Restore to default</label>
           <% else %>
             <span class="text-xs text-gray-300">Matches default</span>
