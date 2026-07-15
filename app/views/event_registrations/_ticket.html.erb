@@ -128,14 +128,20 @@
         <% if callout.behavioral_builtin? %>
           <% card = builtin_cards.card_for(callout) %>
           <% if card %>
-            <%# Behavioral cards link to per-registration pages, so they can't be
-                previewed from the data-free sample — render them non-navigating. %>
-            <%= render "event_registrations/callout_card", callout: card, linked: !preview %>
+            <%# Behavioral cards link to per-registration pages. On a real ticket that's
+                the registrant's live page; in the preview it's the admin-only in-memory
+                sample of that page (nil for a card with no previewable page). %>
+            <% sample_href = sample_callout_path(event_registration.event, callout) if preview %>
+            <%= render "event_registrations/callout_card", callout: card,
+                       href: preview ? sample_href : card.href,
+                       linked: preview ? sample_href.present? : true %>
           <% elsif preview && show_all %>
             <!-- The live card doesn't apply to the sample registrant (e.g. no
                  certificate yet), but "Show all options" still previews the row's
                  own static card. -->
-            <%= render "event_registrations/callout_card", callout: callout, href: nil, linked: false %>
+            <% sample_href = sample_callout_path(event_registration.event, callout) %>
+            <%= render "event_registrations/callout_card", callout: callout,
+                       href: sample_href, linked: sample_href.present? %>
           <% end %>
         <% else %>
           <%= render "event_registrations/callout_card",

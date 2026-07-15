@@ -75,23 +75,10 @@ class EventsController < ApplicationController
 
     @show_all_options = params[:options] == "all"
     # Always an unsaved, data-free sample so the preview can never read from or
-    # write to a real registrant. Its content/custom callout pages preview from
-    # materialized rows; behavioral built-in cards (whose pages are
-    # per-registration) render non-navigating, since the sentinel slug wouldn't
-    # resolve to a real page.
-    registrant = Person.new(first_name: "Sample", last_name: "Person")
-    @event_registration = @event.event_registrations.new(
-      registrant: registrant,
-      slug: "sample",
-      status: "registered",
-      intends_to_pay: true,
-      w9_requested: @show_all_options,
-      invoice_requested: @show_all_options,
-      scholarship_requested: @show_all_options,
-      shoutout: @show_all_options,
-      created_at: Time.current
-    )
-    build_sample_ce_registration if @show_all_options
+    # write to a real registrant. Its behavioral built-in cards link to the
+    # admin-only sample callout previews (see Events::CalloutsController), which
+    # render the same in-memory sample — nothing is ever persisted.
+    @event_registration = SampleTicketRegistration.new(@event, all_options: @show_all_options).registration
   end
 
   def background
@@ -517,18 +504,6 @@ class EventsController < ApplicationController
   end
 
   private
-
-  # Build (unsaved) a CE registration on the sample ticket so the "Show all
-  # options" preview renders a populated CE card. Mirrors a complete, paid-looking
-  # CE record without touching the database.
-  def build_sample_ce_registration
-    license = ProfessionalLicense.new(person: @event_registration.registrant, number: "SAMPLE-12345")
-    @event_registration.continuing_education_registrations.build(
-      professional_license: license,
-      hours: @event.ce_hours_offered || 6,
-      cost_cents: @event.ce_hours_cost_cents || 15_000
-    )
-  end
 
   # The registrations the admin checked on the recipient picker, narrowed to those
   # we can actually email. Shared by the confirm interstitial and the send action

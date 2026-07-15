@@ -4,13 +4,17 @@ module Events
   # Each is reachable by the registration slug — the slug is the authorization,
   # so no login is required (mirrors the public ticket/invoice pages).
   class CalloutsController < ApplicationController
-    skip_before_action :authenticate_user!
+    # Real registrant pages are public (the slug is the authorization); the
+    # sample-ticket previews instead require an admin (authorized in #authorize_callout).
+    skip_before_action :authenticate_user!, unless: :sample_preview?
     before_action :set_event_registration
     before_action :authorize_callout
     before_action :set_event
     # These pages carry an editable intro (the built-in row's "Callout page text")
     # above the app-controlled content, plus any resources linked to the row.
     before_action :set_builtin_content, only: %i[ payment scholarship certificate videoconference ]
+
+    helper_method :sample_preview?
 
     # The single-resource page previews a PDF in an <object> (object-src). The
     # global policy blocks <object>/<embed> with object_src :none; relax to :self
@@ -34,13 +38,19 @@ module Events
     # the linked documents (the W-9 from the payment callout's resources, and the
     # dynamic invoice/receipt) for paid events.
     def payment
-      @allocations = @event_registration.allocations.includes(:source).order(:created_at)
-      @document_cards = payment_document_cards
+      # The sample preview has no ledger or documents to link (its sentinel slug
+      # wouldn't resolve), so it just shows the empty structure.
+      @allocations = sample_preview? ? [] : @event_registration.allocations.includes(:source).order(:created_at)
+      @document_cards = sample_preview? ? [] : payment_document_cards
     end
 
     # Certificate of completion, rendered like the invoice. Only reachable once
     # the certificate is unlocked.
     def certificate
+      # The sample preview always shows the template; a real registrant only sees
+      # it once the certificate is unlocked.
+      return if sample_preview?
+
       unless @event_registration.certificate_available?
         redirect_to registration_ticket_path(@event_registration.slug)
       end
@@ -188,16 +198,32 @@ module Events
       @event.registration_ticket_callouts.exists?(builtin_key: builtin_key, hidden: false)
     end
 
+    # Admin-only preview from the sample ticket. Renders these pages for an
+    # unsaved, data-free sample registration instead of a real one looked up by
+    # slug, so nothing is ever read from or written to a real registrant.
+    def sample_preview?
+      params[:sample].present?
+    end
+
     def set_event_registration
-      @event_registration = EventRegistration.find_by!(slug: params[:slug])
+      if sample_preview?
+        @event = Event.find(params[:id])
+        @event_registration = SampleTicketRegistration.new(@event, all_options: true).registration
+      else
+        @event_registration = EventRegistration.find_by!(slug: params[:slug])
+      end
     end
 
     def authorize_callout
-      authorize! @event_registration, to: :show_public?
+      if sample_preview?
+        authorize! @event, to: :dashboard?
+      else
+        authorize! @event_registration, to: :show_public?
+      end
     end
 
     def set_event
-      @event = @event_registration.event
+      @event ||= @event_registration.event
     end
 
     # The editable intro and linked resources for a built-in page, from the

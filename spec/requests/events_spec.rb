@@ -195,6 +195,11 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Frequently asked questions")
       end
 
+      it "links behavioral built-in cards to their in-memory sample preview pages" do
+        get sample_ticket_event_path(event, options: "all")
+        expect(response.body).to include(sample_payment_event_path(event))
+      end
+
       it "models a typical registrant by default, hiding scholarship and CE" do
         get sample_ticket_event_path(event)
         expect(response.body).not_to include("Your scholarship request and award")
@@ -220,6 +225,50 @@ RSpec.describe "Events", type: :request do
         sign_in user
         get sample_ticket_event_path(event)
         expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "sample callout previews" do
+    let(:event) { create(:event, ce_hours_offered: 6, videoconference_url: "https://example.com/vc") }
+
+    sample_paths = {
+      "payment" => :sample_payment_event_path,
+      "certificate" => :sample_certificate_event_path,
+      "scholarship" => :sample_scholarship_event_path,
+      "ce" => :sample_ce_event_path,
+      "videoconference" => :sample_videoconference_event_path
+    }
+
+    context "as admin" do
+      before { sign_in admin }
+
+      sample_paths.each do |name, helper|
+        it "renders the #{name} preview for a data-free sample, back-linked to the ticket, without persisting" do
+          expect { get public_send(helper, event) }
+            .not_to change(EventRegistration, :count)
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include(sample_ticket_event_path(event))
+        end
+      end
+
+      it "does not expose a Pay action on the payment preview" do
+        event.update!(cost_cents: 5000)
+        get sample_payment_event_path(event)
+        expect(response.body).not_to include(registration_pay_path("sample"))
+      end
+    end
+
+    context "as a non-admin" do
+      it "redirects a signed-in non-admin" do
+        sign_in user
+        get sample_payment_event_path(event)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "requires login" do
+        get sample_payment_event_path(event)
+        expect(response).to redirect_to(new_user_session_path)
       end
     end
   end
