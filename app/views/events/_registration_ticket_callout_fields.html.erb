@@ -12,8 +12,7 @@
   data-callout-preview-defaults-value="<%= RegistrationTicketCallout::DEFAULT_COLORS.to_json %>"
   <% if f.object.persisted? %>
     data-sortable-id="<%= f.object.id %>"
-  <% end %>
->
+  <% end %>>
   <% if f.object.persisted? %>
     <div class="cursor-grab text-gray-400 hover:text-gray-600 pt-2 shrink-0" data-sortable-handle title="Drag to reorder"><i class="fa-solid fa-grip-vertical"></i></div>
   <% else %>

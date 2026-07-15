@@ -14,8 +14,7 @@
           px-4 py-2 rounded-lg font-medium text-sm
           transition-all duration-150
           <%= default_btn %>
-        "
-      >
+        ">
         <%= check_box_tag("kinds[]", name, Array(params[:kinds]).include?(name),
                         id: "kind_#{name}",
                         class: "hidden") %>

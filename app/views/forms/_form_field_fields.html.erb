@@ -15,8 +15,8 @@
 %>
 <div class="nested-fields flex items-center gap-3 <%= field.group_header? ? "pl-3 pr-6" : "px-6" %> py-3 border-b border-gray-100 hover:bg-gray-50"
      data-sortable-id="<%= field.id %>"
-     <% if field.section.present? %>data-section="<%= field.section %>"<% end %>
-     <% if field.group_header? %>data-group-header<% end %>>
+     <% if field.section.present? %> data-section="<%= field.section %>"<% end %>
+     <% if field.group_header? %> data-group-header<% end %>>
   <% if field.group_header? %>
     <div class="cursor-grab rounded bg-purple-50 text-purple-500 hover:bg-purple-100 hover:text-purple-700 px-1.5 py-1"
          data-sortable-handle

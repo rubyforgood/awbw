@@ -6,8 +6,7 @@
       data="<%= rails_storage_proxy_path(file, disposition: :inline) %>"
       type="application/pdf"
       class="w-full h-full"
-      aria-label="<%= resource.title %> (PDF preview)"
-    >
+      aria-label="<%= resource.title %> (PDF preview)">
       <%= render "assets/display_assets",
                resource: resource, file: file, variant: :hero, link: true %>
     </object>

@@ -142,7 +142,7 @@
       <% cancel_path =
            if params[:workshop_id].present? && @workshop
              workshop_path(@workshop, anchor: "workshop-variations")
-           elsif (allowed_to?(:index?, WorkshopVariationIdea))
+           elsif allowed_to?(:index?, WorkshopVariationIdea)
              workshop_variation_ideas_path
            else
              root_path

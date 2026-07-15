@@ -61,8 +61,7 @@
       id="event_details_button"
       class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md"
       data-action="dropdown#toggle"
-      data-dropdown-payload-param='[{"event_details":"hidden"}, {"event_details_arrow":"rotate-180"}, {"event_details_button":"rounded-t-md rounded-md"}]'
-    >
+      data-dropdown-payload-param='[{"event_details":"hidden"}, {"event_details_arrow":"rotate-180"}, {"event_details_button":"rounded-t-md rounded-md"}]'>
       Event details
       <i id="event_details_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300 rotate-180"></i>
     </button>
@@ -251,8 +250,7 @@
           class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-t-md"
           data-action="dropdown#toggle"
           data-reveal-section-target="toggle"
-          data-dropdown-payload-param='[{"registration_form_section":"hidden"}, {"registration_form_arrow":"rotate-180"}, {"registration_form_button":"rounded-t-md rounded-md"}]'
-        >
+          data-dropdown-payload-param='[{"registration_form_section":"hidden"}, {"registration_form_arrow":"rotate-180"}, {"registration_form_button":"rounded-t-md rounded-md"}]'>
           Form settings
           <i id="registration_form_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300 rotate-180"></i>
         </button>
@@ -318,8 +316,7 @@
                   class="text-blue-600 hover:text-blue-800 underline"
                   data-controller="anchor-highlight"
                   data-action="click->anchor-highlight#flash"
-                  data-anchor-highlight-target-param="public_registration_setting"
-                >
+                  data-anchor-highlight-target-param="public_registration_setting">
                   Change
                 </a>
               </div>
@@ -521,8 +518,7 @@
           bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
         "
         data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"page_content":"hidden"}, {"page_content_arrow":"rotate-180"}, {"page_content_button":"rounded-md rounded-t-md"}]'
-      >
+        data-dropdown-payload-param='[{"page_content":"hidden"}, {"page_content_arrow":"rotate-180"}, {"page_content_button":"rounded-md rounded-t-md"}]'>
         Event show page
         <i id="page_content_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
       </button>
@@ -559,8 +555,7 @@
         "
         data-action="dropdown#toggle"
         <%== 'data-dropdown-target="expand"' if params[:expand] == "callouts" %>
-        data-dropdown-payload-param='[{"registration_ticket_callouts_panel":"hidden"}, {"registration_ticket_callouts_arrow":"rotate-180"}, {"registration_ticket_callouts_button":"rounded-md rounded-t-md"}]'
-      >
+        data-dropdown-payload-param='[{"registration_ticket_callouts_panel":"hidden"}, {"registration_ticket_callouts_arrow":"rotate-180"}, {"registration_ticket_callouts_button":"rounded-md rounded-t-md"}]'>
         Registration ticket callouts
         <i id="registration_ticket_callouts_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
       </button>
@@ -647,8 +642,7 @@
           id="registration_ticket_callouts_list"
           class="space-y-3"
           data-controller="sortable"
-          data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>"
-        >
+          data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>">
           <%= f.fields_for :registration_ticket_callouts do |rts| %>
             <%= render "events/registration_ticket_callout_fields", f: rts, event_f: f %>
           <% end %>
@@ -672,8 +666,7 @@
           bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
         "
         data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"images":"hidden"}, {"images_arrow":"rotate-180"}, {"images_button":"rounded-md rounded-t-md"}]'
-      >
+        data-dropdown-payload-param='[{"images":"hidden"}, {"images_arrow":"rotate-180"}, {"images_button":"rounded-md rounded-t-md"}]'>
         Images
         <i id="images_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
       </button>
@@ -690,8 +683,7 @@
           bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
         "
         data-action="dropdown#toggle"
-        data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'
-      >
+        data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'>
         Tags
         <i id="tags_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
       </button>
@@ -713,8 +705,7 @@
                 class="
                   flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-blue-50 border border-gray-200
                   rounded-lg shadow-sm hover:bg-gray-100 transition
-                "
-              >
+                ">
                 <%= hidden_field_tag "event[sector_ids][]", "" %>
                 <!-- # To ensure unchecked boxes are submitted -->
                 <%= check_box_tag "event[sector_ids][]",
@@ -745,8 +736,7 @@
                     class="
                       flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-blue-50 border
                       border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition
-                    "
-                  >
+                    ">
                     <%= hidden_field_tag "event[category_ids][]", "" %>
                     <!-- # To ensure unchecked boxes are submitted -->
                     <%= check_box_tag "event[category_ids][]",
@@ -772,8 +762,7 @@
           id="snippets_button"
           class="flex items-center justify-between cursor-pointer w-full bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
           data-action="dropdown#toggle"
-          data-dropdown-payload-param='[{"snippets":"hidden"}, {"snippets_arrow":"rotate-180"}, {"snippets_button":"rounded-md rounded-t-md"}]'
-        >
+          data-dropdown-payload-param='[{"snippets":"hidden"}, {"snippets_arrow":"rotate-180"}, {"snippets_button":"rounded-md rounded-t-md"}]'>
           Google Snippets
           <i id="snippets_arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
         </button>
@@ -813,8 +802,7 @@
           formaction="<%= preview_event_path(@event) %>"
           formtarget="_blank"
           data-turbo="false"
-          class="btn btn-secondary-outline"
-        >
+          class="btn btn-secondary-outline">
           Preview
         </button>
       <% end %>

@@ -8,7 +8,7 @@
     overflow-hidden flex flex-col md:flex-row">
   <div class="w-60 items-center p-2">
     <div class="pt-2">
-      <span class="font-bold"><%= activity.event.name.gsub("."," ").titleize %></span>
+      <span class="font-bold"><%= activity.event.name.gsub(".", " ").titleize %></span>
     </div>
 
     <div class="text-sm text-gray-500 font-medium pt-2 whitespace-nowrap">
@@ -47,7 +47,7 @@
       <% detail = activity.event.properties %>
     <% elsif activity.event.name.include?("auth") %>
       <% path = edit_user_path(user) %>
-      <% title = activity.event.name.gsub("auth.","").titleize %>
+      <% title = activity.event.name.gsub("auth.", "").titleize %>
       <% detail = "" %>
     <% else %>
       <% path = polymorphic_path(activity) %>

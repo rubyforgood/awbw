@@ -4,8 +4,7 @@
   <div
     data-controller="dropdown"
     class="inline-block w-full"
-    data-dropdown-target="content"
-  >
+    data-dropdown-target="content">
     <button
       id="<%= dom_id_prefix %>-button"
       type="button"
@@ -14,15 +13,13 @@
       class="
         relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md
         border border-gray-300 cursor-pointer flex justify-between items-center
-      "
-    >
+      ">
       <label class="mb-0 font-medium text-gray-700"><%= label_text %></label>
       <i
         id="<%= dom_id_prefix %>-arrow"
         class="
           fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300
-        "
-      ></i>
+        "></i>
     </button>
 
     <div
@@ -30,8 +27,7 @@
       class="
         absolute left-0 top-full w-full shadow-sm bg-white border border-t-0
         border-gray-300 rounded-b-md hidden z-40
-      "
-    >
+      ">
       <%# Class "category-checkbox" is used to submit on change %>
       <% items.each do |item| %>
         <div class="flex items-center gap-2 mb-1 px-4">

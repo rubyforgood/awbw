@@ -52,7 +52,7 @@
 
     <% if log_field.name == 'Share challenges for this month' ||
       (log_field.name == 'Anything we can do to help you?' and params[:form_builder_id].to_i == 2) %>
-      <br />
+      <br>
       <script>
         window.quotesIndex = 0;
       </script>
@@ -71,7 +71,7 @@
       <div>
         <a class="btn-underline" href="javascript:addQuote();">Add another Quote</a>
       </div>
-      <br />
+      <br>
 
     <% end %>
 
@@ -115,7 +115,7 @@
 <script>
   function addQuote() {
     window.quotesIndex += 1;
-    $("#quotes").append('<%= j render "quote", index: "last-quotes",q: Quote.new %>');
+    $("#quotes").append('<%= j render "quote", index: "last-quotes", q: Quote.new %>');
 
     contentQuotes = document.getElementById("quote-last-quotes").innerHTML.replace(/last-quotes/g, window.quotesIndex);
     document.getElementById("quote-last-quotes").innerHTML = contentQuotes;

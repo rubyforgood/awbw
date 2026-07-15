@@ -11,7 +11,7 @@
  <%= "active" if @report and @report.sectorable_items.any? { |si| si.sector_id == sf[0].to_i } %>">
           <input id="sector_<%= i %>" name="sectorable_items[<%= i %>][sector_id]"
                  type="checkbox" value="<%= sf[0] %>"
-                 <%= "checked=true" if @report and @report.sectorable_items.any? { |si| si.sector_id == sf[0].to_i } %> />
+                 <%= "checked=true" if @report and @report.sectorable_items.any? { |si| si.sector_id == sf[0].to_i } %>>
           <%= sf[1] %>
         </label>
       </div>

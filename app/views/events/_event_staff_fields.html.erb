@@ -1,7 +1,7 @@
 <div class="nested-fields rounded-lg border border-gray-200 bg-white p-3 mb-3"
      data-controller="event-staff-bio"
      data-event-staff-bio-url-template-value="<%= bio_person_path("__ID__") %>"
-     <% if f.object.persisted? %>id="<%= dom_id(f.object) %>"<% end %>>
+     <% if f.object.persisted? %> id="<%= dom_id(f.object) %>"<% end %>>
   <div class="flex flex-wrap items-end gap-x-4 gap-y-2">
     <div style="width: 320px; min-width: 320px; flex-shrink: 0;">
       <% if f.object.persisted? && f.object.person.present? %>

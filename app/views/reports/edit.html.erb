@@ -6,7 +6,7 @@
   <hr>
  <% unless params[:form_builder_id] == "7" %>
    <h4>Report type</h4>
-  </hr>
+  <hr>
 
   <!-- ######### row 1 ##### -->
   <div class="row">
@@ -20,9 +20,9 @@
 
     <div class='col-md-8'>
       <%= label_tag "Reporting for the month of" %>
-      <input type="text" value="<%= @report.date.strftime("%B %Y") %>" class="form-control"      readonly />
+      <input type="text" value="<%= @report.date.strftime("%B %Y") %>" class="form-control" readonly>
       <%= render "workshop_log_summary", f: f, workshop_logs: @workshop_logs %>
-      <hr />
+      <hr>
     </div>
   </div>
 <% end %>
@@ -34,7 +34,7 @@
       <!-- ######### form fields ####### -->
       <div class='form-group'>
         <%= f.label "Person" %>
-        <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
+        <%= f.text_field :user, disabled: false, value: current_user.name, class: "form-control" %>
         <%= f.hidden_field :created_by_id, value: current_user.id %>
         <%= f.hidden_field :type %>
         <%= f.hidden_field :windows_type_id, value: @report.windows_type_id %>
@@ -49,8 +49,8 @@
         </div>
         <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
         <%= f.collection_select :organization_id, @agencies, :id, :name,
-        { selected: agency ? agency.id : nil,class: "js-agency-select" },
-        class:"selectpicker form-control form-control-custom", onchange: "redirectToNewOrganization()" %>
+        { selected: agency ? agency.id : nil, class: "js-agency-select" },
+        class: "selectpicker form-control form-control-custom", onchange: "redirectToNewOrganization()" %>
       </div>
 
       <%= render "sectorable_items" %>
@@ -87,7 +87,7 @@
           <div>
             <a class="btn-underline" href="javascript:addQuote();">Add another Quote</a>
           </div>
-          <br />
+          <br>
 
         <% end %>
 
@@ -96,7 +96,7 @@
       <!-- ######## uploads sectors ####### -->
       <div class="image-fields-wrapper">
         <div class="image-upload-field form-group">
-          <div class="input-upload-description" >
+          <div class="input-upload-description">
             <%= f.label "Upload Images" %>
             <span class="smaller">
               ***If any image includes clients or client artwork, download
@@ -106,7 +106,7 @@
           </div><!-- bold -->
           <div class="form-group">
             <%= f.label :image, class: "btn btn-primary btn--small" do %>
-              <input type="file" id="report_image" name="image" >
+              <input type="file" id="report_image" name="image">
               Choose File
             <% end %>
 
@@ -121,7 +121,7 @@
         </div>
 
         <div class="image-upload-field">
-          <div class="input-upload-description" >
+          <div class="input-upload-description">
             <%= f.label "Upload Form Files" %>
           </div>
 
@@ -158,7 +158,7 @@
 <script>
   function addQuote() {
     window.quotesIndex += 1;
-    $("#quotes").append('<%= j render "quote", index: "last-quotes",q: Quote.new %>');
+    $("#quotes").append('<%= j render "quote", index: "last-quotes", q: Quote.new %>');
 
     contentQuotes = document.getElementById("quote-last-quotes").innerHTML.replace(/last-quotes/g, window.quotesIndex);
     document.getElementById("quote-last-quotes").innerHTML = contentQuotes;

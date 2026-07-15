@@ -28,8 +28,7 @@
         class="animate-fade"
         data-controller="sortable"
         data-sortable-url-value="<%= faq_path(id: ":id") %>"
-        data-testid="faq-list"
-      >
+        data-testid="faq-list">
         <% if @faqs.present? %>
           <%= render partial: "faq", collection: @faqs, as: :faq %>
           <div class="pagination flex justify-center mt-12"><%= tailwind_paginate @faqs %></div>

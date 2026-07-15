@@ -13,7 +13,7 @@
       <div class="flex items-center gap-2 mb-4">
         <input type="text" value="<%= @checkout_url %>" readonly
                class="flex-1 bg-gray-50 rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono"
-               onclick="this.select()" />
+               onclick="this.select()">
         <button type="button"
                 onclick="navigator.clipboard.writeText('<%= j @checkout_url %>').then(() => { this.textContent = 'Copied!'; setTimeout(() => { this.textContent = 'Copy' }, 2000) })"
                 class="inline-flex items-center gap-1.5 rounded-lg bg-gray-700 text-white px-3 py-2 text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap">

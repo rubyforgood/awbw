@@ -33,7 +33,7 @@
              value="<%= f.answer(report) %>"
              onkeyup="setNumberParticipantsLeft(this);"
              onmouseover="showToolTip(this);"
-             data-toggle="tooltip" data-placement="top"/>
+             data-toggle="tooltip" data-placement="top">
 
           </div>
         <% end %>
@@ -52,7 +52,7 @@
      name="log_fields[<%= field.id %>]" class="form-control"
      <%= "required" if field.required %>
      oninvalid="scroll_here(this);" value="<%= field.answer(report) %>"
-     id="<%= field.name.tr(" ", "-").tr("#","") %>"/>
+     id="<%= field.name.tr(" ", "-").tr("#", "") %>">
   </div>
 
 <% when :textarea %>
@@ -92,7 +92,7 @@
          id="field-<%= field.id %>-<%= answer_option.id %>"
          name="log_fields[<%= field.id %>]"
          value="<%= answer_option.name %>"
-         <%= "checked=true" if field.checked(report, answer_option.name) %> />
+         <%= "checked=true" if field.checked(report, answer_option.name) %>>
 
         <label for="field-<%= field.id %>-<%= answer_option.id %>">
           <span class="custom-<%= field.html_input_type %>-icon"></span>

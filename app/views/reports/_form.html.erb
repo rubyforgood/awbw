@@ -6,7 +6,7 @@
   <hr>
  <% unless params[:form_builder_id].to_i == 7 %>
    <h4>Report type</h4>
-  </hr>
+  <hr>
   <!-- ######### row 1 ##### -->
   <div class="row">
     <div class="col-md-8 form-group">
@@ -26,7 +26,7 @@
       <%= f.select(:date, {}, { include_blank: false }, { class: "form-control form-control-custom" }) %>
 
       <%= render "workshop_log_summary", f: f, workshop_logs: @workshop_logs %>
-      <hr />
+      <hr>
     </div>
   </div>
 <% end %>
@@ -38,7 +38,7 @@
       <!-- ######### form fields ####### -->
       <div class='form-group'>
         <%= f.label "Person" %>
-        <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
+        <%= f.text_field :user, disabled: false, value: current_user.name, class: "form-control" %>
         <%= f.hidden_field :created_by_id, value: current_user.id %>
         <%= f.hidden_field :type %>
         <%= f.hidden_field :windows_type_id, value: @report.windows_type_id %>
@@ -53,8 +53,8 @@
         </div>
         <% agency = agencies.find_by(windows_type_id: f.object.windows_type.id) %>
         <%= f.collection_select :organization_id, agencies, :id, :name,
-        { selected: agency ? agency.id : nil,class: "js-agency-select" },
-        class:"selectpicker form-control form-control-custom", onchange: "redirectToNewOrganization()" %>
+        { selected: agency ? agency.id : nil, class: "js-agency-select" },
+        class: "selectpicker form-control form-control-custom", onchange: "redirectToNewOrganization()" %>
       </div>
 
       <%= f.hidden_field :owner_id, value: @form_builder.id %>
@@ -64,7 +64,7 @@
       <% if params[:form_builder_id].to_i == 7 %>
         <div class="row">
           <div class="col-md-12 col-lg-8">
-            <label class="label-select" for="select-workshop" >
+            <label class="label-select" for="select-workshop">
               Select Workshop from dropdown
             </label>
             <div id="select_workshop">
@@ -95,7 +95,7 @@ id: "select-workshop"
         <div class="image-fields-wrapper">
         <div class="image-upload-field form-group">
 
-          <div class="input-upload-description" >
+          <div class="input-upload-description">
             <%= f.label "Upload Images" %>
             <span class="smaller">
               ***If any image includes clients or client artwork, download
@@ -106,14 +106,14 @@ id: "select-workshop"
 
           <div class="form-group">
             <%= f.label :image, class: "btn btn-primary btn--small" do %>
-              <input type="file" id="report_image" name="image" >
+              <input type="file" id="report_image" name="image">
               Choose File
             <% end %>
           </div>
         </div>
 
         <div class="image-upload-field">
-          <div class="input-upload-description" >
+          <div class="input-upload-description">
             <%= f.label "Upload Form Files" %>
           </div>
 

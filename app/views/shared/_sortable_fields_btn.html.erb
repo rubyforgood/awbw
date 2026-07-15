@@ -3,7 +3,7 @@
 
     <div id="selector-button" class="btn-group" data-toggle="buttons">
       <label class="btn btn-primary btn--small btn-blue btn-sortable btn-fs-medium
-                    <%= "active" if params["show_all"] == "1" %>" >
+                    <%= "active" if params["show_all"] == "1" %>">
         <input id="show_all" name="show_all" value="1" type="checkbox">
         Show All
       </label>
@@ -23,7 +23,7 @@
       <% name = sortable_field.is_a?(String) ? sortable_field : sortable_field.name %>
       <div id="selector-button" class="btn-group" data-toggle="buttons">
          <label class="btn btn-primary btn--small btn-blue btn-sortable btn-fs-medium
-         <%= "active" if name.to_s == params[:kind] %>" >
+         <%= "active" if name.to_s == params[:kind] %>">
          <%= check_box_tag(:kind, name, false, id: "kind_#{name}") %>
           <%= sortable_field_display_name(name).pluralize %>
 

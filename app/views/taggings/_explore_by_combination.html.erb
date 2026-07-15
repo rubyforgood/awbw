@@ -32,7 +32,7 @@
                      data-tags-sync-list-heights-target="sector"
                      <%= "checked" if selected_sectors.include?(sector.name) %>
                      class="rounded border-gray-300 text-lime-600
-                          focus:ring-lime-500" />
+                          focus:ring-lime-500">
 
               <span class="text-gray-900"><%= sector.name %></span>
             </label>
@@ -70,7 +70,7 @@
                      data-tags-sync-list-heights-target="category"
                      <%= "checked" if selected_categories.include?(category.name.downcase) %>
                      class="rounded border-gray-300 text-lime-600
-                        focus:ring-lime-500" />
+                        focus:ring-lime-500">
 
               <span class="text-gray-900">
                     <%= "#{category.category_type&.name&.titleize}: " if category.category_type %>

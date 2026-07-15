@@ -1,6 +1,6 @@
 <div class="container-fluid">
   <h2 class='normal'><%= "#{@form_builder.name}" %></h2>
-  <hr/>
+  <hr>
 
   <%= form_for @report, as: :report, url: { action: :create_story,
     form_builder_id: params[:form_builder_id] }, html: { multipart: true },
@@ -14,12 +14,12 @@
            <!-- ##### FACILITATOR  #### -->
            <div class='form-group'>
              <%= f.label "Person" %>
-             <%= f.text_field :user, disabled: false, value: current_user.name, class:"form-control" %>
+             <%= f.text_field :user, disabled: false, value: current_user.name, class: "form-control" %>
              <%= f.hidden_field :created_by_id, value: current_user.id %>
              <%= f.hidden_field :type %>
              <%= f.hidden_field :windows_type_id, value: @report.windows_type_id %>
              <%= f.hidden_field :id, value: @report.id %>
-       <input type="hidden" id="workshop_id" name="workshop_id" />
+       <input type="hidden" id="workshop_id" name="workshop_id">
              <br>
            </div>
 
@@ -33,8 +33,8 @@
              </div>
              <% agency = @agencies.find_by(windows_type_id: f.object.windows_type.id) %>
              <%= f.collection_select :organization_id, @agencies, :id, :name,
-{ selected: agency ? agency.id : nil,class: "js-agency-select" },
-class:"selectpicker form-control form-control-custom" %>
+{ selected: agency ? agency.id : nil, class: "js-agency-select" },
+class: "selectpicker form-control form-control-custom" %>
            </div>
 
            <!-- ##### HIDDEN FIELDS  #### -->
@@ -44,7 +44,7 @@ class:"selectpicker form-control form-control-custom" %>
 
            <!-- ##### SELECT WORKSHOP  #### -->
            <div class="form-group" id="w_content">
-             <label class="label-select" for="select-workshop" >
+             <label class="label-select" for="select-workshop">
          Enter workshop name or select from dropdown *
              </label>
              <div id="select_workshop">
@@ -70,7 +70,7 @@ id: "select-workshop"
    <div class="col-md-8 col-lg-12">
      <div class="form-group text-form-group">
        <input type="text" name="report[workshop_name]" id="workshop_name" class="form-control" placeholder='Enter the name of your new workshop'>
-                </input>
+                <input>
      </div>
    </div>
        </div>
@@ -95,7 +95,7 @@ id: "select-workshop"
          <%= render "media_file", f: files_form %>
 
          <div class="links small">
-           <%= link_to_add_association "Add Another Media File", f, :media_files, partial: "media_file", class:"btn-underline" %>
+           <%= link_to_add_association "Add Another Media File", f, :media_files, partial: "media_file", class: "btn-underline" %>
          </div>
          <% end %>
        </div>
