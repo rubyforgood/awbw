@@ -230,6 +230,29 @@ RSpec.describe BuiltinCallouts do
       expect(faq.hidden).to be(true)
     end
 
+    it "skips a built-in when the DB unique index rejects a concurrent duplicate" do
+      event = create(:event, cost_cents: 0)
+      service = described_class.new(event)
+
+      # Simulate the concurrency window: the in-memory existence + uniqueness
+      # checks pass, but the unique index on [event_id, builtin_key] rejects the
+      # insert because a concurrent request committed the same row first. Fire it
+      # for Handouts, mirroring the Honeybadger report.
+      original_create = event.registration_ticket_callouts.method(:create!)
+      allow(event.registration_ticket_callouts).to receive(:create!) do |attrs|
+        raise ActiveRecord::RecordNotUnique, "Duplicate entry" if attrs[:builtin_key] == "handouts"
+        original_create.call(attrs)
+      end
+
+      expect { service.seed }.not_to raise_error
+
+      keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
+      expect(keys).to contain_exactly(
+        "payment", "certificate", "scholarship", "ce_hours", "art_supplies",
+        "videoconference", "faq"
+      )
+    end
+
     it "appends the built-in callouts after existing custom ones" do
       event = create(:event)
       custom = create(:registration_ticket_callout, event:, title: "Parking")
