@@ -1,9 +1,10 @@
 <!-- Floating Help Button -->
 <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end"
-     data-controller="fab">
+     data-controller="dropdown">
 
   <!-- Hidden menu items -->
-  <div data-fab-target="menu"
+  <div id="fab-menu"
+       data-dropdown-target="content"
      class="hidden flex flex-col items-start space-y-2 mb-2 p-4 bg-white border border-gray-300 rounded-lg shadow-md transition-all duration-300">
  
   <%= link_to faqs_path, class: "flex items-center space-x-2 text-gray-800 px-3 py-2 rounded hover:bg-gray-100 w-max" do %>
@@ -31,9 +32,10 @@
 
 
   <!-- Main round button -->
-  <button type="button"
-          data-fab-target="button"
-          data-action="fab#toggle"
+  <button id="fab-button"
+          type="button"
+          data-action="dropdown#toggle"
+          data-dropdown-payload-param='[{"fab-menu":"hidden"}, {"fab-button":"rotate-45"}]'
           class="bg-primary text-white w-10 h-10 rounded-full shadow-lg flex items-center
                  justify-center text-lg font-bold hover:bg-blue-700 transition">
     ?
