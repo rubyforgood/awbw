@@ -20,6 +20,7 @@ class Person < ApplicationRecord
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
+  has_many :other_responses, as: :owner, dependent: :destroy
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
            dependent: :restrict_with_error
   has_many :stories_as_author, inverse_of: :author, class_name: "Story", foreign_key: :author_id,
@@ -305,10 +306,12 @@ class Person < ApplicationRecord
   # profile fields shown on the edit page.
   OTHER_WORKSHOP_SETTING_IDENTIFIERS = %w[primary_age_group additional_age_group].freeze
 
-  # Free-text "Other" sectors the person typed on registration forms.
-  # They can't be Sector records, so they're surfaced beside the sector tags.
+  # Free-text "Other" sectors the person typed on registration forms, captured
+  # as OtherResponse records (see EventRegistrationServices::PublicRegistration).
+  # They can't be Sector records, so they're surfaced beside the sector tags —
+  # only while pending or explicitly kept (dismissed/promoted ones drop off).
   def other_sector_responses
-    other_form_responses(FormField::SECTOR_FIELD_IDENTIFIERS)
+    other_responses.sectors.visible.order(:text)
   end
 
   # Free-text "Other" workshop settings (category-backed fields) from forms.

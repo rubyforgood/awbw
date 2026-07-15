@@ -143,7 +143,9 @@
             </div>
           <% end %>
           <!-- Sectors + Age ranges (two columns; age ranges is the thinner column) -->
-          <% sectorable_items = @person.sectorable_items.includes(:sector).sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
+          <%# "Other" is never a real sector tag (captured as an OtherResponse), so a
+              stray legacy tagging is dropped from the displayed list. %>
+          <% sectorable_items = @person.sectorable_items.includes(:sector).reject { |si| si.sector&.name == Sector::OTHER_SECTOR_NAME }.sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
           <% other_sectors = @person.other_sector_responses %>
           <% show_sectors = @person.profile_show_sectors? %>
           <% primary_age_groups = @person.primary_age_groups.to_a %>
@@ -167,7 +169,7 @@
                                        display_leader: true,
                                        is_leader: si.is_leader %>
                         <% end %>
-                        <%= render "people/other_responses", responses: other_sectors %>
+                        <%= render "people/other_sector_responses", responses: other_sectors, curatable: current_user&.super_user?, return_to: "person_show" %>
                       </div>
                     <% else %>
                       <p class="text-gray-500 italic">None selected.</p>

@@ -105,7 +105,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
         it "tags the person with the primary/additional split and captures the Other free text" do
           expect(primary_sector_of(registrant)).to eq(sector_education)
           expect(additional_sectors_of(registrant)).to contain_exactly(sector_mh)
-          expect(registrant.other_sector_responses).to include("Equine therapy")
+          expect(registrant.other_sector_responses.map(&:text)).to include("Equine therapy")
           expect(registrant.primary_age_groups).to contain_exactly(age_adults)
           expect(registrant.additional_age_groups).to contain_exactly(age_teens, age_children)
         end

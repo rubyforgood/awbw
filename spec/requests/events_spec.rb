@@ -1534,6 +1534,15 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Sexual Assault")
       end
 
+      it "shows the free-text \"Other\" sector responses as their own detail card" do
+        create(:other_response, owner: person, text: "Hospice care")
+
+        get background_event_path(event)
+
+        expect(response.body).to include("Other sector responses")
+        expect(response.body).to include("Hospice care")
+      end
+
       it "labels the organizations count box and breaks it down by program status" do
         get background_event_path(event)
 
