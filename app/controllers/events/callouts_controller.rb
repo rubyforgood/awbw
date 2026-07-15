@@ -30,19 +30,6 @@ module Events
       "Letter to Supervisors"
     ].freeze
 
-    HANDOUT_SUBTITLES = {
-      "2-Day AWBW Facilitator Training Worksheets & Handouts" =>
-        "List of resources and worksheets we will reference and utilize during the training. You do not need to print them out, it may be helpful for you to access the links during the training.",
-      "AWBW Training Workshop Worksheets" =>
-        "Worksheets you can create on during all 5 of the art workshops at the training. Any art materials are welcomed during creation.",
-      "Aha Moments" =>
-        "Worksheet you can use to reflect on the workshop, its impact, and how you'd like to apply it.",
-      "Inviting and Responding to Participants' Sharing" =>
-        "A resource to invite and support sharing, active listening, and connection during breakout rooms.",
-      "Letter to Supervisors" =>
-        "Letter you can share to help relieve you from competing responsibilities during the two training days. So you can secure the time and space needed to fully engage in the training."
-    }.freeze
-
     # Payment page: the full allocation ledger with the running balance due, plus
     # the linked documents (the W-9 from the payment callout's resources, and the
     # dynamic invoice/receipt) for paid events.
@@ -155,26 +142,22 @@ module Events
 
     # Handouts page: callout-card links to the training worksheet/handout
     # resources, in display order, each opening its own registrant resource page
-    # (PDF preview + download, with a back-to-handouts eyebrow).
+    # (PDF preview + download, with a back-to-handouts eyebrow). Cards read their
+    # subtitle from the materialized handouts callout's join rows.
     def handouts
       return redirect_to registration_ticket_path(@event_registration.slug) unless @event.show_handouts_callout?
-      by_title = Resource.where(title: HANDOUT_RESOURCE_TITLES).index_by(&:title)
-      @handout_cards = HANDOUT_RESOURCE_TITLES.filter_map do |title|
-        resource = by_title[title]
-        next unless resource
-        resource_card(icon: "fa-solid fa-file-pdf", title: resource.title,
-                      subtitle: HANDOUT_SUBTITLES[resource.title] || "Open this training resource",
-                      href: registration_resource_path(@event_registration.slug, resource, return_to: "handouts"), target: nil)
-      end
+      callout = @event.registration_ticket_callouts.find_by(magic_key: "handouts")
+      @handout_cards = callout_resource_cards(callout, icon: "fa-solid fa-file-pdf", return_to: "handouts")
     end
 
     # Registrant-facing page for a single Resource, shown in the shared callout
     # chrome: the PDF first-page preview and a download button. Reached from the
     # handouts/forms callouts so a registrant views a document without leaving the
-    # ticket context.
+    # ticket context. The page content shown under the title comes from the join
+    # row on the callout the registrant arrived from.
     def resource
       @resource = Resource.find(params[:resource_id]).decorate
-      @resource_subtitle = HANDOUT_SUBTITLES[@resource.title]
+      @resource_page_content = origin_callout_link&.page_content.presence
     end
 
     # Videoconference page: the join link and add-to-calendar options.
@@ -212,11 +195,37 @@ module Events
     def set_builtin_content
       callout = @event.registration_ticket_callouts.find_by(magic_key: action_name)
       @builtin_intro = callout&.description.presence
-      resources = callout && action_name != "payment" ? callout.resources.to_a : []
-      @builtin_resource_cards = resources.map do |resource|
-        resource_card(icon: "fa-solid fa-file-lines", title: resource.title,
-                      subtitle: "Open this document",
-                      href: registration_resource_path(@event_registration.slug, resource, return_to: action_name), target: nil)
+      callout = nil if action_name == "payment"
+      @builtin_resource_cards = callout_resource_cards(callout, icon: "fa-solid fa-file-lines", return_to: action_name)
+    end
+
+    # Callout cards for a callout's linked resources, in display order, each
+    # linking to the resource's own registrant page. The card subtitle comes from
+    # the join row (materialized default, admin-editable).
+    def callout_resource_cards(callout, icon:, return_to:)
+      return [] unless callout
+      callout.registration_ticket_callout_resources.ordered.includes(:resource).filter_map do |link|
+        resource = link.resource
+        next unless resource
+        resource_card(icon: icon, title: resource.title,
+                      subtitle: link.subtitle.presence || "Open this document",
+                      href: registration_resource_path(@event_registration.slug, resource, return_to: return_to), target: nil)
+      end
+    end
+
+    # The join row for @resource on the callout the registrant arrived from
+    # (via return_to / callout_id), so the resource page can show that callout's
+    # editable page content under the title.
+    def origin_callout_link
+      origin_callout&.registration_ticket_callout_resources&.find_by(resource_id: @resource.id)
+    end
+
+    def origin_callout
+      case params[:return_to]
+      when "callout"
+        @event.registration_ticket_callouts.find_by(id: params[:callout_id])
+      when *RegistrationTicketCallout::MAGIC_KEYS
+        @event.registration_ticket_callouts.find_by(magic_key: params[:return_to])
       end
     end
 

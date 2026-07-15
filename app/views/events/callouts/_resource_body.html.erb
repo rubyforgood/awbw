@@ -1,39 +1,37 @@
 <% inline_title = local_assigns[:inline_title] %>
-<% subtitle = local_assigns[:subtitle] %>
+<% page_content = local_assigns[:page_content] %>
 <% show_actions = resource.downloadable_asset&.file&.attached? || allowed_to?(:edit?, resource) %>
 
-<% if inline_title.present? || show_actions %>
-  <div class="flex items-start gap-4 mb-1">
-    <% if inline_title.present? %>
-      <h2 class="flex-1 min-w-0 text-2xl font-semibold text-gray-900 break-words"><%= inline_title %></h2>
+<% if show_actions %>
+  <%# Floated right so the title and page content flow full-width beneath it.
+      Download sits on top; the admin-only Edit link tucks in below (new tab so
+      the callout context isn't lost). %>
+  <div class="float-right ml-4 flex flex-col items-end gap-2">
+    <% if resource.downloadable_asset&.file&.attached? %>
+      <%= link_to url_for(resource.downloadable_asset.file), download: true, class: "btn btn-utility" do %>
+        Download
+        <i class="fa-solid fa-download"></i>
+      <% end %>
     <% end %>
-    <% if show_actions %>
-      <%# Download sits parallel with the title; the admin-only Edit link tucks
-          in below it. Edit opens in a new tab so the callout context isn't lost. %>
-      <div class="ml-auto flex flex-col items-end gap-2 shrink-0">
-        <% if resource.downloadable_asset&.file&.attached? %>
-          <%= link_to url_for(resource.downloadable_asset.file), download: true, class: "btn btn-utility" do %>
-            Download
-            <i class="fa-solid fa-download"></i>
-          <% end %>
-        <% end %>
-        <% if allowed_to?(:edit?, resource) %>
-          <%= link_to edit_resource_path(resource), target: "_blank", rel: "noopener",
-                class: "admin-only inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
-            <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
-            Edit resource
-            <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-          <% end %>
-        <% end %>
-      </div>
+    <% if allowed_to?(:edit?, resource) %>
+      <%= link_to edit_resource_path(resource), target: "_blank", rel: "noopener",
+            class: "admin-only inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
+        <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
+        Edit resource
+        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+      <% end %>
     <% end %>
   </div>
 <% end %>
 
-<% if subtitle.present? %>
-  <p class="text-gray-600 max-w-3xl mb-4"><%= subtitle %></p>
+<% if inline_title.present? %>
+  <h2 class="text-2xl font-semibold text-gray-900 break-words"><%= inline_title %></h2>
 <% end %>
 
-<p class="text-xs text-gray-400 mb-3">The preview below may take a moment to load.</p>
+<% if page_content.present? %>
+  <p class="text-gray-600 max-w-3xl mt-1"><%= page_content %></p>
+<% end %>
+
+<p class="clear-both text-xs text-gray-400 pt-3 mb-3">The preview below may take a moment to load.</p>
 
 <%= render "assets/resource_display", resource: resource %>

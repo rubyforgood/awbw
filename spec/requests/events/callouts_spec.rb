@@ -34,6 +34,19 @@ RSpec.describe "Events::Callouts", type: :request do
         get registration_handouts_path(registration.slug)
         expect(response).to have_http_status(:success)
       end
+
+      it "shows each linked resource card with its join-row subtitle" do
+        callout = create(:registration_ticket_callout, event:, magic_key: "handouts")
+        resource = create(:resource, title: "Aha Moments")
+        create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
+               resource:, subtitle: "Reflect on the workshop", page_content: "Long detail copy.")
+
+        get registration_handouts_path(registration.slug)
+
+        expect(response.body).to include("Reflect on the workshop")
+        # Page content is detail-page only, never on the card.
+        expect(response.body).not_to include("Long detail copy.")
+      end
     end
 
     context "on a non-training event" do
@@ -123,24 +136,27 @@ RSpec.describe "Events::Callouts", type: :request do
       end
     end
 
-    context "supplemental subtitle" do
-      it "shows the handout's supplemental description below the title" do
-        title = Events::CalloutsController::HANDOUT_RESOURCE_TITLES.first
-        resource = create(:resource, title: title)
+    context "page content" do
+      let(:resource) { create(:resource) }
+
+      it "shows the join row's page content below the title" do
+        callout = create(:registration_ticket_callout, event:, magic_key: "handouts")
+        create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
+               resource:, subtitle: "Short card line", page_content: "The longer page content copy.")
 
         get registration_resource_path(registration.slug, resource, return_to: "handouts")
 
-        expect(response.body).to include(Events::CalloutsController::HANDOUT_SUBTITLES[title])
+        expect(response.body).to include("The longer page content copy.")
+        # The subtitle is a card-only line, not shown on the resource page.
+        expect(response.body).not_to include("Short card line")
       end
 
-      it "omits the subtitle for a resource without one" do
-        resource = create(:resource, title: "Some other document")
+      it "shows no page content when the resource isn't linked to the origin callout" do
+        create(:registration_ticket_callout, :magic, event:, magic_key: "handouts")
 
         get registration_resource_path(registration.slug, resource, return_to: "handouts")
 
         expect(response).to have_http_status(:success)
-        subtitle_texts = Events::CalloutsController::HANDOUT_SUBTITLES.values
-        expect(subtitle_texts.any? { |text| response.body.include?(text) }).to be(false)
       end
     end
 

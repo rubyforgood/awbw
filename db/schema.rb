@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_14_130312) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_15_000553) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1095,9 +1095,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_130312) do
 
   create_table "registration_ticket_callout_resources", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.text "page_content"
     t.integer "position", null: false
     t.bigint "registration_ticket_callout_id", null: false
     t.integer "resource_id", null: false
+    t.string "subtitle"
     t.datetime "updated_at", null: false
     t.index ["registration_ticket_callout_id", "resource_id"], name: "index_callout_resources_on_callout_and_resource", unique: true
     t.index ["registration_ticket_callout_id"], name: "index_callout_resources_on_callout_id"
