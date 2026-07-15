@@ -112,8 +112,14 @@ RSpec.describe "Events::Callouts", type: :request do
 
       expect(response.body).to include("unlocks once both of these are met")
       expect(response.body).to include("Your payment is on file")
-      expect(response.body).to include("The join link isn't in this calendar entry yet")
       expect(response.body).not_to include("https://example.com/zoom")
+
+      # The checklist and the calendar hover surface the same unlock date (read
+      # from the body to stay independent of the request's time zone).
+      reveal_date = response.body[/Available from ([A-Z][a-z]+ \d{1,2}, \d{4})/, 1]
+      expect(reveal_date).to be_present
+      expect(response.body).to include("isn't in this calendar entry yet")
+      expect(response.body).to include("Add the event again on #{reveal_date}")
     end
   end
 

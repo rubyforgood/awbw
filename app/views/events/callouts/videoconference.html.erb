@@ -39,11 +39,11 @@
     <% end %>
 
     <div class="border-t border-gray-100 pt-5">
-      <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Add to your calendar</p>
+      <div class="flex items-center gap-1 mb-2">
+        <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Add to your calendar</p>
+        <%= render "events/videoconference_calendar_notice", event: @event, registration: @event_registration %>
+      </div>
       <div class="flex flex-wrap gap-1 items-center text-sm text-blue-600 font-medium"><%= @event.calendar_links(show_videoconference_details: @event_registration.videoconference_details_visible?) %></div>
-      <% if @event.videoconference_url.present? && !@event_registration.videoconference_details_visible? %>
-        <p class="mt-2 text-xs text-gray-500">The join link isn't in this calendar entry yet — add the event to your calendar again once the link is available to include it.</p>
-      <% end %>
     </div>
   </div>
 <% end %>
