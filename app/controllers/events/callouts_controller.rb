@@ -241,13 +241,15 @@ module Events
     end
 
     # The payment callout's linked documents (the W-9 by default on paid events),
-    # shown on the payment page's Documents section. Uses the materialized Payment
-    # row's resources when present (so admins can add/remove them), else the W-9
-    # for paid events not yet materialized.
+    # shown on the payment page's Documents section. Returns the join rows so each
+    # card reads its admin-editable subtitle from the materialized row. Uses the
+    # materialized Payment row's links when present (so admins can add/remove
+    # them), else transient links for the W-9 on paid events not yet materialized.
     def payment_document_resources
       payment_callout = @event.registration_ticket_callouts.find_by(magic_key: "payment")
-      return payment_callout.resources.to_a if payment_callout
-      @event.cost_cents.to_i.positive? ? Resource.where(title: "W-9").to_a : []
+      return payment_callout.registration_ticket_callout_resources.ordered.includes(:resource).to_a if payment_callout
+      return [] unless @event.cost_cents.to_i.positive?
+      Resource.where(title: "W-9").map { |resource| RegistrationTicketCalloutResource.new(resource:) }
     end
 
     # A blue callout card linking to a document. External/static links open in a

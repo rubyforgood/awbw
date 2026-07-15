@@ -180,7 +180,11 @@ class DefaultTicketCallouts
         # The W-9 is a removable linked resource, included by default only on paid
         # events (where a tax form applies); the invoice/receipt stay dynamic on
         # the payment page. Admins add/remove it per event.
-        resources: -> { @event.cost_cents.to_i.positive? ? [ Resource.find_by(title: "W-9") ].compact : [] }
+        resources: -> { @event.cost_cents.to_i.positive? ? [ Resource.find_by(title: "W-9") ].compact : [] },
+        # Its card subtitle is materialized here (admin-editable), not hard-coded in the view.
+        resource_content: {
+          "W-9" => { subtitle: "AWBW's W-9 tax form for your records" }
+        }
       },
       {
         magic_key: "certificate",

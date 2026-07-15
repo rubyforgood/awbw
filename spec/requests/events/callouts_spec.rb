@@ -59,6 +59,22 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  describe "GET /registration/:slug/payment" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+
+    it "shows the W-9 document's materialized join-row subtitle, not hard-coded copy" do
+      callout = create(:registration_ticket_callout, event:, magic_key: "payment")
+      w9 = create(:resource, title: "W-9")
+      create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
+             resource: w9, subtitle: "Custom W-9 line")
+
+      get registration_payment_path(registration.slug)
+
+      expect(response.body).to include("Custom W-9 line")
+      expect(response.body).not_to include("AWBW's W-9 tax form for your records")
+    end
+  end
+
   describe "GET /registration/:slug/videoconference" do
     let(:event) { create(:event, videoconference_url: "https://example.com/zoom") }
 

@@ -91,6 +91,15 @@ RSpec.describe "Registration ticket callouts", type: :request do
         expect(response.body).not_to include(rails_blob_path(resource.downloadable_asset.file, only_path: true))
       end
 
+      it "shows the resource card's materialized join-row subtitle, not a generic placeholder" do
+        callout.registration_ticket_callout_resources.first.update!(subtitle: "Reflect on the workshop")
+
+        get event_registration_ticket_callout_path(event, callout)
+
+        expect(response.body).to include("Reflect on the workshop")
+        expect(response.body).not_to include("Open this document")
+      end
+
       it "links to the in-ticket registrant page when a registration slug is present" do
         registration = create(:event_registration, event:)
 

@@ -42,19 +42,23 @@ class RegistrationTicketCalloutsController < ApplicationController
   private
 
   # This callout's resources as clickable cards linking to each resource's own
-  # page (never inline). A registrant reaching the page carries their ticket slug
-  # in `reg`, so links go to the in-ticket registrant resource page returning here;
-  # without a slug (e.g. an admin preview) they fall back to the resource's own page.
+  # page (never inline). Each card's subtitle reads from the materialized join
+  # row (admin-editable), not a hard-coded default. A registrant reaching the page
+  # carries their ticket slug in `reg`, so links go to the in-ticket registrant
+  # resource page returning here; without a slug (e.g. an admin preview) they fall
+  # back to the resource's own page.
   def build_resource_cards
     reg_slug = params[:reg].presence
-    @callout.resources.map do |resource|
+    @callout.registration_ticket_callout_resources.ordered.includes(:resource).filter_map do |link|
+      resource = link.resource
+      next unless resource
       href = if reg_slug
         registration_resource_path(reg_slug, resource, return_to: "callout", callout_id: @callout.id)
       else
         resource_path(resource)
       end
       MagicTicketCallouts::Card.new(icon_class: "fa-solid fa-file-lines", color: "blue",
-                                    title: resource.title, subtitle: "Open this document",
+                                    title: resource.title, subtitle: link.subtitle.presence || "Open this document",
                                     href:, target: nil, trailing_icon: "fa-solid fa-arrow-right")
     end
   end
