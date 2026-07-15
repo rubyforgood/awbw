@@ -262,7 +262,7 @@ class DefaultTicketCallouts
         callout_type: "reference",
         icon_class: "fa-solid fa-circle-question",
         color_class: "blue",
-        description: faq_html,
+        description: self.class.faq_html,
         hidden: ->(event) { !event.facilitator_training? }
       }
     ]
@@ -320,18 +320,20 @@ class DefaultTicketCallouts
     Events::CalloutsController::HANDOUT_RESOURCE_TITLES.filter_map { |title| by_title[title] }
   end
 
-  # Renders FAQS to the basic HTML the callout description accepts (headings,
-  # paragraphs, lists) so the materialized card reads like the code-defined page.
-  def faq_html
+  # Renders FAQS to standard <details>/<summary> disclosures so each question is a
+  # collapsible section, identical to how the FAQ page and every other callout
+  # render admin-authored disclosures (see CalloutContent). Used both to seed the
+  # materialized card's editable copy and as the FAQ page's fallback default, so a
+  # fresh card starts as editable toggles.
+  def self.faq_html
     FAQS.map do |faq|
-      parts = [ "<h3>#{h(faq[:q])}</h3>" ]
-      parts += faq[:a].map { |paragraph| "<p>#{h(paragraph)}</p>" }
-      parts << "<ul>#{faq[:list].map { |item| "<li>#{h(item)}</li>" }.join}</ul>" if faq[:list]
-      parts.join
+      body = faq[:a].map { |paragraph| "<p>#{h(paragraph)}</p>" }
+      body << "<ul>#{faq[:list].map { |item| "<li>#{h(item)}</li>" }.join}</ul>" if faq[:list]
+      "<details><summary>#{h(faq[:q])}</summary>#{body.join}</details>"
     end.join
   end
 
-  def h(text)
+  def self.h(text)
     ERB::Util.html_escape(text)
   end
 end

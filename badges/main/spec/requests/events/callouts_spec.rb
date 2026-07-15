@@ -10,9 +10,22 @@ RSpec.describe "Events::Callouts", type: :request do
     context "on a facilitator training" do
       let(:event) { create(:event, facilitator_training: true) }
 
-      it "renders the FAQ" do
+      it "renders the FAQ as collapsible toggles from the default content" do
         get registration_faq_path(registration.slug)
         expect(response).to have_http_status(:success)
+        expect(response.body).to include("<details")
+        expect(response.body).to include("Who is this training designed for?")
+      end
+
+      it "renders the editable FAQ callout copy when the card is materialized" do
+        DefaultTicketCallouts.seed(event)
+        faq = event.registration_ticket_callouts.find_by(magic_key: "faq")
+        faq.update!(description: "<details><summary>Custom question</summary><p>Custom answer</p></details>")
+
+        get registration_faq_path(registration.slug)
+        expect(response.body).to include("Custom question")
+        expect(response.body).to include("Custom answer")
+        expect(response.body).not_to include("Who is this training designed for?")
       end
     end
 

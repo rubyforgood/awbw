@@ -194,6 +194,12 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.form_label_html("<h2>Section</h2>")).to eq("<h2>Section</h2>")
     end
 
+    it "keeps collapsible <details>/<summary> disclosures (incl. the open state)" do
+      input = %(<details open><summary>Workshop 1</summary><ul><li>Glue</li></ul></details>)
+      # The sanitizer normalizes the boolean attribute to open="" — functionally identical.
+      expect(helper.form_label_html(input)).to eq(%(<details open=""><summary>Workshop 1</summary><ul><li>Glue</li></ul></details>))
+    end
+
     it "keeps font size and color via inline style" do
       input = %(<span style="font-size:24px;color:#ff0000">big red</span>)
       result = helper.form_label_html(input)

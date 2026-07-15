@@ -13,9 +13,7 @@
     </div>
   <% else %>
     <% if @callout.description.present? %>
-      <div class="rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700">
-        <%= form_label_html(@callout.description) %>
-      </div>
+      <%= render "events/callouts/rich_content", content: @callout.description %>
     <% end %>
 
     <% if @resource_cards.any? %>
