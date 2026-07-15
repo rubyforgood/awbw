@@ -32,9 +32,13 @@ class OtherResponse < ApplicationRecord
   # then either promoted into a real tag, kept as auxiliary data, or dismissed.
   STATUSES = %w[pending kept promoted dismissed].freeze
 
-  # Statuses that still surface (as an "(other)" chip for sectors, or a live row
-  # in the review queue).
+  # Statuses that still surface (as an "(other)" chip) on the person's profile
+  # and edit form. `dismissed` is hidden here but not gone — see below.
   VISIBLE_STATUSES = %w[pending kept].freeze
+
+  # Statuses shown in the review queue. `dismissed` stays so a curator can still
+  # promote it to a sector later; only `promoted` (already a real tag) drops off.
+  REVIEWABLE_STATUSES = %w[pending kept dismissed].freeze
 
   belongs_to :owner, polymorphic: true
   belongs_to :promotable, polymorphic: true, optional: true
@@ -51,8 +55,11 @@ class OtherResponse < ApplicationRecord
 
   scope :sectors, -> { where(kind: "sector") }
   scope :visible, -> { where(status: VISIBLE_STATUSES) }
+  scope :reviewable, -> { where(status: REVIEWABLE_STATUSES) }
   scope :pending, -> { where(status: "pending") }
-  scope :promotable_now, -> { where.not(status: "dismissed") }
+  # Promotable = anything not already a real tag; a dismissed value can still be
+  # promoted later.
+  scope :promotable_now, -> { where.not(status: "promoted") }
 
   # The coarse category (and thus owner + promotability) for a question.
   def self.kind_for(field_identifier)

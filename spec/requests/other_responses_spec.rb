@@ -15,13 +15,20 @@ RSpec.describe "OtherResponses", type: :request do
       bob = create(:person)
       create(:other_response, owner: alice, text: "Equine therapy")
       create(:other_response, owner: bob, text: "equine therapy")
-      create(:other_response, :dismissed, owner: bob, text: "Hidden one")
 
       get other_responses_path
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Equine therapy")
-      expect(response.body).not_to include("Hidden one")
+    end
+
+    it "keeps dismissed responses in the queue (they can still be promoted later)" do
+      sign_in admin
+      create(:other_response, :dismissed, text: "Youth membership")
+
+      get other_responses_path
+
+      expect(response.body).to include("Youth membership")
     end
 
     it "shows generic (non-sector) responses under their question" do
@@ -53,6 +60,17 @@ RSpec.describe "OtherResponses", type: :request do
       get other_responses_path(status: "kept")
 
       expect(response.body).to include("Kept value")
+      expect(response.body).not_to include("Pending value")
+    end
+
+    it "filters to dismissed" do
+      sign_in admin
+      create(:other_response, text: "Pending value")
+      create(:other_response, :dismissed, text: "Dismissed value")
+
+      get other_responses_path(status: "dismissed")
+
+      expect(response.body).to include("Dismissed value")
       expect(response.body).not_to include("Pending value")
     end
 
@@ -108,6 +126,16 @@ RSpec.describe "OtherResponses", type: :request do
       expect(sector.reload.status).to eq("pending")
     end
 
+    it "revives a dismissed group when kept" do
+      sign_in admin
+      dismissed = create(:other_response, :dismissed, text: "Equine therapy")
+
+      post curate_other_responses_path,
+           params: { kind: "sector", normalized_text: "equine therapy", status: "kept" }
+
+      expect(dismissed.reload.status).to eq("kept")
+    end
+
     it "dismisses an organization-type group by kind" do
       sign_in admin
       org_response = create(:other_response, :organization_type, text: "Nonprofit collective")
@@ -151,7 +179,7 @@ RSpec.describe "OtherResponses", type: :request do
       expect(response).not_to have_http_status(:ok)
     end
 
-    it "tags every non-dismissed person and marks the responses promoted" do
+    it "tags everyone in the group — including dismissed — and marks them promoted" do
       sign_in admin
       sector = create(:sector, name: "Equine Therapy")
       kept = create(:other_response, owner: create(:person), text: "Equine therapy")
@@ -162,8 +190,9 @@ RSpec.describe "OtherResponses", type: :request do
 
       expect(kept.reload.status).to eq("promoted")
       expect(kept.owner.sectors).to include(sector)
-      expect(dismissed.reload.status).to eq("dismissed")
-      expect(dismissed.owner.sectors).not_to include(sector)
+      # Dismissed responses stay in the queue and are promoted too.
+      expect(dismissed.reload.status).to eq("promoted")
+      expect(dismissed.owner.sectors).to include(sector)
     end
 
     it "also tags the org the person registered with (derived via the response's submission)" do

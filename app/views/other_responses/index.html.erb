@@ -28,7 +28,7 @@
 
     <!-- Status filter -->
     <div class="flex items-center gap-2 text-sm">
-      <% [ [ "All", nil ], [ "Pending", "pending" ], [ "Kept", "kept" ] ].each do |label, value| %>
+      <% [ [ "All", nil ], [ "Pending", "pending" ], [ "Kept", "kept" ], [ "Dismissed", "dismissed" ] ].each do |label, value| %>
         <% active = @status_filter == value %>
         <%= link_to label, other_responses_path(status: value, return_to: params[:return_to], person_id: params[:person_id]),
                     class: "px-3 py-1 rounded-full #{active ? "bg-gray-800 text-white" : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-100"}" %>
@@ -53,8 +53,11 @@
                 <td class="px-4 py-3 text-sm text-gray-600"><%= group[:question_label] %></td>
                 <td class="px-4 py-3 text-sm text-gray-800">
                   <span class="font-medium"><%= group[:display_text] %></span>
-                  <% if group[:status_counts]["kept"].to_i.positive? %>
-                    <span class="ml-1 text-xs text-gray-400">(<%= group[:status_counts]["kept"] %> kept)</span>
+                  <% notes = [] %>
+                  <% notes << "#{group[:status_counts]["kept"]} kept" if group[:status_counts]["kept"].to_i.positive? %>
+                  <% notes << "#{group[:status_counts]["dismissed"]} dismissed" if group[:status_counts]["dismissed"].to_i.positive? %>
+                  <% if notes.any? %>
+                    <span class="ml-1 text-xs text-gray-400">(<%= notes.join(", ") %>)</span>
                   <% end %>
                 </td>
                 <td class="px-4 py-3 text-center text-sm text-gray-700"><%= group[:count] %></td>

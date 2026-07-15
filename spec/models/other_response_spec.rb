@@ -67,6 +67,15 @@ RSpec.describe OtherResponse, type: :model do
       expect(OtherResponse.visible).to contain_exactly(pending, kept)
     end
 
+    it ".reviewable keeps dismissed in the queue but drops promoted" do
+      pending = create(:other_response)
+      kept = create(:other_response, :kept)
+      dismissed = create(:other_response, :dismissed)
+      create(:other_response, :promoted)
+
+      expect(OtherResponse.reviewable).to contain_exactly(pending, kept, dismissed)
+    end
+
     it "only sector responses are promotable" do
       expect(create(:other_response).promotable?).to be(true)
       expect(create(:other_response, :generic).promotable?).to be(false)

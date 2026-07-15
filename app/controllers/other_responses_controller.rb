@@ -7,8 +7,8 @@ class OtherResponsesController < ApplicationController
   # is grouped on its own, since its "Other"s are unrelated auxiliary data.
   def index
     authorize!
-    @status_filter = params[:status].presence_in(OtherResponse::VISIBLE_STATUSES)
-    statuses = @status_filter ? [ @status_filter ] : OtherResponse::VISIBLE_STATUSES
+    @status_filter = params[:status].presence_in(OtherResponse::REVIEWABLE_STATUSES)
+    statuses = @status_filter ? [ @status_filter ] : OtherResponse::REVIEWABLE_STATUSES
     responses = OtherResponse.where(status: statuses).includes(:owner, :source_form_answer)
 
     @groups = responses
@@ -28,7 +28,9 @@ class OtherResponsesController < ApplicationController
       return redirect_to other_responses_path, alert: "Choose keep or dismiss."
     end
 
-    scope = group_scope.where(status: OtherResponse::VISIBLE_STATUSES)
+    # Act on every still-reviewable row so "Keep all" can also revive a dismissed
+    # value; already-promoted rows are left alone.
+    scope = group_scope.promotable_now
     count = scope.count
     scope.find_each { |response| response.update!(status: status) }
 
