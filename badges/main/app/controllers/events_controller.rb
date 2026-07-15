@@ -37,7 +37,7 @@ class EventsController < ApplicationController
     authorize! @event
     # Materialize any missing built-in callouts so the editor shows them all
     # (idempotent; heals events created before a built-in existed).
-    DefaultTicketCallouts.seed(@event)
+    BuiltinCallouts.seed(@event)
     set_form_variables
   end
 
@@ -191,7 +191,7 @@ class EventsController < ApplicationController
   def details
     authorize! @event, to: :details?
 
-    callout = @event.registration_ticket_callouts.find_by(magic_key: "event_details")
+    callout = @event.registration_ticket_callouts.find_by(builtin_key: "event_details")
     @event_details_title = callout&.title.presence || @event.event_details_label
     @event_details_body = callout&.description.presence || @event.event_details
 
@@ -452,7 +452,7 @@ class EventsController < ApplicationController
         if params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@event)
         end
-        DefaultTicketCallouts.seed(@event)
+        BuiltinCallouts.seed(@event)
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -483,7 +483,7 @@ class EventsController < ApplicationController
         assign_associations(@event)
         # Lazily materialize built-in callouts for events created before this
         # existed — heals on first edit, no data backfill. Idempotent.
-        DefaultTicketCallouts.seed(@event)
+        BuiltinCallouts.seed(@event)
         success = true
       else
         raise ActiveRecord::Rollback
@@ -727,6 +727,11 @@ class EventsController < ApplicationController
     @event = @event.decorate
     @event.build_primary_asset if @event.primary_asset.blank?
     @event.gallery_assets.build
+    # Build any not-yet-present built-in callouts as in-memory rows so the editor
+    # shows them (editable, with builtin_key round-tripped) even before the event's
+    # first save. Idempotent, so it's a no-op once they exist (edit seeds real
+    # rows first; a failed create/update already carries the submitted rows).
+    BuiltinCallouts.build(@event)
     @locations = Location.order(:city, :state)
     @registration_forms = Form.standalone.where(role: "registration").order(:name)
     @scholarship_forms = Form.standalone.where(role: "scholarship").order(:name)

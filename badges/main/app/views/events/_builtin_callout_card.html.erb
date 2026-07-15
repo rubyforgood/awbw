@@ -1,7 +1,7 @@
 <%# An editable built-in registration-ticket callout (CE hours, art supplies),
     rendered inside the event form's callouts section and tinted in the colour the
     card uses on the ticket. locals: f (event form builder), card
-    (MagicTicketCallouts::EditorCard), label_field/content_field (event attribute
+    (BuiltinCalloutCards::EditorCard), label_field/content_field (event attribute
     symbols), title_placeholder, content_help, content_placeholder. %>
 <% theme = card.theme %>
 <div class="registration-ticket-callout-fields flex items-start gap-3 rounded-lg border <%= theme[:border] %> <%= theme[:bg] %> p-3 shadow-sm">

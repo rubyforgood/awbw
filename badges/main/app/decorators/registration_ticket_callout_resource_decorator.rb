@@ -13,7 +13,7 @@ class RegistrationTicketCalloutResourceDecorator < ApplicationDecorator
   # callout page and is dropped from the URL when nil. `color` themes the card —
   # blue on the callout pages, grey in the payment page's documents list.
   def to_card(registrant_slug:, return_to:, icon: "fa-solid fa-file-lines", color: "blue", callout_id: nil)
-    MagicTicketCallouts::Card.new(
+    BuiltinCalloutCards::Card.new(
       icon_class: icon, color:, title: resource.title, subtitle: card_subtitle,
       href: card_href(registrant_slug:, return_to:, callout_id:),
       target: nil, trailing_icon: "fa-solid fa-arrow-right"

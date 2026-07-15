@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_15_000553) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_15_041845) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1111,6 +1111,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000553) do
   end
 
   create_table "registration_ticket_callouts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "builtin_key"
     t.string "callout_type", default: "reference", null: false
     t.string "color_class"
     t.datetime "created_at", null: false
@@ -1119,13 +1120,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000553) do
     t.bigint "event_id", null: false
     t.boolean "hidden", default: false, null: false
     t.string "icon_class"
-    t.string "magic_key"
     t.boolean "payment_access_gated", default: false, null: false
     t.integer "position", null: false
     t.string "subtitle"
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["event_id", "magic_key"], name: "index_registration_ticket_callouts_on_event_id_and_magic_key", unique: true
+    t.index ["event_id", "builtin_key"], name: "index_registration_ticket_callouts_on_event_id_and_builtin_key", unique: true
     t.index ["event_id", "position"], name: "index_registration_ticket_callouts_on_event_id_and_position"
     t.index ["event_id"], name: "index_registration_ticket_callouts_on_event_id"
   end

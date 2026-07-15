@@ -48,7 +48,7 @@ class Event < ApplicationRecord
     reject_if: proc { |attrs| attrs["person_id"].blank? }
   accepts_nested_attributes_for :registration_ticket_callouts, allow_destroy: true,
     # Reject only blank *new* callouts; existing rows (with an id) must always
-    # process so a control-only magic row's hidden/position toggle persists even
+    # process so a control-only built-in row's hidden/position toggle persists even
     # though it submits no title.
     reject_if: proc { |attrs| attrs["id"].blank? && attrs["title"].blank? }
 
@@ -124,24 +124,6 @@ class Event < ApplicationRecord
     signed_in_one_click_enabled? || registration_form.nil?
   end
 
-  # Whether the built-in "training" ticket callouts (Handouts, FAQ, Forms) appear
-  # on this event's registration tickets. Their content is written for the 2-Day
-  # AWBW Facilitator Training, so they only belong on those events — a public,
-  # non-training event (often with no registration process) should not surface
-  # training worksheets or "2-day training" FAQ on its ticket. Handouts and FAQ
-  # are pure training curriculum; Forms (W-9, invoice, receipt) also belongs on
-  # any paid event, whose registrants need their invoice and receipt.
-  #
-  # These are the default rules; a later change adds a per-event override so
-  # admins can force a callout on or off from the event's callouts section.
-  def show_handouts_callout?
-    facilitator_training?
-  end
-
-  def show_faq_callout?
-    facilitator_training?
-  end
-
   def scholarship_form
     forms.find_by(event_forms: { role: "scholarship" })
   end
@@ -182,7 +164,7 @@ class Event < ApplicationRecord
   def videoconference_details_available_from
     return @videoconference_details_available_from if defined?(@videoconference_details_available_from)
     @videoconference_details_available_from =
-      if (callout = registration_ticket_callouts.magic.find_by(magic_key: "videoconference"))
+      if (callout = registration_ticket_callouts.builtin.find_by(builtin_key: "videoconference"))
         callout.display_from
       elsif start_date
         start_date - VIDEOCONFERENCE_DETAILS_LEAD
