@@ -150,11 +150,32 @@ RSpec.describe "Events", type: :request do
     context "as admin" do
       before { sign_in admin }
 
-      it "renders a preview ticket for an unsaved sample registration" do
+      it "builds an unsaved sample registration when the event has none" do
         get sample_ticket_event_path(event)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Sample ticket preview")
-        expect(response.body).to include("Sample Registrant")
+        expect(response.body).to include("Sample Person")
+      end
+
+      context "when the event has a registration" do
+        let(:registrant) { create(:person, first_name: "Realname", last_name: "Smith") }
+        let!(:registration) { create(:event_registration, event:, registrant:) }
+
+        it "previews a real registration with its name masked" do
+          get sample_ticket_event_path(event)
+          expect(response.body).to include("Sample Person")
+          expect(response.body).not_to include("Realname")
+        end
+
+        it "does not persist the masked name onto the real registrant" do
+          get sample_ticket_event_path(event)
+          expect(registrant.reload.first_name).to eq("Realname")
+        end
+
+        it "links the behavioral built-in cards to that registration's live pages" do
+          get sample_ticket_event_path(event, options: "all")
+          expect(response.body).to include(registration_payment_path(registration.slug))
+        end
       end
 
       it "materializes the built-in callouts so the preview reads from real rows" do

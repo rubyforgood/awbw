@@ -128,7 +128,10 @@
         <% if callout.behavioral_builtin? %>
           <% card = builtin_cards.card_for(callout) %>
           <% if card %>
-            <%= render "event_registrations/callout_card", callout: card, linked: !preview %>
+            <%# Behavioral cards link to per-registration pages: clickable on a real
+                ticket, and in the preview only when it's based on a real registration
+                (a built sample's sentinel slug wouldn't resolve). %>
+            <%= render "event_registrations/callout_card", callout: card, linked: !preview || event_registration.persisted? %>
           <% elsif preview && show_all %>
             <!-- The live card doesn't apply to the sample registrant (e.g. no
                  certificate yet), but "Show all options" still previews the row's
