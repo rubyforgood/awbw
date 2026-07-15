@@ -35,6 +35,35 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  # The intro copy an admin types into a built-in's materialized callout row (its
+  # "Callout page text" / description) renders on that built-in's public page. CE
+  # and scholarship previously had no request-layer coverage of this; the FAQ case
+  # is covered above, and handouts has no description intro (resource cards only).
+  describe "built-in page copy from the callout row description" do
+    it "renders the CE callout's description on the CE page" do
+      BuiltinCallouts.seed(event)
+      event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
+        .update!(description: "<p>Bring your license number.</p>", hidden: false)
+
+      get registration_ce_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Bring your license number.")
+    end
+
+    it "renders the scholarship callout's description on the scholarship page" do
+      registration.update!(scholarship_requested: true)
+      BuiltinCallouts.seed(event)
+      event.registration_ticket_callouts.find_by(builtin_key: "scholarship")
+        .update!(description: "<p>About your scholarship.</p>", hidden: false)
+
+      get registration_scholarship_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("About your scholarship.")
+    end
+  end
+
   describe "GET /registration/:slug/handouts" do
     it "renders the handouts page when its callout is published" do
       create(:registration_ticket_callout, event:, builtin_key: "handouts", hidden: false)
