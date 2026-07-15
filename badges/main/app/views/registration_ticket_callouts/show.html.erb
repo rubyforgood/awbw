@@ -1,7 +1,13 @@
 <% content_for(:page_bg_class, "public") %>
 <% content_for(:page_title, "#{@callout.title} — #{@event.title}") %>
 <% reg_slug = params[:reg].presence %>
-<% back_path = reg_slug ? registration_ticket_path(reg_slug) : nil %>
+<%# Coming from the admin's sample-ticket preview, return there; a real registrant
+    returns to their ticket; otherwise the layout falls back to the event page. %>
+<% back_path = if params[:return_to] == "sample_ticket"
+     sample_ticket_event_path(@event)
+   elsif reg_slug
+     registration_ticket_path(reg_slug)
+   end %>
 <%= render layout: "events/callouts/callout_page", locals: { title: @callout.title, back_path: back_path } do %>
   <% if @callout.subtitle.present? %>
     <p class="text-base text-gray-500 mb-4"><%= @callout.subtitle %></p>

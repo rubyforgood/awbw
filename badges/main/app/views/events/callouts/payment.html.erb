@@ -29,10 +29,15 @@
 
   <% if @event_registration.remaining_cost.positive? %>
     <div class="mt-6 flex justify-center">
-      <%= button_to "Pay with Credit Card",
-                    registration_pay_path(@event_registration.slug),
-                    data: { turbo: false },
-                    class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
+      <% if sample_preview? %>
+        <button type="button" disabled
+                class="btn btn-accent px-6 py-2 text-sm uppercase font-telefon opacity-60 cursor-not-allowed">Pay with Credit Card</button>
+      <% else %>
+        <%= button_to "Pay with Credit Card",
+                      registration_pay_path(@event_registration.slug),
+                      data: { turbo: false },
+                      class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
+      <% end %>
     </div>
 
     <details class="mt-6">

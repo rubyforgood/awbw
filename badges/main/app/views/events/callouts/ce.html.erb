@@ -32,7 +32,7 @@
       Admin-only jump to the management surface for this CE registration. Hidden
       from registrants; opens in a new tab so the registrant view is kept.
     %>
-    <% if ce_registration && allowed_to?(:edit?, ce_registration) %>
+    <% if ce_registration && allowed_to?(:edit?, ce_registration) && !sample_preview? %>
       <div class="mb-4 flex justify-end">
         <%= link_to edit_continuing_education_registration_path(ce_registration), target: "_blank", rel: "noopener",
               class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
@@ -86,10 +86,15 @@
             <p class="mt-3 text-sm text-amber-700">Payment due by <%= @event.ce_payment_due_deadline.to_fs(:long) %></p>
           <% end %>
           <div class="mt-6 flex justify-center">
-            <%= button_to "Pay with Credit Card",
-                          registration_ce_pay_path(@event_registration.slug),
-                          data: { turbo: false },
-                          class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
+            <% if sample_preview? %>
+              <button type="button" disabled
+                      class="btn btn-accent px-6 py-2 text-sm uppercase font-telefon opacity-60 cursor-not-allowed">Pay with Credit Card</button>
+            <% else %>
+              <%= button_to "Pay with Credit Card",
+                            registration_ce_pay_path(@event_registration.slug),
+                            data: { turbo: false },
+                            class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
+            <% end %>
           </div>
         <% end %>
       </section>
@@ -114,7 +119,7 @@
         <div class="flex items-center justify-between gap-3">
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Your professional license</h2>
 
-          <% if license_on_file && !editing_license && !license_locked %>
+          <% if license_on_file && !editing_license && !license_locked && !sample_preview? %>
             <%= link_to registration_ce_path(@event_registration.slug, editing: "license", return_to: params[:return_to].presence),
                   class: "shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50" do %>
               <i class="fa-solid fa-pen-to-square text-xs"></i>
