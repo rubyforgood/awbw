@@ -4,9 +4,18 @@
     under the title on the resource's own page. %>
 <div class="nested-fields flex items-start gap-2">
   <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-2">
-    <%= f.collection_select :resource_id, Resource.order(:title), :id, :title,
-          { include_blank: "Select a resource…" },
-          class: "rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
+    <% resource = f.object.resource %>
+    <select
+      name="<%= f.field_name(:resource_id) %>"
+      id="<%= f.field_id(:resource_id) %>"
+      data-controller="remote-select"
+      data-remote-select-model-value="resource"
+      class="rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm">
+      <option value="">Type to search resources…</option>
+      <% if resource %>
+        <option value="<%= resource.id %>" selected><%= resource.title %></option>
+      <% end %>
+    </select>
     <%= f.text_field :subtitle, placeholder: "Short one-line",
           class: "rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
     <%= f.text_area :page_content, rows: 2, placeholder: "Shown under the title",
