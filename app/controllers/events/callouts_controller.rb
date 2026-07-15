@@ -35,7 +35,7 @@ module Events
     # dynamic invoice/receipt) for paid events.
     def payment
       @allocations = @event_registration.allocations.includes(:source).order(:created_at)
-      @document_resources = payment_document_resources
+      @document_cards = payment_document_cards
     end
 
     # Certificate of completion, rendered like the invoice. Only reachable once
@@ -235,16 +235,44 @@ module Events
       answer.update!(submitted_answer: number.to_s, question_name_when_answered: field.name)
     end
 
-    # The payment callout's linked documents (the W-9 by default on paid events),
-    # shown on the payment page's Documents section. Returns the join rows so each
-    # card reads its admin-editable subtitle from the materialized row. Uses the
-    # materialized Payment row's links when present (so admins can add/remove
-    # them), else transient links for the W-9 on paid events not yet materialized.
+    # The payment page's Documents section as grey callout cards, rendered through
+    # the shared card partial like every other callout surface: the dynamic
+    # invoice/receipt first, then the payment callout's linked resources (the W-9
+    # by default on paid events), each reading its admin-editable subtitle from the
+    # materialized join row.
+    def payment_document_cards
+      slug = @event_registration.slug
+      cards = []
+      if @event_registration.invoice_available?
+        cards << document_card(title: "Invoice", subtitle: "Itemized invoice for this registration",
+          icon: "fa-solid fa-file-invoice-dollar", href: registration_invoice_path(slug, return_to: "payment"))
+        if @event_registration.receipt_available?
+          cards << document_card(title: "Receipt", subtitle: "Paid-in-full receipt for this registration",
+            icon: "fa-solid fa-receipt", href: registration_receipt_path(slug, return_to: "payment"))
+        end
+      end
+      cards + payment_document_resources.map do |link|
+        link.decorate.to_card(registrant_slug: slug, return_to: "payment",
+                              icon: "fa-solid fa-file-pdf", color: "gray")
+      end
+    end
+
+    # The payment callout's linked resource join rows (the W-9 by default on paid
+    # events). Uses the materialized Payment row's links when present (so admins
+    # can add/remove them), else transient links for the W-9 on paid events not
+    # yet materialized.
     def payment_document_resources
       payment_callout = @event.registration_ticket_callouts.find_by(magic_key: "payment")
       return payment_callout.registration_ticket_callout_resources.ordered.includes(:resource).to_a if payment_callout
       return [] unless @event.cost_cents.to_i.positive?
       Resource.where(title: "W-9").map { |resource| RegistrationTicketCalloutResource.new(resource:) }
+    end
+
+    # A grey document card for a non-resource payment document (the dynamic
+    # invoice/receipt). Opens in a new tab, matching the callout-card contract.
+    def document_card(title:, subtitle:, icon:, href:)
+      MagicTicketCallouts::Card.new(icon_class: icon, color: "gray", title:, subtitle:,
+                                    href:, target: "_blank", trailing_icon: "fa-solid fa-arrow-right")
     end
 
     def redirect_to_ce_stripe_checkout(ce_registration)
