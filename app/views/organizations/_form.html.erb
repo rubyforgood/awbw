@@ -160,7 +160,7 @@
       </div>
     <% end %>
 
-    <% facilitator_status_name = f.object.affiliations.facilitators.active.exists? ? "Active" : "Inactive" %>
+    <% facilitator_status_name = f.object.affiliations.facilitators.active.exists? ? "Active" : "Formerly active" %>
     <% status_matches_affiliations = f.object.organization_status&.name == facilitator_status_name %>
     <% show_status_select = allowed_to?(:manage?, Organization) &&
          (params[:admin] || (f.object.persisted? && !status_matches_affiliations)) %>
@@ -278,7 +278,7 @@
           </label>
           <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
             <% if has_affiliations && org_earliest_aff.present? %>
-              <p>Auto-managed from affiliation records. Earliest affiliation start date: <%= org_earliest_aff.strftime('%b %Y') %>.</p>
+              <p>Auto-managed from affiliation records — shown as merged year-based periods (e.g. "2010-2012, 2026").</p>
               <% if f.object.start_date.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>
                 <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Organization start_date (<%= f.object.start_date.strftime('%b %Y') %>) differs from earliest affiliation.</p>
               <% end %>
@@ -294,7 +294,7 @@
             <% end %>
           </div>
           <div class="pt-1">
-            <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><% if org_aff_ended || (f.object.end_date.present? && !has_affiliations) %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="Affiliation ended"></i><% end %><%= (org_earliest_aff || f.object.start_date)&.strftime('%b %Y') || "—" %><%= " – #{org_end_date.strftime('%b %Y')}" if org_end_date.present? %></span>
+            <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><%= org_decorated.affiliated_since_display.presence || "—" %></span>
             <% if has_affiliations && org_earliest_aff.nil? %>
               <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
             <% elsif f.object.start_date.present? && org_earliest_aff.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>

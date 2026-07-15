@@ -65,7 +65,7 @@ RSpec.describe "organizations/edit", type: :view do
     end
 
     it "shows the status select and the red mismatch hint when the status does not match the affiliation-calculated status" do
-      org = org_with_status("Pending")
+      org = org_with_status("Formerly active")
       create(:affiliation, organization: org, person: create(:person), inactive: false, end_date: nil)
       assign(:organization, org.reload)
       render

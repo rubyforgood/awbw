@@ -8,7 +8,7 @@ class OrganizationsController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(Organization.includes(
-        :windows_type, :organization_status, :sectors, :addresses,
+        :windows_type, :organization_status, :sectors, :addresses, :affiliations,
         { categorizable_items: { category: :category_type } },
         logo_attachment: :blob
       ))
@@ -17,9 +17,8 @@ class OrganizationsController < ApplicationController
       @active_people_count = Affiliation.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
       @organizations = filtered.paginate(page: params[:page], per_page: per_page)
       org_ids = @organizations.map(&:id)
-      @affiliated_since = Affiliation.where(organization_id: org_ids)
-                                            .group(:organization_id)
-                                            .minimum(:start_date)
+      # Merged-period "Affiliated since" label per org, from the preloaded affiliations.
+      @affiliated_since_display = @organizations.to_h { |org| [ org.id, org.decorate.affiliated_since_display ] }
       @active_people_counts = Affiliation.active
                                                 .where(organization_id: org_ids)
                                                 .group(:organization_id)

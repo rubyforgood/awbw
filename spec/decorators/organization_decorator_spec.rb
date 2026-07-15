@@ -1,6 +1,28 @@
 require "rails_helper"
 
 RSpec.describe OrganizationDecorator do
+  describe "#affiliated_since_display" do
+    let(:organization) { create(:organization) }
+
+    it "is blank when there are no affiliations and no start date" do
+      organization.update_column(:start_date, nil)
+      expect(organization.decorate.affiliated_since_display).to eq("")
+    end
+
+    it "falls back to the org start_date when there are no affiliations" do
+      organization.update_column(:start_date, Date.new(2015, 3, 1))
+      expect(organization.decorate.affiliated_since_display).to eq("Mar 2015")
+    end
+
+    it "shows merged affiliation periods" do
+      create(:affiliation, organization: organization, person: create(:person),
+                           start_date: Date.new(2010, 1, 1), end_date: Date.new(2012, 6, 1))
+      create(:affiliation, organization: organization, person: create(:person),
+                           start_date: Date.new(2013, 1, 1), end_date: Date.new(2015, 6, 1))
+      expect(organization.reload.decorate.affiliated_since_display).to eq("2010-2012, 2013-2015")
+    end
+  end
+
   describe ".program_status_classes" do
     it "maps each status to its pill classes, accepting symbols or model strings" do
       expect(described_class.program_status_classes(:new)).to include("green")

@@ -38,25 +38,17 @@ export default class extends Controller {
 
   recalculate() {
     const affiliations = this.getVisibleAffiliations()
-
-    // Affiliated since = min start_date of all affiliations
-    const allStartDates = affiliations.map(a => a.startDate).filter(Boolean)
-    const affiliatedSince = allStartDates.length
-      ? new Date(Math.min(...allStartDates.map(d => new Date(d))))
-      : null
-
-    // Affiliated end = only if ALL affiliations are inactive (end_date in the past)
     const now = new Date()
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
-    const allInactive = affiliations.length > 0 &&
-      affiliations.every(a => a.endDate && new Date(a.endDate) < today)
-    const affiliatedEnd = allInactive
-      ? new Date(Math.max(...affiliations.map(a => new Date(a.endDate))))
-      : null
 
-    // Facilitator since/end — same logic filtered by title. Mirror
-    // Affiliation#facilitator?: an exact, case-sensitive match on "Facilitator"
-    // (trimmed), so the live figure matches what the server will render.
+    // Affiliated since = merged year-based periods (mirrors AffiliationPeriods).
+    if (this.hasAffiliatedSinceTarget) {
+      this.affiliatedSinceTarget.textContent = this.affiliatedSinceLabel(affiliations, today) || "—"
+    }
+
+    // Facilitations/program since — unchanged single-range display, filtered by
+    // title. Mirror Affiliation#facilitator?: an exact, case-sensitive match on
+    // "Facilitator" (trimmed), so the live figure matches the server render.
     const facilitatorAffiliations = affiliations.filter(a =>
       a.title.trim() === "Facilitator"
     )
@@ -70,12 +62,48 @@ export default class extends Controller {
       ? new Date(Math.max(...facilitatorAffiliations.map(a => new Date(a.endDate))))
       : null
 
-    if (this.hasAffiliatedSinceTarget) {
-      this.updateDisplay(this.affiliatedSinceTarget, affiliatedSince, affiliatedEnd)
-    }
     if (this.hasFacilitatorSinceTarget) {
       this.updateDisplay(this.facilitatorSinceTarget, facilitatorSince, facilitatorEnd)
     }
+  }
+
+  // Merge affiliation intervals into periods and format them as year-based ranges
+  // — the client-side mirror of app/services/affiliation_periods.rb.
+  affiliatedSinceLabel(affiliations, today) {
+    const intervals = affiliations
+      .filter(a => a.startDate)
+      .map(a => ({ start: new Date(a.startDate), end: a.endDate ? new Date(a.endDate) : null }))
+      .sort((a, b) => a.start - b.start)
+    if (!intervals.length) return ""
+
+    const periods = []
+    for (const iv of intervals) {
+      const last = periods[periods.length - 1]
+      if (last && (last.end === null || iv.start <= last.end)) {
+        last.end = last.end === null || iv.end === null ? null : new Date(Math.max(last.end, iv.end))
+      } else {
+        periods.push({ start: iv.start, end: iv.end })
+      }
+    }
+
+    const ongoing = end => end === null || end >= today
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    // A single ongoing period is a fresh org — worth the month's precision.
+    if (periods.length === 1 && ongoing(periods[0].end)) {
+      const s = periods[0].start
+      return s.getUTCFullYear() === today.getUTCFullYear()
+        ? `${months[s.getUTCMonth()]} ${s.getUTCFullYear()}`
+        : `${s.getUTCFullYear()}`
+    }
+
+    return periods
+      .map(p => {
+        const startYear = p.start.getUTCFullYear()
+        if (ongoing(p.end) || startYear === p.end.getUTCFullYear()) return `${startYear}`
+        return `${startYear}-${p.end.getUTCFullYear()}`
+      })
+      .join(", ")
   }
 
   getVisibleAffiliations() {

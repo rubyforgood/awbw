@@ -1,5 +1,5 @@
 class OrganizationStatus < ApplicationRecord
-  ORGANIZATION_STATUSES = [ "Active", "Inactive", "Pending", "Reinstate", "Suspended", "Unknown" ]
+  ORGANIZATION_STATUSES = [ "Active", "Formerly active", "Unknown" ]
 
   has_many :organizations
 
