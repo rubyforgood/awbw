@@ -182,9 +182,9 @@ RSpec.describe "Events", type: :request do
         create(:registration_ticket_callout, :hidden, event: event, title: "Draft note")
         get sample_ticket_event_path(event, options: "all")
         expect(response.body).to include("Draft note")
-        # The payment built-in seeds hidden, so it only appears here; it also
-        # exercises the card rendering against the unsaved sample's sentinel slug.
-        expect(response.body).to include("Make your payment")
+        # The built-ins seed hidden, so they only appear here — and the ticket
+        # renders them against the unsaved sample's sentinel slug without raising.
+        expect(response.body).to include("Frequently asked questions")
       end
 
       it "models a typical registrant by default, hiding scholarship and CE" do
