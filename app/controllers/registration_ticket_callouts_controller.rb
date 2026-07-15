@@ -22,7 +22,7 @@ class RegistrationTicketCalloutsController < ApplicationController
       return
     end
 
-    @resource_cards = build_resource_cards
+    @resource_cards = @callout.decorate.resource_cards(registrant_slug: params[:reg].presence, return_to: "callout")
     @event = @event.decorate
   end
 
@@ -41,24 +41,6 @@ class RegistrationTicketCalloutsController < ApplicationController
   end
 
   private
-
-  # This callout's resources as clickable cards linking to each resource's own
-  # page (never inline). A registrant reaching the page carries their ticket slug
-  # in `reg`, so links go to the in-ticket registrant resource page returning here;
-  # without a slug (e.g. an admin preview) they fall back to the resource's own page.
-  def build_resource_cards
-    reg_slug = params[:reg].presence
-    @callout.resources.map do |resource|
-      href = if reg_slug
-        registration_resource_path(reg_slug, resource, return_to: "callout", callout_id: @callout.id)
-      else
-        resource_path(resource)
-      end
-      MagicTicketCallouts::Card.new(icon_class: "fa-solid fa-file-lines", color: "blue",
-                                    title: resource.title, subtitle: "Open this document",
-                                    href:, target: nil, trailing_icon: "fa-solid fa-arrow-right")
-    end
-  end
 
   def set_event
     @event = Event.find(params[:event_id])

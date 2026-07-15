@@ -26,9 +26,8 @@
    else
      [ registration_ticket_path(@event_registration.slug), "Back to ticket", nil ]
    end %>
-<%= render layout: "events/callouts/callout_page", locals: { title: detail_label || @resource.title, back_path: back_path, back_label: back_label, container_width: "max-w-5xl" } do %>
-  <% if detail_label %>
-    <h2 class="text-lg font-semibold text-gray-800 mb-4"><%= @resource.title %></h2>
-  <% end %>
-  <%= render "events/callouts/resource_body", resource: @resource %>
+<%= render layout: "events/callouts/callout_page", locals: { title: detail_label || @resource.title, back_path: back_path, back_label: back_label, container_width: "max-w-7xl" } do %>
+  <%# When the header already reads "<Origin> detail", the resource's own title is
+      shown inline next to the actions; reached directly, the header IS the title. %>
+  <%= render "events/callouts/resource_body", resource: @resource, inline_title: (detail_label ? @resource.title : nil), page_content: @resource_page_content %>
 <% end %>

@@ -34,6 +34,19 @@ RSpec.describe "Events::Callouts", type: :request do
         get registration_handouts_path(registration.slug)
         expect(response).to have_http_status(:success)
       end
+
+      it "shows each linked resource card with its join-row subtitle" do
+        callout = create(:registration_ticket_callout, event:, magic_key: "handouts")
+        resource = create(:resource, title: "Aha Moments")
+        create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
+               resource:, subtitle: "Reflect on the workshop", page_content: "Long detail copy.")
+
+        get registration_handouts_path(registration.slug)
+
+        expect(response.body).to include("Reflect on the workshop")
+        # Page content is detail-page only, never on the card.
+        expect(response.body).not_to include("Long detail copy.")
+      end
     end
 
     context "on a non-training event" do
@@ -43,6 +56,22 @@ RSpec.describe "Events::Callouts", type: :request do
         get registration_handouts_path(registration.slug)
         expect(response).to redirect_to(registration_ticket_path(registration.slug))
       end
+    end
+  end
+
+  describe "GET /registration/:slug/payment" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+
+    it "shows the W-9 document's materialized join-row subtitle, not hard-coded copy" do
+      callout = create(:registration_ticket_callout, event:, magic_key: "payment")
+      w9 = create(:resource, title: "W-9")
+      create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
+             resource: w9, subtitle: "Custom W-9 line")
+
+      get registration_payment_path(registration.slug)
+
+      expect(response.body).to include("Custom W-9 line")
+      expect(response.body).not_to include("AWBW's W-9 tax form for your records")
     end
   end
 
@@ -113,6 +142,48 @@ RSpec.describe "Events::Callouts", type: :request do
 
         expect(response).to have_http_status(:success)
         expect(response.body).not_to include("type=\"application/pdf\"")
+      end
+    end
+
+    context "admin edit button" do
+      let(:resource) { create(:resource) }
+
+      it "shows an admin-only Edit link to change the PDF when signed in as an admin" do
+        sign_in create(:user, super_user: true)
+
+        get registration_resource_path(registration.slug, resource)
+
+        expect(response.body).to include(edit_resource_path(resource))
+      end
+
+      it "hides the Edit link from registrants viewing the page" do
+        get registration_resource_path(registration.slug, resource)
+
+        expect(response.body).not_to include(edit_resource_path(resource))
+      end
+    end
+
+    context "page content" do
+      let(:resource) { create(:resource) }
+
+      it "shows the join row's page content below the title" do
+        callout = create(:registration_ticket_callout, event:, magic_key: "handouts")
+        create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
+               resource:, subtitle: "Short card line", page_content: "The longer page content copy.")
+
+        get registration_resource_path(registration.slug, resource, return_to: "handouts")
+
+        expect(response.body).to include("The longer page content copy.")
+        # The subtitle is a card-only line, not shown on the resource page.
+        expect(response.body).not_to include("Short card line")
+      end
+
+      it "shows no page content when the resource isn't linked to the origin callout" do
+        create(:registration_ticket_callout, :magic, event:, magic_key: "handouts")
+
+        get registration_resource_path(registration.slug, resource, return_to: "handouts")
+
+        expect(response).to have_http_status(:success)
       end
     end
 

@@ -482,6 +482,7 @@ RSpec.describe "Events::Registrations", type: :request do
 
     it "links each handout to its registrant resource page, returning to handouts" do
       handout = create(:resource, title: "Aha Moments", kind: "Handout")
+      DefaultTicketCallouts.seed(event) # materialize the handouts callout, linking the resource
       get registration_handouts_path(registration.slug)
       expect(response).to have_http_status(:success)
       expect(response.body).to include(registration_resource_path(registration.slug, handout, return_to: "handouts"))
