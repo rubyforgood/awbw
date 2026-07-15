@@ -54,6 +54,16 @@ class BuiltinCallouts
            "The membership fee covers all facilitators connected to the same program or organization for the calendar year, regardless of the number of facilitators participating. Only one membership fee payment is required per program annually." ] }
   ].freeze
 
+  # Hidden Resource (by title) backing the handout links, in display order.
+  # Missing ones (e.g. not seeded in an environment) are silently skipped.
+  HANDOUT_RESOURCE_TITLES = [
+    "2-Day AWBW Facilitator Training Worksheets & Handouts",
+    "AWBW Training Workshop Worksheets",
+    "Aha Moments",
+    "Inviting and Responding to Participants' Sharing",
+    "Letter to Supervisors"
+  ].freeze
+
   # Default per-resource copy for the built-in handout links, keyed by resource
   # title. `subtitle` is the short line on the handouts card; `page_content` is
   # the longer copy shown under the title on the resource's own page. Materialized
@@ -81,11 +91,6 @@ class BuiltinCallouts
       page_content: "Letter you can share to help relieve you from competing responsibilities during the two training days. So you can secure the time and space needed to fully engage in the training."
     }
   }.freeze
-
-  # builtin_keys this service knows how to materialize.
-  def self.seedable_keys
-    new(nil).send(:definitions).map { |definition| definition[:builtin_key] }
-  end
 
   def self.seed(event)
     new(event).seed
@@ -348,8 +353,8 @@ class BuiltinCallouts
   # The training worksheet resources, by title, in the display order the code
   # card used. Missing ones (not seeded in an environment) are simply skipped.
   def handout_resources
-    by_title = Resource.where(title: Events::CalloutsController::HANDOUT_RESOURCE_TITLES).index_by(&:title)
-    Events::CalloutsController::HANDOUT_RESOURCE_TITLES.filter_map { |title| by_title[title] }
+    by_title = Resource.where(title: HANDOUT_RESOURCE_TITLES).index_by(&:title)
+    HANDOUT_RESOURCE_TITLES.filter_map { |title| by_title[title] }
   end
 
   # Renders FAQS to standard <details>/<summary> disclosures so each question is a
