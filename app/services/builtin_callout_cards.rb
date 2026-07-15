@@ -92,13 +92,12 @@ class BuiltinCalloutCards
     end
   end
 
+  # `preview: true` is the sample ticket: it bypasses the config gaps so an admin
+  # can preview (and click through) a published built-in card even before the
+  # event carries the config it depends on (a cost, a scholarship form, CE hours).
   def initialize(event_registration, preview: false)
     @registration = event_registration
     @event = event_registration.event
-    # The admin sample-ticket preview illustrates a hypothetical registrant with
-    # options toggled on, so the scholarship / CE cards render from the sample
-    # registration's options even when the concrete event isn't configured for them
-    # (their config_gap is skipped). On a real ticket this stays false.
     @preview = preview
   end
 

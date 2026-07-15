@@ -200,6 +200,17 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(sample_payment_event_path(event))
       end
 
+      it "previews a published behavioral card even when the event config is incomplete" do
+        free = create(:event, cost_cents: 0)
+        BuiltinCallouts.seed(free)
+        # A free event has a payment "config gap" (BuiltinCalloutCards.config_gap)
+        # that hides the card on a real ticket; the preview shows it anyway so the
+        # admin can see and click it while finishing setup.
+        free.registration_ticket_callouts.find_by(builtin_key: "payment").update!(hidden: false)
+        get sample_ticket_event_path(free)
+        expect(response.body).to include(sample_payment_event_path(free))
+      end
+
       it "models a typical registrant by default, hiding scholarship and CE" do
         get sample_ticket_event_path(event)
         expect(response.body).not_to include("Your scholarship request and award")
