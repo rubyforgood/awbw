@@ -27,6 +27,7 @@ Videoconference: <%= event_platform_label(@event) %>
 
 View your ticket:
 <%= registration_ticket_url(@event_registration.slug) %>
+<%= render "ce_deadlines", event: @event %>
 
 <% if @event.registration_close_date %>
   Registration closes on

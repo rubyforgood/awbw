@@ -408,7 +408,7 @@ if flagship && flagship.ce_hours_details.blank?
       <li>Complete the post-training evaluation within one week.</li>
       <li>Your CE certificate will be emailed within three weeks of the training.</li>
     </ul>
-    <p>Questions about continuing education? Reach out and our team will follow up with details.</p>
+    <p>Questions about continuing education? Reach out by email or Portal contact us form, and our team will follow up with details.</p>
   HTML
 end
 

@@ -25,6 +25,22 @@
     </div>
 
     <div class="px-6 sm:px-8 py-7">
+      <% if @event.ce_hours_request_deadline || @event.ce_payment_due_deadline %>
+        <dl class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <% if @event.ce_hours_request_deadline %>
+            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Request CE credit by</dt>
+              <dd class="mt-1 text-base font-semibold text-gray-900"><%= @event.ce_hours_request_deadline.strftime("%B %-d, %Y") %></dd>
+            </div>
+          <% end %>
+          <% if @event.ce_payment_due_deadline %>
+            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Payment due by</dt>
+              <dd class="mt-1 text-base font-semibold text-gray-900"><%= @event.ce_payment_due_deadline.strftime("%B %-d, %Y") %></dd>
+            </div>
+          <% end %>
+        </dl>
+      <% end %>
       <%= render "events/callouts/rich_content", content: @event.ce_hours_details %>
     </div>
   </div>

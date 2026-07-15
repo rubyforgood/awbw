@@ -11,6 +11,16 @@ module EventRegistrationServices
     # seeds the registrant's ProfessionalLicense.
     CE_LICENSE_NUMBER_IDENTIFIER = "ce_license_number".freeze
 
+    # Well-known field_identifier of the CE license-type question (e.g. "LCSW").
+    # Its answer seeds the ProfessionalLicense's kind.
+    CE_LICENSE_KIND_IDENTIFIER = "ce_license_kind".freeze
+
+    # Well-known field_identifiers of the CE license issuing-state and expiry
+    # questions. Their answers fill in the ProfessionalLicense's issuing_state
+    # and expires_on (both optional — registrants can supply them later).
+    CE_LICENSE_ISSUING_STATE_IDENTIFIER = "ce_license_issuing_state".freeze
+    CE_LICENSE_EXPIRES_ON_IDENTIFIER = "ce_license_expires_on".freeze
+
     # Well-known field_identifier of the "Additional forms" multi-select question.
     # Checking "Invoice" / "W-9" toggles the registration's invoice_requested /
     # w9_requested flags, which the digital ticket reads to surface those downloads.
@@ -412,7 +422,10 @@ module EventRegistrationServices
       return unless ce_credit_requested?
       return if event_registration.continuing_education_registrations.exists?
 
-      license = ProfessionalLicense.find_or_create_for(person: person, number: ce_license_number)
+      license = ProfessionalLicense.find_or_create_for(person: person, number: ce_license_number, kind: ce_license_kind)
+      if ce_license_issuing_state || ce_license_expires_on
+        license.update!(issuing_state: ce_license_issuing_state, expires_on: ce_license_expires_on)
+      end
       event_registration.continuing_education_registrations.create!(professional_license: license)
     end
 
@@ -426,6 +439,24 @@ module EventRegistrationServices
       return nil unless @continuing_education_form
 
       ce_field_value(CE_LICENSE_NUMBER_IDENTIFIER)&.strip.presence
+    end
+
+    def ce_license_kind
+      return nil unless @continuing_education_form
+
+      ce_field_value(CE_LICENSE_KIND_IDENTIFIER)&.strip.presence
+    end
+
+    def ce_license_issuing_state
+      return nil unless @continuing_education_form
+
+      ce_field_value(CE_LICENSE_ISSUING_STATE_IDENTIFIER)&.strip.presence
+    end
+
+    def ce_license_expires_on
+      return nil unless @continuing_education_form
+
+      ce_field_value(CE_LICENSE_EXPIRES_ON_IDENTIFIER).presence
     end
 
     def ce_field_value(key)
@@ -514,7 +545,6 @@ module EventRegistrationServices
 
     def save_continuing_education_submission(person)
       return unless @continuing_education_form && @continuing_education_params.present?
-      return unless ce_credit_requested?
 
       submission = FormSubmission.find_or_create_by!(
         person: person, form: @continuing_education_form, role: "continuing_education", event: @event

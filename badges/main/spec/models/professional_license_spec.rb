@@ -27,6 +27,13 @@ RSpec.describe ProfessionalLicense, type: :model do
       expect(first.number).to be_nil
       expect(person.professional_licenses.count).to eq(1)
     end
+
+    it "records the license type when given" do
+      license = described_class.find_or_create_for(person: person, number: "ABC-1", kind: "LCSW")
+
+      expect(license.kind).to eq("LCSW")
+      expect(license.number).to eq("ABC-1")
+    end
   end
 
   describe "#number_known?" do
