@@ -1,5 +1,6 @@
 class Resource < ApplicationRecord
-  include AuthorCreditable, Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include AuthorCreditable, Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  remote_searchable_by :title
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include Mentionable
