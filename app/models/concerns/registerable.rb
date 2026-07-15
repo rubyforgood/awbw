@@ -27,6 +27,13 @@ module Registerable
     allocations.where(source_type: Payment.polymorphic_name).sum(:amount)
   end
 
+  # True once actual money has been received (cash, check, or card) — as opposed
+  # to a balance settled purely by scholarship or discount. Gates the receipt and
+  # W-9, which only apply once a real payment is on file.
+  def payment_received?
+    payments_sum.positive?
+  end
+
   # Comp/discount coverage only (excludes payments and scholarships).
   def discount_sum
     return allocations.to_a.select { |a| a.source_type == "Discount" }.sum(&:amount) if allocations.loaded?

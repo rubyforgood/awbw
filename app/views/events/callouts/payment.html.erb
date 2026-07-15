@@ -55,7 +55,9 @@
   <% if @document_cards.any? %>
     <div class="mt-10 space-y-3">
       <% @document_cards.each do |card| %>
-        <%= render "event_registrations/callout_card", callout: card %>
+        <%# Locked documents (no href — a receipt/W-9 not yet unlocked) render as a
+            non-navigating card that names what unlocks them. %>
+        <%= render "event_registrations/callout_card", callout: card, linked: card.href.present? %>
       <% end %>
     </div>
   <% end %>
