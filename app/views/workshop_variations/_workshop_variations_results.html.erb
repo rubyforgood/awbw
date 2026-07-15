@@ -34,7 +34,9 @@
             </td>
             <td class="px-4 py-2" title="<%= workshop_variation.name %>">
               <div class="flex items-center gap-2 text-sm text-gray-800 font-semibold">
-                <%= link_to "#{truncate(workshop_variation.name, length: 30)} (#{workshop_variation.windows_type&.short_name || 'Combined'})", workshop_variation_path(workshop_variation), data: { turbo_frame: "_top" }, class: "hover:text-blue-600 hover:underline" %>
+                <%= link_to workshop_variation_path(workshop_variation), data: { turbo_frame: "_top" }, class: "hover:text-blue-600 hover:underline" do %>
+                  <%= truncate(workshop_variation.name, length: 30) %> (<%= workshop_variation.windows_type&.short_name || "Combined" %>)
+                <% end %>
                 <% unless workshop_variation.published? %>
                   <span class="inline-flex items-center pl-2 pr-3 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-gray-600 whitespace-nowrap">
                     <span class="inline-flex justify-center w-4"><i class="fa-solid fa-eye-slash"></i></span>
