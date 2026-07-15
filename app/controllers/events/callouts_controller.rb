@@ -77,8 +77,10 @@ module Events
       end
     end
 
-    # CE hours status: hours, amount owed, and license number.
+    # CE hours status: hours, amount owed, and license number. The heading and the
+    # requirements copy live on the materialized ce_hours callout row now.
     def ce
+      @ce_callout = @event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
       case params[:checkout]
       when "success"
         flash.now[:notice] = "Your CE payment was successful."

@@ -34,11 +34,13 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "skips a built-in card the event has materialized (it renders from the row instead)" do
-      event.update!(event_details: "Bring supplies")
-      create(:registration_ticket_callout, event:, builtin_key: "event_details", title: "Before you attend")
+      event.update!(ce_hours_offered: 6)
+      license = create(:professional_license, :placeholder, person: registration.registrant)
+      create(:continuing_education_registration, event_registration: registration, professional_license: license)
+      create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE hours")
 
       # Materialized, so the code fallback omits it — the row renders it instead.
-      expect(card_titles(registration)).not_to include(event.event_details_label)
+      expect(card_titles(registration.reload)).not_to include("CE hours")
     end
 
     it "makes the payment card an action card while a balance is due, reference once paid" do
@@ -57,7 +59,7 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "uses the arrow trailing icon for every card" do
-      event.update!(ce_hours_details: "6 hours", videoconference_url: "https://example.zoom.us/j/1")
+      event.update!(videoconference_url: "https://example.zoom.us/j/1")
       trailing = described_class.new(registration).cards.map(&:trailing_icon).uniq
       expect(trailing).to eq([ "fa-solid fa-arrow-right" ])
     end
@@ -78,16 +80,16 @@ RSpec.describe BuiltinCalloutCards do
 
     it "shows the CE card only when the registrant requested CE credit" do
       event.update!(ce_hours_offered: 6)
-      expect(card_titles(registration)).not_to include(event.ce_hours_details_label)
+      expect(card_titles(registration)).not_to include(event.ce_hours_label)
       license = create(:professional_license, :placeholder, person: registration.registrant)
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
-      expect(card_titles(registration.reload)).to include(event.ce_hours_details_label)
+      expect(card_titles(registration.reload)).to include(event.ce_hours_label)
     end
 
     it "omits the CE card when the event offers no CE hours, even with a CE registration" do
       license = create(:professional_license, :placeholder, person: registration.registrant)
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
-      expect(card_titles(registration.reload)).not_to include(event.ce_hours_details_label)
+      expect(card_titles(registration.reload)).not_to include(event.ce_hours_label)
     end
 
     it "omits the scholarship card when the event has no scholarship form, even when requested" do
@@ -101,7 +103,7 @@ RSpec.describe BuiltinCalloutCards do
       ce = create(:continuing_education_registration, event_registration: registration, professional_license: license)
 
       # Balance due, license still needed: orange card, amber chip naming what's needed.
-      needs = card(registration.reload, event.ce_hours_details_label)
+      needs = card(registration.reload, event.ce_hours_label)
       expect(needs.theme).to eq(DomainTheme.swatch("orange"))
       expect(needs.subtitle).to eq("6 hours")
       expect(needs.badge).to eq("$150 · License number needed")
@@ -109,14 +111,14 @@ RSpec.describe BuiltinCalloutCards do
 
       # License provided but still owing: orange card, amber "$X due" chip like the payment card.
       license.update!(number: "LIC123")
-      due = card(registration.reload, event.ce_hours_details_label)
+      due = card(registration.reload, event.ce_hours_label)
       expect(due.theme).to eq(DomainTheme.swatch("orange"))
       expect(due.badge).to eq("$150 due")
       expect(due.badge_classes).to be_nil
 
       # Paid in full: resting teal card, no "due" chip.
       create(:allocation, allocatable: ce, amount: 15_000)
-      paid = card(registration.reload, event.ce_hours_details_label)
+      paid = card(registration.reload, event.ce_hours_label)
       expect(paid.theme).to eq(DomainTheme.swatch("teal"))
       expect(paid.badge).to be_nil
     end
@@ -125,17 +127,17 @@ RSpec.describe BuiltinCalloutCards do
       event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000, ce_hours_request_deadline: Date.new(2026, 7, 1))
       license = create(:professional_license, :placeholder, person: registration.registrant)
       create(:continuing_education_registration, event_registration: registration, professional_license: license)
-      expect(card(registration.reload, event.ce_hours_details_label).badge).to eq("$150 · License number needed by Jul 1")
+      expect(card(registration.reload, event.ce_hours_label).badge).to eq("$150 · License number needed by Jul 1")
     end
 
     it "appends the CE payment deadline to the amount-due badge, dropping it once paid" do
       event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 15_000, ce_payment_due_deadline: Date.new(2026, 8, 15))
       license = create(:professional_license, person: registration.registrant, number: "LIC123")
       ce_reg = create(:continuing_education_registration, event_registration: registration, professional_license: license)
-      expect(card(registration.reload, event.ce_hours_details_label).badge).to eq("$150 due by Aug 15")
+      expect(card(registration.reload, event.ce_hours_label).badge).to eq("$150 due by Aug 15")
 
       create(:allocation, source: create(:payment), allocatable: ce_reg, amount: ce_reg.cost_cents)
-      expect(card(registration.reload, event.ce_hours_details_label).badge).to be_nil
+      expect(card(registration.reload, event.ce_hours_label).badge).to be_nil
     end
 
     it "shows the scholarship card only when requested, without an amount chip until awarded" do
@@ -189,9 +191,8 @@ RSpec.describe BuiltinCalloutCards do
     end
 
     it "orders the code-fallback cards from payment downward" do
-      # Handouts/FAQ are row-driven, so they never appear in this fallback.
-      event.update!(facilitator_training: true, event_details: "Bring supplies",
-                    ce_hours_details: "6 hours", ce_hours_offered: 6,
+      # Handouts/FAQ/art supplies are row-driven, so they never appear in this fallback.
+      event.update!(facilitator_training: true, ce_hours_offered: 6,
                     videoconference_url: "https://example.zoom.us/j/123",
                     start_date: 3.days.ago, end_date: 2.days.ago)
       add_scholarship_form(event)
@@ -202,8 +203,7 @@ RSpec.describe BuiltinCalloutCards do
         "Make your payment",
         "Certificate of completion",
         "Scholarship",
-        event.ce_hours_details_label,
-        event.event_details_label,
+        event.ce_hours_label,
         "Videoconference"
       ])
     end
