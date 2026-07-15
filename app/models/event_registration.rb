@@ -376,9 +376,19 @@ class EventRegistration < ApplicationRecord
     event.cost_cents.to_i.positive?
   end
 
-  # A paid-in-full receipt is available once a paid event carries no balance.
+  # A receipt is proof money changed hands, so it's available only once a paid
+  # event is settled in full AND at least some of that settlement was an actual
+  # payment. A balance cleared purely by scholarship or discount (no money
+  # received) gets no receipt — nor does merely intending to pay.
   def receipt_available?
-    invoice_available? && remaining_cost.zero?
+    invoice_available? && remaining_cost.zero? && payment_received?
+  end
+
+  # AWBW's own W-9 is only useful to a payer who actually paid us, so it's gated on
+  # a paid event AND an actual payment being on file (cash, check, or card). A
+  # balance cleared purely by scholarship or discount doesn't unlock it.
+  def w9_available?
+    invoice_available? && payment_received?
   end
 
   # Cost source for the Registerable payment interface: the event's price.

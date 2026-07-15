@@ -1031,6 +1031,71 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#receipt_available?" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:reg) { create(:event_registration, event: event) }
+
+    it "is false for a free event" do
+      free_reg = create(:event_registration, event: create(:event, cost_cents: 0))
+      expect(free_reg.receipt_available?).to be(false)
+    end
+
+    it "is true once an actual payment settles the balance in full" do
+      payment = create(:payment, type: "CashPayment", amount_cents: 10_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 10_000)
+
+      expect(reg.reload.receipt_available?).to be(true)
+    end
+
+    it "is false when the balance is cleared purely by scholarship and discount" do
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 6_000)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 6_000)
+      create(:allocation, source: create(:discount, amount_cents: 4_000), allocatable: reg, amount: 4_000)
+
+      expect(reg.reload.paid_in_full?).to be(true)  # balance is zero...
+      expect(reg.receipt_available?).to be(false)   # ...but no money was received
+    end
+
+    it "is false while a balance remains, even with a partial payment" do
+      payment = create(:payment, type: "CashPayment", amount_cents: 4_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 4_000)
+
+      expect(reg.reload.receipt_available?).to be(false)
+    end
+  end
+
+  describe "#w9_available?" do
+    let(:event) { create(:event, cost_cents: 10_000) }
+    let(:reg) { create(:event_registration, event: event) }
+
+    it "is true on a paid event once an actual payment is on file (cash/check)" do
+      payment = create(:payment, type: "CheckPayment", amount_cents: 5_000, amount_cents_remaining: nil, check_number: "12")
+      create(:allocation, source: payment, allocatable: reg, amount: 5_000)
+
+      expect(reg.reload.w9_available?).to be(true)
+    end
+
+    it "is true for an automatic card charge too — any actual payment counts" do
+      payment = create(:external_processor_payment, amount_cents: 5_000, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: reg, amount: 5_000)
+
+      expect(reg.reload.w9_available?).to be(true)
+    end
+
+    it "is false when the balance is covered only by a scholarship or discount" do
+      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 6_000)
+      create(:allocation, source: scholarship, allocatable: reg, amount: 6_000)
+      create(:allocation, source: create(:discount, amount_cents: 4_000), allocatable: reg, amount: 4_000)
+
+      expect(reg.reload.w9_available?).to be(false)
+    end
+
+    it "is false on a free event (nothing to pay)" do
+      free_reg = create(:event_registration, event: create(:event, cost_cents: 0))
+      expect(free_reg.w9_available?).to be(false)
+    end
+  end
+
   describe "payment reads from a preloaded allocations association" do
     it "issues no per-row queries when allocations are preloaded" do
       event = create(:event, cost_cents: 1_000)

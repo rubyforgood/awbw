@@ -67,6 +67,9 @@ RSpec.describe "Events::Callouts", type: :request do
       w9 = create(:resource, title: "W-9")
       create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
              resource: w9, subtitle: "Custom W-9 line")
+      # The W-9 unlocks once an actual payment is on file.
+      payment = create(:payment, type: "CashPayment", amount_cents: event.cost_cents, amount_cents_remaining: nil)
+      create(:allocation, source: payment, allocatable: registration, amount: event.cost_cents)
 
       get registration_payment_path(registration.slug)
 

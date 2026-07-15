@@ -54,6 +54,23 @@ RSpec.describe EventReceipt do
       expect(receipt.balance_cents).to eq(0)
     end
 
+    it "lists scholarship and discount credits as ledger entries and counts them toward amount paid" do
+      payment = create(:payment, type: "CashPayment", amount_cents: 90_000)
+      scholarship = create(:scholarship, recipient: registrant, amount_cents: 50_000)
+      discount = create(:discount, amount_cents: 10_000)
+      create(:allocation, source: payment, allocatable: registration, amount: 90_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 50_000)
+      create(:allocation, source: discount, allocatable: registration, amount: 10_000)
+
+      receipt = described_class.from_registration(registration)
+
+      # Each allocation is its own ledger entry (so payments and credits are
+      # distinguishable), while the summary's amount paid reconciles to the total.
+      expect(receipt.entries.map(&:method)).to include("Cash", "Scholarship", "Discount")
+      expect(receipt.amount_paid_cents).to eq(150_000)
+      expect(receipt.balance_cents).to eq(0)
+    end
+
     context "with a snapshotted organization" do
       let(:organization) { create(:organization, name: "A Greater Hope") }
 
