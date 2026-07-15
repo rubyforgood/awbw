@@ -131,7 +131,7 @@ class BuiltinCallouts
   def seed
     existing_keys = @event.registration_ticket_callouts.builtin.pluck(:builtin_key).to_set
     definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) }
-               .map { |definition| create(definition) }
+               .filter_map { |definition| create(definition) }
   end
 
   # In-memory counterpart to #seed. Skips keys already present on the loaded
@@ -294,6 +294,12 @@ class BuiltinCallouts
     callout = @event.registration_ticket_callouts.create!(attributes_for(definition))
     build_resource_links(callout, definition)
     callout
+  rescue ActiveRecord::RecordNotUnique
+    # A concurrent request seeded this built-in in the window between our existence
+    # check and this insert, so the unique index on [event_id, builtin_key] rejects
+    # the duplicate. Seeding is idempotent, so drop the failed in-memory row and skip.
+    @event.registration_ticket_callouts.reset
+    nil
   end
 
   # In-memory sibling of #create: builds the row (and its resource links) without
