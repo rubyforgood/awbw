@@ -5,7 +5,7 @@
 <div class="nested-fields flex items-start gap-2">
   <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-2">
     <%= f.collection_select :resource_id, Resource.order(:title), :id, :title,
-          { include_blank: "Select a document…" },
+          { include_blank: "Select a resource…" },
           class: "rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
     <%= f.text_field :subtitle, placeholder: "Card subtitle (short one-line)",
           class: "rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>

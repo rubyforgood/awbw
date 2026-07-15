@@ -163,11 +163,14 @@
               <%= f.fields_for :registration_ticket_callout_resources do |rf| %>
                 <%= render "events/registration_ticket_callout_resource_fields", f: rf %>
               <% end %>
-            </div>
 
-            <%= link_to_add_association "➕ Add resource", f, :registration_ticket_callout_resources,
-                  partial: "events/registration_ticket_callout_resource_fields",
-                  class: "mt-1 inline-block text-sm font-medium text-purple-600 hover:text-purple-800" %>
+              <%# Insert new rows at the end of the list (right before this link), not
+                  above the whole section — cocoon's default would prepend before the parent. %>
+              <%= link_to_add_association "➕ Add resource", f, :registration_ticket_callout_resources,
+                    partial: "events/registration_ticket_callout_resource_fields",
+                    data: { association_insertion_node: "this", association_insertion_method: "before" },
+                    class: "inline-block text-sm font-medium text-purple-600 hover:text-purple-800" %>
+            </div>
           </div>
         </details>
       </div>
