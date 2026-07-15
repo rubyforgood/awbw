@@ -177,15 +177,14 @@
 
         <!-- Add to calendar (secondary utility, kept at the bottom) -->
         <div class="flex flex-col items-center pt-5 border-t border-gray-100">
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
-            Add to your calendar
-          </p>
+          <div class="flex items-center gap-1 mb-2">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">
+              Add to your calendar
+            </p>
+            <%= render "events/videoconference_calendar_notice", event: event_registration.event, registration: event_registration %>
+          </div>
 
           <div class="flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium"><%= event_registration.event.decorate.calendar_links(show_videoconference_details: event_registration.videoconference_details_visible?) %></div>
-
-          <% if event_registration.event.videoconference_url.present? && !event_registration.videoconference_details_visible? %>
-            <p class="mt-2 text-xs text-gray-400 text-center max-w-sm">The videoconference join link isn't in this calendar entry yet — add it again once the link is available to include it.</p>
-          <% end %>
         </div>
       <% end %>
     </div>

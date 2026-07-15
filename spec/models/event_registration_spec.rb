@@ -661,6 +661,13 @@ RSpec.describe EventRegistration, type: :model do
       reg = create(:event_registration, event: event, registrant: user.person)
       expect(reg.videoconference_details_visible?).to be true
     end
+
+    it "is visible immediately once paid when the callout has no drip date" do
+      event = create(:event, cost_cents: 1099, start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours)
+      create(:registration_ticket_callout, event:, magic_key: "videoconference", display_from: nil)
+      reg = create(:event_registration, event: event, registrant: user.person, intends_to_pay: true)
+      expect(reg.videoconference_details_visible?).to be true
+    end
   end
 
   describe ".payment_status scope" do

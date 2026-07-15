@@ -176,19 +176,26 @@ class Event < ApplicationRecord
   # When the videoconference connection details unlock. Driven by the drip date on
   # the materialized videoconference callout (admin-editable), falling back to
   # VIDEOCONFERENCE_DETAILS_LEAD before the start for events that haven't
-  # materialized the built-in callouts.
+  # materialized the built-in callouts. nil when there's no date to gate on — a
+  # materialized callout whose drip date was cleared, or an event with no start
+  # date — in which case the details are available immediately (see below).
   def videoconference_details_available_from
     return @videoconference_details_available_from if defined?(@videoconference_details_available_from)
-    return unless start_date
-    override = registration_ticket_callouts.magic.find_by(magic_key: "videoconference")&.display_from
-    @videoconference_details_available_from = override || start_date - VIDEOCONFERENCE_DETAILS_LEAD
+    @videoconference_details_available_from =
+      if (callout = registration_ticket_callouts.magic.find_by(magic_key: "videoconference"))
+        callout.display_from
+      elsif start_date
+        start_date - VIDEOCONFERENCE_DETAILS_LEAD
+      end
   end
 
-  # Whether the videoconference connection details may be revealed yet: only once
-  # we've reached the drip date above.
+  # Whether the videoconference connection details may be revealed yet. A drip
+  # date gates them until it arrives; with no drip date there's nothing to wait
+  # on, so they're available immediately (still subject to the per-registration
+  # payment gate in EventRegistration#videoconference_details_visible?).
   def videoconference_details_visible?(now = Time.current)
     from = videoconference_details_available_from
-    from.present? && now >= from
+    from.blank? || now >= from
   end
 
   def registerable?
