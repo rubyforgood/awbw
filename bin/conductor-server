@@ -16,6 +16,35 @@ export WORKSPACE_PORT=${WORKSPACE_PORT:-${CONDUCTOR_PORT:-}}
 export PORT=${WORKSPACE_PORT:-${PORT:-3000}}
 export VITE_RUBY_PORT=$((PORT + 36))
 
+# Reap any ghost servers still bound to this workspace's ports before booting, so
+# a leaked process from a prior crashed/force-quit session doesn't cause a bind
+# collision. lsof can return several PIDs for one port (puma cluster master +
+# workers, or `bin/vite dev` + its esbuild children); word-split the list, SIGTERM
+# each, then SIGKILL any survivors after a grace beat. A quoted `kill "$pid"`
+# would pass the whole newline-joined list as a single argument and silently fail.
+free_ports() {
+  killed=""
+  for p in "$@"; do
+    pids=$(lsof -ti :"$p" 2>/dev/null || true)
+    [ -n "$pids" ] || continue
+    echo "Freeing port $p (pid $(echo $pids | tr '\n' ' '))..."
+    # shellcheck disable=SC2086 -- intentional word-split of the multi-PID list
+    kill $pids 2>/dev/null || true
+    killed=1
+  done
+  [ -n "$killed" ] || return 0
+  sleep 1
+  for p in "$@"; do
+    pids=$(lsof -ti :"$p" 2>/dev/null || true)
+    [ -n "$pids" ] || continue
+    echo "Force-killing process(es) still on port $p..."
+    # shellcheck disable=SC2086 -- intentional word-split of the multi-PID list
+    kill -9 $pids 2>/dev/null || true
+  done
+}
+
+free_ports "$PORT" "$VITE_RUBY_PORT"
+
 echo "Starting on http://awbw.local:${PORT} (Vite on :${VITE_RUBY_PORT})"
 
 # Start Vite dev server in the background
