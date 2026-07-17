@@ -25,14 +25,35 @@ PORT=${WORKSPACE_PORT:-${PORT:-3000}}
 
 echo "Archiving Conductor workspace (port ${PORT})..."
 
-# Kill any processes listening on this workspace's ports
-for p in "$PORT" "$((PORT + 36))"; do
-  pid=$(lsof -ti :"$p" 2>/dev/null || true)
-  if [ -n "$pid" ]; then
-    echo "Stopping process on port $p (pid $pid)..."
-    kill "$pid" 2>/dev/null || true
-  fi
-done
+# Reap every process listening on this workspace's ports (Rails on PORT, Vite on
+# PORT+36). lsof can return several PIDs for one port — puma cluster master +
+# workers share the listening socket, and `bin/vite dev` spawns esbuild children
+# — so the old quoted `kill "$pid"` passed the whole newline-joined list as a
+# single argument and silently failed, orphaning the extra processes. They stayed
+# bound to the port and collided with the next workspace to recycle the block.
+# Word-split the list, SIGTERM each, then SIGKILL any survivors after a grace beat.
+free_ports() {
+  killed=""
+  for p in "$@"; do
+    pids=$(lsof -ti :"$p" 2>/dev/null || true)
+    [ -n "$pids" ] || continue
+    echo "Stopping process(es) on port $p (pid $(echo $pids | tr '\n' ' '))..."
+    # shellcheck disable=SC2086 -- intentional word-split of the multi-PID list
+    kill $pids 2>/dev/null || true
+    killed=1
+  done
+  [ -n "$killed" ] || return 0
+  sleep 1
+  for p in "$@"; do
+    pids=$(lsof -ti :"$p" 2>/dev/null || true)
+    [ -n "$pids" ] || continue
+    echo "Force-killing process(es) still on port $p..."
+    # shellcheck disable=SC2086 -- intentional word-split of the multi-PID list
+    kill -9 $pids 2>/dev/null || true
+  done
+}
+
+free_ports "$PORT" "$((PORT + 36))"
 
 # Drop workspace-specific databases. Keep `|| true` so a drop failure never
 # aborts archiving, but let stderr through so failures are visible in the log
