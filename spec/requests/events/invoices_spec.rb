@@ -63,6 +63,57 @@ RSpec.describe "Events::Invoices", type: :request do
         expect(response).to redirect_to(root_path)
       end
     end
+  end
+
+  describe "POST /events/:event_id/invoice" do
+    context "as an admin" do
+      before { sign_in admin }
+
+      let(:invoice_params) do
+        {
+          invoice: {
+            attention: "Jordan Rivera",
+            names: "Ada Lovelace\nGrace Hopper",
+            line_item: { quantity: "2", unit_price: "1500" }
+          }
+        }
+      end
+
+      it "tracks a generate.invoice Ahoy event tied to the event with the entered details" do
+        expect(Analytics::AhoyTracker).to receive(:track_event).with(
+          anything,
+          "generate.invoice",
+          hash_including(
+            "resource_type" => "Event",
+            "resource_id" => event.id,
+            "attention" => "Jordan Rivera",
+            "names" => "Ada Lovelace\nGrace Hopper"
+          )
+        )
+
+        post event_invoice_path(event), params: invoice_params
+      end
+
+      it "re-renders the filled-in form so the values survive the save" do
+        post event_invoice_path(event), params: invoice_params
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Invoice recorded.")
+        expect(response.body).to include("Jordan Rivera")
+        expect(response.body).to include("Ada Lovelace")
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in create(:user) }
+
+      it "is denied and tracks nothing" do
+        expect(Analytics::AhoyTracker).not_to receive(:track_event)
+
+        post event_invoice_path(event), params: { invoice: { attention: "x" } }
+        expect(response).to redirect_to(root_path)
+      end
+    end
 
     context "as a guest (no account)" do
       let(:form) { create(:form) }

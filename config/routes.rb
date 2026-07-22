@@ -163,7 +163,7 @@ Rails.application.routes.draw do
     resource :registrations, only: %i[ create ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
     resource :bulk_payment, only: [ :new, :create, :show ], module: :events
-    resource :invoice, only: [ :show ], module: :events
+    resource :invoice, only: [ :show, :create ], module: :events
     get "form_submissions/:person_id", to: "events/form_submissions#show", as: :registrant_submissions
   end
   resources :people do

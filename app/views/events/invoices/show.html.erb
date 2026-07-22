@@ -15,7 +15,7 @@
       [ dashboard_event_path(@event), "Back to event" ]
     end
 %>
-<%= render "events/invoices/actions", back_path: back_path, back_label: back_label %>
+<%= render "events/invoices/actions", back_path: back_path, back_label: back_label, editable: @invoice.editable? %>
 <div class="px-4 sm:px-8 py-6 print:p-0">
-  <%= render "events/invoices/invoice", invoice: @invoice %>
+  <%= render "events/invoices/invoice", invoice: @invoice, entered: @entered || {} %>
 </div>
