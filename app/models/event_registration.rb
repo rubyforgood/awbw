@@ -372,6 +372,41 @@ class EventRegistration < ApplicationRecord
     event.cost_cents.to_i.positive?
   end
 
+  # Ahoy event name emitted by Events::RegistrationsController#invoice each time
+  # the invoice page is opened. Kept distinct from a plain "view.event_registration"
+  # so it tracks the invoice specifically, not the ticket page.
+  INVOICE_VIEW_EVENT = "view.event_registration_invoice".freeze
+
+  # Registrations whose invoice page has (or hasn't) been opened at least once —
+  # so admins can search/filter for people who haven't looked at their invoice.
+  scope :invoice_viewed, -> {
+    where(id: invoice_view_events_scope.select(:resource_id))
+  }
+  scope :invoice_not_viewed, -> {
+    where.not(id: invoice_view_events_scope.select(:resource_id))
+  }
+
+  def self.invoice_view_events_scope
+    Ahoy::Event.where(name: INVOICE_VIEW_EVENT, resource_type: name)
+  end
+
+  # Invoice page-view tracking for this registration (see INVOICE_VIEW_EVENT).
+  def invoice_view_events
+    self.class.invoice_view_events_scope.where(resource_id: id)
+  end
+
+  def invoice_viewed?
+    invoice_view_events.exists?
+  end
+
+  def invoice_first_viewed_at
+    invoice_view_events.minimum(:time)
+  end
+
+  def invoice_last_viewed_at
+    invoice_view_events.maximum(:time)
+  end
+
   # A receipt is proof money changed hands, so it's available only once a paid
   # event is settled in full AND at least some of that settlement was an actual
   # payment. A balance cleared purely by scholarship or discount (no money

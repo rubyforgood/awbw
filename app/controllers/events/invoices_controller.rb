@@ -3,6 +3,8 @@ module Events
   # event's content (line item + cost); when a `submission_id` is supplied it
   # autofills the bill-to/attention from that bulk-payment submission.
   class InvoicesController < ApplicationController
+    include AhoyTracking
+
     # Bulk-payment payers have no account; authorization (below) gates access.
     skip_before_action :authenticate_user!, only: [ :show ]
     before_action :set_event
@@ -14,6 +16,14 @@ module Events
         @submission = FormSubmission.find(params[:submission_id])
         authorize! @submission, to: :show_invoice?
         @invoice = EventInvoice.from_bulk_payment(@submission)
+
+        # Record that the payer opened their bulk-payment invoice. The blank
+        # admin template (else branch) is an internal tool, so it isn't tracked.
+        track_view("form_submission_invoice", {
+          resource_type: "FormSubmission",
+          resource_id: @submission.id,
+          event_id: @event.id
+        })
       else
         # The blank template is an admin tool.
         authorize! @event, to: :invoice?

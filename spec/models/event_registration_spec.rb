@@ -1126,4 +1126,41 @@ RSpec.describe EventRegistration, type: :model do
       expect(preloaded.paid_in_full?).to be(true)
     end
   end
+
+  describe "invoice view tracking" do
+    let(:registration) { create(:event_registration) }
+
+    def track_invoice_view(reg)
+      create(
+        :ahoy_event,
+        name: EventRegistration::INVOICE_VIEW_EVENT,
+        properties: { resource_type: "EventRegistration", resource_id: reg.id }
+      )
+    end
+
+    it "reports whether the invoice has been viewed" do
+      expect(registration.invoice_viewed?).to be(false)
+      track_invoice_view(registration)
+      expect(registration.invoice_viewed?).to be(true)
+    end
+
+    it "exposes first and last view timestamps" do
+      travel_to(2.days.ago) { track_invoice_view(registration) }
+      travel_to(1.hour.ago) { track_invoice_view(registration) }
+
+      expect(registration.invoice_first_viewed_at).to be_within(1.second).of(2.days.ago)
+      expect(registration.invoice_last_viewed_at).to be_within(1.second).of(1.hour.ago)
+    end
+
+    it "scopes registrations by whether their invoice was viewed" do
+      viewed = registration
+      unviewed = create(:event_registration)
+      track_invoice_view(viewed)
+
+      expect(EventRegistration.invoice_viewed).to include(viewed)
+      expect(EventRegistration.invoice_viewed).not_to include(unviewed)
+      expect(EventRegistration.invoice_not_viewed).to include(unviewed)
+      expect(EventRegistration.invoice_not_viewed).not_to include(viewed)
+    end
+  end
 end

@@ -91,6 +91,17 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("$1,500")
     end
 
+    it "records an Ahoy view event so admins can tell the invoice was opened" do
+      # A real browser User-Agent so Ahoy doesn't skip the request as a bot.
+      browser = { "User-Agent" => "Mozilla/5.0 (Macintosh) AppleWebKit/537.36 Chrome/120 Safari/537.36" }
+
+      expect { get registration_invoice_path(registration.slug), headers: browser }
+        .to change { registration.reload.invoice_view_events.count }.by(1)
+
+      expect(registration.invoice_viewed?).to be(true)
+      expect(EventRegistration.invoice_viewed).to include(registration)
+    end
+
     it "shows the balance due once a scholarship or payment is applied" do
       scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 60_000)
       create(:allocation, source: scholarship, allocatable: registration, amount: 60_000)

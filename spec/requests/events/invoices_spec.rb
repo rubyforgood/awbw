@@ -43,6 +43,20 @@ RSpec.describe "Events::Invoices", type: :request do
           # 8 attendees × $1,500 = $12,000
           expect(response.body).to include("$12,000")
         end
+
+        it "records an Ahoy view event for the bulk-payment invoice" do
+          # A real browser User-Agent so Ahoy doesn't skip the request as a bot.
+          browser = { "User-Agent" => "Mozilla/5.0 (Macintosh) AppleWebKit/537.36 Chrome/120 Safari/537.36" }
+
+          expect { get event_invoice_path(event, submission_id: submission.id), headers: browser }
+            .to change {
+              Ahoy::Event.where(
+                name: "view.form_submission_invoice",
+                resource_type: "FormSubmission",
+                resource_id: submission.id
+              ).count
+            }.by(1)
+        end
       end
     end
 
