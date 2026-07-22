@@ -301,9 +301,10 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(response.body).to include("return_to=bulk_payment_ticket")
     end
 
-    it "links 'View submission' to the public submission page" do
+    it "links 'View your form responses' to the public submission page" do
       get_ticket
 
+      expect(response.body).to include("View your form responses")
       expect(response.body).to include(event_bulk_payment_path(event, reg: submission.slug))
     end
 
