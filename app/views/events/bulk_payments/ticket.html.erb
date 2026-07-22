@@ -83,8 +83,13 @@
         </div>
       </div>
 
-      <!-- Divider -->
-      <div class="border-t border-gray-200"></div>
+      <!-- Divider (perforation "ticket tear" separating the event from the
+           payer/payment portion) -->
+      <div class="relative my-6">
+        <div class="border-t border-dashed border-gray-300"></div>
+        <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
+        <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
+      </div>
 
       <!-- Payer + payment status: the payer is who's viewing this ticket, so the
            payer and what they owe are the headline. -->
@@ -115,17 +120,10 @@
         </div>
       </div>
 
-      <!-- Divider (perforation style) -->
-      <div class="relative my-6">
-        <div class="border-t border-dashed border-gray-300"></div>
-        <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
-        <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
-      </div>
-
       <!-- Registrant details -->
       <div>
         <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide text-center mb-3">
-          Registrant details<% if attendees.any? %> (<%= attendees.size %>)<% end %>
+          Registrant details<% if attendees.any? %> (<%= attendees.size %> of <%= attendee_count %>)<% end %>
         </h3>
         <% if attendees.any? %>
           <div class="overflow-hidden border border-gray-200 rounded-lg bg-white">
@@ -189,7 +187,10 @@
       </div>
 
       <% if allowed_to?(:dashboard?, @event) %>
-        <div class="admin-only rounded-lg border border-blue-200 bg-blue-50/50 px-4 py-4 space-y-3">
+        <div class="admin-only relative rounded-lg border border-blue-200 bg-blue-50/50 px-4 pt-6 pb-4 space-y-3">
+          <span class="absolute -top-3 left-4 inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+            <i class="fa-solid fa-lock text-[0.65rem]"></i> Admin only
+          </span>
           <div class="flex items-center justify-between gap-2">
             <h2 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Payment allocations</h2>
             <%= render "events/payment_badge", payment: @payment %>
