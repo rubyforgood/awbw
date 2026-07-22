@@ -1,8 +1,8 @@
 <% if payment %>
   <% if payment.amount_cents_remaining > 0 %>
     <%= link_to payment_path(payment),
-                class: "inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 hover:bg-green-200 shrink-0" do %>
-      <i class="fa-solid fa-circle-check text-green-500"></i> Paid — <%= dollars_from_cents(payment.amount_cents_remaining) %> remaining
+                class: "inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800 hover:bg-orange-200 shrink-0" do %>
+      <i class="fa-solid fa-circle-exclamation text-orange-500"></i> Paid — <%= dollars_from_cents(payment.amount_cents_remaining) %> unallocated
     <% end %>
   <% else %>
     <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 shrink-0">

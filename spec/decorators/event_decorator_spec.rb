@@ -111,6 +111,33 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#short_date_range" do
+    it "shows a single date without a weekday when there is no end date" do
+      event = build(:event, start_date: Time.zone.local(2026, 6, 11, 12), end_date: nil).decorate
+      expect(event.short_date_range).to eq("Jun 11, 2026")
+    end
+
+    it "shows a single date when start and end fall on the same day" do
+      event = build(:event, start_date: Time.zone.local(2026, 6, 11, 9), end_date: Time.zone.local(2026, 6, 11, 17)).decorate
+      expect(event.short_date_range).to eq("Jun 11, 2026")
+    end
+
+    it "collapses month and year for a same-month range" do
+      event = build(:event, start_date: Time.zone.local(2026, 9, 20, 9), end_date: Time.zone.local(2026, 9, 21, 17)).decorate
+      expect(event.short_date_range).to eq("Sep 20-21, 2026")
+    end
+
+    it "collapses only the year for a same-year, cross-month range" do
+      event = build(:event, start_date: Time.zone.local(2026, 6, 30, 9), end_date: Time.zone.local(2026, 7, 2, 17)).decorate
+      expect(event.short_date_range).to eq("Jun 30 - Jul 2, 2026")
+    end
+
+    it "shows both years for a cross-year range" do
+      event = build(:event, start_date: Time.zone.local(2025, 12, 31, 9), end_date: Time.zone.local(2026, 1, 2, 17)).decorate
+      expect(event.short_date_range).to eq("Dec 31, 2025 - Jan 2, 2026")
+    end
+  end
+
   describe "#labelled_cost" do
     it "returns nil when cost_cents is nil" do
       event = build(:event, cost_cents: nil).decorate
