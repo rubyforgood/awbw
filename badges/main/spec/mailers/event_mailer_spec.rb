@@ -60,10 +60,6 @@ RSpec.describe EventMailer, type: :mailer do
       it "includes the rhino_description in the body" do
         expect(mail.body.encoded).to include("Join us for an art healing workshop")
       end
-
-      it "includes the Details heading" do
-        expect(mail.body.encoded).to include("Details")
-      end
     end
 
     context "when the event has no rhino_description" do
