@@ -56,8 +56,7 @@
   <%= render "ce_deadlines", event: @event %>
 
   <%# Admin-authored plain-text blurb (also used for calendar invites). The full
-      rich show-page description is intentionally NOT rendered here — it can carry
-      embedded images that flatten to "[filename.jpg]" alt text in email. %>
+      rich show-page description is intentionally NOT rendered here. %>
   <% if @event.short_description.present? %>
     <span style="padding-bottom: 12px"><strong>Details</strong></span><br>
     <p>
