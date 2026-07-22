@@ -272,6 +272,23 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(response.body).to include("jordan@example.com")
     end
 
+    it "shows the payer's name, organization, and registrants-covered count" do
+      submission.form_answers.create!(form_field: payer_first_name_field, submitted_answer: "Alex",
+                                      question_name_when_answered: "Payer first name")
+      submission.form_answers.create!(form_field: payer_last_name_field, submitted_answer: "Chen",
+                                      question_name_when_answered: "Payer last name")
+      submission.form_answers.create!(form_field: org_field, submitted_answer: "Bright Futures Academy",
+                                      question_name_when_answered: "Organization")
+
+      get_ticket
+
+      expect(response.body).to include("Payer")
+      expect(response.body).to include("Alex Chen")
+      expect(response.body).to include("Bright Futures Academy")
+      # One attendee is listed and no explicit count is set, so the covered count is 1.
+      expect(response.body).to include("Covering 1 registrant")
+    end
+
     it "does not show per-person actions like cancelling a registration" do
       get_ticket
 
@@ -284,9 +301,10 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(response.body).to include("return_to=bulk_payment_ticket")
     end
 
-    it "links 'View submission' to the public submission page" do
+    it "links 'View your form responses' to the public submission page" do
       get_ticket
 
+      expect(response.body).to include("View your form responses")
       expect(response.body).to include(event_bulk_payment_path(event, reg: submission.slug))
     end
 
