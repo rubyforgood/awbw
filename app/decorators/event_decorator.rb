@@ -58,6 +58,22 @@ class EventDecorator < ApplicationDecorator
     end
   end
 
+  # Same collapsed range as `date_range` but without the weekday prefix
+  # (e.g. "Sep 20-21, 2026") — for tighter contexts where the weekday is noise.
+  def short_date_range
+    s = start_date.in_time_zone(Time.zone)
+    e = (end_date || start_date).in_time_zone(Time.zone)
+    return s.strftime("%b %-d, %Y") if s.to_date == e.to_date
+
+    if s.year == e.year && s.month == e.month
+      "#{s.strftime('%b')} #{s.strftime('%-d')}-#{e.strftime('%-d')}, #{s.strftime('%Y')}"
+    elsif s.year == e.year
+      "#{s.strftime('%b %-d')} - #{e.strftime('%b %-d')}, #{s.strftime('%Y')}"
+    else
+      "#{s.strftime('%b %-d, %Y')} - #{e.strftime('%b %-d, %Y')}"
+    end
+  end
+
   def detail(length: nil)
     length ? description&.truncate(length) : description
   end

@@ -76,7 +76,7 @@
         </div>
         <div class="min-w-0 self-center">
           <p class="text-base font-bold text-green-800 leading-tight"><%= link_to @event.title, event_path(@event), class: "hover:underline" %></p>
-          <p class="text-xs font-semibold text-blue-900 uppercase mt-1"><%= @event.date_range %> <span class="font-normal text-blue-900">(<%= @event.times %>)</span></p>
+          <p class="text-xs font-semibold text-blue-900 uppercase mt-1"><%= @event.short_date_range %></p>
           <% if @event.labelled_cost.present? %>
             <p class="text-xs font-semibold text-blue-900 uppercase mt-0.5"><%= @event.labelled_cost %></p>
           <% end %>
