@@ -14,7 +14,9 @@
     </p>
   </div>
 
-  <% count = @event_registrations.size %>
+  <% registrant_count = @event_registrations.size %>
+  <% submitter_count = @submitters.size %>
+  <% count = registrant_count + submitter_count %>
   <div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
     <div class="flex items-start gap-2">
       <i class="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
@@ -23,64 +25,97 @@
           <p class="font-medium">You're about to invite <%= count %> <%= "person".pluralize(count) %>.</p>
           <p class="mt-1">Review the recipients and the invite email below, then send. Anyone without a Portal account gets one created, and each person receives a personalized link to set their password.</p>
         <% else %>
-          <p class="font-medium">You're about to email <%= count %> registrant<%= "s" if count != 1 %>.</p>
+          <p class="font-medium">You're about to email <%= count %> recipient<%= "s" if count != 1 %>.</p>
           <p class="mt-1">Review the recipients and the message below, then send. Each person receives their own copy, and one FYI email will be sent to the admin.</p>
         <% end %>
       </div>
     </div>
   </div>
 
-  <div class="border-primary/10 mb-6 rounded-2xl border bg-white p-4">
-    <h2 class="mb-3 text-lg font-semibold text-gray-800">Recipients <span class="font-normal text-gray-400">(<%= count %>)</span></h2>
+  <% if registrant_count.positive? %>
+    <div class="border-primary/10 mb-6 rounded-2xl border bg-white p-4">
+      <h2 class="mb-3 text-lg font-semibold text-gray-800">Registrants <span class="font-normal text-gray-400">(<%= registrant_count %>)</span></h2>
 
-    <h3 class="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Comma-separated names</h3>
-    <p class="mb-4 text-sm break-words text-gray-700">
-      <%= @event_registrations.map { |reg| reg.registrant.full_name }.join(", ") %>
-    </p>
+      <h3 class="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Comma-separated names</h3>
+      <p class="mb-4 text-sm break-words text-gray-700">
+        <%= @event_registrations.map { |reg| reg.registrant.full_name }.join(", ") %>
+      </p>
 
-    <h3 class="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Comma-separated emails</h3>
-    <p class="mb-4 text-sm break-words text-gray-700">
-      <%= @event_registrations.map { |reg| reg.registrant.preferred_email }.join(", ") %>
-    </p>
+      <h3 class="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Comma-separated emails</h3>
+      <p class="mb-4 text-sm break-words text-gray-700">
+        <%= @event_registrations.map { |reg| reg.registrant.preferred_email }.join(", ") %>
+      </p>
 
-    <h3 class="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Full list</h3>
-    <ul class="columns-1 gap-x-8 text-sm sm:columns-2">
-      <% @event_registrations.each do |reg| %>
-        <li class="mb-1 break-inside-avoid">
-          <span class="text-gray-900"><%= reg.registrant.full_name %></span>
-          <span class="text-gray-400">&lt;<%= reg.registrant.preferred_email %>&gt;</span>
-        </li>
-      <% end %>
-    </ul>
-  </div>
-
-  <div class="border-primary/10 mb-6 overflow-hidden rounded-2xl border bg-white">
-    <div class="border-b border-gray-200 bg-gray-50 px-4 py-3">
-      <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Subject</p>
-      <p class="text-sm font-medium text-gray-900"><%= @reminder_subject %></p>
-      <%# Name the omission explicitly — the preview below shows an absence, which
-          is easy to miss when you're scanning for what's there. %>
-      <% if @hide_event_card && !@invite_mode %>
-        <p class="mt-1.5 text-xs text-gray-500">
-          <i class="fa-solid fa-eye-slash text-gray-400"></i>
-          Event details box hidden — the date, time, cost, and location won't be in this email.
-        </p>
-      <% end %>
-      <% if @hide_ticket_button && !@invite_mode %>
-        <p class="mt-1.5 text-xs text-gray-500">
-          <i class="fa-solid fa-eye-slash text-gray-400"></i>
-          "View ticket" button hidden — this email won't link to the registrant's ticket.
-        </p>
-      <% end %>
+      <h3 class="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Full list</h3>
+      <ul class="columns-1 gap-x-8 text-sm sm:columns-2">
+        <% @event_registrations.each do |reg| %>
+          <li class="mb-1 break-inside-avoid">
+            <span class="text-gray-900"><%= reg.registrant.full_name %></span>
+            <span class="text-gray-400">&lt;<%= reg.registrant.preferred_email %>&gt;</span>
+          </li>
+        <% end %>
+      </ul>
     </div>
-    <div class="email-preview max-h-[70vh] overflow-auto p-4" style="font-family: Lato, sans-serif;">
-      <%= raw @reminder_preview_html %>
+  <% end %>
+
+  <% if submitter_count.positive? %>
+    <div class="border-primary/10 mb-6 rounded-2xl border bg-white p-4">
+      <h2 class="mb-3 text-lg font-semibold text-gray-800">Pay for Others submitters <span class="font-normal text-gray-400">(<%= submitter_count %>)</span></h2>
+      <ul class="columns-1 gap-x-8 text-sm sm:columns-2">
+        <% @submitters.each do |submission| %>
+          <li class="mb-1 break-inside-avoid">
+            <span class="text-gray-900"><%= submission.bulk_payment_payer_name %></span>
+            <span class="text-gray-400">&lt;<%= submission.bulk_payment_reminder_email %>&gt;</span>
+          </li>
+        <% end %>
+      </ul>
     </div>
-  </div>
+  <% end %>
+
+  <% if @reminder_preview_html.present? %>
+    <div class="border-primary/10 mb-6 overflow-hidden rounded-2xl border bg-white">
+      <div class="border-b border-gray-200 bg-gray-50 px-4 py-3">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase"><% if @invite_mode %>Subject<% else %>Registrant email — subject<% end %></p>
+        <p class="text-sm font-medium text-gray-900"><%= @reminder_subject %></p>
+        <%# Name the omission explicitly — the preview below shows an absence, which
+            is easy to miss when you're scanning for what's there. %>
+        <% if @hide_event_card && !@invite_mode %>
+          <p class="mt-1.5 text-xs text-gray-500">
+            <i class="fa-solid fa-eye-slash text-gray-400"></i>
+            Event details box hidden — the date, time, cost, and location won't be in this email.
+          </p>
+        <% end %>
+        <% if @hide_ticket_button && !@invite_mode %>
+          <p class="mt-1.5 text-xs text-gray-500">
+            <i class="fa-solid fa-eye-slash text-gray-400"></i>
+            "View ticket" button hidden — this email won't link to the registrant's ticket.
+          </p>
+        <% end %>
+      </div>
+      <div class="email-preview max-h-[70vh] overflow-auto p-4" style="font-family: Lato, sans-serif;">
+        <%= raw @reminder_preview_html %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @submitter_reminder_preview_html.present? %>
+    <div class="border-primary/10 mb-6 overflow-hidden rounded-2xl border bg-white">
+      <div class="border-b border-gray-200 bg-gray-50 px-4 py-3">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Pay for Others email — subject</p>
+        <p class="text-sm font-medium text-gray-900"><%= @submitter_reminder_subject %></p>
+      </div>
+      <div class="email-preview max-h-[70vh] overflow-auto p-4" style="font-family: Lato, sans-serif;">
+        <%= raw @submitter_reminder_preview_html %>
+      </div>
+    </div>
+  <% end %>
 
   <%= form_with url: send_reminder_event_path(@event), method: :post, data: { turbo: false } do |f| %>
     <% @event_registrations.each do |reg| %>
       <%= hidden_field_tag "registration_ids[]", reg.id %>
+    <% end %>
+    <% @submitters.each do |submission| %>
+      <%= hidden_field_tag "form_submission_ids[]", submission.id %>
     <% end %>
     <% if @invite_mode %>
       <%= hidden_field_tag :mode, "invite" %>

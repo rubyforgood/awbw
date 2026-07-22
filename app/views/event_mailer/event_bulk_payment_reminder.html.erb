@@ -1,0 +1,43 @@
+<h1>Payment reminder</h1>
+
+<div style="margin-top: 36px; text-align: left;">
+  <p>
+    Hello <strong><%= @submission.bulk_payment_payer_name %></strong>,
+  </p>
+
+  <%# Editable intro the admin sets on the bulk-reminder page. In preview mode the
+      container always renders (hidden when empty) with the hooks the
+      reminder-preview Stimulus controller fills in live; a real send only renders
+      it when a message is present. Mirrors event_registration_reminder. %>
+  <% if @custom_message.present? || @preview %>
+    <%= content_tag :div,
+          reminder_message_html(@custom_message),
+          id: ("reminder-custom-message" if @preview),
+          data: ({ reminder_preview_target: "message" } if @preview),
+          style: "margin: 8px 0; font-size: 14px; line-height: 1.5;#{' display: none;' if @preview && @custom_message.blank?}" %>
+  <% end %>
+
+  <p>
+    You submitted a "Pay for Others" form for
+    <strong><%= pluralize(@attendee_count, "attendee") %></strong><%= " for #{@event.title}" if @event %>.
+    Some of them still need to complete their registration or payment.
+  </p>
+
+  <% if @event %>
+    <%= render "event_details_card", event: @event, time_zone: @time_zone %>
+  <% end %>
+</div>
+
+<% if @ticket_url %>
+  <p>
+    Review who you're paying for and your total, and finish any outstanding payment:
+  </p>
+
+  <p>
+    <a href="<%= @ticket_url %>" class="button">View payment</a>
+  </p>
+<% end %>
+
+<p style="margin-top: 24px; font-size: 12px; color: #6b7280;">
+  This is an automated reminder from <%= @organization_name %>.
+</p>

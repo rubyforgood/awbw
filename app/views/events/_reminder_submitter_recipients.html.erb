@@ -1,0 +1,71 @@
+<%# "Pay for Others" submitters with loose ends, in their own section below the
+    registrant list. Only rendered when there are any; checkboxes submit under
+    form_submission_ids[] alongside the registrant registration_ids[]. %>
+<% if @bulk_payment_recipients.present? %>
+  <div class="mt-10 mb-6">
+    <h2 class="text-lg font-semibold text-gray-800 mb-1 pb-2 border-b border-gray-200">
+      Pay for Others submitters
+      <span class="text-gray-400 font-normal">(<%= @bulk_payment_recipients.size %>)</span>
+    </h2>
+    <p class="text-gray-600 mb-3 text-sm">
+      People who submitted a "Pay for Others" form but still have attendees who
+      aren't registered yet, or whose registration hasn't been paid in full.
+      Remind them to follow up. They're a separate group — the filters above don't
+      change this list.
+    </p>
+
+    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+      <table class="w-full border-collapse">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-10">
+              <input type="checkbox" id="submitters_select_all" class="rounded border-gray-300" checked aria-label="Select all submitters" onclick="document.querySelectorAll('.submitter-checkbox').forEach(function(c){ c.checked = document.getElementById('submitters_select_all').checked })">
+            </th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Payer</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Outstanding</th>
+            <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700 w-10"><span class="sr-only">Bulk payment</span></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+          <% @bulk_payment_recipients.each do |recipient| %>
+            <% submission = recipient.submission %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-2">
+                <%= check_box_tag "form_submission_ids[]", submission.id, true, class: "submitter-checkbox rounded border-gray-300", id: "form_submission_ids_#{submission.id}" %>
+              </td>
+              <td class="px-4 py-2 text-sm">
+                <%= recipient.payer_name %>
+                <span class="text-xs text-gray-500">(<%= recipient.email %>)</span>
+              </td>
+              <td class="px-4 py-2 text-sm whitespace-nowrap">
+                <% if recipient.unregistered_count.positive? %>
+                  <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-rose-50 text-rose-700 border-rose-200">
+                    <i class="fa-solid fa-user-slash"></i>
+                    <%= recipient.unregistered_count %> not registered
+                  </span>
+                <% end %>
+                <% if recipient.unpaid_count.positive? %>
+                  <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium border px-2 py-0.5 bg-amber-50 text-amber-700 border-amber-200">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                    <%= recipient.unpaid_count %> unpaid
+                  </span>
+                <% end %>
+                <span class="text-xs text-gray-400 ml-1">of <%= pluralize(recipient.attendee_count, "attendee") %></span>
+              </td>
+              <td class="px-4 py-2 text-right">
+                <%# Opens the payer's card on the bulk payments dashboard in a new
+                    tab so the in-progress draft on this page isn't lost. %>
+                <%= link_to bulk_payments_event_path(@event, expand: submission.id, anchor: "payment-card-#{submission.id}"),
+                            title: "View #{recipient.payer_name}'s bulk payment (opens in a new tab)",
+                            target: "_blank", rel: "noopener",
+                            class: "inline-flex items-center shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
+                  <i class="fa-solid fa-people-group text-gray-400"></i>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

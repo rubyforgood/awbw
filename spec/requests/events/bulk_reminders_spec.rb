@@ -16,6 +16,19 @@ RSpec.describe "Events::BulkReminders", type: :request do
     node.present? && node["checked"].present?
   end
 
+  # A bulk-payment submission for this event whose single attendee isn't
+  # registered, so it qualifies for the Pay-for-Others reminder section.
+  def bulk_submission_with_unregistered_attendee(payer_name: "Pat Payer")
+    form = create(:form)
+    first, last = payer_name.split
+    payer = create(:person, first_name: first, last_name: last)
+    submission = create(:form_submission, form: form, event: event, person: payer, role: "bulk_payment")
+    field = create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees")
+    submission.form_answers.create!(form_field: field,
+                                    submitted_answer: [ { "first_name" => "Nora", "last_name" => "West" } ].to_json)
+    submission
+  end
+
   it "checks every registrant by default" do
     get preview_reminder_event_path(event)
 
@@ -348,6 +361,59 @@ RSpec.describe "Events::BulkReminders", type: :request do
       expect(response.headers["Location"]).to include("hide_event_card=0")
       follow_redirect!
       expect(Nokogiri::HTML(response.body).at_css("#hide_event_card")["checked"]).to be_nil
+    end
+  end
+
+  describe "Pay for Others submitters" do
+    let!(:submission) { bulk_submission_with_unregistered_attendee }
+
+    it "lists a qualifying submitter, pre-checked, below the registrants" do
+      get preview_reminder_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Pay for Others submitters")
+      expect(response.body).to include("Pat Payer")
+      node = Nokogiri::HTML(response.body).at_css("#form_submission_ids_#{submission.id}")
+      expect(node).to be_present
+      expect(node["checked"]).to be_present
+    end
+
+    it "omits a submitter whose attendees are all registered and paid" do
+      registrant = create(:person, first_name: "Nora", last_name: "West")
+      reg = create(:event_registration, event: event, registrant: registrant)
+      create(:allocation, allocatable: reg, amount: event.cost_cents)
+
+      get preview_reminder_event_path(event)
+
+      expect(response.body).not_to include("Pat Payer")
+    end
+
+    it "lists the submitter on the confirm interstitial without sending" do
+      expect {
+        post confirm_reminder_event_path(event), params: { form_submission_ids: [ submission.id ], custom_message: "Please pay!" }
+      }.not_to change(Notification, :count)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Pat Payer")
+      expect(response.body).to include("value=\"#{submission.id}\"")
+    end
+
+    it "sends a bulk-payment reminder notification to a selected submitter" do
+      expect {
+        post send_reminder_event_path(event), params: { registration_ids: [ jane.id ], form_submission_ids: [ submission.id ] }
+      }.to change { Notification.where(kind: "event_registration_reminder").count }.by(1)
+        .and change { Notification.where(kind: "event_bulk_payment_reminder").count }.by(1)
+        .and have_enqueued_mail(EventMailer, :event_registration_reminder_fyi).once
+
+      expect(response).to redirect_to(registrants_event_path(event))
+    end
+
+    it "can send to a submitter alone" do
+      expect {
+        post send_reminder_event_path(event), params: { form_submission_ids: [ submission.id ] }
+      }.to change { Notification.where(kind: "event_bulk_payment_reminder").count }.by(1)
+
+      expect(response).to redirect_to(registrants_event_path(event))
     end
   end
 end

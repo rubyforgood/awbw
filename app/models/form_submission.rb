@@ -357,6 +357,21 @@ class FormSubmission < ApplicationRecord
     "#{form&.display_name} submission ##{id}"
   end
 
+  # The payer's name for admin-facing summaries. Prefers the linked person, then
+  # the submitted payer answers (the payer often has no account).
+  def bulk_payment_payer_name
+    person&.full_name.presence ||
+      [ answers_by_identifier["payer_first_name"], answers_by_identifier["payer_last_name"] ]
+        .compact_blank.join(" ").presence ||
+      "Payer"
+  end
+
+  # The address a bulk-payment reminder is sent to: the payer's account/contact
+  # email, falling back to the email typed on the form.
+  def bulk_payment_reminder_email
+    person&.preferred_email.presence || answers_by_identifier["payer_email"].presence
+  end
+
   private
 
   def answer_text(raw_value)

@@ -2,7 +2,7 @@
 
 <div style="margin-top: 24px; text-align: left;">
   <p>
-    A reminder email was sent to <strong><%= @recipient_labels.size %></strong> registrant<%= "s" if @recipient_labels.size != 1 %> for <strong><%= @event.title %></strong>.
+    A reminder email was sent to <strong><%= @recipient_labels.size %></strong> recipient<%= "s" if @recipient_labels.size != 1 %> for <strong><%= @event.title %></strong>.
   </p>
 
   <% if @recipient_labels.any? %>
@@ -17,7 +17,7 @@
 <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
 
 <p style="font-weight: bold; color: #374151;">
-  Reminder content sent to each registrant:
+  Reminder content sent to each recipient:
 </p>
 
 <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; background-color: #ffffff;">
@@ -33,7 +33,7 @@
 
   <% unless @hide_ticket_button %>
     <p style="font-size: 12px; color: #6b7280; margin: 8px 0 0;">
-      Each registrant also received a personalized "View ticket" link.
+      Each recipient also received a personalized link to their ticket or payment.
     </p>
   <% end %>
 </div>

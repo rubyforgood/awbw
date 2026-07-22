@@ -413,6 +413,12 @@ class EventsController < ApplicationController
 
     return render partial: "events/reminder_recipients" if turbo_frame_request?
 
+    # "Pay for Others" submitters with loose ends (an attendee not registered, or
+    # a matched registration not paid in full). They render in their own section
+    # below the registrant list and can be reminded in the same send. Not shown in
+    # invite mode, which targets account-less registrants, not payers.
+    @bulk_payment_recipients = @invite_mode ? [] : BulkPaymentReminderRecipients.new(@event).call
+
     @sample_registration = @event_registrations.first
 
     # Invite mode sends the fixed portal welcome email — no editable subject/message,
@@ -435,10 +441,18 @@ class EventsController < ApplicationController
     # The ticket button shows by default — only hidden when the admin explicitly ticks it.
     @hide_ticket_button = hide_ticket_button_param
 
+    # Preview a real recipient in preview mode (custom-message container always
+    # present for the live preview). Prefer a registrant; fall back to a submitter
+    # so an event with only Pay-for-Others recipients still shows a sample.
     if @sample_registration
+      @preview_kind = :registrant
       # Render in preview mode so the custom-message container is always present
       # in the markup for the live preview, even before any text is typed.
       mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, hide_ticket_button: @hide_ticket_button, preview: true)
+      @reminder_preview_html = mail.html_part&.body&.decoded
+    elsif @bulk_payment_recipients.any?
+      @preview_kind = :submitter
+      mail = EventMailer.event_bulk_payment_reminder(@bulk_payment_recipients.first.submission, custom_message: @custom_message, custom_subject: @custom_subject, preview: true)
       @reminder_preview_html = mail.html_part&.body&.decoded
     end
   end
@@ -451,12 +465,13 @@ class EventsController < ApplicationController
     @event = @event.decorate
     @invite_mode = invite_mode?
     @event_registrations = selected_reminder_registrations
+    @submitters = selected_reminder_submitters
     @custom_message = params[:custom_message].to_s
     @custom_subject = params[:custom_subject].to_s
     @hide_event_card = hide_event_card_param
     @hide_ticket_button = hide_ticket_button_param
 
-    if @event_registrations.empty?
+    if @event_registrations.empty? && @submitters.empty?
       redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: (hide_event_card_param ? "1" : "0"), hide_ticket_button: (hide_ticket_button_param ? "1" : "0")), alert: "Please select at least one recipient."
       return
     end
@@ -467,16 +482,25 @@ class EventsController < ApplicationController
       return
     end
 
-    mail = EventMailer.event_registration_reminder(@event_registrations.first, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, hide_ticket_button: @hide_ticket_button)
-    @reminder_subject = mail.subject
-    @reminder_preview_html = mail.html_part&.body&.decoded
+    if @event_registrations.any?
+      mail = EventMailer.event_registration_reminder(@event_registrations.first, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, hide_ticket_button: @hide_ticket_button)
+      @reminder_subject = mail.subject
+      @reminder_preview_html = mail.html_part&.body&.decoded
+    end
+
+    if @submitters.any?
+      submitter_mail = EventMailer.event_bulk_payment_reminder(@submitters.first, custom_message: @custom_message, custom_subject: @custom_subject)
+      @submitter_reminder_subject = submitter_mail.subject
+      @submitter_reminder_preview_html = submitter_mail.html_part&.body&.decoded
+    end
   end
 
   def send_reminder
     authorize! @event, to: :send_reminder?
     registrations = selected_reminder_registrations
+    submitters = selected_reminder_submitters
 
-    if registrations.empty?
+    if registrations.empty? && submitters.empty?
       redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s, hide_event_card: (hide_event_card_param ? "1" : "0"), hide_ticket_button: (hide_ticket_button_param ? "1" : "0")), alert: "Please select at least one recipient."
       return
     end
@@ -507,14 +531,30 @@ class EventsController < ApplicationController
       )
     end
 
+    # Pay-for-Others submitters get the payer-facing reminder, tracked against
+    # their submission so it shows in the payer's communication history too.
+    submitters.each do |submission|
+      NotificationServices::CreateNotification.call(
+        noticeable: submission,
+        kind: "event_bulk_payment_reminder",
+        recipient_role: :person,
+        recipient_email: submission.bulk_payment_reminder_email,
+        notification_type: 0,
+        custom_message: custom_message.presence,
+        custom_subject: custom_subject.presence
+      )
+    end
+
     # One admin summary for the whole batch: count, roster, and a copy of what
     # was sent. Roster passed as plain "Name <email>" labels so the delivery job
-    # needs no record lookups.
-    recipient_labels = registrations.map { |r| "#{r.registrant.full_name} <#{r.registrant.preferred_email}>" }
+    # needs no record lookups; submitters are tagged so the two groups read apart.
+    recipient_labels = registrations.map { |r| "#{r.registrant.full_name} <#{r.registrant.preferred_email}>" } +
+      submitters.map { |s| "#{s.bulk_payment_payer_name} <#{s.bulk_payment_reminder_email}> (Pay for Others)" }
     EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence, hide_event_card: hide_event_card, hide_ticket_button: hide_ticket_button).deliver_later
 
-    track_view("events.send_reminder", { event_id: @event.id, recipient_count: registrations.size })
-    redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
+    count = registrations.size + submitters.size
+    track_view("events.send_reminder", { event_id: @event.id, recipient_count: count })
+    redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{count} recipient#{'s' if count != 1}."
   end
 
   def create
@@ -1074,6 +1114,18 @@ class EventsController < ApplicationController
       .where(id: allowed_ids)
       .includes(registrant: [ :user, :contact_methods ])
       .select { |r| r.registrant.preferred_email.present? }
+  end
+
+  # The Pay-for-Others submitters the admin checked, narrowed to those we can
+  # actually email. Mirrors selected_reminder_registrations for the submitter
+  # section so confirm and send operate on the same set.
+  def selected_reminder_submitters
+    allowed_ids = Array(params[:form_submission_ids]).map(&:to_i).reject(&:zero?)
+    @event.form_submissions
+      .bulk_payment
+      .where(id: allowed_ids)
+      .includes(:person, form_answers: :form_field)
+      .select { |submission| submission.bulk_payment_reminder_email.present? }
   end
 
   # Maps registrant person_id => the organization name they typed on the

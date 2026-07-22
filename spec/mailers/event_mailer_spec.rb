@@ -370,6 +370,58 @@ RSpec.describe EventMailer, type: :mailer do
     end
   end
 
+  describe "#event_bulk_payment_reminder" do
+    let(:event) { create(:event, title: "Art Workshop", cost_cents: 10_000) }
+    let(:form) { create(:form) }
+    let(:payer) { create(:person, first_name: "Pat", last_name: "Payer") }
+    let(:submission) do
+      create(:form_submission, form: form, event: event, person: payer, role: "bulk_payment").tap do |s|
+        field = create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees")
+        s.form_answers.create!(form_field: field,
+                               submitted_answer: [ { "first_name" => "Nora", "last_name" => "West" } ].to_json)
+      end
+    end
+    let(:mail) { described_class.event_bulk_payment_reminder(submission) }
+
+    it "renders without raising" do
+      expect { mail.deliver_now }.not_to raise_error
+    end
+
+    it "sends to the payer" do
+      expect(mail.to).to eq([ payer.preferred_email ])
+    end
+
+    it "addresses the payer by name and links to their payment ticket" do
+      expect(mail.html_part.body.encoded).to include("Pat Payer")
+      expect(mail.html_part.body.encoded).to include(bulk_payment_ticket_url(submission.slug))
+    end
+
+    it "falls back to a payment-focused default subject" do
+      expect(mail.subject).to include("complete your payment")
+      expect(mail.subject).to include("Art Workshop")
+    end
+
+    context "with a custom subject and message" do
+      let(:mail) { described_class.event_bulk_payment_reminder(submission, custom_subject: "Please pay!", custom_message: "Thanks <strong>so much</strong>.") }
+
+      it "uses the custom subject verbatim" do
+        expect(mail.subject).to eq("Please pay!")
+      end
+
+      it "includes the sanitized custom message" do
+        expect(mail.html_part.body.encoded).to include("Thanks <strong>so much</strong>.")
+      end
+    end
+
+    context "in preview mode" do
+      let(:mail) { described_class.event_bulk_payment_reminder(submission, preview: true) }
+
+      it "renders the custom-message container even when blank" do
+        expect(mail.html_part.body.encoded).to include("reminder-custom-message")
+      end
+    end
+  end
+
   describe "#event_registration_reminder_fyi" do
     let(:event) { create(:event, title: "Art Workshop") }
     let(:recipient_labels) { [ "Alex Rivera <alex@example.org>", "Sam Lee <sam@example.org>" ] }
@@ -385,7 +437,7 @@ RSpec.describe EventMailer, type: :mailer do
 
     it "summarizes the count and event in the subject" do
       expect(mail.subject).to include("[FYI]")
-      expect(mail.subject).to include("2 registrants")
+      expect(mail.subject).to include("2 recipients")
       expect(mail.subject).to include("Art Workshop")
     end
 
@@ -405,7 +457,7 @@ RSpec.describe EventMailer, type: :mailer do
 
     it "uses the singular noun for a single recipient" do
       mail = described_class.event_registration_reminder_fyi(event, [ "Alex Rivera <alex@example.org>" ])
-      expect(mail.subject).to include("1 registrant ")
+      expect(mail.subject).to include("1 recipient ")
     end
 
     context "with the event card hidden" do
@@ -436,16 +488,16 @@ RSpec.describe EventMailer, type: :mailer do
     context "with the ticket button hidden" do
       let(:mail) { described_class.event_registration_reminder_fyi(event, recipient_labels, hide_ticket_button: true) }
 
-      it "omits the View ticket link note, matching what registrants received" do
-        expect(mail.html_part.body.encoded).not_to include("View ticket")
-        expect(mail.text_part.body.encoded).not_to include("View ticket")
+      it "omits the ticket/payment link note, matching what recipients received" do
+        expect(mail.html_part.body.encoded).not_to include("link to their ticket or payment")
+        expect(mail.text_part.body.encoded).not_to include("link to their ticket or payment")
       end
     end
 
     context "by default" do
-      it "notes each registrant received a View ticket link" do
-        expect(mail.html_part.body.encoded).to include("View ticket")
-        expect(mail.text_part.body.encoded).to include("View ticket")
+      it "notes each recipient received a ticket or payment link" do
+        expect(mail.html_part.body.encoded).to include("link to their ticket or payment")
+        expect(mail.text_part.body.encoded).to include("link to their ticket or payment")
       end
     end
   end

@@ -29,43 +29,45 @@
       <% end %>
     </p>
   </div>
-  <% if @event_registrations.empty? %>
+  <% if @event_registrations.empty? && @bulk_payment_recipients.empty? %>
     <% if @invite_mode %>
       <p class="mb-4 text-gray-600">Every registrant with an email already has a portal account — there's no one to invite.</p>
     <% else %>
-      <p class="mb-4 text-gray-600">There are no registrants with an email address to send a reminder to.</p>
+      <p class="mb-4 text-gray-600">There are no registrants or Pay for Others submitters with an email address to send a reminder to.</p>
     <% end %>
     <%= link_to "Back to registrants", registrants_event_path(@event), class: button_classes(:secondary_outline) %>
   <% else %>
     <h2 class="mb-2 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-800">Recipients</h2>
-    <% if @invite_mode %>
-      <p class="mb-3 text-gray-600">
-        Only registrants with no Portal account yet are listed — a Portal invite
-        (confirmation) email is for people who can't sign in. Filters keep everyone
-        in the list and check
-        the matches. Separate multiple values with
-        <code class="font-mono">'--'</code> to match multiple values (e.g.
-        <code class="font-mono">amy--aisha</code>).
-      </p>
-    <% else %>
-      <p class="mb-3 text-gray-600">
-        Choose who will receive this reminder. Filters keep everyone in the list and
-        check the matches. Separate multiple values with
-        <code class="font-mono">'--'</code> to match multiple values (e.g.
-        <code class="font-mono">amy--aisha</code>).
-      </p>
+    <% if @event_registrations.any? %>
+      <% if @invite_mode %>
+        <p class="mb-3 text-gray-600">
+          Only registrants with no Portal account yet are listed — a Portal invite
+          (confirmation) email is for people who can't sign in. Filters keep everyone
+          in the list and check
+          the matches. Separate multiple values with
+          <code class="font-mono">'--'</code> to match multiple values (e.g.
+          <code class="font-mono">amy--aisha</code>).
+        </p>
+      <% else %>
+        <p class="mb-3 text-gray-600">
+          Choose who will receive this reminder. Filters keep everyone in the list and
+          check the matches. Separate multiple values with
+          <code class="font-mono">'--'</code> to match multiple values (e.g.
+          <code class="font-mono">amy--aisha</code>).
+        </p>
+      <% end %>
+      <%= render "events/registrant_filters",
+            url: preview_reminder_event_path(@event, mode: ("invite" if @invite_mode)),
+            frame: "reminder_recipients",
+            clear_url: preview_reminder_event_path(@event, mode: ("invite" if @invite_mode)),
+            hidden_params: (@invite_mode ? { mode: "invite" } : {}),
+            topic_subscription_types: @topic_subscription_types,
+            text_fields: [
+              { param: :name, label: "Name", placeholder: "Registrant name", primary: true },
+              { param: :email, label: "Email", placeholder: "Email address", primary: true },
+              { param: :reg_org, label: "Organization", placeholder: "Organization name" }
+            ] %>
     <% end %>
-    <%= render "events/registrant_filters",
-          url: preview_reminder_event_path(@event, mode: ("invite" if @invite_mode)),
-          frame: "reminder_recipients",
-          clear_url: preview_reminder_event_path(@event, mode: ("invite" if @invite_mode)),
-          hidden_params: (@invite_mode ? { mode: "invite" } : {}),
-          topic_subscription_types: @topic_subscription_types,
-          text_fields: [
-            { param: :name, label: "Name", placeholder: "Registrant name", primary: true },
-            { param: :email, label: "Email", placeholder: "Email address", primary: true },
-            { param: :reg_org, label: "Organization", placeholder: "Organization name" }
-          ] %>
     <%# Turbo disabled: this POST renders the confirmation interstitial (a full
         page), not a redirect, so a normal browser navigation is what we want.
         reminder-preview drives the live message/subject preview as the admin types
@@ -74,7 +76,10 @@
       <% if @invite_mode %>
         <%= hidden_field_tag :mode, "invite" %>
       <% end %>
-      <%= render "events/reminder_recipients" %>
+      <% if @event_registrations.any? %>
+        <%= render "events/reminder_recipients" %>
+      <% end %>
+      <%= render "events/reminder_submitter_recipients" %>
       <% if @invite_mode %>
         <div class="my-14">
           <h2 class="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Email</h2>
@@ -143,7 +148,7 @@
       <% end %>
       <% if @reminder_preview_html.present? %>
         <div class="mb-6">
-          <h2 class="mb-3 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-800">Preview (sample registrant)</h2>
+          <h2 class="mb-3 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-800">Preview (<%= @preview_kind == :submitter ? "Pay for Others submitter" : "sample registrant" %>)</h2>
           <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white">
             <div class="border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700">
               <span class="font-semibold text-gray-500">Subject:</span>

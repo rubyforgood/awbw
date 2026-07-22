@@ -1,0 +1,25 @@
+Payment reminder
+
+Hello <%= @submission.bulk_payment_payer_name %>,
+
+<% if @custom_message.present? %>
+<%= strip_tags(@custom_message).strip %>
+
+<% end %>You submitted a "Pay for Others" form for <%= pluralize(@attendee_count, "attendee") %><%= " for #{@event.title}" if @event %>. Some of them still need to complete their registration or payment.
+
+<% if @event %><% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
+<%= @event.pre_title %>
+<% end %><%= @event.title %>
+<% Time.use_zone(@time_zone) do %><% if event_dates_detail_label(@event.object).present? %><%= event_dates_detail_label(@event.object) %>
+<% end %><% if event_times_label(@event.object).present? %><%= event_times_label(@event.object) %>
+<% end %><% end %>
+<% if event_location_label(@event.object).present? %>
+Location: <%= event_location_label(@event.object) %>
+<% end %>
+<% end %><% if @ticket_url %>
+Review who you're paying for and your total, and finish any outstanding payment:
+<%= @ticket_url %>
+<% end %>
+
+--
+This is an automated reminder from <%= @organization_name %>.

@@ -78,11 +78,43 @@ class EventMailer < ApplicationMailer
     )
   end
 
-  # Single admin summary sent once per bulk-reminder send: how many registrants
-  # were emailed, who they were, and a copy of the reminder content. The roster
-  # is passed as "Name <email>" labels (not records), so the job that delivers
-  # this needs no extra lookups. The per-recipient reminders are tracked
-  # notifications; this is just an at-a-glance heads-up for the team.
+  # The bulk-reminder counterpart for a "Pay for Others" submitter. They have no
+  # ticket of their own, so instead of a registration reminder they get a nudge
+  # to their public payment ticket (attendees + total). Shares the admin's custom
+  # subject/message with the registrant reminder so one compose drives both.
+  def event_bulk_payment_reminder(form_submission, custom_message: nil, custom_subject: nil, preview: false)
+    @submission = form_submission
+    @person = form_submission.person
+    @event = form_submission.event&.decorate
+    @answers = form_submission.answers_by_identifier
+    @attendee_count = form_submission.bulk_payment_attendee_count
+    @custom_message = custom_message.presence
+    @custom_subject = custom_subject.presence
+    # See event_registration_reminder: renders the live-preview message container
+    # even when blank. Never set on a real send.
+    @preview = preview
+
+    @notification_type = "Event bulk payment reminder"
+
+    @time_zone = @person&.user&.time_zone || Time.zone.name
+    @ticket_url = bulk_payment_ticket_url(@submission.slug) if @submission.event.present? && @submission.slug.present?
+    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+
+    default_subject = "AWBW Portal: Reminder: complete your payment for #{@event&.title}"
+    mail(
+      to: form_submission.bulk_payment_reminder_email,
+      from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
+      reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      subject: @custom_subject || default_subject
+    )
+  end
+
+  # Single admin summary sent once per bulk-reminder send: how many people were
+  # emailed, who they were, and a copy of the reminder content. Recipients span
+  # both registrants and Pay-for-Others submitters, so the roster is passed as
+  # "Name <email>" labels (not records) and the count uses the neutral noun
+  # "recipient". The per-recipient reminders are tracked notifications; this is
+  # just an at-a-glance heads-up for the team.
   def event_registration_reminder_fyi(event, recipient_labels, custom_message: nil, hide_event_card: false, hide_ticket_button: false)
     @event = event.decorate
     @recipient_labels = Array(recipient_labels)
@@ -100,7 +132,7 @@ class EventMailer < ApplicationMailer
       to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW Portal: [FYI] Reminder sent to #{count} registrant#{'s' if count != 1} for #{@event.title}"
+      subject: "AWBW Portal: [FYI] Reminder sent to #{count} recipient#{'s' if count != 1} for #{@event.title}"
     )
   end
 
