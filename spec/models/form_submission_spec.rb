@@ -80,4 +80,36 @@ RSpec.describe FormSubmission do
       expect(submission.bulk_payment_amount_cents(free_event)).to eq(0)
     end
   end
+
+  describe "invoice view tracking" do
+    let(:submission) { create(:form_submission, role: "bulk_payment") }
+
+    def view_invoice(submission, viewer_role: "recipient")
+      create(
+        :ahoy_event,
+        name: FormSubmission::INVOICE_VIEW_EVENT,
+        properties: { resource_type: "FormSubmission", resource_id: submission.id, viewer_role: viewer_role }
+      )
+    end
+
+    it "counts recipient opens but ignores admin previews" do
+      expect(submission.invoice_viewed?).to be(false)
+
+      view_invoice(submission, viewer_role: "admin")
+      expect(submission.invoice_viewed?).to be(false)
+
+      view_invoice(submission)
+      expect(submission.invoice_viewed?).to be(true)
+    end
+
+    it "returns recipient view times oldest first" do
+      travel_to(2.days.ago) { view_invoice(submission) }
+      travel_to(1.hour.ago) { view_invoice(submission) }
+
+      times = submission.invoice_view_times
+      expect(times.size).to eq(2)
+      expect(times.first).to be_within(1.second).of(2.days.ago)
+      expect(times.last).to be_within(1.second).of(1.hour.ago)
+    end
+  end
 end

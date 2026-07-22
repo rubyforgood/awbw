@@ -51,7 +51,7 @@ This codebase (Rails 8.1)
 | `app/models/` | ActiveRecord models | ~80 files |
 | `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display) | ~30 files |
 | `app/jobs/` | SolidQueue background jobs | 4 files |
-| `app/models/concerns/` | Shared model modules | 16 concerns |
+| `app/models/concerns/` | Shared model modules | 17 concerns |
 
 ### Presentation
 
@@ -133,6 +133,7 @@ This codebase (Rails 8.1)
 | `AhoyTrackable` | Event tracking integration |
 | `AuthorCreditable` | Author attribution |
 | `Featureable` | `featured`, `publicly_featured` scopes |
+| `InvoiceViewTrackable` | Recipient-only invoice open tracking via Ahoy `viewer_role`; `invoice_views`/`invoice_viewed?`/`invoice_view_times` + `invoice_viewed`/`invoice_not_viewed` scopes (EventRegistration, FormSubmission) |
 | `Mentioner` | ActionText @mention extraction and grouping |
 | `NameFilterable` | Name-based filtering |
 | `Publishable` | `published`, `publicly_visible` scopes |

@@ -7,6 +7,8 @@ RSpec.describe "Events::Registrations", type: :request do
   before { sign_in user }
 
   let(:turbo_headers) { { "Accept" => "text/vnd.turbo-stream.html" } }
+  # A real browser User-Agent so Ahoy doesn't skip the request as a bot.
+  let(:browser_headers) { { "User-Agent" => "Mozilla/5.0 (Macintosh) AppleWebKit/537.36 Chrome/120 Safari/537.36" } }
 
   describe "GET /registration/:slug" do
     let(:admin) { create(:user, :with_person, super_user: true) }
@@ -91,15 +93,68 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("$1,500")
     end
 
-    it "records an Ahoy view event so admins can tell the invoice was opened" do
-      # A real browser User-Agent so Ahoy doesn't skip the request as a bot.
-      browser = { "User-Agent" => "Mozilla/5.0 (Macintosh) AppleWebKit/537.36 Chrome/120 Safari/537.36" }
-
-      expect { get registration_invoice_path(registration.slug), headers: browser }
-        .to change { registration.reload.invoice_view_events.count }.by(1)
+    it "records the registrant's open as a recipient view" do
+      expect { get registration_invoice_path(registration.slug), headers: browser_headers }
+        .to change { registration.invoice_views.count }.by(1)
 
       expect(registration.invoice_viewed?).to be(true)
       expect(EventRegistration.invoice_viewed).to include(registration)
+    end
+
+    it "does not show the admin-only badge to the registrant" do
+      recipient_view(registration)
+
+      get registration_invoice_path(registration.slug)
+
+      expect(response.body).not_to include("First opened")
+    end
+
+    def recipient_view(registration, time: Time.current)
+      create(
+        :ahoy_event,
+        name: EventRegistration::INVOICE_VIEW_EVENT,
+        properties: { resource_type: "EventRegistration", resource_id: registration.id, viewer_role: "recipient" },
+        time: time
+      )
+    end
+
+    context "as an admin" do
+      let(:admin) { create(:user, :with_person, super_user: true, time_zone: "UTC") }
+
+      before { sign_in admin }
+
+      it "records its own visit as an admin view, not a recipient open" do
+        get registration_invoice_path(registration.slug), headers: browser_headers
+
+        all_views = Ahoy::Event.where(name: EventRegistration::INVOICE_VIEW_EVENT, resource_id: registration.id)
+        expect(all_views.count).to eq(1)                   # the admin view is tracked
+        expect(registration.invoice_views.count).to eq(0)  # but never counts as a recipient open
+      end
+
+      it "shows when the registrant first opened it" do
+        recipient_view(registration, time: Time.utc(2026, 11, 12, 19, 26))
+
+        get registration_invoice_path(registration.slug)
+
+        expect(response.body).to include("First opened Nov 12, 2026 at 7:26 PM")
+      end
+
+      it "reveals every recipient open in the badge" do
+        recipient_view(registration, time: Time.utc(2026, 11, 12, 19, 26))
+        recipient_view(registration, time: Time.utc(2026, 11, 13, 8, 0))
+
+        get registration_invoice_path(registration.slug)
+
+        expect(response.body).to include("First opened Nov 12, 2026 at 7:26 PM")
+        expect(response.body).to include("+1 more")
+        expect(response.body).to include("Nov 13, 2026 at 8:00 AM")
+      end
+
+      it "shows 'Not opened yet' when only admin previews exist" do
+        get registration_invoice_path(registration.slug)
+
+        expect(response.body).to include("Not opened yet")
+      end
     end
 
     it "shows the balance due once a scholarship or payment is applied" do

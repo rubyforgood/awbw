@@ -8,7 +8,8 @@
    else
      [ registration_ticket_path(@event_registration.slug), "Back to ticket" ]
    end %>
+<% viewed_labels = current_user&.super_user? ? @event_registration.decorate.invoice_view_labels : nil %>
 <%= render "events/invoices/actions", back_path: back_path, back_label: back_label %>
 <div class="px-4 sm:px-8 py-6 print:p-0">
-  <%= render "events/invoices/invoice", invoice: @invoice %>
+  <%= render "events/invoices/invoice", invoice: @invoice, viewed_labels: viewed_labels %>
 </div>

@@ -3,6 +3,17 @@ require "rails_helper"
 RSpec.describe "Events::Invoices", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:event) { create(:event, title: "AWBW 2-Day Art Facilitator Training", cost_cents: 150_000) }
+  # A real browser User-Agent so Ahoy doesn't skip the request as a bot.
+  let(:browser_headers) { { "User-Agent" => "Mozilla/5.0 (Macintosh) AppleWebKit/537.36 Chrome/120 Safari/537.36" } }
+
+  def recipient_view(submission, time: Time.current)
+    create(
+      :ahoy_event,
+      name: FormSubmission::INVOICE_VIEW_EVENT,
+      properties: { resource_type: "FormSubmission", resource_id: submission.id, viewer_role: "recipient" },
+      time: time
+    )
+  end
 
   describe "GET /events/:event_id/invoice" do
     context "as an admin" do
@@ -44,18 +55,18 @@ RSpec.describe "Events::Invoices", type: :request do
           expect(response.body).to include("$12,000")
         end
 
-        it "records an Ahoy view event for the bulk-payment invoice" do
-          # A real browser User-Agent so Ahoy doesn't skip the request as a bot.
-          browser = { "User-Agent" => "Mozilla/5.0 (Macintosh) AppleWebKit/537.36 Chrome/120 Safari/537.36" }
+        it "records its own visit as an admin view, not a recipient open" do
+          expect { get event_invoice_path(event, submission_id: submission.id), headers: browser_headers }
+            .not_to change { submission.invoice_views.count }
+        end
 
-          expect { get event_invoice_path(event, submission_id: submission.id), headers: browser }
-            .to change {
-              Ahoy::Event.where(
-                name: "view.form_submission_invoice",
-                resource_type: "FormSubmission",
-                resource_id: submission.id
-              ).count
-            }.by(1)
+        it "shows when the payer first opened it" do
+          admin.update!(time_zone: "UTC") # render the timestamp in a known zone
+          recipient_view(submission, time: Time.utc(2026, 11, 12, 19, 26))
+
+          get event_invoice_path(event, submission_id: submission.id)
+
+          expect(response.body).to include("First opened Nov 12, 2026 at 7:26 PM")
         end
       end
     end
@@ -77,6 +88,19 @@ RSpec.describe "Events::Invoices", type: :request do
         get event_invoice_path(event, submission_id: submission.id)
         expect(response).to have_http_status(:success)
         expect(response.body).to include("INVOICE")
+      end
+
+      it "records the payer's open as a recipient view" do
+        expect { get event_invoice_path(event, submission_id: submission.id), headers: browser_headers }
+          .to change { submission.invoice_views.count }.by(1)
+      end
+
+      it "does not show the admin-only badge to the payer" do
+        recipient_view(submission)
+
+        get event_invoice_path(event, submission_id: submission.id)
+
+        expect(response.body).not_to include("First opened")
       end
 
       it "is denied an invoice for a non-bulk submission" do

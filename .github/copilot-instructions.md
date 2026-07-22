@@ -56,7 +56,7 @@ When changing a model or controller, check whether these related files need upda
 - Prefer POROs over concerns when possible
 - **Prefer decorators (Draper, app/decorators/) over view helpers for model-specific presentation** — when display logic is "about a record" (labels, badges, formatted attributes, status pills), put it on that model's decorator and call `record.decorate.thing`. Reserve `app/helpers/` for generic, cross-model view utilities that aren't tied to one model. Decorators keep presentation testable and out of ERB.
 - Use `after_commit` instead of `after_save` for side effects
-- **Comment only when the reason isn't obvious from the code** — don't restate what the code already says. When a comment is warranted (a non-obvious why, a gotcha), keep it brief and clear.
+- **Write expressive, idiomatic Ruby that explains itself, then comment only what it can't.** Optimize first for clear names, small methods, guard clauses, and standard idioms so the code reads without narration. **Add a comment only when the code genuinely can't be made clear enough on its own** — a non-obvious *why*, a gotcha, a subtle constraint or ordering dependency. Don't restate what the code already says or narrate the obvious. Prefer rewriting unclear code over annotating it; when a comment is warranted, keep it brief.
 
 ## RuboCop (rubocop-rails-omakase)
 
@@ -198,6 +198,23 @@ it needs a `page_bg_class` and register it:**
 - **Match neighboring pages.** Use the same marker as sibling views with the same authorization
   level rather than inventing a new value.
 
+## Admin-only content styling
+
+Some pages are public or shared (registrant/payer-facing) yet surface extra info only admins
+should see (e.g. the invoice "First opened …" badge, the org program-status boxes). Two
+established markers, both keyed on the same `admin-only bg-blue-100` convention:
+
+- **Whole page:** `content_for(:page_bg_class, "admin-only bg-blue-100")` — tints an entire
+  admin-only page (this is one of the `page_bg_class` policy markers above).
+- **Inline element:** add `admin-only bg-blue-100` to the element — the blue tint signals
+  "admin-only" info embedded in an otherwise-shared page.
+
+**`admin-only` is a semantic marker only — there is NO CSS rule that hides it.** It documents
+intent and carries the blue tint; it does not gate visibility. You MUST still gate the content
+in ERB by the viewer's role — `current_user&.super_user?`, `allowed_to?(:manage?, …)`, or the
+relevant policy — so non-admins never receive it in the response. The class only tints what
+admins already see. Match how sibling admin-only elements are gated rather than inventing a check.
+
 ## Lazy index/filter frames
 
 Filterable index pages load their rows lazily in a Turbo frame so changing a
@@ -225,6 +242,7 @@ this). Match the existing pattern:
 
 ## JavaScript
 
+- **Reach for JavaScript last — prefer a no-JS solution first.** Before writing any Stimulus/JS, check whether the behavior can be done declaratively with: semantic HTML and native elements (`<details>`/`<summary>` for disclosure, `<dialog>`, real form controls), Tailwind/CSS state (`hover:`, `focus:`, `group-hover:`, `peer-*`, `:has()`, transitions/animations — e.g. a hover tooltip or a toggle), or Turbo (frames/streams) for navigation and partial updates. Only add Stimulus/JS when the behavior genuinely can't be expressed that way, and keep it minimal when you do. Reference existing no-JS patterns before introducing a controller.
 - ES6+ syntax, ESM imports/exports, `const`/`let` (no `var`)
 - Use `const` for fixed values — not `SCREAMING_SNAKE_CASE` constants (e.g., `const styleId = "foo"` not `const STYLE_ID = "foo"`)
 - **Strongly prefer Stimulus** for JavaScript behavior — do not write raw/inline JS or jQuery

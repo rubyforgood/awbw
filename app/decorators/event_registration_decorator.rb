@@ -11,6 +11,11 @@ class EventRegistrationDecorator < ApplicationDecorator
     amber: "bg-amber-50 text-amber-700 border-amber-200"
   }.freeze
 
+  # Formatted recipient invoice opens, oldest first, for the admin-only badge.
+  def invoice_view_labels
+    invoice_view_times.map { |time| InvoiceViewedLabel.for(time) }
+  end
+
   # Nil when CE isn't in play (so the index can show a "Create" affordance instead).
   # `simulate_paid:` lets the CE callout's ?admin=true preview the post-payment state
   # without recording a payment.

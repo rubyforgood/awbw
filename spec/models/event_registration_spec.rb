@@ -1130,36 +1130,45 @@ RSpec.describe EventRegistration, type: :model do
   describe "invoice view tracking" do
     let(:registration) { create(:event_registration) }
 
-    def track_invoice_view(reg)
+    def track_invoice_view(reg, viewer_role: "recipient")
       create(
         :ahoy_event,
         name: EventRegistration::INVOICE_VIEW_EVENT,
-        properties: { resource_type: "EventRegistration", resource_id: reg.id }
+        properties: { resource_type: "EventRegistration", resource_id: reg.id, viewer_role: viewer_role }
       )
     end
 
-    it "reports whether the invoice has been viewed" do
+    it "counts recipient opens but ignores admin previews" do
       expect(registration.invoice_viewed?).to be(false)
+
+      track_invoice_view(registration, viewer_role: "admin")
+      expect(registration.invoice_viewed?).to be(false)
+
       track_invoice_view(registration)
       expect(registration.invoice_viewed?).to be(true)
     end
 
-    it "exposes first and last view timestamps" do
+    it "returns recipient view times oldest first" do
       travel_to(2.days.ago) { track_invoice_view(registration) }
       travel_to(1.hour.ago) { track_invoice_view(registration) }
+      track_invoice_view(registration, viewer_role: "admin")
 
-      expect(registration.invoice_first_viewed_at).to be_within(1.second).of(2.days.ago)
-      expect(registration.invoice_last_viewed_at).to be_within(1.second).of(1.hour.ago)
+      times = registration.invoice_view_times
+      expect(times.size).to eq(2)
+      expect(times.first).to be_within(1.second).of(2.days.ago)
+      expect(times.last).to be_within(1.second).of(1.hour.ago)
     end
 
-    it "scopes registrations by whether their invoice was viewed" do
+    it "scopes registrations by whether a recipient opened the invoice" do
       viewed = registration
+      admin_only = create(:event_registration)
       unviewed = create(:event_registration)
       track_invoice_view(viewed)
+      track_invoice_view(admin_only, viewer_role: "admin")
 
       expect(EventRegistration.invoice_viewed).to include(viewed)
-      expect(EventRegistration.invoice_viewed).not_to include(unviewed)
-      expect(EventRegistration.invoice_not_viewed).to include(unviewed)
+      expect(EventRegistration.invoice_viewed).not_to include(admin_only, unviewed)
+      expect(EventRegistration.invoice_not_viewed).to include(admin_only, unviewed)
       expect(EventRegistration.invoice_not_viewed).not_to include(viewed)
     end
   end

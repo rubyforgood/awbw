@@ -17,12 +17,11 @@ module Events
         authorize! @submission, to: :show_invoice?
         @invoice = EventInvoice.from_bulk_payment(@submission)
 
-        # Record that the payer opened their bulk-payment invoice. The blank
-        # admin template (else branch) is an internal tool, so it isn't tracked.
-        track_view("form_submission_invoice", {
+        track_view("event_bulk_payment_invoice", {
           resource_type: "FormSubmission",
           resource_id: @submission.id,
-          event_id: @event.id
+          event_id: @event.id,
+          viewer_role: viewer_role
         })
       else
         # The blank template is an admin tool.

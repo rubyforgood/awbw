@@ -1,4 +1,8 @@
 class FormSubmission < ApplicationRecord
+  include InvoiceViewTrackable
+
+  INVOICE_VIEW_EVENT = "view.event_bulk_payment_invoice".freeze
+
   belongs_to :person
   belongs_to :form
   belongs_to :event, optional: true

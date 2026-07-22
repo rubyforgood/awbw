@@ -59,6 +59,12 @@ module AhoyTracking
   def track_print(resource)   = track(:print, resource)
   def track_download(resource)= track(:download, resource)
 
+  # Marks tracked views as an admin preview vs the actual recipient opening a
+  # page, so recipient-only view counts can exclude admins.
+  def viewer_role
+    current_user&.super_user? ? "admin" : "recipient"
+  end
+
   def track_create(resource)  = track(:create, resource)
   def track_update(resource)  = track(:update, resource)
   def track_destroy(resource) = track(:destroy, resource)

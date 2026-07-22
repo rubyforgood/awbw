@@ -1,6 +1,11 @@
 class FormSubmissionDecorator < ApplicationDecorator
   delegate_all
 
+  # Formatted recipient invoice opens, oldest first, for the admin-only badge.
+  def invoice_view_labels
+    invoice_view_times.map { |time| InvoiceViewedLabel.for(time) }
+  end
+
   def matched_attendees(event_registrations)
     object.bulk_payment_attendees.map do |attendee|
       first = attendee["first_name"]&.strip

@@ -36,12 +36,11 @@ module Events
       @event = @event_registration.event
       @invoice = EventInvoice.from_registration(@event_registration)
 
-      # Record that the registrant (or whoever holds the slug) opened their
-      # invoice, so admins can tell whether it's been seen yet.
       track_view("event_registration_invoice", {
         resource_type: "EventRegistration",
         resource_id: @event_registration.id,
-        event_id: @event.id
+        event_id: @event.id,
+        viewer_role: viewer_role
       })
     end
 
