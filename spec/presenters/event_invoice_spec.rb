@@ -96,6 +96,35 @@ RSpec.describe EventInvoice do
       expect(item.unit_price_cents).to eq(150_000)
       expect(invoice.total_cents).to eq(150_000)
     end
+
+    it "is editable so the view renders it as a fillable form" do
+      expect(described_class.from_event(event)).to be_editable
+    end
+  end
+
+  describe "LineItem#unit_price_field_value" do
+    it "renders whole dollars without cents" do
+      item = EventInvoice::LineItem.new(unit_price_cents: 150_000)
+      expect(item.unit_price_field_value).to eq("1500")
+    end
+
+    it "keeps the cents when the amount is not a whole dollar" do
+      item = EventInvoice::LineItem.new(unit_price_cents: 150_050)
+      expect(item.unit_price_field_value).to eq("1500.50")
+    end
+
+    it "is blank when there is no price" do
+      expect(EventInvoice::LineItem.new(unit_price_cents: 0).unit_price_field_value).to eq("")
+    end
+  end
+
+  describe "#editable?" do
+    let(:event) { create(:event) }
+
+    it "is false for a registration invoice" do
+      registration = create(:event_registration, event: event)
+      expect(described_class.from_registration(registration)).not_to be_editable
+    end
   end
 
   describe ".from_bulk_payment" do

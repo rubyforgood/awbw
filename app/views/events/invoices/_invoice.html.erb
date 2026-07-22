@@ -1,6 +1,11 @@
 <%# Renders one EventInvoice as a printable document. Shared by the per-
-    registration and bulk-payment invoice pages. `invoice` is an EventInvoice. %>
-<article class="mx-auto max-w-3xl bg-white text-gray-800 px-8 py-10 print:px-0 print:py-0 print:max-w-none">
+    registration and bulk-payment invoice pages. `invoice` is an EventInvoice.
+    When `invoice.editable?` (the blank template) the bill-to, attention, meta,
+    line item, and a notes area become fillable inputs and the amounts/total
+    recompute live before printing. %>
+<% editable = invoice.editable? %>
+<% field_class = "w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-gray-400 focus:outline-none focus:ring-0 print:border-gray-300" %>
+<article class="mx-auto max-w-3xl bg-white text-gray-800 px-8 py-10 print:px-0 print:py-0 print:max-w-none"<%= %( data-controller="invoice-editor").html_safe if editable %>>
   <%# Header: issuer details (left) + brand logo (right) %>
   <header class="flex items-start justify-between gap-6">
     <address class="not-italic text-sm leading-snug">
@@ -18,36 +23,49 @@
   <%# Bill-to %>
   <div class="space-y-1">
     <p class="text-sm font-bold">Invoice To:</p>
-    <div class="rounded-lg border border-gray-300 px-4 py-3 text-sm leading-relaxed">
-      <p class="font-medium"><%= invoice.bill_to_name %></p>
-      <% invoice.bill_to_address_lines.each do |line| %>
-        <p><%= line %></p>
-      <% end %>
-      <% if invoice.bill_to_email.present? %>
-        <p class="text-gray-500"><%= invoice.bill_to_email %></p>
-      <% end %>
-    </div>
+    <% if editable %>
+      <textarea rows="3" class="<%= field_class %> leading-relaxed" placeholder="Name&#10;Street address&#10;City, State ZIP&#10;email@example.com"></textarea>
+    <% else %>
+      <div class="rounded-lg border border-gray-300 px-4 py-3 text-sm leading-relaxed">
+        <p class="font-medium"><%= invoice.bill_to_name %></p>
+        <% invoice.bill_to_address_lines.each do |line| %>
+          <p><%= line %></p>
+        <% end %>
+        <% if invoice.bill_to_email.present? %>
+          <p class="text-gray-500"><%= invoice.bill_to_email %></p>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 
   <%# Attention %>
   <div class="space-y-1 mt-5">
     <p class="text-sm font-bold">Attention:</p>
-    <div class="rounded-lg border border-gray-300 px-4 py-3 text-sm">
-      <%= invoice.attention.presence || "—" %>
-    </div>
+    <% if editable %>
+      <input type="text" class="<%= field_class %>" placeholder="Name">
+    <% else %>
+      <div class="rounded-lg border border-gray-300 px-4 py-3 text-sm">
+        <%= invoice.attention.presence || "—" %>
+      </div>
+    <% end %>
   </div>
 
   <%# Meta row: number / date / reference / client id %>
   <div class="mt-6 rounded-lg border border-gray-300 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 text-center">
     <% [
-         [ "Invoice Number", invoice.number ],
-         [ "Invoice Date", invoice.date&.strftime("%-d %b, %Y") ],
-         [ "Your Reference", invoice.reference ],
-         [ "Client ID", invoice.client_id ]
-       ].each do |label, value| %>
+         [ "Invoice Number", invoice.number, "R-1024" ],
+         [ "Invoice Date", invoice.date&.strftime("%-d %b, %Y"), "" ],
+         [ "Your Reference", invoice.reference, "" ],
+         [ "Client ID", invoice.client_id, "" ]
+       ].each do |label, value, placeholder| %>
       <div class="px-3 py-3">
         <p class="text-xs font-bold text-gray-600"><%= label %></p>
-        <p class="text-sm mt-1"><%= value.presence || " " %></p>
+        <% if editable %>
+          <input type="text" value="<%= value %>" placeholder="<%= placeholder %>"
+                 class="mt-1 w-full rounded-md border border-gray-200 px-2 py-1 text-sm text-center focus:border-gray-400 focus:outline-none focus:ring-0 print:border-gray-200">
+        <% else %>
+          <p class="text-sm mt-1"><%= value.presence || " " %></p>
+        <% end %>
       </div>
     <% end %>
   </div>
@@ -65,22 +83,51 @@
     </thead>
     <tbody>
       <% invoice.line_items.each do |item| %>
-        <tr class="border-b border-gray-100">
-          <td class="py-2 pr-3 whitespace-nowrap align-top"><%= item.date&.strftime("%m/%d/%y") %></td>
-          <td class="py-2 pr-3 align-top">
-            <%= item.description %>
-            <% if item.details.any? %>
-              <ul class="mt-1 text-xs text-gray-500 leading-relaxed">
-                <% item.details.each do |detail| %>
-                  <li><%= detail %></li>
-                <% end %>
-              </ul>
-            <% end %>
-          </td>
-          <td class="py-2 px-3 text-right tabular-nums align-top"><%= item.quantity %></td>
-          <td class="py-2 px-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(item.unit_price_cents) %></td>
-          <td class="py-2 pl-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(item.amount_cents) %></td>
-        </tr>
+        <% if editable %>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 pr-3 align-top">
+              <input type="text" placeholder="MM/DD/YY"
+                     class="w-24 rounded-md border border-gray-200 px-2 py-1 text-sm focus:border-gray-400 focus:outline-none focus:ring-0 print:border-gray-200">
+            </td>
+            <td class="py-2 pr-3 align-top">
+              <input type="text" value="<%= item.description %>"
+                     class="w-full rounded-md border border-gray-200 px-2 py-1 text-sm focus:border-gray-400 focus:outline-none focus:ring-0 print:border-gray-200">
+            </td>
+            <td class="py-2 px-3 align-top">
+              <input type="number" min="0" step="1" value="<%= item.quantity %>"
+                     data-invoice-editor-target="quantity" data-action="invoice-editor#recompute"
+                     class="w-16 ml-auto block rounded-md border border-gray-200 px-2 py-1 text-sm text-right tabular-nums focus:border-gray-400 focus:outline-none focus:ring-0 print:border-gray-200">
+            </td>
+            <td class="py-2 px-3 align-top">
+              <div class="flex items-center justify-end gap-1">
+                <span class="text-gray-400">$</span>
+                <input type="text" inputmode="decimal" value="<%= item.unit_price_field_value %>"
+                       data-invoice-editor-target="unitPrice" data-action="invoice-editor#recompute"
+                       class="w-24 rounded-md border border-gray-200 px-2 py-1 text-sm text-right tabular-nums focus:border-gray-400 focus:outline-none focus:ring-0 print:border-gray-200">
+              </div>
+            </td>
+            <td class="py-2 pl-3 text-right tabular-nums align-top whitespace-nowrap pt-3">
+              <span data-invoice-editor-target="lineAmount"><%= dollars_from_cents(item.amount_cents) %></span>
+            </td>
+          </tr>
+        <% else %>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 pr-3 whitespace-nowrap align-top"><%= item.date&.strftime("%m/%d/%y") %></td>
+            <td class="py-2 pr-3 align-top">
+              <%= item.description %>
+              <% if item.details.any? %>
+                <ul class="mt-1 text-xs text-gray-500 leading-relaxed">
+                  <% item.details.each do |detail| %>
+                    <li><%= detail %></li>
+                  <% end %>
+                </ul>
+              <% end %>
+            </td>
+            <td class="py-2 px-3 text-right tabular-nums align-top"><%= item.quantity %></td>
+            <td class="py-2 px-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(item.unit_price_cents) %></td>
+            <td class="py-2 pl-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(item.amount_cents) %></td>
+          </tr>
+        <% end %>
       <% end %>
     </tbody>
     <%# With nothing applied (the blank template and bulk-payment invoices) the
@@ -92,12 +139,20 @@
           <td colspan="3"></td>
           <td class="pt-4 text-right text-sm font-bold">Total</td>
           <td class="pt-4 text-right">
-            <span class="inline-block rounded-md border border-gray-400 px-3 py-1 text-sm font-bold tabular-nums whitespace-nowrap"><%= dollars_from_cents(invoice.total_cents) %></span>
+            <span class="inline-block rounded-md border border-gray-400 px-3 py-1 text-sm font-bold tabular-nums whitespace-nowrap"<%= %( data-invoice-editor-target="total").html_safe if editable %>><%= dollars_from_cents(invoice.total_cents) %></span>
           </td>
         </tr>
       </tfoot>
     <% end %>
   </table>
+
+  <%# Notes: who the registration fees cover. Editable template only. %>
+  <% if editable %>
+    <div class="mt-6">
+      <label class="text-xs font-bold text-gray-700">Names included in registration fees</label>
+      <textarea rows="3" class="<%= field_class %> mt-1" placeholder="One name per line…"></textarea>
+    </div>
+  <% end %>
 
   <%# Payments and credits already applied, and the balance the payer still owes. %>
   <% if invoice.amount_applied_cents.positive? %>

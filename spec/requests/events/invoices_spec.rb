@@ -17,6 +17,15 @@ RSpec.describe "Events::Invoices", type: :request do
         expect(response.body).to include("$1,500")
       end
 
+      it "renders the blank template as a fillable form with a names/notes area" do
+        get event_invoice_path(event)
+
+        expect(response.body).to include("data-controller=\"invoice-editor\"")
+        expect(response.body).to include("data-invoice-editor-target=\"quantity\"")
+        expect(response.body).to include("data-invoice-editor-target=\"unitPrice\"")
+        expect(response.body).to include("Names included in registration fees")
+      end
+
       context "with a submission_id" do
         let(:form) { create(:form) }
         let(:payer) { create(:person) }

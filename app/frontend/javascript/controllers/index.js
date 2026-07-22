@@ -102,6 +102,9 @@ application.register("grant-select", GrantSelectController)
 import InactiveToggleController from "./inactive_toggle_controller"
 application.register("inactive-toggle", InactiveToggleController)
 
+import InvoiceEditorController from "./invoice_editor_controller"
+application.register("invoice-editor", InvoiceEditorController)
+
 import OptimisticBookmarkController from "./optimistic_bookmark_controller"
 application.register("optimistic-bookmark", OptimisticBookmarkController)
 

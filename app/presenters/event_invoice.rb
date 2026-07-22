@@ -16,6 +16,16 @@ class EventInvoice
     def details
       self[:details] || []
     end
+
+    # The unit price as a bare, comma-free dollar string suitable for prefilling
+    # an editable input (e.g. "1500" or "1500.50") — whole dollars drop the cents.
+    def unit_price_field_value
+      cents = unit_price_cents.to_i
+      return "" if cents.zero?
+
+      dollars, remainder = cents.divmod(100)
+      remainder.zero? ? dollars.to_s : "#{dollars}.#{remainder.to_s.rjust(2, "0")}"
+    end
   end
 
   # One applied payment or credit (scholarship/discount) that reduces the balance
@@ -72,6 +82,7 @@ class EventInvoice
 
   # A blank invoice template carrying only the event's content (one attendee at
   # the event cost). The bill-to and attention are left empty to be filled in.
+  # Marked editable so the view renders it as a fillable, printable form.
   def self.from_event(event)
     new(
       event: event,
@@ -89,7 +100,8 @@ class EventInvoice
           quantity: 1,
           unit_price_cents: event.cost_cents.to_i
         )
-      ]
+      ],
+      editable: true
     )
   end
 
@@ -140,7 +152,8 @@ class EventInvoice
 
   def initialize(event:, number:, date:, client_id:, bill_to_name:,
                  bill_to_address_lines:, bill_to_email:, attention:, line_items:,
-                 reference: nil, entries: [], amount_applied_cents: 0)
+                 reference: nil, entries: [], amount_applied_cents: 0,
+                 editable: false)
     @event = event
     @number = number
     @date = date
@@ -153,7 +166,11 @@ class EventInvoice
     @reference = reference
     @entries = entries
     @amount_applied_cents = amount_applied_cents
+    @editable = editable
   end
+
+  # True only for the blank template, which the view renders as a fillable form.
+  def editable? = @editable
 
   def total_cents
     line_items.sum(&:amount_cents)
