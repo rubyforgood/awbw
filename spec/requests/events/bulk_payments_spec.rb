@@ -295,6 +295,22 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(response.body).not_to include("Cancel registration")
     end
 
+    it "shows a pay-with-credit-card button while payment is pending" do
+      get_ticket
+
+      expect(response.body).to include(bulk_payment_pay_path(submission.slug))
+      expect(response.body).to include("Pay with credit card")
+    end
+
+    it "hides the pay button once a payment has been recorded" do
+      submission.create_payment!(type: "CashPayment", amount_cents: 1000, amount_cents_remaining: 1000,
+                                 person: payer, payer_type: "Person")
+
+      get_ticket
+
+      expect(response.body).not_to include(bulk_payment_pay_path(submission.slug))
+    end
+
     it "links the invoice back to the ticket" do
       get_ticket
 
@@ -346,6 +362,58 @@ RSpec.describe "Events::BulkPayments", type: :request do
 
       expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
       expect(flash[:notice]).to eq("Confirmation email sent.")
+    end
+  end
+
+  describe "POST pay" do
+    let(:event) { create(:event, :publicly_visible, cost_cents: 15_00, title: "Spring Workshop") }
+    let(:payer) { create(:person) }
+    let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
+    let!(:number_field) do
+      create(:form_field, form: form, answer_type: :free_form_input_one_line,
+             field_identifier: "number_of_attendees", name: "Number of attendees", required: false)
+    end
+    let(:fake_session) { double(url: "https://checkout.stripe.com/test") }
+
+    before do
+      submission.form_answers.create!(form_field: number_field, submitted_answer: "3",
+                                      question_name_when_answered: "Number of attendees")
+      fake_processor = double(checkout: fake_session)
+      allow_any_instance_of(Person).to receive(:set_payment_processor)
+      allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
+      sign_out admin
+    end
+
+    it "redirects the public payer to Stripe Checkout for a pending submission" do
+      post bulk_payment_pay_path(submission.slug)
+
+      expect(response).to redirect_to("https://checkout.stripe.com/test")
+      expect(response.status).to eq(303)
+    end
+
+    it "returns to the ticket when a payment already exists" do
+      submission.create_payment!(type: "CashPayment", amount_cents: 4500, amount_cents_remaining: 4500,
+                                 person: payer, payer_type: "Person")
+
+      post bulk_payment_pay_path(submission.slug)
+
+      expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
+      expect(flash[:notice]).to eq("This payment has already been paid.")
+    end
+
+    it "returns to the ticket when no payment is due" do
+      event.update!(cost_cents: 0)
+
+      post bulk_payment_pay_path(submission.slug)
+
+      expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
+      expect(flash[:alert]).to eq("No payment is due.")
+    end
+
+    it "returns 404 for an unknown slug" do
+      post bulk_payment_pay_path("nope")
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 end

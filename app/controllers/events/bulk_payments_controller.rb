@@ -1,6 +1,6 @@
 module Events
   class BulkPaymentsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :resend_confirmation ]
+    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :resend_confirmation, :pay ]
     before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
 
@@ -109,6 +109,35 @@ module Events
       end
     end
 
+    # Public pay-later action: a payer who chose "Credit card (later)" (or landed
+    # on the ticket with payment pending) returns here to pay by card. Mirrors
+    # Registrations#pay. The resulting Stripe charge carries the submission id and
+    # flows through the existing webhook (PayChargeExtensions#create_bulk_payment)
+    # to record the payment.
+    def pay
+      authorize! :bulk_payment, to: :pay?
+
+      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      @event = @submission.event
+
+      if @submission.payment.present?
+        redirect_to bulk_payment_ticket_path(@submission.slug), notice: "This payment has already been paid."
+        return
+      end
+
+      if @submission.bulk_payment_amount_cents(@event) <= 0
+        redirect_to bulk_payment_ticket_path(@submission.slug), alert: "No payment is due."
+        return
+      end
+
+      checkout_session = build_checkout_session(
+        @submission,
+        quantity: @submission.bulk_payment_attendee_count,
+        attendees_json: @submission.bulk_payment_attendees.to_json
+      )
+      redirect_to checkout_session.url, allow_other_host: true, status: :see_other
+    end
+
     private
 
     def visible_form_fields
@@ -146,22 +175,28 @@ module Events
       form_params[payment_method_field.id.to_s]&.downcase == FormBuilderService::PAYMENT_METHOD_PAY_NOW.downcase
     end
 
+    # Submit-path checkout: quantity and attendees come from the just-submitted
+    # form params (no persisted answers to read yet).
     def create_stripe_checkout_session(submission)
-      person = submission.person
-      unit_amount = @event.cost_cents
-
-      attendees_field = @form.form_fields.find_by(field_identifier: "number_of_attendees")
-      qty = attendees_field ? @form_params[attendees_field.id.to_s].to_i : 1
-      qty = 1 if qty < 1
-
-      metadata = { form_submission_id: submission.id, event_id: @event.id }
+      count_field = @form.form_fields.find_by(field_identifier: "number_of_attendees")
+      qty = count_field ? @form_params[count_field.id.to_s].to_i : 1
 
       attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
-      if attendees_field
-        attendees_json = @form_params[attendees_field.id.to_s]
-        metadata[:attendees] = attendees_json if attendees_json.present?
-      end
+      attendees_json = attendees_field ? @form_params[attendees_field.id.to_s] : nil
 
+      build_checkout_session(submission, quantity: qty, attendees_json: attendees_json)
+    end
+
+    # Builds the Stripe Checkout session for a bulk payment. Quantity and the
+    # attendees metadata are passed in so both the submit path (reads form params)
+    # and the pay-later path (reads the saved submission) can share this.
+    def build_checkout_session(submission, quantity:, attendees_json:)
+      quantity = 1 if quantity.to_i < 1
+
+      metadata = { form_submission_id: submission.id, event_id: @event.id }
+      metadata[:attendees] = attendees_json if attendees_json.present?
+
+      person = submission.person
       person.set_payment_processor :stripe
 
       person.payment_processor.checkout(
@@ -171,10 +206,10 @@ module Events
         line_items: [ {
           price_data: {
             currency: "usd",
-            product_data: { name: "#{Form::BULK_PAYMENT_PUBLIC_NAME} (#{qty} attendees): #{@event.title}" },
-            unit_amount: unit_amount
+            product_data: { name: "#{Form::BULK_PAYMENT_PUBLIC_NAME} (#{quantity} attendees): #{@event.title}" },
+            unit_amount: @event.cost_cents
           },
-          quantity: qty
+          quantity: quantity
         } ],
         success_url: bulk_payment_ticket_url(submission.slug, checkout: "success"),
         cancel_url: bulk_payment_ticket_url(submission.slug, checkout: "cancelled")

@@ -14,4 +14,8 @@ class Events::BulkPaymentPolicy < ApplicationPolicy
   def ticket?
     true
   end
+
+  def pay?
+    true
+  end
 end
