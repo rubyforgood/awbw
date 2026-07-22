@@ -104,13 +104,14 @@ class EventDecorator < ApplicationDecorator
     # If both: URL in location field, physical location in description
     # If only URL: URL in location field
     # If only location: location in location field
-    # Prefer the admin-authored short description; fall back to a flattened
-    # version of the rich show-page description when it's blank.
-    event_description = object.short_description.presence || object.rhino_description.to_plain_text
+    # Only the admin-authored plain-text short description. The rich show-page
+    # description is intentionally not used — it can't render in a calendar entry
+    # and may embed images. Blank leaves the calendar entry without a blurb.
+    event_description = object.short_description.presence
 
     if has_url && has_location
       cal_location = object.videoconference_url
-      base_description = "#{location_name}\n\n#{event_description}"
+      base_description = [ location_name, event_description ].compact_blank.join("\n\n")
     elsif has_url
       cal_location = object.videoconference_url
       base_description = event_description

@@ -171,31 +171,17 @@ RSpec.describe EventDecorator do
   end
 
   describe "#calendar_links" do
-    it "falls back to rhino_description plain text when short_description is blank" do
-      event = create(:event)
+    it "does not fall back to rhino_description when short_description is blank" do
+      event = create(:event, short_description: nil)
       event.update!(rhino_description: "<div>Join us for healing through art</div>")
       decorated = event.decorate
 
-      html = decorated.calendar_links
-      doc = Nokogiri::HTML.fragment(html)
-      links = doc.css("a")
+      doc = Nokogiri::HTML.fragment(decorated.calendar_links)
+      hrefs = doc.css("a").map { |a| a["href"] }
 
-      desc_encoded = ERB::Util.url_encode("Join us for healing through art")
+      rhino_encoded = ERB::Util.url_encode("Join us for healing through art")
 
-      google = links.find { |a| a.text == "Google" }
-      expect(google["href"]).to include("details=#{desc_encoded}")
-
-      apple = links.find { |a| a.text == "Apple" }
-      expect(apple["href"]).to include("DESCRIPTION:Join us for healing through art")
-
-      outlook = links.find { |a| a.text == "Outlook" }
-      expect(outlook["href"]).to include("body=#{desc_encoded}")
-
-      office365 = links.find { |a| a.text == "Office 365" }
-      expect(office365["href"]).to include("body=#{desc_encoded}")
-
-      yahoo = links.find { |a| a.text == "Yahoo" }
-      expect(yahoo["href"]).to include("desc=#{desc_encoded}")
+      expect(hrefs).to all(satisfy { |href| !href.include?(rhino_encoded) && !href.include?("healing through art") })
     end
 
     it "uses short_description over rhino_description when present" do
