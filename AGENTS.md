@@ -71,7 +71,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose |
 |---|---|
 | `app/frontend/entrypoints/` | Vite entry points (application.js, application.css) |
-| `app/frontend/javascript/controllers/` | Stimulus controllers (75) |
+| `app/frontend/javascript/controllers/` | Stimulus controllers (76) |
 | `app/frontend/javascript/rhino/` | Rich text editor customizations (mentions, grid) |
 | `app/frontend/stylesheets/` | Tailwind CSS and component styles |
 
@@ -310,6 +310,7 @@ end
 - `grant_details` — Swaps a grant's eligibility criteria + tasks when the grant picker changes
 - `grant_select` — Tom Select grant picker showing each grant's remaining-of-total funds
 - `inactive_toggle` — Gray out expired affiliations
+- `invoice_editor` — Live-recompute each line's amount (quantity × amount-per-person) and the total as the blank event invoice template is filled in before printing
 - `optimistic_bookmark` — Instant bookmark UI feedback
 - `org_toggle` — Organization toggle UI
 - `paginated_fields` — Client-side pagination of nested fields
