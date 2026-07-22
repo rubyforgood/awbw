@@ -20,9 +20,9 @@ Videoconference: <%= event_platform_label(@event) %>
   <%= @event.labelled_cost %>
 <% end %>
 
-<% if @event.rhino_description.present? %>
-  Event details:
-  <%= @event.rhino_description.to_plain_text %>
+<% if @event.short_description.present? %>
+  Details:
+  <%= @event.short_description %>
 <% end %>
 
 View your ticket:

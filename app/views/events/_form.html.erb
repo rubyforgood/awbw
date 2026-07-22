@@ -211,7 +211,7 @@
           <%= f.input :short_description,
                   label: "Short description",
                   as: :text,
-                  hint: "Plain-text blurb for the \"Add to calendar\" links. Calendars don't render HTML — leave blank to fall back to the page description.",
+                  hint: "Plain-text blurb shown on \"Add to calendar\" links and in registration confirmation emails. Calendars don't render HTML. Leave blank to omit it from emails (calendar links fall back to the page description).",
                   input_html: {
                     rows: 3,
                     placeholder: "Short description for calendar entries…",

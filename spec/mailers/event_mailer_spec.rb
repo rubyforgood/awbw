@@ -53,16 +53,35 @@ RSpec.describe EventMailer, type: :mailer do
       expect(body).not_to include("View event")
     end
 
-    context "when the event has a rhino_description" do
-      let(:event) { create(:event, rhino_description: "Join us for an art healing workshop") }
+    context "when the event has a rich rhino_description but no short_description" do
+      let(:event) { create(:event, rhino_description: "Join us for an art healing workshop", short_description: nil) }
       let(:event_registration) { create(:event_registration, event: event) }
 
-      it "includes the rhino_description in the body" do
-        expect(mail.body.encoded).to include("Join us for an art healing workshop")
+      it "does not dump the rich description into either part" do
+        expect(mail.html_part.body.encoded).not_to include("Join us for an art healing workshop")
+        expect(mail.text_part.body.encoded).not_to include("Join us for an art healing workshop")
+      end
+
+      it "does not include a Details section" do
+        expect(mail.body.encoded).not_to include("<strong>Details</strong>")
       end
     end
 
-    context "when the event has no rhino_description" do
+    context "when the event has a short_description" do
+      let(:event) { create(:event, short_description: "A two-day art healing workshop.") }
+      let(:event_registration) { create(:event_registration, event: event) }
+
+      it "includes the short_description in both the HTML and text parts" do
+        expect(mail.html_part.body.encoded).to include("A two-day art healing workshop.")
+        expect(mail.text_part.body.encoded).to include("A two-day art healing workshop.")
+      end
+
+      it "includes the Details section in the HTML part" do
+        expect(mail.html_part.body.encoded).to include("<strong>Details</strong>")
+      end
+    end
+
+    context "when the event has no short_description" do
       let(:event_registration) { create(:event_registration) }
 
       it "does not include the Details section" do
