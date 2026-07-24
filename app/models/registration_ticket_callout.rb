@@ -45,6 +45,13 @@ class RegistrationTicketCallout < ApplicationRecord
   # blank one still falls back via #display_icon_class.
   attribute :icon_class, :string, default: -> { DEFAULT_ICONS["action"] }
 
+  # A custom callout has no built-in key. Persist that as NULL, never a blank
+  # string, so `builtin?`/`.present?`, the nil-keyed `custom`/`builtin` scopes,
+  # the inclusion validation (which allows nil, not blank), and the
+  # [event_id, builtin_key] unique index all agree. Guards against a "" that a
+  # stray blank form field or legacy data would otherwise wedge the event save on.
+  normalizes :builtin_key, with: ->(value) { value.presence }
+
   belongs_to :event
 
   # A callout can link many resources, shown in order on its detail page (PDF

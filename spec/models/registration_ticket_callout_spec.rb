@@ -48,6 +48,13 @@ RSpec.describe RegistrationTicketCallout, type: :model do
       create(:registration_ticket_callout, event:, builtin_key: nil)
       expect(build(:registration_ticket_callout, event:, builtin_key: nil)).to be_valid
     end
+
+    it "treats a blank builtin_key as a custom (nil) callout, not an invalid key" do
+      callout.builtin_key = ""
+      expect(callout).to be_valid
+      expect(callout.builtin_key).to be_nil
+      expect(callout).not_to be_builtin
+    end
   end
 
   describe "scopes and predicates" do
