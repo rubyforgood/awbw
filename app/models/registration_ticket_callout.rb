@@ -45,12 +45,13 @@ class RegistrationTicketCallout < ApplicationRecord
   # blank one still falls back via #display_icon_class.
   attribute :icon_class, :string, default: -> { DEFAULT_ICONS["action"] }
 
-  # A custom callout has no built-in key. Persist that as NULL, never a blank
-  # string, so `builtin?`/`.present?`, the nil-keyed `custom`/`builtin` scopes,
-  # the inclusion validation (which allows nil, not blank), and the
-  # [event_id, builtin_key] unique index all agree. Guards against a "" that a
-  # stray blank form field or legacy data would otherwise wedge the event save on.
-  normalizes :builtin_key, with: ->(value) { value.presence }
+  # A custom callout has no built-in key: store NULL, never a blank string or a
+  # key we don't recognize. Anything that isn't a current built-in — a stray "",
+  # or a since-removed key like the legacy "event_details" — normalizes to nil so
+  # it's treated as a custom callout everywhere (`builtin?`/`.present?`, the
+  # nil-keyed custom/builtin scopes, the inclusion validation, the
+  # [event_id, builtin_key] unique index) instead of wedging the event save.
+  normalizes :builtin_key, with: ->(value) { value.presence_in(BUILTIN_KEYS) }
 
   belongs_to :event
 

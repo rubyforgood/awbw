@@ -565,6 +565,19 @@ RSpec.describe "Events", type: :request do
         expect(event.reload.ce_hours_request_deadline).to eq(Date.new(2026, 7, 1))
         expect(event.ce_payment_due_deadline).to eq(Date.new(2026, 8, 15))
       end
+
+      it "saves an event whose callout carries a since-removed builtin_key, converting it to custom" do
+        legacy = create(:registration_ticket_callout, event:, title: "Event details", callout_type: "reference")
+        legacy.update_column(:builtin_key, "event_details") # a built-in that no longer exists
+
+        patch event_path(event), params: { event: { title: "Updated",
+          registration_ticket_callouts_attributes: { "0" => {
+            id: legacy.id, builtin_key: "event_details", title: "Event details", callout_type: "reference", published: "1" } } } }
+
+        expect(response).to redirect_to(dashboard_event_path(event))
+        expect(legacy.reload.builtin_key).to be_nil
+        expect(legacy).not_to be_builtin
+      end
     end
 
     context "as non-admin" do

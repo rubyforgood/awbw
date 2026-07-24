@@ -28,10 +28,11 @@ RSpec.describe RegistrationTicketCallout, type: :model do
       expect(callout).not_to be_valid
     end
 
-    it "rejects an unknown builtin_key" do
-      callout.builtin_key = "bogus"
-      expect(callout).not_to be_valid
-      expect(callout.errors[:builtin_key]).to be_present
+    it "treats an unknown/since-removed builtin_key as a custom (nil) callout" do
+      callout.builtin_key = "event_details" # a built-in that no longer exists
+      expect(callout).to be_valid
+      expect(callout.builtin_key).to be_nil
+      expect(callout).not_to be_builtin
     end
 
     it "allows only one callout per builtin_key within an event" do
