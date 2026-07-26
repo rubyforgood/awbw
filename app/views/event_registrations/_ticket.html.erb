@@ -176,7 +176,7 @@
         <div class="flex flex-col items-center gap-1.5">
           <% registration_form = event_registration.event.registration_form %>
 
-          <% if registration_form && registration_form.form_submissions.exists?(person: event_registration.registrant) %>
+          <% if registration_form && event_registration.event.form_submissions.exists?(person: event_registration.registrant, form: registration_form) %>
             <%= link_to "View your form responses",
                           event_public_registration_path(event_registration.event, reg: event_registration.slug),
                           class: "text-sm text-gray-500 hover:text-blue-600 underline" %>
