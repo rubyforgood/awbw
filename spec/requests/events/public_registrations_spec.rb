@@ -278,10 +278,12 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
     it "renders a structured details panel from known event data when enabled" do
       pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+      start_date = 2.weeks.from_now.in_time_zone(pacific).change(hour: 9)
+      end_date   = (start_date + 1.day).change(hour: 16, min: 30)
       event.update!(
         autoshow_registration_details: true,
-        start_date: pacific.local(2026, 7, 23, 9),
-        end_date: pacific.local(2026, 7, 24, 16, 30),
+        start_date: start_date,
+        end_date: end_date,
         cost_cents: 150000,
         videoconference_url: "https://zoom.us/j/123",
         videoconference_label: "Zoom"
@@ -298,9 +300,11 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
     it "pluralizes the date and time labels for a multi-day event" do
       pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+      start_date = 2.weeks.from_now.in_time_zone(pacific).change(hour: 9)
+      end_date   = (start_date + 1.day).change(hour: 16, min: 30)
       event.update!(autoshow_registration_details: true,
-                    start_date: pacific.local(2026, 7, 23, 9),
-                    end_date: pacific.local(2026, 7, 24, 16, 30))
+                    start_date: start_date,
+                    end_date: end_date)
 
       get new_event_public_registration_path(event)
 
