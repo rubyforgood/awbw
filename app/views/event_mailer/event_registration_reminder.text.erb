@@ -1,32 +1,34 @@
-Event reminder
-
-Hello <%= @person.full_name %>,
-
+Event reminder Hello<%= @person.full_name %>,
 <% if @custom_message.present? %>
-<%= strip_tags(@custom_message).strip %>
-
-<% end %><% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
-<%= @event.pre_title %>
+  <%= strip_tags(@custom_message).strip %>
+<% end %>
+<% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
+  <%= @event.pre_title %>
 <% end %><%= @event.title %>
-<% Time.use_zone(@time_zone) do %><% if event_dates_detail_label(@event.object).present? %><%= event_dates_detail_label(@event.object) %>
-<% end %><% if event_times_label(@event.object).present? %><%= event_times_label(@event.object) %>
-<% end %><% end %>
+<% Time.use_zone(@time_zone) do %>
+  <% if event_dates_detail_label(@event.object).present? %>
+    <%= event_dates_detail_label(@event.object) %>
+  <% end %>
+
+  <% if event_times_label(@event.object).present? %>
+    <%= event_times_label(@event.object) %>
+  <% end %>
+<% end %>
 <% if event_location_label(@event.object).present? %>
-Location: <%= event_location_label(@event.object) %>
+  Location:
+  <%= event_location_label(@event.object) %>
 <% end %>
 
 <% if event_platform_label(@event.object).present? %>
-<%= event_platform_label(@event.object) %>
+  <%= event_platform_label(@event.object) %>
 <% end %>
 
 <% if @event.labelled_cost.present? %>
-<%= @event.labelled_cost %>
+  <%= @event.labelled_cost %>
 <% end %>
 <%= render "ce_deadlines", event: @event %>
 <% if @event_registration.slug.present? %>
-View your ticket for event details, directions, and calendar links:
-<%= registration_ticket_url(@event_registration.slug) %>
+  "View your ticket for everything you need to attend, plus a calendar link:
+  <%= registration_ticket_url(@event_registration.slug) %>
 <% end %>
-
---
-This is an automated reminder from <%= @organization_name %>.
+-- This is an automated reminder from<%= @organization_name %>.
