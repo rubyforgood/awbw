@@ -74,8 +74,8 @@ Rails.application.routes.draw do
     end
   end
   resources :community_news
-  get "bulk_payment/:slug", to: "events/bulk_payments#ticket", as: :bulk_payment_ticket
-  post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payments#resend_confirmation", as: :bulk_payment_resend_confirmation
+  get "bulk_payment/:slug", to: "events/bulk_payment_submissions#ticket", as: :bulk_payment_ticket
+  post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payment_submissions#resend_confirmation", as: :bulk_payment_resend_confirmation
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
   get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
@@ -150,19 +150,21 @@ Rails.application.routes.draw do
       get "staff/edit", action: :edit_staff, as: :edit_staff
       patch "staff", action: :update_staff
       get :recipients
-      get :bulk_payments
+      get :bulk_payments, to: "events/bulk_payments#index"
       get :preview_reminder
       patch :preview
       post :copy_registration_form
       post :confirm_reminder
       post :send_reminder
-      post :allocate_bulk_payment
-      post :create_bulk_payment
+      post :allocate_bulk_payment, to: "events/bulk_payments#allocate"
+      post :bulk_payments, to: "events/bulk_payments#create"
+      post :link_bulk_payment, to: "events/bulk_payments#link"
+      delete :unlink_bulk_payment, to: "events/bulk_payments#unlink"
     end
     resources :registration_ticket_callouts, only: [ :show, :update ]
     resource :registrations, only: %i[ create ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
-    resource :bulk_payment, only: [ :new, :create, :show ], module: :events
+    resource :bulk_payment, only: [ :new, :create, :show ], controller: "events/bulk_payment_submissions"
     resource :invoice, only: [ :show ], module: :events
     get "form_submissions/:person_id", to: "events/form_submissions#show", as: :registrant_submissions
   end

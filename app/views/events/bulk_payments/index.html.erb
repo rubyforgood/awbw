@@ -21,7 +21,7 @@
   <% if @submissions.any? %>
     <div class="grid grid-cols-1 gap-3">
       <% @submissions.each do |submission| %>
-        <%= render "bulk_payment_card", submission: submission,
+        <%= render "events/bulk_payment_card", submission: submission,
               event_registrations: @event_registrations,
               allocated_by_registration: @allocated_by_registration %>
       <% end %>
