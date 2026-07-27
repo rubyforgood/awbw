@@ -134,9 +134,9 @@
     </div>
 
     <% event_form_ids = @event.registration_form_ids %>
-    <% form_submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: @event_registrations.map(&:registrant_id)).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
+    <% form_submissions = event_form_ids.any? ? FormSubmission.where(event_id: @event.id, person_id: @event_registrations.map(&:registrant_id)).joins(:form).where(form_id: event_form_ids).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
     <% scholarship_form = @event.scholarship_form %>
-    <% scholarship_submitter_ids = scholarship_form ? FormSubmission.joins(:form_answers).where(form_id: scholarship_form.id, role: "scholarship", person_id: @event_registrations.map(&:registrant_id)).distinct.pluck(:person_id).to_set : Set.new %>
+    <% scholarship_submitter_ids = scholarship_form ? FormSubmission.where(event_id: @event.id, form_id: scholarship_form.id, role: "scholarship", person_id: @event_registrations.map(&:registrant_id)).joins(:form_answers).distinct.pluck(:person_id).to_set : Set.new %>
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <% payment_col = @event.cost_cents.to_i > 0 %>
