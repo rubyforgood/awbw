@@ -10,7 +10,7 @@ module Events
     end
 
     def new
-      authorize! :bulk_payment, to: :new?
+      authorize! :bulk_payment
 
       @form_fields = visible_form_fields
       @event = @event.decorate
@@ -19,7 +19,7 @@ module Events
     end
 
     def create
-      authorize! :bulk_payment, to: :create?
+      authorize! :bulk_payment
 
       @form_params = params.dig(:bulk_payment, :form_fields)&.to_unsafe_h || {}
 
@@ -62,7 +62,7 @@ module Events
     # with no slug) reach it by id (?submission_id=).
     def show
       if params[:reg].present?
-        authorize! :bulk_payment, to: :show?
+        authorize! :bulk_payment
         # where.not(slug: nil) keeps a blank reg from matching a slugless record.
         @submission = FormSubmission.bulk_payment.where.not(slug: nil)
                                     .find_by!(slug: params[:reg], event_id: @event.id)
@@ -78,7 +78,7 @@ module Events
     # registrants they paid for, and the submitted form — but none of the
     # per-person admin actions found on the bulk payments dashboard.
     def ticket
-      authorize! :bulk_payment, to: :ticket?
+      authorize! :bulk_payment
 
       @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
       @payment = @submission.payment
