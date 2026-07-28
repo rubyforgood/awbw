@@ -82,7 +82,7 @@
             <div class="grid grid-cols-2 gap-x-4 items-center py-2">
               <div class="min-w-0"><%= person_profile_button(reg.registrant, subtitle: reg.registrant.preferred_email, path_params: { return_to: "bulk_payments", event_id: @event.id, expand: submission.id }) %></div>
 
-              <div class="flex flex-wrap items-center justify-center gap-4">
+              <div class="flex flex-wrap items-center gap-4">
                 <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
                             title: "View #{reg.registrant.name}'s registration for #{@event.title}",
                             class: "inline-flex items-center w-24 gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
