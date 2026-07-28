@@ -99,7 +99,7 @@ RSpec.describe FormSubmission do
       end
 
       it "returns the stored ids" do
-        submission.update!(metadata: { "linked_registration_ids" => [reg1.id, reg2.id] })
+        submission.update!(metadata: { "linked_registration_ids" => [ reg1.id, reg2.id ] })
         expect(submission.linked_registration_ids).to contain_exactly(reg1.id, reg2.id)
       end
     end
@@ -108,14 +108,14 @@ RSpec.describe FormSubmission do
       it "adds a registration id to metadata" do
         submission.link_registration!(reg1.id)
 
-        expect(submission.reload.linked_registration_ids).to eq([reg1.id])
+        expect(submission.reload.linked_registration_ids).to eq([ reg1.id ])
       end
 
       it "does not duplicate an existing id" do
         submission.link_registration!(reg1.id)
         submission.link_registration!(reg1.id)
 
-        expect(submission.reload.linked_registration_ids).to eq([reg1.id])
+        expect(submission.reload.linked_registration_ids).to eq([ reg1.id ])
       end
 
       it "preserves other metadata" do
@@ -123,7 +123,7 @@ RSpec.describe FormSubmission do
         submission.link_registration!(reg1.id)
 
         expect(submission.reload.metadata["other_key"]).to eq("value")
-        expect(submission.linked_registration_ids).to eq([reg1.id])
+        expect(submission.linked_registration_ids).to eq([ reg1.id ])
       end
     end
 
@@ -133,14 +133,14 @@ RSpec.describe FormSubmission do
         submission.link_registration!(reg2.id)
         submission.unlink_registration!(reg1.id)
 
-        expect(submission.reload.linked_registration_ids).to eq([reg2.id])
+        expect(submission.reload.linked_registration_ids).to eq([ reg2.id ])
       end
 
       it "is a no-op when the id is not linked" do
         submission.link_registration!(reg1.id)
         submission.unlink_registration!(reg2.id)
 
-        expect(submission.reload.linked_registration_ids).to eq([reg1.id])
+        expect(submission.reload.linked_registration_ids).to eq([ reg1.id ])
       end
     end
 

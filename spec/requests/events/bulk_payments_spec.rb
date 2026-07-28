@@ -233,7 +233,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
            params: { submission_id: submission.id, event_registration_id: event_registration.id },
            as: :turbo_stream
 
-      expect(submission.reload.linked_registration_ids).to eq([event_registration.id])
+      expect(submission.reload.linked_registration_ids).to eq([ event_registration.id ])
       expect(response).to have_http_status(:ok)
     end
 
