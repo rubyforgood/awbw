@@ -131,7 +131,7 @@
 
       <% if submission.bulk_payment_attendees.present? %>
         <div class="px-3">
-          <div class="grid grid-cols-2 items-center py-2">
+          <div class="grid grid-cols-2 items-center py-2 gap-2">
             <% submission.bulk_payment_attendees.each do |attendee| %>
               <% best = submission.best_match_for(attendee, event_registrations) %>
 
