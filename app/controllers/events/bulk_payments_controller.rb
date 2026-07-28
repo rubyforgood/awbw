@@ -5,23 +5,24 @@ module Events
     def index
       authorize! @event
 
-      @event = @event.decorate
       @event_registrations = @event.event_registrations.active.includes(:registrant)
       @submissions = @event.form_submissions
                            .where(role: "bulk_payment")
                            .includes(:person, form_answers: :form_field, payment: :allocations)
                            .order(created_at: :desc)
       @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
+      @event = @event.decorate
     end
 
     def create
       authorize! @event
-      @event = @event.decorate
       @event_registrations = @event.event_registrations.active.includes(:registrant)
       @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
 
       submission = @event.form_submissions.find(params[:submission_id])
       payment_type = params[:payment_type]
+
+      @event = @event.decorate
 
       unless %w[CashPayment CheckPayment].include?(payment_type)
         flash.now[:alert] = "Invalid payment type"
@@ -143,9 +144,6 @@ module Events
       @event = Event.find(params[:id])
     end
 
-    # Reloads the payment and the data its bulk payment card needs, so the
-    # allocate turbo stream can re-render the whole card with fresh due/allocated
-    # totals and re-evaluate whether each registration is now paid in full.
     def assign_allocation_card_data(payment)
       @payment = payment.reload
       @submission = @payment.form_submission
@@ -153,17 +151,12 @@ module Events
       @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
     end
 
-    # Reloads the submission and the data its bulk payment card needs, so the
-    # link/unlink turbo stream can re-render the whole card with fresh linked
-    # registration data.
     def assign_bulk_payment_card_data(submission)
       @submission = submission.reload.decorate
       @event_registrations = @event.event_registrations.active.includes(:registrant)
       @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
     end
 
-    # Allocated cents per registration id, fetched in one grouped query so the
-    # bulk payment cards read totals from a hash instead of querying per row.
     def allocated_cents_by_registration(registrations)
       Allocation
         .where(allocatable_type: "EventRegistration", allocatable_id: registrations.ids)

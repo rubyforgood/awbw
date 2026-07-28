@@ -10,7 +10,7 @@ module Events
     end
 
     def new
-      authorize! :bulk_payment
+      authorize! :form_submission
 
       @form_fields = visible_form_fields
       @event = @event.decorate
@@ -19,7 +19,7 @@ module Events
     end
 
     def create
-      authorize! :bulk_payment
+      authorize! :form_submission
 
       @form_params = params.dig(:bulk_payment, :form_fields)&.to_unsafe_h || {}
 
@@ -56,40 +56,31 @@ module Events
       end
     end
 
-    # View of the submitted bulk payment form, rendering the same partial either
-    # way. Mirrors PublicRegistrations#show: the payer reaches it publicly by slug
-    # (?reg=), while admins (e.g. from the dashboard, including legacy submissions
-    # with no slug) reach it by id (?submission_id=).
     def show
-      if params[:reg].present?
-        authorize! :bulk_payment
+      slug = params[:reg]
+      if slug.present?
         @submission = FormSubmission.bulk_payment
-                                    .find_by!(slug: params[:reg], event_id: @event.id)
+                                    .find_by!(slug: slug, event_id: @event.id)
       else
         @submission = FormSubmission.bulk_payment.find_by!(id: params[:submission_id], event_id: @event.id)
-        authorize! @submission, to: :show?
       end
+      authorize! @submission, context: { slug: slug }
 
       @event = @event.decorate
     end
 
-    # Public, slug-based ticket for the payer. Shows the event details, the
-    # registrants they paid for, and the submitted form — but none of the
-    # per-person admin actions found on the bulk payments dashboard.
     def ticket
-      authorize! :bulk_payment
-
       @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      authorize! @submission, context: { slug: params[:slug] }
+
       @payment = @submission.payment
       @event = @submission.event.decorate
     end
 
-    # Re-sends the payer their bulk payment confirmation email (the one carrying
-    # the ticket link). Reachable by the payer from the ticket.
     def resend_confirmation
-      authorize! :bulk_payment, to: :show?
-
       @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      authorize! @submission, to: :show?, context: { slug: params[:slug] }
+
       payer_email = @submission.person.preferred_email.presence ||
                     @submission.answers_by_identifier["payer_email"]&.strip
 
