@@ -124,28 +124,30 @@
       </div>
     <% end %>
 
-    <div class="bg-gray-100 rounded-lg p-3 space-y-1.5">
-      <div class="grid grid-cols-7 gap-x-4 text-xs font-medium text-gray-400 uppercase tracking-wide"><span class="col-span-3">Submitted names</span><span class="col-span-3">Potential match</span><span></span></div>
+    <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Submitted names</h4>
+
+    <div class="border border-gray-200 rounded-lg overflow-hidden">
+      <div class="grid grid-cols-2 gap-x-4 text-xs font-medium text-gray-400 uppercase tracking-wide bg-gray-100 px-3 py-2"><span>First Last Email</span><span>Potential match</span></div>
 
       <% if submission.bulk_payment_attendees.present? %>
-        <div class="divide-y divide-gray-100">
-          <div class="grid grid-cols-7 gap-4 items-center py-2">
+        <div class="px-3">
+          <div class="grid grid-cols-2 items-center py-2">
             <% submission.bulk_payment_attendees.each do |attendee| %>
               <% best = submission.best_match_for(attendee, event_registrations) %>
 
-              <div class="col-span-3 text-sm"><span class="text-gray-900 font-medium"><%= attendee["first_name"] %> <%= attendee["last_name"] %></span> <span class="text-gray-500 break-all"><%= attendee["email"] %></span></div>
+              <div class="text-sm"><span class="text-gray-900 font-medium"><%= attendee["first_name"] %> <%= attendee["last_name"] %></span> <span class="text-gray-500 break-all"><%= attendee["email"] %></span></div>
 
-              <div class="col-span-3">
-                <% if best %>
-                  <%= person_profile_button(best.registrant, compact: true, width_class: "w-auto") %>
-                <% else %>
-                  <span class="text-gray-400 text-xs">No match</span>
-                <% end %>
-              </div>
+              <div class="flex flex-wrap gap-2 items-center">
+                <div class="grow">
+                  <% if best %>
+                    <%= person_profile_button(best.registrant, compact: true, width_class: "w-auto") %>
+                  <% else %>
+                    <span class="text-gray-400 text-xs">No match</span>
+                  <% end %>
+                </div>
 
-              <div>
                 <% if best && !linked_ids.include?(best.id) %>
-                  <%= form_tag link_bulk_payment_event_path(@event), class: "inline" do %>
+                  <%= form_tag link_bulk_payment_event_path(@event), class: "p-4" do %>
                     <%= hidden_field_tag :submission_id, submission.id %>
                     <%= hidden_field_tag :event_registration_id, best.id %>
                     <%= button_tag "Link", class: "cursor-pointer text-xs text-blue-600 hover:text-blue-800 font-medium" %>
@@ -157,7 +159,7 @@
         </div>
       <% end %>
 
-      <div class="pt-2">
+      <div class="px-3 py-2">
         <h5 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Manually link a registration</h5>
 
         <%= form_tag link_bulk_payment_event_path(@event), class: "flex flex-wrap items-center gap-2" do %>
