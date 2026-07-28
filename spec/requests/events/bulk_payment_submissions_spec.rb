@@ -158,7 +158,7 @@ RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
   end
 
   describe "GET show" do
-    # Public submitted-form view, reached by slug via ?reg= (mirrors public
+    # Public submitted-form view, reached by slug via ?slug= (mirrors public
     # registration). Backs to the ticket by default.
     let(:event) { create(:event, :publicly_visible, cost_cents: 1000) }
     let(:payer) { create(:person) }
@@ -169,7 +169,7 @@ RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
     end
 
     def get_show
-      get event_bulk_payment_path(event, reg: submission.slug)
+      get event_bulk_payment_path(event, slug: submission.slug)
     end
 
     context "as a signed-out viewer" do
@@ -191,12 +191,12 @@ RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
       end
 
       it "404s for an unknown slug" do
-        get event_bulk_payment_path(event, reg: "nope")
+        get event_bulk_payment_path(event, slug: "nope")
 
         expect(response).to have_http_status(:not_found)
       end
 
-      it "404s for a blank reg, even when a slugless bulk payment exists" do
+      it "404s for a blank slug, even when a slugless bulk payment exists" do
         submission.update_columns(slug: nil)
 
         get event_bulk_payment_path(event)
@@ -227,7 +227,7 @@ RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
 
     context "as an admin arriving from the dashboard" do
       it "shows a Back to ticket link plus a second Back to bulk payments link" do
-        get event_bulk_payment_path(event, reg: submission.slug, return_to: "bulk_payments")
+        get event_bulk_payment_path(event, slug: submission.slug, return_to: "bulk_payments")
 
         expect(response.body).to include("Back to ticket")
         expect(response.body).to include("Back to bulk payments")
@@ -305,7 +305,7 @@ RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
       get_ticket
 
       expect(response.body).to include("View your form responses")
-      expect(response.body).to include(event_bulk_payment_path(event, reg: submission.slug))
+      expect(response.body).to include(event_bulk_payment_path(event, slug: submission.slug))
     end
 
     it "returns 404 for an unknown slug" do

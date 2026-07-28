@@ -57,7 +57,7 @@ module Events
     end
 
     def show
-      slug = params[:reg]
+      slug = params[:slug]
       if slug.present?
         @submission = FormSubmission.bulk_payment
                                     .find_by!(slug: slug, event_id: @event.id)

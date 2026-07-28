@@ -37,7 +37,7 @@
         Payer slug when present; otherwise the admin-only id fallback so legacy
         slugless submissions are still viewable from the dashboard.
       %>
-      <% submission_show_params = submission.slug.present? ? { reg: submission.slug } : { submission_id: submission.id } %>
+      <% submission_show_params = submission.slug.present? ? { slug: submission.slug } : { submission_id: submission.id } %>
 
       <%= link_to event_bulk_payment_path(@event, **submission_show_params, return_to: "bulk_payments", expand: submission.id),
                   title: "View form submission",

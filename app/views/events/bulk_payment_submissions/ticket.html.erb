@@ -168,7 +168,7 @@
       <!-- Secondary text actions: form responses + resend confirmation -->
       <div class="flex flex-col items-center gap-1.5">
         <%= link_to "View your form responses",
-                      event_bulk_payment_path(@event, reg: @submission.slug),
+                      event_bulk_payment_path(@event, slug: @submission.slug),
                       class: "text-sm text-gray-500 hover:text-blue-600 underline" %>
         <%= button_to "Resend confirmation email",
                       bulk_payment_resend_confirmation_path(@submission.slug),
