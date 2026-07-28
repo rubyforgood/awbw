@@ -1004,7 +1004,7 @@ RSpec.describe "Events", type: :request do
 
       it "shows a blue outline form icon when person submitted the current registration form" do
         create(:event_form, event: event, form: reg_form, role: "registration")
-        create(:form_submission, person: person, form: reg_form)
+        create(:form_submission, person: person, form: reg_form, event: event)
 
         get registrants_event_path(event)
 
@@ -1050,7 +1050,7 @@ RSpec.describe "Events", type: :request do
       before { create(:event_form, event: event, form: scholarship_form, role: "scholarship") }
 
       it "shows the scholarship icon when the person submitted the scholarship form" do
-        submission = create(:form_submission, person: person, form: scholarship_form, role: "scholarship")
+        submission = create(:form_submission, person: person, form: scholarship_form, role: "scholarship", event: event)
         create(:form_answer, form_submission: submission)
 
         get registrants_event_path(event)

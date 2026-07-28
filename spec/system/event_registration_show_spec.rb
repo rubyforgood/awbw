@@ -118,7 +118,7 @@ RSpec.describe "Event registration show page", type: :system do
         sections: %i[person_identifier person_contact_info person_background professional_info marketing scholarship payment consent]
       ).call.tap { |form| EventForm.create!(event: event, form: form, role: "registration") }
       form = event.registration_form
-      form.form_submissions.create!(person: user.person)
+      form.form_submissions.create!(person: user.person, event: event)
 
       sign_in(user)
       visit registration_ticket_path(registration.slug)

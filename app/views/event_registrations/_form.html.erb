@@ -10,7 +10,7 @@
           while it differs from what's stored). A colored icon inside the select
           echoes the status color. ---- %>
       <% event_form_ids = f.object.event.form_ids %>
-      <% submissions = event_form_ids.any? ? FormSubmission.joins(:form).where(form_id: event_form_ids, person_id: f.object.registrant_id).order(Arel.sql("forms.name")).pluck(Arel.sql("forms.name"), :created_at) : [] %>
+      <% submissions = event_form_ids.any? ? FormSubmission.where(event_id: f.object.event.id, person_id: f.object.registrant_id).joins(:form).where(form_id: event_form_ids).order(Arel.sql("forms.name")).pluck(Arel.sql("forms.name"), :created_at) : [] %>
       <% status_icon_colors = {
            "registered"            => "text-blue-600",
            "attended"              => "text-green-600",
