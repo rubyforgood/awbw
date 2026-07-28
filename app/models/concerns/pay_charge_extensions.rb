@@ -156,5 +156,7 @@ module PayChargeExtensions
         stripe_refund_id: stripe_refund["id"]
       )
     end
+
+    external_payment.update!(metadata: (external_payment.metadata || {}).merge(stripe_charge: object))
   end
 end

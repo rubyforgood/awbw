@@ -148,6 +148,14 @@ RSpec.describe PayChargeExtensions do
       expect(ExternalProcessorPayment.last.amount_cents_remaining).to eq(0)
     end
 
+    it "refreshes the stripe_charge metadata with the updated refund state" do
+      payment = ExternalProcessorPayment.last
+      expect(payment.metadata["stripe_charge"]).to include(
+        "amount_refunded" => 15_00,
+        "refunds" => hash_including("data" => array_including(hash_including("id" => "re_123")))
+      )
+    end
+
     it "is idempotent" do
       pay_charge.update!(object: refunded_object, amount_refunded: 15_00)
       expect(Refund.count).to eq(1)

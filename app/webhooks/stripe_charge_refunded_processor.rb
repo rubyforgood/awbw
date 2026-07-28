@@ -23,5 +23,7 @@ class StripeChargeRefundedProcessor
         stripe_refund_id: stripe_refund.id
       )
     end
+
+    external_payment.update!(metadata: (external_payment.metadata || {}).merge(stripe_charge: charge.to_hash))
   end
 end
