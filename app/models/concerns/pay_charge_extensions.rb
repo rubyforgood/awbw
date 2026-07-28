@@ -158,7 +158,7 @@ module PayChargeExtensions
     end
 
     charge = Stripe::Charge.retrieve(
-      { id: processor_id, expand: ["refunds", "balance_transaction"] },
+      { id: processor_id, expand: [ "refunds", "balance_transaction" ] },
       { stripe_account: stripe_account }.compact
     )
 
