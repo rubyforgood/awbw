@@ -117,21 +117,11 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(response.body).not_to include("$0.00")
     end
 
-    it "lists only registrants who are not yet fully paid in the new-allocation dropdown" do
-      create(:payment, person: payer, form_submission: submission,
-             amount_cents: 5000, amount_cents_remaining: 5000)
-      unpaid = create(:person, first_name: "Owes", last_name: "Money", email: "owes.money@example.com")
-      create(:event_registration, event: event, registrant: unpaid, status: "registered")
-      paid = create(:person, first_name: "All", last_name: "Square", email: "all.square@example.com")
-      paid_registration = create(:event_registration, event: event, registrant: paid, status: "registered")
-      create(:allocation, source: create(:payment, amount_cents: 2500, amount_cents_remaining: 2500),
-             allocatable: paid_registration, amount: 2500)
-
+    it "does not show the removed new-allocation dropdown" do
       get bulk_payments_event_path(event)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Owes Money — owes.money@example.com")
-      expect(response.body).not_to include("All Square — all.square@example.com")
+      expect(response.body).not_to include("Select registrant...")
     end
   end
 
@@ -194,7 +184,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
         expect(response.body).to include("payment-card-#{submission.id}")
         expect(response.body).to include("rotate-180")
         expect(response.body).to include(">Paid</span>")
-        expect(response.body.scan(">Allocate</button>").size).to eq(1)
+        expect(response.body.scan(">Allocate</button>").size).to eq(0)
       end
     end
 
