@@ -14,7 +14,6 @@
   event_registrations ||= @event_registrations || @event.event_registrations.active.includes(:registrant)
   allocated_by_registration ||= {}
   event_cost_cents = @event.cost_cents.to_i
-  attendee_matches = submission.matched_attendees(event_registrations)
   linked_ids = submission.linked_registration_ids.to_set
   linked_regs = event_registrations.select { |r| linked_ids.include?(r.id) } %>
 
@@ -61,7 +60,7 @@
         data-dropdown-target="expand"
       <% end %>
       data-dropdown-payload-param='[{"<%= content_id %>":"hidden"}, {"<%= arrow_id %>":"rotate-180"}]'
-      class="text-gray-400 hover:text-gray-600 p-1 justify-self-end"
+      class="cursor-pointer text-gray-400 hover:text-gray-600 p-1 justify-self-end"
       title="More info"
     >
       <i id="<%= arrow_id %>" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
@@ -128,15 +127,15 @@
     <div class="bg-gray-100 rounded-lg p-3 space-y-1.5">
       <div class="grid grid-cols-7 gap-x-4 text-xs font-medium text-gray-400 uppercase tracking-wide"><span class="col-span-3">Submitted names</span><span class="col-span-3">Potential match</span><span></span></div>
 
-      <% if attendee_matches.present? %>
+      <% if submission.bulk_payment_attendees.present? %>
         <div class="divide-y divide-gray-100">
           <div class="grid grid-cols-7 gap-4 items-center py-2">
-            <% attendee_matches.each do |am| %>
-              <div class="col-span-3 text-sm"><span class="text-gray-900 font-medium"><%= am[:first_name] %> <%= am[:last_name] %></span> <span class="text-gray-500 break-all"><%= am[:email] %></span></div>
+            <% submission.bulk_payment_attendees.each do |attendee| %>
+              <% best = submission.best_match_for(attendee, event_registrations) %>
+
+              <div class="col-span-3 text-sm"><span class="text-gray-900 font-medium"><%= attendee["first_name"] %> <%= attendee["last_name"] %></span> <span class="text-gray-500 break-all"><%= attendee["email"] %></span></div>
 
               <div class="col-span-3">
-                <% best = am[:matches].first %>
-
                 <% if best %>
                   <%= person_profile_button(best.registrant, compact: true, width_class: "w-auto") %>
                 <% else %>
@@ -149,7 +148,7 @@
                   <%= form_tag link_bulk_payment_event_path(@event), class: "inline" do %>
                     <%= hidden_field_tag :submission_id, submission.id %>
                     <%= hidden_field_tag :event_registration_id, best.id %>
-                    <%= button_tag "Link", class: "text-xs text-blue-600 hover:text-blue-800 font-medium" %>
+                    <%= button_tag "Link", class: "cursor-pointer text-xs text-blue-600 hover:text-blue-800 font-medium" %>
                   <% end %>
                 <% end %>
               </div>
