@@ -157,6 +157,11 @@ module PayChargeExtensions
       )
     end
 
-    external_payment.update!(metadata: (external_payment.metadata || {}).merge(stripe_charge: object))
+    charge = Stripe::Charge.retrieve(
+      { id: processor_id, expand: ["refunds", "balance_transaction"] },
+      { stripe_account: stripe_account }.compact
+    )
+
+    external_payment.update!(metadata: (external_payment.metadata || {}).merge(stripe_charge: charge.to_hash))
   end
 end

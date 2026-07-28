@@ -128,7 +128,12 @@ RSpec.describe PayChargeExtensions do
       )
     end
 
+    let(:retrieved_charge) do
+      instance_double(Stripe::Charge, to_hash: refunded_object)
+    end
+
     before do
+      allow(Stripe::Charge).to receive(:retrieve).and_return(retrieved_charge)
       pay_charge.update!(object: refunded_object, amount_refunded: 15_00)
     end
 

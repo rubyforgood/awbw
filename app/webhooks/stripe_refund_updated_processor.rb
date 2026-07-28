@@ -16,7 +16,7 @@ class StripeRefundUpdatedProcessor
     return unless external_payment
 
     charge = Stripe::Charge.retrieve(
-      { id: charge_id, expand: ["refunds"] },
+      { id: charge_id, expand: ["refunds", "balance_transaction"] },
       { stripe_account: event.try(:account) }.compact
     )
 
