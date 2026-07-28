@@ -70,7 +70,7 @@
 
   <div id="<%= content_id %>" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3" data-dropdown-target="content">
     <% if linked_regs.any? %>
-      <div class="border-t border-gray-100 pt-2 space-y-1.5">
+      <div class="border-b border-gray-200 pt-2 space-y-1.5">
         <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Linked registrations</h4>
 
         <div class="divide-y divide-gray-100">
@@ -79,13 +79,13 @@
             <% remaining_cents = [event_cost_cents - allocated_cents, 0].max %>
             <% reg_paid_in_full = allocated_cents >= event_cost_cents %>
 
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-2 py-2">
-              <div class="flex-1 min-w-0"><%= person_profile_button(reg.registrant, subtitle: reg.registrant.preferred_email, path_params: { return_to: "bulk_payments", event_id: @event.id, expand: submission.id }) %></div>
+            <div class="grid grid-cols-2 gap-x-4 items-center py-2">
+              <div class="min-w-0"><%= person_profile_button(reg.registrant, subtitle: reg.registrant.preferred_email, path_params: { return_to: "bulk_payments", event_id: @event.id, expand: submission.id }) %></div>
 
-              <div class="flex items-center gap-x-2">
+              <div class="flex flex-wrap items-center justify-center gap-4">
                 <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
                             title: "View #{reg.registrant.name}'s registration for #{@event.title}",
-                            class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
+                            class: "inline-flex items-center w-24 gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                   <i class="fa-solid fa-clipboard-list text-gray-400"></i>
 
                   <% if remaining_cents.zero? %>
@@ -97,26 +97,26 @@
 
                 <%= link_to allocations_path(allocatable_sgid: reg.to_sgid.to_s, return_to: "bulk_payments", expand: submission.id),
                             title: "View registration allocations",
-                            class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
+                            class: "inline-flex items-center w-24 gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                   <i class="fa-solid fa-list-check text-gray-400"></i>
                   <span class="text-green-600 tabular-nums"><%= dollars_from_cents(allocated_cents) %></span>
                 <% end %>
 
                 <% if payment && payment.amount_cents_remaining > 0 && !reg_paid_in_full %>
-                  <%= form_tag allocate_bulk_payment_event_path(@event), class: "inline-flex items-center gap-1" do %>
+                  <%= form_tag allocate_bulk_payment_event_path(@event), class: "flex items-center gap-1" do %>
                     <%= hidden_field_tag :payment_id, payment.id %>
                     <%= hidden_field_tag :event_registration_id, reg.id %>
 
                     <span class="text-xs text-gray-500">$</span>
                     <%= number_field_tag :amount_dollars, nil, step: "0.01", min: "0.01", class: "w-20 rounded-lg border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", placeholder: "0.00" %>
-                    <%= button_tag "Allocate", class: "btn btn-primary btn-xs" %>
+                    <%= button_tag "Allocate", class: "btn btn-primary btn-xs cursor-pointer" %>
                   <% end %>
                 <% end %>
 
                 <%= form_tag unlink_bulk_payment_event_path(@event), method: :delete, class: "inline" do %>
                   <%= hidden_field_tag :submission_id, submission.id %>
                   <%= hidden_field_tag :event_registration_id, reg.id %>
-                  <%= button_tag "Unlink", class: "text-xs text-red-600 hover:text-red-800 font-medium" %>
+                  <%= button_tag "Unlink", class: "text-xs text-red-600 hover:text-red-800 font-medium cursor-pointer" %>
                 <% end %>
               </div>
             </div>
@@ -158,14 +158,14 @@
         </div>
       <% end %>
 
-      <div class="pt-2 border-t border-gray-100">
+      <div class="pt-2">
         <h5 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Manually link a registration</h5>
 
-        <%= form_tag link_bulk_payment_event_path(@event), class: "flex items-center gap-2" do %>
+        <%= form_tag link_bulk_payment_event_path(@event), class: "flex flex-wrap items-center gap-2" do %>
           <%= hidden_field_tag :submission_id, submission.id %>
           <% unlinked_regs = event_registrations.reject { |r| linked_ids.include?(r.id) } %>
 
-          <div class="w-64 shrink-0">
+          <div class="w-64">
             <%= select_tag :event_registration_id,
                    options_from_collection_for_select(unlinked_regs, :id, ->(r) { "#{r.registrant.name} — #{r.registrant.email}" }),
                    prompt: "Select registrant...",
@@ -178,7 +178,7 @@
     </div>
 
     <% if payment %>
-      <div class="border-t border-gray-100 pt-2 space-y-2">
+      <div class="border-t border-gray-200 pt-2 space-y-2">
         <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Payment allocations</h4>
         <div id="<%= dom_id(payment, :allocations) %>"><%= render "events/payment_allocations", payment: payment, return_params: { return_to: "bulk_payments", expand: submission.id } %></div>
       </div>

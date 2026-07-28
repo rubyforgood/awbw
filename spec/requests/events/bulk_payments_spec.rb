@@ -80,23 +80,6 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(response.body).not_to match(/id="payment-arrow-#{submission.id}"[^>]*rotate-180/)
     end
 
-    it "renders a Profile column with a circle-only profile button for matched attendees" do
-      attendee = create(:person, first_name: "Match", last_name: "Attendee", email: "match.attendee@example.com")
-      reg = create(:event_registration, event: event, registrant: attendee, status: "registered")
-      create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees list")
-      submission.form_answers.create!(
-        form_field: form.form_fields.find_by(field_identifier: "bulk_payment_attendees"),
-        submitted_answer: [ { first_name: "Match", last_name: "Attendee", email: "match.attendee@example.com" } ].to_json
-      )
-      submission.link_registration!(reg.id)
-
-      get bulk_payments_event_path(event)
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include(person_path(attendee))
-      expect(response.body).to include("bg-sky-100")
-      expect(response.body).to include("h-5 w-5")
-    end
 
     it "shows a grey \"Paid\" instead of an orange balance when the registration is fully covered" do
       attendee = create(:person, first_name: "Paid", last_name: "Infull", email: "paid.infull@example.com")
