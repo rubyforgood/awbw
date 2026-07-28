@@ -107,7 +107,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/category_types/index.html.erb"          => "admin-only bg-blue-100",
     "app/views/events/dashboard.html.erb"              => "admin-only bg-blue-100",
     "app/views/events/sample_ticket.html.erb"          => "admin-only bg-blue-100",
-    "app/views/events/bulk_payments.html.erb"          => "admin-only bg-blue-100",
+    "app/views/events/bulk_payments/index.html.erb"      => "admin-only bg-blue-100",
     "app/views/events/background.html.erb"             => "admin-only bg-blue-100",
     "app/views/events/edit_staff.html.erb"             => "admin-only bg-white",
     "app/views/events/recipients.html.erb"             => "admin-only bg-white",
@@ -213,9 +213,9 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/registration_ticket_callouts/show.html.erb" => "public",
 
     # ─── bulk payment views ───
-    "app/views/events/bulk_payments/new.html.erb"        => "public",
-    "app/views/events/bulk_payments/show.html.erb"       => "public",
-    "app/views/events/bulk_payments/ticket.html.erb"     => "public",
+    "app/views/events/bulk_payment_submissions/new.html.erb"  => "public",
+    "app/views/events/bulk_payment_submissions/show.html.erb" => "public",
+    "app/views/events/bulk_payment_submissions/ticket.html.erb" => "public",
 
     # ─── event invoice (slug/submission-reachable; blank template gated in controller) ───
     "app/views/events/invoices/show.html.erb"            => "public",
