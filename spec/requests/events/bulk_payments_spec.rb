@@ -121,7 +121,7 @@ RSpec.describe "Events::BulkPayments", type: :request do
       get bulk_payments_event_path(event)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).not_to include("Select registrant...")
+      expect(response.body).not_to include("New allocation")
     end
   end
 

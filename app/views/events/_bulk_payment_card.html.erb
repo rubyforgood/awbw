@@ -126,32 +126,35 @@
     <% end %>
 
     <div class="bg-gray-100 rounded-lg p-3 space-y-1.5">
-      <div class="flex items-center gap-x-4 text-xs font-medium text-gray-400 uppercase tracking-wide"><span class="flex-1 min-w-0">Submitted names</span><span class="flex-1 min-w-0">Potential match</span></div>
+      <div class="grid grid-cols-5 gap-x-4 text-xs font-medium text-gray-400 uppercase tracking-wide"><span class="col-span-2">Submitted names</span><span class="col-span-2">Potential match</span><span></span></div>
 
       <% if attendee_matches.present? %>
         <div class="divide-y divide-gray-100">
-          <% attendee_matches.each do |am| %>
-            <div class="flex items-center gap-x-4 py-2">
-              <div class="flex-1 min-w-0 text-sm"><span class="text-gray-900 font-medium"><%= am[:first_name] %> <%= am[:last_name] %></span><span class="text-gray-500 break-all"><%= am[:email] %></span></div>
+          <div class="grid grid-cols-5 gap-4 items-center py-2">
+            <% attendee_matches.each do |am| %>
+              <div class="col-span-2 min-w-0 text-sm"><span class="text-gray-900 font-medium"><%= am[:first_name] %> <%= am[:last_name] %></span><span class="text-gray-500 break-all"><%= am[:email] %></span></div>
 
-              <div class="flex items-center gap-x-2">
+              <div class="col-span-2 min-w-0">
                 <% best = am[:matches].first %>
 
                 <% if best %>
                   <%= person_profile_button(best.registrant, compact: true, width_class: "w-auto") %>
-                  <% unless linked_ids.include?(best.id) %>
-                    <%= form_tag link_bulk_payment_event_path(@event), class: "inline" do %>
-                      <%= hidden_field_tag :submission_id, submission.id %>
-                      <%= hidden_field_tag :event_registration_id, best.id %>
-                      <%= button_tag "Link", class: "text-xs text-blue-600 hover:text-blue-800 font-medium" %>
-                    <% end %>
-                  <% end %>
                 <% else %>
                   <span class="text-gray-400 text-xs">No match</span>
                 <% end %>
               </div>
-            </div>
-          <% end %>
+
+              <div>
+                <% if best && !linked_ids.include?(best.id) %>
+                  <%= form_tag link_bulk_payment_event_path(@event), class: "inline" do %>
+                    <%= hidden_field_tag :submission_id, submission.id %>
+                    <%= hidden_field_tag :event_registration_id, best.id %>
+                    <%= button_tag "Link", class: "text-xs text-blue-600 hover:text-blue-800 font-medium" %>
+                  <% end %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
         </div>
       <% end %>
 
