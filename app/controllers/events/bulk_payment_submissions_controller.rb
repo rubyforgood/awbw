@@ -63,8 +63,7 @@ module Events
     def show
       if params[:reg].present?
         authorize! :bulk_payment
-        # where.not(slug: nil) keeps a blank reg from matching a slugless record.
-        @submission = FormSubmission.bulk_payment.where.not(slug: nil)
+        @submission = FormSubmission.bulk_payment
                                     .find_by!(slug: params[:reg], event_id: @event.id)
       else
         @submission = FormSubmission.bulk_payment.find_by!(id: params[:submission_id], event_id: @event.id)
