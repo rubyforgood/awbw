@@ -7,11 +7,11 @@ class FormSubmissionPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || record.slug == slug
+    admin? || (slug.present? && record.slug == slug)
   end
 
   def ticket?
-    admin? || record.slug == slug
+    admin? || (slug.present? && record.slug == slug)
   end
 
   def new?
