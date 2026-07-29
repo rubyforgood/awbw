@@ -352,6 +352,18 @@ RSpec.describe "/users", type: :request do
         post toggle_lock_status_user_url(user)
         expect(response).to redirect_to(edit_user_path(user))
       end
+
+      it "records the admin who locked the account as updated_by" do
+        user.update_columns(updated_by_id: create(:user, :admin).id)
+        post toggle_lock_status_user_url(user)
+        expect(user.reload.updated_by).to eq(admin)
+      end
+
+      it "records the admin who unlocked the account as updated_by" do
+        user.update_columns(locked_at: Time.current, updated_by_id: create(:user, :admin).id)
+        post toggle_lock_status_user_url(user)
+        expect(user.reload.updated_by).to eq(admin)
+      end
     end
 
     context "as regular_user" do
@@ -390,6 +402,12 @@ RSpec.describe "/users", type: :request do
         user.reload
         expect(user.confirmed_at).not_to be_nil
         expect(flash[:notice]).to eq("Email has been manually confirmed.")
+      end
+
+      it "records the admin who confirmed the email as updated_by" do
+        user.update_columns(updated_by_id: create(:user, :admin).id)
+        post confirm_email_user_url(user)
+        expect(user.reload.updated_by).to eq(admin)
       end
     end
 
@@ -598,6 +616,12 @@ RSpec.describe "/users", type: :request do
         post send_reset_password_instructions_user_url(user)
         expect(flash[:notice]).to include("Reset password instructions sent")
         expect(response).to redirect_to(users_path)
+      end
+
+      it "records the admin who sent the instructions as updated_by" do
+        user.update_columns(updated_by_id: create(:user, :admin).id)
+        post send_reset_password_instructions_user_url(user)
+        expect(user.reload.updated_by).to eq(admin)
       end
     end
 
