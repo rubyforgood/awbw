@@ -654,6 +654,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_020406) do
     t.datetime "created_at", null: false
     t.bigint "event_id"
     t.integer "form_id", null: false
+    t.json "metadata"
     t.bigint "person_id", null: false
     t.string "role"
     t.string "slug"

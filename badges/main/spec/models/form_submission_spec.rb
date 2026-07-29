@@ -80,4 +80,81 @@ RSpec.describe FormSubmission do
       expect(submission.bulk_payment_amount_cents(free_event)).to eq(0)
     end
   end
+
+  describe "linked registrations" do
+    let(:event) { create(:event) }
+    let(:form) { create(:form) }
+    let(:submission) { create(:form_submission, form: form, event: event) }
+    let!(:reg1) { create(:event_registration, event: event) }
+    let!(:reg2) { create(:event_registration, event: event) }
+
+    describe "#linked_registration_ids" do
+      it "returns an empty array when metadata is nil" do
+        expect(submission.linked_registration_ids).to eq([])
+      end
+
+      it "returns an empty array when metadata has no linked_registration_ids" do
+        submission.update!(metadata: { "other_key" => "value" })
+        expect(submission.linked_registration_ids).to eq([])
+      end
+
+      it "returns the stored ids" do
+        submission.update!(metadata: { "linked_registration_ids" => [ reg1.id, reg2.id ] })
+        expect(submission.linked_registration_ids).to contain_exactly(reg1.id, reg2.id)
+      end
+    end
+
+    describe "#link_registration!" do
+      it "adds a registration id to metadata" do
+        submission.link_registration!(reg1.id)
+
+        expect(submission.reload.linked_registration_ids).to eq([ reg1.id ])
+      end
+
+      it "does not duplicate an existing id" do
+        submission.link_registration!(reg1.id)
+        submission.link_registration!(reg1.id)
+
+        expect(submission.reload.linked_registration_ids).to eq([ reg1.id ])
+      end
+
+      it "preserves other metadata" do
+        submission.update!(metadata: { "other_key" => "value" })
+        submission.link_registration!(reg1.id)
+
+        expect(submission.reload.metadata["other_key"]).to eq("value")
+        expect(submission.linked_registration_ids).to eq([ reg1.id ])
+      end
+    end
+
+    describe "#unlink_registration!" do
+      it "removes a registration id from metadata" do
+        submission.link_registration!(reg1.id)
+        submission.link_registration!(reg2.id)
+        submission.unlink_registration!(reg1.id)
+
+        expect(submission.reload.linked_registration_ids).to eq([ reg2.id ])
+      end
+
+      it "is a no-op when the id is not linked" do
+        submission.link_registration!(reg1.id)
+        submission.unlink_registration!(reg2.id)
+
+        expect(submission.reload.linked_registration_ids).to eq([ reg1.id ])
+      end
+    end
+
+    describe "#linked_registrations" do
+      it "returns event registrations matching linked ids" do
+        submission.link_registration!(reg1.id)
+        submission.link_registration!(reg2.id)
+
+        expect(submission.linked_registrations).to contain_exactly(reg1, reg2)
+      end
+
+      it "returns empty relation when nothing is linked" do
+        expect(submission.linked_registrations).to be_empty
+      end
+    end
+  end
 end

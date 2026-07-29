@@ -1,6 +1,6 @@
 <div class="bg-green-200 border-2 border-green-400 rounded-lg p-4" data-controller="conditional-fields">
   <h3 class="text-lg font-medium mb-4">Record Payment</h3>
-  <%= form_tag create_bulk_payment_event_path(@event) do %>
+  <%= form_tag bulk_payments_event_path(@event) do %>
     <%= hidden_field_tag :submission_id, submission.id %>
     <%= hidden_field_tag :currency, "usd" %>
 
