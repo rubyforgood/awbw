@@ -15,7 +15,7 @@ module Events
       @form_fields = visible_form_fields
       @event = @event.decorate
 
-      @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
+      @attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
     end
 
     def create
@@ -27,7 +27,7 @@ module Events
       if @field_errors.any?
         @form_fields = visible_form_fields
         @event = @event.decorate
-        @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
+        @attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
         render :new, status: :unprocessable_content
         return
       end
@@ -50,7 +50,7 @@ module Events
       else
         @form_fields = visible_form_fields
         @event = @event.decorate
-        @attendee_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
+        @attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
         flash.now[:alert] = result.errors.join(", ")
         render :new, status: :unprocessable_content
       end
