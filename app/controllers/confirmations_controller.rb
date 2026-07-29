@@ -54,5 +54,4 @@ class ConfirmationsController < Devise::ConfirmationsController
   def email_not_found?
     resource.errors.any? { |e| e.attribute == :email && e.type == :not_found }
   end
-
 end
