@@ -589,6 +589,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.datetime "start_date", precision: nil
     t.string "title"
     t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
     t.string "videoconference_label", default: "Virtual event"
     t.string "videoconference_passcode"
     t.string "videoconference_url"
@@ -596,6 +597,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.index ["facilitator_training"], name: "index_events_on_facilitator_training"
     t.index ["location_id"], name: "index_events_on_location_id"
     t.index ["published"], name: "index_events_on_published"
+    t.index ["updated_by_id"], name: "index_events_on_updated_by_id"
   end
 
   create_table "faqs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1418,6 +1420,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.integer "teens_ongoing", default: 0
     t.string "type"
     t.datetime "updated_at", precision: nil, null: false
+    t.integer "updated_by_id"
     t.integer "windows_type_id"
     t.integer "workshop_id"
     t.string "workshop_name"
@@ -1426,6 +1429,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.index ["organization_id"], name: "index_reports_on_organization_id"
     t.index ["type", "date"], name: "index_reports_on_type_and_date"
     t.index ["type", "organization_id"], name: "index_reports_on_type_and_organization_id"
+    t.index ["updated_by_id"], name: "index_reports_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_reports_on_windows_type_id"
     t.index ["workshop_id"], name: "index_reports_on_workshop_id"
   end
@@ -1454,6 +1458,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.boolean "published", default: false, null: false
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
+    t.integer "updated_by_id"
     t.string "url"
     t.integer "windows_type_id"
     t.integer "workshop_id"
@@ -1461,6 +1466,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.index ["created_by_id"], name: "index_resources_on_created_by_id"
     t.index ["organization_id"], name: "index_resources_on_organization_id"
     t.index ["published"], name: "index_resources_on_published"
+    t.index ["updated_by_id"], name: "index_resources_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
     t.index ["workshop_id"], name: "index_resources_on_workshop_id"
   end
@@ -1859,6 +1865,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.integer "total_children", default: 0
     t.integer "total_teens", default: 0
     t.datetime "updated_at", precision: nil, null: false
+    t.integer "updated_by_id"
     t.integer "windows_type_id"
     t.date "workshop_held_on"
     t.integer "workshop_id"
@@ -1866,6 +1873,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.index ["created_by_id"], name: "index_workshop_logs_on_created_by_id"
     t.index ["organization_id", "workshop_held_on"], name: "index_workshop_logs_on_org_and_workshop_held_on"
     t.index ["organization_id"], name: "index_workshop_logs_on_organization_id"
+    t.index ["updated_by_id"], name: "index_workshop_logs_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_workshop_logs_on_windows_type_id"
     t.index ["workshop_held_on"], name: "index_workshop_logs_on_workshop_held_on"
     t.index ["workshop_id"], name: "index_workshop_logs_on_workshop_id"
@@ -1931,6 +1939,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.boolean "publicly_visible", default: false, null: false
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.integer "updated_by_id"
     t.integer "variation_id"
     t.integer "windows_type_id"
     t.integer "workshop_id"
@@ -1940,6 +1949,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.index ["created_by_id"], name: "index_workshop_variations_on_created_by_id"
     t.index ["organization_id"], name: "index_workshop_variations_on_organization_id"
     t.index ["published"], name: "index_workshop_variations_on_published"
+    t.index ["updated_by_id"], name: "index_workshop_variations_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_workshop_variations_on_windows_type_id"
     t.index ["workshop_id"], name: "index_workshop_variations_on_workshop_id"
     t.index ["workshop_variation_idea_id"], name: "index_workshop_variations_on_workshop_variation_idea_id"
@@ -2023,6 +2033,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.text "tips_spanish", size: :long
     t.string "title"
     t.datetime "updated_at", precision: nil, null: false
+    t.integer "updated_by_id"
     t.text "visualization", size: :long
     t.text "visualization_spanish", size: :long
     t.text "warm_up", size: :long
@@ -2039,6 +2050,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
     t.index ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
     t.index ["title"], name: "index_workshops_on_title", type: :fulltext
     t.index ["title"], name: "workshop_fullsearch_title", type: :fulltext
+    t.index ["updated_by_id"], name: "index_workshops_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_workshops_on_windows_type_id"
     t.index ["workshop_idea_id"], name: "index_workshops_on_workshop_idea_id"
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
@@ -2091,6 +2103,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
   add_foreign_key "event_staffs", "people"
   add_foreign_key "events", "locations"
   add_foreign_key "events", "users", column: "created_by_id"
+  add_foreign_key "events", "users", column: "updated_by_id"
   add_foreign_key "form_answers", "form_fields"
   add_foreign_key "form_answers", "form_submissions"
   add_foreign_key "form_builders", "windows_types"
@@ -2138,10 +2151,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
   add_foreign_key "reports", "organizations"
   add_foreign_key "reports", "people", column: "author_id"
   add_foreign_key "reports", "users", column: "created_by_id"
+  add_foreign_key "reports", "users", column: "updated_by_id"
   add_foreign_key "reports", "windows_types"
   add_foreign_key "resources", "organizations"
   add_foreign_key "resources", "people", column: "author_id"
   add_foreign_key "resources", "users", column: "created_by_id"
+  add_foreign_key "resources", "users", column: "updated_by_id"
   add_foreign_key "resources", "windows_types"
   add_foreign_key "resources", "workshops"
   add_foreign_key "scholarship_agreement_responses", "scholarships"
@@ -2187,6 +2202,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
   add_foreign_key "workshop_logs", "organizations"
   add_foreign_key "workshop_logs", "people", column: "author_id"
   add_foreign_key "workshop_logs", "users", column: "created_by_id"
+  add_foreign_key "workshop_logs", "users", column: "updated_by_id"
   add_foreign_key "workshop_logs", "windows_types"
   add_foreign_key "workshop_logs", "workshops"
   add_foreign_key "workshop_resources", "resources"
@@ -2202,11 +2218,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
   add_foreign_key "workshop_variations", "organizations"
   add_foreign_key "workshop_variations", "people", column: "author_id"
   add_foreign_key "workshop_variations", "users", column: "created_by_id"
+  add_foreign_key "workshop_variations", "users", column: "updated_by_id"
   add_foreign_key "workshop_variations", "windows_types"
   add_foreign_key "workshop_variations", "workshop_variation_ideas"
   add_foreign_key "workshop_variations", "workshops"
   add_foreign_key "workshops", "people", column: "author_id"
   add_foreign_key "workshops", "users", column: "created_by_id"
+  add_foreign_key "workshops", "users", column: "updated_by_id"
   add_foreign_key "workshops", "windows_types"
   add_foreign_key "workshops", "workshop_ideas"
 end

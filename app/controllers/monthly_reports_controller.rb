@@ -26,16 +26,12 @@ class MonthlyReportsController < ApplicationController
 
   def show
     @monthly_report = MonthlyReport.includes(
-      :organization, :windows_type, :author, { created_by: :person },
+      :organization, :windows_type, :author, { created_by: :person }, { updated_by: :person },
       { quotes: :workshop },
       { gallery_assets: { file_attachment: :blob } }
     ).find(params[:id]).decorate
     authorize! @monthly_report
     @answers    = @monthly_report.report_form_field_answers.includes(:form_field)
-    @updated_by = Ahoy::Event.where(resource_type: "MonthlyReport", resource_id: @monthly_report.id)
-                              .where("name LIKE 'update.%'")
-                              .order(time: :desc)
-                              .first&.user
   end
 
   private
