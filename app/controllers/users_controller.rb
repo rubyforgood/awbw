@@ -204,9 +204,7 @@ class UsersController < ApplicationController
 
   def send_reset_password_instructions
     authorize! @user
-    # Generating the reset token writes to the record, bumping updated_at; credit the
-    # sender on updated_by too so "Last updated" reflects who sent the reset, not
-    # whoever last edited the account.
+    # Set before the Devise call, which saves the reset token onto the record.
     @user.updated_by = current_user
     @user.send_reset_password_instructions
     redirect_to users_path, notice: "Reset password instructions sent to #{@user.email}."

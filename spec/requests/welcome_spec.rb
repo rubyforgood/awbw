@@ -56,6 +56,14 @@ RSpec.describe "/users/welcome", type: :request do
         expect(user.welcome_instructions_sent_at).to be_nil
       end
 
+      it "clears updated_by since the setup is self-service, not an admin action" do
+        user.update_columns(updated_by_id: create(:user, :admin).id)
+
+        patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
+
+        expect(user.reload.updated_by).to be_nil
+      end
+
       it "signs in the user" do
         patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
         expect(request.env['warden'].user).to eq(user)

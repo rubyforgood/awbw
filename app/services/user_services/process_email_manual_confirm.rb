@@ -32,9 +32,8 @@ module UserServices
 
     def resend_confirmation
       target_email = @user.unconfirmed_email.presence || @user.email
-      # Regenerating the confirmation token saves the record; credit the acting admin.
-      # Devise only saves when it regenerates the token, so persist the attribution
-      # ourselves if it was left dirty (no-op when Devise already saved it).
+      # Credit the acting admin. Devise saves only when it regenerates the token,
+      # so persist the attribution ourselves if it's left dirty.
       @user.updated_by = @current_user
       @user.send_confirmation_instructions
       @user.save(validate: false) if @user.changed?
