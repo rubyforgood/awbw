@@ -29,7 +29,13 @@ module UserServices
     def send_confirmation_email
       return unless @user.unconfirmed_email.present?
 
+      # Sending instructions regenerates the confirmation token and saves the record,
+      # bumping updated_at; credit the acting admin so attribution isn't left on
+      # whoever last edited the account. Devise only saves when it regenerates the
+      # token, so persist the attribution ourselves if it was left dirty.
+      @user.updated_by = @current_user
       @user.send_confirmation_instructions
+      @user.save(validate: false) if @user.changed?
       @actions_taken << "A confirmation email has been sent to #{@user.unconfirmed_email}"
     end
   end

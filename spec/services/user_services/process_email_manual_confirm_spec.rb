@@ -35,6 +35,18 @@ RSpec.describe UserServices::ProcessEmailManualConfirm do
 
           expect(result.summary).to include("Confirmation email has been resent to #{user.email}")
         end
+
+        it "credits the acting admin as updated_by" do
+          user.update_columns(updated_by_id: create(:user, :admin).id)
+
+          described_class.call(
+            user: user,
+            action: "resend",
+            current_user: admin
+          )
+
+          expect(user.reload.updated_by).to eq(admin)
+        end
       end
 
       context "with action 'confirm'" do
@@ -47,6 +59,18 @@ RSpec.describe UserServices::ProcessEmailManualConfirm do
 
           user.reload
           expect(user.confirmed_at).not_to be_nil
+        end
+
+        it "credits the acting admin as updated_by" do
+          user.update_columns(updated_by_id: create(:user, :admin).id)
+
+          described_class.call(
+            user: user,
+            action: "confirm",
+            current_user: admin
+          )
+
+          expect(user.reload.updated_by).to eq(admin)
         end
 
         it "includes manually confirmed message in summary" do

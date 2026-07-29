@@ -204,6 +204,10 @@ class UsersController < ApplicationController
 
   def send_reset_password_instructions
     authorize! @user
+    # Generating the reset token writes to the record, bumping updated_at; credit the
+    # sender on updated_by too so "Last updated" reflects who sent the reset, not
+    # whoever last edited the account.
+    @user.updated_by = current_user
     @user.send_reset_password_instructions
     redirect_to users_path, notice: "Reset password instructions sent to #{@user.email}."
   end
@@ -217,11 +221,11 @@ class UsersController < ApplicationController
 
     if @user.locked_at.present?
       # Unlock the user
-      @user.update(locked_at: nil, failed_attempts: 0)
+      @user.update(locked_at: nil, failed_attempts: 0, updated_by: current_user)
       message = "User has been unlocked."
     else
       # Lock the user
-      @user.update(locked_at: Time.current)
+      @user.update(locked_at: Time.current, updated_by: current_user)
       message = "User has been locked."
     end
 
@@ -241,7 +245,7 @@ class UsersController < ApplicationController
     if @user.confirmed_at.present?
       message = "Email is already confirmed."
     else
-      @user.update(confirmed_at: Time.current)
+      @user.update(confirmed_at: Time.current, updated_by: current_user)
       message = "Email has been manually confirmed."
     end
 
