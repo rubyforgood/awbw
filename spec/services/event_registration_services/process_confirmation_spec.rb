@@ -93,6 +93,24 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
         expect(user.reload.welcome_instructions_token).to be_present
       end
 
+      it "records the current user as the sender" do
+        user = person.user
+
+        described_class.call(
+          event_registration: registration,
+          person: person,
+          create_user: false,
+          send_invite: true,
+          send_confirmation_email: false,
+          send_admin_fyi: false,
+          current_user: admin
+        )
+
+        user.reload
+        expect(user.welcome_instructions_sent_by).to eq(admin)
+        expect(user.updated_by).to eq(admin)
+      end
+
       it "does nothing when person has no user" do
         person.user.destroy!
         person.reload

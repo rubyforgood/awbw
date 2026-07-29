@@ -5,7 +5,7 @@
   <% end %>
 <% elsif user.welcome_instructions_sent_at.present? %>
   <% sent_info = "Confirmation instructions sent #{l(user.welcome_instructions_sent_at, format: :long)}"
-     sent_info += " by #{user.updated_by.name}" if user.updated_by.present? %>
+     sent_info += " by #{user.welcome_instructions_sent_by.name}" if user.welcome_instructions_sent_by.present? %>
   <i class="fa-solid fa-clock text-warning" title="<%= sent_info %>"></i>
 <% else %>
   <%= link_to "Invite",

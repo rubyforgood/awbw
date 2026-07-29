@@ -10,7 +10,7 @@ class UsersController < ApplicationController
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(User.includes(:created_by, :updated_by,
+      base_scope = authorized_scope(User.includes(:created_by, :updated_by, :welcome_instructions_sent_by,
                                                   person: { avatar_attachment: :blob }))
       filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
       @users_count = filtered.count
@@ -204,6 +204,8 @@ class UsersController < ApplicationController
 
   def send_reset_password_instructions
     authorize! @user
+    # Set before the Devise call, which saves the reset token onto the record.
+    @user.updated_by = current_user
     @user.send_reset_password_instructions
     redirect_to users_path, notice: "Reset password instructions sent to #{@user.email}."
   end
@@ -217,11 +219,11 @@ class UsersController < ApplicationController
 
     if @user.locked_at.present?
       # Unlock the user
-      @user.update(locked_at: nil, failed_attempts: 0)
+      @user.update(locked_at: nil, failed_attempts: 0, updated_by: current_user)
       message = "User has been unlocked."
     else
       # Lock the user
-      @user.update(locked_at: Time.current)
+      @user.update(locked_at: Time.current, updated_by: current_user)
       message = "User has been locked."
     end
 
@@ -241,7 +243,7 @@ class UsersController < ApplicationController
     if @user.confirmed_at.present?
       message = "Email is already confirmed."
     else
-      @user.update(confirmed_at: Time.current)
+      @user.update(confirmed_at: Time.current, updated_by: current_user)
       message = "Email has been manually confirmed."
     end
 
@@ -297,8 +299,12 @@ class UsersController < ApplicationController
   def send_welcome_instructions
     authorize! @user, to: :send_welcome_instructions?
 
+    # Sending the invite writes to the record (token + timestamps), so credit the
+    # sender on updated_by too — otherwise "Last updated" attributes it to whoever
+    # last edited the account, not who actually sent the invite.
+    @user.updated_by = current_user
     @user.set_welcome_instructions_token!
-    @user.update(welcome_instructions_sent_at: Time.current)
+    @user.update(welcome_instructions_sent_at: Time.current, welcome_instructions_sent_by: current_user)
     @user.send_confirmation_instructions
 
     redirect_to users_path(search: params[:search],

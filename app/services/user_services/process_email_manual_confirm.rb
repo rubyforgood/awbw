@@ -32,12 +32,17 @@ module UserServices
 
     def resend_confirmation
       target_email = @user.unconfirmed_email.presence || @user.email
+      # Credit the acting admin. Devise saves only when it regenerates the token,
+      # so persist the attribution ourselves if it's left dirty.
+      @user.updated_by = @current_user
       @user.send_confirmation_instructions
+      @user.save(validate: false) if @user.changed?
       @actions_taken << "Confirmation email has been resent to #{target_email}"
     end
 
     def manually_confirm
       pending_email = @user.unconfirmed_email
+      @user.updated_by = @current_user
       @user.confirm
       if pending_email.present?
         @actions_taken << "Email change to #{pending_email} has been manually confirmed"

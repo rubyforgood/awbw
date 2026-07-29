@@ -70,8 +70,9 @@ module EventRegistrationServices
       user = @person.user
       return unless user
 
+      user.updated_by = @current_user
       user.set_welcome_instructions_token!
-      user.update!(welcome_instructions_sent_at: Time.current)
+      user.update!(welcome_instructions_sent_at: Time.current, welcome_instructions_sent_by: @current_user)
       user.send_confirmation_instructions
 
       @actions_taken << "System invite sent"
