@@ -297,6 +297,10 @@ class UsersController < ApplicationController
   def send_welcome_instructions
     authorize! @user, to: :send_welcome_instructions?
 
+    # Sending the invite writes to the record (token + timestamps), so credit the
+    # sender on updated_by too — otherwise "Last updated" attributes it to whoever
+    # last edited the account, not who actually sent the invite.
+    @user.updated_by = current_user
     @user.set_welcome_instructions_token!
     @user.update(welcome_instructions_sent_at: Time.current, welcome_instructions_sent_by: current_user)
     @user.send_confirmation_instructions

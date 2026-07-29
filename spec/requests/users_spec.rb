@@ -546,7 +546,9 @@ RSpec.describe "/users", type: :request do
 
       it "records the admin who sent the invitation" do
         post send_welcome_instructions_user_url(user)
-        expect(user.reload.welcome_instructions_sent_by).to eq(admin)
+        user.reload
+        expect(user.welcome_instructions_sent_by).to eq(admin)
+        expect(user.updated_by).to eq(admin)
       end
 
       xit "sends welcome email" do # TODO fix this testing to make sure notification and email get sent

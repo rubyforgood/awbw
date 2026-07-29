@@ -106,7 +106,9 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
           current_user: admin
         )
 
-        expect(user.reload.welcome_instructions_sent_by).to eq(admin)
+        user.reload
+        expect(user.welcome_instructions_sent_by).to eq(admin)
+        expect(user.updated_by).to eq(admin)
       end
 
       it "does nothing when person has no user" do
