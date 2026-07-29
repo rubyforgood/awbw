@@ -11,7 +11,8 @@ RSpec.describe StripeChargeRefundedProcessor do
       amount_cents: 30_00,
       amount_cents_remaining: 30_00,
       currency: "usd",
-      skip_pay_charge_validation: true
+      skip_pay_charge_validation: true,
+      metadata: { original: "data" }
     )
   end
 
@@ -40,13 +41,30 @@ RSpec.describe StripeChargeRefundedProcessor do
   end
 
   describe "refund creation" do
+    let(:charge_hash) do
+      {
+        "id" => "ch_test_123",
+        "amount" => 30_00,
+        "amount_refunded" => 15_00,
+        "refunded" => false,
+        "refunds" => {
+          "object" => "list",
+          "data" => [
+            { "id" => "re_1", "object" => "refund", "amount" => 10_00, "status" => "succeeded" },
+            { "id" => "re_2", "object" => "refund", "amount" => 5_00, "status" => "succeeded" }
+          ]
+        }
+      }
+    end
+
     let(:retrieved_charge) do
-      double(
-        "Stripe::Charge",
+      instance_double(
+        Stripe::Charge,
         refunds: double("refunds", data: [
           double("refund", id: "re_1", status: "succeeded", amount: 10_00),
           double("refund", id: "re_2", status: "succeeded", amount: 5_00)
-        ])
+        ]),
+        to_hash: charge_hash
       )
     end
 
@@ -81,6 +99,14 @@ RSpec.describe StripeChargeRefundedProcessor do
         .from(30_00).to(15_00)
     end
 
+    it "refreshes the stripe_charge metadata with the updated refund state" do
+      processor.call(event)
+      expect(external_payment.reload.metadata["stripe_charge"]).to include(
+        "amount_refunded" => 15_00,
+        "refunds" => hash_including("data" => array_including(hash_including("id" => "re_1")))
+      )
+    end
+
     it "skips refunds that are not succeeded" do
       succeeded = double("refund", id: "re_1", status: "succeeded", amount: 10_00)
       pending_refund = double("refund", id: "re_2", status: "pending", amount: 5_00)
@@ -97,12 +123,27 @@ RSpec.describe StripeChargeRefundedProcessor do
   end
 
   describe "without a pay_charge" do
+    let(:charge_hash) do
+      {
+        "id" => "ch_test_123",
+        "amount" => 30_00,
+        "amount_refunded" => 10_00,
+        "refunds" => {
+          "object" => "list",
+          "data" => [
+            { "id" => "re_no_pc", "object" => "refund", "amount" => 10_00, "status" => "succeeded" }
+          ]
+        }
+      }
+    end
+
     let(:retrieved_charge) do
-      double(
-        "Stripe::Charge",
+      instance_double(
+        Stripe::Charge,
         refunds: double("refunds", data: [
           double("refund", id: "re_no_pc", status: "succeeded", amount: 10_00)
-        ])
+        ]),
+        to_hash: charge_hash
       )
     end
 
@@ -119,6 +160,13 @@ RSpec.describe StripeChargeRefundedProcessor do
       expect { processor.call(event) }
         .to change { external_payment.reload.amount_cents_remaining }
         .from(30_00).to(20_00)
+    end
+
+    it "refreshes the stripe_charge metadata" do
+      processor.call(event)
+      expect(external_payment.reload.metadata["stripe_charge"]).to include(
+        "amount_refunded" => 10_00
+      )
     end
   end
 end
