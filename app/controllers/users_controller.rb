@@ -10,7 +10,7 @@ class UsersController < ApplicationController
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(User.includes(:created_by, :updated_by,
+      base_scope = authorized_scope(User.includes(:created_by, :updated_by, :welcome_instructions_sent_by,
                                                   person: { avatar_attachment: :blob }))
       filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
       @users_count = filtered.count
@@ -298,7 +298,7 @@ class UsersController < ApplicationController
     authorize! @user, to: :send_welcome_instructions?
 
     @user.set_welcome_instructions_token!
-    @user.update(welcome_instructions_sent_at: Time.current)
+    @user.update(welcome_instructions_sent_at: Time.current, welcome_instructions_sent_by: current_user)
     @user.send_confirmation_instructions
 
     redirect_to users_path(search: params[:search],

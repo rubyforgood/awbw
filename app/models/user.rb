@@ -27,6 +27,7 @@ class User < ApplicationRecord
   belongs_to :person, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
+  belongs_to :welcome_instructions_sent_by, class_name: "User", optional: true
   belongs_to :favorite_event, class_name: "Event", optional: true
   has_many :bookmarks, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
