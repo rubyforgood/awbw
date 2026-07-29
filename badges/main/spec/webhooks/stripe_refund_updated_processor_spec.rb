@@ -6,6 +6,7 @@ RSpec.describe StripeRefundUpdatedProcessor do
   let(:person) { create(:person) }
   let(:external_payment) do
     ExternalProcessorPayment.create!(
+      stripe_charge_id: "ch_test_123",
       person: person,
       amount_cents: 30_00,
       amount_cents_remaining: 15_00,
@@ -25,13 +26,28 @@ RSpec.describe StripeRefundUpdatedProcessor do
     )
   end
 
+  let(:charge_hash) do
+    {
+      "id" => "ch_test_123",
+      "amount" => 30_00,
+      "amount_refunded" => 0,
+      "refunded" => false,
+      "refunds" => { "object" => "list", "data" => [], "has_more" => false }
+    }
+  end
+
+  let(:retrieved_charge) do
+    instance_double(Stripe::Charge, to_hash: charge_hash)
+  end
+
   let(:stripe_refund) do
     double(
       "Stripe::Refund",
       object: "refund",
       id: "re_test_refund",
       status: "canceled",
-      amount: 15_00
+      amount: 15_00,
+      charge: "ch_test_123"
     )
   end
 
@@ -58,6 +74,10 @@ RSpec.describe StripeRefundUpdatedProcessor do
   end
 
   describe "refund cancellation" do
+    before do
+      allow(Stripe::Charge).to receive(:retrieve).and_return(retrieved_charge)
+    end
+
     it "destroys the local Refund record" do
       expect { processor.call(event) }.to change(Refund, :count).by(-1)
     end
@@ -66,6 +86,14 @@ RSpec.describe StripeRefundUpdatedProcessor do
       expect { processor.call(event) }
         .to change { external_payment.reload.amount_cents_remaining }
         .from(0).to(15_00)
+    end
+
+    it "refreshes the stripe_charge metadata after canceling" do
+      processor.call(event)
+      expect(external_payment.reload.metadata["stripe_charge"]).to include(
+        "amount_refunded" => 0,
+        "refunds" => hash_including("data" => [])
+      )
     end
 
     it "is idempotent on replay" do
