@@ -48,7 +48,6 @@ class GrantsController < ApplicationController
 
   def create
     @grant = Grant.new(grant_params)
-    @grant.created_by = current_user
     @grant.updated_by = current_user
     authorize! @grant
 

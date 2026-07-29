@@ -99,7 +99,6 @@ class UsersController < ApplicationController
     # assign person
     person_id = params[:person_id].presence || params.dig(:user, :person_id).presence
     @user.person = Person.find(person_id) if person_id
-    @user.created_by = current_user
     @user.updated_by = current_user
 
     if @user.save
@@ -134,7 +133,7 @@ class UsersController < ApplicationController
 
     @user.assign_attributes(user_params.except(:password, :password_confirmation))
     @user.updated_by = current_user
-    @user.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
+    @user.comments.select(&:new_record?).each { |c| c.updated_by = current_user }
     @user.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
     # Suppress Devise's automatic reconfirmation email so the interstitial can control it

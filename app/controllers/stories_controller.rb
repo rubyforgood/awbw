@@ -63,7 +63,6 @@ class StoriesController < ApplicationController
 
   def create
     @story = Story.new(story_params.except(:category_ids, :sector_ids))
-    @story.created_by = current_user
     authorize! @story
 
     success = false

@@ -25,7 +25,6 @@ class CommentsController < ApplicationController
   def create
     authorize!
     @comment = @commentable.comments.build(comment_params)
-    @comment.created_by = current_user
     @comment.updated_by = current_user
 
     if @comment.save

@@ -297,7 +297,6 @@ class ScholarshipsController < ApplicationController
   # on new ones, editor on existing ones whose body changed.
   def attribute_comment_authorship
     @scholarship.comments.select(&:new_record?).each do |c|
-      c.created_by = current_user
       c.updated_by = current_user
     end
     @scholarship.comments.select { |c| c.persisted? && c.body_changed? }.each do |c|
