@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
+RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:event) { create(:event, cost_cents: 0) }
   let(:form) { create(:form) }

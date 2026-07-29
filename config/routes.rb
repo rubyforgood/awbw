@@ -73,8 +73,8 @@ Rails.application.routes.draw do
     end
   end
   resources :community_news
-  get "bulk_payment/:slug", to: "events/bulk_payment_submissions#ticket", as: :bulk_payment_ticket
-  post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payment_submissions#resend_confirmation", as: :bulk_payment_resend_confirmation
+  get "bulk_payment/:slug", to: "events/bulk_payment_form_submissions#ticket", as: :bulk_payment_ticket
+  post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payment_form_submissions#resend_confirmation", as: :bulk_payment_resend_confirmation
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
   get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
@@ -163,7 +163,7 @@ Rails.application.routes.draw do
     resources :registration_ticket_callouts, only: [ :show, :update ]
     resource :registrations, only: %i[ create ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
-    resource :bulk_payment, only: [ :new, :create, :show ], controller: "events/bulk_payment_submissions"
+    resource :bulk_payment, only: [ :new, :create, :show ], controller: "events/bulk_payment_form_submissions"
     resource :invoice, only: [ :show ], module: :events
     get "form_submissions/:person_id", to: "events/form_submissions#show", as: :registrant_submissions
   end
