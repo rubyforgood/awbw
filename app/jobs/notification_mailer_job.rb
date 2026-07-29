@@ -17,7 +17,9 @@ class NotificationMailerJob < ApplicationJob
       "event_registration_cancelled_fyi" => ->(n) { NotificationMailer.event_registration_cancelled_fyi(n) },
       "event_registration_reminder" => ->(n) { EventMailer.event_registration_reminder(n.noticeable, custom_message: n.custom_message, custom_subject: n.custom_subject) },
       "bulk_payment_confirmation" => ->(n) { EventMailer.bulk_payment_confirmation(n.noticeable) },
-      "bulk_payment_confirmation_fyi" => ->(n) { NotificationMailer.bulk_payment_confirmation_fyi(n) }
+      "bulk_payment_confirmation_updated" => ->(n) { EventMailer.bulk_payment_confirmation(n.noticeable, updated: true) },
+      "bulk_payment_confirmation_fyi" => ->(n) { NotificationMailer.bulk_payment_confirmation_fyi(n) },
+      "bulk_payment_confirmation_updated_fyi" => ->(n) { NotificationMailer.bulk_payment_confirmation_fyi(n, updated: true) }
     }
 
     mailer = mailer_map[notification.kind]&.call(notification)

@@ -1,12 +1,22 @@
-<h1>Payment received</h1>
+<h1><%= @updated ? "Attendee list updated" : "Payment received" %></h1>
 
 <div style="margin-top: 36px; text-align: left;">
+  <% if @updated %>
+    <p style="color: #6b7280; font-size: 14px; margin: 0 0 16px;">
+      Updated on <%= @submission.updated_at.strftime("%B %-d, %Y") %>
+    </p>
+  <% end %>
+
   <p>
     Hello <strong><%= @person.full_name %></strong>,
   </p>
 
   <p>
-    We've received your payment submission<%= " for the following #{@organization_name} event" if @event %>:
+    <% if @updated %>
+      Your payment submission<%= " for the following #{@organization_name} event" if @event %> has been updated. Here are the current details:
+    <% else %>
+      We've received your payment submission<%= " for the following #{@organization_name} event" if @event %>:
+    <% end %>
   </p>
 
   <% if @event %>

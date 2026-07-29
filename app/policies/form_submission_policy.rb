@@ -14,6 +14,16 @@ class FormSubmissionPolicy < ApplicationPolicy
     admin? || (slug.present? && record.slug == slug)
   end
 
+  # The payer edits their own submission's attendee list via its public slug;
+  # admins can edit any submission.
+  def edit?
+    admin? || (slug.present? && record.slug == slug)
+  end
+
+  def update?
+    admin? || (slug.present? && record.slug == slug)
+  end
+
   def new?
     true
   end

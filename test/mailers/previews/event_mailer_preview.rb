@@ -32,6 +32,10 @@ class EventMailerPreview < ActionMailer::Preview
     EventMailer.bulk_payment_confirmation(sample_bulk_payment_submission)
   end
 
+  def bulk_payment_confirmation_updated
+    EventMailer.bulk_payment_confirmation(sample_bulk_payment_submission, updated: true)
+  end
+
   private
 
   def sample_bulk_payment_submission

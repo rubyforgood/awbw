@@ -27,17 +27,23 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
-  def bulk_payment_confirmation_fyi(notification)
+  # `updated: true` is the FYI sent when the attendee list is edited after
+  # submission, so staff know the Pay for Other(s) data changed (vs. a brand-new
+  # submission).
+  def bulk_payment_confirmation_fyi(notification, updated: false)
     @submission = notification.noticeable
+    @updated = updated
     @person = @submission.person
     @event = @submission.event&.decorate
     @answers = @submission.answers_by_identifier
     @attendees = @submission.bulk_payment_attendees
     @notification_type = "Bulk payment"
 
-    mail(
-      subject: "#{FYI_PREFIX} New bulk payment by #{@person.full_name} for #{@event&.title}"
-    )
+    subject = @updated ?
+      "#{FYI_PREFIX} #{Form::BULK_PAYMENT_PUBLIC_NAME} updated by #{@person.full_name} for #{@event&.title}" :
+      "#{FYI_PREFIX} New bulk payment by #{@person.full_name} for #{@event&.title}"
+
+    mail(subject: subject)
   end
 
   def idea_submitted(notification)

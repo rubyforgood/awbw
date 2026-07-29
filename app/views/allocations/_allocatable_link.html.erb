@@ -5,7 +5,7 @@
     destination can return to the origin (e.g. a bulk payment tray). ---%>
 <% allocatable = allocation.allocatable %>
 <% if allocatable %>
-  <% descriptor = allocatable_descriptor(allocatable, return_params: local_assigns.fetch(:return_params, {})) %>
+  <% descriptor = allocatable_descriptor(allocatable, return_params: local_assigns.fetch(:return_params, {}), compact: local_assigns.fetch(:compact, false)) %>
   <% if descriptor[:path] %>
     <%= link_to descriptor[:path], class: "group inline-flex max-w-xs items-center gap-1.5", data: { turbo_frame: "_top" } do %>
       <span class="min-w-0">

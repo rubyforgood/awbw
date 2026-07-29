@@ -272,7 +272,7 @@ RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
       expect(response.body).to include("jordan@example.com")
     end
 
-    it "shows the payer's name, organization, and registrants-covered count" do
+    it "shows the payer's name, organization, and attendees-covered count" do
       submission.form_answers.create!(form_field: payer_first_name_field, submitted_answer: "Alex",
                                       question_name_when_answered: "Payer first name")
       submission.form_answers.create!(form_field: payer_last_name_field, submitted_answer: "Chen",
@@ -286,7 +286,7 @@ RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
       expect(response.body).to include("Alex Chen")
       expect(response.body).to include("Bright Futures Academy")
       # One attendee is listed and no explicit count is set, so the covered count is 1.
-      expect(response.body).to include("Covering 1 registrant")
+      expect(response.body).to include("Covering 1 attendee")
     end
 
     it "does not show per-person actions like cancelling a registration" do
@@ -321,6 +321,14 @@ RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
       expect(response.body).to include("Back to bulk payments")
     end
 
+    it "does not show the admin-only per-attendee status column to the public payer" do
+      # The single attendee is unmatched, so an admin would see "Not registered";
+      # the public payer must not.
+      get_ticket
+
+      expect(response.body).not_to include("Not registered")
+    end
+
     context "as an admin" do
       before { sign_in admin }
 
@@ -328,6 +336,33 @@ RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
         get_ticket
 
         expect(response.body).to include("Payment allocations")
+      end
+
+      it "flags an unmatched attendee as not registered" do
+        get_ticket
+
+        expect(response.body).to include("Not registered")
+      end
+
+      it "shows the balance due for a matched but unallocated registrant" do
+        create(:event_registration, event: event,
+               registrant: create(:person, first_name: "Jordan", last_name: "Rivers", email: "jordan@example.com"))
+
+        get_ticket
+
+        # Event cost is $10 and nothing is allocated yet.
+        expect(response.body).to include("$10 due")
+      end
+
+      it "marks a fully-allocated registrant as paid" do
+        reg = create(:event_registration, event: event,
+                     registrant: create(:person, first_name: "Jordan", last_name: "Rivers", email: "jordan@example.com"))
+        create(:allocation, allocatable: reg, amount: event.cost_cents)
+
+        get_ticket
+
+        expect(response.body).to include("Paid")
+        expect(response.body).not_to include("$10 due")
       end
     end
   end
@@ -346,6 +381,113 @@ RSpec.describe "Events::BulkPaymentSubmissions", type: :request do
 
       expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
       expect(flash[:notice]).to eq("Confirmation email sent.")
+    end
+  end
+
+  describe "editing attendees" do
+    let(:event) { create(:event, :publicly_visible, cost_cents: 1000, title: "Spring Workshop") }
+    let(:payer) { create(:person) }
+    let(:attendees_json) do
+      [
+        { "first_name" => "Jordan", "last_name" => "Rivers", "email" => "jordan@example.com" },
+        { "first_name" => "Sam", "last_name" => "Lee", "email" => "sam@example.com" }
+      ].to_json
+    end
+    let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
+    let!(:attendees_field) do
+      create(:form_field, form: form, answer_type: :free_form_input_one_line,
+             field_identifier: "bulk_payment_attendees", name: "Attendees", required: false)
+    end
+
+    before do
+      submission.form_answers.create!(form_field: attendees_field, submitted_answer: attendees_json,
+                                      question_name_when_answered: "Attendees")
+      sign_out admin
+    end
+
+    describe "GET edit" do
+      it "renders the attendee rows for the public payer via the slug" do
+        get edit_bulk_payment_path(submission.slug)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Edit attendees")
+        expect(response.body).to include('value="Jordan"')
+        expect(response.body).to include('value="Sam"')
+      end
+
+      it "locks an attendee already connected to an active registrant" do
+        create(:event_registration, event: event,
+               registrant: create(:person, first_name: "Jordan", last_name: "Rivers", email: "jordan@example.com"))
+
+        get edit_bulk_payment_path(submission.slug)
+
+        # Only the matched row's three inputs (first/last/email) render read-only.
+        expect(response.body).to include("Registered")
+        expect(response.body.scan(/readonly/).size).to eq(3)
+      end
+
+      it "404s for an unknown slug" do
+        get edit_bulk_payment_path("nope")
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "shows a Back to bulk payments eyebrow for an admin arriving from the dashboard" do
+        sign_in admin
+
+        get edit_bulk_payment_path(submission.slug, return_to: "bulk_payments", expand: submission.id)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Back to ticket")
+        expect(response.body).to include("Back to bulk payments")
+      end
+    end
+
+    describe "PATCH update" do
+      def patch_attendees(list)
+        patch update_bulk_payment_path(submission.slug),
+              params: { bulk_payment: { attendees_json: list.to_json } }
+      end
+
+      it "rewrites the attendee list and returns to the ticket" do
+        patch_attendees([
+          { first_name: "Jordan", last_name: "Rivers", email: "jordan@example.com" },
+          { first_name: "Sam", last_name: "Lee", email: "sam@example.com" },
+          { first_name: "Alex", last_name: "Kim", email: "alex@example.com" }
+        ])
+
+        expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
+        expect(submission.reload.bulk_payment_attendees.map { |a| a["first_name"] }).to eq(%w[Jordan Sam Alex])
+      end
+
+      it "sends the payer an updated confirmation email" do
+        expect {
+          patch_attendees([ { first_name: "Jordan", last_name: "Rivers", email: "jordan@example.com" } ])
+        }.to change { Notification.where(kind: "bulk_payment_confirmation_updated").count }.by(1)
+      end
+
+      it "sends staff an updated FYI email" do
+        expect {
+          patch_attendees([ { first_name: "Jordan", last_name: "Rivers", email: "jordan@example.com" } ])
+        }.to change { Notification.where(kind: "bulk_payment_confirmation_updated_fyi").count }.by(1)
+      end
+
+      it "removes attendees left off the submitted list" do
+        patch_attendees([ { first_name: "Jordan", last_name: "Rivers", email: "jordan@example.com" } ])
+
+        expect(submission.reload.bulk_payment_attendees.size).to eq(1)
+      end
+
+      it "drops entirely blank rows and trims whitespace" do
+        patch_attendees([
+          { first_name: "  Pat  ", last_name: " Smith ", email: " pat@example.com " },
+          { first_name: "", last_name: "", email: "" }
+        ])
+
+        expect(submission.reload.bulk_payment_attendees).to eq(
+          [ { "first_name" => "Pat", "last_name" => "Smith", "email" => "pat@example.com" } ]
+        )
+      end
     end
   end
 end

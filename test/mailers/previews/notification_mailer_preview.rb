@@ -55,6 +55,22 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.bulk_payment_confirmation_fyi(notification)
   end
 
+  def bulk_payment_confirmation_updated_fyi
+    submission = FormSubmission.where(role: "bulk_payment").order(id: :desc).first ||
+      raise("Need a bulk_payment FormSubmission to preview")
+
+    notification = find_valid_notification("bulk_payment_confirmation_updated_fyi") ||
+      Notification.create!(
+        noticeable: submission,
+        notification_type: 0,
+        kind: "bulk_payment_confirmation_updated_fyi",
+        recipient_role: "admin",
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+      )
+
+    NotificationMailer.bulk_payment_confirmation_fyi(notification, updated: true)
+  end
+
   def idea_submitted
     noticeable = StoryIdea.first || WorkshopVariationIdea.first
     user = noticeable&.created_by || User.first

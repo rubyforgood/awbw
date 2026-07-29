@@ -52,6 +52,36 @@ RSpec.describe FormSubmission do
     end
   end
 
+  describe "#update_bulk_payment_attendees" do
+    let(:form) { create(:form) }
+    let!(:field) { create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees") }
+    let(:submission) { create(:form_submission, form: form) }
+
+    it "writes the attendee list to the form answer as JSON" do
+      submission.update_bulk_payment_attendees([ { "first_name" => "A", "last_name" => "B", "email" => "a@example.com" } ])
+
+      expect(submission.bulk_payment_attendees).to eq(
+        [ { "first_name" => "A", "last_name" => "B", "email" => "a@example.com" } ]
+      )
+    end
+
+    it "replaces any previously stored attendees" do
+      submission.form_answers.create!(form_field: field,
+                                      submitted_answer: [ { "first_name" => "Old" } ].to_json)
+
+      submission.update_bulk_payment_attendees([ { "first_name" => "New" } ])
+
+      expect(submission.bulk_payment_attendees).to eq([ { "first_name" => "New" } ])
+    end
+
+    it "returns false and writes nothing when the form has no attendees field" do
+      field.destroy!
+
+      expect(submission.update_bulk_payment_attendees([ { "first_name" => "A" } ])).to be(false)
+      expect(submission.reload.bulk_payment_attendees).to eq([])
+    end
+  end
+
   describe "#bulk_payment_amount_cents" do
     let(:event) { create(:event, cost_cents: 2500) }
     let(:form) { create(:form) }

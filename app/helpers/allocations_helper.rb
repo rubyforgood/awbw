@@ -5,13 +5,16 @@ module AllocationsHelper
   # allocatable type; everything else falls back to a name + humanized type.
   # `return_params` (e.g. from a bulk payment tray) are appended to a linkable
   # path so the destination's back link can return to the origin.
-  def allocatable_descriptor(allocatable, return_params: {})
+  # compact: drop the "Event registration for" framing and the event subtitle —
+  # used where the surrounding context (e.g. a bulk payment ticket) already makes
+  # the event and that it's a registration obvious, so only the registrant matters.
+  def allocatable_descriptor(allocatable, return_params: {}, compact: false)
     case allocatable
     when EventRegistration
       {
         path: edit_event_registration_path(allocatable, return_params),
-        title: "Event registration for #{allocatable.registrant&.full_name}",
-        subtitle: allocatable.event&.title
+        title: compact ? allocatable.registrant&.full_name : "Event registration for #{allocatable.registrant&.full_name}",
+        subtitle: compact ? nil : allocatable.event&.title
       }
     else
       {

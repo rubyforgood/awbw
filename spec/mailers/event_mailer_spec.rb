@@ -151,6 +151,21 @@ RSpec.describe EventMailer, type: :mailer do
       # Event cost (1099¢) × 4 attendees = $43.96
       expect(mail.body.encoded).to include("$43.96")
     end
+
+    context "when re-sent as an update" do
+      let(:mail) { described_class.bulk_payment_confirmation(submission, updated: true) }
+
+      it "uses an 'updated' subject rather than 'Payment received'" do
+        expect(mail.subject).to include("Attendees updated")
+        expect(mail.subject).not_to include("Payment received")
+      end
+
+      it "flags the body as an update with a dated line" do
+        body = mail.body.encoded
+        expect(body).to include("Attendee list updated")
+        expect(body).to include("Updated on #{submission.updated_at.strftime('%B %-d, %Y')}")
+      end
+    end
   end
 
   describe "#event_registration_reminder" do

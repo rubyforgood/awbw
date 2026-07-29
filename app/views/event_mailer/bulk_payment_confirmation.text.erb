@@ -1,8 +1,10 @@
-Payment received
-
+<%= @updated ? "Attendee list updated" : "Payment received" %>
+<% if @updated %>
+Updated on <%= @submission.updated_at.strftime("%B %-d, %Y") %>
+<% end %>
 Hello <%= @person.full_name %>,
 
-We've received your payment submission<%= " for the following event" if @event %>:
+<% if @updated %>Your payment submission<%= " for the following event" if @event %> has been updated. Here are the current details:<% else %>We've received your payment submission<%= " for the following event" if @event %>:<% end %>
 
 <% if @event %><% if @event.respond_to?(:pre_title) && @event.pre_title.present? %><%= @event.pre_title %>
 <% end %><%= @event.title %>

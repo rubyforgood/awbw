@@ -23,6 +23,27 @@ RSpec.describe NotificationMailer, type: :mailer do
     it "names the payer in the subject" do
       expect(described_class.bulk_payment_confirmation_fyi(notification).subject).to include("Pat Payer")
     end
+
+    it "links to the payer's payment ticket, not the submission page" do
+      body = described_class.bulk_payment_confirmation_fyi(notification).body.encoded
+
+      expect(body).to include(bulk_payment_ticket_url(submission.slug))
+      expect(body).to include("View payment ticket")
+      expect(body).not_to include("View submission")
+    end
+
+    context "when re-sent as an update" do
+      let(:mail) { described_class.bulk_payment_confirmation_fyi(notification, updated: true) }
+
+      it "flags the subject and body as a Pay for Other(s) data change" do
+        expect(mail.subject).to include("#{Form::BULK_PAYMENT_PUBLIC_NAME} updated by")
+        expect(mail.body.encoded).to include("#{Form::BULK_PAYMENT_PUBLIC_NAME} data changed")
+      end
+
+      it "still links to the payment ticket" do
+        expect(mail.body.encoded).to include(bulk_payment_ticket_url(submission.slug))
+      end
+    end
   end
 
   describe "#event_registration_confirmation_fyi" do

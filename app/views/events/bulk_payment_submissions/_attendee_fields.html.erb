@@ -1,0 +1,63 @@
+<%#
+  One editable attendee ("member") row for the bulk payment edit form. Used both
+  for the pre-rendered existing rows and as the Stimulus <template> that new rows
+  are cloned from (rendered with index "INDEX", which the controller swaps).
+  Locals:
+    index                        - row index, or "INDEX" for the JS template
+    first_name, last_name, email - current values (blank for the template)
+    locked                       - true when the attendee is already connected to
+                                   a registrant; fields render read-only, but the
+                                   row stays removable
+%>
+<% locked = local_assigns.fetch(:locked, false) %>
+<% index = local_assigns.fetch(:index, "INDEX") %>
+<% base_input = "w-full rounded-lg border px-3.5 py-2.5 text-sm shadow-sm transition focus:outline-none" %>
+<% editable_input = "#{base_input} bg-white text-gray-900 border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30" %>
+<% readonly_input = "#{base_input} bg-gray-50 text-gray-500 border-gray-200 cursor-not-allowed" %>
+<% input_classes = locked ? readonly_input : editable_input %>
+<div class="flex items-start gap-3 mb-3" data-bulk-payment-attendees-target="row" data-index="<%= index %>">
+  <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1.5" for="attendee_<%= index %>_first_name">Attendee first name</label>
+      <input type="text"
+             name="bulk_payment[attendees][<%= index %>][first_name]"
+             id="attendee_<%= index %>_first_name"
+             value="<%= first_name %>"
+             data-attendee-field="first_name"
+             <%= "readonly" if locked %>
+             class="<%= input_classes %>">
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1.5" for="attendee_<%= index %>_last_name">Attendee last name</label>
+      <input type="text"
+             name="bulk_payment[attendees][<%= index %>][last_name]"
+             id="attendee_<%= index %>_last_name"
+             value="<%= last_name %>"
+             data-attendee-field="last_name"
+             <%= "readonly" if locked %>
+             class="<%= input_classes %>">
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1.5" for="attendee_<%= index %>_email">Attendee email</label>
+      <input type="email"
+             name="bulk_payment[attendees][<%= index %>][email]"
+             id="attendee_<%= index %>_email"
+             value="<%= email %>"
+             data-attendee-field="email"
+             <%= "readonly" if locked %>
+             class="<%= input_classes %>">
+    </div>
+  </div>
+  <% if locked %>
+    <span class="mt-8 inline-flex shrink-0 items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700"
+          title="This attendee is registered, so their details are locked. You can still remove them.">
+      <i class="fa-solid fa-link text-[10px]"></i> Registered
+    </span>
+  <% end %>
+  <button type="button"
+          data-action="bulk-payment-attendees#removeRow"
+          class="mt-7 inline-flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+          title="Remove attendee">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>

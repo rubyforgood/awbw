@@ -1,0 +1,93 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "Edit attendees — #{@event.title}") %>
+
+<div class="max-w-2xl mx-auto px-4 pt-4">
+  <%# Back to the ticket, carrying the admin's dashboard-return context when they
+      arrived from the bulk payments dashboard. %>
+  <div class="flex flex-col items-start gap-1">
+    <%= link_to bulk_payment_ticket_path(@submission.slug, return_to: params[:return_to], expand: params[:expand]), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
+    <% end %>
+    <% if params[:return_to] == "bulk_payments" && allowed_to?(:dashboard?, @event) %>
+      <%= link_to bulk_payments_return_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Back to bulk payments
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<div class="max-w-2xl mx-auto pb-12 pt-6 px-4">
+  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
+    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+      <div class="flex items-center gap-5">
+        <div class="shrink-0">
+          <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
+        </div>
+        <div>
+          <h1 class="text-xl font-semibold tracking-wide leading-tight">Edit attendees</h1>
+          <p class="text-sm text-blue-200"><%= @event.title %></p>
+        </div>
+      </div>
+      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+    </div>
+
+    <div class="px-6 sm:px-8 py-7">
+      <div class="flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-900 rounded-lg px-4 py-3 mb-6">
+        <i class="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
+        <div class="text-sm space-y-2">
+          <p><strong>Update who this payment covers.</strong> Edit an attendee's details, remove
+            anyone who shouldn't be here, or add more people to the list.</p>
+          <p>Attendees already <strong>linked to a registration</strong> are locked — you can't rename
+            them, but you can still remove them from this list.</p>
+        </div>
+      </div>
+
+      <% if flash[:alert] %>
+        <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 mb-6">
+          <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
+          <span><%= flash[:alert] %></span>
+        </div>
+      <% end %>
+
+      <%= form_with url: update_bulk_payment_path(@submission.slug), method: :patch,
+                     data: { controller: "bulk-payment-attendees",
+                             bulk_payment_attendees_count_value: @attendee_matches.size,
+                             action: "submit->bulk-payment-attendees#serialize", turbo: false },
+                     class: "space-y-2" do %>
+
+        <template data-bulk-payment-attendees-target="template">
+          <%= render "attendee_fields", index: "INDEX", first_name: "", last_name: "", email: "", locked: false %>
+        </template>
+
+        <div data-bulk-payment-attendees-target="rows">
+          <% @attendee_matches.each_with_index do |am, i| %>
+            <%= render "attendee_fields",
+                  index: i,
+                  first_name: am[:first_name],
+                  last_name: am[:last_name],
+                  email: am[:email],
+                  locked: am[:matches].any? %>
+          <% end %>
+        </div>
+
+        <input type="hidden"
+               name="bulk_payment[attendees_json]"
+               data-bulk-payment-attendees-target="hiddenInput">
+
+        <button type="button"
+                data-action="bulk-payment-attendees#addRow"
+                class="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800 transition cursor-pointer mt-2">
+          <i class="fa-solid fa-plus"></i> Add attendee
+        </button>
+
+        <div class="pt-7">
+          <%= button_tag type: "submit",
+                class: "w-full inline-flex items-center justify-center gap-2.5 rounded-xl bg-blue-900 px-6 py-3.5 text-white font-semibold text-lg shadow-lg shadow-blue-900/20 transition hover:bg-blue-800 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer" do %>
+            <i class="fa-regular fa-circle-check"></i>Save attendees
+          <% end %>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+</div>

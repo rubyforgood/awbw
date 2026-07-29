@@ -28,7 +28,9 @@ class Notification < ApplicationRecord
     event_registration_cancelled_fyi
     event_registration_reminder
     bulk_payment_confirmation
+    bulk_payment_confirmation_updated
     bulk_payment_confirmation_fyi
+    bulk_payment_confirmation_updated_fyi
     idea_submitted
     idea_submitted_fyi
     report_submitted

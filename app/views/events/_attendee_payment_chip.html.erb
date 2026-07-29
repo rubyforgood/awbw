@@ -1,0 +1,17 @@
+<%# Per-attendee coverage chip for the bulk payment ticket (admin-only). Locals:
+    status — a hash from BulkPaymentSubmissionsController#attendee_payment_statuses:
+    { state: :paid } | { state: :due, due_cents: N } | { state: :unregistered } %>
+<% case status[:state] %>
+<% when :paid %>
+  <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 whitespace-nowrap">
+    <i class="fa-solid fa-circle-check text-green-500 text-[0.65rem]"></i> Paid
+  </span>
+<% when :due %>
+  <span class="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700 whitespace-nowrap">
+    <i class="fa-solid fa-circle-exclamation text-orange-500 text-[0.65rem]"></i> <%= dollars_from_cents(status[:due_cents]) %> due
+  </span>
+<% else %>
+  <span class="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-500 whitespace-nowrap">
+    Not registered
+  </span>
+<% end %>

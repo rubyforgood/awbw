@@ -36,10 +36,20 @@
       </dd>
     </div>
   <% end %>
-  <% if attendees.any? %>
+  <% if submission.bulk_payment? && submission.slug.present? %>
+    <div class="pt-6 pb-2 border-b border-gray-200 mb-4 flex items-center justify-between gap-2">
+      <h3 class="text-lg font-semibold text-gray-800">Attendees<% if attendees.any? %> (<%= attendees.size %>)<% end %></h3>
+      <%= link_to edit_bulk_payment_path(submission.slug, return_to: params[:return_to], expand: params[:expand]),
+                    class: "inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-800" do %>
+        <i class="fa-solid fa-pen-to-square text-xs"></i> Edit attendees
+      <% end %>
+    </div>
+  <% elsif attendees.any? %>
     <div class="pt-6 pb-2 border-b border-gray-200 mb-4">
       <h3 class="text-lg font-semibold text-gray-800">Attendees</h3>
     </div>
+  <% end %>
+  <% if attendees.any? %>
     <div class="overflow-hidden border border-gray-200 rounded-lg">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">

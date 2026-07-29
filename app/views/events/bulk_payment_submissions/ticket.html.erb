@@ -83,70 +83,84 @@
         </div>
       </div>
 
-      <!-- Divider (perforation "ticket tear" separating the event from the
-           payer/payment portion) -->
-      <div class="relative my-6">
-        <div class="border-t border-dashed border-gray-300"></div>
-        <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
-        <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
-      </div>
+      <!-- Payer + what they owe: the payer is viewing this ticket, so who they
+           are and the amount due are the headline (amount carries the most
+           weight; status and who it covers support it). -->
+      <div class="text-center">
+        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Payer</p>
+        <p class="mt-1 text-2xl font-bold text-gray-900 break-words"><%= payer_name.presence || "—" %></p>
+        <% if payer_organization.present? %>
+          <p class="text-sm text-gray-500 break-words"><%= payer_organization %></p>
+        <% end %>
 
-      <!-- Payer + payment status: the payer is who's viewing this ticket, so the
-           payer and what they owe are the headline. -->
-      <div class="text-center space-y-3">
-        <div class="space-y-1">
-          <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Payer</h3>
-          <p class="text-2xl font-bold text-gray-900 break-words"><%= payer_name.presence || "—" %></p>
-          <% if payer_organization.present? %>
-            <p class="text-sm text-gray-500 break-words"><%= payer_organization %></p>
+        <div class="mt-5 flex flex-col items-center gap-2.5">
+          <% if total_cents.to_i > 0 %>
+            <p class="text-3xl font-bold tracking-tight text-gray-900 tabular-nums"><%= dollars_from_cents(total_cents) %></p>
           <% end %>
-          <p class="inline-flex items-center gap-1.5 rounded-full bg-purple-50 text-purple-700 text-sm font-medium px-3 py-1">
-            <i class="fa-solid fa-users text-purple-400"></i>
-            Covering <%= attendee_count %> <%= "registrant".pluralize(attendee_count) %>
-          </p>
-        </div>
-
-        <!-- Payment status -->
-        <div>
           <% if @payment %>
-            <span class="inline-flex items-center gap-1 rounded-full text-sm font-medium border px-3 py-1 bg-green-50 text-green-700 border-green-200">
-              <i class="fa-solid fa-circle-check text-green-500"></i> Payment received<% if total_cents.to_i > 0 %> — <%= dollars_from_cents(total_cents) %><% end %>
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
+              <i class="fa-solid fa-circle-check text-green-500"></i> Payment received
             </span>
           <% else %>
-            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
-              <i class="fa-solid fa-clock text-amber-500"></i> Payment pending<% if total_cents.to_i > 0 %> — <%= dollars_from_cents(total_cents) %><% end %>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
+              <i class="fa-solid fa-clock text-amber-500"></i> Payment pending
             </span>
           <% end %>
+          <p class="inline-flex items-center gap-1.5 text-sm text-gray-500">
+            <i class="fa-solid fa-users text-gray-400"></i>
+            Covering <%= attendee_count %> <%= "attendee".pluralize(attendee_count) %>
+          </p>
         </div>
       </div>
 
-      <!-- Registrant details -->
+      <!-- Attendees: the people this payment covers (they may not have registered
+           yet, so "attendee" not "registrant"). Long lists scroll within a fixed
+           height (sticky header) so the actions below stay reachable. -->
       <div>
         <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide text-center mb-3">
-          Registrant details<% if attendees.any? %> (<%= attendees.size %> of <%= attendee_count %>)<% end %>
+          Attendees<% if attendees.any? %> (<%= attendees.size %>)<% end %>
         </h3>
         <% if attendees.any? %>
-          <div class="overflow-hidden border border-gray-200 rounded-lg bg-white">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Name</th>
-                  <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Email</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <% attendees.each do |attendee| %>
+          <% show_status = @attendee_statuses.present? %>
+          <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div class="max-h-96 overflow-y-auto">
+              <table class="min-w-full text-sm">
+                <thead class="sticky top-0 z-10 bg-gray-50">
                   <tr>
-                    <td class="px-4 py-2.5 text-sm text-gray-900"><%= [ attendee["first_name"], attendee["last_name"] ].compact_blank.join(" ").presence || "—" %></td>
-                    <td class="px-4 py-2.5 text-sm text-gray-900"><%= attendee["email"].presence || "—" %></td>
+                    <th class="border-b border-gray-200 px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wide w-10">#</th>
+                    <th class="border-b border-gray-200 px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Name</th>
+                    <th class="border-b border-gray-200 px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Email</th>
+                    <% if show_status %>
+                      <th class="border-b border-gray-200 px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                    <% end %>
                   </tr>
-                <% end %>
-              </tbody>
-            </table>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <% attendees.each_with_index do |attendee, i| %>
+                    <tr>
+                      <td class="px-4 py-2.5 text-right text-gray-400 tabular-nums"><%= i + 1 %></td>
+                      <td class="px-4 py-2.5 text-gray-900"><%= [ attendee["first_name"], attendee["last_name"] ].compact_blank.join(" ").presence || "—" %></td>
+                      <td class="px-4 py-2.5 text-gray-600 break-all"><%= attendee["email"].presence || "—" %></td>
+                      <% if show_status %>
+                        <td class="px-4 py-2.5 text-right">
+                          <%= render "events/attendee_payment_chip", status: @attendee_statuses[i] if @attendee_statuses[i] %>
+                        </td>
+                      <% end %>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
           </div>
         <% else %>
-          <p class="text-center text-sm text-gray-500">No registrants were listed on this submission.</p>
+          <p class="text-center text-sm text-gray-500">No attendees were listed on this submission.</p>
         <% end %>
+        <div class="mt-3 text-center">
+          <%= link_to edit_bulk_payment_path(@submission.slug, return_to: params[:return_to], expand: params[:expand]),
+                        class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 underline" do %>
+            <i class="fa-solid fa-pen-to-square text-xs"></i> Edit attendees
+          <% end %>
+        </div>
       </div>
 
       <!-- Divider -->
@@ -185,10 +199,11 @@
             <%= render "events/payment_badge", payment: @payment %>
           </div>
           <% if @payment %>
-            <%= render "events/payment_allocations", payment: @payment %>
+            <%= render "events/payment_allocations", payment: @payment, compact: true %>
             <div>
-              <%= link_to bulk_payments_event_path(@event), class: "inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium" do %>
-                Manage allocations <i class="fa-solid fa-arrow-right text-xs"></i>
+              <%= link_to bulk_payments_return_path(@event, expand: @submission.id),
+                          class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors" do %>
+                <i class="fa-solid fa-sliders text-gray-400 text-xs"></i> Manage allocations
               <% end %>
             </div>
           <% else %>

@@ -96,4 +96,34 @@ RSpec.describe FormSubmissionPolicy, type: :policy do
       it { is_expected.not_to be_allowed_to(:ticket?) }
     end
   end
+
+  %i[edit? update?].each do |action|
+    describe "##{action}" do
+      context "with admin user" do
+        subject { policy_for(user: admin_user) }
+
+        it { is_expected.to be_allowed_to(action) }
+      end
+
+      context "with no user and matching slug" do
+        let(:submission) { build_stubbed(:form_submission).tap { |s| s.slug = "abc123" } }
+        subject { described_class.new(submission, user: nil, slug: "abc123") }
+
+        it { is_expected.to be_allowed_to(action) }
+      end
+
+      context "with no user and non-matching slug" do
+        let(:submission) { build_stubbed(:form_submission).tap { |s| s.slug = "abc123" } }
+        subject { described_class.new(submission, user: nil, slug: "wrong") }
+
+        it { is_expected.not_to be_allowed_to(action) }
+      end
+
+      context "with regular user and no slug context" do
+        subject { policy_for(user: regular_user) }
+
+        it { is_expected.not_to be_allowed_to(action) }
+      end
+    end
+  end
 end

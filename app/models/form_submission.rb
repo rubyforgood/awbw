@@ -54,6 +54,23 @@ class FormSubmission < ApplicationRecord
     []
   end
 
+  # Rewrites the stored bulk-payment attendee list. Attendees are edited after
+  # submission (by the payer or an admin) from a single edit page, so the whole
+  # JSON array is replaced with the incoming set. Returns false when the form has
+  # no attendees field to write to.
+  def update_bulk_payment_attendees(attendees)
+    field = form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
+    return false unless field
+
+    answer = form_answers.find_or_initialize_by(form_field: field)
+    answer.update!(submitted_answer: Array(attendees).to_json, question_name_when_answered: field.name)
+    # Stamp the submission so the "Updated on …" line in the edit-confirmation
+    # email reflects when the attendee list actually changed (the answer lives on
+    # a separate record that wouldn't otherwise touch the submission).
+    touch
+    true
+  end
+
   # Number of attendees the payer submitted, falling back to the size of the
   # attendees list when an explicit count is absent.
   def bulk_payment_attendee_count

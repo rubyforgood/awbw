@@ -1,12 +1,12 @@
 <% profile_url = person_url(@person) %>
 
-New Bulk Payment
+<%= @updated ? "#{Form::BULK_PAYMENT_PUBLIC_NAME} data changed" : "New Bulk Payment" %>
 ------------------------------------------------------------
 
 <%= @person.full_name %> (<%= @person.preferred_email %>)
 
-Submitted on
-<%= @submission.created_at
+<%= @updated ? "Updated on" : "Submitted on" %>
+<%= (@updated ? @submission.updated_at : @submission.created_at)
                .in_time_zone("Pacific Time (US & Canada)")
                .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
 
@@ -30,9 +30,9 @@ Cost
 <% @attendees.each do |attendee| %>- <%= [ attendee["first_name"], attendee["last_name"] ].compact_blank.join(" ") %><%= " <#{attendee['email']}>" if attendee["email"].present? %>
 <% end %><% end %>
 ------------------------------------------------------------
-<% if @event %>
-View submission:
-<%= event_bulk_payment_url(@event, slug: @submission.slug) %>
+<% if @submission.slug.present? %>
+View payment ticket:
+<%= bulk_payment_ticket_url(@submission.slug) %>
 <% end %>
 View profile:
 <%= profile_url %>

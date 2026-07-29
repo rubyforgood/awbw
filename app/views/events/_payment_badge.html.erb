@@ -1,16 +1,21 @@
 <% if payment %>
   <% if payment.amount_cents_remaining > 0 %>
     <%= link_to payment_path(payment),
-                class: "inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800 hover:bg-orange-200 shrink-0" do %>
-      <i class="fa-solid fa-circle-exclamation text-orange-500"></i> Paid — <%= dollars_from_cents(payment.amount_cents_remaining) %> unallocated
+                class: "inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-100 px-3 py-1 text-xs font-medium text-orange-800 hover:bg-orange-200 shrink-0" do %>
+      <i class="fa-solid fa-circle-exclamation text-orange-500"></i>
+      Paid — <%= dollars_from_cents(payment.amount_cents_remaining) %> unallocated
+      <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
     <% end %>
   <% else %>
-    <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 shrink-0">
-      <i class="fa-solid fa-circle-check text-green-500"></i> Fully allocated
-    </span>
+    <%= link_to payment_path(payment),
+                class: "inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-100 px-3 py-1 text-xs font-medium text-green-800 hover:bg-green-200 shrink-0" do %>
+      <i class="fa-solid fa-circle-check text-green-500"></i>
+      Fully allocated
+      <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
+    <% end %>
   <% end %>
 <% else %>
-  <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 shrink-0">
+  <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 shrink-0">
     <i class="fa-solid fa-clock text-amber-500"></i> Pending
   </span>
 <% end %>

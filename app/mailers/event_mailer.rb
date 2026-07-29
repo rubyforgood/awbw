@@ -18,8 +18,13 @@ class EventMailer < ApplicationMailer
     )
   end
 
-  def bulk_payment_confirmation(form_submission)
+  # `updated: true` re-sends this confirmation after the payer/an admin edits the
+  # attendee list. The template swaps in an "updated" heading + an "Updated on …"
+  # line and the subject changes, so a follow-up email reads as a change — not a
+  # duplicate of the original "Payment received" confirmation.
+  def bulk_payment_confirmation(form_submission, updated: false)
     @submission = form_submission
+    @updated = updated
     @person = form_submission.person
     @event = form_submission.event&.decorate
     @answers = form_submission.answers_by_identifier
@@ -36,11 +41,14 @@ class EventMailer < ApplicationMailer
     @ticket_url = bulk_payment_ticket_url(@submission.slug) if @submission.event.present? && @submission.slug.present?
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
 
+    subject = @updated ? "AWBW Portal: Attendees updated for #{@event&.title}" :
+                         "AWBW Portal: Payment received for #{@event&.title}"
+
     mail(
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW Portal: Payment received for #{@event&.title}"
+      subject: subject
     )
   end
 

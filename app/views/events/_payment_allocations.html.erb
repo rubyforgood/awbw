@@ -21,7 +21,7 @@
             end %>
           <tr class="<%= row_class %> transition-colors duration-150">
             <td class="px-3 py-2 text-gray-800">
-              <%= render "allocations/allocatable_link", allocation: allocation, return_params: local_assigns.fetch(:return_params, {}) %>
+              <%= render "allocations/allocatable_link", allocation: allocation, return_params: local_assigns.fetch(:return_params, {}), compact: local_assigns.fetch(:compact, false) %>
             </td>
             <td class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap tabular-nums"><%= dollars_from_cents(allocation.amount) %></td>
             <td class="px-3 py-2 text-gray-500 whitespace-nowrap"><%= allocation.created_at.strftime("%b %-d, %Y") %></td>

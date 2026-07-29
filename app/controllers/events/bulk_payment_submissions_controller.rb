@@ -1,6 +1,6 @@
 module Events
   class BulkPaymentSubmissionsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :resend_confirmation ]
+    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :resend_confirmation, :edit, :update ]
     before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
 
@@ -74,7 +74,40 @@ module Events
       authorize! @submission, context: { slug: params[:slug] }
 
       @payment = @submission.payment
-      @event = @submission.event.decorate
+      event = @submission.event
+      @event = event.decorate
+      # Per-attendee coverage is admin-only: a payer would be alarmed to see a
+      # balance "due" before staff have allocated a payment that's already landed.
+      @attendee_statuses = attendee_payment_statuses(event) if allowed_to?(:dashboard?, event)
+    end
+
+    # Public, slug-based editor for the attendee ("member") list on a submission.
+    # The payer edits their own submission here; admins are routed to the same
+    # page so changes happen in one place. Attendees already matched ("connected")
+    # to an event registrant render read-only, but can still be removed.
+    def edit
+      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      authorize! @submission, to: :edit?, context: { slug: params[:slug] }
+
+      event = @submission.event
+      @attendee_matches = @submission.decorate.matched_attendees(active_event_registrations(event))
+      @event = event.decorate
+    end
+
+    def update
+      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      authorize! @submission, to: :update?, context: { slug: params[:slug] }
+
+      # Locked rows are rendered read-only but still submit their (unchanged)
+      # values, so writing the whole submitted set preserves connected attendees,
+      # applies edits to unmatched rows, and honors additions/removals.
+      if @submission.update_bulk_payment_attendees(submitted_attendees)
+        send_update_notifications(@submission)
+        redirect_to bulk_payment_ticket_path(@submission.slug), notice: "Attendees updated."
+      else
+        redirect_to bulk_payment_ticket_path(@submission.slug),
+                    alert: "This submission can't have its attendees edited."
+      end
     end
 
     def resend_confirmation
@@ -100,6 +133,78 @@ module Events
     end
 
     private
+
+    def active_event_registrations(event)
+      event.event_registrations.active.includes(:registrant)
+    end
+
+    # For each listed attendee (in order), the coverage of the registration they
+    # match: :paid (fully allocated), :due (with the remaining cents), or
+    # :unregistered (no matching active registration). Aligned to
+    # bulk_payment_attendees by index.
+    def attendee_payment_statuses(event)
+      registrations = active_event_registrations(event)
+      allocated = Allocation
+                    .where(allocatable_type: "EventRegistration", allocatable_id: registrations.ids)
+                    .group(:allocatable_id).sum(:amount)
+      cost = event.cost_cents.to_i
+
+      @submission.decorate.matched_attendees(registrations).map do |attendee|
+        regs = attendee[:matches]
+        next { state: :unregistered } if regs.empty?
+
+        remaining = regs.sum { |reg| [ cost - allocated.fetch(reg.id, 0), 0 ].max }
+        remaining.zero? ? { state: :paid } : { state: :due, due_cents: remaining }
+      end
+    end
+
+    # After an attendee-list edit, re-confirm to the payer and FYI staff — both as
+    # "updated" variants so they read as a change, not a fresh submission.
+    def send_update_notifications(submission)
+      payer_email = submission.person.preferred_email.presence ||
+                    submission.answers_by_identifier["payer_email"]&.strip
+      if payer_email.present?
+        NotificationServices::CreateNotification.call(
+          noticeable: submission,
+          kind: :bulk_payment_confirmation_updated,
+          recipient_role: :person,
+          recipient_email: payer_email,
+          notification_type: 0
+        )
+      end
+
+      NotificationServices::CreateNotification.call(
+        noticeable: submission,
+        kind: :bulk_payment_confirmation_updated_fyi,
+        recipient_role: :admin,
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        notification_type: 0
+      )
+    end
+
+    # Parses the serialized attendee JSON posted from the edit form into a clean
+    # array of stripped { first_name, last_name, email } hashes, dropping any row
+    # left entirely blank (mirrors the Stimulus serializer).
+    def submitted_attendees
+      raw = params.dig(:bulk_payment, :attendees_json)
+      return [] if raw.blank?
+
+      parsed = JSON.parse(raw)
+      return [] unless parsed.is_a?(Array)
+
+      parsed.filter_map do |attendee|
+        next unless attendee.is_a?(Hash)
+
+        first = attendee["first_name"].to_s.strip
+        last = attendee["last_name"].to_s.strip
+        email = attendee["email"].to_s.strip
+        next if first.blank? && last.blank? && email.blank?
+
+        { "first_name" => first, "last_name" => last, "email" => email }
+      end
+    rescue JSON::ParserError
+      []
+    end
 
     def visible_form_fields
       scope = @form.form_fields.reorder(position: :asc)

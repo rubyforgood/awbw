@@ -74,8 +74,11 @@ module EventHelper
   # submission's row and anchor-scrolling to it. Relies on the originating link
   # passing `expand: submission.id`; the card reads `params[:expand]` to expand and
   # carries a matching `id="payment-card-<id>"` + `scroll-mt-*` for the anchor.
-  def bulk_payments_return_path(event)
-    expand = params[:expand].presence
+  # Links to the bulk payments tray with a given submission's row expanded and
+  # scrolled into view. Defaults to params[:expand] (the row the caller came from);
+  # pass expand: explicitly when the origin knows the row (e.g. a ticket linking to
+  # its own row).
+  def bulk_payments_return_path(event, expand: params[:expand].presence)
     bulk_payments_event_path(
       event,
       expand: expand,
