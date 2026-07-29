@@ -14,9 +14,10 @@ class WelcomeController < ApplicationController
   end
 
   def update
-    # The invited user sets their own password here — no admin is acting, so clear
-    # updated_by rather than leaving it crediting whoever created/invited the account.
-    if @user.update(password_params.merge(updated_by: nil))
+    # This page is public: the invited user may set their own password, or an admin
+    # may do it on their behalf. Credit the signed-in admin if there is one, otherwise
+    # the account owner — either way, not whoever last edited the account before this.
+    if @user.update(password_params.merge(updated_by: current_user || @user))
       @user.track_auth_event("auth.password_first_set")
       @user.clear_welcome_instructions_token!
       @user.track_auth_event("auth.account_setup_completed")
