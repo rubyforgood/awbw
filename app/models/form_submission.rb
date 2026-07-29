@@ -67,6 +67,26 @@ class FormSubmission < ApplicationRecord
     event.cost_cents.to_i * bulk_payment_attendee_count
   end
 
+  # --- Linked registrations (bulk payment designations) ---
+
+  def linked_registration_ids
+    (metadata || {}).fetch("linked_registration_ids", [])
+  end
+
+  def link_registration!(event_registration_id)
+    ids = linked_registration_ids | [ event_registration_id.to_i ]
+    update!(metadata: (metadata || {}).merge("linked_registration_ids" => ids))
+  end
+
+  def unlink_registration!(event_registration_id)
+    ids = linked_registration_ids - [ event_registration_id.to_i ]
+    update!(metadata: (metadata || {}).merge("linked_registration_ids" => ids))
+  end
+
+  def linked_registrations
+    EventRegistration.where(id: linked_registration_ids)
+  end
+
   private
 
   def generate_slug

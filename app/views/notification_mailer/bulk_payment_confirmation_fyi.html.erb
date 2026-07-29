@@ -89,7 +89,7 @@
 
 <p>
   <% if @event %>
-    <a href="<%= event_bulk_payment_url(@event, reg: @submission.slug) %>"
+    <a href="<%= event_bulk_payment_url(@event, slug: @submission.slug) %>"
        style="display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">
       View submission
     </a>

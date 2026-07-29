@@ -1,11 +1,25 @@
 class FormSubmissionPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
+  authorize :slug, optional: true, allow_nil: true
+
   def index?
     admin?
   end
 
   def show?
-    admin?
+    admin? || (slug.present? && record.slug == slug)
+  end
+
+  def ticket?
+    admin? || (slug.present? && record.slug == slug)
+  end
+
+  def new?
+    true
+  end
+
+  def create?
+    true
   end
 
   # Bulk-payment payers have no account but are emailed a link to their public

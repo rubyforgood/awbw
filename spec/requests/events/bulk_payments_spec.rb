@@ -4,8 +4,6 @@ RSpec.describe "Events::BulkPayments", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:event) { create(:event, cost_cents: 0) }
   let(:form) { create(:form) }
-  # The bulk payment view only renders a known set of "payer" fields, so the
-  # min-word rule is exercised through payer_organization (a free-form text field).
   let!(:org_field) do
     create(:form_field, form: form, answer_type: :free_form_input_one_line,
            field_identifier: "payer_organization", name: "Organization",
@@ -41,311 +39,271 @@ RSpec.describe "Events::BulkPayments", type: :request do
     sign_in admin
   end
 
-  def post_bulk_payment(answer)
-    post event_bulk_payment_path(event),
-         params: { bulk_payment: { form_fields: { org_field.id.to_s => answer } } }
-  end
-
-  describe "POST create with a minimum word count" do
-    it "rejects an answer with too few words" do
-      post_bulk_payment("not quite enough")
-
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(response.body).to include("must be at least 5 words")
-    end
-
-    it "does not flag an answer that meets the minimum" do
-      post_bulk_payment("this answer easily has plenty of words")
-
-      expect(response.body).not_to include("must be at least 5 words")
-    end
-  end
-
-  describe "GET new" do
-    it "shows the minimum word hint below the field" do
-      get new_event_bulk_payment_path(event)
-
-      expect(response.body).to include("Minimum of 5 words.")
-    end
-
-    it "renders the field at its configured width" do
-      org_field.update!(width: :half)
-
-      get new_event_bulk_payment_path(event)
-
-      expect(response.body).to include("md:col-span-6")
-    end
-  end
-
-  describe "POST create with credit card payment" do
-    let(:admin) { create(:user, :admin, :with_person) }
-    let(:event) { create(:event, cost_cents: 15_00) }
-    let(:fake_session) { double(url: "https://checkout.stripe.com/test") }
-
-    before do
-      fake_processor = double(checkout: fake_session)
-      allow_any_instance_of(Person).to receive(:set_payment_processor)
-      allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
-    end
-
-    def payer_params
-      {
-        payer_first_name_field.id.to_s => "Jane",
-        payer_last_name_field.id.to_s => "Doe",
-        payer_email_field.id.to_s => "jane@example.com"
-      }
-    end
-
-    it "redirects to Stripe Checkout when paying by credit card" do
-      post event_bulk_payment_path(event),
-           params: { bulk_payment: { form_fields: payer_params.merge(
-             org_field.id.to_s => "this answer has enough words for validation",
-             payment_method_field.id.to_s => "Credit card (now)"
-           ) } }
-
-      expect(response).to redirect_to("https://checkout.stripe.com/test")
-      expect(response.status).to eq(303)
-    end
-
-    it "does not redirect when payment method is not credit card" do
-      post event_bulk_payment_path(event),
-           params: { bulk_payment: { form_fields: payer_params.merge(
-             org_field.id.to_s => "this answer has enough words for validation",
-             payment_method_field.id.to_s => "Check"
-           ) } }
-
-      expect(response).to have_http_status(:redirect)
-      expect(response.location).to match(%r{/bulk_payment/})
-      expect(flash[:notice]).to eq("Your payment information has been submitted.")
-    end
-
-    it "does not redirect to Stripe when event is free" do
-      event.update!(cost_cents: 0)
-
-      post event_bulk_payment_path(event),
-           params: { bulk_payment: { form_fields: payer_params.merge(
-             org_field.id.to_s => "this answer has enough words for validation"
-           ) } }
-
-      expect(response).to have_http_status(:redirect)
-      expect(response.location).to match(%r{/bulk_payment/})
-    end
-  end
-
-  describe "GET new with the seeded bulk payment form" do
-    let(:seeded_form) do
-      FormBuilderService.new(name: "Bulk Payment", sections: %i[bulk_payment], role: "bulk_payment").call
-    end
-
-    before do
-      # Payer fields are logged_out_only, so test the public (signed-out) view.
-      sign_out admin
-      EventForm.where(event: event).destroy_all
-      EventForm.create!(event: event, form: seeded_form, role: "bulk_payment")
-    end
-
-    it "renders the optional payer phone field" do
-      get new_event_bulk_payment_path(event)
-
-      expect(response.body).to include("Phone")
-    end
-
-    it "labels the attendee fields with the 'Attendee' prefix" do
-      get new_event_bulk_payment_path(event)
-
-      expect(response.body).to include("Attendee first name", "Attendee last name", "Attendee email")
-    end
-  end
-
-  describe "GET show" do
-    # Public submitted-form view, reached by slug via ?reg= (mirrors public
-    # registration). Backs to the ticket by default.
-    let(:event) { create(:event, :publicly_visible, cost_cents: 1000) }
+  describe "GET /events/:id/bulk_payments (admin dashboard)" do
+    let(:event) { create(:event, cost_cents: 2500) }
     let(:payer) { create(:person) }
-    let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
-    let!(:org_answer) do
-      submission.form_answers.create!(form_field: org_field, submitted_answer: "Northside Shelter",
-                                      question_name_when_answered: org_field.name)
-    end
-
-    def get_show
-      get event_bulk_payment_path(event, reg: submission.slug)
-    end
-
-    context "as a signed-out viewer" do
-      before { sign_out admin }
-
-      it "renders the submitted form publicly via the slug" do
-        get_show
-
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Payment submission")
-        expect(response.body).to include("Northside Shelter")
-      end
-
-      it "backs to the ticket by default" do
-        get_show
-
-        expect(response.body).to include(bulk_payment_ticket_path(submission.slug))
-        expect(response.body).to include("Back to ticket")
-      end
-
-      it "404s for an unknown slug" do
-        get event_bulk_payment_path(event, reg: "nope")
-
-        expect(response).to have_http_status(:not_found)
-      end
-
-      it "404s for a blank reg, even when a slugless bulk payment exists" do
-        submission.update_columns(slug: nil)
-
-        get event_bulk_payment_path(event)
-
-        expect(response).to have_http_status(:not_found)
-      end
-
-      it "does not let a signed-out viewer reach a submission by id" do
-        get event_bulk_payment_path(event, submission_id: submission.id)
-
-        expect(response).to redirect_to(root_path)
-      end
-    end
-
-    context "as an admin viewing a slugless submission by id" do
-      before { submission.update_columns(slug: nil) }
-
-      it "renders the same submission partial without a ticket back link" do
-        get event_bulk_payment_path(event, submission_id: submission.id, return_to: "bulk_payments")
-
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Payment submission")
-        expect(response.body).to include("Northside Shelter")
-        expect(response.body).not_to include("Back to ticket")
-        expect(response.body).to include("Back to bulk payments")
-      end
-    end
-
-    context "as an admin arriving from the dashboard" do
-      it "shows a Back to ticket link plus a second Back to bulk payments link" do
-        get event_bulk_payment_path(event, reg: submission.slug, return_to: "bulk_payments")
-
-        expect(response.body).to include("Back to ticket")
-        expect(response.body).to include("Back to bulk payments")
-      end
-    end
-  end
-
-  describe "GET ticket" do
-    let(:event) { create(:event, :publicly_visible, cost_cents: 1000, title: "Spring Workshop") }
-    let(:payer) { create(:person) }
-    let(:attendees_json) do
-      [ { "first_name" => "Jordan", "last_name" => "Rivers", "email" => "jordan@example.com" } ].to_json
-    end
     let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
     let!(:attendees_field) do
-      create(:form_field, form: form, answer_type: :free_form_input_one_line,
-             field_identifier: "bulk_payment_attendees", name: "Attendees", required: false)
+      create(:form_field, form: form, field_identifier: "number_of_attendees", name: "Attendees")
     end
 
-    before do
-      submission.form_answers.create!(form_field: attendees_field, submitted_answer: attendees_json,
-                                      question_name_when_answered: "Attendees")
-      sign_out admin
-    end
+    it "shows the submitted amount even when no payment has landed" do
+      submission.form_answers.create!(form_field: attendees_field, submitted_answer: "3")
 
-    def get_ticket
-      get bulk_payment_ticket_path(submission.slug)
-    end
-
-    it "renders the ticket for the public payer using the slug" do
-      get_ticket
+      get bulk_payments_event_path(event)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Payment ticket")
-      expect(response.body).to include("Spring Workshop")
+      expect(response.body).to include("$75")
     end
 
-    it "lists the registrants" do
-      get_ticket
+    it "shows the recorded payment amount when a payment exists" do
+      submission.form_answers.create!(form_field: attendees_field, submitted_answer: "3")
+      create(:payment, person: payer, form_submission: submission,
+             amount_cents: 5000, amount_cents_remaining: 5000)
 
-      expect(response.body).to include("Jordan Rivers")
-      expect(response.body).to include("jordan@example.com")
+      get bulk_payments_event_path(event)
+
+      expect(response.body).to include("$50")
     end
 
-    it "shows the payer's name, organization, and registrants-covered count" do
-      submission.form_answers.create!(form_field: payer_first_name_field, submitted_answer: "Alex",
-                                      question_name_when_answered: "Payer first name")
-      submission.form_answers.create!(form_field: payer_last_name_field, submitted_answer: "Chen",
-                                      question_name_when_answered: "Payer last name")
-      submission.form_answers.create!(form_field: org_field, submitted_answer: "Bright Futures Academy",
-                                      question_name_when_answered: "Organization")
+    it "renders the targeted submission's row expanded when given an expand param" do
+      get bulk_payments_event_path(event, expand: submission.id)
 
-      get_ticket
-
-      expect(response.body).to include("Payer")
-      expect(response.body).to include("Alex Chen")
-      expect(response.body).to include("Bright Futures Academy")
-      # One attendee is listed and no explicit count is set, so the covered count is 1.
-      expect(response.body).to include("Covering 1 registrant")
+      expect(response.body).to include("id=\"payment-card-#{submission.id}\"")
+      expect(response.body).to include("data-dropdown-target=\"expand\"")
     end
 
-    it "does not show per-person actions like cancelling a registration" do
-      get_ticket
+    it "renders rows collapsed without an expand param" do
+      get bulk_payments_event_path(event)
 
-      expect(response.body).not_to include("Cancel registration")
+      expect(response.body).to match(/id="payment-details-#{submission.id}"\s+class="hidden/)
+      expect(response.body).not_to match(/id="payment-arrow-#{submission.id}"[^>]*rotate-180/)
     end
 
-    it "links the invoice back to the ticket" do
-      get_ticket
 
-      expect(response.body).to include("return_to=bulk_payment_ticket")
+    it "shows a grey \"Paid\" instead of an orange balance when the registration is fully covered" do
+      attendee = create(:person, first_name: "Paid", last_name: "Infull", email: "paid.infull@example.com")
+      registration = create(:event_registration, event: event, registrant: attendee, status: "registered")
+      create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees list")
+      submission.form_answers.create!(
+        form_field: form.form_fields.find_by(field_identifier: "bulk_payment_attendees"),
+        submitted_answer: [ { first_name: "Paid", last_name: "Infull", email: "paid.infull@example.com" } ].to_json
+      )
+      create(:allocation, source: create(:payment, amount_cents: 2500, amount_cents_remaining: 2500),
+             allocatable: registration, amount: 2500)
+      submission.link_registration!(registration.id)
+
+      get bulk_payments_event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("text-gray-500 whitespace-nowrap\">Paid<")
+      expect(response.body).not_to include("$0.00")
     end
 
-    it "links 'View your form responses' to the public submission page" do
-      get_ticket
+    it "does not show the removed new-allocation dropdown" do
+      get bulk_payments_event_path(event)
 
-      expect(response.body).to include("View your form responses")
-      expect(response.body).to include(event_bulk_payment_path(event, reg: submission.slug))
-    end
-
-    it "returns 404 for an unknown slug" do
-      get bulk_payment_ticket_path("nope")
-
-      expect(response).to have_http_status(:not_found)
-    end
-
-    it "adds a Back to bulk payments eyebrow when arriving from the dashboard" do
-      get bulk_payment_ticket_path(submission.slug, return_to: "bulk_payments", expand: submission.id)
-
-      expect(response.body).to include("Back to event")
-      expect(response.body).to include("Back to bulk payments")
-    end
-
-    context "as an admin" do
-      before { sign_in admin }
-
-      it "shows the admin allocations section" do
-        get_ticket
-
-        expect(response.body).to include("Payment allocations")
-      end
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("New allocation")
     end
   end
 
-  describe "POST resend_confirmation" do
-    let(:event) { create(:event, :publicly_visible, cost_cents: 1000) }
-    let(:payer) { create(:person, email: "payer@example.com") }
+  describe "POST /events/:id/allocate_bulk_payment" do
+    let(:event) { create(:event) }
+    let(:payer) { create(:person) }
     let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
+    let!(:payment) { create(:payment, person: payer, form_submission: submission,
+                            amount_cents: 1000, amount_cents_remaining: 1000) }
+    let(:registrant) { create(:person) }
+    let!(:event_registration) { create(:event_registration, event: event, registrant: registrant) }
 
-    before { sign_out admin }
+    let(:valid_params) do
+      { payment_id: payment.id, event_registration_id: event_registration.id, amount_dollars: "5.00" }
+    end
 
-    it "re-sends the payer confirmation and returns to the ticket" do
+    it "rejects unauthenticated request" do
+      sign_out admin
+      post allocate_bulk_payment_event_path(event), params: valid_params
+      expect(response).to redirect_to(new_user_session_path)
+    end
+
+    it "rejects non-admin request" do
+      sign_out admin
+      sign_in create(:user)
+      post allocate_bulk_payment_event_path(event), params: valid_params
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "creates an allocation and returns turbo_stream" do
       expect {
-        post bulk_payment_resend_confirmation_path(submission.slug)
-      }.to change(Notification, :count).by(1)
+        post allocate_bulk_payment_event_path(event), params: valid_params, as: :turbo_stream
+      }.to change(Allocation, :count).by(1)
 
-      expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
-      expect(flash[:notice]).to eq("Confirmation email sent.")
+      expect(payment.reload.amount_cents_remaining).to eq(500)
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+      expect(response.body).to include("Allocation successful")
+    end
+
+    context "when the allocation pays a matched registration in full" do
+      let(:event) { create(:event, cost_cents: 500) }
+      let(:registrant) { create(:person, email: "match@example.com") }
+      let!(:attendees_field) do
+        create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees")
+      end
+
+      before do
+        submission.form_answers.create!(
+          form_field: attendees_field,
+          submitted_answer: [ { first_name: registrant.first_name, last_name: registrant.last_name, email: "match@example.com" } ].to_json
+        )
+        submission.link_registration!(event_registration.id)
+      end
+
+      it "re-renders the card with refreshed totals and hides the inline allocate box for that registration" do
+        post allocate_bulk_payment_event_path(event),
+             params: { payment_id: payment.id, event_registration_id: event_registration.id, amount_dollars: "5.00" },
+             as: :turbo_stream
+
+        expect(response.body).to include("payment-card-#{submission.id}")
+        expect(response.body).to include("rotate-180")
+        expect(response.body).to include(">Paid</span>")
+        expect(response.body.scan(">Allocate</button>").size).to eq(0)
+      end
+    end
+
+    it "shows alert when event_registration_id is blank" do
+      params = valid_params.merge(event_registration_id: "")
+      expect {
+        post allocate_bulk_payment_event_path(event), params: params, as: :turbo_stream
+      }.not_to change(Allocation, :count)
+
+      expect(response.body).to include("Please select a registrant")
+    end
+
+    it "shows alert when event_registration_id is invalid" do
+      params = valid_params.merge(event_registration_id: 999999)
+      expect {
+        post allocate_bulk_payment_event_path(event), params: params, as: :turbo_stream
+      }.not_to change(Allocation, :count)
+
+      expect(response.body).to include("Please select a registrant")
+    end
+
+    it "shows alert when amount is zero" do
+      params = valid_params.merge(amount_dollars: "0.00")
+      expect {
+        post allocate_bulk_payment_event_path(event), params: params, as: :turbo_stream
+      }.not_to change(Allocation, :count)
+
+      expect(response.body).to include("Amount must be greater than $0.00")
+    end
+
+    it "shows alert when amount exceeds remaining balance" do
+      params = valid_params.merge(amount_dollars: "20.00")
+      expect {
+        post allocate_bulk_payment_event_path(event), params: params, as: :turbo_stream
+      }.not_to change(Allocation, :count)
+
+      expect(response.body).to include("Amount exceeds remaining balance")
+    end
+
+    it "shows alert when event registration is already fully paid" do
+      large_payment = create(:payment, person: payer, form_submission: submission,
+                             amount_cents: 2000, amount_cents_remaining: 2000)
+      create(:allocation, source: large_payment, allocatable: event_registration, amount: 1099)
+
+      params = { payment_id: large_payment.id, event_registration_id: event_registration.id, amount_dollars: "5.00" }
+      expect {
+        post allocate_bulk_payment_event_path(event), params: params, as: :turbo_stream
+      }.not_to change(Allocation, :count)
+
+      expect(response.body).to include("already fully paid")
+    end
+  end
+
+  describe "POST /events/:id/link_bulk_payment" do
+    let(:event) { create(:event) }
+    let(:payer) { create(:person) }
+    let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
+    let(:registrant) { create(:person) }
+    let!(:event_registration) { create(:event_registration, event: event, registrant: registrant) }
+
+    it "adds the registration id to the submission metadata" do
+      post link_bulk_payment_event_path(event),
+           params: { submission_id: submission.id, event_registration_id: event_registration.id },
+           as: :turbo_stream
+
+      expect(submission.reload.linked_registration_ids).to eq([ event_registration.id ])
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "does not duplicate an existing link" do
+      submission.link_registration!(event_registration.id)
+
+      expect {
+        post link_bulk_payment_event_path(event),
+             params: { submission_id: submission.id, event_registration_id: event_registration.id },
+             as: :turbo_stream
+      }.not_to change { submission.reload.linked_registration_ids }
+    end
+
+    it "re-renders the card expanded" do
+      post link_bulk_payment_event_path(event),
+           params: { submission_id: submission.id, event_registration_id: event_registration.id },
+           as: :turbo_stream
+
+      expect(response.body).to include("payment-card-#{submission.id}")
+    end
+
+    it "redirects to bulk_payments with HTML format" do
+      post link_bulk_payment_event_path(event),
+           params: { submission_id: submission.id, event_registration_id: event_registration.id }
+
+      expect(response).to redirect_to(bulk_payments_event_path(event))
+    end
+
+    it "shows an alert for a missing registration" do
+      post link_bulk_payment_event_path(event),
+           params: { submission_id: submission.id, event_registration_id: 0 },
+           as: :turbo_stream
+
+      expect(response.body).to include("Registration not found")
+    end
+  end
+
+  describe "DELETE /events/:id/unlink_bulk_payment" do
+    let(:event) { create(:event) }
+    let(:payer) { create(:person) }
+    let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
+    let(:registrant) { create(:person) }
+    let!(:event_registration) { create(:event_registration, event: event, registrant: registrant) }
+
+    before do
+      submission.link_registration!(event_registration.id)
+    end
+
+    it "removes the registration id from the submission metadata" do
+      delete unlink_bulk_payment_event_path(event),
+             params: { submission_id: submission.id, event_registration_id: event_registration.id },
+             as: :turbo_stream
+
+      expect(submission.reload.linked_registration_ids).to be_empty
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "re-renders the card expanded" do
+      delete unlink_bulk_payment_event_path(event),
+             params: { submission_id: submission.id, event_registration_id: event_registration.id },
+             as: :turbo_stream
+
+      expect(response.body).to include("payment-card-#{submission.id}")
+    end
+
+    it "redirects to bulk_payments with HTML format" do
+      delete unlink_bulk_payment_event_path(event),
+             params: { submission_id: submission.id, event_registration_id: event_registration.id }
+
+      expect(response).to redirect_to(bulk_payments_event_path(event))
     end
   end
 end
