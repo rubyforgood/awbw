@@ -26,7 +26,7 @@ class TaggingsController < ApplicationController
       category_names_all: @category_names_all,
       pages: pages,
       number_of_items_per_page: number_of_items_per_page
-    )
+    ).select { |type, _items| allowed_to?(:index?, Tag::TAGGABLE_META.fetch(type)[:klass]) }
 
     @sectors = authorized_scope(Sector.all, as: :taggable).order(:name)
     @categories = authorized_scope(Category.all, as: :taggable)

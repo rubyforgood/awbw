@@ -113,4 +113,53 @@ RSpec.describe "Taggings index", type: :request do
       expect(response.body).to include("Art for Healing")
     end
   end
+
+  describe "People and Organizations sections gated by index permission" do
+    let!(:active_status) { create(:organization_status, name: "Active") }
+    let!(:organization) do
+      create(:organization, name: "Healing Org", organization_status: active_status)
+    end
+    let!(:person) { create(:person, profile_is_searchable: true) }
+
+    before do
+      # An active affiliation makes the org active (published) and the person
+      # visible via with_active_affiliations.
+      create(:affiliation, person: person, organization: organization)
+      create(:sectorable_item, sector: sector_1, sectorable: organization)
+      create(:sectorable_item, sector: sector_1, sectorable: person)
+    end
+
+    context "as a regular signed-in user (cannot index people or organizations)" do
+      it "hides the People and Organizations sections but keeps allowed sections" do
+        get taggings_path(sector_names_all: sector_1.name)
+
+        expect(response.body).not_to include("View all People results")
+        expect(response.body).not_to include("View all Organizations results")
+        expect(response.body).to include("Art for Healing")
+      end
+    end
+
+    context "as a guest (cannot index people or organizations)" do
+      it "hides the People and Organizations sections" do
+        sign_out user
+        get taggings_path(sector_names_all: sector_1.name)
+
+        expect(response.body).not_to include("View all People results")
+        expect(response.body).not_to include("View all Organizations results")
+      end
+    end
+
+    context "as an admin (can index people and organizations)" do
+      let!(:admin) { create(:user, :admin) }
+
+      before { sign_in admin }
+
+      it "shows the People and Organizations sections" do
+        get taggings_path(sector_names_all: sector_1.name)
+
+        expect(response.body).to include("View all People results")
+        expect(response.body).to include("View all Organizations results")
+      end
+    end
+  end
 end
