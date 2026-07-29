@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_15_053137) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_020406) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1377,6 +1377,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_053137) do
     t.integer "updated_by_id"
     t.datetime "welcome_instructions_created_at"
     t.datetime "welcome_instructions_sent_at"
+    t.integer "welcome_instructions_sent_by_id"
     t.string "welcome_instructions_token"
     t.string "zip"
     t.string "zip2"
@@ -1389,6 +1390,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_053137) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
     t.index ["updated_by_id"], name: "index_users_on_updated_by_id"
+    t.index ["welcome_instructions_sent_by_id"], name: "index_users_on_welcome_instructions_sent_by_id"
     t.index ["welcome_instructions_token"], name: "index_users_on_welcome_instructions_token", unique: true
   end
 
