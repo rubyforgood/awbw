@@ -27,6 +27,16 @@ If you notice the user repeatedly correcting the same pattern, suggest adding it
 | `.github/copilot-instructions.md` | Coding rules for Copilot (duplicated from CLAUDE.md — keep in sync) |
 | `ai/` | Shell script shortcuts for common dev tasks |
 
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root (created lazily by `/domain-modeling`). See `docs/agents/domain.md`.
+
 ## Related Files
 
 When changing a model or controller, check whether these related files need updates:
