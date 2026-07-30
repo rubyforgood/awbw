@@ -152,18 +152,50 @@
       <!-- Divider -->
       <div class="border-t border-gray-200"></div>
 
-      <!-- Invoice -->
-      <%= link_to event_invoice_path(@event, submission_id: @submission.id, return_to: "bulk_payment_ticket"),
-                    class: "flex items-center gap-3 rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors" do %>
-        <i class="fa-solid fa-file-invoice-dollar text-blue-500 text-xl shrink-0"></i>
+      <!-- Documents: the invoice is always available; the receipt links once a
+           payment is on file, and is a locked card until then. -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide text-center">Documents</h3>
 
-        <div class="flex-1 min-w-0 text-left">
-          <p class="font-semibold text-blue-900">View invoice</p>
-          <p class="text-sm text-blue-700">Itemized invoice for this payment</p>
-        </div>
+        <!-- Invoice (always available) -->
+        <%= link_to event_invoice_path(@event, submission_id: @submission.id, return_to: "bulk_payment_ticket"),
+                      class: "flex items-center gap-3 rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors" do %>
+          <i class="fa-solid fa-file-invoice-dollar text-blue-500 text-xl shrink-0"></i>
 
-        <i class="fa-solid fa-arrow-right text-blue-500 shrink-0"></i>
-      <% end %>
+          <div class="flex-1 min-w-0 text-left">
+            <p class="font-semibold text-blue-900">View invoice</p>
+            <p class="text-sm text-blue-700">Itemized invoice for this payment</p>
+          </div>
+
+          <i class="fa-solid fa-arrow-right text-blue-500 shrink-0"></i>
+        <% end %>
+
+        <!-- Receipt: available once a payment is recorded, otherwise locked -->
+        <% if @payment %>
+          <%= link_to bulk_payment_receipt_path(@submission.slug),
+                        class: "flex items-center gap-3 rounded-xl border-2 border-green-200 bg-green-50 px-4 py-3 hover:bg-green-100 transition-colors" do %>
+            <i class="fa-solid fa-receipt text-green-600 text-xl shrink-0"></i>
+
+            <div class="flex-1 min-w-0 text-left">
+              <p class="font-semibold text-green-900">View receipt</p>
+              <p class="text-sm text-green-700">Receipt for your records</p>
+            </div>
+
+            <i class="fa-solid fa-arrow-right text-green-600 shrink-0"></i>
+          <% end %>
+        <% else %>
+          <div class="flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-gray-100 px-4 py-3 opacity-75">
+            <i class="fa-solid fa-receipt text-gray-400 text-xl shrink-0"></i>
+
+            <div class="flex-1 min-w-0 text-left">
+              <p class="font-semibold text-gray-500">Receipt</p>
+              <p class="text-sm text-gray-500">Available once your payment is received</p>
+            </div>
+
+            <i class="fa-solid fa-lock text-gray-400 shrink-0"></i>
+          </div>
+        <% end %>
+      </div>
 
       <!-- Secondary text actions: form responses + resend confirmation -->
       <div class="flex flex-col items-center gap-1.5">

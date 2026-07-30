@@ -17,7 +17,7 @@
   <div class="my-8 flex flex-col items-center gap-3">
     <h1 class="text-center text-3xl font-semibold tracking-wide">RECEIPT</h1>
     <span class="inline-flex items-center gap-1.5 rounded-full border border-green-600 bg-green-50 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-green-700">
-      <i class="fa-solid fa-circle-check"></i> Paid in full
+      <i class="fa-solid fa-circle-check"></i> <%= receipt.settles_balance? ? "Paid in full" : "Payment received" %>
     </span>
   </div>
 
@@ -115,23 +115,33 @@
     </table>
   </div>
 
-  <%# Summary: total charged, amount paid, balance due (always $0) %>
+  <%# Summary. A registration receipt reconciles total charged → $0 balance due;
+      a bulk payment has no balance concept, so it just states the amount paid. %>
   <div class="mt-8 flex justify-end">
     <dl class="w-full max-w-xs text-sm">
-      <div class="flex items-center justify-between py-1">
-        <dt class="text-gray-600">Total charged</dt>
-        <dd class="tabular-nums"><%= dollars_from_cents(receipt.total_cents) %></dd>
-      </div>
-      <div class="flex items-center justify-between py-1">
-        <dt class="text-gray-600">Amount paid</dt>
-        <dd class="tabular-nums"><%= dollars_from_cents(receipt.amount_paid_cents) %></dd>
-      </div>
-      <div class="mt-1 flex items-center justify-between border-t border-gray-300 pt-2 font-bold">
-        <dt>Balance due</dt>
-        <dd>
-          <span class="inline-block rounded-md border border-green-500 bg-green-50 px-3 py-1 text-green-700 tabular-nums whitespace-nowrap"><%= dollars_from_cents(receipt.balance_cents) %></span>
-        </dd>
-      </div>
+      <% if receipt.settles_balance? %>
+        <div class="flex items-center justify-between py-1">
+          <dt class="text-gray-600">Total charged</dt>
+          <dd class="tabular-nums"><%= dollars_from_cents(receipt.total_cents) %></dd>
+        </div>
+        <div class="flex items-center justify-between py-1">
+          <dt class="text-gray-600">Amount paid</dt>
+          <dd class="tabular-nums"><%= dollars_from_cents(receipt.amount_paid_cents) %></dd>
+        </div>
+        <div class="mt-1 flex items-center justify-between border-t border-gray-300 pt-2 font-bold">
+          <dt>Balance due</dt>
+          <dd>
+            <span class="inline-block rounded-md border border-green-500 bg-green-50 px-3 py-1 text-green-700 tabular-nums whitespace-nowrap"><%= dollars_from_cents(receipt.balance_cents) %></span>
+          </dd>
+        </div>
+      <% else %>
+        <div class="flex items-center justify-between border-t border-gray-300 pt-2 font-bold">
+          <dt>Amount paid</dt>
+          <dd>
+            <span class="inline-block rounded-md border border-green-500 bg-green-50 px-3 py-1 text-green-700 tabular-nums whitespace-nowrap"><%= dollars_from_cents(receipt.amount_paid_cents) %></span>
+          </dd>
+        </div>
+      <% end %>
     </dl>
   </div>
 

@@ -308,6 +308,22 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
       expect(response.body).to include(event_bulk_payment_path(event, slug: submission.slug))
     end
 
+    it "shows a locked receipt card until a payment is recorded" do
+      get_ticket
+
+      expect(response.body).to include("Available once your payment is received")
+      expect(response.body).not_to include(bulk_payment_receipt_path(submission.slug))
+    end
+
+    it "links the receipt once a payment is on file" do
+      create(:payment, form_submission: submission, type: "CashPayment", amount_cents: 1000)
+
+      get_ticket
+
+      expect(response.body).to include("View receipt")
+      expect(response.body).to include(bulk_payment_receipt_path(submission.slug))
+    end
+
     it "returns 404 for an unknown slug" do
       get bulk_payment_ticket_path("nope")
 
@@ -329,6 +345,48 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
 
         expect(response.body).to include("Payment allocations")
       end
+    end
+  end
+
+  describe "GET receipt" do
+    let(:event) { create(:event, :publicly_visible, cost_cents: 1000, title: "Spring Workshop") }
+    let(:payer) { create(:person) }
+    let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
+
+    before { sign_out admin }
+
+    it "renders the receipt for the amount paid once a payment is recorded" do
+      create(:payment, form_submission: submission, type: "CashPayment", amount_cents: 1000)
+
+      get bulk_payment_receipt_path(submission.slug)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("RECEIPT")
+      expect(response.body).to include("Amount paid")
+      expect(response.body).to include("RCPT-B-#{submission.id}")
+    end
+
+    it "omits the balance/paid-in-full framing (a bulk payment has no owed balance)" do
+      create(:payment, form_submission: submission, type: "CashPayment", amount_cents: 1000)
+
+      get bulk_payment_receipt_path(submission.slug)
+
+      expect(response.body).to include("Payment received")
+      expect(response.body).not_to include("Paid in full")
+      expect(response.body).not_to include("Balance due")
+    end
+
+    it "redirects back to the ticket while payment is still pending" do
+      get bulk_payment_receipt_path(submission.slug)
+
+      expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
+      expect(flash[:alert]).to eq("A receipt is available once your payment is received.")
+    end
+
+    it "returns 404 for an unknown slug" do
+      get bulk_payment_receipt_path("nope")
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 

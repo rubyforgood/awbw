@@ -67,6 +67,13 @@ class FormSubmission < ApplicationRecord
     event.cost_cents.to_i * bulk_payment_attendee_count
   end
 
+  # A bulk payment has no owed-balance/paid-in-full concept, so its receipt simply
+  # records whatever was paid — it unlocks as soon as a payment is on file, the
+  # same signal the ticket uses to show "Payment received".
+  def bulk_payment_receipt_available?
+    bulk_payment? && payment.present?
+  end
+
   # --- Linked registrations (bulk payment designations) ---
 
   def linked_registration_ids

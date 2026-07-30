@@ -81,6 +81,27 @@ RSpec.describe FormSubmission do
     end
   end
 
+  describe "#bulk_payment_receipt_available?" do
+    let(:submission) { create(:form_submission, role: "bulk_payment") }
+
+    it "is true once a payment is recorded" do
+      create(:payment, form_submission: submission)
+
+      expect(submission.reload.bulk_payment_receipt_available?).to be(true)
+    end
+
+    it "is false while no payment is on file" do
+      expect(submission.bulk_payment_receipt_available?).to be(false)
+    end
+
+    it "is false for a non-bulk-payment submission even with a payment" do
+      other = create(:form_submission, role: "registration")
+      create(:payment, form_submission: other)
+
+      expect(other.reload.bulk_payment_receipt_available?).to be(false)
+    end
+  end
+
   describe "linked registrations" do
     let(:event) { create(:event) }
     let(:form) { create(:form) }

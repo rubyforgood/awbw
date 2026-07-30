@@ -17,7 +17,7 @@ module AllocationLedgerLabel
 
   def method_label(allocation)
     if allocation.source_type == Payment.polymorphic_name
-      PAYMENT_METHOD_LABELS[allocation.source&.class&.name] || "Payment"
+      payment_method_label(allocation.source)
     else
       allocation.source_type.underscore.humanize
     end
@@ -26,8 +26,18 @@ module AllocationLedgerLabel
   # Check number, when the payment was a check — so the payer can reconcile it
   # against their own records.
   def reference_for(allocation)
-    source = allocation.source
-    return unless source.is_a?(CheckPayment) && source.check_number.present?
-    "Check ##{source.check_number}"
+    payment_reference(allocation.source)
+  end
+
+  # Method/reference for a Payment directly (not via an allocation) — used by the
+  # bulk payment receipt, whose ledger is the single payment the payer made
+  # rather than the per-registration allocations it settled.
+  def payment_method_label(payment)
+    PAYMENT_METHOD_LABELS[payment&.class&.name] || "Payment"
+  end
+
+  def payment_reference(payment)
+    return unless payment.is_a?(CheckPayment) && payment.check_number.present?
+    "Check ##{payment.check_number}"
   end
 end

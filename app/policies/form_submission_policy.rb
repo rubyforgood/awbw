@@ -14,6 +14,10 @@ class FormSubmissionPolicy < ApplicationPolicy
     admin? || (slug.present? && record.slug == slug)
   end
 
+  def receipt?
+    admin? || (slug.present? && record.slug == slug)
+  end
+
   def new?
     true
   end

@@ -1,6 +1,6 @@
 module Events
   class BulkPaymentFormSubmissionsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :resend_confirmation ]
+    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :receipt, :resend_confirmation ]
     before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
 
@@ -70,6 +70,23 @@ module Events
 
       @payment = @submission.payment
       @event = @submission.event.decorate
+    end
+
+    # Public, slug-based receipt for the payer, available once a payment is on
+    # file. Mirrors #ticket's slug authorization; redirects back to the ticket
+    # while payment is still pending.
+    def receipt
+      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      authorize! @submission, to: :receipt?, context: { slug: params[:slug] }
+
+      unless @submission.bulk_payment_receipt_available?
+        redirect_to bulk_payment_ticket_path(@submission.slug),
+                    alert: "A receipt is available once your payment is received."
+        return
+      end
+
+      @event = @submission.event.decorate
+      @receipt = EventReceipt.from_bulk_payment(@submission)
     end
 
     def resend_confirmation
