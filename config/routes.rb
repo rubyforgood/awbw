@@ -74,6 +74,7 @@ Rails.application.routes.draw do
   end
   resources :community_news
   get "bulk_payment/:slug", to: "events/bulk_payment_form_submissions#ticket", as: :bulk_payment_ticket
+  get "bulk_payment/:slug/invoice", to: "events/bulk_payment_form_submissions#invoice", as: :bulk_payment_invoice
   get "bulk_payment/:slug/receipt", to: "events/bulk_payment_form_submissions#receipt", as: :bulk_payment_receipt
   post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payment_form_submissions#resend_confirmation", as: :bulk_payment_resend_confirmation
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket

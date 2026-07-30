@@ -348,6 +348,46 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
     end
   end
 
+  describe "GET invoice" do
+    let(:event) { create(:event, :publicly_visible, cost_cents: 150_000, title: "Spring Workshop") }
+    let(:payer) { create(:person) }
+    let!(:submission) { create(:form_submission, person: payer, form: form, event: event, role: "bulk_payment") }
+
+    before do
+      # org_field (payer_organization) is defined at the top; only the attendee
+      # count field is new here.
+      count_field = create(:form_field, form: form, field_identifier: "number_of_attendees", name: "Number of attendees")
+      submission.form_answers.create!(form_field: org_field, submitted_answer: "A Greater Hope",
+                                      question_name_when_answered: "Organization")
+      submission.form_answers.create!(form_field: count_field, submitted_answer: "8",
+                                      question_name_when_answered: "Number of attendees")
+      sign_out admin
+    end
+
+    it "renders the bulk-payment invoice publicly by slug" do
+      get bulk_payment_invoice_path(submission.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("INVOICE")
+      expect(response.body).to include("A Greater Hope")
+      # 8 attendees × $1,500 = $12,000
+      expect(response.body).to include("$12,000")
+    end
+
+    it "links back to the ticket when opened from there" do
+      get bulk_payment_invoice_path(submission.slug, return_to: "bulk_payment_ticket")
+
+      expect(response.body).to include(bulk_payment_ticket_path(submission.slug))
+      expect(response.body).to include("Back to ticket")
+    end
+
+    it "returns 404 for an unknown slug (no enumerable id path)" do
+      get bulk_payment_invoice_path("nope")
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe "GET receipt" do
     let(:event) { create(:event, :publicly_visible, cost_cents: 1000, title: "Spring Workshop") }
     let(:payer) { create(:person) }

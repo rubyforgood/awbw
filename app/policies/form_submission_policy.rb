@@ -26,10 +26,10 @@ class FormSubmissionPolicy < ApplicationPolicy
     true
   end
 
-  # Bulk-payment payers have no account but are emailed a link to their public
-  # submission, so they can reach its invoice too. Other submission types stay
-  # admin-only.
-  def show_invoice?
-    record.role == "bulk_payment" || admin?
+  # Bulk-payment payers have no account but are emailed the unguessable slug, so
+  # slug possession authorizes the invoice — same gate as #ticket / #receipt.
+  # (Not keyed on the record id, which is enumerable.)
+  def invoice?
+    admin? || (slug.present? && record.slug == slug)
   end
 end

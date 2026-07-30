@@ -1,25 +1,16 @@
 module Events
-  # Admin-side invoice for an event. Renders a blank template prefilled with the
-  # event's content (line item + cost); when a `submission_id` is supplied it
-  # autofills the bill-to/attention from that bulk-payment submission.
+  # Admin-only blank invoice template for an event, prefilled with the event's
+  # content (line item + cost). A bulk-payment submission's invoice is served by
+  # BulkPaymentFormSubmissionsController#invoice (slug-based, payer-facing).
   class InvoicesController < ApplicationController
-    # Bulk-payment payers have no account; authorization (below) gates access.
+    # Kept skipped so an unauthorized viewer is denied by the policy (redirect to
+    # root) rather than bounced to a sign-in page.
     skip_before_action :authenticate_user!, only: [ :show ]
     before_action :set_event
 
     def show
-      if params[:submission_id].present?
-        # A bulk-payment submission's invoice is reachable by the payer (who has
-        # no account), matching the public bulk-payment show page they're sent.
-        @submission = FormSubmission.find(params[:submission_id])
-        authorize! @submission, to: :show_invoice?
-        @invoice = EventInvoice.from_bulk_payment(@submission)
-      else
-        # The blank template is an admin tool.
-        authorize! @event, to: :invoice?
-        @invoice = EventInvoice.from_event(@event)
-      end
-
+      authorize! @event, to: :invoice?
+      @invoice = EventInvoice.from_event(@event)
       @event = @event.decorate
     end
 

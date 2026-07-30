@@ -158,7 +158,7 @@
         <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide text-center">Documents</h3>
 
         <!-- Invoice (always available) -->
-        <%= link_to event_invoice_path(@event, submission_id: @submission.id, return_to: "bulk_payment_ticket"),
+        <%= link_to bulk_payment_invoice_path(@submission.slug, return_to: "bulk_payment_ticket"),
                       class: "flex items-center gap-3 rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors" do %>
           <i class="fa-solid fa-file-invoice-dollar text-blue-500 text-xl shrink-0"></i>
 

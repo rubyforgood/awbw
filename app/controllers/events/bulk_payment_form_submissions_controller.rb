@@ -1,6 +1,6 @@
 module Events
   class BulkPaymentFormSubmissionsController < ApplicationController
-    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :receipt, :resend_confirmation ]
+    skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :invoice, :receipt, :resend_confirmation ]
     before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
 
@@ -70,6 +70,19 @@ module Events
 
       @payment = @submission.payment
       @event = @submission.event.decorate
+    end
+
+    # Public, slug-based invoice for the payer. Served here (rather than
+    # InvoicesController, which keeps only the admin blank template) so it's gated
+    # by the unguessable slug like #ticket, not an enumerable submission_id. The
+    # shared invoice view branches its back link on return_to.
+    def invoice
+      @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
+      authorize! @submission, to: :invoice?, context: { slug: params[:slug] }
+
+      @event = @submission.event.decorate
+      @invoice = EventInvoice.from_bulk_payment(@submission)
+      render "events/invoices/show"
     end
 
     # Public, slug-based receipt for the payer, available once a payment is on
