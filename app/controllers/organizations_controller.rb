@@ -127,8 +127,6 @@ class OrganizationsController < ApplicationController
   def update
     authorize! @organization
     @organization.assign_attributes(organization_params)
-    @organization.comments.select(&:new_record?).each { |c| c.updated_by = current_user }
-    @organization.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
     if @organization.save
       assign_associations(@organization) if params.dig(:organization, :category_ids)

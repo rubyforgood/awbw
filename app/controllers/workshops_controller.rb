@@ -108,8 +108,6 @@ class WorkshopsController < ApplicationController
     success = false
 
     @workshop.assign_attributes(workshop_params)
-    @workshop.comments.select(&:new_record?).each { |c| c.updated_by = current_user }
-    @workshop.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
     Workshop.transaction do
       if @workshop.save
