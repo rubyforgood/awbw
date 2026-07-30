@@ -81,6 +81,27 @@ RSpec.describe OrganizationPolicy, type: :policy do
         scope = policy.apply_scope(Organization.all, type: :active_record_relation)
         expect(scope.to_sql).to eq(Organization.published.to_sql)
       end
+
+      it "includes organizations with an active affiliation and excludes those without one" do
+        regular = create(:user)
+        with_active_affiliation = create(:organization)
+        create(:affiliation, organization: with_active_affiliation, inactive: false, end_date: nil)
+
+        # An expired affiliation isn't active, and the factory status is never
+        # "Active", so this org matches neither branch of `published`/`active`.
+        without_active_affiliation = create(:organization)
+        create(:affiliation, organization: without_active_affiliation, end_date: 1.day.ago)
+
+        # The scope is broader than "has an active affiliation": an org flagged
+        # "Active" by status alone still qualifies, even with no affiliations.
+        active_by_status = create(:organization, organization_status: create(:organization_status, name: "Active"))
+
+        policy = described_class.new(Organization, user: regular)
+        scope = policy.apply_scope(Organization.all, type: :active_record_relation)
+
+        expect(scope).to include(with_active_affiliation, active_by_status)
+        expect(scope).not_to include(without_active_affiliation)
+      end
     end
   end
 end
