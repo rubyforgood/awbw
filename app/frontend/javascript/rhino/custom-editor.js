@@ -16,7 +16,11 @@ class CustomEditor extends TipTapEditor {
   static get properties() {
     return {
       ...super.properties,
-      floatingToolbarActive: { type: Boolean, reflect: true, attribute: "floating-toolbar-active" },
+      floatingToolbarActive: {
+        type: Boolean,
+        reflect: true,
+        attribute: "floating-toolbar-active",
+      },
     };
   }
 
@@ -38,13 +42,23 @@ class CustomEditor extends TipTapEditor {
           background: #fff;
           border-radius: 8px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-          padding: 4px 8px;
-          max-width: 95vw;
-          overflow-x: auto;
-          white-space: nowrap;
+          padding: 12px;
+          max-width: 75vw;
           display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
           gap: 2px;
           align-items: center;
+        }
+
+        .floating-toolbar-overlay role-toolbar::part(base) {
+          overflow: visible;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 1px;
+          padding: 0;
+          border: none;
+        }
         }
       `,
     ];
@@ -191,8 +205,12 @@ class CustomEditor extends TipTapEditor {
           <button
             class="toolbar__button rhino-toolbar-button"
             type="button"
-            title=${this.floatingToolbarActive ? "Hide floating toolbar" : "Show floating toolbar"}
-            @click=${() => { this.floatingToolbarActive = !this.floatingToolbarActive; }}
+            title=${this.floatingToolbarActive
+              ? "Hide floating toolbar"
+              : "Show floating toolbar"}
+            @click=${() => {
+              this.floatingToolbarActive = !this.floatingToolbarActive;
+            }}
           >
             ${this.floatingToolbarActive ? "📌" : "📍"}
           </button>
@@ -226,13 +244,23 @@ class CustomEditor extends TipTapEditor {
           <slot name="hr-button">${this.renderHorizontalRuleButton()}</slot>
           <slot name="blockquote-button">${this.renderBlockquoteButton()}</slot>
           <slot name="code-block-button">${this.renderCodeBlockButton()}</slot>
-          <slot name="bullet-list-button">${this.renderBulletListButton()}</slot>
-          <slot name="ordered-list-button">${this.renderOrderedListButton()}</slot>
-          <slot name="decrease-indentation-button">${this.renderDecreaseIndentation()}</slot>
-          <slot name="increase-indentation-button">${this.renderIncreaseIndentation()}</slot>
+          <slot name="bullet-list-button"
+            >${this.renderBulletListButton()}</slot
+          >
+          <slot name="ordered-list-button"
+            >${this.renderOrderedListButton()}</slot
+          >
+          <slot name="decrease-indentation-button"
+            >${this.renderDecreaseIndentation()}</slot
+          >
+          <slot name="increase-indentation-button"
+            >${this.renderIncreaseIndentation()}</slot
+          >
           <slot name="grid-button">${this.renderGridButton()}</slot>
           <slot name="table-button"> ${this.renderTableButton()} </slot>
-          <slot name="attach-files-button">${this.renderAttachmentButton()}</slot>
+          <slot name="attach-files-button"
+            >${this.renderAttachmentButton()}</slot
+          >
           <slot name="undo-button"> ${this.renderUndoButton()} </slot>
           <slot name="redo-button"> ${this.renderRedoButton()} </slot>
           <slot name="source-modal-button">
@@ -251,7 +279,11 @@ class CustomEditor extends TipTapEditor {
                 }
               }}
             >
-              <role-tooltip hoist part="toolbar-tooltip" exportparts=${this.__tooltipExportParts}>
+              <role-tooltip
+                hoist
+                part="toolbar-tooltip"
+                exportparts=${this.__tooltipExportParts}
+              >
                 Edit HTML
               </role-tooltip>
               &lt;/&gt;
@@ -259,8 +291,7 @@ class CustomEditor extends TipTapEditor {
           </slot>
         </role-toolbar>
 
-        ${this.renderTableMenu()}
-        ${renderGridMenu(this.editor)}
+        ${this.renderTableMenu()} ${renderGridMenu(this.editor)}
       </div>
     `;
   }
@@ -657,8 +688,9 @@ class CustomEditor extends TipTapEditor {
           (font) => html`
             <option
               value=${font.family}
-              style="font-family: ${font.family || 'inherit'}"
-              ?selected=${font.family && this.editor.isActive("textStyle", { fontFamily: font.family })}
+              style="font-family: ${font.family || "inherit"}"
+              ?selected=${font.family &&
+              this.editor.isActive("textStyle", { fontFamily: font.family })}
             >
               ${font.name}
             </option>
@@ -702,7 +734,8 @@ class CustomEditor extends TipTapEditor {
           (size) => html`
             <option
               value=${size.size}
-              ?selected=${size.size && this.editor.isActive("textStyle", { fontSize: size.size })}
+              ?selected=${size.size &&
+              this.editor.isActive("textStyle", { fontSize: size.size })}
             >
               ${size.name}
             </option>
