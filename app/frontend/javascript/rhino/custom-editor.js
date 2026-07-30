@@ -2,7 +2,7 @@
 // extends the default tiptap editor to have a toolbar
 // with table editing buttons in it.
 
-import { html } from "lit";
+import { html, css } from "lit";
 import "rhino-editor/exports/styles/trix.css";
 import { TipTapEditor } from "rhino-editor/exports/elements/tip-tap-editor.js";
 import * as table_icons from "./table-icons.js";
@@ -13,6 +13,42 @@ import { application } from "../controllers/application";
 import { renderGridMenu } from "./grid/grid-menu.js";
 
 class CustomEditor extends TipTapEditor {
+  static get properties() {
+    return {
+      ...super.properties,
+      floatingToolbarActive: { type: Boolean, reflect: true, attribute: "floating-toolbar-active" },
+    };
+  }
+
+  constructor() {
+    super();
+    this.floatingToolbarActive = false;
+  }
+
+  static get styles() {
+    return [
+      ...super.styles,
+      css`
+        .floating-toolbar-overlay {
+          position: fixed;
+          bottom: 16px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 50;
+          background: #fff;
+          border-radius: 8px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+          padding: 4px 8px;
+          max-width: 95vw;
+          overflow-x: auto;
+          white-space: nowrap;
+          display: flex;
+          gap: 2px;
+          align-items: center;
+        }
+      `,
+    ];
+  }
   renderToolbar() {
     if (this.readonly) return html``;
 
@@ -151,13 +187,81 @@ class CustomEditor extends TipTapEditor {
             </button>
           </slot>
 
+          <slot name="before-floating-toggle-button"></slot>
+          <button
+            class="toolbar__button rhino-toolbar-button"
+            type="button"
+            title=${this.floatingToolbarActive ? "Hide floating toolbar" : "Show floating toolbar"}
+            @click=${() => { this.floatingToolbarActive = !this.floatingToolbarActive; }}
+          >
+            ${this.floatingToolbarActive ? "📌" : "📍"}
+          </button>
+          <slot name="after-floating-toggle-button"></slot>
+
           <slot name="toolbar-end">${this.renderToolbarEnd()}</slot>
         </role-toolbar>
 
-        ${this.renderTableMenu()} ${renderGridMenu(this.editor)}
+        ${this.floatingToolbarActive
+          ? this.renderFloatingToolbar()
+          : html`${this.renderTableMenu()} ${renderGridMenu(this.editor)}`}
         ${this.renderBubbleMenuToolbar()}
         ${this.renderLinkDialogAnchoredRegion()}
       </slot>
+    `;
+  }
+
+  renderFloatingToolbar() {
+    return html`
+      <div class="floating-toolbar-overlay" part="floating-toolbar">
+        <role-toolbar class="toolbar" part="toolbar" role="toolbar">
+          <slot name="bold-button">${this.renderBoldButton()}</slot>
+          <slot name="italic-button">${this.renderItalicButton()}</slot>
+          <slot name="color-picker"> ${this.renderTextColorPicker()} </slot>
+          <slot name="font-picker"> ${this.renderFontPicker()} </slot>
+          <slot name="font-size-picker"> ${this.renderFontSizePicker()} </slot>
+          <slot name="strike-button">${this.renderStrikeButton()}</slot>
+          <slot name="link-button">${this.renderLinkButton()}</slot>
+          <slot name="align-buttons">${this.renderAlignmentButtons()}</slot>
+          <slot name="heading-button">${this.renderHeadingButton()}</slot>
+          <slot name="hr-button">${this.renderHorizontalRuleButton()}</slot>
+          <slot name="blockquote-button">${this.renderBlockquoteButton()}</slot>
+          <slot name="code-block-button">${this.renderCodeBlockButton()}</slot>
+          <slot name="bullet-list-button">${this.renderBulletListButton()}</slot>
+          <slot name="ordered-list-button">${this.renderOrderedListButton()}</slot>
+          <slot name="decrease-indentation-button">${this.renderDecreaseIndentation()}</slot>
+          <slot name="increase-indentation-button">${this.renderIncreaseIndentation()}</slot>
+          <slot name="grid-button">${this.renderGridButton()}</slot>
+          <slot name="table-button"> ${this.renderTableButton()} </slot>
+          <slot name="attach-files-button">${this.renderAttachmentButton()}</slot>
+          <slot name="undo-button"> ${this.renderUndoButton()} </slot>
+          <slot name="redo-button"> ${this.renderRedoButton()} </slot>
+          <slot name="source-modal-button">
+            <button
+              class="toolbar__button rhino-toolbar-button"
+              type="button"
+              @click=${() => {
+                const modalController =
+                  application.getControllerForElementAndIdentifier(
+                    document.querySelector("[data-controller='rhino-source']"),
+                    "rhino-source",
+                  );
+                if (modalController) {
+                  modalController.registerEditor(this.editor);
+                  modalController.show();
+                }
+              }}
+            >
+              <role-tooltip hoist part="toolbar-tooltip" exportparts=${this.__tooltipExportParts}>
+                Edit HTML
+              </role-tooltip>
+              &lt;/&gt;
+            </button>
+          </slot>
+        </role-toolbar>
+
+        ${this.renderTableMenu()}
+        ${renderGridMenu(this.editor)}
+      </div>
     `;
   }
 
