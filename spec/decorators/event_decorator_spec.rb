@@ -283,8 +283,23 @@ RSpec.describe EventDecorator do
         apple = Nokogiri::HTML.fragment(event.decorate.calendar_links).css("a").find { |a| a.text == "Apple" }
 
         expect(apple["href"]).to include("The videoconference join link isn't in this calendar entry yet")
-        expect(apple["href"]).to include("Re-download the event from the Portal on #{reveal} to include it")
+        expect(apple["href"]).to include("Re-download it from the Portal on #{reveal} to include it")
         expect(apple["href"]).not_to include("88285411273")
+      end
+
+      it "appends the viewer's personalized ticket URL to the gated calendar entry" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 23.days.from_now)
+
+        apple = Nokogiri::HTML.fragment(
+          event.reload.decorate.calendar_links(re_add_url: "https://portal.example/registration/abc/ticket")
+        ).css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("Re-download it from the Portal")
+        expect(apple["href"]).to include("https://portal.example/registration/abc/ticket")
       end
 
       it "uses a generic re-add note when there's no unlock date to name (payment gate)" do
@@ -295,7 +310,7 @@ RSpec.describe EventDecorator do
         apple = Nokogiri::HTML.fragment(event.decorate.calendar_links(show_videoconference_details: false))
                   .css("a").find { |a| a.text == "Apple" }
 
-        expect(apple["href"]).to include("Re-download the event from the Portal once the link is available to include it")
+        expect(apple["href"]).to include("Re-download it from the Portal once the link is available to include it")
       end
 
       it "drops the note once the details are visible — the real join link takes its place" do
@@ -308,7 +323,7 @@ RSpec.describe EventDecorator do
         apple = Nokogiri::HTML.fragment(event.reload.decorate.calendar_links).css("a").find { |a| a.text == "Apple" }
 
         expect(apple["href"]).to include("Join on Zoom: https://awbw.zoom.us/j/88285411273")
-        expect(apple["href"]).not_to include("Re-download the event from the Portal")
+        expect(apple["href"]).not_to include("Re-download it from the Portal")
       end
 
       it "adds no note when the event has no videoconference URL, even while gated" do
@@ -319,7 +334,7 @@ RSpec.describe EventDecorator do
                                               display_from: 23.days.from_now)
 
         hrefs = Nokogiri::HTML.fragment(event.reload.decorate.calendar_links).css("a").map { |a| a["href"] }
-        hrefs.each { |href| expect(href).not_to include("Re-download the event from the Portal") }
+        hrefs.each { |href| expect(href).not_to include("Re-download it from the Portal") }
       end
 
       it "links the re-download phrase to the given Portal URL in the HTML note" do
@@ -334,7 +349,7 @@ RSpec.describe EventDecorator do
         doc = Nokogiri::HTML.fragment(event.decorate.videoconference_calendar_pending_note_html("/registration/abc/ticket"))
         link = doc.at_css("a")
 
-        expect(link.text).to eq("Re-download the event from the Portal")
+        expect(link.text).to eq("Re-download it from the Portal")
         expect(link["href"]).to eq("/registration/abc/ticket")
         expect(doc.text).to include("on #{reveal} to include it")
       end

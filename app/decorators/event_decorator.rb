@@ -88,8 +88,10 @@ class EventDecorator < ApplicationDecorator
   # `show_videoconference_details` controls whether the join link/ID/passcode are
   # carried into the calendar entry. Callers with a registration pass that
   # registrant's gate (date + paid/intends); the default falls back to the
-  # event-level date gate for registration-less contexts.
-  def calendar_links(show_videoconference_details: object.videoconference_details_visible?)
+  # event-level date gate for registration-less contexts. `re_add_url` is the
+  # viewer's personalized ticket URL, appended to the gated re-download note so
+  # the saved entry links back to where they can regenerate it.
+  def calendar_links(show_videoconference_details: object.videoconference_details_visible?, re_add_url: nil)
     start_time   = object.start_date.utc.strftime("%Y%m%dT%H%M%SZ")
     end_time     = object.end_date.utc.strftime("%Y%m%dT%H%M%SZ")
     title_encoded = ERB::Util.url_encode(object.title)
@@ -131,7 +133,7 @@ class EventDecorator < ApplicationDecorator
       if show_videoconference_details
         videoconference_calendar_details
       elsif object.videoconference_url.present?
-        videoconference_calendar_pending_note
+        videoconference_calendar_pending_note(re_add_url: re_add_url)
       end
     description = [ vc_details, base_description ].compact_blank.join("\n\n")
 
@@ -189,20 +191,22 @@ class EventDecorator < ApplicationDecorator
   end
 
   # The note shown while the viewer's videoconference details are still gated: the
-  # entry they save now won't carry the join link, so tell them to re-download the
-  # event from the Portal once it unlocks. Plain-text form for the calendar entry
-  # (#calendar_links); a calendar description can't hold a link. The hover uses
+  # entry they save now won't carry the join link, so tell them to re-download it
+  # from the Portal once it unlocks. Plain-text form for the calendar entry
+  # (#calendar_links); a calendar description can't hold a link, so `re_add_url`
+  # (the viewer's ticket URL) is appended as plain text when given. The hover uses
   # the _html form below. Both share the reveal-date phrasing so they stay in sync.
-  def videoconference_calendar_pending_note
-    "The videoconference join link isn't in this calendar entry yet. " \
-      "Re-download the event from the Portal #{videoconference_pending_reveal_phrase} to include it."
+  def videoconference_calendar_pending_note(re_add_url: nil)
+    note = "The videoconference join link isn't in this calendar entry yet. " \
+      "Re-download it from the Portal #{videoconference_pending_reveal_phrase} to include it."
+    re_add_url.present? ? "#{note}\n#{re_add_url}" : note
   end
 
   # HTML form of #videoconference_calendar_pending_note for the on-page hover, with
-  # the "Re-download the event from the Portal" phrase linked to `portal_url` — the
-  # page whose add-to-calendar buttons regenerate the entry once the link unlocks.
+  # the "Re-download it from the Portal" phrase linked to `portal_url` — the page
+  # whose add-to-calendar buttons regenerate the entry once the link unlocks.
   def videoconference_calendar_pending_note_html(portal_url)
-    link = h.link_to("Re-download the event from the Portal", portal_url, class: "underline font-medium")
+    link = h.link_to("Re-download it from the Portal", portal_url, class: "underline font-medium")
     h.safe_join([
       "The videoconference join link isn't in this calendar entry yet. ",
       link,

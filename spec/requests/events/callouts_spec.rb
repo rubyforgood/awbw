@@ -143,7 +143,7 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(reveal_date).to be_present
       # "isn't" is HTML-escaped on the page (isn&#39;t), so match the apostrophe-free part.
       expect(response.body).to include("in this calendar entry yet")
-      expect(response.body).to include("Re-download the event from the Portal")
+      expect(response.body).to include("Re-download it from the Portal")
       expect(response.body).to include("on #{reveal_date}")
     end
   end

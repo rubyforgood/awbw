@@ -66,7 +66,8 @@
         </p>
         <%= render "events/videoconference_calendar_notice", event: event, registration: calendar_registration %>
       </div>
-      <div class="flex gap-2 items-center text-sm text-gray-700"><%= event.calendar_links(show_videoconference_details: calendar_registration&.videoconference_details_visible?) %></div>
+      <% calendar_re_add_url = calendar_registration ? registration_ticket_url(calendar_registration.slug) : event_url(event) %>
+      <div class="flex gap-2 items-center text-sm text-gray-700"><%= event.calendar_links(show_videoconference_details: calendar_registration&.videoconference_details_visible?, re_add_url: calendar_re_add_url) %></div>
     </div>
   <% end %>
 <% end %>
