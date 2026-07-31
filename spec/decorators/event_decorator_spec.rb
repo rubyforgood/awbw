@@ -313,7 +313,9 @@ RSpec.describe EventDecorator do
         expect(apple["href"]).to include("Re-download it from the Portal once the link is available to include it")
       end
 
-      it "names the payment condition — not a past drip date — when payment is the only blocker" do
+      it "names only payment — not a passed drip date — when both gates were set but the date has passed" do
+        # A drip date exists but is already in the past (date gate satisfied),
+        # leaving payment as the only remaining blocker.
         event = create(:event,
                         start_date: 3.days.from_now, end_date: 3.days.from_now + 2.hours,
                         videoconference_url: "https://awbw.zoom.us/j/88285411273")

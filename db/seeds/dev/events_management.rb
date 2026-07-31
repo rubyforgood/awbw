@@ -316,6 +316,17 @@ Event.find_by(title: "AWBW Facilitator Training")&.update!(
   hint_registration_cost: "due within 3 weeks of registration"
 )
 
+# Any event with a videoconference link should show its videoconference callout
+# card on the ticket — the card is the doorway to the videoconference page, which
+# gates the actual join details (payment + drip date) on its own. So publish it
+# and keep it un-gated (it must stay reachable before payment). force-set on
+# re-seed, mirroring the videoconference-settings refresh above.
+Event.where.not(videoconference_url: [ nil, "" ]).find_each do |vc_event|
+  vc_event.registration_ticket_callouts
+          .find_by(builtin_key: "videoconference")
+          &.update!(hidden: false, payment_access_gated: false)
+end
+
 # Seed the "Before you attend" details — the materials/art-supply info that used to
 # live in a long confirmation email and that registrants routinely missed. Shown on
 # its own ticket-linked page (and via the prominent amber call-out on the ticket).
