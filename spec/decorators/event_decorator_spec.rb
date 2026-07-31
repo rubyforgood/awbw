@@ -261,7 +261,6 @@ RSpec.describe EventDecorator do
       doc = Nokogiri::HTML.fragment(decorated.calendar_links)
       hrefs = doc.css("a").map { |a| a["href"] }
 
-      # Every provider link still renders; none carry a join URL or meeting details.
       expect(hrefs.size).to eq(5)
       hrefs.each do |href|
         expect(href).not_to include("Join on")

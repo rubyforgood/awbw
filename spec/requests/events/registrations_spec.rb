@@ -614,9 +614,7 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("unlocks once both of these are met")
       expect(response.body).to include("Available from")
 
-      # The downloadable calendar entry itself carries the re-download note as
-      # plain text, with the registrant's own videoconference-page URL appended
-      # (Nokogiri decodes the href attribute, so match it directly).
+      # Nokogiri decodes the href attribute, so match the note/URL text directly.
       apple = Nokogiri::HTML.fragment(response.body).css("a").find { |a| a.text == "Apple" }
       expect(apple["href"]).to include("The videoconference join link isn't in this calendar entry yet")
       expect(apple["href"]).to include("Re-download it from the Portal")

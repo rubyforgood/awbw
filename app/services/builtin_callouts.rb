@@ -261,8 +261,7 @@ class BuiltinCallouts
         icon_class: "fa-solid fa-video",
         color_class: "blue",
         hidden: ->(_event) { true },
-        # Drips the connection details onto the ticket a week before the event
-        # starts. Stored and admin-editable per event.
+        # Default drip date; admins can edit it per event afterward.
         display_from: ->(event) { event.start_date - 7.days if event.start_date }
       },
       {

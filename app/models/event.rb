@@ -149,11 +149,8 @@ class Event < ApplicationRecord
     now >= start_date - VIDEOCONFERENCE_JOIN_BUFFER && now <= end_date + VIDEOCONFERENCE_JOIN_BUFFER
   end
 
-  # When the videoconference connection details unlock: the drip date on the
-  # materialized videoconference callout (admin-editable, seeded to a week before
-  # the start). Only gates once that callout exists — with no callout, or a
-  # callout whose drip date was cleared, there's nothing to wait on and the
-  # details are available immediately (see below).
+  # The drip date on the materialized videoconference callout — nil when there's no
+  # callout or its date was cleared, in which case the details unlock immediately.
   def videoconference_details_available_from
     return @videoconference_details_available_from if defined?(@videoconference_details_available_from)
     @videoconference_details_available_from =
