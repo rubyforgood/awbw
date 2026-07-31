@@ -124,8 +124,15 @@ class EventDecorator < ApplicationDecorator
 
     # Carry the join link, meeting ID/code, and passcode into the calendar entry
     # so registrants have everything they need to connect straight from the event
-    # — but only once the details may be shared (date + paid/intends).
-    vc_details = videoconference_calendar_details if show_videoconference_details
+    # — but only once the details may be shared (date + paid/intends). While they
+    # are still gated, leave a note in the entry so a viewer who saves it now
+    # knows to re-add the event once the link unlocks.
+    vc_details =
+      if show_videoconference_details
+        videoconference_calendar_details
+      elsif object.videoconference_url.present?
+        videoconference_calendar_pending_note
+      end
     description = [ vc_details, base_description ].compact_blank.join("\n\n")
 
     desc_encoded     = ERB::Util.url_encode(description)
@@ -179,6 +186,16 @@ class EventDecorator < ApplicationDecorator
       ],
       " "
     )
+  end
+
+  # The note shown while the viewer's videoconference details are still gated: the
+  # calendar entry (or on-page hover) they save now won't carry the join link, so
+  # tell them when to re-add the event to get it. Shared by #calendar_links and
+  # the videoconference_calendar_notice partial so both stay in sync.
+  def videoconference_calendar_pending_note
+    reveal = object.videoconference_details_available_from
+    when_text = reveal.present? ? "on #{reveal.to_date.strftime("%B %-d, %Y")}" : "once the link is available"
+    "The videoconference join link isn't in this calendar entry yet. Add the event again #{when_text} to include it."
   end
 
   # True when the event spans more than one calendar day in the viewer's time

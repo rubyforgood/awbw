@@ -270,6 +270,59 @@ RSpec.describe EventDecorator do
       end
     end
 
+    describe "the pending re-add note (join link present but gated)" do
+      it "embeds a dated note telling the viewer to re-add the event once the link unlocks" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 23.days.from_now)
+        event.reload
+        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+
+        apple = Nokogiri::HTML.fragment(event.decorate.calendar_links).css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("The videoconference join link isn't in this calendar entry yet")
+        expect(apple["href"]).to include("Add the event again on #{reveal} to include it")
+        expect(apple["href"]).not_to include("88285411273")
+      end
+
+      it "uses a generic re-add note when there's no unlock date to name (payment gate)" do
+        event = create(:event,
+                        start_date: 3.days.from_now, end_date: 3.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+
+        apple = Nokogiri::HTML.fragment(event.decorate.calendar_links(show_videoconference_details: false))
+                  .css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("Add the event again once the link is available to include it")
+      end
+
+      it "drops the note once the details are visible — the real join link takes its place" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 1.day.ago)
+
+        apple = Nokogiri::HTML.fragment(event.reload.decorate.calendar_links).css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("Join on Zoom: https://awbw.zoom.us/j/88285411273")
+        expect(apple["href"]).not_to include("Add the event again")
+      end
+
+      it "adds no note when the event has no videoconference URL, even while gated" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: nil)
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 23.days.from_now)
+
+        hrefs = Nokogiri::HTML.fragment(event.reload.decorate.calendar_links).css("a").map { |a| a["href"] }
+        hrefs.each { |href| expect(href).not_to include("Add the event again") }
+      end
+    end
+
     # The reveal date is the admin-editable drip date (display_from) on the
     # built-in videoconference callout. These drive that gate directly.
     context "with a materialized videoconference callout (admin drip date gate)" do

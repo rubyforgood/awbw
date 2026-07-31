@@ -613,6 +613,11 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).not_to include("secret123")
       expect(response.body).to include("unlocks once both of these are met")
       expect(response.body).to include("Available from")
+
+      # The downloadable calendar entry itself carries the re-add note (Nokogiri
+      # decodes the href attribute, so match the note text directly).
+      apple = Nokogiri::HTML.fragment(response.body).css("a").find { |a| a.text == "Apple" }
+      expect(apple["href"]).to include("The videoconference join link isn't in this calendar entry yet")
     end
 
     it "withholds the link and credentials until the registrant has payment access" do
