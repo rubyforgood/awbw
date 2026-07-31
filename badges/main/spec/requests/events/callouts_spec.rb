@@ -128,7 +128,8 @@ RSpec.describe "Events::Callouts", type: :request do
     end
 
     it "lists both unlock conditions while the details aren't visible yet" do
-      event.update!(start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours)
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference",
+        display_from: 23.days.from_now)
 
       get registration_videoconference_path(registration.slug)
 
@@ -140,8 +141,10 @@ RSpec.describe "Events::Callouts", type: :request do
       # from the body to stay independent of the request's time zone).
       reveal_date = response.body[/Available from ([A-Z][a-z]+ \d{1,2}, \d{4})/, 1]
       expect(reveal_date).to be_present
-      expect(response.body).to include("isn't in this calendar entry yet")
-      expect(response.body).to include("Add the event again on #{reveal_date}")
+      # "isn't" is HTML-escaped on the page (isn&#39;t), so match the apostrophe-free part.
+      expect(response.body).to include("in this calendar entry yet")
+      expect(response.body).to include("Re-download it from the Portal")
+      expect(response.body).to include("on #{reveal_date}")
     end
   end
 

@@ -30,6 +30,6 @@
       <span class="text-gray-400">0</span>
     <% end %>
   </td>
-  <td class="px-4 py-3.5 align-middle text-sm text-gray-700 whitespace-nowrap" data-sort-value="<%= grant.object.application_deadline&.iso8601 %>"><%= grant.application_deadline %></td>
+  <td class="px-4 py-3.5 align-middle text-sm text-gray-700 whitespace-nowrap" data-sort-value="<%= grant.object.funds_allocation_deadline&.iso8601 %>"><%= grant.funds_allocation_deadline %></td>
   <td class="px-4 py-3.5 align-middle text-right text-sm"><%= link_to "Edit", edit_grant_path(grant), class: "text-gray-500 hover:text-gray-700 underline", data: { turbo_frame: "_top" } %></td>
 </tr>

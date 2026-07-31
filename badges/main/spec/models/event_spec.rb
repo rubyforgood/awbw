@@ -89,34 +89,25 @@ RSpec.describe Event, type: :model do
   end
 
   describe "#videoconference_details_visible?" do
-    it "returns true when there is no drip date to wait on (no start_date)" do
-      event = build(:event, start_date: nil)
+    it "is visible when no videoconference callout has been materialized (nothing to gate on)" do
+      event = create(:event, start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours)
       expect(event.videoconference_details_visible?).to be true
     end
 
-    it "returns false more than a week before the start" do
-      event = build(:event, start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours)
-      expect(event.videoconference_details_visible?).to be false
-    end
-
-    it "returns true within a week of the start" do
-      event = build(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
-      expect(event.videoconference_details_visible?).to be true
-    end
-
-    it "returns true once the event has started" do
-      event = build(:event, start_date: 1.hour.ago, end_date: 1.hour.from_now)
-      expect(event.videoconference_details_visible?).to be true
-    end
-
-    it "defers to the videoconference callout's drip date over the week-before default" do
+    it "is gated while the materialized callout's drip date is still in the future" do
       event = create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
       create(:registration_ticket_callout, event:, builtin_key: "videoconference",
         display_from: 2.days.from_now)
 
-      # Within the week-before default (which would be true), but before the
-      # callout's later drip date.
       expect(event.videoconference_details_visible?).to be false
+    end
+
+    it "is visible once the materialized callout's drip date has passed" do
+      event = create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours)
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference",
+        display_from: 1.day.ago)
+
+      expect(event.videoconference_details_visible?).to be true
     end
 
     it "is visible immediately when the callout's drip date has been cleared" do

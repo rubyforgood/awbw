@@ -41,11 +41,12 @@
     </div>
 
     <div>
-      <%= f.input :application_deadline,
+      <%= f.input :funds_allocation_deadline,
+                  label: "Funds allocation deadline",
                   as: :string,
                   input_html: {
                     type: "date",
-                    value: @grant.application_deadline&.strftime("%Y-%m-%d"),
+                    value: @grant.funds_allocation_deadline&.strftime("%Y-%m-%d"),
                     class: "w-full sm:w-1/2 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm"
                   } %>
     </div>

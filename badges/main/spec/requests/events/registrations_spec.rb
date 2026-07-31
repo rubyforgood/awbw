@@ -580,7 +580,11 @@ RSpec.describe "Events::Registrations", type: :request do
                      videoconference_url: "https://awbw.zoom.us/j/88285411273",
                      videoconference_label: "Zoom", videoconference_passcode: "secret123")
     end
-    # Within a week and intends to pay → the connection details are visible.
+    # The videoconference callout's drip date has passed and the registrant
+    # intends to pay → the connection details are visible.
+    let!(:videoconference_callout) do
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference", display_from: 1.day.ago)
+    end
     let!(:registration) { create(:event_registration, event: event, registrant: user.person, intends_to_pay: true) }
 
     it "shows the join link and add-to-calendar options" do
@@ -588,6 +592,10 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("https://awbw.zoom.us/j/88285411273")
       expect(response.body).to include("Add to your calendar")
+      # The page passes the visible gate into #calendar_links, so the join link
+      # is embedded in the calendar entry (the "Join on <domain>: <url>" form is
+      # unique to the calendar details).
+      expect(response.body).to include("Join on Zoom: https://awbw.zoom.us/j/88285411273")
     end
 
     it "shows the meeting ID parsed from the URL and the passcode" do
@@ -598,13 +606,19 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("secret123")
     end
 
-    it "withholds the link and credentials more than a week before the event" do
-      event.update!(start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours)
+    it "withholds the link and credentials until the drip date arrives" do
+      videoconference_callout.update!(display_from: 1.day.from_now)
       get registration_videoconference_path(registration.slug)
       expect(response.body).not_to include("88285411273")
       expect(response.body).not_to include("secret123")
       expect(response.body).to include("unlocks once both of these are met")
       expect(response.body).to include("Available from")
+
+      # Nokogiri decodes the href attribute, so match the note/URL text directly.
+      apple = Nokogiri::HTML.fragment(response.body).css("a").find { |a| a.text == "Apple" }
+      expect(apple["href"]).to include("The videoconference join link isn't in this calendar entry yet")
+      expect(apple["href"]).to include("Re-download it from the Portal")
+      expect(apple["href"]).to include(registration_videoconference_url(registration.slug))
     end
 
     it "withholds the link and credentials until the registrant has payment access" do
@@ -613,6 +627,37 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).not_to include("88285411273")
       expect(response.body).not_to include("secret123")
       expect(response.body).to include("payment is on file")
+    end
+  end
+
+  # The ticket page passes the registrant's own gate into #calendar_links, so the
+  # join link only reaches the add-to-calendar entry once the details are visible.
+  describe "GET /registration/:slug add-to-calendar videoconference gating" do
+    let(:event) do
+      create(:event, start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours,
+                     videoconference_url: "https://awbw.zoom.us/j/88285411273",
+                     videoconference_label: "Zoom", videoconference_passcode: "secret123")
+    end
+    let!(:videoconference_callout) do
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference", display_from: 1.day.ago)
+    end
+    let!(:registration) { create(:event_registration, event:, registrant: user.person, intends_to_pay: true) }
+
+    it "embeds the join link in the add-to-calendar entry once the details are visible" do
+      get registration_ticket_path(registration.slug)
+      expect(response.body).to include("Join on Zoom: https://awbw.zoom.us/j/88285411273")
+    end
+
+    it "keeps the join link out of the add-to-calendar entry while the drip date is pending" do
+      videoconference_callout.update!(display_from: 1.day.from_now)
+      get registration_ticket_path(registration.slug)
+      expect(response.body).not_to include("88285411273")
+    end
+
+    it "keeps the join link out of the add-to-calendar entry until the registrant has payment access" do
+      registration.update!(intends_to_pay: false)
+      get registration_ticket_path(registration.slug)
+      expect(response.body).not_to include("88285411273")
     end
   end
 
