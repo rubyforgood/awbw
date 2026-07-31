@@ -99,6 +99,39 @@ RSpec.describe "Events", type: :request do
         expect(response).to redirect_to(root_path)
       end
     end
+
+    # The registration section passes the viewer's registration gate into
+    # #calendar_links, so the join link only reaches the add-to-calendar entry
+    # once the details are visible. A free event keeps payment access open so
+    # these isolate the drip-date gate.
+    context "add-to-calendar videoconference gating for a registered viewer" do
+      let(:registrant) { create(:user, :with_person) }
+      let(:vc_event) do
+        create(:event, :published, :publicly_visible, cost_cents: 0,
+                       start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours,
+                       videoconference_url: "https://awbw.zoom.us/j/88285411273",
+                       videoconference_passcode: "secret123")
+      end
+      let!(:videoconference_callout) do
+        create(:registration_ticket_callout, event: vc_event, builtin_key: "videoconference", display_from: 1.day.ago)
+      end
+
+      before do
+        create(:event_registration, event: vc_event, registrant: registrant.person, status: "registered")
+        sign_in registrant
+      end
+
+      it "embeds the join link in the add-to-calendar entry once the details are visible" do
+        get event_path(vc_event)
+        expect(response.body).to include("Join on Zoom: https://awbw.zoom.us/j/88285411273")
+      end
+
+      it "keeps the join link out of the add-to-calendar entry while the drip date is pending" do
+        videoconference_callout.update!(display_from: 1.day.from_now)
+        get event_path(vc_event)
+        expect(response.body).not_to include("88285411273")
+      end
+    end
   end
 
   describe "GET /revenue" do

@@ -7,12 +7,6 @@ class Event < ApplicationRecord
   # link is available to paid registrants.
   VIDEOCONFERENCE_JOIN_BUFFER = 30.minutes
 
-  # How far ahead of the start the videoconference connection details (join link,
-  # meeting ID, passcode) may be shared. Kept hidden until then so the link isn't
-  # exposed — on the ticket, the videoconference page, or in calendar entries —
-  # more than a week in advance.
-  VIDEOCONFERENCE_DETAILS_LEAD = 7.days
-
   has_rich_text :rhino_header
   has_rich_text :rhino_description
 
@@ -155,20 +149,12 @@ class Event < ApplicationRecord
     now >= start_date - VIDEOCONFERENCE_JOIN_BUFFER && now <= end_date + VIDEOCONFERENCE_JOIN_BUFFER
   end
 
-  # When the videoconference connection details unlock. Driven by the drip date on
-  # the materialized videoconference callout (admin-editable), falling back to
-  # VIDEOCONFERENCE_DETAILS_LEAD before the start for events that haven't
-  # materialized the built-in callouts. nil when there's no date to gate on — a
-  # materialized callout whose drip date was cleared, or an event with no start
-  # date — in which case the details are available immediately (see below).
+  # The drip date on the materialized videoconference callout — nil when there's no
+  # callout or its date was cleared, in which case the details unlock immediately.
   def videoconference_details_available_from
     return @videoconference_details_available_from if defined?(@videoconference_details_available_from)
     @videoconference_details_available_from =
-      if (callout = registration_ticket_callouts.builtin.find_by(builtin_key: "videoconference"))
-        callout.display_from
-      elsif start_date
-        start_date - VIDEOCONFERENCE_DETAILS_LEAD
-      end
+      registration_ticket_callouts.builtin.find_by(builtin_key: "videoconference")&.display_from
   end
 
   # Whether the videoconference connection details may be revealed yet. A drip

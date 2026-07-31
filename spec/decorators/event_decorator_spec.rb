@@ -216,14 +216,16 @@ RSpec.describe EventDecorator do
       expect(apple["href"]).to include("DESCRIPTION:Bring a friend!")
     end
 
-    it "embeds the join link, meeting ID, and passcode within a week of the event" do
+    it "embeds the join link, meeting ID, and passcode once the details are visible" do
       event = create(:event,
                       start_date: 6.days.from_now, end_date: 6.days.from_now + 2.hours,
                       videoconference_url: "https://awbw.zoom.us/j/88285411273",
                       videoconference_passcode: "secret123")
-      decorated = event.decorate
+      create(:registration_ticket_callout, event: event,
+                                            builtin_key: "videoconference",
+                                            display_from: 1.day.ago)
 
-      doc = Nokogiri::HTML.fragment(decorated.calendar_links)
+      doc = Nokogiri::HTML.fragment(event.reload.decorate.calendar_links)
       apple = doc.css("a").find { |a| a.text == "Apple" }
 
       expect(apple["href"]).to include("Join on Zoom: https://awbw.zoom.us/j/88285411273")
@@ -231,19 +233,215 @@ RSpec.describe EventDecorator do
       expect(apple["href"]).to include("Passcode: secret123")
     end
 
-    it "omits the join link, meeting ID, and passcode more than a week out" do
+    it "omits the join link from every calendar link when details are gated for the registrant (payment gate)" do
+      # Within the date window (details would otherwise be visible), but the
+      # caller passes false — the per-registration payment gate hasn't opened.
       event = create(:event,
-                      start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours,
+                      start_date: 3.days.from_now, end_date: 3.days.from_now + 2.hours,
                       videoconference_url: "https://awbw.zoom.us/j/88285411273",
                       videoconference_passcode: "secret123")
       decorated = event.decorate
 
-      doc = Nokogiri::HTML.fragment(decorated.calendar_links)
-      apple = doc.css("a").find { |a| a.text == "Apple" }
+      doc = Nokogiri::HTML.fragment(decorated.calendar_links(show_videoconference_details: false))
+      hrefs = doc.css("a").map { |a| a["href"] }
 
-      expect(apple["href"]).not_to include("88285411273")
-      expect(apple["href"]).not_to include("Meeting ID")
-      expect(apple["href"]).not_to include("secret123")
+      hrefs.each do |href|
+        expect(href).not_to include("88285411273")
+        expect(href).not_to include("secret123")
+        expect(href).not_to include("awbw.zoom.us")
+      end
+    end
+
+    it "does not leak a join link in any calendar link when the event has no videoconference URL" do
+      event = create(:event,
+                      start_date: 3.days.from_now, end_date: 3.days.from_now + 2.hours,
+                      videoconference_url: nil)
+      decorated = event.decorate
+
+      doc = Nokogiri::HTML.fragment(decorated.calendar_links)
+      hrefs = doc.css("a").map { |a| a["href"] }
+
+      expect(hrefs.size).to eq(5)
+      hrefs.each do |href|
+        expect(href).not_to include("Join on")
+        expect(href).not_to include("Meeting ID")
+        expect(href).not_to include("zoom.us")
+      end
+    end
+
+    describe "the pending re-add note (join link present but gated)" do
+      it "embeds a dated note telling the viewer to re-add the event once the link unlocks" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 23.days.from_now)
+        event.reload
+        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+
+        apple = Nokogiri::HTML.fragment(event.decorate.calendar_links).css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("The videoconference join link isn't in this calendar entry yet")
+        expect(apple["href"]).to include("Re-download it from the Portal on #{reveal} to include it")
+        expect(apple["href"]).not_to include("88285411273")
+      end
+
+      it "appends the viewer's personalized re-download URL to the gated calendar entry" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 23.days.from_now)
+
+        apple = Nokogiri::HTML.fragment(
+          event.reload.decorate.calendar_links(re_add_url: "https://portal.example/registration/abc/ticket")
+        ).css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("Re-download it from the Portal")
+        expect(apple["href"]).to include("https://portal.example/registration/abc/ticket")
+      end
+
+      it "uses a generic note when neither payment nor a drip date can be named" do
+        event = create(:event,
+                        start_date: 3.days.from_now, end_date: 3.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+
+        apple = Nokogiri::HTML.fragment(event.decorate.calendar_links(show_videoconference_details: false))
+                  .css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("Re-download it from the Portal once the link is available to include it")
+      end
+
+      it "names only payment — not a passed drip date — when both gates were set but the date has passed" do
+        # A drip date exists but is already in the past (date gate satisfied),
+        # leaving payment as the only remaining blocker.
+        event = create(:event,
+                        start_date: 3.days.from_now, end_date: 3.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 1.day.ago)
+        event.reload
+        past_date = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+
+        apple = Nokogiri::HTML.fragment(
+          event.decorate.calendar_links(show_videoconference_details: false, payment_pending: true)
+        ).css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("Re-download it from the Portal once your payment is on file to include it")
+        expect(apple["href"]).not_to include(past_date)
+        expect(apple["href"]).not_to include("unlocks on")
+      end
+
+      it "names both conditions when payment and the drip date are pending" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 23.days.from_now)
+        event.reload
+        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+
+        apple = Nokogiri::HTML.fragment(
+          event.decorate.calendar_links(show_videoconference_details: false, payment_pending: true)
+        ).css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("once your payment is on file and the link unlocks on #{reveal} to include it")
+      end
+
+      it "drops the note once the details are visible — the real join link takes its place" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 1.day.ago)
+
+        apple = Nokogiri::HTML.fragment(event.reload.decorate.calendar_links).css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("Join on Zoom: https://awbw.zoom.us/j/88285411273")
+        expect(apple["href"]).not_to include("Re-download it from the Portal")
+      end
+
+      it "adds no note when the event has no videoconference URL, even while gated" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: nil)
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 23.days.from_now)
+
+        hrefs = Nokogiri::HTML.fragment(event.reload.decorate.calendar_links).css("a").map { |a| a["href"] }
+        hrefs.each { |href| expect(href).not_to include("Re-download it from the Portal") }
+      end
+
+      it "links the re-download phrase to the given Portal URL in the HTML note" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 23.days.from_now)
+        event.reload
+        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+
+        doc = Nokogiri::HTML.fragment(event.decorate.videoconference_calendar_pending_note_html("/registration/abc/ticket"))
+        link = doc.at_css("a")
+
+        expect(link.text).to eq("Re-download it from the Portal")
+        expect(link["href"]).to eq("/registration/abc/ticket")
+        expect(doc.text).to include("on #{reveal} to include it")
+      end
+    end
+
+    # The reveal date is the admin-editable drip date (display_from) on the
+    # built-in videoconference callout. These drive that gate directly.
+    context "with a materialized videoconference callout (admin drip date gate)" do
+      def zoom_details_visible_in_all_links?(decorated)
+        hrefs = Nokogiri::HTML.fragment(decorated.calendar_links).css("a").map { |a| a["href"] }
+        hrefs.all? { |href| href.include?("88285411273") }
+      end
+
+      it "embeds the join link in every calendar link once the drip date has passed, even months out" do
+        event = create(:event,
+                        start_date: 90.days.from_now, end_date: 90.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273",
+                        videoconference_passcode: "secret123")
+        create(:registration_ticket_callout, event: event,
+                                              builtin_key: "videoconference",
+                                              display_from: 1.day.ago)
+
+        expect(zoom_details_visible_in_all_links?(event.reload.decorate)).to be(true)
+      end
+
+      it "omits the join link from every calendar link while the drip date is still in the future, even days out" do
+        # Close to the start (3 days out) but the drip date hasn't arrived, so
+        # the details must stay withheld regardless of proximity.
+        event = create(:event,
+                        start_date: 3.days.from_now, end_date: 3.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273",
+                        videoconference_passcode: "secret123")
+        create(:registration_ticket_callout, event: event,
+                                              builtin_key: "videoconference",
+                                              display_from: 1.day.from_now)
+
+        hrefs = Nokogiri::HTML.fragment(event.reload.decorate.calendar_links).css("a").map { |a| a["href"] }
+        # Guard against a change that only wires the gate into some providers:
+        # the join link and passcode must be absent from all of them.
+        hrefs.each do |href|
+          expect(href).not_to include("88285411273")
+          expect(href).not_to include("secret123")
+          expect(href).not_to include("awbw.zoom.us")
+        end
+      end
+
+      it "embeds the join link immediately when the drip date is blank (no gate), even months out" do
+        event = create(:event,
+                        start_date: 90.days.from_now, end_date: 90.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273",
+                        videoconference_passcode: "secret123")
+        create(:registration_ticket_callout, event: event,
+                                              builtin_key: "videoconference",
+                                              display_from: nil)
+
+        expect(zoom_details_visible_in_all_links?(event.reload.decorate)).to be(true)
+      end
     end
   end
 
