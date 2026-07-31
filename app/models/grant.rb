@@ -12,7 +12,7 @@ class Grant < ApplicationRecord
   validates :donor_type, inclusion: { in: DONOR_TYPES }
   validate :amount_covers_scholarships_already_issued
 
-  scope :by_deadline, -> { order(Arel.sql("application_deadline IS NULL, application_deadline ASC")) }
+  scope :by_deadline, -> { order(Arel.sql("funds_allocation_deadline IS NULL, funds_allocation_deadline ASC")) }
 
   # Total scholarship draws against a grant, as a correlated subquery. Used by the
   # funds scopes so they stay flat WHERE clauses — no GROUP BY/HAVING, which would
