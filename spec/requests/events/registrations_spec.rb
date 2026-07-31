@@ -580,7 +580,11 @@ RSpec.describe "Events::Registrations", type: :request do
                      videoconference_url: "https://awbw.zoom.us/j/88285411273",
                      videoconference_label: "Zoom", videoconference_passcode: "secret123")
     end
-    # Within a week and intends to pay → the connection details are visible.
+    # The videoconference callout's drip date has passed and the registrant
+    # intends to pay → the connection details are visible.
+    let!(:videoconference_callout) do
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference", display_from: 1.day.ago)
+    end
     let!(:registration) { create(:event_registration, event: event, registrant: user.person, intends_to_pay: true) }
 
     it "shows the join link and add-to-calendar options" do
@@ -598,8 +602,8 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("secret123")
     end
 
-    it "withholds the link and credentials more than a week before the event" do
-      event.update!(start_date: 8.days.from_now, end_date: 8.days.from_now + 2.hours)
+    it "withholds the link and credentials until the drip date arrives" do
+      videoconference_callout.update!(display_from: 1.day.from_now)
       get registration_videoconference_path(registration.slug)
       expect(response.body).not_to include("88285411273")
       expect(response.body).not_to include("secret123")

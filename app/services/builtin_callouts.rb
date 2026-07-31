@@ -261,8 +261,8 @@ class BuiltinCallouts
         icon_class: "fa-solid fa-video",
         color_class: "blue",
         hidden: ->(_event) { true },
-        # Drips onto the ticket a week before the event starts, replacing the old
-        # hard-coded "one week prior" rule with a stored, editable date.
+        # Drips the connection details onto the ticket a week before the event
+        # starts. Stored and admin-editable per event.
         display_from: ->(event) { event.start_date - 7.days if event.start_date }
       },
       {

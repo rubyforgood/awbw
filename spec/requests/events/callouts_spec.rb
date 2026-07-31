@@ -128,7 +128,8 @@ RSpec.describe "Events::Callouts", type: :request do
     end
 
     it "lists both unlock conditions while the details aren't visible yet" do
-      event.update!(start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours)
+      create(:registration_ticket_callout, event:, builtin_key: "videoconference",
+        display_from: 23.days.from_now)
 
       get registration_videoconference_path(registration.slug)
 
