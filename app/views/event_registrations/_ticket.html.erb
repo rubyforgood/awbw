@@ -206,7 +206,7 @@
             <%= render "events/videoconference_calendar_notice", event: event_registration.event, registration: event_registration %>
           </div>
 
-          <div class="flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium"><%= event_registration.event.decorate.calendar_links(show_videoconference_details: event_registration.videoconference_details_visible?, re_add_url: registration_ticket_url(event_registration.slug)) %></div>
+          <div class="flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium"><%= event_registration.event.decorate.calendar_links(show_videoconference_details: event_registration.videoconference_details_visible?, re_add_url: registration_videoconference_url(event_registration.slug), payment_pending: !event_registration.payment_access_granted?) %></div>
         </div>
       <% end %>
     </div>

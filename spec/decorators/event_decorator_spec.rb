@@ -287,7 +287,7 @@ RSpec.describe EventDecorator do
         expect(apple["href"]).not_to include("88285411273")
       end
 
-      it "appends the viewer's personalized ticket URL to the gated calendar entry" do
+      it "appends the viewer's personalized re-download URL to the gated calendar entry" do
         event = create(:event,
                         start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
                         videoconference_url: "https://awbw.zoom.us/j/88285411273")
@@ -302,7 +302,7 @@ RSpec.describe EventDecorator do
         expect(apple["href"]).to include("https://portal.example/registration/abc/ticket")
       end
 
-      it "uses a generic re-add note when there's no unlock date to name (payment gate)" do
+      it "uses a generic note when neither payment nor a drip date can be named" do
         event = create(:event,
                         start_date: 3.days.from_now, end_date: 3.days.from_now + 2.hours,
                         videoconference_url: "https://awbw.zoom.us/j/88285411273")
@@ -311,6 +311,40 @@ RSpec.describe EventDecorator do
                   .css("a").find { |a| a.text == "Apple" }
 
         expect(apple["href"]).to include("Re-download it from the Portal once the link is available to include it")
+      end
+
+      it "names the payment condition — not a past drip date — when payment is the only blocker" do
+        event = create(:event,
+                        start_date: 3.days.from_now, end_date: 3.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 1.day.ago)
+        event.reload
+        past_date = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+
+        apple = Nokogiri::HTML.fragment(
+          event.decorate.calendar_links(show_videoconference_details: false, payment_pending: true)
+        ).css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("Re-download it from the Portal once your payment is on file to include it")
+        expect(apple["href"]).not_to include(past_date)
+        expect(apple["href"]).not_to include("unlocks on")
+      end
+
+      it "names both conditions when payment and the drip date are pending" do
+        event = create(:event,
+                        start_date: 30.days.from_now, end_date: 30.days.from_now + 2.hours,
+                        videoconference_url: "https://awbw.zoom.us/j/88285411273")
+        create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
+                                              display_from: 23.days.from_now)
+        event.reload
+        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+
+        apple = Nokogiri::HTML.fragment(
+          event.decorate.calendar_links(show_videoconference_details: false, payment_pending: true)
+        ).css("a").find { |a| a.text == "Apple" }
+
+        expect(apple["href"]).to include("once your payment is on file and the link unlocks on #{reveal} to include it")
       end
 
       it "drops the note once the details are visible — the real join link takes its place" do

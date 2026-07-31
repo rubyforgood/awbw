@@ -43,7 +43,7 @@
         <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Add to your calendar</p>
         <%= render "events/videoconference_calendar_notice", event: @event, registration: @event_registration %>
       </div>
-      <div class="flex flex-wrap gap-1 items-center text-sm text-blue-600 font-medium"><%= @event.calendar_links(show_videoconference_details: @event_registration.videoconference_details_visible?, re_add_url: registration_ticket_url(@event_registration.slug)) %></div>
+      <div class="flex flex-wrap gap-1 items-center text-sm text-blue-600 font-medium"><%= @event.calendar_links(show_videoconference_details: @event_registration.videoconference_details_visible?, re_add_url: registration_videoconference_url(@event_registration.slug), payment_pending: !@event_registration.payment_access_granted?) %></div>
     </div>
   </div>
 <% end %>

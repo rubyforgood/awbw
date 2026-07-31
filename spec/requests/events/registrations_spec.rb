@@ -615,12 +615,12 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("Available from")
 
       # The downloadable calendar entry itself carries the re-download note as
-      # plain text, with the registrant's own ticket URL appended (Nokogiri
-      # decodes the href attribute, so match it directly).
+      # plain text, with the registrant's own videoconference-page URL appended
+      # (Nokogiri decodes the href attribute, so match it directly).
       apple = Nokogiri::HTML.fragment(response.body).css("a").find { |a| a.text == "Apple" }
       expect(apple["href"]).to include("The videoconference join link isn't in this calendar entry yet")
       expect(apple["href"]).to include("Re-download it from the Portal")
-      expect(apple["href"]).to include(registration_ticket_url(registration.slug))
+      expect(apple["href"]).to include(registration_videoconference_url(registration.slug))
     end
 
     it "withholds the link and credentials until the registrant has payment access" do

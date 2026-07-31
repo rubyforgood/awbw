@@ -90,8 +90,10 @@ class EventDecorator < ApplicationDecorator
   # registrant's gate (date + paid/intends); the default falls back to the
   # event-level date gate for registration-less contexts. `re_add_url` is the
   # viewer's personalized ticket URL, appended to the gated re-download note so
-  # the saved entry links back to where they can regenerate it.
-  def calendar_links(show_videoconference_details: object.videoconference_details_visible?, re_add_url: nil)
+  # the saved entry links back to where they can regenerate it. `payment_pending`
+  # (caller-supplied, per registrant) lets the gated note name the payment
+  # condition alongside — or instead of — the drip date.
+  def calendar_links(show_videoconference_details: object.videoconference_details_visible?, re_add_url: nil, payment_pending: false)
     start_time   = object.start_date.utc.strftime("%Y%m%dT%H%M%SZ")
     end_time     = object.end_date.utc.strftime("%Y%m%dT%H%M%SZ")
     title_encoded = ERB::Util.url_encode(object.title)
@@ -133,7 +135,7 @@ class EventDecorator < ApplicationDecorator
       if show_videoconference_details
         videoconference_calendar_details
       elsif object.videoconference_url.present?
-        videoconference_calendar_pending_note(re_add_url: re_add_url)
+        videoconference_calendar_pending_note(re_add_url: re_add_url, payment_pending: payment_pending)
       end
     description = [ vc_details, base_description ].compact_blank.join("\n\n")
 
@@ -196,21 +198,21 @@ class EventDecorator < ApplicationDecorator
   # (#calendar_links); a calendar description can't hold a link, so `re_add_url`
   # (the viewer's ticket URL) is appended as plain text when given. The hover uses
   # the _html form below. Both share the reveal-date phrasing so they stay in sync.
-  def videoconference_calendar_pending_note(re_add_url: nil)
+  def videoconference_calendar_pending_note(re_add_url: nil, payment_pending: false)
     note = "The videoconference join link isn't in this calendar entry yet. " \
-      "Re-download it from the Portal #{videoconference_pending_reveal_phrase} to include it."
+      "Re-download it from the Portal #{videoconference_pending_reveal_phrase(payment_pending: payment_pending)} to include it."
     re_add_url.present? ? "#{note}\n#{re_add_url}" : note
   end
 
   # HTML form of #videoconference_calendar_pending_note for the on-page hover, with
   # the "Re-download it from the Portal" phrase linked to `portal_url` — the page
   # whose add-to-calendar buttons regenerate the entry once the link unlocks.
-  def videoconference_calendar_pending_note_html(portal_url)
+  def videoconference_calendar_pending_note_html(portal_url, payment_pending: false)
     link = h.link_to("Re-download it from the Portal", portal_url, class: "underline font-medium")
     h.safe_join([
       "The videoconference join link isn't in this calendar entry yet. ",
       link,
-      " #{videoconference_pending_reveal_phrase} to include it."
+      " #{videoconference_pending_reveal_phrase(payment_pending: payment_pending)} to include it."
     ])
   end
 
@@ -382,11 +384,24 @@ class EventDecorator < ApplicationDecorator
 
   private
 
-  # "on <date>" when the details unlock on a known drip date, else a generic
-  # phrase. Shared by the plain-text and HTML pending-note forms.
-  def videoconference_pending_reveal_phrase
+  # Describes what's still gating the details, naming only the conditions that are
+  # actually pending: the payment condition (caller-supplied, since it's per
+  # registrant) and/or the drip date — and the date only while it's genuinely in
+  # the future, never a date that has already passed. Shared by the plain-text and
+  # HTML pending-note forms.
+  def videoconference_pending_reveal_phrase(payment_pending: false)
     reveal = object.videoconference_details_available_from
-    reveal.present? ? "on #{reveal.to_date.strftime("%B %-d, %Y")}" : "once the link is available"
+    date_clause = "on #{reveal.to_date.strftime("%B %-d, %Y")}" if reveal.present? && Time.current < reveal
+
+    if payment_pending && date_clause
+      "once your payment is on file and the link unlocks #{date_clause}"
+    elsif payment_pending
+      "once your payment is on file"
+    elsif date_clause
+      date_clause
+    else
+      "once the link is available"
+    end
   end
 
   # The videoconference connection block (join link, meeting ID/code, passcode)
