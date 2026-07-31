@@ -1,4 +1,4 @@
-<%= simple_form_for(@organization, html: { data: { controller: "affiliation-dates affiliation-facilitator-warning", affiliation_dates_periods_value: true } }) do |f| %>
+<%= simple_form_for(@organization, html: { data: { controller: "affiliation-dates affiliation-facilitator-warning", affiliation_dates_server_affiliated_since_value: true } }) do |f| %>
   <%= render 'shared/errors', resource: @organization if @organization.errors.any? %>
   <%= render "duplicate_organizations_warning" %>
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>

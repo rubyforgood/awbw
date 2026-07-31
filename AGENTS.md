@@ -198,7 +198,7 @@ action, or `authorize! :workshop, to: :summary?`).
 
 ### Business Logic
 
-- `AffiliationPeriods` — Merges an organization's affiliation date-intervals into periods and formats them as year-based ranges for the "Affiliated since" display (e.g. "2010-2012, 2026"); mirrored client-side in `affiliation_dates_controller.js`
+- `AffiliationPeriods` — Merges an organization's affiliation date-intervals into periods and formats them as year-based ranges for the "Affiliated since" display (e.g. "2010-2012, 2026"); rendered server-side on the org show/index/edit pages (single source of truth — no JS duplication)
 - `EventDashboard` — Aggregates per-event dashboard metrics (registrant/org/sector/state/county counts, scholarship totals, payment received/outstanding/total). One population per event — `EventRegistration.active` — so the money and the people figures always reconcile; "who completed the training" is an attendance figure over that population (`#attended_count`), never a narrower population
 - `EventRevenueReport` — Cross-event revenue report grouped by calendar year (money in vs org subsidy vs net, CE fees, chart series) for the CEO revenue page
 - `EventRevenueFigures` — Batch-loads the per-event money components `EventRevenueReport` rows are built from (registration payments/outstanding, funded/unfunded scholarships, discounts, CE paid/outstanding) in a fixed number of grouped queries; mirrors the `EventDashboard` definitions

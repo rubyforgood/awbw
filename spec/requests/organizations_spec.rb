@@ -174,6 +174,18 @@ RSpec.describe "/organizations", type: :request do
       get edit_organization_url(organization)
       expect(response.body).to include("Monthly reports")
     end
+
+    it "renders affiliated-since as merged year-based periods (server-side)" do
+      organization = Organization.create!(valid_attributes)
+      create(:affiliation, organization: organization, person: create(:person),
+                           start_date: Date.new(2010, 1, 1), end_date: Date.new(2012, 6, 1))
+      create(:affiliation, organization: organization, person: create(:person),
+                           start_date: Date.new(2013, 1, 1), end_date: Date.new(2015, 6, 1))
+
+      get edit_organization_url(organization)
+
+      expect(response.body).to include("2010-2012, 2013-2015")
+    end
   end
 
   describe "POST /create" do

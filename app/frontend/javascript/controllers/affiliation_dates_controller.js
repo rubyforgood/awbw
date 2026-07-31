@@ -2,9 +2,10 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["affiliatedSince", "facilitatorSince", "affiliationsContainer"]
-  // Organizations show "Affiliated since" as merged year-based periods; the person
-  // form leaves it off and keeps the single Mon YYYY – Mon YYYY range.
-  static values = { periods: Boolean }
+  // Orgs render "Affiliated since" server-side as merged periods (AffiliationPeriods),
+  // so the controller leaves that field alone; the person form keeps the live single
+  // Mon YYYY – Mon YYYY range.
+  static values = { serverAffiliatedSince: Boolean }
 
   initialize() {
     this.boundRecalculate = () => this.recalculate()
@@ -44,22 +45,19 @@ export default class extends Controller {
     const now = new Date()
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
 
-    // Affiliated since — merged periods (orgs) or a single range (person form).
-    if (this.hasAffiliatedSinceTarget) {
-      if (this.periodsValue) {
-        this.affiliatedSinceTarget.textContent = this.affiliatedSinceLabel(affiliations, today) || "—"
-      } else {
-        const startDates = affiliations.map(a => a.startDate).filter(Boolean)
-        const affiliatedSince = startDates.length
-          ? new Date(Math.min(...startDates.map(d => new Date(d))))
-          : null
-        const allInactive = affiliations.length > 0 &&
-          affiliations.every(a => a.endDate && new Date(a.endDate) < today)
-        const affiliatedEnd = allInactive
-          ? new Date(Math.max(...affiliations.map(a => new Date(a.endDate))))
-          : null
-        this.updateDisplay(this.affiliatedSinceTarget, affiliatedSince, affiliatedEnd)
-      }
+    // Affiliated since — single Mon YYYY range (person form). Orgs render this
+    // server-side as merged periods, so skip it there.
+    if (this.hasAffiliatedSinceTarget && !this.serverAffiliatedSinceValue) {
+      const startDates = affiliations.map(a => a.startDate).filter(Boolean)
+      const affiliatedSince = startDates.length
+        ? new Date(Math.min(...startDates.map(d => new Date(d))))
+        : null
+      const allInactive = affiliations.length > 0 &&
+        affiliations.every(a => a.endDate && new Date(a.endDate) < today)
+      const affiliatedEnd = allInactive
+        ? new Date(Math.max(...affiliations.map(a => new Date(a.endDate))))
+        : null
+      this.updateDisplay(this.affiliatedSinceTarget, affiliatedSince, affiliatedEnd)
     }
 
     // Facilitations/program since — unchanged single-range display, filtered by
@@ -81,45 +79,6 @@ export default class extends Controller {
     if (this.hasFacilitatorSinceTarget) {
       this.updateDisplay(this.facilitatorSinceTarget, facilitatorSince, facilitatorEnd)
     }
-  }
-
-  // Merge affiliation intervals into periods and format them as year-based ranges
-  // — the client-side mirror of app/services/affiliation_periods.rb.
-  affiliatedSinceLabel(affiliations, today) {
-    const intervals = affiliations
-      .filter(a => a.startDate)
-      .map(a => ({ start: new Date(a.startDate), end: a.endDate ? new Date(a.endDate) : null }))
-      .sort((a, b) => a.start - b.start)
-    if (!intervals.length) return ""
-
-    const periods = []
-    for (const iv of intervals) {
-      const last = periods[periods.length - 1]
-      if (last && (last.end === null || iv.start <= last.end)) {
-        last.end = last.end === null || iv.end === null ? null : new Date(Math.max(last.end, iv.end))
-      } else {
-        periods.push({ start: iv.start, end: iv.end })
-      }
-    }
-
-    const ongoing = end => end === null || end >= today
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-    // A single ongoing period is a fresh org — worth the month's precision.
-    if (periods.length === 1 && ongoing(periods[0].end)) {
-      const s = periods[0].start
-      return s.getUTCFullYear() === today.getUTCFullYear()
-        ? `${months[s.getUTCMonth()]} ${s.getUTCFullYear()}`
-        : `${s.getUTCFullYear()}`
-    }
-
-    return periods
-      .map(p => {
-        const startYear = p.start.getUTCFullYear()
-        if (ongoing(p.end) || startYear === p.end.getUTCFullYear()) return `${startYear}`
-        return `${startYear}-${p.end.getUTCFullYear()}`
-      })
-      .join(", ")
   }
 
   getVisibleAffiliations() {
