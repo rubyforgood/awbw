@@ -79,6 +79,14 @@
                               confirm_email_manual_user_path(@user),
                               class: "btn btn-warning-outline text-sm" %>
                 <% end %>
+                <% if @user.unconfirmed_email.present? %>
+                  <%= button_to "Resend confirmation email",
+                                process_email_manual_user_path(@user),
+                                method: :post,
+                                params: { confirm_action: "resend" },
+                                form_class: "inline",
+                                class: "btn btn-secondary-outline text-sm" %>
+                <% end %>
                 <% unless @user.confirmed_at.present? %>
                   <%= button_to "Resend invite email",
                                 send_welcome_instructions_user_path(@user),
