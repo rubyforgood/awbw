@@ -189,13 +189,25 @@ class EventDecorator < ApplicationDecorator
   end
 
   # The note shown while the viewer's videoconference details are still gated: the
-  # calendar entry (or on-page hover) they save now won't carry the join link, so
-  # tell them when to re-add the event to get it. Shared by #calendar_links and
-  # the videoconference_calendar_notice partial so both stay in sync.
+  # entry they save now won't carry the join link, so tell them to re-download the
+  # event from the Portal once it unlocks. Plain-text form for the calendar entry
+  # (#calendar_links); a calendar description can't hold a link. The hover uses
+  # the _html form below. Both share the reveal-date phrasing so they stay in sync.
   def videoconference_calendar_pending_note
-    reveal = object.videoconference_details_available_from
-    when_text = reveal.present? ? "on #{reveal.to_date.strftime("%B %-d, %Y")}" : "once the link is available"
-    "The videoconference join link isn't in this calendar entry yet. Add the event again #{when_text} to include it."
+    "The videoconference join link isn't in this calendar entry yet. " \
+      "Re-download the event from the Portal #{videoconference_pending_reveal_phrase} to include it."
+  end
+
+  # HTML form of #videoconference_calendar_pending_note for the on-page hover, with
+  # the "Re-download the event from the Portal" phrase linked to `portal_url` — the
+  # page whose add-to-calendar buttons regenerate the entry once the link unlocks.
+  def videoconference_calendar_pending_note_html(portal_url)
+    link = h.link_to("Re-download the event from the Portal", portal_url, class: "underline font-medium")
+    h.safe_join([
+      "The videoconference join link isn't in this calendar entry yet. ",
+      link,
+      " #{videoconference_pending_reveal_phrase} to include it."
+    ])
   end
 
   # True when the event spans more than one calendar day in the viewer's time
@@ -365,6 +377,13 @@ class EventDecorator < ApplicationDecorator
   end
 
   private
+
+  # "on <date>" when the details unlock on a known drip date, else a generic
+  # phrase. Shared by the plain-text and HTML pending-note forms.
+  def videoconference_pending_reveal_phrase
+    reveal = object.videoconference_details_available_from
+    reveal.present? ? "on #{reveal.to_date.strftime("%B %-d, %Y")}" : "once the link is available"
+  end
 
   # The videoconference connection block (join link, meeting ID/code, passcode)
   # as plain text for embedding in calendar entries. Nil when there's no link.
