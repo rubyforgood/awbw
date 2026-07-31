@@ -135,17 +135,6 @@ RSpec.describe "/users", type: :request do
         get edit_user_url(user)
         expect(response).to be_successful
       end
-
-      it "offers a direct resend confirmation button when an email change is pending" do
-        user.update_columns(unconfirmed_email: "new@example.com")
-        get edit_user_url(user)
-        expect(response.body).to include("Resend confirmation email")
-      end
-
-      it "does not offer the resend confirmation button without a pending email change" do
-        get edit_user_url(user)
-        expect(response.body).not_to include("Resend confirmation email")
-      end
     end
 
     context "as regular_user" do

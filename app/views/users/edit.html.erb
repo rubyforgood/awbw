@@ -75,17 +75,9 @@
               <% end %>
               <div class="flex flex-wrap gap-2">
                 <% if @user.confirmed_at.nil? || @user.unconfirmed_email.present? %>
-                  <%= link_to "Confirm email",
+                  <%= link_to "Confirm or resend email",
                               confirm_email_manual_user_path(@user),
                               class: "btn btn-warning-outline text-sm" %>
-                <% end %>
-                <% if @user.unconfirmed_email.present? %>
-                  <%= button_to "Resend confirmation email",
-                                process_email_manual_user_path(@user),
-                                method: :post,
-                                params: { confirm_action: "resend" },
-                                form_class: "inline",
-                                class: "btn btn-secondary-outline text-sm" %>
                 <% end %>
                 <% unless @user.confirmed_at.present? %>
                   <%= button_to "Resend invite email",
