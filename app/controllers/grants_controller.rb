@@ -139,7 +139,7 @@ class GrantsController < ApplicationController
   def grant_params
     params.require(:grant).permit(
       :name, :description, :amount_dollars, :amount_cents, :donor_sgid,
-      :application_deadline, :funds_received_on, :eligibility_criteria, :tasks
+      :funds_allocation_deadline, :funds_received_on, :eligibility_criteria, :tasks
     )
   end
 end

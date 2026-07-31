@@ -86,7 +86,7 @@ grants = grant_plans.filter_map do |(name, donor_type, donor_name, amount_cents,
   grant = Grant.find_or_create_by!(name: name) do |g|
     g.donor = donor
     g.amount_cents = amount_cents
-    g.application_deadline = Date.current + 30
+    g.funds_allocation_deadline = Date.current + 30
     g.funds_received_on = Date.current - 30
     g.eligibility_criteria = eligibility
     g.tasks = tasks
@@ -477,7 +477,7 @@ if anchor_grant && recipient_orgs.any?
   sibling = Grant.find_or_create_by!(name: "#{anchor_grant.name} (2026)") do |g|
     g.donor = anchor_grant.donor
     g.amount_cents = 600_000
-    g.application_deadline = Date.current + 60
+    g.funds_allocation_deadline = Date.current + 60
     g.funds_received_on = Date.current - 10
     g.eligibility_criteria = anchor_grant.eligibility_criteria
     g.tasks = anchor_grant.tasks

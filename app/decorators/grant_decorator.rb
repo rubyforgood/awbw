@@ -11,8 +11,8 @@ class GrantDecorator < ApplicationDecorator
     h.dollars_from_cents(object.remaining_cents)
   end
 
-  def application_deadline
-    object.application_deadline&.strftime("%B %-d, %Y") || "—"
+  def funds_allocation_deadline
+    object.funds_allocation_deadline&.strftime("%B %-d, %Y") || "—"
   end
 
   def funds_received_on

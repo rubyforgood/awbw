@@ -9,7 +9,7 @@ RSpec.describe "/grants", type: :request do
       name: "Healing Arts Grant",
       amount_dollars: "5000",
       donor_sgid: organization.to_signed_global_id.to_s,
-      application_deadline: "2026-12-31",
+      funds_allocation_deadline: "2026-12-31",
       eligibility_criteria: "Must be a facilitator",
       tasks: "Submit application"
     }
