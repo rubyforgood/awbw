@@ -316,13 +316,13 @@ Event.find_by(title: "AWBW Facilitator Training")&.update!(
   hint_registration_cost: "due within 3 weeks of registration"
 )
 
-# Show the videoconference callout card on any event with a link: it's the doorway
-# to the videoconference page, which gates the join details itself, so it must stay
-# reachable (un-gated) before payment. force-set on re-seed.
+# Un-gate a published videoconference callout on events that have a link, so its
+# card stays reachable before payment (it's the doorway to the videoconference
+# page, which gates the join details itself). Only when already published — don't
+# force-publish an opted-out callout. force-set on re-seed.
 Event.where.not(videoconference_url: [ nil, "" ]).find_each do |vc_event|
-  vc_event.registration_ticket_callouts
-          .find_by(builtin_key: "videoconference")
-          &.update!(hidden: false, payment_access_gated: false)
+  vc = vc_event.registration_ticket_callouts.find_by(builtin_key: "videoconference")
+  vc.update!(payment_access_gated: false) if vc&.published?
 end
 
 # Seed the "Before you attend" details — the materials/art-supply info that used to
