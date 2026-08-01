@@ -176,4 +176,38 @@ RSpec.describe PersonDecorator do
       expect(person.decorate.profile_display_summary).to eq("Hide facilitator since")
     end
   end
+
+  describe "#sectors_summary" do
+    it "is 'None selected' with no sectors" do
+      expect(create(:person).decorate.sectors_summary).to eq("None selected")
+    end
+
+    it "bolds and stars the primary, crowns and labels the leader" do
+      person = create(:person)
+      health = create(:sector, name: "Health/Medical")
+      create(:sectorable_item, sectorable: person, sector: health, is_primary: true, is_leader: true)
+
+      summary = person.reload.decorate.sectors_summary
+      expect(summary).to include("fa-star", "fa-crown", "<strong>Health/Medical</strong>", "(sector leader)")
+    end
+  end
+
+  describe "#age_ranges_summary" do
+    it "is 'None selected' with no age ranges" do
+      expect(create(:person).decorate.age_ranges_summary).to eq("None selected")
+    end
+
+    it "bolds and stars the primary age range (no crown)" do
+      person = create(:person)
+      age_type = create(:category_type, :published, name: "AgeRange")
+      kids = create(:category, :published, category_type: age_type, name: "Children (0-12)")
+      teens = create(:category, :published, category_type: age_type, name: "Teens (13-17)")
+      create(:categorizable_item, categorizable: person, category: kids, is_primary: true)
+      create(:categorizable_item, categorizable: person, category: teens)
+
+      summary = person.reload.decorate.age_ranges_summary
+      expect(summary).to include("fa-star", "<strong>Children (0-12)</strong>", "Teens (13-17)")
+      expect(summary).not_to include("fa-crown")
+    end
+  end
 end

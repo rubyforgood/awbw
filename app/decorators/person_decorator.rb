@@ -103,6 +103,22 @@ class PersonDecorator < ApplicationDecorator
     hidden.any? ? "Hide #{hidden.to_sentence}" : "All shown"
   end
 
+  # One-line summary of the tagged age ranges for a collapsed form section. The
+  # primary age group is bold with a ⭐ (age ranges have no leader flag). HTML-safe.
+  def age_ranges_summary
+    items = object.age_range_items_ordered
+    return "None selected" if items.empty?
+
+    h.safe_join(items.map { |item|
+      name = item.category&.name.to_s
+      if item.is_primary?
+        h.safe_join([ h.content_tag(:i, "", class: "fa-solid fa-star text-amber-400"), h.content_tag(:strong, name) ], " ")
+      else
+        name
+      end
+    }, ", ")
+  end
+
   def facilitator_since_date
     @facilitator_since_date ||= begin
       facilitator_affiliations = affiliations.facilitators
