@@ -943,4 +943,51 @@ RSpec.describe EventDashboard do
       expect(dashboard.unallocated_bulk_payment_cents).to eq(0)
     end
   end
+
+  describe "attendance stats" do
+    let(:event) { create(:event) }
+
+    context "with a mix of attendance outcomes" do
+      before do
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Aa"), status: "attended")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Ab"), status: "attended")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Ba"), status: "incomplete_attendance")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Ca"), status: "no_show")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Da"), status: "registered")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Ea"), status: "transferred_in")
+      end
+
+      it "counts each attendance outcome" do
+        expect(dashboard.attended_count).to eq(2)
+        expect(dashboard.incomplete_attendance_count).to eq(1)
+        expect(dashboard.no_show_count).to eq(1)
+        expect(dashboard.attendance_pending_count).to eq(2)
+      end
+
+      it "reports the recorded-outcome total and rate (incomplete counts as showing up)" do
+        expect(dashboard.attendance_recorded?).to be(true)
+        expect(dashboard.attendance_outcome_count).to eq(4)
+        expect(dashboard.attendance_rate).to eq(3.0 / 4)
+      end
+
+      it "lists the registrants behind each status" do
+        expect(dashboard.attendance_registrants("attended").map(&:first_name)).to eq(%w[ Aa Ab ])
+        expect(dashboard.attendance_registrants("no_show").map(&:first_name)).to eq(%w[ Ca ])
+        expect(dashboard.attendance_registrants("registered", "transferred_in").map(&:first_name)).to eq(%w[ Da Ea ])
+      end
+    end
+
+    context "before any outcome is recorded" do
+      before do
+        create(:event_registration, event: event, status: "registered")
+      end
+
+      it "reports nothing recorded and a nil rate" do
+        expect(dashboard.attendance_recorded?).to be(false)
+        expect(dashboard.attendance_outcome_count).to eq(0)
+        expect(dashboard.attendance_rate).to be_nil
+        expect(dashboard.attendance_pending_count).to eq(1)
+      end
+    end
+  end
 end

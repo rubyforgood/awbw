@@ -1689,6 +1689,19 @@ RSpec.describe "Events", type: :request do
             expect(response.body).to include("Public bulk payment form")
           end
         end
+
+      it "renders the attendance breakdown with per-status drill-down links" do
+        create(:event_registration, event: event, registrant: create(:person), status: "attended")
+        create(:event_registration, event: event, registrant: create(:person), status: "no_show")
+
+        get dashboard_event_path(event)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text("Attendance", normalize_ws: true)
+        expect(page).to have_link(href: registrants_event_path(event, attendance_status: "attended"), visible: :all)
+        expect(page).to have_link(href: registrants_event_path(event, attendance_status: "no_show"), visible: :all)
+        # attended + no_show recorded → 50% show rate.
+        expect(page).to have_text("50%", normalize_ws: true)
       end
     end
 

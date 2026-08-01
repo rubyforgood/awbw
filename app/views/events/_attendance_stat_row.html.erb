@@ -1,0 +1,45 @@
+<%#
+  Expandable attendance breakdown sub-row (e.g. Attended / No show). Reads as
+  "[icon] [count] [label] … [chevron]"; the summary toggles the registrant list,
+  and the jump link (outside the toggle, to the right of the chevron) drills into
+  the manage list filtered to this status.
+
+  Locals:
+    label:       row label (e.g. "Attended")
+    icon:        Font Awesome icon name (e.g. "fa-circle-check")
+    count:       registrant count for the row
+    registrants: Person records to list when expanded
+    filter_path: manage path filtered to this row's registrants
+    icon_color:  optional icon color class (defaults to neutral gray)
+%>
+<%
+  icon_color = local_assigns.fetch(:icon_color, "text-gray-400")
+%>
+<div class="flex items-start gap-1.5">
+  <details class="group/row flex-1 min-w-0">
+    <summary class="flex items-center justify-between gap-2 rounded px-1 -mx-1 py-1 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden hover:bg-gray-50">
+      <span class="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+        <i class="fa-solid <%= icon %> <%= icon_color %>"></i>
+        <span class="font-semibold tabular-nums text-gray-700"><%= count %></span>
+        <%= label %>
+      </span>
+      <i class="fa-solid fa-chevron-down text-[10px] text-gray-300 transition-transform group-open/row:rotate-180"></i>
+    </summary>
+    <% if registrants.any? %>
+      <ul class="mt-1 mb-1 ml-5 space-y-0.5 text-xs text-gray-700 max-h-40 overflow-y-auto">
+        <% registrants.each do |registrant| %>
+          <li>
+            <%= link_to registrant.name, registrants_event_path(@event, registrant_ids: registrant.id),
+                  title: [ registrant.name, *@dashboard.organization_names_by_registrant[registrant.id] ].join(" · "),
+                  class: "block truncate min-w-0 hover:underline" %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="mt-1 mb-1 ml-5 text-xs text-gray-400">None</p>
+    <% end %>
+  </details>
+  <%= link_to filter_path, class: "shrink-0 flex h-7 items-center text-gray-300 hover:text-gray-500", title: "View #{label.downcase} registrants" do %>
+    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+  <% end %>
+</div>

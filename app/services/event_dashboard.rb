@@ -28,6 +28,60 @@ class EventDashboard
     @registrants ||= people_sorted(registrant_ids)
   end
 
+  # --- Attendance ------------------------------------------------------------
+  # Attendance outcomes are recorded per registration (see
+  # EventRegistration#status). Before the event happens everyone is still
+  # "registered", so there's nothing meaningful to show until an outcome lands.
+
+  # Every registration status for this event, counted in one query.
+  def registration_status_counts
+    @registration_status_counts ||= event.event_registrations.group(:status).count
+  end
+
+  def attended_count
+    registration_status_counts.fetch("attended", 0)
+  end
+
+  def incomplete_attendance_count
+    registration_status_counts.fetch("incomplete_attendance", 0)
+  end
+
+  def no_show_count
+    registration_status_counts.fetch("no_show", 0)
+  end
+
+  # Active registrations still awaiting an outcome — registered or transferred
+  # in, but not yet marked attended / incomplete / no-show.
+  def attendance_pending_count
+    registration_status_counts.fetch("registered", 0) +
+      registration_status_counts.fetch("transferred_in", 0)
+  end
+
+  # Registrations with an attendance outcome on record — the denominator for the
+  # attendance rate.
+  def attendance_outcome_count
+    attended_count + incomplete_attendance_count + no_show_count
+  end
+
+  # True once any attendance outcome has been recorded.
+  def attendance_recorded?
+    attendance_outcome_count.positive?
+  end
+
+  # Fraction (0.0–1.0) of expected attendees who showed up, or nil when no
+  # outcome has been recorded yet. Incomplete attendance counts as showing up.
+  def attendance_rate
+    return nil unless attendance_recorded?
+    (attended_count + incomplete_attendance_count).fdiv(attendance_outcome_count)
+  end
+
+  # Registrants (Person records, name-sorted) with the given attendance
+  # status(es), for drilling into an attendance row's list.
+  def attendance_registrants(*statuses)
+    ids = statuses.flat_map { |status| registrant_ids_by_status.fetch(status, []) }
+    people_sorted(ids)
+  end
+
   def scholarship_total_cents
     scholarships.sum(:amount_cents)
   end
@@ -734,6 +788,16 @@ class EventDashboard
 
   def registrant_ids
     @registrant_ids ||= active_registrations.pluck(:registrant_id)
+  end
+
+  # Registrant (Person) ids grouped by registration status, for the attendance
+  # breakdown drill-downs.
+  def registrant_ids_by_status
+    @registrant_ids_by_status ||= event.event_registrations
+      .pluck(:status, :registrant_id)
+      .each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |(status, registrant_id), map|
+        map[status] << registrant_id
+      end
   end
 
   # Facilitator status for one represented organization, used by the
