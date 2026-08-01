@@ -74,7 +74,7 @@ RSpec.describe "organizations/edit", type: :view do
     end
   end
 
-  describe "program status by event" do
+  describe "program status" do
     it "renders an 'event · status' chip for each event the org is represented at" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
       person = create(:person)
@@ -90,11 +90,16 @@ RSpec.describe "organizations/edit", type: :view do
       expect(rendered).to include("PES205 · Ongoing")
     end
 
-    it "shows a dash when the org has no events" do
+    it "always shows the general status chip, even with no events" do
+      org = organization
+      org.update!(organization_status: OrganizationStatus.find_or_create_by!(name: "Unknown"))
+      assign(:organization, org.reload)
+      assign(:organization_statuses, OrganizationStatus.all)
       assign(:organization_events, Event.none)
       render
 
-      assert_select "label", text: /Program status by event/
+      assert_select "label", text: /Program status/
+      expect(rendered).to include("Never active")
     end
   end
 

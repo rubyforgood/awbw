@@ -46,6 +46,14 @@ class OrganizationsController < ApplicationController
 
     track_view(@organization)
 
+    # Events for the admin-only "Program status" block (facilitator status as of
+    # each event). Skip the query for non-managers, who don't see the block.
+    @organization_events = if allowed_to?(:manage?, @organization)
+      Event.where(id: @organization.event_registrations.active.select(:event_id)).order(start_date: :desc)
+    else
+      Event.none
+    end
+
     workshop_logs = WorkshopLog.where(organization_id: @organization.id)
     @month_year_options = workshop_logs.group("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m')")
                                        .select("DATE_FORMAT(COALESCE(workshop_held_on, created_at, NOW()), '%Y-%m') AS ym,

@@ -224,7 +224,7 @@ RSpec.describe Organization do
 
   describe '.search_by_params' do
     let!(:active_status) { create(:organization_status, name: "Active") }
-    let!(:inactive_status) { create(:organization_status, name: "Inactive") }
+    let!(:inactive_status) { create(:organization_status, name: "Formerly active") }
 
     let!(:active_org) { create(:organization, name: "Community Center", organization_status: active_status) }
     let!(:inactive_org) { create(:organization, name: "Old Program", organization_status: inactive_status) }
@@ -254,12 +254,35 @@ RSpec.describe Organization do
       end
     end
 
-    context 'with status dropdown' do
-      it 'filters by organization_status_id' do
-        results = Organization.search_by_params(organization_status_id: active_status.id.to_s)
+    context 'with program status filter' do
+      it 'filters to the active bucket' do
+        results = Organization.search_by_params(program_status: "active")
         expect(results).to include(active_org)
         expect(results).not_to include(inactive_org)
       end
+    end
+  end
+
+  describe ".program_status scope" do
+    let!(:active) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active")) }
+    let!(:formerly) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Formerly active")) }
+    let!(:unknown) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Unknown")) }
+    let!(:no_status) { create(:organization).tap { |o| o.update_columns(organization_status_id: nil) } }
+
+    it "buckets active" do
+      expect(Organization.program_status("active")).to contain_exactly(active)
+    end
+
+    it "buckets formerly_active" do
+      expect(Organization.program_status("formerly_active")).to contain_exactly(formerly)
+    end
+
+    it "treats Unknown and no-status as never_active" do
+      expect(Organization.program_status("never_active")).to contain_exactly(unknown, no_status)
+    end
+
+    it "combines formerly + never" do
+      expect(Organization.program_status("formerly_or_never")).to contain_exactly(formerly, unknown, no_status)
     end
   end
 

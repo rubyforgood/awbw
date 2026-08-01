@@ -39,9 +39,36 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
+  describe "#organization_status_label" do
+    it "returns the stored status name" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      expect(org.decorate.organization_status_label).to eq("Active")
+    end
+
+    it "renders Unknown as 'Never active'" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Unknown"))
+      expect(org.decorate.organization_status_label).to eq("Never active")
+    end
+
+    it "renders a missing status as 'Never active'" do
+      org = create(:organization)
+      org.update_columns(organization_status_id: nil)
+      expect(org.decorate.organization_status_label).to eq("Never active")
+    end
+  end
+
+  describe "#organization_status_chip" do
+    it "renders a pill with the label and its status color" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Formerly active"))
+      chip = org.decorate.organization_status_chip
+      expect(Capybara.string(chip)).to have_css("span", text: "Formerly active")
+      expect(chip).to include("orange")
+    end
+  end
+
   describe ".program_status_classes" do
     it "maps each status to its pill classes, accepting symbols or model strings" do
-      expect(described_class.program_status_classes(:new)).to include("green")
+      expect(described_class.program_status_classes(:new)).to include("indigo")
       expect(described_class.program_status_classes(:ongoing)).to include("blue")
       expect(described_class.program_status_classes(:reinstated)).to include("purple")
       # Organization#program_status returns "Reinstate" (no trailing d).

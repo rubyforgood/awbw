@@ -20,7 +20,7 @@
 
           <tbody class="divide-y divide-gray-100">
           <% @organizations.each do |organization| %>
-            <% cache [organization, @program_since_display[organization.id], @active_people_counts[organization.id], current_user.super_user?] do %>
+            <% cache [organization, @program_since_display[organization.id], organization.organization_status_id, @active_people_counts[organization.id], current_user.super_user?] do %>
             <tr class="hover:bg-gray-50 transition">
               <td class="px-4 py-2">
                 <% status_label = organization.published? ? nil : organization.organization_status&.name %>
@@ -51,6 +51,7 @@
 
               <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
                 <%= @program_since_display[organization.id] %>
+                <div class="mt-1"><%= organization.decorate.organization_status_chip %></div>
               </td>
 
               <td class="px-4 py-2 text-center text-sm">

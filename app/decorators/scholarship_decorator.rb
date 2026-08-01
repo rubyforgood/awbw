@@ -36,7 +36,7 @@ class ScholarshipDecorator < ApplicationDecorator
   def program_status_classes
     case program&.program_status(object.recipient)
     when "Ongoing"   then "bg-blue-50 text-blue-700 border-blue-200"
-    when "New"       then "bg-green-50 text-green-700 border-green-200"
+    when "New"       then "bg-indigo-50 text-indigo-700 border-indigo-200"
     when "Reinstate" then "bg-purple-50 text-purple-700 border-purple-200"
     else "bg-gray-50 text-gray-500 border-gray-200"
     end

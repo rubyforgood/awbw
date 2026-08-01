@@ -105,6 +105,33 @@ class OrganizationDecorator < ApplicationDecorator
     AffiliationPeriods.label(affiliations.select(&:facilitator?)) || ""
   end
 
+  # The org's stored program status (organization_status), with "Unknown" — and a
+  # missing status — displayed as "Never active".
+  def organization_status_label
+    name = object.organization_status&.name
+    name.blank? || name == "Unknown" ? "Never active" : name
+  end
+
+  # Pill classes for the org-wide status chip, keyed off the stored status name.
+  def organization_status_classes
+    theme_key = case object.organization_status&.name
+    when "Active" then :org_active
+    when "Formerly active" then :org_formerly_active
+    else :org_never_active
+    end
+    [
+      DomainTheme.bg_class_for(theme_key, intensity: 100),
+      DomainTheme.text_class_for(theme_key, intensity: 700),
+      DomainTheme.border_class_for(theme_key, intensity: 200)
+    ].join(" ")
+  end
+
+  # Rendered org-wide status chip (Active / Formerly active / Never active).
+  def organization_status_chip
+    h.content_tag(:span, organization_status_label,
+                  class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes}")
+  end
+
   def facilitator_since_date
     @facilitator_since_date ||= affiliations.facilitators.minimum(:start_date)
   end

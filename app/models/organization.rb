@@ -105,6 +105,21 @@ class Organization < ApplicationRecord
     end
     scope.distinct
   end
+  # Index filter over the stored organization_status, bucketed for display:
+  # "never_active" covers stored "Unknown" and orgs with no status at all;
+  # "formerly_or_never" is either of the two non-active buckets.
+  scope :program_status, ->(bucket) {
+    by_name = ->(name) { where(organization_status_id: OrganizationStatus.where(name: name).select(:id)) }
+    never = -> { by_name.call("Unknown").or(where(organization_status_id: nil)) }
+    case bucket.to_s
+    when "active"            then by_name.call("Active")
+    when "formerly_active"   then by_name.call("Formerly active")
+    when "never_active"      then never.call
+    when "formerly_or_never" then by_name.call("Formerly active").or(never.call)
+    else all
+    end
+  }
+
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
   scope :published, -> { active }
@@ -117,7 +132,7 @@ class Organization < ApplicationRecord
     organizations = organizations.address(params[:address]) if params[:address].present?
     organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
-    organizations = organizations.where(organization_status_id: params[:organization_status_id]) if params[:organization_status_id].present?
+    organizations = organizations.program_status(params[:program_status]) if params[:program_status].present?
     organizations
   end
 

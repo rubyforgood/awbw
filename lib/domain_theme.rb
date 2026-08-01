@@ -49,10 +49,17 @@ module DomainTheme
     user_only:                :amber,
     person_bio:               :purple,
 
-    # Organization program status badges (amber is reserved for warnings)
-    program_new:              :green,
+    # Per-event program status badges — New is indigo (not green) so it never
+    # collides with the org-wide "Active" status (amber is reserved for warnings).
+    program_new:              :indigo,
     program_ongoing:          :blue,
     program_reinstated:       :purple,
+
+    # Org-wide program status (the stored organization_status): Active is the
+    # positive current state, Formerly active a lapsed one, Never active neutral.
+    org_active:               :green,
+    org_formerly_active:      :orange,
+    org_never_active:         :gray,
 
     # Badges (non-model-specific)
     legacy_facilitator:       :yellow,
