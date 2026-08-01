@@ -1,15 +1,15 @@
 <% return unless organization.persisted? %>
 <% org_filter = { organization_id: organization.id } %>
 <% monthly_reports = MonthlyReport.where(org_filter) %>
-<%# One row on md+ (grid-flow-col + equal auto columns); wraps to a 2/3-col grid
-    on narrower screens. %>
-<ul class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-none md:auto-cols-fr md:grid-flow-col gap-x-6 gap-y-2">
-  <li><%= index_button CommunityNews.where(org_filter), params: org_filter %></li>
-  <li><%= index_button Story.where(org_filter), params: org_filter %></li>
-  <li><%= index_button organization.workshop_logs, params: org_filter %></li>
-  <li><%= index_button organization.event_registrations, params: org_filter %></li>
-  <li><%= index_button StoryIdea.where(org_filter), params: org_filter %></li>
+<%# Stacked on mobile, a single equal-width row on md+ (each item flex-1, shrinks
+    with truncated labels rather than wrapping to a second row). %>
+<ul class="flex flex-col md:flex-row gap-x-6 gap-y-2">
+  <li class="md:flex-1 md:min-w-0"><%= index_button CommunityNews.where(org_filter), params: org_filter %></li>
+  <li class="md:flex-1 md:min-w-0"><%= index_button Story.where(org_filter), params: org_filter %></li>
+  <li class="md:flex-1 md:min-w-0"><%= index_button organization.workshop_logs, params: org_filter %></li>
+  <li class="md:flex-1 md:min-w-0"><%= index_button organization.event_registrations, params: org_filter %></li>
+  <li class="md:flex-1 md:min-w-0"><%= index_button StoryIdea.where(org_filter), params: org_filter %></li>
   <% if monthly_reports.exists? %>
-    <li><%= index_button monthly_reports, params: org_filter %></li>
+    <li class="md:flex-1 md:min-w-0"><%= index_button monthly_reports, params: org_filter %></li>
   <% end %>
 </ul>
