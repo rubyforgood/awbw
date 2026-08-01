@@ -347,4 +347,20 @@ RSpec.describe OrganizationDecorator do
       expect(organization.decorate.organization_type_option).to eq("")
     end
   end
+
+  describe "#profile_display_summary" do
+    it "says everything is shown when no toggle is hidden" do
+      expect(create(:organization).decorate.profile_display_summary).to eq("All shown")
+    end
+
+    it "names only the hidden items, prefixed with Hide" do
+      organization = create(:organization, profile_show_phone: false, profile_show_website: false)
+      expect(organization.decorate.profile_display_summary).to eq("Hide phone and website")
+    end
+
+    it "uses the checkbox wording for a hidden item" do
+      organization = create(:organization, profile_show_events_registered: false)
+      expect(organization.decorate.profile_display_summary).to eq("Hide events hosted")
+    end
+  end
 end
