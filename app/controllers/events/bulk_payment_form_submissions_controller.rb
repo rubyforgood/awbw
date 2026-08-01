@@ -4,11 +4,6 @@ module Events
     before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
 
-    rescue_from ActionController::InvalidAuthenticityToken do
-      flash[:alert] = "Your session has expired. Please try submitting the form again."
-      redirect_to new_event_bulk_payment_path(@event)
-    end
-
     def new
       authorize! :form_submission
 
