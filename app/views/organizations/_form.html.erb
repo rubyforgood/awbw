@@ -8,11 +8,13 @@
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>
   <% automanaged_notice = "<span class='text-xs text-amber-700 mt-1'>Auto-managed by affiliations</span>" %>
 
-  <div class="mb-8 grid grid-cols-1 items-start gap-6 md:grid-cols-[3fr_1fr]">
-    <!-- LEFT SIDE (3/4) -->
-    <div>
+  <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 mb-8 items-start">
+    <!-- LEFT SIDE (3/4): name, Windows audience, and the collapsed config sections,
+         stacked so this column tracks the logo's height and leaves no dead space
+         under the collapsed sections. -->
+    <div class="space-y-6">
       <!-- Organization Name + Parent -->
-      <div class="mb-8 grid grid-cols-1 items-start gap-4 <%= "md:grid-cols-[3fr_1fr]" if allowed_to?(:manage?, Organization) %>">
+      <div class="grid grid-cols-1 <%= "md:grid-cols-[3fr_1fr]" if allowed_to?(:manage?, Organization) %> gap-4 items-start">
         <div>
           <%= f.input :name,
                       label: "Organization Name",
@@ -53,14 +55,20 @@
         <% end %>
       </div>
 
-      <!-- Sectors & Windows audience -->
-      <div class="grid grid-cols-1 items-start gap-4 md:grid-cols-[3fr_1fr]">
-        <div class="form-group space-y-4">
-          <div class="mb-2 font-semibold text-gray-700">
-            Sectors
-          </div>
+      <!-- Sectors + Windows audience: parallel 50/50 columns -->
+      <%# Sectors is collapsible — collapses to the list of tagged sectors. Open on
+          a new org or when there are errors. %>
+      <% sector_names = f.object.sectors.map(&:name).reject { |name| name == Sector::OTHER_SECTOR_NAME }.sort %>
+      <% sectors_open = !f.object.persisted? || f.object.errors.any? %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+        <details class="form-group space-y-4 group"<%= " open".html_safe if sectors_open %>>
+          <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+            <span class="font-semibold">Sectors:</span>
+            <span class="text-sm text-gray-500"><%= sector_names.any? ? sector_names.to_sentence : "None selected" %></span>
+            <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+          </summary>
 
-          <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> mb-4 p-4 shadow-sm">
+          <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm mt-2">
             <%= f.simple_fields_for :sectorable_items do |sfi| %>
               <%= render "shared/sectorable_item_fields", f: sfi %>
             <% end %>
@@ -77,8 +85,9 @@
                                         },
                                       class: button_classes(:secondary_outline) %>
           </div>
-        </div>
+        </details>
 
+        <!-- Windows audience -->
         <div>
           <%= f.association :windows_type,
                             label: "Windows audience",
@@ -89,6 +98,43 @@
                             } %>
         </div>
       </div>
+
+      <!-- Profile-specific Categories (e.g. Workshop Settings) -->
+      <% if @org_categories_grouped.present? %>
+        <% primary_age_ids = @organization.primary_age_category_ids %>
+        <div class="form-group space-y-4">
+          <%# Ensures the primary-age param is always submitted so unchecking every
+              toggle clears the primary flags. %>
+          <%= hidden_field_tag "organization[primary_age_category_ids][]", "" %>
+          <% @org_categories_grouped.each do |type, cats| %>
+            <% is_age = type.name == "AgeRange" %>
+            <%# Collapsed to a one-line summary of the current selections so the long
+                option grid doesn't have to be scrolled past every edit — these rarely
+                change. Native <details>/<summary>, no JavaScript. %>
+            <% selected_names = cats.select { |category| @organization.category_ids.include?(category.id) }.map(&:name) %>
+            <details class="group">
+              <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+                <span class="font-semibold"><%= type.display_label %>:</span>
+                <span class="text-sm text-gray-500"><%= selected_names.any? ? selected_names.to_sentence : "None selected" %></span>
+                <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+              </summary>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2">
+                <% if is_age %>
+                  <p class="text-sm text-gray-500 mb-3">Check every age group served, then mark the primary ones.</p>
+                <% end %>
+                <div class="flex flex-wrap gap-3">
+                  <% cats.each do |category| %>
+                    <%= render "shared/category_checkbox", param_key: "organization", category: category,
+                               checked: @organization.category_ids.include?(category.id),
+                               is_age: is_age,
+                               primary_checked: is_age && primary_age_ids.include?(category.id) %>
+                  <% end %>
+                </div>
+              </div>
+            </details>
+          <% end %>
+        </div>
+      <% end %>
     </div>
 
     <!-- RIGHT SIDE (1/4) -->
@@ -97,43 +143,6 @@
       <div class="flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :logo %></div>
     </div>
   </div>
-
-  <!-- Profile-specific Categories (e.g. Workshop Settings) -->
-  <% if @org_categories_grouped.present? %>
-    <% primary_age_ids = @organization.primary_age_category_ids %>
-    <div class="form-group mb-8 space-y-4">
-      <%# Ensures the primary-age param is always submitted so unchecking every
-          toggle clears the primary flags. %>
-      <%= hidden_field_tag "organization[primary_age_category_ids][]", "" %>
-      <% @org_categories_grouped.each do |type, cats| %>
-        <% is_age = type.name == "AgeRange" %>
-<%# Collapsed to a one-line summary of the current selections so the long
-            option grid doesn't have to be scrolled past every edit — these rarely
-            change. Native <details>/<summary>, no JavaScript. %>
-        <% selected_names = cats.select { |category| @organization.category_ids.include?(category.id) }.map(&:name) %>
-        <details class="group">
-          <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
-            <span class="font-semibold"><%= type.display_label %>:</span>
-            <span class="text-sm text-gray-500"><%= selected_names.any? ? selected_names.to_sentence : "None selected" %></span>
-            <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
-          </summary>
-          <div class="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-            <% if is_age %>
-              <p class="mb-3 text-sm text-gray-500">Check every age group served, then mark the primary ones.</p>
-            <% end %>
-            <div class="flex flex-wrap gap-3">
-              <% cats.each do |category| %>
-                <%= render "shared/category_checkbox", param_key: "organization", category: category,
-                           checked: @organization.category_ids.include?(category.id),
-                           is_age: is_age,
-                           primary_checked: is_age && primary_age_ids.include?(category.id) %>
-              <% end %>
-            </div>
-          </div>
-        </details>
-      <% end %>
-    </div>
-  <% end %>
 
   <!-- Background info -->
 <%# Collapsible like Workshop settings above. Stays open on a new org (required
@@ -410,25 +419,16 @@
     </div>
   </div>
 
-  <% if f.object.persisted? %>
-    <div class="form-group mb-8 space-y-4">
-      <div class="mb-2 font-semibold text-gray-700">
-        Associated records
-      </div>
-      <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-        <%= render "associated_records", organization: f.object %>
-      </div>
-    </div>
-  <% end %>
+  <details class="profile-preferences-section mb-8 group">
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-medium">Profile display preferences</span>
+      <span class="text-sm text-gray-500"><%= f.object.decorate.profile_display_summary %></span>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+    </summary>
 
-  <div class="profile-preferences-section mb-8">
-    <div class="mb-2 block font-medium text-gray-700">
-      Profile display preferences:
-    </div>
-
-    <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <div class="pr-3 pb-3 pl-3">
-        <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm mt-2">
+      <div class="pl-3 pr-3 pb-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
           <%= f.input :profile_show_email, label: "Show email" %>
           <%= f.input :profile_show_phone, label: "Show phone" %>
           <%= f.input :profile_show_website, label: "Show website" %>
@@ -448,11 +448,19 @@
         </div>
       </div>
     </div>
-  </div>
+  </details>
 
   <% if f.object.persisted? %>
     <%= render "shared/comments_and_communications", f: f %>
 
+    <div class="form-group space-y-4 mb-8">
+      <div class="font-semibold text-gray-700 mb-2">
+        Associated records
+      </div>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+        <%= render "associated_records", organization: f.object %>
+      </div>
+    </div>
   <% end %>
 
   <% if params[:admin] && allowed_to?(:manage?, Organization) %>
