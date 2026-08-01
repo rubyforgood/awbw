@@ -4,11 +4,6 @@ module Events
     before_action :set_event
     before_action :ensure_registerable, only: [ :new, :create ]
 
-    rescue_from ActionController::InvalidAuthenticityToken do
-      flash[:alert] = "Your session has expired. Please try submitting the form again."
-      redirect_to new_event_public_registration_path(@event)
-    end
-
     def new
       authorize! :public_registration, to: :new?
 
