@@ -107,29 +107,45 @@
       <%= hidden_field_tag "organization[primary_age_category_ids][]", "" %>
       <% @org_categories_grouped.each do |type, cats| %>
         <% is_age = type.name == "AgeRange" %>
-        <div class="mb-2 font-semibold text-gray-700"><%= type.display_label %></div>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-          <% if is_age %>
-            <p class="mb-3 text-sm text-gray-500">Check every age group served, then mark the primary ones.</p>
-          <% end %>
-          <div class="flex flex-wrap gap-3">
-            <% cats.each do |category| %>
-              <%= render "shared/category_checkbox", param_key: "organization", category: category,
-                         checked: @organization.category_ids.include?(category.id),
-                         is_age: is_age,
-                         primary_checked: is_age && primary_age_ids.include?(category.id) %>
+<%# Collapsed to a one-line summary of the current selections so the long
+            option grid doesn't have to be scrolled past every edit — these rarely
+            change. Native <details>/<summary>, no JavaScript. %>
+        <% selected_names = cats.select { |category| @organization.category_ids.include?(category.id) }.map(&:name) %>
+        <details class="group">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
+            <div class="flex flex-wrap items-baseline gap-2">
+              <span class="font-semibold text-gray-700"><%= type.display_label %>:</span>
+              <span class="text-sm text-gray-500"><%= selected_names.any? ? selected_names.to_sentence : "None selected" %></span>
+            </div>
+            <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <div class="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+            <% if is_age %>
+              <p class="mb-3 text-sm text-gray-500">Check every age group served, then mark the primary ones.</p>
             <% end %>
+            <div class="flex flex-wrap gap-3">
+              <% cats.each do |category| %>
+                <%= render "shared/category_checkbox", param_key: "organization", category: category,
+                           checked: @organization.category_ids.include?(category.id),
+                           is_age: is_age,
+                           primary_checked: is_age && primary_age_ids.include?(category.id) %>
+              <% end %>
+            </div>
           </div>
-        </div>
+        </details>
       <% end %>
     </div>
   <% end %>
 
   <!-- Background info -->
-  <div class="form-group mb-8 space-y-4">
-    <div class="mb-2 font-semibold text-gray-700">
-      Background Info
-    </div>
+<%# Collapsible like Workshop settings above. Stays open on a new org (required
+      fields) or when the form has errors so nothing hides behind the summary. %>
+  <% background_open = !@organization.persisted? || @organization.errors.any? %>
+  <details class="form-group group mb-8 space-y-4"<%= " open".html_safe if background_open %>>
+    <summary class="flex cursor-pointer list-none items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
+      <span class="font-semibold text-gray-700">Background Info</span>
+      <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open:rotate-180"></i>
+    </summary>
 
     <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
 
@@ -252,7 +268,7 @@
   </div>
 
     </div>
-  </div>
+  </details>
 
   <div id="addresses" class="form-group mb-8 scroll-mt-20 space-y-4">
     <div class="mb-2 font-semibold text-gray-700">
