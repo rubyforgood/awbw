@@ -47,29 +47,26 @@ RSpec.describe "Organization profile events-attended section", type: :request do
   end
 
   it "lists each event once even when several members attended it" do
-    event = create(:event, title: "Shared Event", abbreviation: "SE1")
+    event = create(:event, title: "Shared Event")
     register(event: event)
     register(event: event)
 
     get_events_section
 
-    # One event card, and one deduped program-status chip (keyed by its
-    # abbreviation) — not one per registration. The card renders the title as a
-    # text node (">Shared Event"); the chip references it only in a title="…"
-    # tooltip, so the card count keys off the leading ">".
+    # One card, not one per registration (the title renders as a ">Shared Event" node).
     expect(response.body.scan(/>\s*Shared Event/).size).to eq(1)
-    expect(response.body.scan("SE1").size).to eq(1)
   end
 
-  it "shows an admin program-status chip labeled with the event abbreviation" do
+  it "shows an admin program-status chip per event in the profile's Program status block" do
     event = create(:event, title: "Trauma-Informed Onsite", abbreviation: "TOS205", start_date: 2.days.from_now)
     person = create(:person)
     create(:affiliation, organization: organization, person: person, title: "Facilitator", start_date: 1.year.ago, end_date: nil)
     registration = create(:event_registration, registrant: person, event: event, status: "registered")
     registration.event_registration_organizations.create!(organization: organization)
 
-    get_events_section
+    get organization_path(organization)
 
+    expect(response.body).to include("Program status")
     expect(response.body).to include("TOS205")
     expect(response.body).to include("Ongoing")
   end
