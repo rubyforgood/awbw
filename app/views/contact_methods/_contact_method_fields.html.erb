@@ -1,8 +1,10 @@
 <div class="nested-fields mb-4 rounded-lg border border-gray-200 bg-white p-6">
   <%= f.hidden_field :kind, value: :phone %>
-  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-5">
+<%# Flex-wrap (not a fixed 5-col grid) so the row reflows to multiple lines in a
+      narrow container, e.g. the half-width Phones column on the person form. %>
+  <div class="flex flex-wrap items-end gap-x-4 gap-y-3 mb-6">
     <!-- Contact Type -->
-    <div>
+    <div class="min-w-[8rem] flex-1">
       <%= f.input :contact_type,
                   as: :select,
                   required: true,
@@ -12,7 +14,7 @@
     </div>
 
     <!-- Value -->
-    <div>
+    <div class="min-w-[8rem] flex-1">
       <%= f.input :value,
                   wrapper: false,
                   label: "Value",
@@ -39,7 +41,7 @@
                   input_html: { class: "mr-2 text-blue-600 focus:ring-blue-500" } %>
     </div>
 
-    <div class="text-end text-right">
+<div class="ml-auto text-end">
       <!-- Remove button -->
       <%= link_to_remove_association "Remove",
                                      f,
