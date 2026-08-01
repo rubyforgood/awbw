@@ -2,14 +2,15 @@
 <% org_filter = { organization_id: organization.id } %>
 <% monthly_reports = MonthlyReport.where(org_filter) %>
 <%# Stacked on mobile, a single equal-width row on md+ (each item flex-1, shrinks
-    with truncated labels rather than wrapping to a second row). %>
+    with truncated labels rather than wrapping to a second row). Alphabetical by
+    label, which keeps Stories and Story ideas adjacent. %>
 <ul class="flex flex-col md:flex-row gap-x-6 gap-y-2">
   <li class="md:flex-1 md:min-w-0"><%= index_button CommunityNews.where(org_filter), params: org_filter %></li>
-  <li class="md:flex-1 md:min-w-0"><%= index_button Story.where(org_filter), params: org_filter %></li>
-  <li class="md:flex-1 md:min-w-0"><%= index_button organization.workshop_logs, params: org_filter %></li>
   <li class="md:flex-1 md:min-w-0"><%= index_button organization.event_registrations, params: org_filter %></li>
-  <li class="md:flex-1 md:min-w-0"><%= index_button StoryIdea.where(org_filter), params: org_filter %></li>
   <% if monthly_reports.exists? %>
     <li class="md:flex-1 md:min-w-0"><%= index_button monthly_reports, params: org_filter %></li>
   <% end %>
+  <li class="md:flex-1 md:min-w-0"><%= index_button Story.where(org_filter), params: org_filter %></li>
+  <li class="md:flex-1 md:min-w-0"><%= index_button StoryIdea.where(org_filter), params: org_filter %></li>
+  <li class="md:flex-1 md:min-w-0"><%= index_button organization.workshop_logs, params: org_filter %></li>
 </ul>
