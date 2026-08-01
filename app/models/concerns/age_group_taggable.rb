@@ -8,6 +8,30 @@ module AgeGroupTaggable
 
   AGE_RANGE_CATEGORY_TYPE = "AgeRange"
 
+  included do
+    # Age ranges edit through cocoon nested fields like sectors — a scoped view of
+    # categorizable_items (AgeRange categories only) so the form's add/remove and
+    # primary toggle round-trip as nested attributes; the is_primary flag splits
+    # primary vs additional. The Person and Organization chip editors are identical.
+    has_many :age_range_categorizable_items,
+             -> { joins(category: :category_type).where(category_types: { name: AGE_RANGE_CATEGORY_TYPE }) },
+             class_name: "CategorizableItem", as: :categorizable, inverse_of: :categorizable
+    accepts_nested_attributes_for :age_range_categorizable_items, allow_destroy: true,
+                                  reject_if: proc { |attrs| attrs["category_id"].blank? }
+    # The picker can submit the same age range twice (two new rows), which the
+    # CategorizableItem uniqueness validation can't catch — both are unsaved, so
+    # both INSERT and hit the DB unique index. Collapse duplicates before validation.
+    before_validation :dedupe_age_range_items
+  end
+
+  # The age-range nested items in category position order for the cocoon chip
+  # editor. Reads the same association the form's nested attributes build into, so
+  # unsaved picks survive a failed save (and aren't primary-first — starring
+  # shouldn't reshuffle them). Display surfaces lead with the primary instead.
+  def age_range_items_ordered
+    age_range_categorizable_items.sort_by { |item| [ item.category&.position || 0, item.category&.name.to_s ] }
+  end
+
   # AgeRange categories tagged on this record, split by the primary flag and
   # returned in display order. Filters the categorizable_items association in
   # Ruby (like the sectors index does with sectorable_items) so the result rides
@@ -52,6 +76,22 @@ module AgeGroupTaggable
   end
 
   private
+
+  # Keep one tagging per age-range category. Prefer the persisted row, fold any
+  # duplicate's primary flag onto the keeper, and drop the extras (destroy if
+  # persisted, otherwise remove from the unsaved set).
+  def dedupe_age_range_items
+    live = age_range_categorizable_items.reject(&:marked_for_destruction?)
+    live.group_by(&:category_id).each_value do |items|
+      next if items.size <= 1
+
+      keeper = items.find(&:persisted?) || items.first
+      keeper.is_primary = true if items.any?(&:is_primary?)
+      (items - [ keeper ]).each do |dup|
+        dup.persisted? ? dup.mark_for_destruction : age_range_categorizable_items.delete(dup)
+      end
+    end
+  end
 
   def age_range_categories(primary:)
     categorizable_items
