@@ -201,6 +201,20 @@ class OrganizationsController < ApplicationController
       .group_by(&:category_type)
       .select { |type, _| type&.profile_specific? }
       .sort_by { |type, _| type&.name.to_s.downcase }
+
+    # Age ranges edit as their own sectors-style cocoon chip picker (AgeRange
+    # isn't a profile_specific type, so it never appears in @org_categories_grouped).
+    # Tagged via age_range_categorizable_items nested attributes, not category_ids.
+    @age_range_type = CategoryType.find_by(name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE)
+    age_ranges = @age_range_type ? @age_range_type.categories.published.order(:position, :name) : Category.none
+    @age_ranges_collection = age_ranges.pluck(:name, :id)
+    @current_age_range_category_ids = @organization.age_range_categorizable_items.map(&:category_id)
+
+    # The category types this form edits via category_ids — the profile-specific
+    # types shown below (workshop settings). assign_associations preserves taggings
+    # of any other type (age ranges included, handled by nested attributes), so
+    # saving the form can't drop an organization's other category connections.
+    @managed_category_type_ids = @org_categories_grouped.map { |type, _| type.id }
   end
 
   def set_index_variables
@@ -242,7 +256,7 @@ class OrganizationsController < ApplicationController
     params.require(:organization).permit(
       :name, :description, :start_date, :end_date, :mission_vision_values,
       :organization_type, :organization_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
-      :organization_status_id, :location_id, :windows_type_id, :high_profile, :parent_id,
+      :organization_status_id, :location_id, :high_profile, :parent_id,
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
       :profile_show_stories, :profile_show_events_registered, :profile_show_workshop_logs,
@@ -252,6 +266,7 @@ class OrganizationsController < ApplicationController
         :sector_id,
         :_destroy
       ],
+      age_range_categorizable_items_attributes: [ :id, :category_id, :is_primary, :_destroy ],
       affiliations_attributes: [
         :id,
         :person_id,
