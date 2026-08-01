@@ -363,4 +363,22 @@ RSpec.describe OrganizationDecorator do
       expect(organization.decorate.profile_display_summary).to eq("Hide events hosted")
     end
   end
+
+  describe "#sectors_summary" do
+    it "is 'None selected' with no sectors" do
+      expect(create(:organization).decorate.sectors_summary).to eq("None selected")
+    end
+
+    it "bolds and stars the primary, crowns and labels the leader" do
+      org = create(:organization)
+      health = create(:sector, name: "Health/Medical")
+      housing = create(:sector, name: "Housing")
+      create(:sectorable_item, sectorable: org, sector: health, is_primary: true, is_leader: true)
+      create(:sectorable_item, sectorable: org, sector: housing)
+
+      summary = org.reload.decorate.sectors_summary
+      expect(summary).to include("fa-star", "fa-crown", "<strong>Health/Medical</strong>", "(sector leader)")
+      expect(summary).to include("Housing")
+    end
+  end
 end

@@ -20,68 +20,95 @@
   <div class="flex flex-col items-start gap-8 md:flex-row">
     <div class="w-full md:w-5/6">
       <div class="space-y-6">
-        <div class="flex flex-col gap-4 md:flex-row md:flex-wrap"><%= f.input :first_name, wrapper_html: { class: "w-full md:w-40" }, input_html: { value: f.object.first_name || @user&.first_name, class: "w-full" } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name", wrapper_html: { class: "w-full md:w-40" }, input_html: { class: "w-full" } %><%= f.input :last_name, wrapper_html: { class: "w-full md:w-40" }, input_html: { value: f.object.last_name || @user&.last_name, class: "w-full" } %><%= f.input :pronunciation, hint: "How to say the name", wrapper_html: { class: "w-full md:w-44" }, input_html: { class: "w-full" } %><%= f.input :pronouns, wrapper_html: { class: "w-full md:w-32" }, input_html: { class: "w-full" } %></div>
+<%# 2-up on mobile, 4-across on md+. %>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4"><%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name" %><%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name } %><%= f.input :pronunciation, hint: "How to say the name" %><%= f.input :pronouns %></div>
 
-<%# Collapsible — collapses to the email(s) on file. Open on a new person
-            or when there are errors so the required primary email stays visible. %>
+        <%# Emails and Phones sit parallel (50/50). Each collapses to the value(s)
+            on file; both open on a new person or when there are errors. %>
         <% primary_email = f.object.user&.email.presence || f.object.email.presence %>
         <% email_summary = [ primary_email, f.object.email_2.presence ].compact %>
-        <% emails_open = !f.object.persisted? || f.object.errors.any? %>
-        <details class="emails group"<%= " open".html_safe if emails_open %>>
-          <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-2">
-            <span class="font-semibold">Emails:</span>
-            <span class="text-sm text-gray-500"><%= email_summary.any? ? email_summary.to_sentence : "None" %></span>
-            <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
-          </summary>
+        <% contacts_open = !f.object.persisted? || f.object.errors.any? %>
+        <% phone_values = f.object.contact_methods.reject(&:marked_for_destruction?).filter_map { |cm| cm.value.presence } %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          <details class="emails group"<%= " open".html_safe if contacts_open %>>
+            <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-2">
+              <span class="font-semibold">Emails:</span>
+              <span class="text-sm text-gray-500"><%= email_summary.any? ? email_summary.to_sentence : "None" %></span>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+            </summary>
 
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-            <div class="flex flex-col gap-4 md:flex-row">
-              <% if f.object.user %>
-                <div>
-                  <label class="mb-1 block text-md font-medium text-gray-700">Primary email</label>
-                  <span class="font-medium text-gray-900"><%= f.object.user&.email %></span>
-                  <% if f.object.user.unconfirmed_email.present? && allowed_to?(:show_email_change?, f.object) %>
-                    <% pending_label = capture do %>Change to <strong><%= f.object.user.unconfirmed_email %></strong> awaiting confirmation<% end %>
-                    <%= render "shared/badge",
-                          label: pending_label,
-                          classes: "bg-yellow-50 text-yellow-800 border-yellow-300",
-                          icon: "fa-solid fa-triangle-exclamation text-yellow-500",
-                          extra: "mt-1",
-                          title: "Only the person and admins can see this pending change; it is hidden from other profile visitors." %>
-                  <% end %>
-
-                  <p class="mt-1 text-sm text-gray-500">
-                    Only
-                    <% if allowed_to?(:edit?, f.object.user) %>
-                      <%= link_to "editable by admins",
-                                  edit_user_path(f.object.user),
-                                  class: "underline" %>
-                    <% else %>
-                      editable by admins
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+              <%# Two per row so the secondary email + type wrap to the next line
+                  in the narrow half-width column. %>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <% if f.object.user %>
+                  <div>
+                    <label class="block text-md font-medium text-gray-700 mb-1">Primary email</label>
+                    <span class="text-gray-900 font-medium"><%= f.object.user&.email %></span>
+                    <% if f.object.user.unconfirmed_email.present? && allowed_to?(:show_email_change?, f.object) %>
+                      <div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-50 border border-yellow-300 rounded-full text-xs font-medium text-yellow-800" title="Only the person and admins can see this pending change; it is hidden from other profile visitors.">
+                        <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+                        Change to <strong><%= f.object.user.unconfirmed_email %></strong> awaiting confirmation
+                      </div>
                     <% end %>
-                  </p>
-                </div>
-              <% else %>
-                <%= f.input :email, label: "Primary email" %>
+
+                    <p class="text-sm text-gray-500 mt-1">
+                      Only
+                      <% if allowed_to?(:edit?, f.object.user) %>
+                        <%= link_to "editable by admins",
+                                    edit_user_path(f.object.user),
+                                    class: "underline" %>
+                      <% else %>
+                        editable by admins
+                      <% end %>
+                    </p>
+                  </div>
+                <% else %>
+                  <%= f.input :email, label: "Primary email" %>
+                <% end %>
+
+                <%= f.input :email_type,
+                            label: "Primary email type",
+                            as: :select,
+                            collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                            selected: f.object.email_type || f.object.user&.email_type,
+                            include_blank: true %>
+
+                <%= f.input :email_2, label: "Secondary email" %>
+
+                <%= f.input :email_2_type,
+                            label: "Secondary email type",
+                            as: :select,
+                            collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                            include_blank: true %>
+              </div>
+            </div>
+          </details>
+
+          <details id="phones" class="phones scroll-mt-4 group"<%= " open".html_safe if contacts_open %>>
+            <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-2">
+              <span class="font-semibold">Phones:</span>
+              <span class="text-sm text-gray-500"><%= phone_values.any? ? phone_values.to_sentence : "None" %></span>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+            </summary>
+
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+              <% if @person.best_time_to_call.present? || params[:admin] == "true" %>
+                <%= f.input :best_time_to_call %>
               <% end %>
 
-              <%= f.input :email_type,
-                          label: "Primary email type",
-                          as: :select,
-                          collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                          selected: f.object.email_type || f.object.user&.email_type,
-                          include_blank: true %>
+              <%= f.simple_fields_for :contact_methods do |cf| %>
+                <%= render "contact_methods/contact_method_fields", f: cf %>
+              <% end %>
 
-              <%= f.input :email_2, label: "Secondary email" %>
-
-              <%= f.input :email_2_type,
-                          label: "Secondary email type",
-                          as: :select,
-                          collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                          include_blank: true %>
+              <%= link_to_add_association "➕ Add phone",
+                                          f,
+                                          :contact_methods,
+                                          partial: "contact_methods/contact_method_fields",
+                                          class: "btn btn-secondary-outline" %>
             </div>
-          </div>
-        </details>
+          </details>
+        </div>
       </div>
     </div>
 
@@ -89,37 +116,7 @@
     <div class="flex w-full flex-col items-center gap-4 md:w-1/6"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div>
   </div>
 
-  <div class="phones scroll-mt-4" id="phones">
-    <%# Collapsible — collapses to the phone number(s) on file. Open on a new
-        person or when there are errors so an invalid number stays visible. %>
-    <% phone_values = f.object.contact_methods.reject(&:marked_for_destruction?).filter_map { |cm| cm.value.presence } %>
-    <% phones_open = !f.object.persisted? || f.object.errors.any? %>
-    <details class="form-group space-y-4 group"<%= " open".html_safe if phones_open %>>
-      <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
-        <span class="font-semibold">Phones:</span>
-        <span class="text-sm text-gray-500"><%= phone_values.any? ? phone_values.to_sentence : "None" %></span>
-        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
-      </summary>
-
-      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm mt-2">
-        <% if @person.best_time_to_call.present? || params[:admin] == "true" %>
-          <%= f.input :best_time_to_call %>
-        <% end %>
-
-        <%= f.simple_fields_for :contact_methods do |f| %>
-          <%= render "contact_methods/contact_method_fields", f: f %>
-        <% end %>
-
-        <%= link_to_add_association "➕ Add phone",
-                                    f,
-                                    :contact_methods,
-                                    partial: "contact_methods/contact_method_fields",
-                                    class: button_classes(:secondary_outline) %>
-      </div>
-    </details>
-  </div>
-
-  <div class="addresses scroll-mt-4" id="addresses">
+<div class="addresses scroll-mt-4" id="addresses">
     <!-- Primary Address Choice -->
     <div class="flex flex-col gap-4 md:flex-row"><%# = f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %></div>
 
@@ -135,11 +132,11 @@
        else
          pluralize(person_addresses.size, "address")
        end %>
-    <details class="form-group space-y-4 group"<%= " open".html_safe if addresses_open %>>
+    <details class="form-group space-y-4 group/section"<%= " open".html_safe if addresses_open %>>
       <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
         <span class="font-semibold">Addresses:</span>
         <span class="text-sm text-gray-500"><%= address_summary %></span>
-        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
       </summary>
 
       <div class="rounded-lg border border-gray-200 bg-yellow-50 p-4 mb-4 shadow-sm mt-2">
@@ -177,12 +174,11 @@
     <%# "Other" is never a real sector tag (it's captured as an OtherResponse),
         so drop any stray legacy tagging from the editable list. %>
     <% editable_sector_items = sectors_owner.sectorable_items_ordered.reject { |item| item.sector&.name == Sector::OTHER_SECTOR_NAME } %>
-    <% sector_names = editable_sector_items.reject(&:marked_for_destruction?).filter_map { |item| item.sector&.name } %>
     <% sectors_open = !sectors_owner.persisted? || sectors_owner.errors.any? %>
     <details class="form-group flex flex-col flex-1 min-w-[20rem] group"<%= " open".html_safe if sectors_open %>>
       <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
         <span class="font-semibold">Sectors:</span>
-        <span class="text-sm text-gray-500"><%= sector_names.any? ? sector_names.to_sentence : "None selected" %></span>
+        <span class="text-sm text-gray-500"><%= sectors_owner.decorate.sectors_summary %></span>
         <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
       </summary>
       <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm mt-2
@@ -209,13 +205,12 @@
 
     <!-- Age ranges -->
     <% if @age_ranges_collection.present? %>
-<% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
-      <% age_range_names = age_owner.age_range_items_ordered.reject(&:marked_for_destruction?).filter_map { |item| item.category&.name } %>
+      <% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
       <% age_ranges_open = !age_owner.persisted? || age_owner.errors.any? %>
       <details class="form-group flex flex-col flex-1 min-w-[20rem] group"<%= " open".html_safe if age_ranges_open %>>
         <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
           <span class="font-semibold">Age ranges:</span>
-          <span class="text-sm text-gray-500"><%= age_range_names.any? ? age_range_names.to_sentence : "None selected" %></span>
+          <span class="text-sm text-gray-500"><%= age_owner.decorate.age_ranges_summary %></span>
           <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
         </summary>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2
@@ -304,12 +299,18 @@
   <!-- Organization Affiliations -->
   <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
   <% decorated = person.decorate %>
-  <div id="affiliations" class="form-group scroll-mt-4 space-y-4">
-    <div class="mb-2 font-semibold text-gray-700">
-      Affiliations<span class="text-sm font-normal text-gray-500"> (only editable by admins)</span>
-    </div>
+<details id="affiliations" class="form-group space-y-4 scroll-mt-4 group/section" open>
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-semibold">Affiliations</span>
+      <% affiliation_count = person.affiliations.reject(&:marked_for_destruction?).size %>
+      <% if affiliation_count.positive? %>
+        <span class="text-sm text-gray-500"><%= pluralize(affiliation_count, "affiliation") %></span>
+      <% end %>
+      <span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
+    </summary>
 
-    <div class="admin-only mb-4 rounded-lg border border-gray-200 bg-blue-50 p-4 shadow-sm">
+    <div class="rounded-lg border border-gray-200 admin-only bg-blue-50 p-4 mb-4 shadow-sm mt-2">
       <% if allowed_to?(:manage?, Person) && params[:admin].present? %>
         <div class="admin-only mb-4 rounded-lg bg-blue-100 p-4">
           <%= f.input :member_since,
@@ -410,7 +411,7 @@
         <%= render "agreement_form_links", person: person %>
       <% end %>
     </div>
-  </div>
+  </details>
 
   <!-- PERSON FIELDS -->
   <%# Collapsible like the sections above. Stays open on a new person or when the
@@ -468,7 +469,7 @@
   <details id="professional-licenses" class="form-group space-y-4 scroll-mt-4 group"<%= " open".html_safe if licenses_open %>>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Professional licenses:</span>
-      <span class="text-sm text-gray-500"><%= licenses.any? ? pluralize(licenses.size, "license") : "None" %></span>
+      <span class="text-sm text-gray-500"><%= licenses.any? ? licenses.map(&:name).to_sentence : "None" %></span>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
     </summary>
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2">

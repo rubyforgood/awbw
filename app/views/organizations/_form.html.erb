@@ -58,13 +58,12 @@
       <!-- Sectors + Windows audience: parallel 50/50 columns -->
       <%# Sectors is collapsible — collapses to the list of tagged sectors. Open on
           a new org or when there are errors. %>
-      <% sector_names = f.object.sectors.map(&:name).reject { |name| name == Sector::OTHER_SECTOR_NAME }.sort %>
       <% sectors_open = !f.object.persisted? || f.object.errors.any? %>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
         <details class="form-group space-y-4 group"<%= " open".html_safe if sectors_open %>>
           <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
             <span class="font-semibold">Sectors:</span>
-            <span class="text-sm text-gray-500"><%= sector_names.any? ? sector_names.to_sentence : "None selected" %></span>
+            <span class="text-sm text-gray-500"><%= f.object.decorate.sectors_summary %></span>
             <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
           </summary>
 
@@ -88,15 +87,23 @@
         </details>
 
         <!-- Windows audience -->
-        <div>
-          <%= f.association :windows_type,
-                            label: "Windows audience",
-                            include_blank: true,
-                            required: false,
-                            input_html: {
-                              class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                            } %>
-        </div>
+        <% windows_open = !f.object.persisted? || f.object.errors.any? %>
+        <details class="form-group space-y-4 group"<%= " open".html_safe if windows_open %>>
+          <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+            <span class="font-semibold">Windows audience:</span>
+            <span class="text-sm text-gray-500"><%= f.object.windows_type&.name.presence || "None selected" %></span>
+            <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <div class="mt-2">
+            <%= f.association :windows_type,
+                              label: false,
+                              include_blank: true,
+                              required: false,
+                              input_html: {
+                                class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                              } %>
+          </div>
+        </details>
       </div>
 
       <!-- Profile-specific Categories (e.g. Workshop Settings) -->
@@ -140,7 +147,7 @@
     <!-- RIGHT SIDE (1/4) -->
     <div class="flex items-center justify-center">
       <!-- Logo -->
-      <div class="flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :logo %></div>
+      <div class="flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :logo, size: "w-24 h-24" %></div>
     </div>
   </div>
 
@@ -290,11 +297,11 @@
      else
        pluralize(org_addresses.size, "address")
      end %>
-  <details id="addresses" class="form-group space-y-4 mb-8 scroll-mt-20 group"<%= " open".html_safe if addresses_open %>>
+<details id="addresses" class="form-group space-y-4 mb-8 scroll-mt-20 group/section"<%= " open".html_safe if addresses_open %>>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Addresses:</span>
       <span class="text-sm text-gray-500"><%= address_summary %></span>
-      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
     </summary>
 
     <div class="mb-4 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm">
@@ -316,12 +323,17 @@
     </div>
   </details>
 
-  <div id="affiliations" class="form-group mb-8 scroll-mt-20 space-y-4">
-    <div class="mb-2 font-semibold text-gray-700">
-      Affiliations
-    </div>
+<details id="affiliations" class="form-group space-y-4 mb-8 scroll-mt-20 group/section" open>
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-semibold">Affiliations</span>
+      <% affiliation_count = f.object.affiliations.reject(&:marked_for_destruction?).size %>
+      <% if affiliation_count.positive? %>
+        <span class="text-sm text-gray-500"><%= pluralize(affiliation_count, "affiliation") %></span>
+      <% end %>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
+    </summary>
 
-    <div class="relative rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> mb-4 p-4 shadow-sm">
+    <div class="relative rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 mb-4 shadow-sm mt-2">
       <% if show_status_select %>
         <div class="absolute top-4 right-4 z-10 w-56">
           <%= f.input :organization_status_id,
@@ -347,7 +359,7 @@
         </div>
       <% end %>
       <% org_decorated = f.object.decorate %>
-      <div class="mb-4 flex flex-col gap-6 md:flex-row">
+<div class="mb-4 flex flex-col gap-6 md:flex-row">
         <% unless has_affiliations %>
           <div class="shrink-0">
             <label class="mb-1 inline-flex items-center gap-1 text-md font-medium text-gray-700">Affiliated since</label>
@@ -417,7 +429,7 @@
         <% end %>
       <% end %>
     </div>
-  </div>
+  </details>
 
   <details class="profile-preferences-section mb-8 group">
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
