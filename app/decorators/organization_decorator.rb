@@ -209,6 +209,29 @@ class OrganizationDecorator < ApplicationDecorator
     object.facilitator_program_status(as_of: date&.to_date)
   end
 
+  # Profile display toggles in form order, mapped to the noun used on each
+  # checkbox ("Show email" => "email"). Drives the collapsed form section's
+  # one-line summary.
+  PROFILE_DISPLAY_LABELS = {
+    profile_show_email: "email",
+    profile_show_phone: "phone",
+    profile_show_website: "website",
+    profile_show_description: "description",
+    profile_show_sectors: "sectors",
+    profile_show_workshops: "workshops",
+    profile_show_stories: "stories",
+    profile_show_events_registered: "events hosted",
+    profile_show_workshop_logs: "workshop logs"
+  }.freeze
+
+  # One-line summary of the profile display preferences for the collapsed form
+  # section. Most orgs show everything, so it names only what's hidden
+  # ("Hide phone and website") and says "All shown" when nothing is hidden.
+  def profile_display_summary
+    hidden = PROFILE_DISPLAY_LABELS.reject { |attr, _| object.public_send(attr) }.values
+    hidden.any? ? "Hide #{hidden.to_sentence}" : "All shown"
+  end
+
   def badges
     earliest = affiliations.minimum(:start_date) || start_date
     years = earliest ? (Time.zone.now.year - earliest.year) : nil

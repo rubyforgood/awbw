@@ -71,6 +71,38 @@ class PersonDecorator < ApplicationDecorator
     @badges ||= compute_badges
   end
 
+  # Profile display toggles in form order, mapped to the noun used on each
+  # checkbox ("Show email" => "email"). Drives the collapsed form section's
+  # one-line summary.
+  PROFILE_DISPLAY_LABELS = {
+    profile_show_credentials: "credentials",
+    profile_show_pronouns: "pronouns",
+    profile_show_email: "email",
+    profile_show_phone: "phone",
+    profile_show_social_media: "social media",
+    profile_show_member_since: "facilitator since",
+    profile_show_bio: "bio",
+    profile_show_affiliations: "affiliations",
+    profile_show_sectors: "sectors",
+    profile_show_workshops: "workshops",
+    profile_show_workshop_variations: "workshop variations",
+    profile_show_stories: "stories",
+    profile_show_resources: "resources",
+    profile_show_events_registered: "registrations",
+    profile_show_story_ideas: "story ideas",
+    profile_show_workshop_ideas: "workshop ideas",
+    profile_show_workshop_variation_ideas: "variation ideas",
+    profile_show_workshop_logs: "workshop logs"
+  }.freeze
+
+  # One-line summary of the profile display preferences for the collapsed form
+  # section. Most people show everything, so it names only what's hidden
+  # ("Hide phone and bio") and says "All shown" when nothing is hidden.
+  def profile_display_summary
+    hidden = PROFILE_DISPLAY_LABELS.reject { |attr, _| object.public_send(attr) }.values
+    hidden.any? ? "Hide #{hidden.to_sentence}" : "All shown"
+  end
+
   def facilitator_since_date
     @facilitator_since_date ||= begin
       facilitator_affiliations = affiliations.facilitators
