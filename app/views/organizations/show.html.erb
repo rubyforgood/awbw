@@ -47,11 +47,19 @@
             <%= [address.locality, [address.city, address.state].compact_blank.join(", "), address.district].compact_blank.join(" · ") %>
           </p>
         <% end %>
-        <% affiliated_since = @organization.decorate.affiliated_since_display %>
+        <% org_decorated = @organization.decorate %>
+        <% affiliated_since = org_decorated.affiliated_since_display %>
         <% if affiliated_since.present? %>
           <p class="text-gray-500 text-sm mt-1">
             Affiliated since
             <span class="font-medium"><%= affiliated_since %></span>
+          </p>
+        <% end %>
+        <% program_since = org_decorated.program_since_display %>
+        <% if program_since.present? %>
+          <p class="text-gray-500 text-sm mt-1">
+            Program since
+            <span class="font-medium"><%= program_since %></span>
           </p>
         <% end %>
         <!-- Contact info -->

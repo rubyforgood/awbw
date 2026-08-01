@@ -1,4 +1,4 @@
-<%= simple_form_for(@organization, html: { data: { controller: "affiliation-dates affiliation-facilitator-warning", affiliation_dates_server_affiliated_since_value: true } }) do |f| %>
+<%= simple_form_for(@organization, html: { data: { controller: "affiliation-facilitator-warning" } }) do |f| %>
   <%= render 'shared/errors', resource: @organization if @organization.errors.any? %>
   <%= render "duplicate_organizations_warning" %>
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>
@@ -269,8 +269,6 @@
       <% org_latest_end = f.object.persisted? ? f.object.affiliations.maximum(:end_date) : nil %>
       <% org_end_date = org_aff_ended ? org_latest_end : f.object.end_date %>
       <% org_decorated = f.object.decorate %>
-      <% org_fac_start = org_decorated.facilitator_since_date %>
-      <% org_fac_ended = org_decorated.facilitation_end_date %>
       <div class="flex flex-col md:flex-row gap-6 mb-4">
         <div class="shrink-0 relative group cursor-help">
           <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
@@ -294,7 +292,7 @@
             <% end %>
           </div>
           <div class="pt-1">
-            <span class="text-gray-900 font-medium" data-affiliation-dates-target="affiliatedSince"><%= org_decorated.affiliated_since_display.presence || "—" %></span>
+            <span class="text-gray-900 font-medium"><%= org_decorated.affiliated_since_display.presence || "—" %></span>
             <% if has_affiliations && org_earliest_aff.nil? %>
               <i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>
             <% elsif f.object.start_date.present? && org_earliest_aff.present? && f.object.start_date.beginning_of_month != org_earliest_aff.beginning_of_month %>
@@ -317,18 +315,41 @@
             Facilitations/program since <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
           </label>
           <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
-            <p>Earliest start date from affiliations with 'facilitator' in the title. Edit affiliation records to change this date.</p>
+            <p>Facilitator-affiliation history (title 'Facilitator'), shown as merged year-based periods. Edit affiliation records to change it.</p>
           </div>
           <div class="pt-1">
-            <span class="text-gray-900 font-medium" data-affiliation-dates-target="facilitatorSince"><% if org_fac_ended %><i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active facilitator affiliations"></i><% end %><%= org_fac_start&.strftime("%b %Y") || "—" %><%= " – #{org_fac_ended.strftime('%b %Y')}" if org_fac_ended %></span>
+            <span class="text-gray-900 font-medium"><%= org_decorated.program_since_display.presence || "—" %></span>
           </div>
         </div>
+        <% if allowed_to?(:manage?, Organization) %>
+          <% org_events = @organization_events || [] %>
+          <div class="shrink-0 relative group cursor-help">
+            <label class="inline-flex items-center gap-1 text-md font-medium text-gray-700 mb-1">
+              Program status by event <i class="fa-solid fa-circle-info text-gray-400 text-xs"></i>
+            </label>
+            <div class="hidden group-hover:block absolute z-50 left-0 bottom-full mb-1 bg-blue-100 text-gray-700 text-xs rounded-lg shadow-lg ring-1 ring-blue-200 p-3 w-64 whitespace-normal">
+              <p>The org's status as a facilitator program as of each event's date. <span class="font-medium">New</span> — no facilitator affiliations yet. <span class="font-medium">Ongoing</span> — has an active facilitator. <span class="font-medium">Reinstated</span> — had facilitators but all have ended.</p>
+            </div>
+            <div class="pt-1">
+              <% if org_events.any? %>
+                <div class="flex flex-wrap gap-2 max-w-md">
+                  <% org_events.each do |event| %>
+                    <% status = org_decorated.facilitator_status_as_of(event.start_date) %>
+                    <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 <%= OrganizationDecorator.program_status_classes(status) %>"
+                          title="<%= event.title %>">
+                      <%= event.decorate.compact_label.truncate(24) %> · <%= status.to_s.titleize %>
+                    </span>
+                  <% end %>
+                </div>
+              <% else %>
+                <span class="text-gray-500">—</span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
       <% if allowed_to?(:manage?, Organization) %>
-        <div class="p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
-          <% if f.object.affiliations.present? %>
-            <%= render "affiliations/header", label: "Person" %>
-          <% end %>
+        <div class="p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10">
           <%= f.fields_for :affiliations do |affiliation_form| %>
             <div data-paginated-fields-target="item">
               <%= render "affiliation_fields",

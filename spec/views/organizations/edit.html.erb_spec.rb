@@ -74,6 +74,30 @@ RSpec.describe "organizations/edit", type: :view do
     end
   end
 
+  describe "program status by event" do
+    it "renders an 'event · status' chip for each event the org is represented at" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      person = create(:person)
+      create(:affiliation, organization: org, person: person, title: "Facilitator",
+                           start_date: 1.year.ago, end_date: nil)
+      event = create(:event, title: "August Training", abbreviation: "PES205", start_date: 2.days.from_now)
+
+      assign(:organization, org.reload)
+      assign(:organization_statuses, OrganizationStatus.all)
+      assign(:organization_events, Event.where(id: event.id))
+      render
+
+      expect(rendered).to include("PES205 · Ongoing")
+    end
+
+    it "shows a dash when the org has no events" do
+      assign(:organization_events, Event.none)
+      render
+
+      assert_select "label", text: /Program status by event/
+    end
+  end
+
   describe "new affiliation defaults" do
     it "defaults the start date to today and leaves primary contact unchecked" do
       organization.affiliations.build

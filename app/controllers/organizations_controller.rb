@@ -17,8 +17,9 @@ class OrganizationsController < ApplicationController
       @active_people_count = Affiliation.active.where(organization_id: filtered.select(:id)).count("DISTINCT person_id, organization_id")
       @organizations = filtered.paginate(page: params[:page], per_page: per_page)
       org_ids = @organizations.map(&:id)
-      # Merged-period "Affiliated since" label per org, from the preloaded affiliations.
-      @affiliated_since_display = @organizations.to_h { |org| [ org.id, org.decorate.affiliated_since_display ] }
+      # Merged-period "Program since" label per org (facilitator affiliations),
+      # from the preloaded affiliations.
+      @program_since_display = @organizations.to_h { |org| [ org.id, org.decorate.program_since_display ] }
       @active_people_counts = Affiliation.active
                                                 .where(organization_id: org_ids)
                                                 .group(:organization_id)
@@ -174,6 +175,16 @@ class OrganizationsController < ApplicationController
                                  affiliation.person&.last_name.to_s.downcase ]
                              }
       @organization.affiliations.proxy_association.target.replace(sorted)
+    end
+
+    # Events the org is represented at, newest first — drives the per-event
+    # "Program status by event" chips in the Affiliations section. Program status
+    # (New/Ongoing/Reinstate) is only meaningful relative to a specific event date.
+    @organization_events = if @organization.persisted?
+      Event.where(id: @organization.event_registrations.active.select(:event_id))
+           .order(start_date: :desc)
+    else
+      Event.none
     end
 
     @org_categories_grouped = Category

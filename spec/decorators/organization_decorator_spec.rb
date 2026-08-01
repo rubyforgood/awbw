@@ -23,6 +23,22 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
+  describe "#program_since_display" do
+    let(:organization) { create(:organization) }
+
+    it "is blank when the org has never had a facilitator affiliation" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Volunteer", start_date: Date.new(2010, 1, 1))
+      expect(organization.reload.decorate.program_since_display).to eq("")
+    end
+
+    it "shows merged facilitator-affiliation periods, ignoring non-facilitator ones" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 1, 1), end_date: Date.new(2018, 6, 1))
+      create(:affiliation, organization: organization, person: create(:person), title: "Volunteer", start_date: Date.new(2005, 1, 1), end_date: nil)
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2024, 2, 1), end_date: nil)
+      expect(organization.reload.decorate.program_since_display).to eq("2015-2018, 2024")
+    end
+  end
+
   describe ".program_status_classes" do
     it "maps each status to its pill classes, accepting symbols or model strings" do
       expect(described_class.program_status_classes(:new)).to include("green")
