@@ -1,7 +1,9 @@
 <% return unless organization.persisted? %>
 <% org_filter = { organization_id: organization.id } %>
 <% monthly_reports = MonthlyReport.where(org_filter) %>
-<ul class="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 md:grid-cols-3">
+<%# One row on md+ (grid-flow-col + equal auto columns); wraps to a 2/3-col grid
+    on narrower screens. %>
+<ul class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-none md:auto-cols-fr md:grid-flow-col gap-x-6 gap-y-2">
   <li><%= index_button CommunityNews.where(org_filter), params: org_filter %></li>
   <li><%= index_button Story.where(org_filter), params: org_filter %></li>
   <li><%= index_button organization.workshop_logs, params: org_filter %></li>
