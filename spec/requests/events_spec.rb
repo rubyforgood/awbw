@@ -1699,6 +1699,7 @@ RSpec.describe "Events", type: :request do
             expect(response.body).to include("Public bulk payment form")
           end
         end
+      end
 
       it "renders the attendance breakdown with per-status drill-down links" do
         create(:event_registration, event: event, registrant: create(:person), status: "attended")
