@@ -10,12 +10,21 @@
     </div>
 
     <div>
-      <%= f.label :donor_sgid, "Donor", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= select_tag "grant[donor_sgid]",
-                     grouped_options_for_select(@donor_options, @grant.donor_sgid),
-                     include_blank: "Select an organization or person",
-                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
-      <p class="mt-1 text-xs text-gray-500">The organization or person donating the funds.</p>
+      <% donor_label_data = @grant.donor&.compound_search_label %>
+      <%= f.input :donor_sgid,
+                  collection: donor_label_data ? [ [ donor_label_data[:label], donor_label_data[:id] ] ] : [],
+                  selected: donor_label_data&.dig(:id),
+                  required: true,
+                  input_html: {
+                    class: "bg-white",
+                    data: {
+                      controller: "remote-select",
+                      remote_select_model_value: "person_or_organization"
+                    }
+                  },
+                  prompt: "Search organizations and people",
+                  label: "Donor",
+                  hint: "The organization or person donating the funds." %>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
