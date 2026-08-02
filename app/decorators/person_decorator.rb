@@ -111,11 +111,12 @@ class PersonDecorator < ApplicationDecorator
 
     h.safe_join(items.map { |item|
       name = item.category&.name.to_s
-      if item.is_primary?
+      inner = if item.is_primary?
         h.safe_join([ h.content_tag(:i, "", class: "fa-solid fa-star text-amber-400"), h.content_tag(:strong, name) ], " ")
       else
         name
       end
+      h.content_tag(:span, inner, class: "whitespace-nowrap")
     }, ", ")
   end
 
