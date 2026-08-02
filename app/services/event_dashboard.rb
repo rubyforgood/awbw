@@ -457,6 +457,17 @@ class EventDashboard
     @sectors ||= Sector.where(id: registrant_sector_ids).order(:name)
   end
 
+  # Counts of distinct sectors named as a primary vs an additional sector, for
+  # the sectors card subtitle. These overlap (a sector can be primary for one
+  # registrant and additional for another), so they don't sum to #sectors.size.
+  def primary_sector_count
+    primary_sector_ids.size
+  end
+
+  def additional_sector_count
+    additional_sector_ids.size
+  end
+
   # Sectors registrants named as their single primary sector (the
   # registration dropdown), ordered for the "Primary sector" chart.
   def primary_sectors

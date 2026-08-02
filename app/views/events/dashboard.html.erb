@@ -347,7 +347,8 @@
           </h3>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+        <% program_counts = @dashboard.program_status_counts %>
+        <p class="text-xs text-gray-500 mt-1"><%= program_counts[:new] %> new · <%= program_counts[:ongoing] %> ongoing · <%= program_counts[:reinstated] %> reinstated</p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.organizations.any? %>
@@ -385,7 +386,7 @@
           </h3>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+        <p class="text-xs text-gray-500 mt-1"><%= @dashboard.primary_sector_count %> primary · <%= @dashboard.additional_sector_count %> additional</p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.sectors.any? %>
@@ -420,7 +421,7 @@
           </h3>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+        <p class="text-xs text-gray-500 mt-1"><% if @dashboard.countries.any? %><%= link_to registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-")), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= pluralize(@dashboard.countries.size, "country") %> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% else %><%= pluralize(@dashboard.countries.size, "country") %><% end %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.states.any? %>
