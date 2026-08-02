@@ -7,11 +7,11 @@
   </div>
 
   <%# Forms dropdown — sits top-right below the sub-nav, holding the public form
-      links, the sample-ticket preview, and "Manage forms" (the Edit-event form
-      settings section). %>
+      links, the sample-ticket preview, and "Edit form settings" (the Edit-event
+      form settings section). %>
   <% if allowed_to?(:edit?, @event) %>
     <div class="flex justify-end mb-6">
-      <%= render "form_actions_menu", button_label: "Forms", manage_label: "Manage forms", sample_return_to: "dashboard" %>
+      <%= render "form_actions_menu", button_label: "Forms", manage_label: "Edit form settings", sample_return_to: "dashboard" %>
     </div>
   <% end %>
 
