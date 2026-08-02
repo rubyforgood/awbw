@@ -1791,6 +1791,14 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to match(/\d+ new · \d+ ongoing · \d+ reinstated/)
       end
 
+      it "charts the organizations' program-status breakdown above the org list" do
+        get background_event_path(event)
+
+        expect(response.body).to include("Organization/program status")
+        # "Background Org" is the registrant's first-facilitator program → New.
+        expect(response.body).to include("New")
+      end
+
       it "shows a program-status column in the registrant roster" do
         get background_event_path(event)
 
@@ -1835,6 +1843,26 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Adults")
         # Percentages render as always-visible text (not hover-only), so they read on mobile.
         expect(response.body).to include("100.0%")
+      end
+
+      it "shows an all age groups breakdown spanning the primary and additional questions" do
+        registration_form = create(:form, name: "Registration")
+        create(:event_form, event: event, form: registration_form, role: "registration")
+        age_range = create(:category_type, name: "AgeRange")
+        adults = create(:category, name: "Adults", category_type: age_range)
+        teens = create(:category, name: "Teens", category_type: age_range)
+        primary_field = create(:form_field, form: registration_form, field_identifier: "primary_age_group",
+                                            answer_type: :multi_select_checkbox)
+        additional_field = create(:form_field, form: registration_form, field_identifier: "additional_age_group",
+                                               answer_type: :multi_select_checkbox)
+        submission = create(:form_submission, person: person, form: registration_form)
+        create(:form_answer, form_submission: submission, form_field: primary_field, submitted_answer: adults.id.to_s)
+        create(:form_answer, form_submission: submission, form_field: additional_field, submitted_answer: teens.id.to_s)
+
+        get background_event_path(event)
+
+        expect(response.body).to include("All age groups")
+        expect(response.body).to include("Teens")
       end
 
       it "shows a life experiences breakdown from registrants' StoryPopulation tags" do

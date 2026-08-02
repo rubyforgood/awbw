@@ -1,25 +1,38 @@
 <% content_for(:page_bg_class, "public") %>
 
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<%# Opt out of the layout's max-w-7xl cap to match the wider registrants page;
+    the wrapper restores the layout's gutters at a wider bound. %>
+<% content_for(:full_width, true) %>
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back link on the left; sub-nav (admins only) on the right %>
-  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-2 print:hidden">
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
     <%= link_to "← Event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
     <% if allowed_to?(:manage?, @event) %>
       <%= render "events/subnav", event: @event, current: :staff %>
     <% end %>
   </div>
   <% if allowed_to?(:edit_staff?, @event) %>
-    <div class="flex justify-end mb-6 print:hidden">
+    <div class="flex justify-end gap-3 mb-6 print:hidden">
       <%= link_to edit_staff_event_path(@event), class: "admin-only btn btn-primary btn--small" do %>
         <i class="fa-solid fa-pen"></i> Edit staff
       <% end %>
     </div>
   <% end %>
 
-  <div class="text-center mb-10">
-    <p class="text-sm font-semibold uppercase tracking-wide <%= DomainTheme.text_class_for(:events) %>">Meet the staff</p>
-    <h1 class="text-3xl font-bold text-gray-900 mt-1"><%= @event.title %></h1>
+  <%# Title block — matches the dashboard/background/scholarships report pages:
+      event title eyebrow over a text-3xl heading with an icon. %>
+  <div class="text-center mb-8">
+    <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide"><%= @event.title %></p>
+    <% if @event.start_date.present? %>
+      <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
+    <% end %>
+    <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
+      <i class="fa-solid fa-users <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i>
+      Meet the staff
+    </h1>
   </div>
 
   <%= render "events/staff_cards", event_staffs: @event_staffs %>
+</div>
 </div>

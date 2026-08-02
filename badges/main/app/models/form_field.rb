@@ -44,6 +44,11 @@ class FormField < ApplicationRecord
     "additional_age_group" => "AgeRange"
   }.freeze
 
+  # Both age group fields (the single-select "primary" and the multi-select
+  # "additional"), backing the "All age groups" breakdown. The "primary_age_group"
+  # field alone backs the "Primary age group" chart.
+  AGE_GROUP_FIELD_IDENTIFIERS = %w[primary_age_group additional_age_group].freeze
+
   # The payment-method field. Its answer options ("Credit card (now)", etc.) are
   # wired to Stripe charge logic in the controllers, so they must not be edited
   # casually from the form builder — the editor shows them read-only unless the
