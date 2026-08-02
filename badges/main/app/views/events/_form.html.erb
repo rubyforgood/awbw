@@ -642,15 +642,25 @@
           <% end %>
         </div>
 
-        <div
-          id="registration_ticket_callouts_list"
-          class="space-y-3"
-          data-controller="sortable"
-          data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>"
-        >
-          <%= f.fields_for :registration_ticket_callouts do |rts| %>
-            <%= render "events/registration_ticket_callout_fields", f: rts, event_f: f %>
-          <% end %>
+        <div data-controller="expandable-cards">
+          <div class="flex justify-end mb-3">
+            <button type="button" data-action="expandable-cards#toggleAll"
+                    class="inline-flex items-center gap-2 text-sm font-medium text-purple-700 hover:text-purple-900">
+              <i class="fa-solid fa-chevron-down transition-transform rotate-180" data-expandable-cards-target="icon"></i>
+              <span data-expandable-cards-target="label">Collapse all</span>
+            </button>
+          </div>
+
+          <div
+            id="registration_ticket_callouts_list"
+            class="space-y-3"
+            data-controller="sortable"
+            data-sortable-url-value="<%= @event.persisted? ? event_registration_ticket_callout_path(@event, ":id") : "" %>"
+          >
+            <%= f.fields_for :registration_ticket_callouts do |rts| %>
+              <%= render "events/registration_ticket_callout_fields", f: rts, event_f: f %>
+            <% end %>
+          </div>
         </div>
 
         <div class="mt-3">

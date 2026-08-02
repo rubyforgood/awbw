@@ -5,9 +5,14 @@
 %>
 <% event_f = local_assigns[:event_f] %>
 
+<%# Clicking anywhere on the card chrome toggles collapse (cursor-pointer signals
+    it); `toggleFromRow` ignores clicks inside the expanded editor body, and the
+    chevron + Published cluster stops propagation so those keep their own clicks. %>
 <div
-  class="nested-fields registration-ticket-callout-fields flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors"
-  data-controller="callout-preview"
+  class="nested-fields registration-ticket-callout-fields flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors cursor-pointer select-none"
+  data-controller="callout-preview expandable-card"
+  data-action="click->expandable-card#toggleFromRow expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse"
+  data-expandable-card-expanded-value="<%= f.object.published? %>"
   data-callout-preview-themes-value="<%= DomainTheme.swatches.to_json %>"
   data-callout-preview-defaults-value="<%= RegistrationTicketCallout::DEFAULT_COLORS.to_json %>"
   <% if f.object.persisted? %>
@@ -28,44 +33,60 @@
       <%= f.hidden_field :builtin_key %>
     <% end %>
     <%#
-      Published toggle, pinned to the card's top-right corner. The checkbox is
-      kept as a bare sibling *before* the content div below so the
-      `peer-checked:block` reveal still works — only its visual position is moved
-      (via absolute), not its DOM order. For the same reason the label is a
-      separate `for`-linked element rather than wrapping the input (wrapping it
-      would stop it being a sibling of the content div and break the reveal).
+      Top-right controls, pinned to the card's corner: a chevron that
+      collapses/expands this callout's editor (via expandable-card) and, to its
+      right, the Published toggle. Collapse is independent of Published, so a
+      published callout can still be collapsed.
     %>
-    <%= f.label :published, "Published", class: "absolute top-0 right-6 text-sm font-medium text-gray-600 cursor-pointer select-none" %>
-    <%= f.check_box :published, class: "peer rounded border-gray-300 text-purple-600 absolute top-0.5 right-0" %>
+    <div class="absolute top-0 right-0 flex items-center gap-3"
+         data-action="click->expandable-card#stopPropagation">
+      <button type="button"
+              class="leading-none text-gray-400 hover:text-gray-600"
+              data-action="expandable-card#toggle"
+              aria-label="Collapse or expand callout details">
+        <i class="fa-solid fa-chevron-down text-xs transition-transform <%= "rotate-180" if f.object.published? %>" data-expandable-card-target="icon"></i>
+      </button>
+
+      <%# Toggling Published expands (checked) or collapses (unchecked) the editor;
+          the chevron can then override that state independently. %>
+      <label class="flex items-center gap-2 text-sm font-medium text-gray-600 cursor-pointer select-none">
+        Published
+        <%= f.check_box :published, class: "rounded border-gray-300 text-purple-600",
+              data: { action: "change->expandable-card#syncToCheckbox" } %>
+      </label>
+    </div>
 
     <%#
       Always-visible header row: identifies the callout even when its editor is
       collapsed. Holds the built-in badge, title, and default-status text on the
-      left; `pr-24` reserves the top-right gutter so nothing runs under the
-      Published toggle pinned there.
+      left; `pr-32` reserves the top-right gutter so nothing runs under the
+      chevron + Published controls pinned there. Toggling is handled by the card
+      root (see above), so this row needs no click handler of its own.
     %>
 
-    <div class="flex items-center gap-x-3 pr-24 text-sm">
+    <div class="flex items-center gap-x-3 pr-32 text-sm">
       <% if f.object.builtin? %>
         <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 shrink-0">Built in</span>
       <% end %>
 
       <span class="text-gray-800 font-medium truncate max-w-xs" title="<%= f.object.title %>"><%= f.object.title %></span>
 
-      <%# Warns when this published built-in is set up but the event isn't
-          configured for it, so it still won't reach the ticket (free event → no
-          payment card, no scholarship form / CE hours → no scholarship / CE card). %>
-      <% if (suppression_reason = f.object.decorate.ticket_suppression_reason) %>
+      <%# Names the config the event is missing for this built-in (a cost, a
+          scholarship form, CE hours, a videoconference link) so admins know what
+          to change for it to reach the ticket. Shown regardless of published state. %>
+      <% if (config_hint = f.object.decorate.config_suppression_hint) %>
         <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 shrink-0">
           <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-          <%= suppression_reason %>
+          Won't show unless you <%= config_hint %>
         </span>
       <% end %>
     </div>
 
-    <%# Editable content — hidden when the Published checkbox is unchecked.
-        `mt-5` keeps the preview card clear of the Published toggle above it. %>
-    <div class="hidden peer-checked:block space-y-3 mt-5">
+    <%# Editable content — collapsed/expanded by the chevron above (expandable-card
+        toggles `hidden`). Defaults open when published, closed otherwise; render
+        the matching initial state to avoid a flash before the controller connects.
+        `mt-5` keeps the preview card clear of the controls above it. %>
+    <div class="<%= "hidden" unless f.object.published? %> space-y-3 mt-5 cursor-auto select-auto" data-expandable-card-target="body">
       <%#
         Live preview of how this callout appears on the ticket — the same card
         registrants see (icon, title, subtitle, themed color). Seeded from the

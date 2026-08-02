@@ -92,6 +92,20 @@ class BuiltinCalloutCards
     end
   end
 
+  # Action-oriented companion to #config_gap for the editor: what the admin must
+  # configure for this built-in to reach the ticket, or nil when the event is
+  # already set up for it (or the built-in has no config dependency). Mirrors
+  # #config_gap's conditions so the two can't drift.
+  def self.config_gap_action(event, builtin_key)
+    return unless config_gap(event, builtin_key)
+    {
+      "payment" => "set an event cost above $0",
+      "scholarship" => "add a scholarship form under form settings",
+      "ce_hours" => "set CE hours above 0 under form settings",
+      "videoconference" => "add a videoconference link"
+    }[builtin_key]
+  end
+
   # `preview: true` is the sample ticket: it bypasses the config gaps so an admin
   # can preview (and click through) a published built-in card even before the
   # event carries the config it depends on (a cost, a scholarship form, CE hours).
