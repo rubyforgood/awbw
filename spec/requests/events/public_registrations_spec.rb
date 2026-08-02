@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Events::PublicRegistrations", type: :request do
   # A guest registering on a free event so we exercise the bare create path
   # without payment or auth.
-  let(:event) { create(:event, :publicly_registerable, cost_cents: 0) }
+  let(:event) { create(:event, cost_cents: 0) }
   let(:form) { create(:form) }
   let!(:essay_field) do
     create(:form_field, form: form, answer_type: :free_form_input_paragraph,
@@ -15,51 +15,6 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
   def post_registration(answer)
     post event_public_registration_path(event),
          params: { public_registration: { form_fields: { essay_field.id.to_s => answer } } }
-  end
-
-  # Anonymous visitors may only reach the public registration/scholarship form
-  # when public registration is enabled; signed-in users and admins always may.
-  describe "access control by public registration setting" do
-    let(:admin) { create(:user, :admin) }
-    let(:visitor) { create(:user, :with_person) }
-
-    context "when public registration is disabled" do
-      let(:event) { create(:event, cost_cents: 0) }
-
-      it "redirects an anonymous visitor from the registration form" do
-        get new_event_public_registration_path(event)
-        expect(response).to redirect_to(root_path)
-      end
-
-      it "redirects an anonymous visitor from the scholarship form" do
-        get new_event_public_registration_path(event, scholarship_requested: true)
-        expect(response).to redirect_to(root_path)
-      end
-
-      it "rejects an anonymous create" do
-        post_registration("this answer easily has plenty of words")
-        expect(response).to redirect_to(root_path)
-      end
-
-      it "allows a signed-in user" do
-        sign_in visitor
-        get new_event_public_registration_path(event)
-        expect(response).to have_http_status(:ok)
-      end
-
-      it "allows an admin" do
-        sign_in admin
-        get new_event_public_registration_path(event)
-        expect(response).to have_http_status(:ok)
-      end
-    end
-
-    context "when public registration is enabled" do
-      it "allows an anonymous visitor to the registration form" do
-        get new_event_public_registration_path(event)
-        expect(response).to have_http_status(:ok)
-      end
-    end
   end
 
   describe "POST create with a minimum word count" do
@@ -615,7 +570,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
   describe "GET new payment method options" do
     # A paid event so the payment section is not stripped from the form.
-    let(:event) { create(:event, :publicly_registerable, cost_cents: 150_00) }
+    let(:event) { create(:event, cost_cents: 150_00) }
     let!(:payment_method_field) do
       field = create(:form_field, form: form, answer_type: :single_select_radio,
                      field_identifier: "payment_method", name: "Payment method",

@@ -6,7 +6,6 @@ RSpec.describe "Public registration new page", type: :system do
       :event,
       :published,
       :publicly_visible,
-      :publicly_registerable,
       title: "My Event",
       start_date: 2.days.from_now.change(hour: 10),
       end_date: 2.days.from_now.change(hour: 12)

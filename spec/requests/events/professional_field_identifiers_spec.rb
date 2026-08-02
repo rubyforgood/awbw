@@ -14,7 +14,7 @@ require "rails_helper"
 #     and form-submission show pages.
 RSpec.describe "Events::PublicRegistrations professional fields", type: :request do
   let(:admin) { create(:user, :admin) }
-  let(:event) { create(:event, :publicly_registerable, cost_cents: 0) }
+  let(:event) { create(:event, cost_cents: 0) }
 
   # An AgeRange type (profile-specific so the person edit form lists it) with the
   # published ranges plus an unpublished range that must never be offered.

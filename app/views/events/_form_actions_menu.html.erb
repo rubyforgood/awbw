@@ -15,20 +15,15 @@
   <div id="<%= dropdown_id %>"
        data-dropdown-target="content"
        class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
-    <%# Menu wording and which links appear both key off the event's form settings:
-        - Links open the public-facing form pages. When public registration is on,
-          each is prefixed "Public …" to signal it's exposed to anonymous visitors.
-        - Registration link: shown when a registration form is selected AND that
-          form page is actually reachable by someone — i.e. public registration is
-          on (anonymous use it) OR one-click is off (signed-in users use it). When
-          one-click is on and public registration is off, nobody hits the form page
-          (signed-in users register in one click; anonymous are blocked), so hide it.
-        - Scholarship / bulk payment only make sense once there's a fee, so also
-          gate them on the event having a cost. %>
+    <%# Links open the public-facing form pages, gated by the event's form
+        settings. When public registration is on, each label is prefixed
+        "Public …" to signal it's the publicly-exposed form. Scholarship and bulk
+        payment only make sense once there's a fee, so they also require the event
+        to have a cost. %>
     <% has_cost = @event.cost_cents.to_i.positive? %>
     <% public_form = @event.public_registration_enabled? %>
     <% form_label = ->(name) { public_form ? "Public #{name} form" : "#{name.capitalize} form" } %>
-    <% show_registration = @event.registration_form.present? && (public_form || !@event.signed_in_one_click_enabled?) %>
+    <% show_registration = @event.registration_form.present? %>
     <% show_scholarship = @event.scholarship_form.present? && has_cost %>
     <% show_bulk_payment = @event.bulk_payment_form.present? && has_cost %>
     <% if @event.registration_form.present? || @event.scholarship_form || @event.bulk_payment_form %>

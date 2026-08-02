@@ -77,38 +77,6 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
     end
   end
 
-  # Anonymous visitors may only reach the public bulk-payment form when public
-  # registration is enabled; signed-in users and admins always may. (The parent
-  # `before` signs in an admin, so sign out to exercise the anonymous path.)
-  describe "access control by public registration setting" do
-    it "redirects an anonymous visitor when public registration is disabled" do
-      sign_out admin
-      get new_event_bulk_payment_path(event)
-      expect(response).to redirect_to(event_path(event))
-    end
-
-    it "rejects an anonymous create when public registration is disabled" do
-      sign_out admin
-      post_bulk_payment("this answer easily has plenty of words")
-      expect(response).to redirect_to(event_path(event))
-    end
-
-    it "allows an anonymous visitor when public registration is enabled" do
-      sign_out admin
-      public_event = create(:event, :publicly_registerable, cost_cents: 0)
-      EventForm.create!(event: public_event, form: create(:form), role: "bulk_payment")
-
-      get new_event_bulk_payment_path(public_event)
-
-      expect(response).to have_http_status(:ok)
-    end
-
-    it "allows a signed-in admin when public registration is disabled" do
-      get new_event_bulk_payment_path(event)
-      expect(response).to have_http_status(:ok)
-    end
-  end
-
   describe "POST create with credit card payment" do
     let(:admin) { create(:user, :admin, :with_person) }
     let(:event) { create(:event, cost_cents: 15_00) }
@@ -165,8 +133,6 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
   end
 
   describe "GET new with the seeded bulk payment form" do
-    # Public registration must be on for the signed-out (anonymous) view.
-    let(:event) { create(:event, :publicly_registerable, cost_cents: 0) }
     let(:seeded_form) do
       FormBuilderService.new(name: "Bulk Payment", sections: %i[bulk_payment], role: "bulk_payment").call
     end
