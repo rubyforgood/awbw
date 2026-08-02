@@ -278,7 +278,7 @@
       <%= render "breakdown_card", title: "States", data: state_data, chart: :map, palette: palette, map_color: addresses_color, row_paths: state_paths %>
     <% end %>
     <% if school_district_data.any? %>
-      <%= render "breakdown_card", title: "School districts", data: school_district_data, chart: :bar, palette: palette, row_paths: school_district_paths %>
+      <%= render "breakdown_card", title: "School districts (via Address data)", data: school_district_data, chart: :bar, palette: palette, row_paths: school_district_paths %>
     <% end %>
     <%# Life experiences and settings come from registration answers; hide each
         card entirely when no one has answered those questions. %>
