@@ -1108,6 +1108,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_135946) do
     t.index ["organization_user_id"], name: "index_monthly_reports_on_organization_user_id"
   end
 
+  create_table "notification_compositions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.string "cta_label"
+    t.string "cta_url"
+    t.bigint "event_id"
+    t.text "grey_box_text"
+    t.string "kind", null: false
+    t.string "name"
+    t.json "recipient_added_ids"
+    t.json "recipient_excluded_ids"
+    t.json "recipient_segments"
+    t.string "scope_type", default: "general", null: false
+    t.string "subject"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["event_id"], name: "index_notification_compositions_on_event_id"
+    t.index ["user_id"], name: "index_notification_compositions_on_user_id"
+  end
+
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.boolean "bulk", default: false, null: false
     t.string "channel", default: "autoemail", null: false
