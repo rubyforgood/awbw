@@ -343,7 +343,9 @@ class EventRegistration < ApplicationRecord
   end
 
   def scholarship?
-    scholarships.exists?
+    # any? (not exists?) so a preloaded :scholarships association is reused
+    # instead of firing a per-row query on the registrants roster.
+    scholarships.any?
   end
 
   # Noun phrase distinguishing a scholarship-requested registration from a

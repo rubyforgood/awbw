@@ -90,8 +90,13 @@ class EventsController < ApplicationController
   def registrants
     authorize! @event, to: :registrants?
     @event = @event.decorate
+    # contact_methods (phone) and affiliations (org names) are read only by the
+    # CSV export, so skip them on the HTML roster to avoid eager-loading data the
+    # page never uses (Bullet: AVOID eager loading).
+    registrant_includes = [ :user, { avatar_attachment: :blob } ]
+    registrant_includes += [ :contact_methods, { affiliations: :organization } ] if request.format.csv?
     scope = @event.event_registrations
-      .includes(:comments, :organizations, :allocations, :scholarships, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: [ :user, :contact_methods, { avatar_attachment: :blob }, { affiliations: :organization } ])
+      .includes(:comments, :organizations, :allocations, :scholarships, { continuing_education_registrations: [ :professional_license, :allocations ] }, registrant: registrant_includes)
       .joins(:registrant)
     scope = scope.keyword(params[:keyword]) if params[:keyword].present?
     scope = scope.payment_status(params[:payment_status]) if params[:payment_status].present?
