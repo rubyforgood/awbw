@@ -45,6 +45,9 @@ class Notification < ApplicationRecord
     form_link_request
 
     manual_log
+
+    bulk_email
+    bulk_email_fyi
   ].freeze
 
   # Channels for a manually logged communication. "autoemail" is the default
