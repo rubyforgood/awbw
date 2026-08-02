@@ -364,6 +364,26 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
+  describe "#background_summary" do
+    it "leads with the organization type" do
+      org = create(:organization, agency_type: "501c3/nonprofit")
+      expect(org.decorate.background_summary).to include("501c3/nonprofit")
+    end
+
+    it "shows the specify-text for an 'Other' type" do
+      org = create(:organization, agency_type: Organization::AGENCY_TYPE_OTHER, agency_type_other: "Co-op")
+      expect(org.decorate.background_summary).to include("Co-op")
+    end
+
+    it "adds a pill for each filled optional field and omits blank ones" do
+      org = create(:organization, agency_type: "501c3/nonprofit", email: "hi@example.org",
+                   description: "About us", website_url: "", mission_vision_values: "")
+      summary = org.decorate.background_summary
+      expect(summary).to include("Email", "Description")
+      expect(summary).not_to include("Website", "Mission/vision/values")
+    end
+  end
+
   describe "#sectors_summary" do
     it "is 'None selected' with no sectors" do
       expect(create(:organization).decorate.sectors_summary).to eq("None selected")

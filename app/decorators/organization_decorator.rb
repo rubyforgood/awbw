@@ -68,6 +68,31 @@ class OrganizationDecorator < ApplicationDecorator
                   "aria-hidden": true)
   end
 
+  # Optional Background-info fields, mapped to the short pill label shown in the
+  # collapsed section summary when they're filled in.
+  BACKGROUND_FIELD_LABELS = {
+    email: "Email",
+    website_url: "Website",
+    description: "Description",
+    mission_vision_values: "Mission/vision/values"
+  }.freeze
+
+  # One-line summary for the collapsed Background Info section: the organization
+  # type (the specify-text when it's "Other"), followed by a pill for each filled
+  # optional field. FileMaker ID is intentionally left out — it's admin-only.
+  # HTML-safe.
+  def background_summary
+    type = agency_type_option.presence
+    type = "#{type}: #{object.agency_type_other}" if type == Organization::AGENCY_TYPE_OTHER && object.agency_type_other.present?
+
+    parts = [ h.content_tag(:span, type || "Type not set", class: "text-gray-600") ]
+    BACKGROUND_FIELD_LABELS.each do |attr, pill_label|
+      next if object.public_send(attr).blank?
+      parts << h.content_tag(:span, pill_label, class: "text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600")
+    end
+    h.safe_join(parts, " ")
+  end
+
   def detail(length: nil)
     length ? description&.truncate(length) : description
   end
