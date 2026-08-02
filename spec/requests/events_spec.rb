@@ -1613,6 +1613,16 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Bulk payments")
         expect(response.body).to include(bulk_payments_event_path(event))
       end
+
+      it "renders a Forms menu with a Manage forms link to the edit form-settings section" do
+        create(:event_form, event: event, form: create(:form), role: "registration")
+
+        get dashboard_event_path(event)
+
+        expect(response.body).to include("Forms")
+        expect(response.body).to include("Manage forms")
+        expect(response.body).to include(edit_event_path(event, anchor: "registration_form_section"))
+      end
     end
 
     context "as non-admin non-owner" do

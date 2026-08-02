@@ -6,6 +6,15 @@
     <%= render "events/subnav", event: @event, current: :dashboard %>
   </div>
 
+  <%# Forms dropdown — sits top-right below the sub-nav, holding the public form
+      links, the sample-ticket preview, and "Manage forms" (the Edit-event form
+      settings section). %>
+  <% if allowed_to?(:edit?, @event) %>
+    <div class="flex justify-end mb-6">
+      <%= render "form_actions_menu", button_label: "Forms", manage_label: "Manage forms", sample_return_to: "dashboard" %>
+    </div>
+  <% end %>
+
   <%# Centered title block %>
   <div class="text-center mb-8">
     <%= link_to @event.decorate.compact_label, edit_event_path(@event), title: @event.title, class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
@@ -18,43 +27,6 @@
       <i class="fa-solid fa-chart-simple text-blue-600"></i>
       Dashboard
     </h1>
-  </div>
-
-  <%# Quick links: registration forms and bulk payment. Each form link is gated by
-      its event setting — registration on an associated registration form, scholarship
-      on that form plus the "Enable scholarship application" checkbox (which is what
-      creates the scholarship event_form). The scholarship link points at the public
-      registration page, so it also needs the registration form or it dead-ends there.
-      Bulk payment is gated on the event having a bulk payment form.
-      Links open in a new tab. %>
-  <% link_base = "inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm font-medium shadow-sm transition-colors" %>
-  <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
-    <% if @event.event_forms.registration.exists? %>
-      <%= link_to new_event_public_registration_path(@event), target: "_blank", rel: "noopener noreferrer",
-            class: "#{link_base} #{DomainTheme.border_class_for(:events, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:events, intensity: 300)} hover:bg-gray-50" do %>
-        <i class="fa-solid fa-clipboard-list <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
-        Public registration form
-        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
-      <% end %>
-    <% end %>
-
-    <% if @event.event_forms.registration.exists? && @event.scholarship_form %>
-      <%= link_to new_event_public_registration_path(@event, scholarship_requested: true), target: "_blank", rel: "noopener noreferrer",
-            class: "#{link_base} #{DomainTheme.border_class_for(:scholarships, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:scholarships, intensity: 300)} hover:bg-gray-50" do %>
-        <i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>"></i>
-        Scholarship form
-        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
-      <% end %>
-    <% end %>
-
-    <% if @event.bulk_payment_form %>
-      <%= link_to new_event_bulk_payment_path(@event), target: "_blank", rel: "noopener noreferrer",
-            class: "#{link_base} #{DomainTheme.border_class_for(:payments, intensity: 200)} text-gray-700 hover:#{DomainTheme.border_class_for(:payments, intensity: 300)} hover:bg-gray-50" do %>
-        <i class="fa-solid fa-money-check-dollar <%= DomainTheme.text_class_for(:payments, intensity: 600) %>"></i>
-        Bulk payment form
-        <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400"></i>
-      <% end %>
-    <% end %>
   </div>
 
   <%# Money cards (paid events only) — shown first %>

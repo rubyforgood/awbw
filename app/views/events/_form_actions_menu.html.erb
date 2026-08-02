@@ -1,3 +1,6 @@
+<% button_label = local_assigns.fetch(:button_label, "Form actions") %>
+<% manage_label = local_assigns.fetch(:manage_label, "Change form settings") %>
+<% sample_return_to = local_assigns.fetch(:sample_return_to, "registrants") %>
 <% dropdown_id = "form-actions-menu-#{SecureRandom.hex(4)}" %>
 <% item_class = "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
 <div data-controller="dropdown" class="relative">
@@ -5,7 +8,7 @@
           data-action="dropdown#toggle"
           data-dropdown-payload-param='[{"<%= dropdown_id %>":"hidden"}]'
           class="btn btn-utility-outline">
-    <span>Form actions</span>
+    <span><%= button_label %></span>
     <i class="fa-solid fa-chevron-down w-3 h-3 text-gray-400"></i>
   </button>
 
@@ -23,11 +26,11 @@
         <%= link_to "Bulk payment form", new_event_bulk_payment_path(@event), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
       <% end %>
       <div class="my-1 border-t border-gray-100"></div>
-      <%= link_to "Change form settings", edit_event_path(@event, anchor: "registration_form_section"), class: item_class %>
+      <%= link_to manage_label, edit_event_path(@event, anchor: "registration_form_section"), class: item_class %>
     <% else %>
       <%= link_to "Enable forms", edit_event_path(@event, anchor: "registration_form_section"), class: item_class %>
     <% end %>
     <div class="my-1 border-t border-gray-100"></div>
-    <%= link_to "Sample ticket", sample_ticket_event_path(@event, return_to: "registrants"), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
+    <%= link_to "Sample ticket", sample_ticket_event_path(@event, return_to: sample_return_to), class: item_class, target: "_blank", rel: "noopener noreferrer" %>
   </div>
 </div>
