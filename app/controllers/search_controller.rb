@@ -46,8 +46,8 @@ class SearchController < ApplicationController
     query = params[:q].to_s.strip
     return [] if query.blank?
 
-    records = authorized_scope(Person.remote_search(query)).limit(25).to_a +
-      authorized_scope(Organization.remote_search(query)).limit(25).to_a
+    records = authorized_scope(Organization.remote_search(query)).limit(25).to_a +
+      authorized_scope(Person.remote_search(query)).limit(25).to_a
 
     records.map(&:compound_search_label)
   end

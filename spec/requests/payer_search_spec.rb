@@ -26,6 +26,13 @@ RSpec.describe "Payer search (combined people + organizations)", type: :request 
       expect(resolved).to include(organization)
     end
 
+    it "lists organizations before people" do
+      get "/search/person_or_organization", params: { q: "Searchable" }
+
+      kinds = response.parsed_body.map { |row| row["label"].split(" · ").last }
+      expect(kinds.index("Organization")).to be < kinds.index("Person")
+    end
+
     it "returns an empty array for a blank query" do
       get "/search/person_or_organization", params: { q: "" }
 
