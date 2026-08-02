@@ -150,7 +150,7 @@
           <% show_sectors = @person.profile_show_sectors? %>
           <% primary_age_groups = @person.primary_age_groups.to_a %>
           <% additional_age_groups = @person.additional_age_groups.to_a %>
-          <% show_age = primary_age_groups.any? || additional_age_groups.any? %>
+          <% show_age = @person.profile_show_age_ranges? && (primary_age_groups.any? || additional_age_groups.any?) %>
           <% if show_sectors || show_age %>
             <div class="md:col-span-2 p-3">
               <div class="flex gap-4 items-start">

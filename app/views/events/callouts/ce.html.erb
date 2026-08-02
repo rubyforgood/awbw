@@ -34,12 +34,7 @@
     %>
     <% if ce_registration && allowed_to?(:edit?, ce_registration) && !sample_preview? %>
       <div class="mb-4 flex justify-end">
-        <%= link_to edit_continuing_education_registration_path(ce_registration), target: "_blank", rel: "noopener",
-              class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
-          <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
-          Edit CE registration
-          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-        <% end %>
+        <%= render "events/callouts/admin_edit_link", path: edit_continuing_education_registration_path(ce_registration), label: "Edit CE registration" %>
       </div>
     <% end %>
     <%= turbo_frame_tag "license_section" do %>
