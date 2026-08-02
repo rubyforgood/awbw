@@ -26,18 +26,28 @@ RSpec.describe "Payer search (combined people + organizations)", type: :request 
       expect(resolved).to include(organization)
     end
 
-    it "lists organizations before people" do
-      get "/search/person_or_organization", params: { q: "Searchable" }
-
-      kinds = response.parsed_body.map { |row| row["label"].split(" · ").last }
-      expect(kinds.index("Organization")).to be < kinds.index("Person")
-    end
-
     it "returns an empty array for a blank query" do
       get "/search/person_or_organization", params: { q: "" }
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to eq([])
+    end
+  end
+
+  # Each compound endpoint searches the same two tables and differs only in
+  # order; the returned kinds must follow the class order declared in the
+  # controller (payer picker: people first; donor picker: organizations first).
+  describe "result ordering follows SearchController::COMPOUND_MODELS" do
+    let!(:person) { create(:person, first_name: "Searchable", last_name: "Payer") }
+    let!(:organization) { create(:organization, name: "Searchable Payer Org") }
+
+    SearchController::COMPOUND_MODELS.each do |model_param, classes|
+      it "lists #{classes.map(&:name).join(', then ')} for /search/#{model_param}" do
+        get "/search/#{model_param}", params: { q: "Searchable" }
+
+        kinds = response.parsed_body.map { |row| row["label"].split(" · ").last }.uniq
+        expect(kinds).to eq(classes.map { |klass| klass.model_name.human })
+      end
     end
   end
 end
