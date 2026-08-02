@@ -112,10 +112,16 @@ class OrganizationDecorator < ApplicationDecorator
     active: :org_active, formerly_active: :org_formerly_active, never_active: :org_never_active
   }.freeze
 
-  # The org's program-status bucket (:active / :formerly_active / :never_active),
-  # collapsing the stored six-value organization_status.
+  # The org's program-status bucket (:active / :formerly_active / :never_active).
+  # Derived from facilitator affiliations when the org has any (an active one =>
+  # :active, otherwise :formerly_active); only when the org has NO facilitator
+  # affiliations does it fall back to the stored organization_status (so a manual
+  # "Active" backs it into :active, and Pending/Suspended keep their buckets).
   def organization_status_bucket
-    OrganizationStatus.program_bucket(object.organization_status&.name)
+    facilitators = object.affiliations.select(&:facilitator?)
+    return OrganizationStatus.program_bucket(object.organization_status&.name) if facilitators.none?
+
+    facilitators.any?(&:active?) ? :active : :formerly_active
   end
 
   def organization_status_label

@@ -287,6 +287,29 @@ RSpec.describe Organization do
     it "combines formerly + never" do
       expect(Organization.program_status("formerly_or_never")).to contain_exactly(inactive, suspended, pending, unknown, no_status)
     end
+
+    context "when the org has facilitator affiliations (they win over stored status)" do
+      let!(:active_fac_org) do
+        create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Suspended")).tap do |o|
+          create(:affiliation, organization: o, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+        end
+      end
+      let!(:lapsed_fac_org) do
+        create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active")).tap do |o|
+          create(:affiliation, organization: o, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+        end
+      end
+
+      it "buckets an active facilitator as active, regardless of the stored status" do
+        expect(Organization.program_status("active")).to include(active_fac_org)
+        expect(Organization.program_status("active")).not_to include(lapsed_fac_org)
+      end
+
+      it "buckets only-lapsed facilitators as formerly_active, regardless of the stored status" do
+        expect(Organization.program_status("formerly_active")).to include(lapsed_fac_org)
+        expect(Organization.program_status("formerly_active")).not_to include(active_fac_org)
+      end
+    end
   end
 
   describe "search_by_params sector and age-group filters" do

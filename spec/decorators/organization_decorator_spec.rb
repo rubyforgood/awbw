@@ -58,6 +58,20 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
+  describe "#organization_status_bucket (facilitator affiliations win over stored status)" do
+    it "is :active for an active facilitator affiliation even when stored status is Suspended" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Suspended"))
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.year.ago, end_date: nil)
+      expect(org.reload.decorate.organization_status_bucket).to eq(:active)
+    end
+
+    it "is :formerly_active for only-lapsed facilitator affiliations even when stored status is Active" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
+      expect(org.reload.decorate.organization_status_bucket).to eq(:formerly_active)
+    end
+  end
+
   describe "#organization_status_chip" do
     it "renders a pill with the bucketed label and its status color" do
       org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Inactive"))

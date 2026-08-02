@@ -108,15 +108,25 @@ class Organization < ApplicationRecord
   # Index filter over the stored organization_status, bucketed for display:
   # "never_active" covers stored "Unknown" and orgs with no status at all;
   # "formerly_or_never" is either of the two non-active buckets.
+  # Program status filter: facilitator affiliations win — an active facilitator
+  # affiliation => active, facilitator affiliations but none active => formerly
+  # active. Orgs with NO facilitator affiliations fall back to the stored
+  # organization_status bucket (a missing status counts as never active).
   scope :program_status, ->(bucket) {
-    in_bucket = ->(b) { where(organization_status_id: OrganizationStatus.where(name: OrganizationStatus.names_for_bucket(b)).select(:id)) }
-    # never_active also covers orgs with no stored status at all.
-    never = -> { in_bucket.call(:never_active).or(where(organization_status_id: nil)) }
+    fac_ids = Affiliation.facilitators.select(:organization_id)
+    active_fac_ids = Affiliation.facilitators.active.select(:organization_id)
+    # Orgs with no facilitator affiliations whose stored status is in the bucket.
+    stored = ->(b) { where.not(id: fac_ids).where(organization_status_id: OrganizationStatus.where(name: OrganizationStatus.names_for_bucket(b)).select(:id)) }
+    stored_never = -> {
+      never_ids = OrganizationStatus.where(name: OrganizationStatus.names_for_bucket(:never_active)).pluck(:id)
+      where.not(id: fac_ids).where(organization_status_id: never_ids + [ nil ])
+    }
+    formerly = -> { where(id: fac_ids).where.not(id: active_fac_ids).or(stored.call(:formerly_active)) }
     case bucket.to_s
-    when "active"            then in_bucket.call(:active)
-    when "formerly_active"   then in_bucket.call(:formerly_active)
-    when "never_active"      then never.call
-    when "formerly_or_never" then in_bucket.call(:formerly_active).or(never.call)
+    when "active"            then where(id: active_fac_ids).or(stored.call(:active))
+    when "formerly_active"   then formerly.call
+    when "never_active"      then stored_never.call
+    when "formerly_or_never" then formerly.call.or(stored_never.call)
     else all
     end
   }
