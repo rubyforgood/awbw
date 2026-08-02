@@ -109,13 +109,14 @@ class Organization < ApplicationRecord
   # "never_active" covers stored "Unknown" and orgs with no status at all;
   # "formerly_or_never" is either of the two non-active buckets.
   scope :program_status, ->(bucket) {
-    by_name = ->(name) { where(organization_status_id: OrganizationStatus.where(name: name).select(:id)) }
-    never = -> { by_name.call("Unknown").or(where(organization_status_id: nil)) }
+    in_bucket = ->(b) { where(organization_status_id: OrganizationStatus.where(name: OrganizationStatus.names_for_bucket(b)).select(:id)) }
+    # never_active also covers orgs with no stored status at all.
+    never = -> { in_bucket.call(:never_active).or(where(organization_status_id: nil)) }
     case bucket.to_s
-    when "active"            then by_name.call("Active")
-    when "formerly_active"   then by_name.call("Formerly active")
+    when "active"            then in_bucket.call(:active)
+    when "formerly_active"   then in_bucket.call(:formerly_active)
     when "never_active"      then never.call
-    when "formerly_or_never" then by_name.call("Formerly active").or(never.call)
+    when "formerly_or_never" then in_bucket.call(:formerly_active).or(never.call)
     else all
     end
   }

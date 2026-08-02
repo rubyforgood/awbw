@@ -40,14 +40,15 @@ RSpec.describe OrganizationDecorator do
   end
 
   describe "#organization_status_label" do
-    it "returns the stored status name" do
-      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
-      expect(org.decorate.organization_status_label).to eq("Active")
-    end
-
-    it "renders Unknown as 'Never active'" do
-      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Unknown"))
-      expect(org.decorate.organization_status_label).to eq("Never active")
+    {
+      "Active" => "Active", "Reinstate" => "Active",
+      "Inactive" => "Formerly active", "Suspended" => "Formerly active",
+      "Pending" => "Never active", "Unknown" => "Never active"
+    }.each do |stored, label|
+      it "collapses stored '#{stored}' to '#{label}'" do
+        org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: stored))
+        expect(org.decorate.organization_status_label).to eq(label)
+      end
     end
 
     it "renders a missing status as 'Never active'" do
@@ -58,8 +59,8 @@ RSpec.describe OrganizationDecorator do
   end
 
   describe "#organization_status_chip" do
-    it "renders a pill with the label and its status color" do
-      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Formerly active"))
+    it "renders a pill with the bucketed label and its status color" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Inactive"))
       chip = org.decorate.organization_status_chip
       expect(Capybara.string(chip)).to have_css("span", text: "Formerly active")
       expect(chip).to include("orange")
@@ -75,7 +76,7 @@ RSpec.describe OrganizationDecorator do
     end
 
     it "falls back to the status label (orange) when there are no facilitator years" do
-      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Formerly active"))
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Inactive"))
       chip = org.decorate.program_since_chip("")
       expect(Capybara.string(chip)).to have_css("span", text: "Formerly active")
       expect(chip).to include("orange")

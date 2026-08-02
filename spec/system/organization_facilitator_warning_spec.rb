@@ -16,7 +16,7 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
 
   def visit_and_wait(path)
     visit path
-    expect(page).to have_css("[data-affiliation-dates-ready]", wait: 10)
+    expect(page).to have_css("[data-affiliation-facilitator-warning-ready]", wait: 10)
   end
 
   def set_date_input(input, value)
@@ -27,8 +27,8 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
   end
 
   def row_for(title)
-    all("[data-affiliation-dates-target='affiliationsContainer'] .nested-fields").find { |f|
-      f.find("input[name*='title']").value.include?(title)
+    all("#affiliations .nested-fields").find { |f|
+      f.find("textarea[name*='title']").value.include?(title)
     }
   end
 

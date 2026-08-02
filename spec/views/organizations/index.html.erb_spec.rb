@@ -8,8 +8,8 @@ RSpec.describe "organizations/index", type: :view do
   let!(:organization2) { create(:organization, name: "Organization 2") }
 
   let!(:organization_status1) { create(:organization_status, name: "Active") }
-  let!(:organization_status2) { create(:organization_status, name: "Formerly active") }
-  let!(:organization_status3) { create(:organization_status, name: "Unknown") }
+  let!(:organization_status2) { create(:organization_status, name: "Suspended") }
+  let!(:organization_status3) { create(:organization_status, name: "Inactive") }
 
   before(:each) do
     assign(:organizations, paginated([ organization1, organization2 ]))

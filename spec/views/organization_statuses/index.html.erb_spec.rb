@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe "organization_statuses/index", type: :view do
   let(:admin) { create(:user, :admin) }
   let(:organization_status1) { create(:organization_status, name: "Active") }
-  let(:organization_status2) { create(:organization_status, name: "Formerly active") }
+  let(:organization_status2) { create(:organization_status, name: "Suspended") }
 
   before(:each) do
     assign(:organization_statuses, paginated([ organization_status1, organization_status2 ]))

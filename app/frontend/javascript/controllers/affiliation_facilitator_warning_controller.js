@@ -17,10 +17,13 @@ export default class extends Controller {
     this.handleSubmit = (event) => this.guardSubmit(event);
     // Capture phase so this runs before other submit listeners (e.g. dirty-form).
     this.element.addEventListener("submit", this.handleSubmit, true);
+    // Signal that snapshots are captured so tests can wait before interacting.
+    this.element.dataset.affiliationFacilitatorWarningReady = "";
   }
 
   disconnect() {
     this.element.removeEventListener("submit", this.handleSubmit, true);
+    delete this.element.dataset.affiliationFacilitatorWarningReady;
   }
 
   guardSubmit(event) {

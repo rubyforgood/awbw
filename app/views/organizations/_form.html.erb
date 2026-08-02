@@ -160,7 +160,7 @@
       </div>
     <% end %>
 
-    <% facilitator_status_name = f.object.affiliations.facilitators.active.exists? ? "Active" : "Formerly active" %>
+    <% facilitator_status_name = f.object.affiliations.facilitators.active.exists? ? "Active" : "Inactive" %>
     <% status_matches_affiliations = f.object.organization_status&.name == facilitator_status_name %>
     <% show_status_select = allowed_to?(:manage?, Organization) &&
          (params[:admin] || (f.object.persisted? && !status_matches_affiliations)) %>

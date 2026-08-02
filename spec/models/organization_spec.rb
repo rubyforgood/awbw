@@ -265,24 +265,27 @@ RSpec.describe Organization do
 
   describe ".program_status scope" do
     let!(:active) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active")) }
-    let!(:formerly) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Formerly active")) }
+    let!(:reinstate) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Reinstate")) }
+    let!(:inactive) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Inactive")) }
+    let!(:suspended) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Suspended")) }
+    let!(:pending) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Pending")) }
     let!(:unknown) { create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Unknown")) }
     let!(:no_status) { create(:organization).tap { |o| o.update_columns(organization_status_id: nil) } }
 
-    it "buckets active" do
-      expect(Organization.program_status("active")).to contain_exactly(active)
+    it "buckets Active + Reinstate as active" do
+      expect(Organization.program_status("active")).to contain_exactly(active, reinstate)
     end
 
-    it "buckets formerly_active" do
-      expect(Organization.program_status("formerly_active")).to contain_exactly(formerly)
+    it "buckets Inactive + Suspended as formerly_active" do
+      expect(Organization.program_status("formerly_active")).to contain_exactly(inactive, suspended)
     end
 
-    it "treats Unknown and no-status as never_active" do
-      expect(Organization.program_status("never_active")).to contain_exactly(unknown, no_status)
+    it "buckets Pending, Unknown, and no-status as never_active" do
+      expect(Organization.program_status("never_active")).to contain_exactly(pending, unknown, no_status)
     end
 
     it "combines formerly + never" do
-      expect(Organization.program_status("formerly_or_never")).to contain_exactly(formerly, unknown, no_status)
+      expect(Organization.program_status("formerly_or_never")).to contain_exactly(inactive, suspended, pending, unknown, no_status)
     end
   end
 

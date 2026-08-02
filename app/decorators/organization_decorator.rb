@@ -105,20 +105,26 @@ class OrganizationDecorator < ApplicationDecorator
     AffiliationPeriods.label(affiliations.select(&:facilitator?)) || ""
   end
 
-  # The org's stored program status (organization_status), with "Unknown" — and a
-  # missing status — displayed as "Never active".
-  def organization_status_label
-    name = object.organization_status&.name
-    name.blank? || name == "Unknown" ? "Never active" : name
+  ORG_STATUS_BUCKET_LABELS = {
+    active: "Active", formerly_active: "Formerly active", never_active: "Never active"
+  }.freeze
+  ORG_STATUS_BUCKET_THEMES = {
+    active: :org_active, formerly_active: :org_formerly_active, never_active: :org_never_active
+  }.freeze
+
+  # The org's program-status bucket (:active / :formerly_active / :never_active),
+  # collapsing the stored six-value organization_status.
+  def organization_status_bucket
+    OrganizationStatus.program_bucket(object.organization_status&.name)
   end
 
-  # Pill classes for the org-wide status chip, keyed off the stored status name.
+  def organization_status_label
+    ORG_STATUS_BUCKET_LABELS.fetch(organization_status_bucket)
+  end
+
+  # Pill classes for the org-wide status chip, keyed off the program-status bucket.
   def organization_status_classes
-    theme_key = case object.organization_status&.name
-    when "Active" then :org_active
-    when "Formerly active" then :org_formerly_active
-    else :org_never_active
-    end
+    theme_key = ORG_STATUS_BUCKET_THEMES.fetch(organization_status_bucket)
     [
       DomainTheme.bg_class_for(theme_key, intensity: 100),
       DomainTheme.text_class_for(theme_key, intensity: 700),

@@ -198,29 +198,29 @@ class Affiliation < ApplicationRecord
   end
 
   def deactivate_organization_if_no_active_people
-    formerly_active_status = OrganizationStatus.find_by(name: "Formerly active")
-    return unless formerly_active_status
-    return if organization.organization_status_id == formerly_active_status.id
+    inactive_status = OrganizationStatus.find_by(name: "Inactive")
+    return unless inactive_status
+    return if organization.organization_status_id == inactive_status.id
 
-    organization.update_column(:organization_status_id, formerly_active_status.id)
+    organization.update_column(:organization_status_id, inactive_status.id)
 
     Ahoy::Tracker.new(user: Current.user).track(
       "autochange.organization",
       resource_type: "Organization",
       resource_id: organization.id,
       resource_title: organization.name,
-      change: "status_set_to_formerly_active",
+      change: "status_set_to_inactive",
       reason: "no_active_affiliations"
     )
   end
 
-  # Only flip back from "Formerly active" — the status the deactivation callback
-  # sets. Leave Unknown (and Active) untouched.
+  # Only flip back from "Inactive" — the status the deactivation callback sets.
+  # Leave Pending/Reinstate/Unknown (and Active) untouched.
   def reactivate_organization_if_inactive
-    formerly_active_status = OrganizationStatus.find_by(name: "Formerly active")
+    inactive_status = OrganizationStatus.find_by(name: "Inactive")
     active_status = OrganizationStatus.find_by(name: "Active")
-    return unless formerly_active_status && active_status
-    return unless organization.organization_status_id == formerly_active_status.id
+    return unless inactive_status && active_status
+    return unless organization.organization_status_id == inactive_status.id
 
     organization.update_column(:organization_status_id, active_status.id)
 

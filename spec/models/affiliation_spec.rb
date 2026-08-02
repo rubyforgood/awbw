@@ -154,19 +154,19 @@ RSpec.describe Affiliation, type: :model do
 
   describe '#sync_organization_status_with_affiliations' do
     let!(:active_status) { OrganizationStatus.find_or_create_by!(name: "Active") }
-    let!(:formerly_active_status) { OrganizationStatus.find_or_create_by!(name: "Formerly active") }
+    let!(:inactive_status) { OrganizationStatus.find_or_create_by!(name: "Inactive") }
 
-    it 'sets the organization to Formerly active when its last active affiliation goes inactive' do
+    it 'sets the organization to Inactive when its last active affiliation goes inactive' do
       org = create(:organization, organization_status: active_status)
       affiliation = create(:affiliation, organization: org, inactive: false, end_date: nil)
 
       affiliation.update!(inactive: true)
 
-      expect(org.reload.organization_status).to eq(formerly_active_status)
+      expect(org.reload.organization_status).to eq(inactive_status)
     end
 
-    it 'sets a Formerly active organization back to Active when it regains an active affiliation' do
-      org = create(:organization, organization_status: formerly_active_status)
+    it 'sets an Inactive organization back to Active when it regains an active affiliation' do
+      org = create(:organization, organization_status: inactive_status)
 
       create(:affiliation, organization: org, inactive: false, end_date: nil)
 
@@ -177,16 +177,18 @@ RSpec.describe Affiliation, type: :model do
       org = create(:organization, organization_status: active_status)
       create(:affiliation, organization: org, title: "Volunteer", inactive: false, end_date: nil)
 
-      expect(org.reload.organization_status).to eq(formerly_active_status)
+      expect(org.reload.organization_status).to eq(inactive_status)
     end
 
-    it "leaves an Unknown organization untouched when it regains an active affiliation" do
-      status = OrganizationStatus.find_or_create_by!(name: "Unknown")
-      org = create(:organization, organization_status: status)
+    %w[Pending Reinstate Unknown].each do |status_name|
+      it "leaves a #{status_name} organization untouched when it regains an active affiliation" do
+        status = OrganizationStatus.find_or_create_by!(name: status_name)
+        org = create(:organization, organization_status: status)
 
-      create(:affiliation, organization: org, inactive: false, end_date: nil)
+        create(:affiliation, organization: org, inactive: false, end_date: nil)
 
-      expect(org.reload.organization_status).to eq(status)
+        expect(org.reload.organization_status).to eq(status)
+      end
     end
   end
 
