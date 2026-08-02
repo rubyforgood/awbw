@@ -60,7 +60,7 @@
           a new org or when there are errors. %>
       <% sectors_open = !f.object.persisted? || f.object.errors.any? %>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-        <details class="form-group space-y-4 group"<%= " open".html_safe if sectors_open %>>
+        <details class="form-group group"<%= " open".html_safe if sectors_open %>>
           <%# Title is a fixed column; the names flow in the flex-1 column and wrap
               indented under themselves (hanging indent), chevron trailing. %>
           <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
@@ -89,7 +89,7 @@
 
         <!-- Windows audience -->
         <% windows_open = !f.object.persisted? || f.object.errors.any? %>
-        <details class="form-group space-y-4 group"<%= " open".html_safe if windows_open %>>
+        <details class="form-group group"<%= " open".html_safe if windows_open %>>
           <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
             <span class="font-semibold">Windows audience:</span>
             <span class="text-sm text-gray-500"><%= f.object.windows_type&.name.presence || "None selected" %></span>
@@ -156,14 +156,14 @@
 <%# Collapsible like Workshop settings above. Stays open on a new org (required
       fields) or when the form has errors so nothing hides behind the summary. %>
   <% background_open = !@organization.persisted? || @organization.errors.any? %>
-  <details class="form-group space-y-4 mb-8 group"<%= " open".html_safe if background_open %>>
+  <details class="form-group mb-8 group"<%= " open".html_safe if background_open %>>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Background Info:</span>
       <span class="text-sm text-gray-500"><%= f.object.decorate.background_summary %></span>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
     </summary>
 
-    <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+<div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm mt-2">
 
   <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
     <div class="flex flex-col">
@@ -299,14 +299,14 @@
      else
        pluralize(org_addresses.size, "address")
      end %>
-<details id="addresses" class="form-group space-y-4 mb-8 scroll-mt-20 group/section"<%= " open".html_safe if addresses_open %>>
+  <details id="addresses" class="form-group mb-8 scroll-mt-20 group/section"<%= " open".html_safe if addresses_open %>>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Addresses:</span>
       <span class="text-sm text-gray-500"><%= address_summary %></span>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
     </summary>
 
-    <div class="mb-4 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm">
+<div class="rounded-lg border border-gray-200 bg-yellow-50 p-4 mb-4 shadow-sm mt-2">
       <div class="flex flex-wrap items-center gap-4 p-3">
         <%= f.simple_fields_for :addresses do |sfi| %>
           <%= render "organizations/address_fields", f: sfi %>
@@ -325,7 +325,7 @@
     </div>
   </details>
 
-<details id="affiliations" class="form-group space-y-4 mb-8 scroll-mt-20 group/section" open>
+  <details id="affiliations" class="form-group mb-8 scroll-mt-20 group/section" open>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Affiliations</span>
       <% affiliation_count = f.object.affiliations.reject(&:marked_for_destruction?).size %>
