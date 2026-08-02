@@ -1693,6 +1693,7 @@ RSpec.describe "Events", type: :request do
       it "renders the attendance breakdown with per-status drill-down links" do
         create(:event_registration, event: event, registrant: create(:person), status: "attended")
         create(:event_registration, event: event, registrant: create(:person), status: "no_show")
+        create(:event_registration, event: event, registrant: create(:person), status: "cancelled")
 
         get dashboard_event_path(event)
 
@@ -1700,8 +1701,10 @@ RSpec.describe "Events", type: :request do
         expect(page).to have_text("Attendance", normalize_ws: true)
         expect(page).to have_link(href: registrants_event_path(event, attendance_status: "attended"), visible: :all)
         expect(page).to have_link(href: registrants_event_path(event, attendance_status: "no_show"), visible: :all)
-        # attended + no_show recorded → 50% show rate.
-        expect(page).to have_text("50%", normalize_ws: true)
+        expect(page).to have_link(href: registrants_event_path(event, attendance_status: "cancelled"), visible: :all)
+        # 1 attended over 3 registrants (attended + registered + no-show; the
+        # cancellation is excluded) → 33%.
+        expect(page).to have_text("33%", normalize_ws: true)
       end
     end
 

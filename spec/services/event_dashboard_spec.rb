@@ -955,25 +955,31 @@ RSpec.describe EventDashboard do
         create(:event_registration, event: event, registrant: create(:person, first_name: "Ca"), status: "no_show")
         create(:event_registration, event: event, registrant: create(:person, first_name: "Da"), status: "registered")
         create(:event_registration, event: event, registrant: create(:person, first_name: "Ea"), status: "transferred_in")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Fa"), status: "cancelled")
       end
 
-      it "counts each attendance outcome" do
+      it "counts each attendance status" do
         expect(dashboard.attended_count).to eq(2)
         expect(dashboard.incomplete_attendance_count).to eq(1)
         expect(dashboard.no_show_count).to eq(1)
         expect(dashboard.attendance_pending_count).to eq(2)
+        expect(dashboard.cancelled_count).to eq(1)
       end
 
-      it "reports the recorded-outcome total and rate (only full attendance counts toward it)" do
+      it "rates full attendance over every registrant (active + no-shows, excluding cancellations)" do
         expect(dashboard.attendance_recorded?).to be(true)
         expect(dashboard.attendance_outcome_count).to eq(4)
-        expect(dashboard.attendance_rate).to eq(2.0 / 4)
+        # 5 active registrants (attended ×2, incomplete, registered, transferred_in)
+        # + 1 no-show; the cancellation is excluded.
+        expect(dashboard.expected_attendee_count).to eq(6)
+        expect(dashboard.attendance_rate).to eq(2.0 / 6)
       end
 
       it "lists the registrants behind each status" do
         expect(dashboard.attendance_registrants("attended").map(&:first_name)).to eq(%w[ Aa Ab ])
         expect(dashboard.attendance_registrants("no_show").map(&:first_name)).to eq(%w[ Ca ])
         expect(dashboard.attendance_registrants("registered", "transferred_in").map(&:first_name)).to eq(%w[ Da Ea ])
+        expect(dashboard.attendance_registrants("cancelled").map(&:first_name)).to eq(%w[ Fa ])
       end
     end
 

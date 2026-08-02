@@ -408,7 +408,7 @@
           <p class="break-words">
             <% if @dashboard.attendance_recorded? %>
               <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:event_registrations, intensity: 700) %> tabular-nums"><%= number_to_percentage(@dashboard.attendance_rate * 100, precision: 0) %></span>
-              <span class="text-xs text-gray-500">attended (<%= @dashboard.attended_count %> of <%= @dashboard.attendance_outcome_count %> recorded)</span>
+              <span class="text-xs text-gray-500">attended (<%= @dashboard.attended_count %> of <%= pluralize(@dashboard.expected_attendee_count, "registrant") %>)</span>
             <% else %>
               <span class="text-2xl sm:text-3xl font-bold text-gray-400 tabular-nums">—</span>
               <span class="text-xs text-gray-500">Not yet recorded</span>
@@ -438,6 +438,11 @@
               count: @dashboard.attendance_pending_count,
               registrants: @dashboard.attendance_registrants("registered", "transferred_in"),
               filter_path: registrants_event_path(@event, registrant_ids: @dashboard.attendance_registrants("registered", "transferred_in").map(&:id).join("-").presence || "0") %>
+        <%= render "attendance_stat_row", label: "Cancelled", icon: "fa-ban",
+              icon_color: @dashboard.cancelled_count.positive? ? "text-gray-500" : "text-gray-400",
+              count: @dashboard.cancelled_count,
+              registrants: @dashboard.attendance_registrants("cancelled"),
+              filter_path: registrants_event_path(@event, attendance_status: "cancelled") %>
       </div>
     </details>
   </div>

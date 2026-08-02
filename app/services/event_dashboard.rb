@@ -50,6 +50,10 @@ class EventDashboard
     registration_status_counts.fetch("no_show", 0)
   end
 
+  def cancelled_count
+    registration_status_counts.fetch("cancelled", 0)
+  end
+
   # Active registrations still awaiting an outcome — registered or transferred
   # in, but not yet marked attended / incomplete / no-show.
   def attendance_pending_count
@@ -57,10 +61,17 @@ class EventDashboard
       registration_status_counts.fetch("transferred_in", 0)
   end
 
-  # Registrations with an attendance outcome on record — the denominator for the
-  # attendance rate.
+  # Registrations with an attendance outcome on record (attended / incomplete /
+  # no-show).
   def attendance_outcome_count
     attended_count + incomplete_attendance_count + no_show_count
+  end
+
+  # Everyone expected at the event: active registrants (see #registrant_count)
+  # plus recorded no-shows. Cancellations and transfers out withdrew, so they're
+  # excluded. This is the denominator for the attendance rate.
+  def expected_attendee_count
+    registrant_count + no_show_count
   end
 
   # True once any attendance outcome has been recorded.
@@ -68,12 +79,14 @@ class EventDashboard
     attendance_outcome_count.positive?
   end
 
-  # Fraction (0.0–1.0) of recorded attendees who fully attended, or nil when no
-  # outcome has been recorded yet. Only a full attendance counts toward the rate —
-  # incomplete attendance and no-shows both count against it.
+  # Fraction (0.0–1.0) of everyone expected who fully attended, or nil when no
+  # outcome has been recorded yet. Only a full attendance counts in the
+  # numerator; the denominator is every registrant (#expected_attendee_count),
+  # so no-shows and not-yet-recorded registrants both pull the rate down.
   def attendance_rate
     return nil unless attendance_recorded?
-    attended_count.fdiv(attendance_outcome_count)
+    return nil if expected_attendee_count.zero?
+    attended_count.fdiv(expected_attendee_count)
   end
 
   # Registrants (Person records, name-sorted) with the given attendance
