@@ -176,10 +176,9 @@
     <% editable_sector_items = sectors_owner.sectorable_items_ordered.reject { |item| item.sector&.name == Sector::OTHER_SECTOR_NAME } %>
     <% sectors_open = !sectors_owner.persisted? || sectors_owner.errors.any? %>
     <details class="form-group flex flex-col flex-1 min-w-[20rem] group"<%= " open".html_safe if sectors_open %>>
-      <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
-        <span class="font-semibold">Sectors:</span>
-        <span class="text-sm text-gray-500"><%= sectors_owner.decorate.sectors_summary %></span>
-        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+      <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+        <span class="font-semibold shrink-0">Sectors:</span>
+        <span class="text-sm text-gray-500 flex-1 min-w-0"><%= sectors_owner.decorate.sectors_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
       </summary>
       <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm mt-2
                   flex flex-wrap items-center content-start gap-2 flex-1"
@@ -208,10 +207,9 @@
       <% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
       <% age_ranges_open = !age_owner.persisted? || age_owner.errors.any? %>
       <details class="form-group flex flex-col flex-1 min-w-[20rem] group"<%= " open".html_safe if age_ranges_open %>>
-        <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
-          <span class="font-semibold">Age ranges:</span>
-          <span class="text-sm text-gray-500"><%= age_owner.decorate.age_ranges_summary %></span>
-          <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+        <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+          <span class="font-semibold shrink-0">Age ranges:</span>
+          <span class="text-sm text-gray-500 flex-1 min-w-0"><%= age_owner.decorate.age_ranges_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
         </summary>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2
                     flex flex-wrap items-center content-start gap-2 flex-1"
@@ -424,7 +422,7 @@
         <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Bio present</span>
       <% end %>
       <% if f.object.shoutout_text.present? %>
-        <span class="admin-only bg-blue-100 text-blue-800 text-xs font-normal px-2 py-0.5 rounded-full">Shout-out present</span>
+        <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Shout-out present</span>
       <% end %>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
     </summary>
