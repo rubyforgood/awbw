@@ -156,8 +156,9 @@
       fields) or when the form has errors so nothing hides behind the summary. %>
   <% background_open = !@organization.persisted? || @organization.errors.any? %>
   <details class="form-group space-y-4 mb-8 group"<%= " open".html_safe if background_open %>>
-    <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
-      <span class="font-semibold">Background Info</span>
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-semibold">Background Info:</span>
+      <span class="text-sm text-gray-500"><%= f.object.decorate.background_summary %></span>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
     </summary>
 
