@@ -10,17 +10,13 @@
     <%= render "events/subnav", event: @event, current: :registrants %>
   </div>
 
-  <%# Title row: heading + registrant action controls %>
-  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-    <div>
-      <h1 class="text-2xl font-semibold text-gray-900">
-        Registrants (<%= @active_count %>)
-      </h1>
-      <p class="text-gray-600 mt-1">
-        <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
-      </p>
-    </div>
-    <div class="flex flex-wrap items-center gap-1">
+  <%# Title block — matches the dashboard/background/scholarships report pages:
+      event eyebrow over a text-3xl heading with an icon and a count subtitle,
+      with the registrant action controls pinned top-right so they share the
+      title's vertical band. On mobile they sit in their own right-aligned row
+      above the centered title to avoid overlap. %>
+  <div class="relative mb-6">
+    <div class="flex flex-wrap items-center justify-end gap-1 mb-4 sm:mb-0 sm:absolute sm:right-0 sm:top-0">
       <% if allowed_to?(:edit?, @event) %>
         <%= render "form_actions_menu" %>
       <% end %>
@@ -28,6 +24,18 @@
       <% if allowed_to?(:new?, EventRegistration) %>
         <%= link_to "Add registrant", new_event_registration_path(event_id: @event.id, return_to: "registrants"), class: "admin-only bg-blue-100 btn btn-primary-outline" %>
       <% end %>
+    </div>
+
+    <div class="text-center">
+      <%= link_to @event.decorate.compact_label, edit_event_path(@event), title: @event.title, class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
+      <% if @event.start_date.present? %>
+        <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
+      <% end %>
+      <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-users <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i>
+        Registrants
+      </h1>
+      <p class="text-gray-500 mt-2"><%= pluralize(@active_count, "person") %></p>
     </div>
   </div>
 

@@ -39,22 +39,26 @@
     <%= link_to "← Events", events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
     <%= render "events/subnav", event: @event, current: :background %>
   </div>
-  <div class="flex justify-end gap-3 mb-6 print:hidden">
-    <button onclick="window.print();" class="btn btn-utility-outline">
-      <i class="fa-solid fa-print"></i> Print
-    </button>
-  </div>
+  <%# Title block with the Print button pinned top-right so it shares the title's
+      vertical band instead of stacking above it. On mobile it sits in its own
+      right-aligned row above the centered title to avoid overlapping it. %>
+  <div class="relative mb-8">
+    <div class="flex justify-end gap-3 mb-4 sm:mb-0 sm:absolute sm:right-0 sm:top-0 print:hidden">
+      <button onclick="window.print();" class="btn btn-utility-outline">
+        <i class="fa-solid fa-print"></i> Print
+      </button>
+    </div>
 
-  <%# Title block %>
-  <div class="text-center mb-8">
-    <%= link_to @event.decorate.compact_label, edit_event_path(@event), title: @event.title, class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
-    <% if @event.start_date.present? %>
-      <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
-    <% end %>
-    <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
-      <i class="fa-solid fa-users-viewfinder text-blue-600"></i>
-      Get to know the registrants
-    </h1>
+    <div class="text-center">
+      <%= link_to @event.decorate.compact_label, edit_event_path(@event), title: @event.title, class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
+      <% if @event.start_date.present? %>
+        <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
+      <% end %>
+      <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-users-viewfinder text-blue-600"></i>
+        Get to know the registrants
+      </h1>
+    </div>
   </div>
 
   <%# ---- At-a-glance counts — one compact "stat bar" of metrics; each segment
