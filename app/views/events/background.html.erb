@@ -226,10 +226,13 @@
   <% program_status_paths = @dashboard.program_status_registrant_ids.to_h { |status, ids| [ status.to_s.titleize, registrants_event_path(@event, registrant_ids: ids.join("-")) ] } %>
   <%# States and countries use the addresses theme color (slate) for their map ramps. %>
   <% addresses_color = "#475569" %>
+  <%# On lg the three topic columns share row tracks via subgrid, so the primary
+      cards (row 1) line up in height with each other and the "all"/org cards
+      (row 2) line up with each other — across all three columns. %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
     <%# Col 1: sectors — primary on top, all sectors stacked below. %>
     <% if primary_sector_data.any? || sector_data.any? %>
-      <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-2">
         <% if primary_sector_data.any? %>
           <%= render "breakdown_card", title: "Primary sector", data: primary_sector_data, chart: :pie, palette: palette, row_paths: primary_sector_paths %>
         <% end %>
@@ -241,7 +244,7 @@
     <%# Col 2: age groups — primary on top, all age groups stacked below. Primary
         always shows (no-data box when empty); "All age groups" (primary +
         additional questions) appears only when someone answered either. %>
-    <div class="flex flex-col gap-6">
+    <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-2">
       <%= render "breakdown_card", title: "Primary age group", data: age_group_data, chart: :pie, palette: palette,
                                    empty_message: "No age group responses from registration answers yet.", row_paths: age_group_paths %>
       <% if all_age_group_data.any? %>
@@ -251,7 +254,7 @@
     <%# Col 3: organizations — program-status breakdown (new/ongoing/reinstated)
         charted on top, the full org list below. %>
     <% if org_data.any? %>
-      <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-2">
         <% if program_status_data.any? %>
           <%= render "breakdown_card", title: "Program status", data: program_status_data, chart: :pie, palette: program_status_palette, row_paths: program_status_paths %>
         <% end %>
