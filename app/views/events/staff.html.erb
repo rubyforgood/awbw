@@ -1,6 +1,10 @@
 <% content_for(:page_bg_class, "public") %>
 
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<%# Opt out of the layout's max-w-7xl cap to match the wider registrants page;
+    the wrapper restores the layout's gutters at a wider bound. %>
+<% content_for(:full_width, true) %>
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back link on the left; sub-nav (admins only) on the right %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
     <%= link_to "← Event", event_path(@event), class: "text-sm text-gray-500 hover:text-gray-700" %>
@@ -152,4 +156,5 @@
       None yet!
     </div>
   <% end %>
+</div>
 </div>
