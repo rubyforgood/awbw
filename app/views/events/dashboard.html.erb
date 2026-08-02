@@ -318,10 +318,10 @@
              [ "attended", "fa-circle-check", "text-green-600" ],
              [ "incomplete_attendance", "fa-circle-half-stroke", "text-amber-500" ],
              [ "no_show", "fa-circle-xmark", "text-red-500" ],
-             [ "registered", "fa-hourglass-half", nil ],
+             [ "cancelled", "fa-ban", nil ],
              [ "transferred_in", "fa-arrow-right-to-bracket", nil ],
              [ "transferred_out", "fa-arrow-right-from-bracket", nil ],
-             [ "cancelled", "fa-ban", nil ]
+             [ "registered", "fa-hourglass-half", nil ]
            ].each do |status, icon, active_color| %>
           <% count = @dashboard.attendance_count_for(status) %>
           <%= render "attendance_stat_row",
