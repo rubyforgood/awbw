@@ -41,24 +41,59 @@ RSpec.describe EventRegistration, type: :model do
       reg = create(:event_registration, status: "transferred_out")
       expect(reg).not_to be_active
     end
-
-    it "returns true for transferred_in status" do
-      reg = create(:event_registration, status: "transferred_in")
-      expect(reg).to be_active
-    end
   end
 
   describe ".active" do
     it "returns only registrations with active statuses" do
       active_reg = create(:event_registration, status: "registered")
-      transferred_in_reg = create(:event_registration, status: "transferred_in")
       cancelled_reg = create(:event_registration, status: "cancelled")
       no_show_reg = create(:event_registration, status: "no_show")
       transferred_out_reg = create(:event_registration, status: "transferred_out")
 
       results = EventRegistration.active
-      expect(results).to include(active_reg, transferred_in_reg)
+      expect(results).to include(active_reg)
       expect(results).not_to include(cancelled_reg, no_show_reg, transferred_out_reg)
+    end
+
+    it "includes a transferred-in registration, which keeps its own active status" do
+      source = create(:event_registration, status: "transferred_out")
+      incoming = create(:event_registration, status: "registered", transferred_from_registration: source)
+
+      expect(EventRegistration.active).to include(incoming)
+    end
+  end
+
+  describe "transfer trail" do
+    let(:source) { create(:event_registration, status: "transferred_out") }
+    let!(:incoming) { create(:event_registration, status: "registered", transferred_from_registration: source) }
+
+    it "links the incoming registration back to the one it came from" do
+      expect(incoming.transferred_from_registration).to eq(source)
+      expect(source.reload.transferred_to_registration).to eq(incoming)
+    end
+
+    it "identifies an in by the back-link, not by status" do
+      expect(incoming).to be_transferred_in
+      expect(incoming).not_to be_transferred_out
+      expect(create(:event_registration, status: "registered")).not_to be_transferred_in
+    end
+
+    it "identifies an out by its terminal status" do
+      expect(source).to be_transferred_out
+      expect(source).not_to be_transferred_in
+    end
+
+    it "reports a pending destination only while an out has no incoming record" do
+      pending = create(:event_registration, status: "transferred_out")
+      expect(pending).to be_transfer_destination_pending
+      expect(source).not_to be_transfer_destination_pending
+      expect(incoming).not_to be_transfer_destination_pending
+    end
+
+    it "nullifies the back-link if the source is destroyed" do
+      source.update_column(:status, "registered") # bypass the deletion guard for the test
+      source.destroy
+      expect(incoming.reload.transferred_from_registration_id).to be_nil
     end
   end
 
@@ -172,7 +207,9 @@ RSpec.describe EventRegistration, type: :model do
     it "returns true for a transferred-in registration with no allocations" do
       # Transferred-in is an ordinary active registration here; the source event's
       # transferred_out record preserves the transfer history.
-      expect(create(:event_registration, status: "transferred_in")).to be_deletable
+      source = create(:event_registration, status: "transferred_out")
+      incoming = create(:event_registration, status: "registered", transferred_from_registration: source)
+      expect(incoming).to be_deletable
     end
   end
 

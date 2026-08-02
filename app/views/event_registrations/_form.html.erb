@@ -17,7 +17,6 @@
            "incomplete_attendance" => "text-amber-600",
            "cancelled"             => "text-gray-500",
            "no_show"               => "text-red-600",
-           "transferred_in"        => "text-teal-600",
            "transferred_out"       => "text-purple-600"
          } %>
       <% status_icons = {
@@ -26,7 +25,6 @@
            "incomplete_attendance" => "fa-clock",
            "cancelled"             => "fa-ban",
            "no_show"               => "fa-circle-xmark",
-           "transferred_in"        => "fa-right-to-bracket",
            "transferred_out"       => "fa-right-from-bracket"
          } %>
       <% current_icon_color = status_icon_colors[f.object.status] || "text-gray-500" %>
@@ -104,6 +102,30 @@
                     data: { "attendance-status-target": "select", action: "attendance-status#update" },
                     "aria-label": "Registration status" %>
             </div>
+
+            <%# ---- Transfer trail (issue #1944) — link the paired registration so
+                the historical in/out relationship stays visible from either end. ---- %>
+            <% if f.object.transferred_out? %>
+              <% destination = f.object.transferred_to_registration %>
+              <% if destination %>
+                <p class="mt-1.5 text-xs text-purple-700">
+                  <i class="fa-solid fa-right-from-bracket"></i>
+                  Transferred to
+                  <%= link_to destination.event.title, edit_event_registration_path(destination, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+                </p>
+              <% else %>
+                <p class="mt-1.5 text-xs text-purple-700">
+                  <i class="fa-solid fa-circle-exclamation"></i>
+                  <%= link_to "Record where they transferred to", transfer_event_registration_path(f.object, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+                </p>
+              <% end %>
+            <% elsif f.object.transferred_in? %>
+              <p class="mt-1.5 text-xs text-teal-700">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Transferred in from
+                <%= link_to f.object.transferred_from_registration.event.title, edit_event_registration_path(f.object.transferred_from_registration, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+              </p>
+            <% end %>
           </div>
         </div>
 

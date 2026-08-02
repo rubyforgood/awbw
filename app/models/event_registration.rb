@@ -24,6 +24,15 @@ class EventRegistration < ApplicationRecord
   # registration is deleted (mirrors the FK's on_delete: :nullify).
   has_many :affiliations, dependent: :nullify, inverse_of: :event_registration
 
+  # Event-transfer trail (issue #1944). The FK lives on the incoming record: an
+  # "in" points back at the "out" it came from, so an in is identifiable directly
+  # (transferred_from_registration_id present) without scanning other rows. The
+  # in keeps its own real attendance status; only the out is marked
+  # "transferred_out". Chained transfers form a linked list back to the original.
+  belongs_to :transferred_from_registration, class_name: "EventRegistration", optional: true
+  has_one :transferred_to_registration, class_name: "EventRegistration",
+    foreign_key: :transferred_from_registration_id, inverse_of: :transferred_from_registration, dependent: :nullify
+
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
   # Staff correct/add attendance times on the CE edit form; a row with no sign-in
@@ -38,7 +47,7 @@ class EventRegistration < ApplicationRecord
   after_update :release_scholarships, if: :status_changed_to_cancelled?
   after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
 
-  ACTIVE_STATUSES = %w[ registered attended incomplete_attendance transferred_in ].freeze
+  ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
   # Attendance outcomes surfaced as their own participation buckets; every other
@@ -122,7 +131,6 @@ class EventRegistration < ApplicationRecord
     "registered" => "Registered",
     "attended" => "Attended",
     "incomplete_attendance" => "Incomplete attendance",
-    "transferred_in" => "Transferred in",
     "cancelled" => "Cancelled",
     "no_show" => "No show",
     "transferred_out" => "Transferred out"
@@ -565,12 +573,24 @@ class EventRegistration < ApplicationRecord
     status.in?(%w[ attended incomplete_attendance no_show ])
   end
 
-  # Transferred out to another event. The trail to where the registrant went is
-  # history worth keeping, so it blocks deletion. Transferred_in is deliberately
-  # excluded: it's an ordinary active registration here, and the source event's
-  # transferred_out record already preserves the transfer trail.
+  # Transferred out to another event. Terminal status, so an out is always
+  # identifiable from its status alone. The trail to where the registrant went is
+  # history worth keeping, so it blocks deletion.
   def transferred_out?
     status == "transferred_out"
+  end
+
+  # Transferred in from another event's registration. Identified by the presence
+  # of the back-link (not by status), so an in keeps recording its own real
+  # attendance (registered/attended/…) without losing the transfer history.
+  def transferred_in?
+    transferred_from_registration_id.present?
+  end
+
+  # A transferred-out registration whose destination hasn't been recorded yet.
+  # Drives the follow-up prompt to create/link the incoming registration.
+  def transfer_destination_pending?
+    transferred_out? && transferred_to_registration.nil?
   end
 
   # Safe to delete only when removing the record would not orphan financial data

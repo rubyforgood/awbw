@@ -2,7 +2,7 @@ class EventRegistrationsController < ApplicationController
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
-  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance ]
+  before_action :set_event_registration, only: [ :show, :edit, :update, :destroy, :update_onboarding, :toggle_certificate_issued, :update_attendance, :transfer, :process_transfer ]
 
   def index
     authorize!
@@ -98,27 +98,36 @@ class EventRegistrationsController < ApplicationController
       respond_to do |format|
         format.turbo_stream
         format.html {
-          case params[:return_to]
-          when "registrants" then redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
-          when "index" then redirect_to event_registrations_path, notice: notice, status: :see_other
-          when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
-          when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: notice, status: :see_other
-          when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
-          when "attendees" then redirect_to attendees_events_path, notice: notice, status: :see_other
-          when "roster" then redirect_to roster_event_path(@event_registration.event), notice: notice, status: :see_other
-          # Two ways back to the recipients page: the shout-outs section (the
-          # feature-a-shout-out flow) or the recipient's own card (their name).
-          when "recipients" then redirect_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), notice: notice, status: :see_other
-          when "recipient_card" then redirect_to helpers.recipients_event_card_path(@event_registration.event, @event_registration.slug), notice: notice, status: :see_other
-          when "attendance" then redirect_to attendance_event_path(@event_registration.event), notice: notice, status: :see_other
+          # Just marked transferred out with no destination on record yet? Send
+          # the admin straight to the transfer screen to create/link the
+          # incoming registration (issue #1944).
+          if @event_registration.saved_change_to_status? &&
+             @event_registration.transfer_destination_pending? &&
+             allowed_to?(:transfer?, @event_registration)
+            redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to]), status: :see_other
           else
-            # No explicit origin: keep admins in the management context (the
-            # registrants list) rather than dropping them on the public
-            # registration show.
-            if allowed_to?(:manage?, with: EventRegistrationPolicy)
-              redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
+            case params[:return_to]
+            when "registrants" then redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
+            when "index" then redirect_to event_registrations_path, notice: notice, status: :see_other
+            when "ticket" then redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
+            when "preview_reminder" then redirect_to preview_reminder_event_path(@event_registration.event), notice: notice, status: :see_other
+            when "onboarding" then redirect_to helpers.onboarding_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
+            when "attendees" then redirect_to attendees_events_path, notice: notice, status: :see_other
+            when "roster" then redirect_to roster_event_path(@event_registration.event), notice: notice, status: :see_other
+            # Two ways back to the recipients page: the shout-outs section (the
+            # feature-a-shout-out flow) or the recipient's own card (their name).
+            when "recipients" then redirect_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), notice: notice, status: :see_other
+            when "recipient_card" then redirect_to helpers.recipients_event_card_path(@event_registration.event, @event_registration.slug), notice: notice, status: :see_other
+            when "attendance" then redirect_to attendance_event_path(@event_registration.event), notice: notice, status: :see_other
             else
-              redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
+              # No explicit origin: keep admins in the management context (the
+              # registrants list) rather than dropping them on the public
+              # registration show.
+              if allowed_to?(:manage?, with: EventRegistrationPolicy)
+                redirect_to helpers.registrants_event_row_path(@event_registration.event, @event_registration.id), notice: notice, status: :see_other
+              else
+                redirect_to registration_ticket_path(@event_registration.slug), notice: notice, status: :see_other
+              end
             end
           end
         }
@@ -174,6 +183,7 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
+<<<<<<< HEAD
   # Inline correction of one registrant's sign-in/out times for one training day, from
   # the event's attendance report. Rows carry clock times only — the day comes from the
   # report section the editor was opened in — plus a blank row to add a session and a
@@ -193,6 +203,43 @@ class EventRegistrationsController < ApplicationController
     # they typed; the editor reopens on this cell prefilled with them.
     flash[:attendance_rows] = rows.submitted
     redirect_to attendance_report_path(date, reopen: true), status: :see_other
+=======
+  # Follow-up screen shown after a registration is marked "transferred out":
+  # pick the destination event so the incoming registration is created/linked
+  # and the transfer trail is preserved (issue #1944).
+  def transfer
+    authorize! @event_registration, to: :transfer?
+    @return_to = params[:return_to]
+    @events = transfer_destination_events
+  end
+
+  def process_transfer
+    authorize! @event_registration, to: :transfer?
+    destination_event = Event.find(params[:destination_event_id])
+
+    # The registrant may already be registered for the destination event, which
+    # would collide with the (registrant, event) uniqueness rule — link that
+    # record as the transfer target instead of creating a duplicate.
+    destination = EventRegistration.find_or_initialize_by(
+      registrant_id: @event_registration.registrant_id,
+      event_id: destination_event.id
+    )
+    destination.transferred_from_registration = @event_registration
+
+    if destination.save
+      redirect_to edit_event_registration_path(destination, return_to: params[:return_to].presence),
+        notice: "Transfer recorded — #{@event_registration.registrant.full_name} is now registered for #{destination_event.title}.",
+        status: :see_other
+    else
+      @return_to = params[:return_to]
+      @events = transfer_destination_events
+      flash.now[:alert] = destination.errors.full_messages.to_sentence
+      render :transfer, status: :unprocessable_content
+    end
+  rescue ActiveRecord::RecordNotFound
+    redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to].presence),
+      alert: "Select a destination event to transfer to.", status: :see_other
+>>>>>>> 9f45a210d (Track event-reg transfers via a back-link instead of a status)
   end
 
   def confirm
@@ -371,6 +418,7 @@ class EventRegistrationsController < ApplicationController
     @event_registration = EventRegistration.includes({ registrant: [ :user, { affiliations: :organization } ] }, { event: [ :location, :event_forms ] }, :organizations, comments: [ :created_by, :updated_by ]).find(params[:id])
   end
 
+<<<<<<< HEAD
   # Back to the report in read mode, scrolled to the day cell that was edited, keeping
   # whichever view the admin had open. `reopen:` puts that cell back into edit mode.
   def attendance_report_path(date, reopen: false)
@@ -380,6 +428,14 @@ class EventRegistrationsController < ApplicationController
     attendance_event_path(@event_registration.event,
       ce: params[:ce].presence, group: params[:group].presence, return_to: params[:return_to].presence,
       edit: (cell if reopen), anchor: cell)
+=======
+  # Events a registrant can be transferred into: any published event other than
+  # the one they're transferring out of, most recent first.
+  def transfer_destination_events
+    Event.where(published: true)
+         .where.not(id: @event_registration.event_id)
+         .order(start_date: :desc)
+>>>>>>> 9f45a210d (Track event-reg transfers via a back-link instead of a status)
   end
 
   # Creates the audited completion row for a checklist step (recording who/when),

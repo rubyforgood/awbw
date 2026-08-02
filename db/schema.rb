@@ -519,6 +519,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
     t.string "slug"
     t.boolean "someone_else_will_pay", default: false, null: false
     t.string "status", default: "registered", null: false
+    t.bigint "transferred_from_registration_id"
     t.datetime "updated_at", null: false
     t.boolean "w9_requested", default: false, null: false
     t.index ["checkout_session_id"], name: "index_event_registrations_on_checkout_session_id"
@@ -527,6 +528,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
     t.index ["registrant_id", "event_id"], name: "index_event_registrations_on_registrant_id_and_event_id", unique: true
     t.index ["registrant_id"], name: "index_event_registrations_on_registrant_id"
     t.index ["slug"], name: "index_event_registrations_on_slug", unique: true
+    t.index ["transferred_from_registration_id"], name: "index_event_registrations_on_transferred_from_registration_id"
   end
 
   create_table "event_staffs", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1863,6 +1865,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_144446) do
   add_foreign_key "event_registration_organizations", "event_registrations"
   add_foreign_key "event_registration_organizations", "form_submissions", on_delete: :nullify
   add_foreign_key "event_registration_organizations", "organizations"
+  add_foreign_key "event_registrations", "event_registrations", column: "transferred_from_registration_id", on_delete: :nullify
   add_foreign_key "event_registrations", "events"
   add_foreign_key "event_registrations", "people", column: "registrant_id"
   add_foreign_key "event_staffs", "events"

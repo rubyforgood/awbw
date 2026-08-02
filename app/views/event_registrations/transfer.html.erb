@@ -1,0 +1,55 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<%
+  source = @event_registration
+  roster_path = registrants_event_path(source.event)
+%>
+<div class="mb-4">
+  <%= link_to roster_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i>
+    <%= source.event.title %> registrants
+  <% end %>
+</div>
+
+<div class="<%= DomainTheme.bg_class_for(:event_registrations) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="max-w-2xl mx-auto">
+    <div class="flex items-center mb-6">
+      <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-purple-100">
+        <i class="fa-solid fa-right-from-bracket text-purple-600"></i>
+      </div>
+      <h1 class="ml-3 text-xl font-semibold text-gray-900">Where did they transfer to?</h1>
+    </div>
+
+    <div class="bg-white rounded-lg p-4 mb-6">
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+        <dt class="text-gray-500">Registrant</dt>
+        <dd class="text-gray-900 font-medium"><%= source.registrant.full_name %></dd>
+        <dt class="text-gray-500">Transferred out of</dt>
+        <dd class="text-gray-900"><%= source.event.title %></dd>
+      </dl>
+    </div>
+
+    <p class="mb-4 text-sm text-gray-600">
+      Recording the destination event creates (or links) this person's registration
+      there and keeps the transfer history. The new registration tracks its own
+      attendance — you can skip this now and record it later.
+    </p>
+
+    <%= form_with url: process_transfer_event_registration_path(source), method: :post, data: { turbo: false }, class: "space-y-4" do %>
+      <%= hidden_field_tag :return_to, @return_to %>
+
+      <div>
+        <label for="destination_event_id" class="mb-1 block text-sm font-medium text-gray-700">Destination event</label>
+        <%= select_tag :destination_event_id,
+              options_from_collection_for_select(@events, :id, :time_title),
+              include_blank: "Select an event…",
+              required: true,
+              class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+      </div>
+
+      <div class="flex items-center gap-3 border-t border-gray-200 pt-4">
+        <%= link_to "Skip for now", roster_path, class: "btn btn-secondary-outline" %>
+        <%= submit_tag "Record transfer", class: "btn btn-primary ml-auto" %>
+      </div>
+    <% end %>
+  </div>
+</div>
