@@ -12,6 +12,6 @@
     <li class="md:flex-1 md:min-w-0"><%= index_button monthly_reports, params: org_filter, wrap: true %></li>
   <% end %>
   <li class="md:flex-1 md:min-w-0"><%= index_button Story.where(org_filter), params: org_filter, wrap: true %></li>
-  <li class="md:flex-1 md:min-w-0"><%= index_button StoryIdea.where(org_filter), params: org_filter, wrap: true %></li>
+  <li class="md:flex-1 md:min-w-0"><%= index_button StoryIdea.where(org_filter), params: org_filter, wrap: true, label: safe_join([ "Story", tag.br, "ideas" ]) %></li>
   <li class="md:flex-1 md:min-w-0"><%= index_button organization.workshop_logs, params: org_filter, wrap: true %></li>
 </ul>
