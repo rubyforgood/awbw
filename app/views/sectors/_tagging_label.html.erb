@@ -15,6 +15,11 @@
 <% compact ||= false %>
 <% chip_size = compact ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm" %>
 
+<%# Muted renders the chip in a calm neutral grey instead of the loud lime, for
+    pages where the sector isn't the focus (e.g. the scholarship recipients
+    roster). The star stays as the only accent. %>
+<% muted ||= false %>
+
 <%# Tags hidden from the public (unpublished) are only ever shown to admins, so
     they read as a muted grey chip with an eye-slash icon — the same "hidden" cue
     used on password fields — to flag at a glance what the public can't see. %>
@@ -39,6 +44,12 @@
      bg_color = "bg-gray-100"
      bg_hover_color = "bg-gray-200"
      text_color = "text-gray-500"
+     border_class = "border-gray-200"
+     border_hover_class = "border-gray-300"
+   elsif muted
+     bg_color = is_primary ? "bg-gray-100" : "bg-gray-50"
+     bg_hover_color = is_primary ? "bg-gray-200" : "bg-gray-100"
+     text_color = is_primary ? "text-gray-700" : "text-gray-500"
      border_class = "border-gray-200"
      border_hover_class = "border-gray-300"
    end %>

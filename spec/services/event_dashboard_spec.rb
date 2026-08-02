@@ -510,6 +510,36 @@ RSpec.describe EventDashboard do
       expect(map[separate_applicant.id]).to eq(EventRegistration.find_by(event: event, registrant: separate_applicant).id)
     end
 
+    describe "#scholarship_applicants_by_funder" do
+      it "buckets applicants by their scholarship's grant funder, unfunded last, carrying the donor and its city/state" do
+        embedded_reg = event.event_registrations.find_by(registrant: embedded_applicant)
+        separate_reg = event.event_registrations.find_by(registrant: separate_applicant)
+        donor = create(:organization, name: "Joyful Heart Foundation")
+        create(:address, addressable: donor, city: "Los Angeles", state: "CA")
+        grant = create(:grant, name: "Healing Arts", donor: donor, amount_cents: 100_000)
+        funded = create(:scholarship, recipient: embedded_applicant, grant: grant, amount_cents: 1_000)
+        create(:allocation, source: funded, allocatable: embedded_reg, amount: 1_000)
+        unfunded = create(:scholarship, recipient: separate_applicant, amount_cents: 1_000)
+        create(:allocation, source: unfunded, allocatable: separate_reg, amount: 1_000)
+
+        groups = dashboard.scholarship_applicants_by_funder
+
+        expect(groups.map(&:name)).to eq([ "Joyful Heart Foundation", "Unfunded" ])
+        expect(groups.first.people).to eq([ embedded_applicant ])
+        expect(groups.first.donor).to eq(donor)
+        expect(groups.first.location).to eq("Los Angeles, CA")
+        expect(groups.last.people).to eq([ separate_applicant ])
+        expect(groups.last.donor).to be_nil
+      end
+
+      it "collects applicants with no awarded scholarship under 'No scholarship yet'" do
+        groups = dashboard.scholarship_applicants_by_funder
+
+        expect(groups.map(&:name)).to eq([ "No scholarship yet" ])
+        expect(groups.first.people).to match_array([ embedded_applicant, separate_applicant ])
+      end
+    end
+
     it "gathers scholarship answers wherever they were captured, keyed by applicant" do
       answers = dashboard.scholarship_answers_by_applicant
 
