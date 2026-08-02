@@ -239,13 +239,13 @@
             <%= render "dashboard_money_row", label: "Paid", icon: "fa-money-bill-wave",
                   amount_cents: @dashboard.cont_ed_paid_cents,
                   count: @dashboard.cont_ed_paid_count, registrants: @dashboard.cont_ed_paid_registrants,
-                  filter_path: registrants_event_path(@event, registrant_ids: @dashboard.cont_ed_paid_registrants.map(&:id).join("-").presence || "0") %>
+                  filter_path: registrants_event_path(@event, ce_status: "paid") %>
             <%= render "dashboard_money_row", label: "Due", icon: "fa-hourglass-half",
                   icon_color: @dashboard.cont_ed_unpaid_count.positive? ? "text-white" : "text-gray-400",
                   icon_bg: @dashboard.cont_ed_unpaid_count.positive? ? "bg-orange-500" : nil,
                   amount_cents: @dashboard.cont_ed_outstanding_cents,
                   count: @dashboard.cont_ed_unpaid_count, registrants: @dashboard.cont_ed_unpaid_registrants,
-                  filter_path: registrants_event_path(@event, registrant_ids: @dashboard.cont_ed_unpaid_registrants.map(&:id).join("-").presence || "0") %>
+                  filter_path: registrants_event_path(@event, ce_status: "requested") %>
           </div>
         </details>
       </div>
@@ -261,13 +261,13 @@
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg font-bold <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
             <i class="fa-solid fa-users text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i>
             <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.registrant_count, registrants_event_path(@event, registrant_ids: @dashboard.registrants.map(&:id).join("-")), class: "hover:underline" %>
+              <%= link_to @dashboard.registrant_count, registrants_event_path(@event, status_filter: "active"), class: "hover:underline" %>
             </span>
             <span class="truncate">Registrants</span>
           </h3>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><%= link_to registrants_event_path(@event), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.registrant_count %> active <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% if @dashboard.inactive_registration_count.positive? %> · <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.inactive_registrant_ids.join("-")), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.inactive_registration_count %> inactive <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% end %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= link_to registrants_event_path(@event, status_filter: "active"), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.registrant_count %> active <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% if @dashboard.inactive_registration_count.positive? %> · <%= link_to registrants_event_path(@event, status_filter: "inactive"), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.inactive_registration_count %> inactive <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% end %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.registrants.any? %>

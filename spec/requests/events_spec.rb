@@ -1572,6 +1572,16 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Overview Org")
       end
 
+      it "drills the active/inactive counts into the matching status filter, not a registrant_ids list" do
+        create(:event_registration, event: event, registrant: create(:person), status: "cancelled")
+
+        get dashboard_event_path(event)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link(href: registrants_event_path(event, status_filter: "active"), visible: :all)
+        expect(page).to have_link(href: registrants_event_path(event, status_filter: "inactive"), visible: :all)
+      end
+
       it "shows a program status badge next to each organization" do
         get dashboard_event_path(event)
 
