@@ -61,7 +61,7 @@ This codebase (Rails 8.1)
 | `app/views/` | ERB templates | ~632 files |
 | `app/decorators/` | Draper decorators for view logic | ~40 files |
 | `app/policies/` | ActionPolicy authorization rules | ~55 files |
-| `app/presenters/` | Presentation objects | 5 files |
+| `app/presenters/` | Presentation objects | 6 files |
 | `app/helpers/` | View helpers | ~25 files |
 | `app/mailers/` | ActionMailer classes | 5 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
@@ -199,6 +199,7 @@ end
 - `RichTextMigrator` — Rich text migration utility
 - `DisplayImagePresenter` — Image display logic
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
+- `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card on the background dashboard and scholarship-recipients page (fed plucked data by `EventDashboard`)
 - `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
 
 ### Event Registrations

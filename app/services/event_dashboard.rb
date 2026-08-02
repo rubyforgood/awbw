@@ -55,6 +55,18 @@ class EventDashboard
     scholarships.distinct.count(:recipient_id)
   end
 
+  # This event's registrants grouped by the city of the organization linked on
+  # their registration, with the scholarship-recipient count per city — the
+  # shared "Registrants by city" breakdown on the background and recipients
+  # pages. Fed already-plucked data so the rollup runs in memory.
+  def registrant_city_breakdown
+    @registrant_city_breakdown ||= RegistrantCityBreakdown.new(
+      org_registrant_pairs: registration_org_registrant_pairs,
+      city_by_org: city_by_organization,
+      scholarship_recipient_ids: scholarships.distinct.pluck(:recipient_id)
+    )
+  end
+
   # Field identifiers for the scholarship-application questions, wherever they
   # are asked (the scholarship section can live on the registration form, the
   # standalone scholarship form, or both).
@@ -355,6 +367,20 @@ class EventDashboard
     @organization_counts ||= organization_registrant_ids_by_org.transform_values(&:size)
   end
 
+  # Scholarship-recipient count per organization (registrants awarded a
+  # scholarship this event), keyed by organization id — flags which orgs are
+  # "scholarship organizations" on the background Organizations breakdown. Only
+  # orgs with at least one recipient appear.
+  def scholarship_recipient_count_by_org
+    @scholarship_recipient_count_by_org ||= begin
+      recipient_ids = scholarships.distinct.pluck(:recipient_id).to_set
+      organization_registrant_ids_by_org.each_with_object({}) do |(organization_id, person_ids), map|
+        count = person_ids.count { |person_id| recipient_ids.include?(person_id) }
+        map[organization_id] = count if count.positive?
+      end
+    end
+  end
+
   # Registrant ids tied to at least one organization — the people behind the
   # organizations count.
   def organization_registrant_ids
@@ -390,6 +416,43 @@ class EventDashboard
         label = location_label(state, country)
         map[person_id] = label if label.present?
       end
+  end
+
+  # Primary sector name(s) per registrant (Person id) — the inverse of
+  # primary_sector_registrant_ids_by_sector, for the roster's Primary sector
+  # column. Reuses the already-computed primary-sector data (no extra queries).
+  def primary_sector_names_by_registrant
+    @primary_sector_names_by_registrant ||= names_by_registrant(primary_sectors, primary_sector_registrant_ids_by_sector)
+  end
+
+  # Primary age group name(s) per registrant (Person id) — the inverse of
+  # age_group_registrant_ids_by_category, for the roster's Primary age group column.
+  def primary_age_group_names_by_registrant
+    @primary_age_group_names_by_registrant ||= names_by_registrant(age_groups, age_group_registrant_ids_by_category)
+  end
+
+  # Registrant (Person) ids with a continuing-education registration this event.
+  def ce_registrant_ids
+    @ce_registrant_ids ||= ce_registration_by_registrant.keys
+  end
+
+  # Distinct registrants with continuing education — the CE subtotal + pie share.
+  def ce_registrant_count
+    ce_registrant_ids.size
+  end
+
+  # First continuing-education registration per registrant (Person id), for the
+  # roster's CE column: its icon links to editing this record when present.
+  def ce_registration_by_registrant
+    @ce_registration_by_registrant ||= begin
+      registrant_by_registration = active_registrations.to_h { |registration| [ registration.id, registration.registrant_id ] }
+      ContinuingEducationRegistration
+        .where(event_registration_id: active_registration_ids)
+        .each_with_object({}) do |ce_registration, map|
+          registrant_id = registrant_by_registration[ce_registration.event_registration_id]
+          map[registrant_id] ||= ce_registration if registrant_id
+        end
+    end
   end
 
   # Every sector tagged on registrants (primary + additional), backing the
@@ -864,6 +927,32 @@ class EventDashboard
       .where(allocations: { allocatable_type: "EventRegistration", allocatable_id: active_registration_ids })
   end
 
+  # [ [ organization_id, registrant_id ], ... ] from the organizations linked on
+  # each active registration (the registration-time snapshot only, not later
+  # affiliations) — the basis for grouping registrants by their org's city.
+  def registration_org_registrant_pairs
+    @registration_org_registrant_pairs ||= EventRegistrationOrganization
+      .joins(:event_registration)
+      .where(event_registration_id: active_registration_ids)
+      .pluck(:organization_id, "event_registrations.registrant_id")
+  end
+
+  # "City, State" per linked organization, from its first active address (mirrors
+  # Organization#program_location). Orgs with no active address are absent, so
+  # their registrants fall into the breakdown's Unknown bucket.
+  def city_by_organization
+    org_ids = registration_org_registrant_pairs.map(&:first).uniq
+    Address.active
+      .where(addressable_type: "Organization", addressable_id: org_ids)
+      .order(:id)
+      .pluck(:addressable_id, :city, :state)
+      .each_with_object({}) do |(org_id, city, state), map|
+        next if map.key?(org_id)
+        label = [ city, state ].compact_blank.join(", ").presence
+        map[org_id] = label if label
+      end
+  end
+
   def paid_registration_ids
     @paid_registration_ids ||= active_registration_ids.select do |id|
       allocated_by_registration.fetch(id, 0) >= event.cost_cents.to_i
@@ -1038,6 +1127,14 @@ class EventDashboard
   def location_label(state, country)
     return state.to_s.strip.upcase.presence if domestic_country?(country)
     country_alpha3(country) || state.to_s.strip.upcase.presence
+  end
+
+  # Invert a { record_id => [ person_id ] } map into { person_id => [ record.name ] },
+  # iterating the ordered records so each registrant's names keep that order.
+  def names_by_registrant(records, registrant_ids_by_id)
+    records.each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |record, map|
+      registrant_ids_by_id.fetch(record.id, []).each { |person_id| map[person_id] << record.name }
+    end
   end
 
   # Treat a blank country as domestic (US addresses often omit it).
