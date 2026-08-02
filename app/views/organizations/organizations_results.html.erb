@@ -29,7 +29,7 @@
 
               <td class="px-4 py-2 text-sm">
                 <div class="flex flex-wrap items-center gap-1">
-                  <% organization.sectors.each do |sector| %>
+                  <% organization.all_sectors.sort_by { |s| s&.name.to_s }.each do |sector| %>
                     <%= render "sectors/tagging_label", sector: sector %>
                   <% end %>
                 </div>

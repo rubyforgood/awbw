@@ -120,6 +120,27 @@ class Organization < ApplicationRecord
     end
   }
 
+  # Index filters that match a sector / age group tagged directly on the org OR on
+  # any affiliated person — mirroring the aggregate the index/profile columns show.
+  scope :sector_name_including_people, ->(name) {
+    next all if name.blank?
+    term = name.to_s.downcase
+    direct = joins(:sectors).where("LOWER(sectors.name) = ?", term).select(:id)
+    via_people = joins(people: :sectors).where("LOWER(sectors.name) = ?", term).select(Arel.sql("organizations.id"))
+    where(id: direct).or(where(id: via_people))
+  }
+
+  scope :age_group_name_including_people, ->(name) {
+    next all if name.blank?
+    age_category_ids = Category.joins(:category_type)
+                               .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
+                               .where("LOWER(categories.name) = ?", name.to_s.downcase)
+                               .select(:id)
+    direct = joins(:categories).where(categories: { id: age_category_ids }).select(:id)
+    via_people = joins(people: :categories).where(categories: { id: age_category_ids }).select(Arel.sql("organizations.id"))
+    where(id: direct).or(where(id: via_people))
+  }
+
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
   scope :published, -> { active }
@@ -127,8 +148,8 @@ class Organization < ApplicationRecord
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
     organizations = organizations.search(params[:query]) if params[:query].present?
-    organizations = organizations.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
-    organizations = organizations.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
+    organizations = organizations.sector_name_including_people(params[:sector_name]) if params[:sector_name].present?
+    organizations = organizations.age_group_name_including_people(params[:age_group_name]) if params[:age_group_name].present?
     organizations = organizations.address(params[:address]) if params[:address].present?
     organizations = organizations.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
@@ -267,11 +288,7 @@ class Organization < ApplicationRecord
  end
 
   def affiliated_sectors
-    users
-      .includes(person: :sectors)
-      .map(&:person)
-      .compact
-      .flat_map(&:sectors)
+    people.includes(:sectors).flat_map(&:sectors)
   end
 
   def all_sectors

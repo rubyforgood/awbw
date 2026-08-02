@@ -290,23 +290,29 @@ RSpec.describe Organization do
     let!(:age_type) { create(:category_type, name: "AgeRange", published: true) }
     let!(:teen) { create(:category, :published, category_type: age_type, name: "13-17") }
     let!(:sector) { create(:sector, :published, name: "Housing") }
-    let!(:tagged) { create(:organization, name: "Tagged Org") }
+    let!(:direct_org) { create(:organization, name: "Direct Org") }
+    let!(:via_person_org) { create(:organization, name: "Via Person Org") }
     let!(:untagged) { create(:organization, name: "Untagged Org") }
 
     before do
-      tagged.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
-      tagged.sectorable_items.create!(sector: sector, is_primary: false)
+      direct_org.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      direct_org.sectorable_items.create!(sector: sector, is_primary: false)
+
+      person = create(:person)
+      create(:affiliation, organization: via_person_org, person: person)
+      person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      person.sectorable_items.create!(sector: sector, is_primary: false)
     end
 
-    it "filters by age group via category_names_all" do
-      results = Organization.search_by_params(category_names_all: "13-17")
-      expect(results).to include(tagged)
+    it "matches a sector tagged directly on the org or via an affiliated person" do
+      results = Organization.search_by_params(sector_name: "Housing")
+      expect(results).to include(direct_org, via_person_org)
       expect(results).not_to include(untagged)
     end
 
-    it "filters by sector via sector_names_all" do
-      results = Organization.search_by_params(sector_names_all: "Housing")
-      expect(results).to include(tagged)
+    it "matches an age group tagged directly on the org or via an affiliated person" do
+      results = Organization.search_by_params(age_group_name: "13-17")
+      expect(results).to include(direct_org, via_person_org)
       expect(results).not_to include(untagged)
     end
   end
