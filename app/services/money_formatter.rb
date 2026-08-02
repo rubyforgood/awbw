@@ -20,22 +20,24 @@ class MoneyFormatter
   end
 
   # Abbreviated for tight UI like the grant picker: plain under $1k ("$750"),
-  # "k" for thousands ("$12.5k"), "m" for millions ("$1.2m"). One decimal place,
-  # trailing .0 dropped. Lossy on purpose — use dollars_from_cents for exact values.
-  def self.compact_from_cents(cents)
+  # "k" for thousands ("$12.5k"), "m" for millions ("$1.2m"). Rounds to `precision`
+  # decimal places (default 1), trailing .0 dropped, so precision: 0 gives whole
+  # units ("$15k"). Lossy on purpose — use dollars_from_cents for exact values.
+  def self.compact_from_cents(cents, precision: 1)
     amount = cents.to_i.to_d / 100
     if amount >= 1_000_000
-      "$#{trim_decimal(amount / 1_000_000)}m"
+      "$#{trim_decimal(amount / 1_000_000, precision)}m"
     elsif amount >= 1_000
-      "$#{trim_decimal(amount / 1_000)}k"
+      "$#{trim_decimal(amount / 1_000, precision)}k"
     else
       "$#{amount.to_i}"
     end
   end
 
-  def self.trim_decimal(value)
-    rounded = value.round(1)
-    rounded.frac.zero? ? rounded.to_i.to_s : rounded.to_s("F")
+  def self.trim_decimal(value, precision = 1)
+    # BigDecimal#round(0) returns an Integer, higher precisions a BigDecimal.
+    rounded = value.round(precision)
+    rounded.to_i == rounded ? rounded.to_i.to_s : rounded.to_s("F")
   end
   private_class_method :trim_decimal
 end

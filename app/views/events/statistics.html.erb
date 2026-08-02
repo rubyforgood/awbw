@@ -1,0 +1,48 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% content_for(:full_width, true) %>
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+    <div class="mb-6">
+      <% if params[:return_to] == "events" %>
+        <%= link_to "← Events", events_path,
+              class: "text-sm font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+      <% else %>
+        <%= link_to "← Admin home", admin_path,
+              class: "text-sm font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline" %>
+      <% end %>
+    </div>
+
+    <div class="mb-6">
+      <h1 class="text-2xl font-semibold text-gray-900">Events statistics</h1>
+      <p class="text-gray-600 mt-1">
+        Revenue and participation at a glance — open a full report for the year-by-year detail.
+      </p>
+    </div>
+
+    <%# Filters driving both summary cards — event, time period and event type —
+        matching the filter selects on the full revenue and participation reports. %>
+    <%= form_with url: statistics_events_path, method: :get, local: true,
+          class: "flex flex-wrap items-end gap-4 mb-6" do %>
+      <%= hidden_field_tag :return_to, params[:return_to] %>
+      <%= render "event_filter" %>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-gray-600" for="period">Time period</label>
+        <%= select_tag :period,
+              options_for_select([ [ "This year", "this_year" ], [ "Last year", "last_year" ], [ "All time", "all_time" ] ], @period),
+              class: "px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
+              onchange: "this.form.submit()" %>
+      </div>
+      <%= render "event_type_filter" %>
+    <% end %>
+
+    <div class="flex flex-col md:flex-row gap-6">
+      <div class="flex-1 min-w-0">
+        <%= render "events/revenue_summary", report: @revenue_report, period: @revenue_report.period_scope(@period) %>
+      </div>
+      <div class="flex-1 min-w-0">
+        <%= render "events/participation_summary", report: @participation_report, period: @participation_report.period_scope(@period) %>
+      </div>
+    </div>
+  </div>
+</div>

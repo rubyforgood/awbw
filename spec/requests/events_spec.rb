@@ -145,7 +145,7 @@ RSpec.describe "Events", type: :request do
         sign_in admin
         get revenue_events_path
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Event revenue")
+        expect(response.body).to include("Events revenue")
         expect(response.body).to include("Revenue by year")
         expect(response.body).to include("Fees collected")
         expect(response.body).to include("TAC 261")
@@ -162,11 +162,48 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include('title="TAC 261"')
       end
 
+      # The Event dropdown lists every (paid) event, so the report rows are
+      # identified by their per-event dashboard link rather than the title.
+      it "narrows to facilitator trainings by event type" do
+        sign_in admin
+        get revenue_events_path(event_type: "trainings")
+        expect(response.body).to include(dashboard_event_path(paid_training))
+        expect(response.body).not_to include(dashboard_event_path(paid_webinar))
+      end
+
+      it "narrows to non-trainings by event type" do
+        sign_in admin
+        get revenue_events_path(event_type: "other")
+        expect(response.body).to include(dashboard_event_path(paid_webinar))
+        expect(response.body).not_to include(dashboard_event_path(paid_training))
+      end
+
+      it "narrows to a single selected event" do
+        sign_in admin
+        get revenue_events_path(event_id: paid_training.id)
+        expect(response.body).to include(dashboard_event_path(paid_training))
+        expect(response.body).not_to include(dashboard_event_path(paid_webinar))
+      end
+
+      it "narrows to a single calendar year" do
+        sign_in admin
+        get revenue_events_path(time_period: "2025")
+        expect(response.body).to include(dashboard_event_path(paid_webinar))
+        expect(response.body).not_to include(dashboard_event_path(paid_training))
+      end
+
       it "returns to the originating event's dashboard when arrived from it" do
         sign_in admin
         get revenue_events_path(return_to: "dashboard", event_id: paid_training.id)
         expect(response.body).to include(dashboard_event_path(paid_training))
         expect(response.body).to include("← Dashboard")
+      end
+
+      it "carries the statistics origin back through the eyebrow" do
+        sign_in admin
+        get revenue_events_path(return_to: "events")
+        expect(response.body).to include("← Events statistics")
+        expect(response.body).to include(statistics_events_path(return_to: "events"))
       end
     end
 
@@ -174,6 +211,128 @@ RSpec.describe "Events", type: :request do
       it "redirects" do
         sign_in user
         get revenue_events_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "GET /participation" do
+    let!(:training_2026) { create(:event, title: "TAC 261", facilitator_training: true, start_date: Date.new(2026, 5, 1)) }
+    let!(:webinar_2025) { create(:event, title: "Open webinar", facilitator_training: false, start_date: Date.new(2025, 5, 1)) }
+
+    before do
+      create(:event_registration, event: training_2026, status: "attended")
+      create(:event_registration, event: training_2026, status: "no_show")
+      create(:event_registration, event: webinar_2025, status: "attended")
+    end
+
+    context "as admin" do
+      it "lists every event grouped by year by default" do
+        sign_in admin
+        get participation_events_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Events participation")
+        expect(response.body).to include("Attendance by year")
+        expect(response.body).to include("TAC 261")
+        expect(response.body).to include("Open webinar")
+        expect(response.body).to include("2026", "2025")
+      end
+
+      # The Event dropdown lists every event, so the report rows are identified by
+      # their per-event dashboard link rather than the title.
+      it "narrows to facilitator trainings by event type" do
+        sign_in admin
+        get participation_events_path(event_type: "trainings")
+        expect(response.body).to include(dashboard_event_path(training_2026))
+        expect(response.body).not_to include(dashboard_event_path(webinar_2025))
+      end
+
+      it "narrows to non-trainings by event type" do
+        sign_in admin
+        get participation_events_path(event_type: "other")
+        expect(response.body).to include(dashboard_event_path(webinar_2025))
+        expect(response.body).not_to include(dashboard_event_path(training_2026))
+      end
+
+      it "narrows to a single selected event" do
+        sign_in admin
+        get participation_events_path(event_id: training_2026.id)
+        expect(response.body).to include(dashboard_event_path(training_2026))
+        expect(response.body).not_to include(dashboard_event_path(webinar_2025))
+      end
+
+      it "narrows to a single calendar year" do
+        sign_in admin
+        get participation_events_path(time_period: "2025")
+        expect(response.body).to include(dashboard_event_path(webinar_2025))
+        expect(response.body).not_to include(dashboard_event_path(training_2026))
+      end
+
+      it "carries the statistics origin back through the eyebrow and the filter form" do
+        sign_in admin
+        get participation_events_path(return_to: "events")
+        expect(response.body).to include("← Events statistics")
+        expect(response.body).to include(statistics_events_path(return_to: "events"))
+        expect(response.body).to match(/<input[^>]*name="return_to"[^>]*value="events"/)
+      end
+    end
+
+    context "as non-admin" do
+      it "redirects" do
+        sign_in user
+        get participation_events_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "GET /statistics" do
+    let!(:training) { create(:event, facilitator_training: true, cost_cents: 10_000, start_date: Date.current) }
+
+    before { create(:event_registration, event: training, status: "attended") }
+
+    context "as admin" do
+      it "shows the revenue and participation summaries side by side" do
+        sign_in admin
+        get statistics_events_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Events statistics")
+        expect(response.body).to include("Revenue")
+        expect(response.body).to include("Participation")
+        expect(response.body).to include("People attended")
+        expect(response.body).to match(/\d+ trainings/)
+        expect(response.body).to match(/\d+ other/)
+        # The trainings/other split links into the filtered registrants index.
+        expect(response.body).to include("event_type=trainings", "attendance_status=attended")
+        expect(response.body).to include(revenue_events_path, participation_events_path)
+      end
+
+      it "toggles the summary figures to all time via the period select" do
+        sign_in admin
+        get statistics_events_path(period: "all_time")
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("All time")
+        expect(response.body).to match(/<select[^>]*name="period"/)
+      end
+
+      it "returns to the admin home by default" do
+        sign_in admin
+        get statistics_events_path
+        expect(response.body).to include("← Admin home")
+      end
+
+      it "returns to the events index when arrived from it" do
+        sign_in admin
+        get statistics_events_path(return_to: "events")
+        expect(response.body).to include("← Events")
+        expect(response.body).to include(events_path)
+      end
+    end
+
+    context "as non-admin" do
+      it "redirects" do
+        sign_in user
+        get statistics_events_path
         expect(response).to redirect_to(root_path)
       end
     end

@@ -1,0 +1,10 @@
+<%# Specific-event filter shared by the revenue/participation/statistics report
+    forms. Scopes the report(s) to the chosen event. %>
+<div class="flex flex-col gap-1">
+  <label class="text-xs font-medium text-gray-600" for="event_id">Event</label>
+  <%= select_tag :event_id,
+        options_from_collection_for_select(@filter_events, :id, :time_title, params[:event_id].to_i),
+        include_blank: "All events",
+        class: "px-3 py-2 rounded-md border-gray-300 shadow-sm text-sm text-gray-700",
+        onchange: "this.form.submit()" %>
+</div>

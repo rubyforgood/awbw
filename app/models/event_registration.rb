@@ -71,6 +71,15 @@ class EventRegistration < ApplicationRecord
   scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
   scope :attendance_status, ->(status) { where(status: status) }
+  # Registrations on facilitator-training events ("trainings") vs everything else
+  # ("other"); any other value is a no-op so "all events" passes through.
+  scope :event_type, ->(type) {
+    case type
+    when "trainings" then joins(:event).where(events: { facilitator_training: true })
+    when "other" then joins(:event).where(events: { facilitator_training: false })
+    else all
+    end
+  }
   scope :registrant_state, ->(state) {
     joins(registrant: :addresses)
       .where(addresses: { inactive: false, state: state })
@@ -268,6 +277,12 @@ class EventRegistration < ApplicationRecord
     end
     if params[:ce_status].present?
       registrations = registrations.ce_status(params[:ce_status])
+    end
+    if params[:attendance_status].present?
+      registrations = registrations.attendance_status(params[:attendance_status])
+    end
+    if params[:event_type].present?
+      registrations = registrations.event_type(params[:event_type])
     end
     registrations
   end

@@ -23,6 +23,18 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response).to have_http_status(:success)
       end
 
+      it "links to the selected event's dashboard when one is filtered" do
+        event.update!(abbreviation: "TAC261")
+        get event_registrations_path(event_id: event.id)
+        expect(response.body).to include("TAC261 event dashboard")
+        expect(response.body).to include(dashboard_event_path(event))
+      end
+
+      it "shows no event-dashboard link with no event filtered" do
+        get event_registrations_path
+        expect(response.body).not_to include("event dashboard")
+      end
+
       it "filters registrations by organization_id" do
         organization = create(:organization)
         matching_reg = create(:event_registration)
@@ -42,6 +54,24 @@ RSpec.describe "EventRegistrations", type: :request do
         get event_registrations_path(ce_status: "needs_license")
         expect(response).to have_http_status(:success)
         expect(response.body).to include(needs_license.registrant.first_name)
+        expect(response.body).not_to include(existing_registration.registrant.first_name)
+      end
+
+      it "filters registrations by attendance status" do
+        no_show = create(:event_registration, status: "no_show")
+
+        get event_registrations_path(attendance_status: "no_show")
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(no_show.registrant.first_name)
+        expect(response.body).not_to include(existing_registration.registrant.first_name)
+      end
+
+      it "filters registrations by event type" do
+        training_reg = create(:event_registration, event: create(:event, facilitator_training: true))
+
+        get event_registrations_path(event_type: "trainings")
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(training_reg.registrant.first_name)
         expect(response.body).not_to include(existing_registration.registrant.first_name)
       end
 

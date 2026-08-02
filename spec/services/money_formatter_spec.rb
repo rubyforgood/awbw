@@ -42,5 +42,10 @@ RSpec.describe MoneyFormatter do
       expect(described_class.compact_from_cents(1_000_000)).to eq("$10k")
       expect(described_class.compact_from_cents(120_000_000)).to eq("$1.2m")
     end
+
+    it "rounds to whole units at precision 0" do
+      expect(described_class.compact_from_cents(1_517_000, precision: 0)).to eq("$15k")
+      expect(described_class.compact_from_cents(420_000, precision: 0)).to eq("$4k")
+    end
   end
 end
