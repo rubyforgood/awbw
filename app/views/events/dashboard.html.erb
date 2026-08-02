@@ -11,7 +11,7 @@
       form settings section). %>
   <% if allowed_to?(:edit?, @event) %>
     <div class="flex justify-end mb-6">
-      <%= render "form_actions_menu", button_label: "Forms", manage_label: "Edit form settings", sample_return_to: "dashboard" %>
+      <%= render "form_actions_menu", sample_return_to: "dashboard" %>
     </div>
   <% end %>
 
