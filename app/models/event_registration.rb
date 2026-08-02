@@ -603,7 +603,7 @@ class EventRegistration < ApplicationRecord
   def generate_slug
     loop do
       self.slug = SecureRandom.urlsafe_base64(16)
-      break unless EventRegistration.exists?(slug: slug)
+      break unless self.class.exists?(slug: slug)
     end
   end
 
