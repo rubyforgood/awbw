@@ -2,7 +2,7 @@
 <% manage_label = local_assigns.fetch(:manage_label, "Edit form settings") %>
 <% sample_return_to = local_assigns.fetch(:sample_return_to, "registrants") %>
 <% dropdown_id = "form-actions-menu-#{SecureRandom.hex(4)}" %>
-<% item_class = "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
+<% item_class = "block whitespace-nowrap px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
 <div data-controller="dropdown" class="relative">
   <button type="button"
           data-action="dropdown#toggle"
@@ -14,7 +14,7 @@
 
   <div id="<%= dropdown_id %>"
        data-dropdown-target="content"
-       class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[180px]">
+       class="hidden absolute right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[240px]">
     <%# Links open the public-facing form pages, gated by the event's form
         settings. When public registration is on, each label is prefixed
         "Public …" to signal it's the publicly-exposed form. Scholarship and bulk
