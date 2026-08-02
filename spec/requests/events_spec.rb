@@ -1623,6 +1623,43 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Edit form settings")
         expect(response.body).to include(edit_event_path(event, anchor: "registration_form_section"))
       end
+
+      it "shows the registration link only when a registration form is selected" do
+        get dashboard_event_path(event)
+        expect(response.body).not_to include("Registration form")
+
+        create(:event_form, event: event, form: create(:form), role: "registration")
+        get dashboard_event_path(event)
+        expect(response.body).to include("Registration form")
+      end
+
+      it "prefixes the registration link with Public when public registration is enabled" do
+        create(:event_form, event: event, form: create(:form), role: "registration")
+
+        get dashboard_event_path(event)
+        expect(response.body).not_to include("Public registration form")
+
+        event.update!(public_registration_enabled: true)
+        get dashboard_event_path(event)
+        expect(response.body).to include("Public registration form")
+      end
+
+      it "shows scholarship and bulk payment links only when the event has a cost" do
+        create(:event_form, event: event, form: create(:form), role: "scholarship")
+        create(:event_form, event: event, form: create(:form), role: "bulk_payment")
+
+        free_event = create(:event, cost_cents: 0)
+        create(:event_form, event: free_event, form: create(:form), role: "scholarship")
+        create(:event_form, event: free_event, form: create(:form), role: "bulk_payment")
+
+        get dashboard_event_path(free_event)
+        expect(response.body).not_to include("Scholarship form")
+        expect(response.body).not_to include("Bulk payment form")
+
+        get dashboard_event_path(event)
+        expect(response.body).to include("Scholarship form")
+        expect(response.body).to include("Bulk payment form")
+      end
     end
 
     context "as non-admin non-owner" do
