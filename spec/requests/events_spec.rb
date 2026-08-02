@@ -757,7 +757,7 @@ RSpec.describe "Events", type: :request do
       it "shows the active registrant count in the page heading" do
         get registrants_event_path(event)
 
-        expect(response.body).to include("Registrants (2)")
+        expect(response.body).to include("2 people")
       end
     end
 
