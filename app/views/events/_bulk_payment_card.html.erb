@@ -46,11 +46,13 @@
         Submission - ID: <%= submission.id %>
       <% end %>
 
-      <%= link_to event_invoice_path(@event, submission_id: submission.id, return_to: "bulk_payments"),
-                  title: "View invoice",
-                  class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
-        <i class="fa-solid fa-file-invoice-dollar text-xs"></i>
-        Invoice
+      <% if submission.slug.present? %>
+        <%= link_to bulk_payment_ticket_path(submission.slug, return_to: "bulk_payments", expand: submission.id),
+                    title: "View ticket",
+                    class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
+          <i class="fa-solid fa-ticket text-xs"></i>
+          Ticket
+        <% end %>
       <% end %>
     </div>
 
