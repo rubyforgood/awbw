@@ -11,6 +11,16 @@ class RegistrationTicketCalloutDecorator < ApplicationDecorator
     "Won't show on the ticket — #{gap}" if gap
   end
 
+  # For the editor's collapsed callout header: the config change the admin must
+  # make for this built-in to appear on the ticket (e.g. "set an event cost above
+  # $0"), or nil when it's already set up (or it's a custom callout with no config
+  # dependency). Shown regardless of published state so admins see the requirement
+  # before publishing. Shares BuiltinCalloutCards.config_gap_action.
+  def config_action_hint
+    return unless builtin?
+    BuiltinCalloutCards.config_gap_action(event, builtin_key)
+  end
+
   # This callout's linked resources as cards, in display order, each reading its
   # subtitle from the materialized join row and linking to the resource's own
   # page. Shared by every surface that lists a callout's resources (the handouts

@@ -67,4 +67,31 @@ RSpec.describe RegistrationTicketCalloutDecorator, type: :decorator do
       expect(callout.decorate.ticket_suppression_reason).to be_nil
     end
   end
+
+  describe "#config_action_hint" do
+    def builtin_callout(builtin_key, event:, hidden: true)
+      create(:registration_ticket_callout, event:, builtin_key:, hidden:,
+             title: builtin_key.humanize)
+    end
+
+    it "names the config change even when the callout is unpublished" do
+      callout = builtin_callout("payment", event: create(:event, cost_cents: 0), hidden: true)
+      expect(callout.decorate.config_action_hint).to eq("set an event cost above $0")
+    end
+
+    it "names setting CE hours for a CE callout on an event that offers none" do
+      callout = builtin_callout("ce_hours", event: create(:event, ce_hours_offered: nil))
+      expect(callout.decorate.config_action_hint).to eq("set CE hours above 0 under form settings")
+    end
+
+    it "is nil once the event is configured for the callout" do
+      callout = builtin_callout("payment", event: create(:event, cost_cents: 5_000))
+      expect(callout.decorate.config_action_hint).to be_nil
+    end
+
+    it "is nil for a custom (non-built-in) callout" do
+      callout = create(:registration_ticket_callout, builtin_key: nil)
+      expect(callout.decorate.config_action_hint).to be_nil
+    end
+  end
 end

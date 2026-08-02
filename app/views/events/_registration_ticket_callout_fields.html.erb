@@ -11,7 +11,7 @@
 <div
   class="nested-fields registration-ticket-callout-fields flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors cursor-pointer select-none"
   data-controller="callout-preview expandable-card"
-  data-action="click->expandable-card#toggleFromRow"
+  data-action="click->expandable-card#toggleFromRow expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse"
   data-expandable-card-expanded-value="<%= f.object.published? %>"
   data-callout-preview-themes-value="<%= DomainTheme.swatches.to_json %>"
   data-callout-preview-defaults-value="<%= RegistrationTicketCallout::DEFAULT_COLORS.to_json %>"
@@ -71,13 +71,13 @@
 
       <span class="text-gray-800 font-medium truncate max-w-xs" title="<%= f.object.title %>"><%= f.object.title %></span>
 
-      <%# Warns when this published built-in is set up but the event isn't
-          configured for it, so it still won't reach the ticket (free event → no
-          payment card, no scholarship form / CE hours → no scholarship / CE card). %>
-      <% if (suppression_reason = f.object.decorate.ticket_suppression_reason) %>
+      <%# Names the config the event is missing for this built-in (a cost, a
+          scholarship form, CE hours, a videoconference link) so admins know what
+          to change for it to reach the ticket. Shown regardless of published state. %>
+      <% if (config_hint = f.object.decorate.config_action_hint) %>
         <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 shrink-0">
           <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-          <%= suppression_reason %>
+          Won't show unless you <%= config_hint %>
         </span>
       <% end %>
     </div>

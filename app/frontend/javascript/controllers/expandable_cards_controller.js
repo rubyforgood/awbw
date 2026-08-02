@@ -14,10 +14,13 @@ export default class extends Controller {
 
   toggleAll() {
     this.expandedValue = !this.expandedValue
+    this.dispatch(this.expandedValue ? "expandAll" : "collapseAll")
   }
 
+  // Only syncs the button's own label/icon. The expand/collapse broadcast lives
+  // in toggleAll so it fires solely on an explicit click — not on connect, which
+  // would otherwise force every card open regardless of its own initial state.
   expandedValueChanged() {
-    this.dispatch(this.expandedValue ? "expandAll" : "collapseAll")
     if (this.hasLabelTarget) {
       this.labelTarget.textContent = this.expandedValue ? "Collapse all" : "Expand all"
     }
