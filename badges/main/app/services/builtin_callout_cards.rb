@@ -55,6 +55,7 @@ class BuiltinCalloutCards
       EditorCard.new("certificate", "fa-solid fa-certificate", "green", "Certificate of completion", "View and download your certificate", "Once the certificate is unlocked", nil),
       EditorCard.new("scholarship", "fa-solid fa-award", "fuchsia", "Scholarship", "Your scholarship request and award", "When the registrant requested a scholarship", nil),
       EditorCard.new("videoconference", "fa-solid fa-video", "blue", "Videoconference", "Join link and how to add it to your calendar", "When the event has a videoconference link", "Details come from this event's videoconference settings."),
+      EditorCard.new("staff", "fa-solid fa-people-group", "blue", "Meet the staff", "The team for this event", "Always shown when published", "The roster comes from this event's staff."),
       EditorCard.new("handouts", "fa-solid fa-folder-open", "blue", "Handouts", "Worksheets and resources for the training", "On facilitator trainings", "Items link to their relevant resources."),
       EditorCard.new("faq", "fa-solid fa-circle-question", "blue", "Frequently asked questions", "Common questions about the 2-day training", "On facilitator trainings", nil)
     ].reject { |card| materialized.include?(card.builtin_key) }
@@ -69,7 +70,8 @@ class BuiltinCalloutCards
     "certificate" => :certificate_card,
     "scholarship" => :scholarship_status_card,
     "ce_hours" => :ce_hours_card,
-    "videoconference" => :videoconference_card
+    "videoconference" => :videoconference_card,
+    "staff" => :staff_card
   }.freeze
 
   # Why a built-in card with this builtin_key can never appear on the given event's
@@ -293,6 +295,16 @@ class BuiltinCalloutCards
   # Short month/day for a deadline shown inline on the CE card, e.g. "Jul 1".
   def ce_deadline_text(deadline)
     deadline.strftime("%b %-d")
+  end
+
+  # Always shown once published — the roster page (which shares its card grid
+  # with the admin staff page) handles the empty case, so there's no config gap.
+  def staff_card
+    Card.new(icon_class: "fa-solid fa-people-group", color: "blue",
+             title: "Meet the staff",
+             subtitle: "The team for this event",
+             href: registration_staff_path(registration.slug),
+             target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 
   # Shown only when the event has a videoconference URL set.

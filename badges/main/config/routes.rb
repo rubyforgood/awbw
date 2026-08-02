@@ -90,6 +90,7 @@ Rails.application.routes.draw do
   get "registration/:slug/handouts", to: "events/callouts#handouts", as: :registration_handouts
   get "registration/:slug/resource/:resource_id", to: "events/callouts#resource", as: :registration_resource
   get "registration/:slug/videoconference", to: "events/callouts#videoconference", as: :registration_videoconference
+  get "registration/:slug/staff", to: "events/callouts#staff", as: :registration_staff
   post "registration/:slug/resend_confirmation", to: "events/registrations#resend_confirmation", as: :registration_resend_confirmation
   post "registration/:slug/cancel", to: "events/registrations#cancel", as: :registration_cancel
   post "registration/:slug/reactivate", to: "events/registrations#reactivate", as: :registration_reactivate
@@ -142,6 +143,7 @@ Rails.application.routes.draw do
       get "sample_ticket/scholarship", to: "events/callouts#scholarship", defaults: { sample: "1" }, as: :sample_scholarship
       get "sample_ticket/ce", to: "events/callouts#ce", defaults: { sample: "1" }, as: :sample_ce
       get "sample_ticket/videoconference", to: "events/callouts#videoconference", defaults: { sample: "1" }, as: :sample_videoconference
+      get "sample_ticket/staff", to: "events/callouts#staff", defaults: { sample: "1" }, as: :sample_staff
       get :background
       get :registrants
       get :onboarding

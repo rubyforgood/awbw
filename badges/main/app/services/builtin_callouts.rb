@@ -265,6 +265,18 @@ class BuiltinCallouts
         display_from: ->(event) { event.start_date - 7.days if event.start_date }
       },
       {
+        builtin_key: "staff",
+        # Links to the "Meet the staff" roster page, which shares its card grid
+        # with the admin staff page. Behavioral (BuiltinCalloutCards#staff_card
+        # supplies the link); the row still owns the editable title/subtitle/copy.
+        title: "Meet the staff",
+        subtitle: "The team for this event",
+        callout_type: "reference",
+        icon_class: "fa-solid fa-people-group",
+        color_class: "blue",
+        hidden: ->(_event) { true }
+      },
+      {
         builtin_key: "handouts",
         title: "Handouts",
         subtitle: "Worksheets and resources for the training",

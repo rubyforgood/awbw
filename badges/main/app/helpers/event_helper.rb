@@ -9,6 +9,7 @@ module EventHelper
     when "scholarship" then sample_scholarship_event_path(event)
     when "ce_hours" then sample_ce_event_path(event)
     when "videoconference" then sample_videoconference_event_path(event)
+    when "staff" then sample_staff_event_path(event)
     end
   end
 

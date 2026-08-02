@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_30_012644) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_160043) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -816,6 +816,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_012644) do
     t.string "name"
     t.text "notes", size: :long
     t.integer "organization_status_id"
+    t.boolean "profile_show_age_ranges", default: true, null: false
     t.boolean "profile_show_description", default: true, null: false
     t.boolean "profile_show_email", default: true, null: false
     t.boolean "profile_show_events_registered", default: true, null: false
@@ -1003,6 +1004,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_012644) do
     t.text "notes"
     t.boolean "profile_is_searchable", default: true, null: false
     t.boolean "profile_show_affiliations", default: true, null: false
+    t.boolean "profile_show_age_ranges", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
     t.boolean "profile_show_credentials", default: true, null: false
     t.boolean "profile_show_email", default: true, null: false

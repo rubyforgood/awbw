@@ -188,7 +188,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :staff?
     @event = @event.decorate
     @event_staffs = @event.event_staffs
-      .includes(person: [ :sectors, { avatar_attachment: :blob }, { affiliations: :organization } ])
+      .includes(person: [ :sectors, { categorizable_items: { category: :category_type } }, { avatar_attachment: :blob }, { affiliations: :organization } ])
       .ordered_by_name
   end
 
@@ -201,7 +201,7 @@ class EventsController < ApplicationController
     authorize! @event, to: :update_staff?
 
     if @event.update(event_staff_params)
-      redirect_to staff_event_path(@event), notice: "Event staff updated."
+      redirect_to staff_update_return_path, notice: "Event staff updated."
     else
       render :edit_staff, status: :unprocessable_content
     end
@@ -411,6 +411,18 @@ class EventsController < ApplicationController
   end
 
   private
+
+  # Where to land after saving staff: back to the origin the editor was opened
+  # from (the sample preview, or a registrant's staff callout page), else the
+  # admin staff roster. Kept in sync with the edit_staff eyebrow.
+  def staff_update_return_path
+    case params[:return_to]
+    when "sample_staff" then sample_staff_event_path(@event)
+    when "registration_staff"
+      params[:reg].present? ? registration_staff_path(params[:reg]) : staff_event_path(@event)
+    else staff_event_path(@event)
+    end
+  end
 
   # The registrations the admin checked on the recipient picker, narrowed to those
   # we can actually email. Shared by the confirm interstitial and the send action

@@ -14,12 +14,7 @@
       <% end %>
     <% end %>
     <% if allowed_to?(:edit?, resource) %>
-      <%= link_to edit_resource_path(resource), target: "_blank", rel: "noopener",
-            class: "admin-only inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
-        <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
-        Edit resource
-        <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-      <% end %>
+      <%= render "events/callouts/admin_edit_link", path: edit_resource_path(resource), label: "Edit resource" %>
     <% end %>
   </div>
 <% end %>

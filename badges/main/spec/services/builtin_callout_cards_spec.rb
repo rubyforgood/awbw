@@ -17,8 +17,11 @@ RSpec.describe BuiltinCalloutCards do
   end
 
   describe "#cards" do
-    it "shows the payment card for a bare paid, non-training registration" do
-      expect(card_titles(registration)).to eq([ "Make your payment" ])
+    it "shows the payment and staff cards for a bare paid, non-training registration" do
+      # Staff has no config gate, so it always shows in the code fallback (for
+      # events not yet materialized); every other card here gates on config. On a
+      # legacy event with no staff row the card just links back to the ticket.
+      expect(card_titles(registration)).to eq([ "Make your payment", "Meet the staff" ])
     end
 
     it "omits the payment card for a free event" do
@@ -215,7 +218,8 @@ RSpec.describe BuiltinCalloutCards do
         "Certificate of completion",
         "Scholarship",
         event.ce_hours_label,
-        "Videoconference"
+        "Videoconference",
+        "Meet the staff"
       ])
     end
   end
@@ -250,6 +254,15 @@ RSpec.describe BuiltinCalloutCards do
 
       # Certificate isn't unlocked (event not ended, not attended).
       expect(described_class.new(registration).card_for(callout)).to be_nil
+    end
+
+    it "links the staff card to the registrant's roster page, keeping the row's text" do
+      callout = create(:registration_ticket_callout, event:, builtin_key: "staff",
+        title: "Meet our team", subtitle: "Who you'll learn from")
+
+      card = described_class.new(registration).card_for(callout)
+      expect(card.title).to eq("Meet our team")            # row owns the text
+      expect(card.href).to eq("/registration/#{registration.slug}/staff")
     end
 
     it "keeps the live CE deadline badge on a materialized CE row" do

@@ -91,6 +91,88 @@ RSpec.describe "Events::Callouts", type: :request do
     end
   end
 
+  describe "callout page header" do
+    let(:event) { create(:event, title: "Windows workshop", start_date: Date.new(2020, 1, 12), end_date: Date.new(2099, 12, 12)) }
+
+    it "shows the event title and short date range under the callout title" do
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false)
+      get registration_staff_path(registration.slug)
+      # title · "<Mon D, 2020> - <Mon D, 2099>" — the short_date_range format
+      # (no weekday, with year); the exact day depends on the request time zone.
+      expect(response.body).to match(/Windows workshop · \w{3} \d{1,2}, 2020 - \w{3} \d{1,2}, 2099/)
+    end
+  end
+
+  describe "GET /registration/:slug/staff" do
+    it "renders the staff roster with the event's staff cards when published" do
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false,
+             title: "Meet the staff")
+      create(:event_staff, event:, person: create(:person, first_name: "Dana", last_name: "Facil"))
+
+      get registration_staff_path(registration.slug)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Dana")
+      expect(response.body).to include("Meet the staff")
+    end
+
+    it "renders the empty state when the event has no staff" do
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false)
+      get registration_staff_path(registration.slug)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("None yet!")
+    end
+
+    it "titles the page with the callout row's editable title" do
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false,
+             title: "Meet our facilitators")
+      get registration_staff_path(registration.slug)
+      expect(response.body).to include("Meet our facilitators")
+    end
+
+    it "renders the callout row's editable intro copy above the roster" do
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false,
+             description: "<p>Say hi to our team.</p>")
+      get registration_staff_path(registration.slug)
+      expect(response.body).to include("Say hi to our team.")
+    end
+
+    it "redirects to the ticket when the callout is hidden or absent" do
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: true)
+      get registration_staff_path(registration.slug)
+      expect(response).to redirect_to(registration_ticket_path(registration.slug))
+    end
+
+    it "shows a staff member's primary age range, gated by their profile toggle" do
+      age_type = create(:category_type, name: "AgeRange", published: true)
+      youth = create(:category, :published, category_type: age_type, name: "Youth")
+      staffer = create(:person)
+      staffer.tag_age_groups(primary_ids: [ youth.id ], additional_ids: [])
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false)
+      create(:event_staff, event:, person: staffer)
+
+      get registration_staff_path(registration.slug)
+      expect(response.body).to include("Youth")
+
+      staffer.update!(profile_show_age_ranges: false)
+      get registration_staff_path(registration.slug)
+      expect(response.body).not_to include("Youth")
+    end
+
+    it "shows an admin-only Edit staff button to admins" do
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false)
+      sign_in create(:user, super_user: true)
+      get registration_staff_path(registration.slug)
+      expect(response.body).to include(edit_staff_event_path(event))
+    end
+
+    it "hides the Edit staff button from non-admin registrants" do
+      create(:registration_ticket_callout, event:, builtin_key: "staff", hidden: false)
+      get registration_staff_path(registration.slug)
+      expect(response.body).not_to include(edit_staff_event_path(event))
+    end
+  end
+
   describe "GET /registration/:slug/payment" do
     let(:event) { create(:event, cost_cents: 10_000) }
 
