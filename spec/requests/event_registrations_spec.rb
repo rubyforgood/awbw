@@ -487,6 +487,23 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("financial records")
         expect(response.body).to include("reverted payments still count")
       end
+
+      it "prompts to record the destination for a transferred-out registration" do
+        existing_registration.update!(status: "transferred_out")
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Record where they transferred to")
+      end
+
+      it "shows the source event on a transferred-in registration" do
+        source = create(:event_registration, event: event, status: "transferred_out")
+        incoming = create(:event_registration, event: new_event, transferred_from_registration: source)
+
+        get edit_event_registration_path(incoming)
+
+        expect(response.body).to include("Transferred in from")
+      end
     end
 
     describe "PATCH /event_registrations/:id" do
@@ -556,6 +573,73 @@ RSpec.describe "EventRegistrations", type: :request do
               params: { event_registration: { someone_else_will_pay: "1" } }
 
         expect(existing_registration.reload.someone_else_will_pay).to be(true)
+      end
+
+      it "redirects to the transfer screen when newly marked transferred out" do
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { status: "transferred_out" } }
+
+        expect(response).to redirect_to(transfer_event_registration_path(existing_registration, return_to: nil))
+      end
+
+      it "does not redirect to the transfer screen once a destination is recorded" do
+        create(:event_registration, transferred_from_registration: existing_registration)
+        existing_registration.update!(status: "transferred_out")
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { fee_note: "Settled" } }
+
+        expect(response).not_to redirect_to(transfer_event_registration_path(existing_registration, return_to: nil))
+      end
+    end
+
+    describe "transfer flow" do
+      let!(:source) { create(:event_registration, event: event, status: "transferred_out") }
+
+      describe "GET /event_registrations/:id/transfer" do
+        it "renders the destination picker, excluding the source event" do
+          other = create(:event, title: "Destination Event", published: true)
+
+          get transfer_event_registration_path(source)
+
+          expect(response).to have_http_status(:success)
+          expect(response.body).to include("Destination Event")
+          # The source event isn't offered as a transfer destination.
+          expect(response.body).not_to include("<option value=\"#{event.id}\"")
+        end
+      end
+
+      describe "POST /event_registrations/:id/process_transfer" do
+        let(:destination_event) { create(:event, published: true) }
+
+        it "creates the incoming registration linked back to the source" do
+          expect {
+            post process_transfer_event_registration_path(source),
+                 params: { destination_event_id: destination_event.id }
+          }.to change(EventRegistration, :count).by(1)
+
+          incoming = EventRegistration.find_by(registrant: source.registrant, event: destination_event)
+          expect(incoming.transferred_from_registration).to eq(source)
+          expect(incoming.status).to eq("registered")
+          expect(response).to redirect_to(edit_event_registration_path(incoming))
+        end
+
+        it "links an existing registration on the destination event instead of duplicating" do
+          existing = create(:event_registration, registrant: source.registrant, event: destination_event)
+
+          expect {
+            post process_transfer_event_registration_path(source),
+                 params: { destination_event_id: destination_event.id }
+          }.not_to change(EventRegistration, :count)
+
+          expect(existing.reload.transferred_from_registration).to eq(source)
+        end
+
+        it "sends the admin back to pick an event when none was chosen" do
+          post process_transfer_event_registration_path(source)
+
+          expect(response).to redirect_to(transfer_event_registration_path(source))
+        end
       end
     end
 
@@ -1639,6 +1723,13 @@ RSpec.describe "EventRegistrations", type: :request do
     describe "GET /event_registrations/:id/confirm" do
       it "redirects to root (unauthorized)" do
         get confirm_event_registration_path(existing_registration)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "GET /event_registrations/:id/transfer" do
+      it "redirects to root (admin only)" do
+        get transfer_event_registration_path(existing_registration)
         expect(response).to redirect_to(root_path)
       end
     end
