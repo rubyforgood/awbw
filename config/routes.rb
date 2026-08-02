@@ -148,6 +148,7 @@ Rails.application.routes.draw do
       get :revenue
       get :participation
       get :statistics
+      get :facilitator_training_report
     end
     member do
       get :dashboard

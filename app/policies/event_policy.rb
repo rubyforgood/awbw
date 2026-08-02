@@ -31,6 +31,12 @@ class EventPolicy < ApplicationPolicy
     admin?
   end
 
+  # The facilitator-training report aggregates scholarship money and trainee
+  # counts across every training, so it's admin-only like the revenue report.
+  def facilitator_training_report?
+    admin?
+  end
+
   def show?
     return true if admin?
 
@@ -160,6 +166,7 @@ class EventPolicy < ApplicationPolicy
                   :pre_title,
                   :pre_date_text,
                   :facilitator_training,
+                  :on_demand,
                   :featured,
                   :start_date, :start_date_date, :start_date_time,
                   :end_date, :end_date_date, :end_date_time,

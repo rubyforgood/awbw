@@ -42,5 +42,19 @@
         <%= render "events/participation_summary", report: @participation_report, period: @participation_report.period_scope(@period) %>
       </div>
     </div>
+
+    <%# Scholarship + trainee summary across facilitator trainings, grouped by
+        year. The same partial the standalone report page renders. %>
+    <section class="mt-10 pt-8 border-t border-gray-200">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Facilitator training summary</h2>
+          <p class="text-gray-600 text-sm mt-1">Scholarship dollars and awards (funded vs unfunded) plus trainee counts, by training.</p>
+        </div>
+        <%= link_to "Open report →", facilitator_training_report_events_path(return_to: params[:return_to]),
+              class: "text-sm font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} hover:underline whitespace-nowrap" %>
+      </div>
+      <%= render "facilitator_training_report", report: @facilitator_report %>
+    </section>
   </div>
 </div>

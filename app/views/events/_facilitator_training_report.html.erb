@@ -1,0 +1,125 @@
+<%# Shareable facilitator-training summary: scholarship dollars and award counts
+    (funded vs unfunded) plus trainee counts, one column per training, grouped by
+    year. Pass `report:` (a FacilitatorTrainingReport). Rendered on the event
+    revenue page and the standalone facilitator training report page. %>
+<% if report.any? %>
+  <div class="space-y-10">
+    <% report.years.each do |group| %>
+      <% events = group.columns %>
+      <section class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <div class="flex items-baseline justify-between gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-900"><%= group.year || "Undated" %> facilitator trainings</h3>
+          <span class="text-xs text-gray-500"><%= pluralize(events.size, "training") %></span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border-collapse">
+            <%# ---- $ of Scholarships ---- %>
+            <thead>
+              <tr class="bg-rose-100 text-gray-800">
+                <th class="text-left font-semibold px-3 py-2 border border-gray-200">$ of scholarships</th>
+                <% events.each do |column| %>
+                  <th class="text-right font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap" title="<%= column.event.title %>">
+                    <%= column.label %>
+                    <% if column.date_label %>
+                      <span class="block text-xs font-normal text-gray-500"><%= column.date_label %></span>
+                    <% end %>
+                  </th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody class="tabular-nums">
+              <tr>
+                <td class="px-3 py-2 border border-gray-200 text-gray-600">Total funded</td>
+                <% events.each do |column| %>
+                  <td class="px-3 py-2 border border-gray-200 text-right"><%= dollars_from_cents(column.funded_cents) %></td>
+                <% end %>
+              </tr>
+              <tr>
+                <td class="px-3 py-2 border border-gray-200 text-gray-600">Total unfunded</td>
+                <% events.each do |column| %>
+                  <td class="px-3 py-2 border border-gray-200 text-right"><%= dollars_from_cents(column.unfunded_cents) %></td>
+                <% end %>
+              </tr>
+              <tr class="font-semibold text-gray-900">
+                <td class="px-3 py-2 border border-gray-200">Total</td>
+                <% events.each do |column| %>
+                  <td class="px-3 py-2 border border-gray-200 text-right"><%= dollars_from_cents(column.scholarship_cents) %></td>
+                <% end %>
+              </tr>
+              <tr class="bg-gray-100 font-bold text-gray-900">
+                <td class="px-3 py-2 border border-gray-200">Overall total</td>
+                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= dollars_from_cents(group.scholarship_cents) %></td>
+              </tr>
+
+              <%# ---- # of Scholarships ---- %>
+              <tr class="bg-amber-100 text-gray-800">
+                <th class="text-left font-semibold px-3 py-2 border border-gray-200"># of scholarships</th>
+                <% events.each do |column| %>
+                  <th class="text-right font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap"><%= column.label %></th>
+                <% end %>
+              </tr>
+              <tr>
+                <td class="px-3 py-2 border border-gray-200 text-gray-600">Total # funded</td>
+                <% events.each do |column| %>
+                  <td class="px-3 py-2 border border-gray-200 text-right"><%= column.funded_count %></td>
+                <% end %>
+              </tr>
+              <tr>
+                <td class="px-3 py-2 border border-gray-200 text-gray-600">Total # unfunded</td>
+                <% events.each do |column| %>
+                  <td class="px-3 py-2 border border-gray-200 text-right"><%= column.unfunded_count %></td>
+                <% end %>
+              </tr>
+              <tr class="font-semibold text-gray-900">
+                <td class="px-3 py-2 border border-gray-200">Total #</td>
+                <% events.each do |column| %>
+                  <td class="px-3 py-2 border border-gray-200 text-right"><%= column.scholarship_count %></td>
+                <% end %>
+              </tr>
+              <tr class="bg-gray-100 font-bold text-gray-900">
+                <td class="px-3 py-2 border border-gray-200">Overall # total</td>
+                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.scholarship_count %></td>
+              </tr>
+
+              <%# ---- # of Trainees ---- %>
+              <tr class="bg-yellow-100 text-gray-800">
+                <th class="text-left font-semibold px-3 py-2 border border-gray-200"># of trainees</th>
+                <% events.each do |column| %>
+                  <th class="text-right font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap">
+                    <%= column.label %>
+                    <% if column.on_demand? %>
+                      <span class="block text-xs font-normal text-gray-500">On-demand</span>
+                    <% end %>
+                  </th>
+                <% end %>
+              </tr>
+              <tr class="font-semibold text-gray-900">
+                <td class="px-3 py-2 border border-gray-200 text-gray-600">Trainees</td>
+                <% events.each do |column| %>
+                  <td class="px-3 py-2 border border-gray-200 text-right"><%= column.trainee_count %></td>
+                <% end %>
+              </tr>
+              <tr>
+                <td class="px-3 py-2 border border-gray-200 text-gray-600">2-Day total</td>
+                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.two_day_trainee_count %></td>
+              </tr>
+              <tr>
+                <td class="px-3 py-2 border border-gray-200 text-gray-600">On-Demand total</td>
+                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.on_demand_trainee_count %></td>
+              </tr>
+              <tr class="bg-gray-100 font-bold text-gray-900">
+                <td class="px-3 py-2 border border-gray-200">Overall total</td>
+                <td class="px-3 py-2 border border-gray-200 text-right" colspan="<%= events.size %>"><%= group.trainee_count %></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% end %>
+  </div>
+<% else %>
+  <div class="text-center py-8 text-gray-500">
+    No facilitator trainings yet — mark an event as a facilitator training to see it here.
+  </div>
+<% end %>

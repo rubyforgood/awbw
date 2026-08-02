@@ -38,12 +38,21 @@ class EventsController < ApplicationController
   end
 
   # Events statistics hub: the revenue and participation report summaries side by
-  # side, each linking to its full report.
+  # side, each linking to its full report, plus the facilitator-training summary.
   def statistics
     authorize!
     @period = params[:period].presence_in(%w[ this_year last_year all_time ]) || "this_year"
     @revenue_report = EventRevenueReport.new(report_events(Event.paid))
     @participation_report = EventParticipationReport.new(report_events(Event.all))
+    @facilitator_report = FacilitatorTrainingReport.new(facilitator_training_events)
+  end
+
+  # Standalone, shareable summary of scholarship dollars/counts and trainee counts
+  # across facilitator trainings, grouped by year. Admin-only (aggregates money
+  # across every event), the same report partial the statistics hub embeds.
+  def facilitator_training_report
+    authorize!
+    @report = FacilitatorTrainingReport.new(facilitator_training_events)
   end
 
   def new
@@ -685,6 +694,13 @@ class EventsController < ApplicationController
 
   def set_event
     @event = Event.find(params[:id])
+  end
+
+  # Facilitator-training events for the summary report, ordered by start date so
+  # columns read left-to-right chronologically within each year. Passed as plain
+  # records — the report decorates each for its column label/date range.
+  def facilitator_training_events
+    Event.facilitator_trainings.order(:start_date)
   end
 
   def event_params

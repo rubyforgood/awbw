@@ -103,6 +103,17 @@ class EventDashboard
     scholarships.where(grant_id: nil).sum(:amount_cents)
   end
 
+  # Number of scholarship awards, split the same way as the dollar figures: a
+  # scholarship is funded when a grant backs it, unfunded otherwise. Together
+  # these sum to the event's total scholarship award count.
+  def funded_scholarship_count
+    scholarships.where.not(grant_id: nil).count
+  end
+
+  def unfunded_scholarship_count
+    scholarships.where(grant_id: nil).count
+  end
+
   def scholarship_recipient_count
     scholarships.distinct.count(:recipient_id)
   end
