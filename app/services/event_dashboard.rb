@@ -381,6 +381,13 @@ class EventDashboard
     end
   end
 
+  # Registrant (Person) ids whose organization(s) carried the given program
+  # status (:new / :ongoing / :reinstated) as of the event — drill target for
+  # the organizations card's program-status subtitle.
+  def program_status_registrant_ids(status)
+    program_statuses_by_registrant.select { |_, statuses| statuses.include?(status) }.keys
+  end
+
   # Organization ids per registrant (Person id) — the inverse of
   # organization_registrant_ids_by_org.
   def organization_ids_by_registrant
@@ -457,17 +464,6 @@ class EventDashboard
     @sectors ||= Sector.where(id: registrant_sector_ids).order(:name)
   end
 
-  # Counts of distinct sectors named as a primary vs an additional sector, for
-  # the sectors card subtitle. These overlap (a sector can be primary for one
-  # registrant and additional for another), so they don't sum to #sectors.size.
-  def primary_sector_count
-    primary_sector_ids.size
-  end
-
-  def additional_sector_count
-    additional_sector_ids.size
-  end
-
   # Sectors registrants named as their single primary sector (the
   # registration dropdown), ordered for the "Primary sector" chart.
   def primary_sectors
@@ -514,6 +510,19 @@ class EventDashboard
 
   def additional_sector_count
     additional_sector_ids.size
+  end
+
+  # Registrant (Person) ids who named a primary sector, and those who tagged a
+  # sector without naming it primary — drill targets for the sectors subtitle.
+  # A registrant can appear in both when their additional sectors differ from
+  # their primary one.
+  def primary_sector_registrant_ids
+    primary_sector_rows.map(&:first).uniq
+  end
+
+  def additional_sector_registrant_ids
+    primary_pairs = primary_sector_rows.to_set
+    registrant_sector_pairs.reject { |pair| primary_pairs.include?(pair) }.map(&:first).uniq
   end
 
   # Free-text "Other" sectors registrants typed, kept as OtherResponse records

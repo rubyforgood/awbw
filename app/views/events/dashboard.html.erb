@@ -258,16 +258,12 @@
     <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg font-bold <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
-            <i class="fa-solid fa-users text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.registrant_count, registrants_event_path(@event, status_filter: "active"), class: "hover:underline" %>
-            </span>
-            <span class="truncate">Registrants</span>
-          </h3>
+          <%= render "headcount_header", color_key: :people, icon: "fa-users",
+                count: @dashboard.registrant_count, label: "Registrants",
+                path: registrants_event_path(@event, status_filter: "active") %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><%= link_to registrants_event_path(@event, status_filter: "active"), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.registrant_count %> active <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% if @dashboard.inactive_registration_count.positive? %> · <%= link_to registrants_event_path(@event, status_filter: "inactive"), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.inactive_registration_count %> inactive <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% end %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", count: @dashboard.registrant_count, label: "#{@dashboard.registrant_count} active", path: registrants_event_path(@event, status_filter: "active") %><% if @dashboard.inactive_registration_count.positive? %> · <%= render "stat_link", count: @dashboard.inactive_registration_count, label: "#{@dashboard.inactive_registration_count} inactive", path: registrants_event_path(@event, status_filter: "inactive") %><% end %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.registrants.any? %>
@@ -293,22 +289,12 @@
     <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:event_registrations, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg font-bold <%= DomainTheme.text_class_for(:event_registrations, intensity: 700) %>">
-            <i class="fa-solid fa-user-check text-xs <%= DomainTheme.text_class_for(:event_registrations, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.attended_count, registrants_event_path(@event, attendance_status: "attended"), class: "hover:underline" %>
-            </span>
-            <span class="truncate">Attended</span>
-          </h3>
+          <%= render "headcount_header", color_key: :event_registrations, icon: "fa-user-check",
+                count: @dashboard.attended_count, label: "Attended",
+                path: registrants_event_path(@event, attendance_status: "attended") %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">
-          <% if @dashboard.attendance_recorded? %>
-            <%= number_to_percentage(@dashboard.attendance_rate * 100, precision: 0) %> of <%= pluralize(@dashboard.expected_attendee_count, "registrant") %>
-          <% else %>
-            Not yet recorded
-          <% end %>
-        </p>
+        <p class="text-xs text-gray-500 mt-1"><% if @dashboard.attendance_recorded? %><%= render "stat_link", count: @dashboard.expected_attendee_count, label: "#{number_to_percentage(@dashboard.attendance_rate * 100, precision: 0)} of #{pluralize(@dashboard.expected_attendee_count, "registrant")}", path: registrants_event_path(@event) %><% else %>Not yet recorded<% end %></p>
       </summary>
 
       <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
@@ -338,17 +324,13 @@
     <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg font-bold <%= DomainTheme.text_class_for(:organizations, intensity: 700) %>">
-            <i class="fa-solid fa-building text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.organization_count, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">Organizations</span>
-          </h3>
+          <%= render "headcount_header", color_key: :organizations, icon: "fa-building",
+                count: @dashboard.organization_count, label: "Organizations",
+                path: registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
         <% program_counts = @dashboard.program_status_counts %>
-        <p class="text-xs text-gray-500 mt-1"><%= program_counts[:new] %> new · <%= program_counts[:ongoing] %> ongoing · <%= program_counts[:reinstated] %> reinstated</p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", count: program_counts[:new], label: "#{program_counts[:new]} new", path: registrants_event_path(@event, registrant_ids: @dashboard.program_status_registrant_ids(:new).join("-").presence || "0") %> · <%= render "stat_link", count: program_counts[:ongoing], label: "#{program_counts[:ongoing]} ongoing", path: registrants_event_path(@event, registrant_ids: @dashboard.program_status_registrant_ids(:ongoing).join("-").presence || "0") %> · <%= render "stat_link", count: program_counts[:reinstated], label: "#{program_counts[:reinstated]} reinstated", path: registrants_event_path(@event, registrant_ids: @dashboard.program_status_registrant_ids(:reinstated).join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.organizations.any? %>
@@ -377,16 +359,12 @@
     <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg font-bold <%= DomainTheme.text_class_for(:sectors, intensity: 700) %>">
-            <i class="fa-solid fa-layer-group text-xs <%= DomainTheme.text_class_for(:sectors, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.sectors.size, registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">Sectors</span>
-          </h3>
+          <%= render "headcount_header", color_key: :sectors, icon: "fa-layer-group",
+                count: @dashboard.sectors.size, label: "Sectors",
+                path: registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><%= @dashboard.primary_sector_count %> primary · <%= @dashboard.additional_sector_count %> additional</p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", count: @dashboard.primary_sector_count, label: "#{@dashboard.primary_sector_count} primary", path: registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids.join("-").presence || "0") %> · <%= render "stat_link", count: @dashboard.additional_sector_count, label: "#{@dashboard.additional_sector_count} additional", path: registrants_event_path(@event, registrant_ids: @dashboard.additional_sector_registrant_ids.join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.sectors.any? %>
@@ -412,16 +390,12 @@
     <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg font-bold <%= DomainTheme.text_class_for(:addresses, intensity: 700) %>">
-            <i class="fa-solid fa-location-dot text-xs <%= DomainTheme.text_class_for(:addresses, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.states.size, registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">States</span>
-          </h3>
+          <%= render "headcount_header", color_key: :addresses, icon: "fa-location-dot",
+                count: @dashboard.states.size, label: "States",
+                path: registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><% if @dashboard.countries.any? %><%= link_to registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-")), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= pluralize(@dashboard.countries.size, "country") %> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% else %><%= pluralize(@dashboard.countries.size, "country") %><% end %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", count: @dashboard.countries.size, label: pluralize(@dashboard.countries.size, "country"), path: registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.states.any? %>
