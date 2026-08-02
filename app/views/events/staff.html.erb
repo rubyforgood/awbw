@@ -21,7 +21,7 @@
   <div class="text-center mb-8">
     <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide"><%= @event.title %></p>
     <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
-      <i class="fa-solid fa-users text-blue-600"></i>
+      <i class="fa-solid fa-users <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i>
       Meet the staff
     </h1>
   </div>
