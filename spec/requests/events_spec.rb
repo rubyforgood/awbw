@@ -1698,7 +1698,7 @@ RSpec.describe "Events", type: :request do
         get dashboard_event_path(event)
 
         page = Capybara.string(response.body)
-        expect(page).to have_text("Attendance", normalize_ws: true)
+        expect(page).to have_text("Attended", normalize_ws: true)
         # Every status is its own row that drills into the roster filtered to it.
         %w[ attended no_show registered cancelled transferred_in transferred_out incomplete_attendance ].each do |status|
           expect(page).to have_link(href: registrants_event_path(event, attendance_status: status), visible: :all)
