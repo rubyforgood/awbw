@@ -214,7 +214,7 @@ class EventsController < ApplicationController
     scope = scope.funder_name(params[:funder_name]) if params[:funder_name].present?
     scope = scope.submission_status(params[:submission_status], @event) if params[:submission_status].present?
     scope = scope.registrant_city(params[:city]) if params[:city].present?
-    scope = scope.organization_status(params[:org_status], @event) if params[:org_status].present?
+    scope = scope.organization_linking_status(params[:org_status], @event) if params[:org_status].present?
     scope = scope.account_status(params[:account_status]) if params[:account_status].present?
     scope = scope.registrant_ids(params[:registrant_ids]) if params[:registrant_ids].present?
     scope = scope.registrant_state(params[:state]) if params[:state].present?
