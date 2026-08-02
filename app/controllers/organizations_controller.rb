@@ -206,6 +206,12 @@ class OrganizationsController < ApplicationController
 
   def set_index_variables
     @organization_statuses = OrganizationStatus.all
+    @sector_options = Sector.published.order(:name).pluck(:name)
+    @age_group_options = Category.joins(:category_type)
+                                 .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
+                                 .published
+                                 .order(:position, :name)
+                                 .pluck(:name)
   end
 
   def populations_served

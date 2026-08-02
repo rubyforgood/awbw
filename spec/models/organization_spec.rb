@@ -286,6 +286,31 @@ RSpec.describe Organization do
     end
   end
 
+  describe "search_by_params sector and age-group filters" do
+    let!(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+    let!(:teen) { create(:category, :published, category_type: age_type, name: "13-17") }
+    let!(:sector) { create(:sector, :published, name: "Housing") }
+    let!(:tagged) { create(:organization, name: "Tagged Org") }
+    let!(:untagged) { create(:organization, name: "Untagged Org") }
+
+    before do
+      tagged.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      tagged.sectorable_items.create!(sector: sector, is_primary: false)
+    end
+
+    it "filters by age group via category_names_all" do
+      results = Organization.search_by_params(category_names_all: "13-17")
+      expect(results).to include(tagged)
+      expect(results).not_to include(untagged)
+    end
+
+    it "filters by sector via sector_names_all" do
+      results = Organization.search_by_params(sector_names_all: "Housing")
+      expect(results).to include(tagged)
+      expect(results).not_to include(untagged)
+    end
+  end
+
   describe "age groups served" do
     let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
     let!(:young) { create(:category, :published, category_type: age_type, name: "3-5") }
