@@ -113,7 +113,7 @@
     </div>
 
     <!-- Avatar -->
-    <div class="flex w-full flex-col items-center gap-4 md:w-1/6"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div>
+<div class="w-full md:w-1/4 flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :avatar, size: "w-24 h-24" %></div>
   </div>
 
 <div class="addresses scroll-mt-4" id="addresses">
@@ -576,13 +576,15 @@
   </div>
   </details>
 
-  <div class="profile-preferences-section">
-    <div class="mb-2 block font-medium text-gray-700">
-      Social media links
-    </div>
+<details class="profile-preferences-section group">
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-medium">Social media links</span>
+      <span class="text-sm text-gray-500"><%= @person.decorate.social_media_summary %></span>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+    </summary>
 
-    <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <div class="flex flex-col gap-4 px-3 pb-3 md:flex-row">
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm mt-2">
+      <div class="flex flex-col md:flex-row gap-4 pl-3 pr-3 pb-3">
         <%= f.input :linked_in_url, as: :text, input_html: { rows: 1 } %>
         <%= f.input :facebook_url, as: :text, input_html: { rows: 1 } %>
         <%= f.input :instagram_url, as: :text, input_html: { rows: 1 } %>
@@ -590,7 +592,7 @@
         <%= f.input :twitter_url, as: :text, input_html: { rows: 1 } %>
       </div>
     </div>
-  </div>
+  </details>
 
 <details id="profile-preferences" class="profile-preferences-section scroll-mt-4 group">
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
