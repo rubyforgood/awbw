@@ -183,7 +183,6 @@ class EventRegistrationsController < ApplicationController
     end
   end
 
-<<<<<<< HEAD
   # Inline correction of one registrant's sign-in/out times for one training day, from
   # the event's attendance report. Rows carry clock times only — the day comes from the
   # report section the editor was opened in — plus a blank row to add a session and a
@@ -203,7 +202,8 @@ class EventRegistrationsController < ApplicationController
     # they typed; the editor reopens on this cell prefilled with them.
     flash[:attendance_rows] = rows.submitted
     redirect_to attendance_report_path(date, reopen: true), status: :see_other
-=======
+  end
+
   # Follow-up screen shown after a registration is marked "transferred out":
   # pick the destination event so the incoming registration is created/linked
   # and the transfer trail is preserved (issue #1944).
@@ -239,7 +239,6 @@ class EventRegistrationsController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     redirect_to transfer_event_registration_path(@event_registration, return_to: params[:return_to].presence),
       alert: "Select a destination event to transfer to.", status: :see_other
->>>>>>> 9f45a210d (Track event-reg transfers via a back-link instead of a status)
   end
 
   def confirm
@@ -418,7 +417,6 @@ class EventRegistrationsController < ApplicationController
     @event_registration = EventRegistration.includes({ registrant: [ :user, { affiliations: :organization } ] }, { event: [ :location, :event_forms ] }, :organizations, comments: [ :created_by, :updated_by ]).find(params[:id])
   end
 
-<<<<<<< HEAD
   # Back to the report in read mode, scrolled to the day cell that was edited, keeping
   # whichever view the admin had open. `reopen:` puts that cell back into edit mode.
   def attendance_report_path(date, reopen: false)
@@ -428,14 +426,16 @@ class EventRegistrationsController < ApplicationController
     attendance_event_path(@event_registration.event,
       ce: params[:ce].presence, group: params[:group].presence, return_to: params[:return_to].presence,
       edit: (cell if reopen), anchor: cell)
-=======
-  # Events a registrant can be transferred into: any published event other than
-  # the one they're transferring out of, most recent first.
+  end
+
+  # Events a registrant can be transferred into: published events of the same
+  # kind as the one they're leaving — a facilitator training only transfers to
+  # another facilitator training, and a non-training only to another
+  # non-training — excluding the source event, most recent first.
   def transfer_destination_events
-    Event.where(published: true)
+    Event.where(published: true, facilitator_training: @event_registration.event.facilitator_training)
          .where.not(id: @event_registration.event_id)
          .order(start_date: :desc)
->>>>>>> 9f45a210d (Track event-reg transfers via a back-link instead of a status)
   end
 
   # Creates the audited completion row for a checklist step (recording who/when),

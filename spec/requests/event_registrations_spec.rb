@@ -597,15 +597,29 @@ RSpec.describe "EventRegistrations", type: :request do
       let!(:source) { create(:event_registration, event: event, status: "transferred_out") }
 
       describe "GET /event_registrations/:id/transfer" do
-        it "renders the destination picker, excluding the source event" do
-          other = create(:event, title: "Destination Event", published: true)
+        it "offers same-kind events, excluding the source and the other kind" do
+          same_kind = create(:event, title: "Destination Event", published: true, facilitator_training: false)
+          other_kind = create(:event, title: "A Facilitator Training", published: true, facilitator_training: true)
 
           get transfer_event_registration_path(source)
 
           expect(response).to have_http_status(:success)
           expect(response.body).to include("Destination Event")
-          # The source event isn't offered as a transfer destination.
+          # The source event and the opposite kind aren't offered as destinations.
           expect(response.body).not_to include("<option value=\"#{event.id}\"")
+          expect(response.body).not_to include("<option value=\"#{other_kind.id}\"")
+        end
+
+        it "offers only other facilitator trainings when transferring out of one" do
+          training = create(:event, title: "Source Training", facilitator_training: true)
+          training_source = create(:event_registration, event: training, status: "transferred_out")
+          another_training = create(:event, title: "Another Training", published: true, facilitator_training: true)
+          non_training = create(:event, title: "A Non-Training Event", published: true, facilitator_training: false)
+
+          get transfer_event_registration_path(training_source)
+
+          expect(response.body).to include("<option value=\"#{another_training.id}\"")
+          expect(response.body).not_to include("<option value=\"#{non_training.id}\"")
         end
       end
 
