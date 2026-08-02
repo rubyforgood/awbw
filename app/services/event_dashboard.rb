@@ -381,13 +381,6 @@ class EventDashboard
     end
   end
 
-  # Registrant (Person) ids whose organization(s) carried the given program
-  # status (:new / :ongoing / :reinstated) as of the event — drill target for
-  # the organizations card's program-status subtitle.
-  def program_status_registrant_ids(status)
-    program_statuses_by_registrant.select { |_, statuses| statuses.include?(status) }.keys
-  end
-
   # Organization ids per registrant (Person id) — the inverse of
   # organization_registrant_ids_by_org.
   def organization_ids_by_registrant
