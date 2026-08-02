@@ -200,7 +200,7 @@ RSpec.describe "Events", type: :request do
 
       it "materializes the built-in callouts so the preview reads from real rows" do
         expect { get sample_ticket_event_path(event) }
-          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(8)
+          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(9)
       end
 
       it "renders a published custom callout as a link to its detail page" do
@@ -294,7 +294,8 @@ RSpec.describe "Events", type: :request do
       "certificate" => :sample_certificate_event_path,
       "scholarship" => :sample_scholarship_event_path,
       "ce" => :sample_ce_event_path,
-      "videoconference" => :sample_videoconference_event_path
+      "videoconference" => :sample_videoconference_event_path,
+      "staff" => :sample_staff_event_path
     }
 
     context "as admin" do
@@ -2290,6 +2291,23 @@ RSpec.describe "Events", type: :request do
         expect(staff.title).to eq("Staff")
         expect(staff.expected_to_attend).to be(true)
         expect(response).to redirect_to(staff_event_path(published_event))
+      end
+
+      it "returns to the sample staff callout preview when opened from there" do
+        sign_in admin
+        patch staff_event_path(published_event, return_to: "sample_staff"), params: {
+          event: { event_staffs_attributes: { "0" => { person_id: staffer.id, title: "Staff" } } }
+        }
+        expect(response).to redirect_to(sample_staff_event_path(published_event))
+      end
+
+      it "returns to the registrant's staff callout page when opened from there" do
+        registration = create(:event_registration, event: published_event)
+        sign_in admin
+        patch staff_event_path(published_event, return_to: "registration_staff", reg: registration.slug), params: {
+          event: { event_staffs_attributes: { "0" => { person_id: staffer.id, title: "Staff" } } }
+        }
+        expect(response).to redirect_to(registration_staff_path(registration.slug))
       end
 
       it "saves an optional event-specific bio that overrides the profile bio" do

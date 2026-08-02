@@ -12,7 +12,7 @@ class RegistrationTicketCallout < ApplicationRecord
   # hidden rather than destroyed so they can be restored to their default.
   BUILTIN_KEYS = %w[
     payment certificate scholarship ce_hours art_supplies
-    videoconference handouts faq
+    videoconference staff handouts faq
   ].freeze
 
   # "Content" built-in callouts render their own editable copy/resources (like custom

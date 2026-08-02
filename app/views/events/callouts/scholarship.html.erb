@@ -13,12 +13,7 @@
       <%# Admin-only jump to the management surface for this scholarship. Hidden from
           registrants; opens in a new tab so the registrant view is kept. %>
       <div class="flex justify-end">
-        <%= link_to edit_scholarship_path(@scholarship), target: "_blank", rel: "noopener",
-              class: "inline-flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 transition" do %>
-          <i class="fa-solid fa-pen-to-square text-[0.6rem]"></i>
-          Edit scholarship
-          <i class="fa-solid fa-arrow-up-right-from-square text-[0.6rem] opacity-70"></i>
-        <% end %>
+        <%= render "events/callouts/admin_edit_link", path: edit_scholarship_path(@scholarship), label: "Edit scholarship" %>
       </div>
     <% end %>
 
