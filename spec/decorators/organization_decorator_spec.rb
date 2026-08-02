@@ -66,6 +66,22 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
+  describe "#program_since_chip" do
+    it "shows the years in the org's status colour (Active → green)" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Active"))
+      chip = org.decorate.program_since_chip("2021")
+      expect(Capybara.string(chip)).to have_css("span", text: "2021")
+      expect(chip).to include("green")
+    end
+
+    it "falls back to the status label (orange) when there are no facilitator years" do
+      org = create(:organization, organization_status: OrganizationStatus.find_or_create_by!(name: "Formerly active"))
+      chip = org.decorate.program_since_chip("")
+      expect(Capybara.string(chip)).to have_css("span", text: "Formerly active")
+      expect(chip).to include("orange")
+    end
+  end
+
   describe ".program_status_classes" do
     it "maps each status to its pill classes, accepting symbols or model strings" do
       expect(described_class.program_status_classes(:new)).to include("indigo")

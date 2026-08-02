@@ -132,6 +132,14 @@ class OrganizationDecorator < ApplicationDecorator
                   class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes}")
   end
 
+  # Index "Program since" chip for admins: the facilitator-period years coloured
+  # by the org's status (green Active / orange Formerly active / gray Never
+  # active), falling back to the status label when there are no facilitator years.
+  def program_since_chip(years = program_since_display)
+    h.content_tag(:span, years.presence || organization_status_label,
+                  class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{organization_status_classes}")
+  end
+
   def facilitator_since_date
     @facilitator_since_date ||= affiliations.facilitators.minimum(:start_date)
   end

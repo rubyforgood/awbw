@@ -8,7 +8,7 @@
           <thead class="bg-gray-100">
           <tr>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
-            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Designations</th>
+            <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Sectors</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Age group(s)</th>
             <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Program since</th>
             <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">People (<%= number_with_delimiter(@active_people_count) %>)</th>
@@ -29,10 +29,6 @@
 
               <td class="px-4 py-2 text-sm">
                 <div class="flex flex-wrap items-center gap-1">
-                  <% if organization.windows_type %>
-                    <%= render "shared/badge", label: organization.windows_type.short_name.titleize, classes: "bg-purple-100 text-purple-800 border-purple-200" %>
-                  <% end %>
-
                   <% organization.sectors.each do |sector| %>
                     <%= render "sectors/tagging_label", sector: sector %>
                   <% end %>
@@ -51,11 +47,10 @@
 
               <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
                 <% program_since = @program_since_display[organization.id] %>
-                <% if program_since.present? %>
-                  <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 bg-yellow-100 text-yellow-800 border-yellow-200"><%= program_since %></span>
-                <% end %>
                 <% if allowed_to?(:manage?, Organization) %>
-                  <div class="admin-only mt-1"><%= organization.decorate.organization_status_chip %></div>
+                  <span class="admin-only"><%= organization.decorate.program_since_chip(program_since) %></span>
+                <% elsif program_since.present? %>
+                  <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 bg-yellow-100 text-yellow-800 border-yellow-200"><%= program_since %></span>
                 <% end %>
               </td>
 
