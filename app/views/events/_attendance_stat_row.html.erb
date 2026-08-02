@@ -29,9 +29,11 @@
       <ul class="mt-1 mb-1 ml-5 space-y-0.5 text-xs text-gray-700 max-h-40 overflow-y-auto">
         <% registrants.each do |registrant| %>
           <li>
-            <%= link_to registrant.name, registrants_event_path(@event, registrant_ids: registrant.id),
+            <%= link_to registrants_event_path(@event, registrant_ids: registrant.id),
                   title: [ registrant.name, *@dashboard.organization_names_by_registrant[registrant.id] ].join(" · "),
-                  class: "block truncate min-w-0 hover:underline" %>
+                  class: "group/row flex items-center rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+              <span class="truncate min-w-0 group-hover/row:underline"><%= registrant.name %></span>
+            <% end %>
           </li>
         <% end %>
       </ul>
