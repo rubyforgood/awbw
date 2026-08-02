@@ -34,20 +34,22 @@ RSpec.describe "Payer search (combined people + organizations)", type: :request 
     end
   end
 
-  # Each compound endpoint searches the same two tables and differs only in
-  # order; the returned kinds must follow the class order declared in the
-  # controller (payer picker: people first; donor picker: organizations first).
-  describe "result ordering follows SearchController::COMPOUND_MODELS" do
+  # The `order` param controls which kind leads the combined results.
+  describe "result ordering" do
     let!(:person) { create(:person, first_name: "Searchable", last_name: "Payer") }
     let!(:organization) { create(:organization, name: "Searchable Payer Org") }
 
-    SearchController::COMPOUND_MODELS.each do |model_param, classes|
-      it "lists #{classes.map(&:name).join(', then ')} for /search/#{model_param}" do
-        get "/search/#{model_param}", params: { q: "Searchable" }
+    def result_kinds(params)
+      get "/search/person_or_organization", params: params
+      response.parsed_body.map { |row| row["label"].split(" · ").last }.uniq
+    end
 
-        kinds = response.parsed_body.map { |row| row["label"].split(" · ").last }.uniq
-        expect(kinds).to eq(classes.map { |klass| klass.model_name.human })
-      end
+    it "lists people first by default" do
+      expect(result_kinds(q: "Searchable")).to eq([ "Person", "Organization" ])
+    end
+
+    it "lists organizations first when order=organization" do
+      expect(result_kinds(q: "Searchable", order: "organization")).to eq([ "Organization", "Person" ])
     end
   end
 end

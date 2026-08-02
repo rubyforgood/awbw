@@ -1,19 +1,14 @@
 class SearchController < ApplicationController
   skip_before_action :preload_current_user_associations, raise: false
 
-  # Virtual "models" that search people and organizations together. Both search
-  # the same two tables; they differ only in result order. The payer /
-  # additional-designation pickers on the payment form list people first; the
-  # grant donor picker lists organizations first (organizations are the more
-  # common donor).
-  COMPOUND_MODELS = {
-    "person_or_organization" => [ Person, Organization ],
-    "organization_or_person" => [ Organization, Person ]
-  }.freeze
+  # Virtual "model" that searches people and organizations together for the
+  # compound payer / donor pickers. The optional `order` param picks which kind
+  # is listed first ("organization" → organizations first; anything else →
+  # people first) — both search the same two tables.
+  COMPOUND_MODEL = "person_or_organization".freeze
 
   def index
-    compound_classes = COMPOUND_MODELS[params[:model]]
-    return render json: compound_results(compound_classes) if compound_classes
+    return render json: compound_results if params[:model] == COMPOUND_MODEL
 
     model_class = allowed_model(params[:model])
     unless model_class
@@ -46,9 +41,10 @@ class SearchController < ApplicationController
 
   private
 
-  # Search each model in turn and concatenate, preserving the given class order
-  # so the caller controls which kind is listed first.
-  def compound_results(model_classes)
+  # Search people and organizations, concatenating in the order the caller
+  # asked for so each picker can lead with its most common kind.
+  def compound_results
+    model_classes = params[:order] == "organization" ? [ Organization, Person ] : [ Person, Organization ]
     model_classes.each { |klass| authorize! klass, to: :search? }
 
     query = params[:q].to_s.strip
