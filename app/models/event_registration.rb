@@ -28,6 +28,18 @@ class EventRegistration < ApplicationRecord
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
   ATTENDANCE_STATUSES = (ACTIVE_STATUSES + INACTIVE_STATUSES).freeze
 
+  # Human labels for each attendance status — the single source of truth for
+  # status display (badges, filters, the dashboard breakdown).
+  ATTENDANCE_STATUS_LABELS = {
+    "registered" => "Registered",
+    "attended" => "Attended",
+    "incomplete_attendance" => "Incomplete attendance",
+    "transferred_in" => "Transferred in",
+    "cancelled" => "Cancelled",
+    "no_show" => "No show",
+    "transferred_out" => "Transferred out"
+  }.freeze
+
   # Manual onboarding checklist steps shown on the event's Onboarding tab. Each is
   # an audited boolean (stored as a row in event_registration_checklist_completions,
   # capturing who completed it and when). The keys double as the param/column keys
@@ -501,16 +513,7 @@ class EventRegistration < ApplicationRecord
 
   def attendance_status_label
     return "—" if status.blank?
-    case status
-    when "registered" then "Registered"
-    when "attended" then "Attended"
-    when "incomplete_attendance" then "Incomplete attendance"
-    when "cancelled" then "Cancelled"
-    when "no_show" then "No show"
-    when "transferred_in" then "Transferred in"
-    when "transferred_out" then "Transferred out"
-    else status.humanize
-    end
+    ATTENDANCE_STATUS_LABELS.fetch(status, status.humanize)
   end
 
   # The completion record for a checklist step, or nil. Reads from the loaded

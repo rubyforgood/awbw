@@ -958,12 +958,14 @@ RSpec.describe EventDashboard do
         create(:event_registration, event: event, registrant: create(:person, first_name: "Fa"), status: "cancelled")
       end
 
-      it "counts each attendance status" do
-        expect(dashboard.attended_count).to eq(2)
-        expect(dashboard.incomplete_attendance_count).to eq(1)
-        expect(dashboard.no_show_count).to eq(1)
-        expect(dashboard.attendance_pending_count).to eq(2)
-        expect(dashboard.cancelled_count).to eq(1)
+      it "counts each attendance status individually" do
+        expect(dashboard.attendance_count_for("attended")).to eq(2)
+        expect(dashboard.attendance_count_for("incomplete_attendance")).to eq(1)
+        expect(dashboard.attendance_count_for("no_show")).to eq(1)
+        expect(dashboard.attendance_count_for("registered")).to eq(1)
+        expect(dashboard.attendance_count_for("transferred_in")).to eq(1)
+        expect(dashboard.attendance_count_for("cancelled")).to eq(1)
+        expect(dashboard.attendance_count_for("transferred_out")).to eq(0)
       end
 
       it "rates full attendance over every registrant (active + no-shows, excluding cancellations)" do
@@ -992,7 +994,7 @@ RSpec.describe EventDashboard do
         expect(dashboard.attendance_recorded?).to be(false)
         expect(dashboard.attendance_outcome_count).to eq(0)
         expect(dashboard.attendance_rate).to be_nil
-        expect(dashboard.attendance_pending_count).to eq(1)
+        expect(dashboard.attendance_count_for("registered")).to eq(1)
       end
     end
   end

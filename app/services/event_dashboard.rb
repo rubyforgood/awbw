@@ -38,33 +38,23 @@ class EventDashboard
     @registration_status_counts ||= event.event_registrations.group(:status).count
   end
 
-  def attended_count
-    registration_status_counts.fetch("attended", 0)
+  # Count of registrations in a single status.
+  def attendance_count_for(status)
+    registration_status_counts.fetch(status.to_s, 0)
   end
 
-  def incomplete_attendance_count
-    registration_status_counts.fetch("incomplete_attendance", 0)
+  def attended_count
+    attendance_count_for("attended")
   end
 
   def no_show_count
-    registration_status_counts.fetch("no_show", 0)
-  end
-
-  def cancelled_count
-    registration_status_counts.fetch("cancelled", 0)
-  end
-
-  # Active registrations still awaiting an outcome — registered or transferred
-  # in, but not yet marked attended / incomplete / no-show.
-  def attendance_pending_count
-    registration_status_counts.fetch("registered", 0) +
-      registration_status_counts.fetch("transferred_in", 0)
+    attendance_count_for("no_show")
   end
 
   # Registrations with an attendance outcome on record (attended / incomplete /
   # no-show).
   def attendance_outcome_count
-    attended_count + incomplete_attendance_count + no_show_count
+    attended_count + attendance_count_for("incomplete_attendance") + no_show_count
   end
 
   # Everyone expected at the event: active registrants (see #registrant_count)

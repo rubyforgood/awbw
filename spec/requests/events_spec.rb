@@ -1699,9 +1699,10 @@ RSpec.describe "Events", type: :request do
 
         page = Capybara.string(response.body)
         expect(page).to have_text("Attendance", normalize_ws: true)
-        expect(page).to have_link(href: registrants_event_path(event, attendance_status: "attended"), visible: :all)
-        expect(page).to have_link(href: registrants_event_path(event, attendance_status: "no_show"), visible: :all)
-        expect(page).to have_link(href: registrants_event_path(event, attendance_status: "cancelled"), visible: :all)
+        # Every status is its own row that drills into the roster filtered to it.
+        %w[ attended no_show registered cancelled transferred_in transferred_out incomplete_attendance ].each do |status|
+          expect(page).to have_link(href: registrants_event_path(event, attendance_status: status), visible: :all)
+        end
         # 1 attended over 3 registrants (attended + registered + no-show; the
         # cancellation is excluded) → 33%.
         expect(page).to have_text("33%", normalize_ws: true)

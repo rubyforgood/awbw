@@ -419,30 +419,26 @@
       </summary>
 
       <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
-        <%= render "attendance_stat_row", label: "Attended", icon: "fa-circle-check",
-              icon_color: @dashboard.attended_count.positive? ? "text-green-600" : "text-gray-400",
-              count: @dashboard.attended_count,
-              registrants: @dashboard.attendance_registrants("attended"),
-              filter_path: registrants_event_path(@event, attendance_status: "attended") %>
-        <%= render "attendance_stat_row", label: "Incomplete attendance", icon: "fa-circle-half-stroke",
-              icon_color: @dashboard.incomplete_attendance_count.positive? ? "text-amber-500" : "text-gray-400",
-              count: @dashboard.incomplete_attendance_count,
-              registrants: @dashboard.attendance_registrants("incomplete_attendance"),
-              filter_path: registrants_event_path(@event, attendance_status: "incomplete_attendance") %>
-        <%= render "attendance_stat_row", label: "No show", icon: "fa-circle-xmark",
-              icon_color: @dashboard.no_show_count.positive? ? "text-red-500" : "text-gray-400",
-              count: @dashboard.no_show_count,
-              registrants: @dashboard.attendance_registrants("no_show"),
-              filter_path: registrants_event_path(@event, attendance_status: "no_show") %>
-        <%= render "attendance_stat_row", label: "Not recorded", icon: "fa-hourglass-half",
-              count: @dashboard.attendance_pending_count,
-              registrants: @dashboard.attendance_registrants("registered", "transferred_in"),
-              filter_path: registrants_event_path(@event, registrant_ids: @dashboard.attendance_registrants("registered", "transferred_in").map(&:id).join("-").presence || "0") %>
-        <%= render "attendance_stat_row", label: "Cancelled", icon: "fa-ban",
-              icon_color: @dashboard.cancelled_count.positive? ? "text-gray-500" : "text-gray-400",
-              count: @dashboard.cancelled_count,
-              registrants: @dashboard.attendance_registrants("cancelled"),
-              filter_path: registrants_event_path(@event, attendance_status: "cancelled") %>
+        <%# One row per attendance status. Icon/colour are presentation config;
+            labels come from EventRegistration::ATTENDANCE_STATUS_LABELS. %>
+        <% [
+             [ "attended", "fa-circle-check", "text-green-600" ],
+             [ "incomplete_attendance", "fa-circle-half-stroke", "text-amber-500" ],
+             [ "no_show", "fa-circle-xmark", "text-red-500" ],
+             [ "registered", "fa-hourglass-half", nil ],
+             [ "transferred_in", "fa-arrow-right-to-bracket", nil ],
+             [ "transferred_out", "fa-arrow-right-from-bracket", nil ],
+             [ "cancelled", "fa-ban", nil ]
+           ].each do |status, icon, active_color| %>
+          <% count = @dashboard.attendance_count_for(status) %>
+          <%= render "attendance_stat_row",
+                label: EventRegistration::ATTENDANCE_STATUS_LABELS.fetch(status),
+                icon: icon,
+                icon_color: (count.positive? && active_color) || "text-gray-400",
+                count: count,
+                registrants: @dashboard.attendance_registrants(status),
+                filter_path: registrants_event_path(@event, attendance_status: status) %>
+        <% end %>
       </div>
     </details>
   </div>
