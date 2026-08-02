@@ -302,6 +302,19 @@ class EventDashboard
     @program_status_by_organization ||= organizations.to_h { |organization| [ organization.id, program_status_for(organization) ] }
   end
 
+  # Registrant ids grouped by their organization's program status
+  # (:new / :ongoing / :reinstated) — the people behind each program-status
+  # slice, for drilling into the matching registrant list. A registrant lands in
+  # a status if any of their represented orgs has it, so the buckets can overlap
+  # (a registrant with a new and an ongoing org appears under both).
+  def program_status_registrant_ids
+    @program_status_registrant_ids ||= program_status_by_organization
+      .each_with_object({ new: [], ongoing: [], reinstated: [] }) do |(organization_id, status), map|
+        map[status].concat(organization_registrant_ids_by_org.fetch(organization_id, []).to_a)
+      end
+      .transform_values(&:uniq)
+  end
+
   # Distinct program statuses for each registrant's organization(s), keyed by
   # Person id — for the registrant roster's program-status column.
   def program_statuses_by_registrant

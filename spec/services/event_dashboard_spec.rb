@@ -796,6 +796,14 @@ RSpec.describe EventDashboard do
       expect(statuses[reinstated_facilitator.id]).to eq([ :reinstated ])
       expect(statuses).not_to have_key(cancelled_facilitator.id)
     end
+
+    it "groups registrant ids by program status, for the breakdown drill-in" do
+      ids = dashboard.program_status_registrant_ids
+
+      expect(ids[:new]).to contain_exactly(new_facilitator.id)
+      expect(ids[:ongoing]).to contain_exactly(ongoing_facilitator.id)
+      expect(ids[:reinstated]).to contain_exactly(reinstated_facilitator.id)
+    end
   end
 
   context "program-status breakdown for non-facilitator affiliations" do

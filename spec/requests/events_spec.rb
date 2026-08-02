@@ -1714,6 +1714,14 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to match(/\d+ new · \d+ ongoing · \d+ reinstated/)
       end
 
+      it "charts the organizations' program-status breakdown above the org list" do
+        get background_event_path(event)
+
+        expect(response.body).to include("Program status")
+        # "Background Org" is the registrant's first-facilitator program → New.
+        expect(response.body).to include("New")
+      end
+
       it "shows a program-status column in the registrant roster" do
         get background_event_path(event)
 
