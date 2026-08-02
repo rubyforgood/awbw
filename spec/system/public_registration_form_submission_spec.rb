@@ -8,7 +8,7 @@ require "rails_helper"
 # questions the dev seeds attach, so the DOM matches what registrants really see.
 RSpec.describe "Public form submissions", type: :system do
   let(:event) do
-    create(:event, :published, :publicly_visible,
+    create(:event, :published, :publicly_visible, :publicly_registerable,
            title: "AWBW Facilitator Training",
            cost_cents: 150_000,
            start_date: 10.days.from_now.change(hour: 9),

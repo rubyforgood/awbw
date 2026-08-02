@@ -25,6 +25,10 @@ FactoryBot.define do
       publicly_visible { true }
     end
 
+    trait :publicly_registerable do
+      public_registration_enabled { true }
+    end
+
     trait :publicly_featured do
       publicly_featured { true }
     end

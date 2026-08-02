@@ -1652,6 +1652,24 @@ RSpec.describe "Events", type: :request do
 
             expect(response.body).to include("Public registration form")
           end
+
+          it "is hidden when one-click is on and public registration is off (nobody uses the form page)" do
+            create(:event_form, event: event, form: create(:form), role: "registration")
+            event.update!(signed_in_one_click_enabled: true)
+
+            get dashboard_event_path(event)
+
+            expect(response.body).not_to include("Registration form")
+          end
+
+          it "is shown when one-click is on but public registration is enabled (anonymous still use it)" do
+            create(:event_form, event: event, form: create(:form), role: "registration")
+            event.update!(signed_in_one_click_enabled: true, public_registration_enabled: true)
+
+            get dashboard_event_path(event)
+
+            expect(response.body).to include("Public registration form")
+          end
         end
 
         context "scholarship and bulk payment links" do

@@ -2,6 +2,7 @@ module Events
   class BulkPaymentFormSubmissionsController < ApplicationController
     skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :resend_confirmation ]
     before_action :set_event, only: [ :new, :create, :show ]
+    before_action :ensure_public_or_authenticated, only: [ :new, :create ]
     before_action :set_form, only: [ :new, :create ]
 
     def new
@@ -116,6 +117,14 @@ module Events
       unless @form
         redirect_to event_path(@event), alert: "#{Form::BULK_PAYMENT_PUBLIC_NAME} form is not available for this event."
       end
+    end
+
+    # Anonymous visitors may only reach the public bulk-payment form when public
+    # registration is enabled; signed-in users (and admins) always may. Mirrors
+    # Events::PublicRegistrationPolicy for the registration/scholarship forms.
+    def ensure_public_or_authenticated
+      return if current_user.present? || @event.public_registration_enabled?
+      redirect_to event_path(@event), alert: "#{Form::BULK_PAYMENT_PUBLIC_NAME} form is not open for public submissions."
     end
 
     def validate_required_fields
