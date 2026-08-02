@@ -496,6 +496,35 @@ class EventDashboard
       .transform_values { |rows| rows.map(&:first).uniq }
   end
 
+  # Every age group (primary + additional) served, read from registrants'
+  # answers to BOTH the "primary_age_group" and "additional_age_group"
+  # registration questions, backing the "All age groups" chart. The
+  # "Primary age group" chart instead uses #age_groups / #age_group_counts,
+  # which read only the primary question.
+  def all_age_groups
+    @all_age_groups ||= Category.age_ranges
+      .where(id: all_age_group_counts.keys)
+      .ordered_by_position_and_name
+  end
+
+  # Distinct registrant count per age-group category across both age group
+  # questions, deduped per [ registrant, category ]. Keyed by Category id, so it
+  # pairs with all_age_groups for the view.
+  def all_age_group_counts
+    @all_age_group_counts ||= all_age_group_answer_rows
+      .group_by(&:last)
+      .transform_values { |rows| rows.map(&:first).uniq.size }
+  end
+
+  # Registrant ids per age-group category across both questions, keyed by
+  # Category id — the people behind each "All age groups" row, for drilling into
+  # the matching registrant list.
+  def all_age_group_registrant_ids_by_category
+    @all_age_group_registrant_ids_by_category ||= all_age_group_answer_rows
+      .group_by(&:last)
+      .transform_values { |rows| rows.map(&:first).uniq }
+  end
+
   # US states only — international registrants' regions (e.g. provinces) are
   # excluded so the States breakdown reflects domestic residents.
   def states
@@ -886,19 +915,29 @@ class EventDashboard
   end
 
   # [ person_id, age_group_category_id ] for every AgeRange selection in active
-  # registrants' "primary_age_group" registration answers. The answer text is a
-  # ", "-joined list of category ids (the checkbox values); non-numeric tokens
-  # (legacy free text) are ignored. Deduped per [ person, category ].
+  # registrants' "primary_age_group" registration answers. Deduped per
+  # [ person, category ].
   def age_group_answer_rows
-    @age_group_answer_rows ||= compute_age_group_answer_rows
+    @age_group_answer_rows ||= age_group_rows_for(%w[primary_age_group])
   end
 
-  def compute_age_group_answer_rows
-    field = registration_form_field("primary_age_group")
-    return [] unless field
+  # Same, but across BOTH the primary and additional age group questions —
+  # the union backing the "All age groups" breakdown.
+  def all_age_group_answer_rows
+    @all_age_group_answer_rows ||= age_group_rows_for(FormField::AGE_GROUP_FIELD_IDENTIFIERS)
+  end
+
+  # [ person_id, age_group_category_id ] rows for the registration fields with
+  # the given identifier(s). Each answer text is a ", "-joined list of category
+  # ids (the checkbox values); non-numeric tokens (legacy free text) are ignored.
+  # Deduped per [ person, category ], so a category chosen in more than one field
+  # counts once.
+  def age_group_rows_for(identifiers)
+    field_ids = registration_form_field_ids(identifiers)
+    return [] if field_ids.empty?
 
     FormAnswer
-      .where(form_field_id: field.id)
+      .where(form_field_id: field_ids)
       .joins(:form_submission)
       .where(form_submissions: { person_id: registrant_ids })
       .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
@@ -972,6 +1011,13 @@ class EventDashboard
     @registration_form_fields ||= {}
     return @registration_form_fields[identifier] if @registration_form_fields.key?(identifier)
     @registration_form_fields[identifier] = event.registration_form&.form_fields&.find_by(field_identifier: identifier)
+  end
+
+  # Ids of the registration form fields matching any of the given identifier(s) —
+  # for questions that can span more than one field (e.g. the primary + additional
+  # age group fields). Returns [] when the event has no registration form.
+  def registration_form_field_ids(identifiers)
+    event.registration_form&.form_fields&.where(field_identifier: identifiers)&.ids || []
   end
 
   # State abbreviation for a US address, otherwise the country's ISO 3-letter

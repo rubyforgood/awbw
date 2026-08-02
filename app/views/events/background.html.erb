@@ -10,6 +10,7 @@
 <% other_response_data = @dashboard.other_sector_response_rows.map { |text, count, _ids| [ text, count ] } %>
 <% other_response_paths = @dashboard.other_sector_response_rows.to_h { |text, _count, ids| [ text, registrants_event_path(@event, registrant_ids: ids.join("-")) ] } %>
 <% age_group_data = @dashboard.age_groups.map { |c| [ c.name, @dashboard.age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
+<% all_age_group_data = @dashboard.all_age_groups.map { |c| [ c.name, @dashboard.all_age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 <% state_data = @dashboard.state_counts.sort_by { |_, count| -count } %>
 <% country_data = @dashboard.country_counts.sort_by { |_, count| -count } %>
 <% school_district_data = @dashboard.school_district_counts.sort_by { |_, count| -count } %>
@@ -207,37 +208,50 @@
   <% sector_paths = @dashboard.sectors.to_h { |s| [ s.name, registrants_event_path(@event, sector: s.id) ] } %>
   <% sector_paths["Other"] = registrants_event_path(@event, registrant_ids: @dashboard.other_sector_response_registrant_ids.join("-")) if @dashboard.other_sector_response_count.positive? %>
   <% age_group_paths = @dashboard.age_groups.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
+  <% all_age_group_paths = @dashboard.all_age_groups.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.all_age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% state_paths = @dashboard.states.index_with { |state| registrants_event_path(@event, state: state) } %>
   <% country_paths = @dashboard.country_registrant_ids_by_country.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
   <% school_district_paths = @dashboard.school_district_registrant_ids_by_district.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
   <% life_experience_paths = @dashboard.life_experiences.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.life_experience_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% settings_paths = @dashboard.settings.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.settings_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% org_paths = @dashboard.organizations.to_h { |o| [ o.name, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-")) ] } %>
+  <%# States and countries use the addresses theme color (slate) for their map ramps. %>
+  <% addresses_color = "#475569" %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-    <% if primary_sector_data.any? %>
-      <%= render "breakdown_card", title: "Primary sector", data: primary_sector_data, chart: :pie, palette: palette, row_paths: primary_sector_paths %>
+    <%# Col 1: sectors — primary on top, all sectors stacked below. %>
+    <% if primary_sector_data.any? || sector_data.any? %>
+      <div class="flex flex-col gap-6">
+        <% if primary_sector_data.any? %>
+          <%= render "breakdown_card", title: "Primary sector", data: primary_sector_data, chart: :pie, palette: palette, row_paths: primary_sector_paths %>
+        <% end %>
+        <% if sector_data.any? %>
+          <%= render "breakdown_card", title: "All sectors", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
+        <% end %>
+      </div>
     <% end %>
-    <% if sector_data.any? %>
-      <%= render "breakdown_card", title: "All sectors", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
+    <%# Col 2: age groups — primary on top, all age groups stacked below. Primary
+        always shows (no-data box when empty); "All age groups" (primary +
+        additional questions) appears only when someone answered either. %>
+    <div class="flex flex-col gap-6">
+      <%= render "breakdown_card", title: "Primary age group", data: age_group_data, chart: :pie, palette: palette,
+                                   empty_message: "No age group responses from registration answers yet.", row_paths: age_group_paths %>
+      <% if all_age_group_data.any? %>
+        <%= render "breakdown_card", title: "All age groups", data: all_age_group_data, chart: :pie, palette: palette, row_paths: all_age_group_paths %>
+      <% end %>
+    </div>
+    <%# Col 3: organizations. %>
+    <% if org_data.any? %>
+      <%= render "breakdown_card", title: "Organizations", data: org_data, chart: nil, palette: palette, row_paths: org_paths %>
     <% end %>
+    <%# --- Remaining breakdowns flow below row 1 --- %>
     <%# The free-text values behind the "Other" sector slice — a list, since these
         are un-curated answers a curator later promotes into real sectors. %>
     <% if other_response_data.any? %>
       <%= render "breakdown_card", title: "Other sector responses", data: other_response_data, chart: nil, palette: palette, row_paths: other_response_paths %>
     <% end %>
-    <%# States and countries use the addresses theme color (slate) for their map ramps. %>
-    <% addresses_color = "#475569" %>
-    <%# Age group and Countries are both short; stack them in one column so the pair
-        fits within the height of the taller Primary sector pie card. %>
-    <div class="flex flex-col gap-6">
-      <%# Primary age group comes from the registration "ages served" answers;
-          always show the card (with a no-data box when empty). %>
-      <%= render "breakdown_card", title: "Primary age group", data: age_group_data, chart: :pie, palette: palette,
-                                   empty_message: "No age group responses from registration answers yet.", row_paths: age_group_paths %>
-      <% if country_data.any? %>
-        <%= render "breakdown_card", title: "Countries", data: country_data, chart: :world_map, palette: palette, map_color: addresses_color, row_paths: country_paths %>
-      <% end %>
-    </div>
+    <% if country_data.any? %>
+      <%= render "breakdown_card", title: "Countries", data: country_data, chart: :world_map, palette: palette, map_color: addresses_color, row_paths: country_paths %>
+    <% end %>
     <% if state_data.any? %>
       <%= render "breakdown_card", title: "States", data: state_data, chart: :map, palette: palette, map_color: addresses_color, row_paths: state_paths %>
     <% end %>
@@ -251,9 +265,6 @@
     <% end %>
     <% if settings_data.any? %>
       <%= render "breakdown_card", title: "Settings", data: settings_data, chart: :bar, palette: palette, row_paths: settings_paths %>
-    <% end %>
-    <% if org_data.any? %>
-      <%= render "breakdown_card", title: "Organizations", data: org_data, chart: nil, palette: palette, row_paths: org_paths %>
     <% end %>
   </div>
 </div>
