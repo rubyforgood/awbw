@@ -334,7 +334,7 @@
               <%= org_decorated.organization_status_chip %>
               <% org_events.each do |event| %>
                 <% status = org_decorated.facilitator_status_as_of(event.start_date) %>
-                <%= link_to background_event_path(event), target: "_blank", rel: "noopener noreferrer",
+                <%= link_to dashboard_event_path(event), target: "_blank", rel: "noopener noreferrer",
                             title: event.title,
                             class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status)}" do %>
                   <%= event.decorate.compact_label.truncate(24) %> · <%= status.to_s.titleize %>

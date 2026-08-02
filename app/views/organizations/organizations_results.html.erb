@@ -51,7 +51,9 @@
 
               <td class="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
                 <%= @program_since_display[organization.id] %>
-                <div class="mt-1"><%= organization.decorate.organization_status_chip %></div>
+                <% if allowed_to?(:manage?, Organization) %>
+                  <div class="admin-only mt-1"><%= organization.decorate.organization_status_chip %></div>
+                <% end %>
               </td>
 
               <td class="px-4 py-2 text-center text-sm">
