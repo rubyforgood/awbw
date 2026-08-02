@@ -44,6 +44,10 @@
   </div>
 
   <% if @dashboard.scholarship_applicants.any? %>
+    <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
+      <i class="fa-solid fa-user-graduate"></i>
+      Recipients
+    </h2>
     <div data-controller="expandable-cards scholarship-status-toggle"
          data-scholarship-status-toggle-shown-value="true">
       <%# Controls — show/hide scholarship status for all recipients, and expand/collapse all %>
@@ -274,6 +278,28 @@
             </div>
           </div>
         <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# ---- Statistics: recipient breakdowns by city + organization. The actual
+      breakdown partials (scholarship-recipient totals) land in a follow-up PR;
+      titled placeholders for now. ---- %>
+  <% if @dashboard.scholarship_applicants.any? %>
+    <div class="mt-10 break-inside-avoid">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
+        <i class="fa-solid fa-chart-pie"></i>
+        Statistics
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">Recipients by city</h3>
+          <p class="text-sm text-gray-400 italic text-center py-8">Coming soon</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">Recipients by organization</h3>
+          <p class="text-sm text-gray-400 italic text-center py-8">Coming soon</p>
+        </div>
       </div>
     </div>
   <% end %>

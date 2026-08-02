@@ -2049,6 +2049,14 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Hide scholarship status")
       end
 
+      it "renders the Recipients and Statistics section headers with placeholder breakdowns" do
+        get recipients_event_path(event)
+
+        expect(response.body).to include("Statistics")
+        expect(response.body).to include("Recipients by city")
+        expect(response.body).to include("Recipients by organization")
+      end
+
       it "shows each recipient's awarded amount and completed tasks status" do
         event.update!(cost_cents: 50_000)
         registration = event.event_registrations.find_by(registrant: applicant)
