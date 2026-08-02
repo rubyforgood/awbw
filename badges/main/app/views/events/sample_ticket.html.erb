@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<%# Eyebrow returns the admin to wherever they opened the preview from. The
-    Form actions menu lives on the registrants page; the dashboard has its own
-    quick link. Default to the dashboard when the origin is absent/unknown. %>
+<%# Eyebrow returns the admin to wherever they opened the preview from — the
+    Forms menu (shared by the dashboard and registrants page) passes the origin
+    via return_to. Default to the dashboard when the origin is absent/unknown. %>
 <% case params[:return_to]
    when "registrants" %>
   <% back_label = "← Registrants" %>
