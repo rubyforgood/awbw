@@ -36,6 +36,9 @@ class ApplicationDecorator < Draper::Decorator
 
   private
 
+  # A single sector's chip, kept on one line (whitespace-nowrap) so the icon,
+  # name, and "(sector leader)" never split across a wrap — breaks fall between
+  # sectors, at the joining comma.
   def sector_summary_chip(item)
     name = item.sector&.name.to_s
     pieces = []
@@ -43,6 +46,6 @@ class ApplicationDecorator < Draper::Decorator
     pieces << h.content_tag(:i, "", class: "fa-solid fa-star text-amber-400") if item.is_primary?
     pieces << (item.is_primary? ? h.content_tag(:strong, name) : name)
     pieces << "(sector leader)" if item.is_leader?
-    h.safe_join(pieces, " ")
+    h.content_tag(:span, h.safe_join(pieces, " "), class: "whitespace-nowrap")
   end
 end
