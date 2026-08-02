@@ -392,7 +392,7 @@ module ApplicationHelper
     link_to path,
             data: { turbo_prefetch: false }.merge(data),
             class: "group flex items-center gap-3 w-full px-3 py-2 rounded-lg
-                    #{'min-h-[3.5rem]' if wrap}
+                    #{'h-full min-h-[3.5rem]' if wrap}
                     border #{border} #{bg} #{hover_bg}
                     transition-colors duration-200 shadow-sm" do
       icon_tag = if hide_icon
