@@ -260,9 +260,9 @@
     <% if org_data.any? %>
       <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-2">
         <% if program_status_data.any? %>
-          <%= render "breakdown_card", title: "Program status", data: program_status_data, chart: :pie, palette: program_status_palette, row_paths: program_status_paths %>
+          <%= render "breakdown_card", title: "Organization/program status", data: program_status_data, chart: :pie, palette: program_status_palette, row_paths: program_status_paths %>
         <% end %>
-        <%= render "breakdown_card", title: "Organizations", data: org_data, chart: nil, palette: palette, row_paths: org_paths %>
+        <%= render "breakdown_card", title: "All organizations", data: org_data, chart: nil, palette: palette, row_paths: org_paths %>
       </div>
     <% end %>
     <%# --- Remaining breakdowns flow below row 1 --- %>

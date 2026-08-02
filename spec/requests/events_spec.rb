@@ -1717,7 +1717,7 @@ RSpec.describe "Events", type: :request do
       it "charts the organizations' program-status breakdown above the org list" do
         get background_event_path(event)
 
-        expect(response.body).to include("Program status")
+        expect(response.body).to include("Organization/program status")
         # "Background Org" is the registrant's first-facilitator program → New.
         expect(response.body).to include("New")
       end
