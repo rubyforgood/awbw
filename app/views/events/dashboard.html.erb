@@ -263,7 +263,7 @@
                 path: registrants_event_path(@event, status_filter: "active") %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", count: @dashboard.registrant_count, label: "#{@dashboard.registrant_count} active", path: registrants_event_path(@event, status_filter: "active") %><% if @dashboard.inactive_registration_count.positive? %> · <%= render "stat_link", count: @dashboard.inactive_registration_count, label: "#{@dashboard.inactive_registration_count} inactive", path: registrants_event_path(@event, status_filter: "inactive") %><% end %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.registrant_count} active", path: registrants_event_path(@event, status_filter: "active") %><% if @dashboard.inactive_registration_count.positive? %> · <%= render "stat_link", label: "#{@dashboard.inactive_registration_count} inactive", path: registrants_event_path(@event, status_filter: "inactive") %><% end %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.registrants.any? %>
@@ -294,7 +294,7 @@
                 path: registrants_event_path(@event, attendance_status: "attended") %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><% if @dashboard.attendance_recorded? %><%= render "stat_link", count: @dashboard.expected_attendee_count, label: "#{number_to_percentage(@dashboard.attendance_rate * 100, precision: 0)} of #{pluralize(@dashboard.expected_attendee_count, "registrant")}", path: registrants_event_path(@event) %><% else %>Not yet recorded<% end %></p>
+        <p class="text-xs text-gray-500 mt-1"><% if @dashboard.attendance_recorded? %><%= render "stat_link", label: "#{number_to_percentage(@dashboard.attendance_rate * 100, precision: 0)} of #{pluralize(@dashboard.expected_attendee_count, "registrant")}", path: registrants_event_path(@event) %><% else %>Not yet recorded<% end %></p>
       </summary>
 
       <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
@@ -330,21 +330,21 @@
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
         <% program_counts = @dashboard.program_status_counts %>
-        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", count: program_counts[:new], label: "#{program_counts[:new]} new", path: registrants_event_path(@event, registrant_ids: @dashboard.program_status_registrant_ids(:new).join("-").presence || "0") %> · <%= render "stat_link", count: program_counts[:ongoing], label: "#{program_counts[:ongoing]} ongoing", path: registrants_event_path(@event, registrant_ids: @dashboard.program_status_registrant_ids(:ongoing).join("-").presence || "0") %> · <%= render "stat_link", count: program_counts[:reinstated], label: "#{program_counts[:reinstated]} reinstated", path: registrants_event_path(@event, registrant_ids: @dashboard.program_status_registrant_ids(:reinstated).join("-").presence || "0") %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{program_counts[:new]} new", path: registrants_event_path(@event, registrant_ids: @dashboard.program_status_registrant_ids(:new).join("-").presence || "0") %> · <%= render "stat_link", label: "#{program_counts[:ongoing]} ongoing", path: registrants_event_path(@event, registrant_ids: @dashboard.program_status_registrant_ids(:ongoing).join("-").presence || "0") %> · <%= render "stat_link", label: "#{program_counts[:reinstated]} reinstated", path: registrants_event_path(@event, registrant_ids: @dashboard.program_status_registrant_ids(:reinstated).join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.organizations.any? %>
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.organizations.each do |organization| %>
-              <li class="flex items-center gap-1.5">
-                <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "group/rowlink flex items-center justify-between gap-2 flex-1 min-w-0 rounded px-1 py-0.5 hover:bg-gray-50", title: "Registrants from #{organization.name}" do %>
+              <li class="group/rowlink flex items-center gap-1.5 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50">
+                <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "flex items-center justify-between gap-2 flex-1 min-w-0", title: "Registrants from #{organization.name}" do %>
                   <span class="flex items-center gap-1.5 min-w-0">
                     <%= organization.decorate.program_status_badge(@dashboard.program_status_by_organization[organization.id]) %>
                     <span class="truncate min-w-0 group-hover/rowlink:underline"><%= organization.name %></span>
                   </span>
                   <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.organization_counts.fetch(organization.id, 0) %></span>
                 <% end %>
-                <%= link_to organization_path(organization), class: "shrink-0 flex h-7 items-center text-gray-300 hover:text-gray-500", title: "View #{organization.name} profile" do %>
+                <%= link_to organization_path(organization), class: "shrink-0 flex h-7 items-center text-white group-hover/rowlink:text-gray-500", title: "View #{organization.name} profile" do %>
                   <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                 <% end %>
               </li>
@@ -364,7 +364,7 @@
                 path: registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", count: @dashboard.primary_sector_count, label: "#{@dashboard.primary_sector_count} primary", path: registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids.join("-").presence || "0") %> · <%= render "stat_link", count: @dashboard.additional_sector_count, label: "#{@dashboard.additional_sector_count} additional", path: registrants_event_path(@event, registrant_ids: @dashboard.additional_sector_registrant_ids.join("-").presence || "0") %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.primary_sector_count} primary", path: registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids.join("-").presence || "0") %> · <%= render "stat_link", label: "#{@dashboard.additional_sector_count} additional", path: registrants_event_path(@event, registrant_ids: @dashboard.additional_sector_registrant_ids.join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.sectors.any? %>
@@ -375,7 +375,7 @@
                   <span class="truncate min-w-0 group-hover/rowlink:underline"><%= sector.name %></span>
                   <span class="flex items-center gap-2 shrink-0">
                     <span class="text-xs text-gray-500"><%= @dashboard.sector_counts.fetch(sector.id, 0) %></span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover/rowlink:text-gray-500"></i>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white group-hover/rowlink:text-gray-500"></i>
                   </span>
                 <% end %>
               </li>
@@ -395,7 +395,7 @@
                 path: registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", count: @dashboard.countries.size, label: pluralize(@dashboard.countries.size, "country"), path: registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-").presence || "0") %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: pluralize(@dashboard.countries.size, "country"), path: registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.states.any? %>
@@ -406,7 +406,7 @@
                   <span class="group-hover/rowlink:underline"><%= state %></span>
                   <span class="flex items-center gap-2 shrink-0">
                     <span class="text-xs text-gray-500"><%= @dashboard.state_counts.fetch(state, 0) %></span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover/rowlink:text-gray-500"></i>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white group-hover/rowlink:text-gray-500"></i>
                   </span>
                 <% end %>
               </li>
