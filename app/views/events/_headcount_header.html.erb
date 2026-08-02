@@ -15,6 +15,8 @@
     <i class="fa-solid <%= icon %> text-xs <%= DomainTheme.text_class_for(color_key, intensity: 600) %>"></i>
     <span class="tabular-nums shrink-0"><%= count %></span>
     <span class="truncate"><%= label %></span>
-    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white shrink-0 group-hover/header:text-gray-500"></i>
+    <%# Hidden (not just white) so it claims no space until hover — the label keeps
+        its full width, then truncates to make room for the icon on hover. %>
+    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-500 shrink-0 hidden group-hover/header:inline-block"></i>
   <% end %>
 </h3>

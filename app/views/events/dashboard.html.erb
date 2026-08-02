@@ -294,7 +294,7 @@
                 path: registrants_event_path(@event, attendance_status: "attended") %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><% if @dashboard.attendance_recorded? %><%= render "stat_link", label: "#{number_to_percentage(@dashboard.attendance_rate * 100, precision: 0)} of #{pluralize(@dashboard.expected_attendee_count, "registrant")}", path: registrants_event_path(@event) %><% else %>Not yet recorded<% end %></p>
+        <p class="text-xs text-gray-500 mt-1"><% if @dashboard.attendance_recorded? %><%= render "stat_link", label: "#{number_to_percentage(@dashboard.attendance_rate * 100, precision: 0)} of #{pluralize(@dashboard.expected_attendee_count, "registrant")}", path: registrants_event_path(@event, attendance_status: "attended") %><% else %>Not yet recorded<% end %></p>
       </summary>
 
       <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
