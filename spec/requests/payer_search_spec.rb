@@ -26,30 +26,18 @@ RSpec.describe "Payer search (combined people + organizations)", type: :request 
       expect(resolved).to include(organization)
     end
 
+    it "lists organizations before people" do
+      get "/search/person_or_organization", params: { q: "Searchable" }
+
+      kinds = response.parsed_body.map { |row| row["label"].split(" · ").last }.uniq
+      expect(kinds).to eq([ "Organization", "Person" ])
+    end
+
     it "returns an empty array for a blank query" do
       get "/search/person_or_organization", params: { q: "" }
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to eq([])
-    end
-  end
-
-  # The `order` param controls which kind leads the combined results.
-  describe "result ordering" do
-    let!(:person) { create(:person, first_name: "Searchable", last_name: "Payer") }
-    let!(:organization) { create(:organization, name: "Searchable Payer Org") }
-
-    def result_kinds(params)
-      get "/search/person_or_organization", params: params
-      response.parsed_body.map { |row| row["label"].split(" · ").last }.uniq
-    end
-
-    it "lists people first by default" do
-      expect(result_kinds(q: "Searchable")).to eq([ "Person", "Organization" ])
-    end
-
-    it "lists organizations first when order=organization" do
-      expect(result_kinds(q: "Searchable", order: "organization")).to eq([ "Organization", "Person" ])
     end
   end
 end

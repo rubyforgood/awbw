@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus";
 import TomSelect from "tom-select";
 
 export default class extends Controller {
-  static values = { model: String, exclude: String, order: String };
+  static values = { model: String, exclude: String };
 
   connect() {
     this.select = new TomSelect(this.element, {
@@ -19,9 +19,6 @@ export default class extends Controller {
 
         if (this.hasExcludeValue && this.excludeValue) {
           url += `&exclude=${encodeURIComponent(this.excludeValue)}`;
-        }
-        if (this.hasOrderValue && this.orderValue) {
-          url += `&order=${encodeURIComponent(this.orderValue)}`;
         }
         fetch(url)
           .then((r) => r.json())
