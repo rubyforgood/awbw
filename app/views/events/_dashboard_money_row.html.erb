@@ -47,8 +47,8 @@
           <li>
             <%= link_to registrants_event_path(@event, registrant_ids: registrant.id),
                   title: [ registrant.name, *@dashboard.organization_names_by_registrant[registrant.id] ].join(" · "),
-                  class: "group/row flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
-              <span class="truncate min-w-0 group-hover/row:underline"><%= registrant.name %></span>
+                  class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+              <span class="truncate min-w-0 group-hover/rowlink:underline"><%= registrant.name %></span>
               <% if person_cents %>
                 <span class="shrink-0 tabular-nums text-gray-500"><%= dollars_from_cents(person_cents) %></span>
               <% end %>

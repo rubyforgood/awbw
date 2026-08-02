@@ -276,9 +276,9 @@
               <li>
                 <%= link_to registrants_event_path(@event, registrant_ids: registrant.id),
                       title: [ registrant.name, *@dashboard.organization_names_by_registrant[registrant.id] ].join(" · "),
-                      class: "group/row flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
-                  <span class="truncate min-w-0 group-hover/row:underline"><%= registrant.name %></span>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 shrink-0 group-hover/row:text-gray-500"></i>
+                      class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+                  <span class="truncate min-w-0 group-hover/rowlink:underline"><%= registrant.name %></span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 shrink-0 group-hover/rowlink:text-gray-500"></i>
                 <% end %>
               </li>
             <% end %>
@@ -354,10 +354,10 @@
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.organizations.each do |organization| %>
               <li class="flex items-center gap-1.5">
-                <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "group/row flex items-center justify-between gap-2 flex-1 min-w-0 rounded px-1 py-0.5 hover:bg-gray-50", title: "Registrants from #{organization.name}" do %>
+                <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "group/rowlink flex items-center justify-between gap-2 flex-1 min-w-0 rounded px-1 py-0.5 hover:bg-gray-50", title: "Registrants from #{organization.name}" do %>
                   <span class="flex items-center gap-1.5 min-w-0">
                     <%= organization.decorate.program_status_badge(@dashboard.program_status_by_organization[organization.id]) %>
-                    <span class="truncate min-w-0 group-hover/row:underline"><%= organization.name %></span>
+                    <span class="truncate min-w-0 group-hover/rowlink:underline"><%= organization.name %></span>
                   </span>
                   <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.organization_counts.fetch(organization.id, 0) %></span>
                 <% end %>
@@ -392,11 +392,11 @@
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.sectors.each do |sector| %>
               <li>
-                <%= link_to registrants_event_path(@event, sector: sector.id), class: "group/row flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50", title: sector.name do %>
-                  <span class="truncate min-w-0 group-hover/row:underline"><%= sector.name %></span>
+                <%= link_to registrants_event_path(@event, sector: sector.id), class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50", title: sector.name do %>
+                  <span class="truncate min-w-0 group-hover/rowlink:underline"><%= sector.name %></span>
                   <span class="flex items-center gap-2 shrink-0">
                     <span class="text-xs text-gray-500"><%= @dashboard.sector_counts.fetch(sector.id, 0) %></span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover/row:text-gray-500"></i>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover/rowlink:text-gray-500"></i>
                   </span>
                 <% end %>
               </li>
@@ -427,11 +427,11 @@
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.states.each do |state| %>
               <li>
-                <%= link_to registrants_event_path(@event, state: state), class: "group/row flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
-                  <span class="group-hover/row:underline"><%= state %></span>
+                <%= link_to registrants_event_path(@event, state: state), class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+                  <span class="group-hover/rowlink:underline"><%= state %></span>
                   <span class="flex items-center gap-2 shrink-0">
                     <span class="text-xs text-gray-500"><%= @dashboard.state_counts.fetch(state, 0) %></span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover/row:text-gray-500"></i>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover/rowlink:text-gray-500"></i>
                   </span>
                 <% end %>
               </li>
