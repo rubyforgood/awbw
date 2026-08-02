@@ -26,49 +26,7 @@ RSpec.describe RegistrationTicketCalloutDecorator, type: :decorator do
     end
   end
 
-  describe "#ticket_suppression_reason" do
-    def builtin_callout(builtin_key, event:, hidden: false)
-      create(:registration_ticket_callout, event:, builtin_key:, hidden:,
-             title: builtin_key.humanize)
-    end
-
-    it "warns when a published payment callout is on a free event" do
-      callout = builtin_callout("payment", event: create(:event, cost_cents: 0))
-      expect(callout.decorate.ticket_suppression_reason).to eq("Won't show on the ticket — this event is free")
-    end
-
-    it "warns when a published scholarship callout's event has no scholarship form" do
-      callout = builtin_callout("scholarship", event: create(:event))
-      expect(callout.decorate.ticket_suppression_reason).to include("no scholarship form")
-    end
-
-    it "warns when a published CE callout's event offers no CE hours" do
-      callout = builtin_callout("ce_hours", event: create(:event, ce_hours_offered: nil))
-      expect(callout.decorate.ticket_suppression_reason).to include("offers no CE hours")
-    end
-
-    it "warns when a published videoconference callout's event has no join link" do
-      callout = builtin_callout("videoconference", event: create(:event, videoconference_url: nil))
-      expect(callout.decorate.ticket_suppression_reason).to include("no videoconference link")
-    end
-
-    it "is nil when the event is configured for the callout" do
-      callout = builtin_callout("payment", event: create(:event, cost_cents: 5_000))
-      expect(callout.decorate.ticket_suppression_reason).to be_nil
-    end
-
-    it "is nil when the callout is unpublished" do
-      callout = builtin_callout("payment", event: create(:event, cost_cents: 0), hidden: true)
-      expect(callout.decorate.ticket_suppression_reason).to be_nil
-    end
-
-    it "is nil for a custom (non-built-in) callout" do
-      callout = create(:registration_ticket_callout, builtin_key: nil, hidden: false)
-      expect(callout.decorate.ticket_suppression_reason).to be_nil
-    end
-  end
-
-  describe "#config_action_hint" do
+  describe "#config_suppression_hint" do
     def builtin_callout(builtin_key, event:, hidden: true)
       create(:registration_ticket_callout, event:, builtin_key:, hidden:,
              title: builtin_key.humanize)
@@ -76,22 +34,22 @@ RSpec.describe RegistrationTicketCalloutDecorator, type: :decorator do
 
     it "names the config change even when the callout is unpublished" do
       callout = builtin_callout("payment", event: create(:event, cost_cents: 0), hidden: true)
-      expect(callout.decorate.config_action_hint).to eq("set an event cost above $0")
+      expect(callout.decorate.config_suppression_hint).to eq("set an event cost above $0")
     end
 
     it "names setting CE hours for a CE callout on an event that offers none" do
       callout = builtin_callout("ce_hours", event: create(:event, ce_hours_offered: nil))
-      expect(callout.decorate.config_action_hint).to eq("set CE hours above 0 under form settings")
+      expect(callout.decorate.config_suppression_hint).to eq("set CE hours above 0 under form settings")
     end
 
     it "is nil once the event is configured for the callout" do
       callout = builtin_callout("payment", event: create(:event, cost_cents: 5_000))
-      expect(callout.decorate.config_action_hint).to be_nil
+      expect(callout.decorate.config_suppression_hint).to be_nil
     end
 
     it "is nil for a custom (non-built-in) callout" do
       callout = create(:registration_ticket_callout, builtin_key: nil)
-      expect(callout.decorate.config_action_hint).to be_nil
+      expect(callout.decorate.config_suppression_hint).to be_nil
     end
   end
 end

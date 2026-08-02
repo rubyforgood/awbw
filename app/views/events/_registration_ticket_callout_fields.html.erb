@@ -74,7 +74,7 @@
       <%# Names the config the event is missing for this built-in (a cost, a
           scholarship form, CE hours, a videoconference link) so admins know what
           to change for it to reach the ticket. Shown regardless of published state. %>
-      <% if (config_hint = f.object.decorate.config_action_hint) %>
+      <% if (config_hint = f.object.decorate.config_suppression_hint) %>
         <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 shrink-0">
           <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
           Won't show unless you <%= config_hint %>
