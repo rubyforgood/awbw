@@ -49,9 +49,12 @@
                   title: [ registrant.name, *@dashboard.organization_names_by_registrant[registrant.id] ].join(" · "),
                   class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
               <span class="truncate min-w-0 group-hover/rowlink:underline"><%= registrant.name %></span>
-              <% if person_cents %>
-                <span class="shrink-0 tabular-nums text-gray-500"><%= dollars_from_cents(person_cents) %></span>
-              <% end %>
+              <span class="flex items-center gap-2 shrink-0">
+                <% if person_cents %>
+                  <span class="tabular-nums text-gray-500"><%= dollars_from_cents(person_cents) %></span>
+                <% end %>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white group-hover/rowlink:text-gray-500"></i>
+              </span>
             <% end %>
           </li>
         <% end %>
