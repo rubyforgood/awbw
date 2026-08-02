@@ -129,9 +129,9 @@
 
       <%# The three addends: Registration fees + Scholarships + Continuing education fees. Each owns
           paid/completed + outstanding sub-rows that expand to the registrants behind the figure. %>
-      <div class="flex flex-col md:flex-row md:flex-wrap md:items-stretch gap-3 md:gap-4">
+      <div class="flex flex-col md:flex-row md:flex-wrap md:items-stretch gap-3 md:gap-4" data-controller="details-row-sync">
         <%# Payments = Paid + Outstanding %>
-        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:payments, intensity: 200) %> bg-white p-4 shadow-sm">
+        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:payments, intensity: 200) %> bg-white p-4 shadow-sm" data-details-row-sync-target="card" data-action="toggle->details-row-sync#sync">
           <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:payments, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
@@ -171,7 +171,7 @@
         </details>
 
         <%# Scholarships = Completed + Outstanding %>
-        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> bg-white p-4 shadow-sm">
+        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> bg-white p-4 shadow-sm" data-details-row-sync-target="card" data-action="toggle->details-row-sync#sync">
           <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
@@ -203,7 +203,7 @@
         </details>
 
         <%# Continuing education fees = Paid + Outstanding %>
-        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:continuing_education, intensity: 200) %> bg-white p-4 shadow-sm">
+        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:continuing_education, intensity: 200) %> bg-white p-4 shadow-sm" data-details-row-sync-target="card" data-action="toggle->details-row-sync#sync">
           <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
@@ -244,8 +244,8 @@
   <% end %>
 
   <%# Headcount cards — each expands to reveal its full list %>
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" data-controller="details-row-sync">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm" data-details-row-sync-target="card" data-action="toggle->details-row-sync#sync">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
@@ -276,7 +276,7 @@
       </div>
     </details>
 
-    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm" data-details-row-sync-target="card" data-action="toggle->details-row-sync#sync">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:organizations, intensity: 700) %>">
@@ -314,7 +314,7 @@
       </div>
     </details>
 
-    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm" data-details-row-sync-target="card" data-action="toggle->details-row-sync#sync">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:sectors, intensity: 700) %>">
@@ -346,7 +346,7 @@
       </div>
     </details>
 
-    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm">
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm" data-details-row-sync-target="card" data-action="toggle->details-row-sync#sync">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:addresses, intensity: 700) %>">

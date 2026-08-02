@@ -75,6 +75,9 @@ application.register("expandable-card", ExpandableCardController)
 import ExpandableCardsController from "./expandable_cards_controller"
 application.register("expandable-cards", ExpandableCardsController)
 
+import DetailsRowSyncController from "./details_row_sync_controller"
+application.register("details-row-sync", DetailsRowSyncController)
+
 import DropdownController from "./dropdown_controller"
 application.register("dropdown", DropdownController)
 
