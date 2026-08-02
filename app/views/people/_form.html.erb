@@ -132,7 +132,7 @@
        else
          pluralize(person_addresses.size, "address")
        end %>
-    <details class="form-group space-y-4 group/section"<%= " open".html_safe if addresses_open %>>
+    <details class="form-group group/section"<%= " open".html_safe if addresses_open %>>
       <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
         <span class="font-semibold">Addresses:</span>
         <span class="text-sm text-gray-500"><%= address_summary %></span>
@@ -297,7 +297,7 @@
   <!-- Organization Affiliations -->
   <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
   <% decorated = person.decorate %>
-<details id="affiliations" class="form-group space-y-4 scroll-mt-4 group/section" open>
+  <details id="affiliations" class="form-group scroll-mt-4 group/section" open>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Affiliations</span>
       <% affiliation_count = person.affiliations.reject(&:marked_for_destruction?).size %>
@@ -415,7 +415,7 @@
   <%# Collapsible like the sections above. Stays open on a new person or when the
       form has errors so nothing hides behind the summary. %>
   <% background_open = !f.object.persisted? || f.object.errors.any? %>
-  <details class="form-group space-y-4 group"<%= " open".html_safe if background_open %>>
+  <details class="form-group group"<%= " open".html_safe if background_open %>>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Background</span>
       <% if f.object.bio.present? %>
@@ -464,7 +464,7 @@
       or when there are errors so an invalid license stays visible. %>
   <% licenses = f.object.professional_licenses.reject(&:marked_for_destruction?) %>
   <% licenses_open = !f.object.persisted? || f.object.errors.any? %>
-  <details id="professional-licenses" class="form-group space-y-4 scroll-mt-4 group"<%= " open".html_safe if licenses_open %>>
+  <details id="professional-licenses" class="form-group scroll-mt-4 group"<%= " open".html_safe if licenses_open %>>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Professional licenses:</span>
       <span class="text-sm text-gray-500"><%= licenses.any? ? licenses.map(&:name).to_sentence : "None" %></span>
@@ -487,7 +487,7 @@
       and the admin-only demographics/FileMaker block. Open on a new person or
       when there are errors. %>
   <% extras_open = !f.object.persisted? || f.object.errors.any? %>
-  <details class="form-group space-y-4 group"<%= " open".html_safe if extras_open %>>
+  <details class="form-group group"<%= " open".html_safe if extras_open %>>
     <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Extras</span>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
