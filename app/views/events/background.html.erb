@@ -10,24 +10,37 @@
 <% other_response_data = @dashboard.other_sector_response_rows.map { |text, count, _ids| [ text, count ] } %>
 <% other_response_paths = @dashboard.other_sector_response_rows.to_h { |text, _count, ids| [ text, registrants_event_path(@event, registrant_ids: ids.join("-")) ] } %>
 <% age_group_data = @dashboard.age_groups.map { |c| [ c.name, @dashboard.age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
+<% all_age_group_data = @dashboard.all_age_groups.map { |c| [ c.name, @dashboard.all_age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 <% state_data = @dashboard.state_counts.sort_by { |_, count| -count } %>
 <% country_data = @dashboard.country_counts.sort_by { |_, count| -count } %>
 <% school_district_data = @dashboard.school_district_counts.sort_by { |_, count| -count } %>
 <% org_data = @dashboard.organizations.map { |o| [ o.name, @dashboard.organization_counts.fetch(o.id, 0) ] }.sort_by { |_, count| -count } %>
+<%# Program-status breakdown of the represented orgs. Each status carries its own
+    swatch (green/blue/purple) matching the OrganizationDecorator badge colors, and
+    zero-count statuses drop out so data and palette stay aligned. %>
+<% program_status_rows = [ [ "New", @dashboard.program_status_counts[:new], "#22c55e" ],
+                           [ "Ongoing", @dashboard.program_status_counts[:ongoing], "#3b82f6" ],
+                           [ "Reinstated", @dashboard.program_status_counts[:reinstated], "#a855f7" ] ].select { |_, count, _| count.positive? } %>
+<% program_status_data = program_status_rows.map { |label, count, _| [ label, count ] } %>
+<% program_status_palette = program_status_rows.map { |_, _, color| color } %>
 <% life_experience_data = @dashboard.life_experiences.map { |c| [ c.name, @dashboard.life_experience_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 <% settings_data = @dashboard.settings.map { |c| [ c.name, @dashboard.settings_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 
 <%# Shared palette: pie slice i and its legend swatch i both use palette[i]. %>
 <% palette = %w[#3b82f6 #ef4444 #f59e0b #10b981 #6366f1 #ec4899 #14b8a6 #f97316 #8b5cf6 #84cc16 #06b6d4 #eab308 #a855f7 #22c55e #fb7185] %>
 
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<%# Opt out of the layout's max-w-7xl cap to match the wider registrants page;
+    the wrapper restores the layout's gutters at a wider bound. %>
+<% content_for(:full_width, true) %>
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back link + sub-nav, matching the other event pages %>
-  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-2 print:hidden">
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
     <%= link_to "← Events", events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
     <%= render "events/subnav", event: @event, current: :background %>
   </div>
-  <div class="flex justify-end mb-6 print:hidden">
-    <button onclick="window.print();" class="text-sm text-gray-500 hover:text-gray-700">
+  <div class="flex justify-end gap-3 mb-6 print:hidden">
+    <button onclick="window.print();" class="btn btn-utility-outline">
       <i class="fa-solid fa-print"></i> Print
     </button>
   </div>
@@ -38,7 +51,7 @@
     <% if @event.start_date.present? %>
       <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
     <% end %>
-    <h1 class="text-4xl sm:text-5xl font-extrabold text-black mt-2 flex items-center justify-center gap-3">
+    <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
       <i class="fa-solid fa-users-viewfinder text-blue-600"></i>
       Get to know the registrants
     </h1>
@@ -207,42 +220,65 @@
   <% sector_paths = @dashboard.sectors.to_h { |s| [ s.name, registrants_event_path(@event, sector: s.id) ] } %>
   <% sector_paths["Other"] = registrants_event_path(@event, registrant_ids: @dashboard.other_sector_response_registrant_ids.join("-")) if @dashboard.other_sector_response_count.positive? %>
   <% age_group_paths = @dashboard.age_groups.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
+  <% all_age_group_paths = @dashboard.all_age_groups.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.all_age_group_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% state_paths = @dashboard.states.index_with { |state| registrants_event_path(@event, state: state) } %>
   <% country_paths = @dashboard.country_registrant_ids_by_country.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
   <% school_district_paths = @dashboard.school_district_registrant_ids_by_district.transform_values { |ids| registrants_event_path(@event, registrant_ids: ids.join("-")) } %>
   <% life_experience_paths = @dashboard.life_experiences.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.life_experience_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% settings_paths = @dashboard.settings.to_h { |c| [ c.name, registrants_event_path(@event, registrant_ids: @dashboard.settings_registrant_ids_by_category.fetch(c.id, []).join("-")) ] } %>
   <% org_paths = @dashboard.organizations.to_h { |o| [ o.name, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(o.id, []).to_a.join("-")) ] } %>
+  <% program_status_paths = @dashboard.program_status_registrant_ids.to_h { |status, ids| [ status.to_s.titleize, registrants_event_path(@event, registrant_ids: ids.join("-")) ] } %>
+  <%# States and countries use the addresses theme color (slate) for their map ramps. %>
+  <% addresses_color = "#475569" %>
+  <%# On lg the three topic columns share row tracks via subgrid, so the primary
+      cards (row 1) line up in height with each other and the "all"/org cards
+      (row 2) line up with each other — across all three columns. %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-    <% if primary_sector_data.any? %>
-      <%= render "breakdown_card", title: "Primary sector", data: primary_sector_data, chart: :pie, palette: palette, row_paths: primary_sector_paths %>
+    <%# Col 1: sectors — primary on top, all sectors stacked below. %>
+    <% if primary_sector_data.any? || sector_data.any? %>
+      <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-2">
+        <% if primary_sector_data.any? %>
+          <%= render "breakdown_card", title: "Primary sector", data: primary_sector_data, chart: :pie, palette: palette, row_paths: primary_sector_paths %>
+        <% end %>
+        <% if sector_data.any? %>
+          <%= render "breakdown_card", title: "All sectors", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
+        <% end %>
+      </div>
     <% end %>
-    <% if sector_data.any? %>
-      <%= render "breakdown_card", title: "All sectors", data: sector_data, chart: :pie, palette: palette, row_paths: sector_paths %>
+    <%# Col 2: age groups — primary on top, all age groups stacked below. Primary
+        always shows (no-data box when empty); "All age groups" (primary +
+        additional questions) appears only when someone answered either. %>
+    <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-2">
+      <%= render "breakdown_card", title: "Primary age group", data: age_group_data, chart: :pie, palette: palette,
+                                   empty_message: "No age group responses from registration answers yet.", row_paths: age_group_paths %>
+      <% if all_age_group_data.any? %>
+        <%= render "breakdown_card", title: "All age groups", data: all_age_group_data, chart: :pie, palette: palette, row_paths: all_age_group_paths %>
+      <% end %>
+    </div>
+    <%# Col 3: organizations — program-status breakdown (new/ongoing/reinstated)
+        charted on top, the full org list below. %>
+    <% if org_data.any? %>
+      <div class="flex flex-col gap-6 lg:grid lg:grid-rows-subgrid lg:row-span-2">
+        <% if program_status_data.any? %>
+          <%= render "breakdown_card", title: "Organization/program status", data: program_status_data, chart: :pie, palette: program_status_palette, row_paths: program_status_paths %>
+        <% end %>
+        <%= render "breakdown_card", title: "All organizations", data: org_data, chart: nil, palette: palette, row_paths: org_paths %>
+      </div>
     <% end %>
+    <%# --- Remaining breakdowns flow below row 1 --- %>
     <%# The free-text values behind the "Other" sector slice — a list, since these
         are un-curated answers a curator later promotes into real sectors. %>
     <% if other_response_data.any? %>
       <%= render "breakdown_card", title: "Other sector responses", data: other_response_data, chart: nil, palette: palette, row_paths: other_response_paths %>
     <% end %>
-    <%# States and countries use the addresses theme color (slate) for their map ramps. %>
-    <% addresses_color = "#475569" %>
-    <%# Age group and Countries are both short; stack them in one column so the pair
-        fits within the height of the taller Primary sector pie card. %>
-    <div class="flex flex-col gap-6">
-      <%# Primary age group comes from the registration "ages served" answers;
-          always show the card (with a no-data box when empty). %>
-      <%= render "breakdown_card", title: "Primary age group", data: age_group_data, chart: :pie, palette: palette,
-                                   empty_message: "No age group responses from registration answers yet.", row_paths: age_group_paths %>
-      <% if country_data.any? %>
-        <%= render "breakdown_card", title: "Countries", data: country_data, chart: :world_map, palette: palette, map_color: addresses_color, row_paths: country_paths %>
-      <% end %>
-    </div>
+    <% if country_data.any? %>
+      <%= render "breakdown_card", title: "Countries", data: country_data, chart: :world_map, palette: palette, map_color: addresses_color, row_paths: country_paths %>
+    <% end %>
     <% if state_data.any? %>
       <%= render "breakdown_card", title: "States", data: state_data, chart: :map, palette: palette, map_color: addresses_color, row_paths: state_paths %>
     <% end %>
     <% if school_district_data.any? %>
-      <%= render "breakdown_card", title: "School districts", data: school_district_data, chart: :bar, palette: palette, row_paths: school_district_paths %>
+      <%= render "breakdown_card", title: "School districts (via Address data)", data: school_district_data, chart: :bar, palette: palette, row_paths: school_district_paths %>
     <% end %>
     <%# Life experiences and settings come from registration answers; hide each
         card entirely when no one has answered those questions. %>
@@ -252,8 +288,6 @@
     <% if settings_data.any? %>
       <%= render "breakdown_card", title: "Settings", data: settings_data, chart: :bar, palette: palette, row_paths: settings_paths %>
     <% end %>
-    <% if org_data.any? %>
-      <%= render "breakdown_card", title: "Organizations", data: org_data, chart: nil, palette: palette, row_paths: org_paths %>
-    <% end %>
   </div>
+</div>
 </div>

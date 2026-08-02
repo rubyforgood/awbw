@@ -1,9 +1,18 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
-  <%# Top bar: back link + actions %>
-  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+<%# Opt out of the layout's max-w-7xl cap to match the wider registrants page;
+    the wrapper restores the layout's gutters at a wider bound. %>
+<% content_for(:full_width, true) %>
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <%# Top bar: back link + sub-nav, matching the other event pages %>
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
     <%= link_to "← Events", events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
     <%= render "events/subnav", event: @event, current: :dashboard %>
+  </div>
+  <div class="flex justify-end gap-3 mb-6 print:hidden">
+    <button onclick="window.print();" class="btn btn-utility-outline">
+      <i class="fa-solid fa-print"></i> Print
+    </button>
   </div>
 
   <%# Forms dropdown — sits top-right below the sub-nav, holding the public form
@@ -24,7 +33,7 @@
       </p>
     <% end %>
     <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
-      <i class="fa-solid fa-chart-simple text-blue-600"></i>
+      <i class="fa-solid fa-chart-simple <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
       Dashboard
     </h1>
   </div>
@@ -378,4 +387,5 @@
       </div>
     </details>
   </div>
+</div>
 </div>

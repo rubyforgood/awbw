@@ -42,6 +42,10 @@ RSpec.describe EventDashboard do
       create(:form_field, form: registration_form, field_identifier: "primary_age_group",
                           name: "Primary Age Group(s) Served", answer_type: :multi_select_checkbox)
     end
+    let(:additional_age_group_field) do
+      create(:form_field, form: registration_form, field_identifier: "additional_age_group",
+                          name: "Additional Age Group(s) Served", answer_type: :multi_select_checkbox)
+    end
 
     let!(:reg1) do
       # Affiliation exists before registration so it is captured in the snapshot.
@@ -102,6 +106,16 @@ RSpec.describe EventDashboard do
       create(:form_answer, form_field: age_group_field, submitted_answer: "#{age_group1.id}, #{age_group2.id}",
                            form_submission: create(:form_submission, person: person2, form: registration_form))
       create(:form_answer, form_field: age_group_field, submitted_answer: age_group_excluded.id.to_s,
+                           form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
+
+      # Additional age group(s) served, captured as "additional_age_group" answers.
+      # person1 → Adults + Teens (Adults dupes the primary answer, so it dedupes);
+      # cancelled → Adults (ignored). This makes "All age groups" (primary +
+      # additional) differ from the primary-only breakdown.
+      create(:form_answer, form_field: additional_age_group_field,
+                           submitted_answer: "#{age_group1.id}, #{age_group2.id}",
+                           form_submission: create(:form_submission, person: person1, form: registration_form))
+      create(:form_answer, form_field: additional_age_group_field, submitted_answer: age_group1.id.to_s,
                            form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
 
       # States from active registrant addresses; inactive address excluded.
@@ -359,6 +373,22 @@ RSpec.describe EventDashboard do
         map = dashboard.age_group_registrant_ids_by_category
         expect(map[age_group1.id]).to contain_exactly(person1.id, person2.id)
         expect(map[age_group2.id]).to contain_exactly(person2.id)
+      end
+    end
+
+    describe "all age groups (primary + additional registration responses)" do
+      it "returns unique age-group categories across both age group questions" do
+        expect(dashboard.all_age_groups).to contain_exactly(age_group1, age_group2)
+      end
+
+      it "counts distinct registrants per age group, deduping across both questions" do
+        expect(dashboard.all_age_group_counts).to eq(age_group1.id => 2, age_group2.id => 2)
+      end
+
+      it "maps each age group to its registrant ids across both questions" do
+        map = dashboard.all_age_group_registrant_ids_by_category
+        expect(map[age_group1.id]).to contain_exactly(person1.id, person2.id)
+        expect(map[age_group2.id]).to contain_exactly(person1.id, person2.id)
       end
     end
 
@@ -765,6 +795,14 @@ RSpec.describe EventDashboard do
       expect(statuses[ongoing_facilitator.id]).to eq([ :ongoing ])
       expect(statuses[reinstated_facilitator.id]).to eq([ :reinstated ])
       expect(statuses).not_to have_key(cancelled_facilitator.id)
+    end
+
+    it "groups registrant ids by program status, for the breakdown drill-in" do
+      ids = dashboard.program_status_registrant_ids
+
+      expect(ids[:new]).to contain_exactly(new_facilitator.id)
+      expect(ids[:ongoing]).to contain_exactly(ongoing_facilitator.id)
+      expect(ids[:reinstated]).to contain_exactly(reinstated_facilitator.id)
     end
   end
 

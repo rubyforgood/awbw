@@ -1,10 +1,14 @@
-<% content_for(:page_bg_class, "admin-only bg-white") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
 <% answers_by_applicant = @dashboard.scholarship_answers_by_applicant %>
 <% header_answers = @dashboard.header_answers_by_applicant %>
 <% event_date = @event.start_date %>
 
-<div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<%# Opt out of the layout's max-w-7xl cap to match the wider registrants page;
+    the wrapper restores the layout's gutters at a wider bound. %>
+<% content_for(:full_width, true) %>
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
+<div class="bg-white border border-gray-200 rounded-xl shadow p-4 sm:p-6">
   <%# Top bar: back link + sub-nav, matching the other event pages %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
     <%= link_to "← Events", events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
@@ -25,6 +29,9 @@
   <%# Title block %>
   <div class="text-center mb-8">
     <%= link_to @event.title, edit_event_path(@event), class: "text-sm font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700" %>
+    <% if @event.start_date.present? %>
+      <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
+    <% end %>
     <h1 class="text-3xl font-bold mt-1 flex items-center justify-center gap-2 <%= DomainTheme.text_class_for(:scholarships) %>">
       <i class="fa-solid fa-graduation-cap"></i>
       Scholarship recipients
@@ -266,4 +273,5 @@
       </div>
     </div>
   <% end %>
+</div>
 </div>
