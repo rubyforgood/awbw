@@ -964,10 +964,10 @@ RSpec.describe EventDashboard do
         expect(dashboard.attendance_pending_count).to eq(2)
       end
 
-      it "reports the recorded-outcome total and rate (incomplete counts as showing up)" do
+      it "reports the recorded-outcome total and rate (only full attendance counts toward it)" do
         expect(dashboard.attendance_recorded?).to be(true)
         expect(dashboard.attendance_outcome_count).to eq(4)
-        expect(dashboard.attendance_rate).to eq(3.0 / 4)
+        expect(dashboard.attendance_rate).to eq(2.0 / 4)
       end
 
       it "lists the registrants behind each status" do

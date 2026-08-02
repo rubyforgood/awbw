@@ -408,7 +408,7 @@
           <p class="break-words">
             <% if @dashboard.attendance_recorded? %>
               <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:event_registrations, intensity: 700) %> tabular-nums"><%= number_to_percentage(@dashboard.attendance_rate * 100, precision: 0) %></span>
-              <span class="text-xs text-gray-500">attended (<%= @dashboard.attended_count + @dashboard.incomplete_attendance_count %> of <%= @dashboard.attendance_outcome_count %> recorded)</span>
+              <span class="text-xs text-gray-500">attended (<%= @dashboard.attended_count %> of <%= @dashboard.attendance_outcome_count %> recorded)</span>
             <% else %>
               <span class="text-2xl sm:text-3xl font-bold text-gray-400 tabular-nums">—</span>
               <span class="text-xs text-gray-500">Not yet recorded</span>

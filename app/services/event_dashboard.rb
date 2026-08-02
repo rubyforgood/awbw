@@ -68,11 +68,12 @@ class EventDashboard
     attendance_outcome_count.positive?
   end
 
-  # Fraction (0.0–1.0) of expected attendees who showed up, or nil when no
-  # outcome has been recorded yet. Incomplete attendance counts as showing up.
+  # Fraction (0.0–1.0) of recorded attendees who fully attended, or nil when no
+  # outcome has been recorded yet. Only a full attendance counts toward the rate —
+  # incomplete attendance and no-shows both count against it.
   def attendance_rate
     return nil unless attendance_recorded?
-    (attended_count + incomplete_attendance_count).fdiv(attendance_outcome_count)
+    attended_count.fdiv(attendance_outcome_count)
   end
 
   # Registrants (Person records, name-sorted) with the given attendance
