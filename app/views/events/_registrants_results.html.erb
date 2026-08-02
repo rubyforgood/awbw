@@ -21,7 +21,7 @@
         <%# On by default — Organization shows unless the admin hides it. %>
         <label class="inline-flex items-center gap-2 cursor-pointer select-none"
                data-controller="column-toggle" data-column-toggle-group-value="organization">
-          <span class="text-sm text-gray-500">Organization</span>
+          <span class="text-sm text-gray-500">Linked organization</span>
 
           <input
             type="checkbox"
@@ -161,7 +161,7 @@
                 </span>
               </th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-full" aria-sort="none" data-column-toggle-col="organization">
-                <%= render "shared/sortable_header", label: "Organization", index: 1 %>
+                <%= render "shared/sortable_header", label: "Linked organization", index: 1 %>
               </th>
 
               <% if ce_col %>

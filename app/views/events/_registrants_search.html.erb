@@ -54,7 +54,7 @@
           options: [ [ "Not ready", "not_ready" ], [ "Ready", "ready" ], [ "Certificate pending", "certificate_due" ], [ "Completed", "completed" ] ],
           selected: params[:readiness], blank: "All statuses", field_class: field_class %>
 
-    <%= render "events/filter_select", param: :org_status, label: "Organization",
+    <%= render "events/filter_select", param: :org_status, label: "Organization linking",
           options: [ [ "Pending", "pending" ], [ "Linked", "linked" ] ],
           selected: params[:org_status], blank: "All organizations", field_class: field_class %>
 
