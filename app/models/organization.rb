@@ -120,13 +120,17 @@ class Organization < ApplicationRecord
     end
   }
 
-  # Index filters that match a sector / age group tagged directly on the org OR on
-  # any affiliated person — mirroring the aggregate the index/profile columns show.
+  # Index filters that match a sector / age group tagged directly on the org (any),
+  # OR as an affiliated person's PRIMARY tag — mirroring the aggregate the
+  # index/profile columns show.
   scope :sector_name_including_people, ->(name) {
     next all if name.blank?
     term = name.to_s.downcase
     direct = joins(:sectors).where("LOWER(sectors.name) = ?", term).select(:id)
-    via_people = joins(people: :sectors).where("LOWER(sectors.name) = ?", term).select(Arel.sql("organizations.id"))
+    via_people = joins(people: { sectorable_items: :sector })
+                   .where(sectorable_items: { is_primary: true })
+                   .where("LOWER(sectors.name) = ?", term)
+                   .select(Arel.sql("organizations.id"))
     where(id: direct).or(where(id: via_people))
   }
 
@@ -137,7 +141,10 @@ class Organization < ApplicationRecord
                                .where("LOWER(categories.name) = ?", name.to_s.downcase)
                                .select(:id)
     direct = joins(:categories).where(categories: { id: age_category_ids }).select(:id)
-    via_people = joins(people: :categories).where(categories: { id: age_category_ids }).select(Arel.sql("organizations.id"))
+    via_people = joins(people: { categorizable_items: :category })
+                   .where(categorizable_items: { is_primary: true })
+                   .where(categories: { id: age_category_ids })
+                   .select(Arel.sql("organizations.id"))
     where(id: direct).or(where(id: via_people))
   }
 
@@ -287,8 +294,11 @@ class Organization < ApplicationRecord
     sectors
  end
 
+  # Only affiliated people's PRIMARY sector (a person has at most one) — their
+  # non-primary sectors don't roll up to the org.
   def affiliated_sectors
-    people.includes(:sectors).flat_map(&:sectors)
+    people.includes(sectorable_items: :sector)
+          .flat_map { |person| person.sectorable_items.filter_map { |item| item.sector if item.is_primary? } }
   end
 
   def all_sectors
@@ -302,8 +312,10 @@ class Organization < ApplicationRecord
     collect_age_groups(:primary_age_groups)
   end
 
+  # Additional age groups are the org's OWN only — affiliated people contribute
+  # just their primary age groups (via all_primary_age_groups), not additional.
   def all_additional_age_groups
-    collect_age_groups(:additional_age_groups) - all_primary_age_groups
+    additional_age_groups - all_primary_age_groups
   end
 
   remote_searchable_by :name

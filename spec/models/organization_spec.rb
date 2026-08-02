@@ -291,29 +291,55 @@ RSpec.describe Organization do
     let!(:teen) { create(:category, :published, category_type: age_type, name: "13-17") }
     let!(:sector) { create(:sector, :published, name: "Housing") }
     let!(:direct_org) { create(:organization, name: "Direct Org") }
-    let!(:via_person_org) { create(:organization, name: "Via Person Org") }
+    let!(:primary_person_org) { create(:organization, name: "Primary Person Org") }
+    let!(:additional_person_org) { create(:organization, name: "Additional Person Org") }
     let!(:untagged) { create(:organization, name: "Untagged Org") }
 
     before do
-      direct_org.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      # Tagged directly on the org (org's own tags count regardless of primary).
+      direct_org.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
       direct_org.sectorable_items.create!(sector: sector, is_primary: false)
 
-      person = create(:person)
-      create(:affiliation, organization: via_person_org, person: person)
-      person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
-      person.sectorable_items.create!(sector: sector, is_primary: false)
+      # An affiliated person's PRIMARY tags — should match.
+      primary_person = create(:person)
+      create(:affiliation, organization: primary_person_org, person: primary_person)
+      primary_person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      primary_person.sectorable_items.create!(sector: sector, is_primary: true)
+
+      # An affiliated person's ADDITIONAL / non-primary tags — should NOT match.
+      additional_person = create(:person)
+      create(:affiliation, organization: additional_person_org, person: additional_person)
+      additional_person.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
+      additional_person.sectorable_items.create!(sector: sector, is_primary: false)
     end
 
-    it "matches a sector tagged directly on the org or via an affiliated person" do
+    it "matches a sector on the org or an affiliated person's primary, not their non-primary" do
       results = Organization.search_by_params(sector_name: "Housing")
-      expect(results).to include(direct_org, via_person_org)
-      expect(results).not_to include(untagged)
+      expect(results).to include(direct_org, primary_person_org)
+      expect(results).not_to include(additional_person_org, untagged)
     end
 
-    it "matches an age group tagged directly on the org or via an affiliated person" do
+    it "matches an age group on the org or an affiliated person's primary, not their additional" do
       results = Organization.search_by_params(age_group_name: "13-17")
-      expect(results).to include(direct_org, via_person_org)
-      expect(results).not_to include(untagged)
+      expect(results).to include(direct_org, primary_person_org)
+      expect(results).not_to include(additional_person_org, untagged)
+    end
+  end
+
+  describe "#all_sectors" do
+    let!(:housing) { create(:sector, :published, name: "Housing") }
+    let!(:legal) { create(:sector, :published, name: "Legal") }
+    let!(:other) { create(:sector, :published, name: "Other Services") }
+    let(:organization) { create(:organization) }
+
+    it "includes the org's own sectors and affiliated people's primary sector only" do
+      organization.sectorable_items.create!(sector: housing, is_primary: false)
+      person = create(:person)
+      create(:affiliation, organization: organization, person: person)
+      person.sectorable_items.create!(sector: legal, is_primary: true)
+      person.sectorable_items.create!(sector: other, is_primary: false)
+
+      expect(organization.all_sectors).to contain_exactly(housing, legal)
     end
   end
 
@@ -331,11 +357,13 @@ RSpec.describe Organization do
       create(:affiliation, organization: organization, person: person_b)
     end
 
-    it "aggregates and dedupes age groups across affiliated people and the org itself" do
-      organization.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [])
-      person_a.tag_age_groups(primary_ids: [ young.id ], additional_ids: [ teen.id ])
-      person_b.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
+    it "includes org-direct age groups and affiliated people's primary (not their additional)" do
+      organization.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [ teen.id ])
+      person_a.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
+      person_b.tag_age_groups(primary_ids: [], additional_ids: [ young.id ])
 
+      # org primary (adult) + people's primary (young); org's own additional (teen)
+      # stays; person_b's additional (young) is ignored.
       expect(organization.all_primary_age_groups).to contain_exactly(young, adult)
       expect(organization.all_additional_age_groups).to contain_exactly(teen)
     end

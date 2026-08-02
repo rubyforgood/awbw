@@ -103,8 +103,8 @@ RSpec.describe "/organizations", type: :request do
       affiliated_sector_2 = create(:sector, name: "Affiliated Sector 2")
       person_1 = create(:person)
       person_2 = create(:person)
-      create(:sectorable_item, sector: affiliated_sector_1, sectorable: person_1)
-      create(:sectorable_item, sector: affiliated_sector_2, sectorable: person_2)
+      create(:sectorable_item, sector: affiliated_sector_1, sectorable: person_1, is_primary: true)
+      create(:sectorable_item, sector: affiliated_sector_2, sectorable: person_2, is_primary: true)
 
       org = create(:organization, organization_status: organization_status)
       create(:sectorable_item, sector: create(:sector, name: "Direct Sector 1"), sectorable: org)
