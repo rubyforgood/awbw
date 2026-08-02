@@ -1,9 +1,14 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
-  <%# Top bar: back link + actions %>
-  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+  <%# Top bar: back link + sub-nav, matching the other event pages %>
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-2 print:hidden">
     <%= link_to "← Events", events_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
     <%= render "events/subnav", event: @event, current: :dashboard %>
+  </div>
+  <div class="flex justify-end mb-6 print:hidden">
+    <button onclick="window.print();" class="text-sm text-gray-500 hover:text-gray-700">
+      <i class="fa-solid fa-print"></i> Print
+    </button>
   </div>
 
   <%# Centered title block %>
