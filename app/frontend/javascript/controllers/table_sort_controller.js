@@ -8,19 +8,10 @@ import { Controller } from "@hotwired/stimulus"
 // (data-sort-foo) instead — letting one cell offer several sub-sorts (e.g. a
 // Name cell sortable by first or last name).
 // Numeric values sort numerically; everything else sorts alphabetically.
-// Every sort starts from the server's initial row order (see connect), and
-// Array#sort is stable, so equal values keep that order — i.e. the server's
-// default ordering (e.g. by name) is the secondary sort, for free.
 // Each header's indicator is a Font Awesome icon: fa-sort (neutral up/down
 // carets) by default, fa-sort-up / fa-sort-down on the active sort.
 export default class extends Controller {
   static targets = ["body", "header"]
-
-  connect() {
-    // The server-rendered order — reused as the base for every sort so ties break
-    // by it (a stable sort) rather than by whatever the previous sort left behind.
-    this.initialRows = Array.from(this.bodyTarget.rows)
-  }
 
   sort(event) {
     const header = event.currentTarget
@@ -28,7 +19,7 @@ export default class extends Controller {
     const key = header.dataset.sortKey
     const ascending = header.dataset.sortDirection !== "asc"
 
-    const rows = [ ...this.initialRows ]
+    const rows = Array.from(this.bodyTarget.rows)
     rows.sort((a, b) => this.compare(a, b, index, key) * (ascending ? 1 : -1))
     rows.forEach((row) => this.bodyTarget.appendChild(row))
 

@@ -49,15 +49,6 @@ export default class extends Controller {
       return counts[abbrByStateName[name]] ?? counts[name] ?? 0
     }
 
-    // A single over-represented state (e.g. CA in a CA-heavy dataset) washes out a
-    // linear 0→max ramp, leaving every other state near-white. Cap the color scale
-    // just above the SECOND-highest count so that lone outlier pins to the darkest
-    // shade (clamped) while the rest spread across a real gradient below it.
-    const values = states.map(valueFor)
-    const highest = Math.max(0, ...values)
-    const secondHighest = Math.max(0, ...values.filter(v => v < highest))
-    const colorScaleMax = Math.max(1, Math.ceil((secondHighest || highest) * 1.4))
-
     this.chart = new Chart(this.canvasTarget, {
       type: "choropleth",
       data: {
@@ -84,8 +75,6 @@ export default class extends Controller {
           projection: { axis: "x", projection: "albersUsa" },
           color: {
             axis: "x",
-            min: 0,
-            max: colorScaleMax,
             quantize: 5,
             interpolate: rampTo(this.colorValue),
             legend: { position: "bottom-right", align: "bottom" }

@@ -705,6 +705,22 @@ RSpec.describe "Events", type: :request do
 
     before { sign_in admin }
 
+    context "eyebrow back link" do
+      it "returns to the originating background section when arrived from it" do
+        get registrants_event_path(event, return_to: "background", return_anchor: "all-cities")
+
+        expect(response.body).to include("← Background")
+        expect(response.body).to include("#{background_event_path(event)}#all-cities")
+        expect(response.body).not_to include("← Dashboard")
+      end
+
+      it "falls back to the dashboard without background return context" do
+        get registrants_event_path(event)
+
+        expect(response.body).to include("← Dashboard")
+      end
+    end
+
     context "with unknown filter params" do
       it "does not crash on an invalid payment_status" do
         get registrants_event_path(event, payment_status: "bogus")
@@ -1886,6 +1902,19 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("fa-graduation-cap")
         # Same pure-CSS toggle as the Organizations card.
         expect(response.body).to include('id="city-scholarship-filter"')
+      end
+
+      it "anchors its sections and stamps registrants drill-downs with a back-to-section eyebrow" do
+        get background_event_path(event)
+
+        # Sections carry stable ids so a drill-down can scroll back to them.
+        expect(response.body).to include('id="overview"')
+        expect(response.body).to include('id="all-organizations"')
+        expect(response.body).to include('id="primary-sector"')
+        # Registrants links carry the origin page + section so the eyebrow returns here.
+        expect(response.body).to include("return_to=background")
+        expect(response.body).to include("return_anchor=overview")
+        expect(response.body).to include("return_anchor=all-organizations")
       end
 
       it "excludes registrants with an inactive status" do
