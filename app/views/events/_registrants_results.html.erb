@@ -160,7 +160,9 @@
                   <%= render "shared/sortable_header", label: "Last", index: 0, key: "last" %>
                 </span>
               </th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-full" aria-sort="none" data-column-toggle-col="organization">
+              <%# Extra left padding lines the header up with the org pill's text (the
+                  pill is inset from the cell edge by its own px-3), not the cell edge. %>
+              <th class="pl-7 pr-4 py-2 text-left text-sm font-semibold text-gray-700 w-full" aria-sort="none" data-column-toggle-col="organization">
                 <%= render "shared/sortable_header", label: "Linked organization", index: 1 %>
               </th>
 
