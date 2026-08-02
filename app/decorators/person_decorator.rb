@@ -103,6 +103,27 @@ class PersonDecorator < ApplicationDecorator
     hidden.any? ? "Hide #{hidden.to_sentence}" : "All shown"
   end
 
+  # Social-media URL fields mapped to the platform label shown as a pill in the
+  # collapsed section summary when the field is filled in.
+  SOCIAL_MEDIA_LABELS = {
+    linked_in_url: "LinkedIn",
+    facebook_url: "Facebook",
+    instagram_url: "Instagram",
+    youtube_url: "YouTube",
+    twitter_url: "Twitter"
+  }.freeze
+
+  # One-line summary of the social-media links for the collapsed form section: a
+  # grey pill for each platform with a URL on file, or "None". HTML-safe.
+  def social_media_summary
+    present = SOCIAL_MEDIA_LABELS.select { |attr, _| object.public_send(attr).present? }.values
+    return "None" if present.empty?
+
+    h.safe_join(present.map { |label|
+      h.content_tag(:span, label, class: "text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600")
+    }, " ")
+  end
+
   # One-line summary of the tagged age ranges for a collapsed form section. The
   # primary age group is bold with a ⭐ (age ranges have no leader flag). HTML-safe.
   def age_ranges_summary

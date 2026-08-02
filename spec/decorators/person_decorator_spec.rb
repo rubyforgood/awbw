@@ -177,6 +177,19 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#social_media_summary" do
+    it "is 'None' with no links" do
+      expect(create(:person).decorate.social_media_summary).to eq("None")
+    end
+
+    it "shows a pill for each platform with a URL on file" do
+      person = create(:person, linked_in_url: "https://linkedin.com/in/x", youtube_url: "https://youtu.be/x")
+      summary = person.decorate.social_media_summary
+      expect(summary).to include("LinkedIn", "YouTube")
+      expect(summary).not_to include("Facebook", "Instagram", "Twitter")
+    end
+  end
+
   describe "#sectors_summary" do
     it "is 'None selected' with no sectors" do
       expect(create(:person).decorate.sectors_summary).to eq("None selected")
