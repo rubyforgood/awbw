@@ -61,10 +61,11 @@
       <% sectors_open = !f.object.persisted? || f.object.errors.any? %>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
         <details class="form-group space-y-4 group"<%= " open".html_safe if sectors_open %>>
-          <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
-            <span class="font-semibold">Sectors:</span>
-            <span class="text-sm text-gray-500"><%= f.object.decorate.sectors_summary %></span>
-            <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+          <%# Title is a fixed column; the names flow in the flex-1 column and wrap
+              indented under themselves (hanging indent), chevron trailing. %>
+          <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+            <span class="font-semibold shrink-0">Sectors:</span>
+            <span class="text-sm text-gray-500 flex-1 min-w-0"><%= f.object.decorate.sectors_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
           </summary>
 
           <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm mt-2">
