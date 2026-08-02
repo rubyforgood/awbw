@@ -5,7 +5,7 @@ module Events
     before_action :ensure_registerable, only: [ :new, :create ]
 
     def new
-      authorize! :public_registration, to: :new?
+      authorize! @event, to: :new?, with: Events::PublicRegistrationPolicy
 
       @registration_form = registration_form
       unless @registration_form
@@ -21,7 +21,7 @@ module Events
     end
 
     def create
-      authorize! :public_registration, to: :create?
+      authorize! @event, to: :create?, with: Events::PublicRegistrationPolicy
 
       if params[:public_registration][:website_url].present?
         redirect_to new_event_public_registration_path(@event)

@@ -1614,51 +1614,98 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(bulk_payments_event_path(event))
       end
 
-      it "renders a Forms menu with an Edit form settings link to the edit form-settings section" do
-        create(:event_form, event: event, form: create(:form), role: "registration")
+      # The Forms dropdown (app/views/events/_form_actions_menu.html.erb) shows a
+      # link per public-facing form, gated by the event's form settings, and
+      # prefixes each label with "Public" when public registration is enabled.
+      describe "Forms dropdown" do
+        it "renders the menu with an Edit form settings link to the edit form-settings section" do
+          create(:event_form, event: event, form: create(:form), role: "registration")
 
-        get dashboard_event_path(event)
+          get dashboard_event_path(event)
 
-        expect(response.body).to include("Forms")
-        expect(response.body).to include("Edit form settings")
-        expect(response.body).to include(edit_event_path(event, anchor: "registration_form_section"))
-      end
+          expect(response.body).to include("Forms")
+          expect(response.body).to include("Edit form settings")
+          expect(response.body).to include(edit_event_path(event, anchor: "registration_form_section"))
+        end
 
-      it "shows the registration link only when a registration form is selected" do
-        get dashboard_event_path(event)
-        expect(response.body).not_to include("Registration form")
+        context "registration link" do
+          it "is hidden when no registration form is selected" do
+            get dashboard_event_path(event)
+            expect(response.body).not_to include("Registration form")
+            expect(response.body).not_to include("Public registration form")
+          end
 
-        create(:event_form, event: event, form: create(:form), role: "registration")
-        get dashboard_event_path(event)
-        expect(response.body).to include("Registration form")
-      end
+          it "shows 'Registration form' when a form is selected and public registration is off" do
+            create(:event_form, event: event, form: create(:form), role: "registration")
 
-      it "prefixes the registration link with Public when public registration is enabled" do
-        create(:event_form, event: event, form: create(:form), role: "registration")
+            get dashboard_event_path(event)
 
-        get dashboard_event_path(event)
-        expect(response.body).not_to include("Public registration form")
+            expect(response.body).to include("Registration form")
+            expect(response.body).not_to include("Public registration form")
+          end
 
-        event.update!(public_registration_enabled: true)
-        get dashboard_event_path(event)
-        expect(response.body).to include("Public registration form")
-      end
+          it "shows 'Public registration form' when public registration is enabled" do
+            create(:event_form, event: event, form: create(:form), role: "registration")
+            event.update!(public_registration_enabled: true)
 
-      it "shows scholarship and bulk payment links only when the event has a cost" do
-        create(:event_form, event: event, form: create(:form), role: "scholarship")
-        create(:event_form, event: event, form: create(:form), role: "bulk_payment")
+            get dashboard_event_path(event)
 
-        free_event = create(:event, cost_cents: 0)
-        create(:event_form, event: free_event, form: create(:form), role: "scholarship")
-        create(:event_form, event: free_event, form: create(:form), role: "bulk_payment")
+            expect(response.body).to include("Public registration form")
+          end
 
-        get dashboard_event_path(free_event)
-        expect(response.body).not_to include("Scholarship form")
-        expect(response.body).not_to include("Bulk payment form")
+          it "is hidden when one-click is on and public registration is off (nobody uses the form page)" do
+            create(:event_form, event: event, form: create(:form), role: "registration")
+            event.update!(signed_in_one_click_enabled: true)
 
-        get dashboard_event_path(event)
-        expect(response.body).to include("Scholarship form")
-        expect(response.body).to include("Bulk payment form")
+            get dashboard_event_path(event)
+
+            expect(response.body).not_to include("Registration form")
+          end
+
+          it "is shown when one-click is on but public registration is enabled (anonymous still use it)" do
+            create(:event_form, event: event, form: create(:form), role: "registration")
+            event.update!(signed_in_one_click_enabled: true, public_registration_enabled: true)
+
+            get dashboard_event_path(event)
+
+            expect(response.body).to include("Public registration form")
+          end
+        end
+
+        context "scholarship and bulk payment links" do
+          before do
+            create(:event_form, event: event, form: create(:form), role: "scholarship")
+            create(:event_form, event: event, form: create(:form), role: "bulk_payment")
+          end
+
+          it "shows them on a paid event" do
+            get dashboard_event_path(event)
+
+            expect(response.body).to include("Scholarship form")
+            expect(response.body).to include("Bulk payment form")
+          end
+
+          it "hides them on a free event" do
+            free_event = create(:event, cost_cents: 0)
+            create(:event_form, event: free_event, form: create(:form), role: "scholarship")
+            create(:event_form, event: free_event, form: create(:form), role: "bulk_payment")
+
+            get dashboard_event_path(free_event)
+
+            expect(response.body).not_to include("Scholarship form")
+            expect(response.body).not_to include("Bulk payment form")
+          end
+
+          it "prefixes them with Public when public registration is enabled" do
+            create(:event_form, event: event, form: create(:form), role: "registration")
+            event.update!(public_registration_enabled: true)
+
+            get dashboard_event_path(event)
+
+            expect(response.body).to include("Public scholarship form")
+            expect(response.body).to include("Public bulk payment form")
+          end
+        end
       end
     end
 
