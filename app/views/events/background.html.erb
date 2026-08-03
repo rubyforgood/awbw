@@ -54,7 +54,7 @@
         <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
       <% end %>
       <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
-        <i class="fa-solid fa-users-viewfinder text-cyan-600"></i>
+        <i class="fa-solid fa-users-viewfinder <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i>
         Get to know the registrants
       </h1>
     </div>
