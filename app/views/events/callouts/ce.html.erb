@@ -152,7 +152,7 @@
           <% if license_locked %>
             <p class="mt-3 inline-flex items-center gap-1.5 text-xs text-gray-500">
               <i class="fa-solid fa-lock text-[0.65rem]"></i>
-              Your CE certificate has been issued, so your license is locked. Contact us if it needs correcting.
+              Your CE certificate has been issued, so your license is locked. <%= link_to "Contact us", contact_us_path, class: "text-blue-700 underline hover:text-blue-900" %> if it needs correcting.
             </p>
           <% end %>
         <% else %>
