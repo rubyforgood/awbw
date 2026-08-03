@@ -13,6 +13,11 @@
 <% email = record.communications_email %>
 <% notifications = email.present? ? Notification.email(email).order(created_at: :desc) : Notification.none %>
 <% admin = allowed_to?(:index?, with: NotificationPolicy) %>
+<%# On a page non-admins can view (the person profile), admin-only content is
+    marked with the app's `admin-only bg-blue-100` wash so it reads as privileged.
+    On admin-only pages (event registration, scholarship) everything is admin-only
+    already, so callers leave this off and it renders plainly. %>
+<% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% new_notifications = record.notifications.select(&:new_record?) %>
 <%# `record` may be a Draper decorator here, so read the model name via
     `model_name` (delegated to the underlying class) rather than `class.name`,
@@ -48,18 +53,18 @@
         <% notifications.each do |notification| %>
           <% if editable_notifications.include?(notification) %>
             <%= f.simple_fields_for :notifications, own_notifications_by_id.fetch(notification.id, notification) do |nf| %>
-              <%= render "notifications/notification_fields", f: nf, record: record %>
+              <%= render "notifications/notification_fields", f: nf, record: record, mark_admin_only: mark_admin_only %>
             <% end %>
           <% else %>
             <div data-paginated-fields-target="item">
-              <%= render "notifications/notification_row", notification: notification, admin: admin %>
+              <%= render "notifications/notification_row", notification: notification, admin: admin, mark_admin_only: mark_admin_only %>
             </div>
           <% end %>
         <% end %>
         <% if admin %>
           <%# New, unsaved entries — re-rendered here on validation error. %>
           <%= f.simple_fields_for :notifications, new_notifications do |nf| %>
-            <%= render "notifications/notification_fields", f: nf, record: record %>
+            <%= render "notifications/notification_fields", f: nf, record: record, mark_admin_only: mark_admin_only %>
           <% end %>
         <% end %>
       </div>
@@ -71,19 +76,23 @@
     <% end %>
 
     <% if admin %>
-      <div class="admin-only mt-3 flex items-center justify-between gap-2 rounded-md bg-blue-100 px-3 py-2">
+      <%# Blue admin-only wash only where non-admins share the page; a plain gray
+          hover otherwise, matching the org-show admin-only linked text. %>
+      <% admin_button_marker = mark_admin_only ? "admin-only bg-blue-100" : "hover:bg-gray-100" %>
+      <% admin_button_class = "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:text-gray-700 cursor-pointer #{admin_button_marker}" %>
+      <div class="mt-3 flex items-center justify-between gap-2">
         <%= link_to_add_association f, :notifications,
               partial: "notifications/notification_fields",
-              render_options: { locals: { record: record } },
+              render_options: { locals: { record: record, mark_admin_only: mark_admin_only } },
               data: { association_insertion_node: "##{list_id}", association_insertion_method: "append" },
-              class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
+              class: admin_button_class do %>
           <i class="fa-solid fa-plus text-[0.6rem]"></i>
           <%= t("communications.add") %>
         <% end %>
 
         <% if editable_notifications.any? %>
           <button type="button"
-                  class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+                  class="<%= admin_button_class %>"
                   data-action="edit-toggle#toggle">
             <i class="fa-solid fa-pen text-[0.6rem]"></i>
             <span data-edit-toggle-target="editLabel"><%= t("communications.edit") %></span>
