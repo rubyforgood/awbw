@@ -13,13 +13,18 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["body", "header"]
 
+  connect() {
+    // The server base order tie breaks every sort.
+    this.initialRows = Array.from(this.bodyTarget.rows)
+  }
+
   sort(event) {
     const header = event.currentTarget
     const index = Number(header.dataset.sortIndex)
     const key = header.dataset.sortKey
     const ascending = header.dataset.sortDirection !== "asc"
 
-    const rows = Array.from(this.bodyTarget.rows)
+    const rows = [ ...this.initialRows ]
     rows.sort((a, b) => this.compare(a, b, index, key) * (ascending ? 1 : -1))
     rows.forEach((row) => this.bodyTarget.appendChild(row))
 
