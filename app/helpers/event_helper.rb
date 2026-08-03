@@ -84,50 +84,41 @@ module EventHelper
     )
   end
 
-  def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil)
+  def event_profile_button(event, truncate_at: nil, subtitle: nil, data: {}, path: nil, compact: false)
     bg = DomainTheme.bg_class_for(:events, intensity: 100)
     hover_bg = DomainTheme.bg_class_for(:events, intensity: 100, hover: true)
     text = DomainTheme.text_class_for(:events)
     border = DomainTheme.border_class_for(:events)
 
+    padding = compact ? "px-2 py-1" : "px-4 py-2"
+    name_size = compact ? "text-xs" : "text-sm"
+    icon_size = compact ? "text-sm" : "text-lg"
+
     link_to path || event_path(event),
             data: data,
-            style: "min-height: 3.5rem;",
             class: "group relative flex items-center gap-2
-                    w-full px-4 py-2
+                    w-full #{padding}
                     border #{border} #{bg} #{hover_bg} rounded-lg
                     transition-colors duration-200
                     font-medium shadow-sm leading-none
                     overflow-hidden" do
       event = event.decorate if event.respond_to?(:decorate)
 
-      icon_tag = content_tag(:span,
-                             content_tag(:i, "", class: "fa-solid fa-calendar-days"),
-                             class: "flex h-10 w-10 shrink-0 items-center justify-center rounded-full
-                                     border #{DomainTheme.border_class_for(:events)}
-                                     #{DomainTheme.bg_class_for(:events, intensity: 200)}
-                                     #{DomainTheme.text_class_for(:events, intensity: 700)} shadow-sm")
+      icon_tag = content_tag(:i, "", class: "fa-solid fa-calendar-days shrink-0 #{icon_size} #{DomainTheme.text_class_for(:events)}")
 
       display_name = truncate_at ? truncate(event.name.to_s, length: truncate_at) : event.name.to_s
 
-      name = content_tag(
-        :span,
-        display_name,
-        title: event.name.to_s,
-        class: "font-semibold #{text} truncate"
-      )
+      name = content_tag(:span, display_name, title: event.name.to_s, class: "font-semibold #{name_size} #{text} truncate")
 
-      subtitle_tag = if subtitle.present?
-        content_tag(:span, subtitle, class: "text-xs text-gray-500 font-normal truncate")
-      else
-        "".html_safe
+      # Title and date on one line, separated by a dot; the title truncates while
+      # the date stays whole.
+      parts = [ name ]
+      if subtitle.present?
+        parts << content_tag(:span, "·", class: "shrink-0 text-gray-400")
+        parts << content_tag(:span, subtitle, class: "shrink-0 #{name_size} text-gray-500 font-normal whitespace-nowrap")
       end
 
-      text_block = content_tag(
-        :div,
-        name + subtitle_tag,
-        class: "flex flex-col leading-tight text-left min-w-0"
-      )
+      text_block = content_tag(:div, safe_join(parts), class: "flex items-baseline gap-1.5 leading-none text-left min-w-0")
 
       icon_tag + text_block
     end

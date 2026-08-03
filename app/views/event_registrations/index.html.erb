@@ -28,7 +28,7 @@
           <% if @filtered_event %>
             <div class="mb-4">
               <%= event_profile_button(@filtered_event,
-                    subtitle: @filtered_event.decorate.times(display_day: true, display_date: true, inline: true)) %>
+                    subtitle: @filtered_event.decorate.short_date_range) %>
             </div>
           <% end %>
 
@@ -53,9 +53,9 @@
                 <tbody class="divide-y divide-gray-200">
                   <% @event_registrations.each do |event_registration| %>
                     <tr id="<%= dom_id(event_registration) %>" class="hover:bg-gray-50 transition-colors duration-150">
-                      <td class="px-4 py-2 text-sm text-gray-800 align-top">
+                      <td class="px-3 py-1 text-sm text-gray-800 align-middle">
                         <div class="flex items-center gap-2">
-                          <%= person_profile_button(event_registration.registrant) %>
+                          <%= person_profile_button(event_registration.registrant, compact: true) %>
                           <% if submitted_pairs.include?([ event_registration.registrant_id, event_registration.event_id ]) %>
                             <i class="fa-solid fa-file-lines text-green-600 shrink-0" title="Completed registration form"></i>
                           <% elsif events_with_forms.include?(event_registration.event_id) %>
@@ -64,25 +64,24 @@
                         </div>
                       </td>
                       <% unless @filtered_event %>
-                        <td class="px-4 py-2 text-sm text-gray-800 min-w-[50ch]">
+                        <td class="px-3 py-1 text-sm text-gray-800 align-middle min-w-[50ch]">
                           <%= event_profile_button(event_registration.event,
                                 truncate_at: 50,
+                                compact: true,
                                 path: dashboard_event_path(event_registration.event),
-                                subtitle: event_registration.event.decorate.times(display_day: true, display_date: true, inline: true)) %>
+                                subtitle: event_registration.event.decorate.short_date_range) %>
                         </td>
                       <% end %>
-                      <td class="px-4 pb-2 text-sm text-gray-800 align-top" style="padding-top: 1.25rem;">
+                      <td class="px-3 py-1 text-sm text-gray-800 align-middle whitespace-nowrap">
                         <%= event_registration.created_at.strftime("%B %d, %Y") %>
                       </td>
 
                       <!-- Actions -->
-                      <td class="px-4 py-2 align-top">
+                      <td class="px-3 py-1 align-middle">
                         <%= link_to edit_event_registration_path(event_registration, return_to: "index"),
-                                    class: "group relative flex items-center gap-2 w-full px-4 py-2 border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 200)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 200, hover: true)} rounded-lg transition-colors duration-200 font-medium shadow-sm leading-none overflow-hidden" do %>
-                          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 300)} #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} shadow-sm">
-                            <i class="fa-solid fa-user-pen"></i>
-                          </span>
-                          <span class="truncate text-sm font-semibold <%= DomainTheme.text_class_for(:event_registrations) %>">Edit registration</span>
+                                    class: "group relative flex items-center gap-2 w-full px-2 py-1 border #{DomainTheme.border_class_for(:event_registrations)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 200)} #{DomainTheme.bg_class_for(:event_registrations, intensity: 200, hover: true)} rounded-lg transition-colors duration-200 font-medium shadow-sm leading-none overflow-hidden" do %>
+                          <i class="fa-solid fa-user-pen shrink-0 text-sm <%= DomainTheme.text_class_for(:event_registrations) %>"></i>
+                          <span class="truncate text-xs font-semibold <%= DomainTheme.text_class_for(:event_registrations) %>">Edit registration</span>
                         <% end %>
                       </td>
                     </tr>
