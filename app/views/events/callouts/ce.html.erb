@@ -15,14 +15,6 @@
    end %>
 
 <%= render layout: "events/callouts/callout_page", locals: { title: @event.ce_hours_label, **callout_eyebrow } do %>
-  <%# Payment instruction banner: the event's fee + deadline, hidden once paid in full. %>
-  <% if @event.ce_eligible? && @event.ce_hours_cost_cents.to_i.positive? && !ce_registration&.paid_in_full? %>
-    <% due_text = @event.decorate.ce_payment_due_deadline_display %>
-    <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-      Submit payment of <span class="font-semibold"><%= dollars_from_cents(@event.ce_hours_cost_cents) %></span> for CE hours<%= due_text ? " (payment is due no later than #{due_text}.)" : "." %>
-    </div>
-  <% end %>
-
   <% if @event_registration.ce_registered? %>
     <% license = ce_registration&.professional_license %>
     <% license_kind = license&.kind %>
@@ -86,7 +78,10 @@
 
         <% if ce_registration && ce_registration.remaining_cost.positive? %>
           <% if (due_text = @event.decorate.ce_payment_due_deadline_display) %>
-            <p class="mt-3 text-sm text-amber-700">Payment due by <%= due_text %></p>
+            <p class="mt-3 flex items-baseline gap-2 text-sm">
+              <span class="text-xs font-medium uppercase tracking-wide text-gray-400">Payment due</span>
+              <span class="font-semibold text-amber-700"><%= due_text %></span>
+            </p>
           <% end %>
           <div class="mt-6 flex justify-center">
             <% if sample_preview? %>
@@ -234,7 +229,8 @@
       </section>
     <% end %>
   <% else %>
-    <p class="text-sm text-gray-600">You haven't requested continuing education credit for this training. CE hours are available for an additional fee.</p>
+    <p class="text-sm text-gray-600">You haven't requested continuing education credit for this training.
+      <%= @event.ce_hours_cost_cents.to_i.positive? ? "CE hours are available for #{dollars_from_cents(@event.ce_hours_cost_cents)}." : "CE hours are available for an additional fee." %></p>
     <% if @event.ce_hours_request_deadline %>
       <p class="mt-2 text-sm text-amber-700">Request CE credit by <%= @event.ce_hours_request_deadline.to_fs(:long) %>.</p>
     <% end %>

@@ -379,29 +379,38 @@ RSpec.describe "Events::Callouts", type: :request do
       end
     end
 
-    context "when the event has a CE fee and payment deadline" do
+    context "when the event has a CE fee" do
       let(:event) do
         create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000,
                ce_payment_due_deadline: Time.zone.local(2026, 7, 22, 9, 0))
       end
 
-      it "shows the payment instruction banner with the fee and deadline" do
+      it "states the concrete fee on the opt-in page before registering" do
         get registration_ce_path(registration.slug)
-        expect(response.body).to include("Submit payment of")
-        expect(response.body).to include("$150")
-        expect(response.body).to include("payment is due no later than")
-        expect(response.body).to include("on July 22, 2026")
+        expect(response.body).to include("CE hours are available for $150.")
       end
 
-      it "hides the banner once the CE balance is paid in full" do
-        license = create(:professional_license, person: registration.registrant, number: "LIC-9")
-        ce = create(:continuing_education_registration, event_registration: registration,
-                    professional_license: license, cost_cents: 15_000)
-        payment = create(:payment, person: registration.registrant, amount_cents: 15_000, amount_cents_remaining: nil)
-        create(:allocation, source: payment, allocatable: ce, amount: 15_000)
+      context "once CE is registered with a balance due" do
+        before do
+          license = create(:professional_license, person: registration.registrant, number: "LIC-9")
+          create(:continuing_education_registration, event_registration: registration,
+                 professional_license: license, cost_cents: 15_000)
+        end
 
-        get registration_ce_path(registration.slug)
-        expect(response.body).not_to include("Submit payment of")
+        it "surfaces the payment-due deadline as a stat" do
+          get registration_ce_path(registration.slug)
+          expect(response.body).to include("Payment due")
+          expect(response.body).to include("on July 22, 2026")
+        end
+
+        it "omits the payment-due deadline once paid in full" do
+          ce = registration.continuing_education_registrations.first
+          payment = create(:payment, person: registration.registrant, amount_cents: 15_000, amount_cents_remaining: nil)
+          create(:allocation, source: payment, allocatable: ce, amount: 15_000)
+
+          get registration_ce_path(registration.slug)
+          expect(response.body).not_to include("on July 22, 2026")
+        end
       end
     end
   end
