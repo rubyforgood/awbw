@@ -943,4 +943,59 @@ RSpec.describe EventDashboard do
       expect(dashboard.unallocated_bulk_payment_cents).to eq(0)
     end
   end
+
+  describe "attendance stats" do
+    let(:event) { create(:event) }
+
+    context "with a mix of attendance outcomes" do
+      before do
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Aa"), status: "attended")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Ab"), status: "attended")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Ba"), status: "incomplete_attendance")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Ca"), status: "no_show")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Da"), status: "registered")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Ea"), status: "transferred_in")
+        create(:event_registration, event: event, registrant: create(:person, first_name: "Fa"), status: "cancelled")
+      end
+
+      it "counts each attendance status individually" do
+        expect(dashboard.attendance_count_for("attended")).to eq(2)
+        expect(dashboard.attendance_count_for("incomplete_attendance")).to eq(1)
+        expect(dashboard.attendance_count_for("no_show")).to eq(1)
+        expect(dashboard.attendance_count_for("registered")).to eq(1)
+        expect(dashboard.attendance_count_for("transferred_in")).to eq(1)
+        expect(dashboard.attendance_count_for("cancelled")).to eq(1)
+        expect(dashboard.attendance_count_for("transferred_out")).to eq(0)
+      end
+
+      it "rates full attendance over every registrant (active + no-shows, excluding cancellations)" do
+        expect(dashboard.attendance_recorded?).to be(true)
+        expect(dashboard.attendance_outcome_count).to eq(4)
+        # 5 active registrants (attended ×2, incomplete, registered, transferred_in)
+        # + 1 no-show; the cancellation is excluded.
+        expect(dashboard.expected_attendee_count).to eq(6)
+        expect(dashboard.attendance_rate).to eq(2.0 / 6)
+      end
+
+      it "lists the registrants behind each status" do
+        expect(dashboard.attendance_registrants("attended").map(&:first_name)).to eq(%w[ Aa Ab ])
+        expect(dashboard.attendance_registrants("no_show").map(&:first_name)).to eq(%w[ Ca ])
+        expect(dashboard.attendance_registrants("registered", "transferred_in").map(&:first_name)).to eq(%w[ Da Ea ])
+        expect(dashboard.attendance_registrants("cancelled").map(&:first_name)).to eq(%w[ Fa ])
+      end
+    end
+
+    context "before any outcome is recorded" do
+      before do
+        create(:event_registration, event: event, status: "registered")
+      end
+
+      it "reports nothing recorded and a nil rate" do
+        expect(dashboard.attendance_recorded?).to be(false)
+        expect(dashboard.attendance_outcome_count).to eq(0)
+        expect(dashboard.attendance_rate).to be_nil
+        expect(dashboard.attendance_count_for("registered")).to eq(1)
+      end
+    end
+  end
 end

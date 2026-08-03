@@ -239,43 +239,43 @@
             <%= render "dashboard_money_row", label: "Paid", icon: "fa-money-bill-wave",
                   amount_cents: @dashboard.cont_ed_paid_cents,
                   count: @dashboard.cont_ed_paid_count, registrants: @dashboard.cont_ed_paid_registrants,
-                  filter_path: registrants_event_path(@event, registrant_ids: @dashboard.cont_ed_paid_registrants.map(&:id).join("-").presence || "0") %>
+                  filter_path: registrants_event_path(@event, ce_status: "paid") %>
             <%= render "dashboard_money_row", label: "Due", icon: "fa-hourglass-half",
                   icon_color: @dashboard.cont_ed_unpaid_count.positive? ? "text-white" : "text-gray-400",
                   icon_bg: @dashboard.cont_ed_unpaid_count.positive? ? "bg-orange-500" : nil,
                   amount_cents: @dashboard.cont_ed_outstanding_cents,
                   count: @dashboard.cont_ed_unpaid_count, registrants: @dashboard.cont_ed_unpaid_registrants,
-                  filter_path: registrants_event_path(@event, registrant_ids: @dashboard.cont_ed_unpaid_registrants.map(&:id).join("-").presence || "0") %>
+                  filter_path: registrants_event_path(@event, ce_status: "requested") %>
           </div>
         </details>
       </div>
     </div>
   <% end %>
 
-  <%# Headcount cards — each expands to reveal its full list %>
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+  <%# Headcount cards — each expands to reveal its full list. One row of five on
+      large screens, wrapping to three then two as the viewport narrows. %>
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[minmax(0,4fr)_minmax(0,4fr)_minmax(0,5fr)_minmax(0,4fr)_minmax(0,3fr)] gap-3 sm:gap-4">
     <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:people, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:people, intensity: 700) %>">
-            <i class="fa-solid fa-users text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.registrant_count, registrants_event_path(@event, registrant_ids: @dashboard.registrants.map(&:id).join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">Registrants</span>
-          </h3>
+          <%= render "headcount_header", color_key: :people, icon: "fa-users",
+                count: @dashboard.registrant_count, label: "Registrants",
+                path: registrants_event_path(@event, status_filter: "active") %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Active registrations<% if @dashboard.inactive_registration_count.positive? %> · <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.inactive_registrant_ids.join("-")), class: "inline-flex items-center gap-1 no-underline hover:underline hover:text-gray-700" do %><%= @dashboard.inactive_registration_count %> inactive <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i><% end %><% end %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.registrant_count} active", path: registrants_event_path(@event, status_filter: "active") %><% if @dashboard.inactive_registration_count.positive? %> · <%= render "stat_link", label: "#{@dashboard.inactive_registration_count} inactive", path: registrants_event_path(@event, status_filter: "inactive") %><% end %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.registrants.any? %>
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.registrants.each do |registrant| %>
               <li>
-                <%= link_to registrant.name, registrants_event_path(@event, registrant_ids: registrant.id),
+                <%= link_to registrants_event_path(@event, registrant_ids: registrant.id),
                       title: [ registrant.name, *@dashboard.organization_names_by_registrant[registrant.id] ].join(" · "),
-                      class: "block truncate rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" %>
+                      class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+                  <span class="truncate min-w-0 group-hover/rowlink:underline"><%= registrant.name %></span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white shrink-0 group-hover/rowlink:text-gray-500"></i>
+                <% end %>
               </li>
             <% end %>
           </ul>
@@ -285,34 +285,68 @@
       </div>
     </details>
 
+    <%# Attendance — attendance outcomes, styled like the sibling headcount cards %>
+    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:event_registrations, intensity: 200) %> p-4 shadow-sm">
+      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center justify-between gap-2">
+          <%= render "headcount_header", color_key: :event_registrations, icon: "fa-user-check",
+                count: @dashboard.attended_count, label: "Attended",
+                path: registrants_event_path(@event, attendance_status: "attended") %>
+          <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
+        </div>
+        <p class="text-xs text-gray-500 mt-1"><% if @dashboard.attendance_recorded? %><%= render "stat_link", label: "#{number_to_percentage(@dashboard.attendance_rate * 100, precision: 0)} of #{pluralize(@dashboard.expected_attendee_count, "registrant")}", path: registrants_event_path(@event, attendance_status: "attended") %><% else %>Not yet recorded<% end %></p>
+      </summary>
+
+      <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
+        <%# One row per attendance status. Icon/colour are presentation config;
+            labels come from EventRegistration::ATTENDANCE_STATUS_LABELS. %>
+        <% [
+             [ "attended", "fa-circle-check", "text-green-600" ],
+             [ "incomplete_attendance", "fa-circle-half-stroke", "text-amber-500" ],
+             [ "no_show", "fa-circle-xmark", "text-red-500" ],
+             [ "cancelled", "fa-ban", nil ],
+             [ "transferred_in", "fa-arrow-right-to-bracket", nil ],
+             [ "transferred_out", "fa-arrow-right-from-bracket", nil ],
+             [ "registered", "fa-hourglass-half", nil ]
+           ].each do |status, icon, active_color| %>
+          <% count = @dashboard.attendance_count_for(status) %>
+          <%= render "attendance_stat_row",
+                label: EventRegistration::ATTENDANCE_STATUS_LABELS.fetch(status),
+                icon: icon,
+                icon_color: (count.positive? && active_color) || "text-gray-400",
+                count: count,
+                registrants: @dashboard.attendance_registrants(status),
+                filter_path: registrants_event_path(@event, attendance_status: status) %>
+        <% end %>
+      </div>
+    </details>
+
     <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:organizations, intensity: 700) %>">
-            <i class="fa-solid fa-building text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.organization_count, registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">Organizations</span>
-          </h3>
+          <%= render "headcount_header", color_key: :organizations, icon: "fa-building",
+                count: @dashboard.organization_count, label: "Organizations",
+                path: registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+        <% program_counts = @dashboard.program_status_counts %>
+        <% program_status_ids = @dashboard.program_status_registrant_ids %>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{program_counts[:new]} new", path: registrants_event_path(@event, registrant_ids: program_status_ids[:new].join("-").presence || "0") %> · <%= render "stat_link", label: "#{program_counts[:ongoing]} ongoing", path: registrants_event_path(@event, registrant_ids: program_status_ids[:ongoing].join("-").presence || "0") %> · <%= render "stat_link", label: "#{program_counts[:reinstated]} reinstated", path: registrants_event_path(@event, registrant_ids: program_status_ids[:reinstated].join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.organizations.any? %>
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.organizations.each do |organization| %>
-              <li class="flex items-center gap-1.5">
-                <%= link_to organization_path(organization), class: "#{DomainTheme.text_class_for(:organizations, intensity: 600)} hover:#{DomainTheme.text_class_for(:organizations, intensity: 800)} shrink-0", title: "View #{organization.name} profile" do %>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                <% end %>
-                <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "flex items-center justify-between gap-2 flex-1 min-w-0 rounded px-1 py-0.5 hover:bg-gray-50", title: "Registrants from #{organization.name}" do %>
+              <li class="group/rowlink flex items-center gap-1.5 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50">
+                <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "flex items-center justify-between gap-2 flex-1 min-w-0", title: "Registrants from #{organization.name}" do %>
                   <span class="flex items-center gap-1.5 min-w-0">
                     <%= organization.decorate.program_status_badge(@dashboard.program_status_by_organization[organization.id]) %>
-                    <span class="truncate min-w-0"><%= organization.name %></span>
+                    <span class="truncate min-w-0 group-hover/rowlink:underline"><%= organization.name %></span>
                   </span>
                   <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.organization_counts.fetch(organization.id, 0) %></span>
+                <% end %>
+                <%= link_to organization_path(organization), class: "shrink-0 flex h-7 items-center text-white group-hover/rowlink:text-gray-500", title: "View #{organization.name} profile" do %>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                 <% end %>
               </li>
             <% end %>
@@ -326,25 +360,24 @@
     <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:sectors, intensity: 700) %>">
-            <i class="fa-solid fa-layer-group text-xs <%= DomainTheme.text_class_for(:sectors, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.sectors.size, registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">Sectors</span>
-          </h3>
+          <%= render "headcount_header", color_key: :sectors, icon: "fa-layer-group",
+                count: @dashboard.sectors.size, label: "Sectors",
+                path: registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.primary_sector_count} primary", path: registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids.join("-").presence || "0") %> · <%= render "stat_link", label: "#{@dashboard.additional_sector_count} additional", path: registrants_event_path(@event, registrant_ids: @dashboard.additional_sector_registrant_ids.join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.sectors.any? %>
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.sectors.each do |sector| %>
               <li>
-                <%= link_to registrants_event_path(@event, sector: sector.id), class: "flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50", title: sector.name do %>
-                  <span class="truncate min-w-0"><%= sector.name %></span>
-                  <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.sector_counts.fetch(sector.id, 0) %></span>
+                <%= link_to registrants_event_path(@event, sector: sector.id), class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50", title: sector.name do %>
+                  <span class="truncate min-w-0 group-hover/rowlink:underline"><%= sector.name %></span>
+                  <span class="flex items-center gap-2 shrink-0">
+                    <span class="text-xs text-gray-500"><%= @dashboard.sector_counts.fetch(sector.id, 0) %></span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white group-hover/rowlink:text-gray-500"></i>
+                  </span>
                 <% end %>
               </li>
             <% end %>
@@ -358,25 +391,24 @@
     <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm">
       <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="flex items-center gap-1.5 min-w-0 text-lg sm:text-xl font-bold <%= DomainTheme.text_class_for(:addresses, intensity: 700) %>">
-            <i class="fa-solid fa-location-dot text-xs <%= DomainTheme.text_class_for(:addresses, intensity: 600) %>"></i>
-            <span class="tabular-nums shrink-0">
-              <%= link_to @dashboard.states.size, registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")), class: "hover:underline" %>
-            </span>
-            <span class="truncate">States</span>
-          </h3>
+          <%= render "headcount_header", color_key: :addresses, icon: "fa-location-dot",
+                count: @dashboard.states.size, label: "States",
+                path: registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1">Via registrants</p>
+        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: pluralize(@dashboard.countries.size, "country"), path: registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 pt-3 border-t border-gray-100">
         <% if @dashboard.states.any? %>
           <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
             <% @dashboard.states.each do |state| %>
               <li>
-                <%= link_to registrants_event_path(@event, state: state), class: "flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
-                  <span><%= state %></span>
-                  <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.state_counts.fetch(state, 0) %></span>
+                <%= link_to registrants_event_path(@event, state: state), class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
+                  <span class="group-hover/rowlink:underline"><%= state %></span>
+                  <span class="flex items-center gap-2 shrink-0">
+                    <span class="text-xs text-gray-500"><%= @dashboard.state_counts.fetch(state, 0) %></span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-white group-hover/rowlink:text-gray-500"></i>
+                  </span>
                 <% end %>
               </li>
             <% end %>

@@ -1,0 +1,26 @@
+<%#
+  Clickable headcount-card title: [domain icon] [count] [label] [jump icon].
+  The whole title links to `path`; on hover the text underlines and the
+  otherwise-white jump icon appears.
+
+  Locals:
+    color_key: DomainTheme key for the card's colour (e.g. :people)
+    icon:      Font Awesome icon name for the domain (e.g. "fa-users")
+    count:     the headline count
+    label:     the card label (e.g. "Registrants")
+    path:      where the title links
+%>
+<h3 class="min-w-0 text-lg font-bold <%= DomainTheme.text_class_for(color_key, intensity: 700) %>">
+  <%= link_to path, class: "group/header flex items-center gap-1.5 min-w-0 hover:underline" do %>
+    <i class="fa-solid <%= icon %> text-xs <%= DomainTheme.text_class_for(color_key, intensity: 600) %>"></i>
+    <span class="tabular-nums shrink-0"><%= count %></span>
+    <span class="truncate"><%= label %></span>
+    <%# Toggle the wrapper span's display, not the icon's: Font Awesome forces
+        display on the <i>, so `hidden` on the icon itself has no effect. Hidden
+        (claims no space) until hover, so the label keeps its full width and only
+        truncates to make room for the icon on hover. %>
+    <span class="hidden group-hover/header:inline-block shrink-0">
+      <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-500"></i>
+    </span>
+  <% end %>
+</h3>
